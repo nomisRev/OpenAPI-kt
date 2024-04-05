@@ -10,20 +10,14 @@ import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable
 public data class Response(
-  /**
-   * A short description of the response. CommonMark syntax MAY be used for rich text
-   * representation.
-   */
+  /** A short description of the response. CommonMark's syntax MAY be used for rich text representation. */
   public val description: String? = null,
-  /**
-   * Maps a header name to its definition. RFC7230 states header names are case insensitive. If a
-   * response header is defined with the name "Content-Type", it SHALL be ignored.
-   */
+  /** Maps a header name to its definition. RFC7230 states header names are case-insensitive. */
   public val headers: Map<String, ReferenceOr<Header>> = emptyMap(),
   /**
-   * A map containing descriptions of potential response payloads. The key is a media type or media
-   * type range and the value describes it. For responses that match multiple keys, only the most
-   * specific key is applicable. e.g. text/plain overrides text
+   * A map containing descriptions of potential response payloads.
+   * The key is a media type or media type range and the value describes it.
+   * For responses that match multiple keys, only the most specific key is applicable. i.e. text/plain overrides text
    */
   public val content: Map<String, @Serializable(with = MediaTypeSerializer::class) MediaType> = emptyMap(),
   /**
@@ -39,5 +33,11 @@ public data class Response(
   public val extensions: Map<String, JsonElement> = emptyMap()
 ) {
   public operator fun plus(other: Response): Response =
-    Response(description, headers + other.headers, content + other.content, links + other.links, extensions + other.extensions)
+    Response(
+      description,
+      headers + other.headers,
+      content + other.content,
+      links + other.links,
+      extensions + other.extensions
+    )
 }
