@@ -50,7 +50,7 @@ public sealed interface Model {
     override val typeName: String,
     val description: String?,
     val properties: KMap<String, Property>,
-    val nestedGeneration: KList<Model>
+    val nestedInlineModels: KList<Model>
   ) : Model {
     public data class Property(
       val name: String,
@@ -69,15 +69,15 @@ public sealed interface Model {
     // TODO these need to be filtered, this will have unnecessary imports
     override fun imports(): Set<Import> =
       properties.values.flatMapToSet { it.type.imports() } +
-        nestedGeneration.flatMapToSet { it.imports() } +
+        nestedInlineModels.flatMapToSet { it.imports() } +
         setOf(Import("kotlinx.serialization", "Serializable"))
 
     override fun toKotlinCode(indent: Int): String {
       val i = "  ".repeat(indent)
-      val body = if (nestedGeneration.isNotEmpty()) {
+      val body = if (nestedInlineModels.isNotEmpty()) {
         """
         |{
-        |$i${nestedGeneration.joinToString(separator = "\n$i") { it.toKotlinCode(indent + 1) }}
+        |$i${nestedInlineModels.joinToString(separator = "\n$i") { it.toKotlinCode(indent + 1) }}
         |}
         |""".trimMargin()
       } else ""
@@ -87,13 +87,17 @@ public sealed interface Model {
           .filter { it.description != null }
           .joinToString(separator = "\n * ") { "@param ${it.name} ${it.description}" }
 
+      val descriptions = properties.values.count { it.description != null }
       val description = when {
-        description.isNullOrBlank() && properties.isEmpty() -> null
-        description.isNullOrBlank() -> """
+        description.isNullOrBlank() && descriptions <= 0 -> ""
+        description.isNullOrBlank() && descriptions >= 1 -> """
         |/**
         |  * $params
         |  */
-        """.trimMargin()
+        |""".trimMargin()
+
+        description?.isNotBlank() == true && descriptions >= 1 ->
+          "/** $description */"
 
         else -> """
         |/**
@@ -113,28 +117,37 @@ public sealed interface Model {
     }
   }
 
-  public data class AnyOf(
-    override val typeName: String,
+  sealed interface Union : Model {
+    val simpleName: String
     val schemas: KList<Model>
-  ) : Model {
-    override fun imports(): Set<Import> = schemas.flatMapToSet { it.imports() }
-    override fun toKotlinCode(indent: Int): String =
-      TODO()
-  }
+    val postfix: String
+    override val typeName: String
+      get() = "$simpleName$postfix"
 
-  // TODO this should be split into a nested ADT.
-  //  Whilst the code generation can be common, the types are still different.
-  //  This generation can be general purpose, so more precise information is better.
-  /**
-   * This represents `oneOf`, and "array types"/multiple types.
-   *  - oneOf is typically used for a union of objects
-   *  - [Schema.Type.Array] is used for a union of primitives,
-   *      or a union of object(s) and subsections or a single properties as `String`.
-   */
-  public data class OneOf(
-    override val typeName: String,
-    val schemas: KList<Model>
-  ) : Model {
+    /**
+     * This represents `oneOf`, and "array types"/multiple types.
+     *  - oneOf is typically used for a union of objects
+     *  - [Schema.Type.Array] is used for a union of primitives,
+     *      or a union of object(s) and subsections or a single properties as `String`.
+     */
+    public data class OneOf(
+      override val simpleName: String,
+      override val schemas: KList<Model>,
+      override val postfix: String = "OneOf"
+    ) : Union
+
+    public data class AnyOf(
+      override val simpleName: String,
+      override val schemas: KList<Model>,
+      override val postfix: String = "AnyOf"
+    ) : Union
+
+    public data class TypeArray(
+      override val simpleName: String,
+      override val schemas: KList<Model>,
+      override val postfix: String = "Type"
+    ) : Union
+
     override fun imports(): Set<Import> =
       schemas.flatMapToSet { it.imports() } + Import("kotlin.jvm", "JvmInline") + kotlinXSerializerImports
 
@@ -192,13 +205,22 @@ public sealed interface Model {
     }
   }
 
+
   public data class Enum(
     override val typeName: String,
     val inner: Model,
     val values: KList<String>
   ) : Model {
     override fun imports(): Set<Import> = inner.imports()
-    override fun toKotlinCode(indent: Int): String = TODO()
+    override fun toKotlinCode(indent: Int): String {
+      val cases = values.joinToString(postfix = ";")
+      val i = "  ".repeat(indent)
+      return """
+      |${i}enum class $typeName {
+      |${i}  $cases
+      |${i}}
+      """.trimMargin()
+    }
   }
 
   public data object Unit : Model {

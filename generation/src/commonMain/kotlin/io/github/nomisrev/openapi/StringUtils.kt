@@ -35,6 +35,7 @@ internal fun String.capitalize(): String =
 fun String.sanitize(delimiter: String = ".", prefix: String = "") =
   splitToSequence(delimiter).joinToString(delimiter, prefix) { if (it in KOTLIN_KEYWORDS) "`$it`" else it }
 
+// This list only contains words that need to be escaped.
 private val KOTLIN_KEYWORDS = setOf(
   "as",
   "break",

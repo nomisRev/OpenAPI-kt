@@ -27,8 +27,10 @@ public fun FileSystem.program(
     write("$generationPath/models/$name.kt".toPath()) {
       writeUtf8Line("package $modelPackage")
       writeUtf8Line()
-      writeUtf8Line(imports.joinToString("\n") { "import ${it.`package`}.${it.typeName}" })
-      writeUtf8Line()
+      if (imports.isNotEmpty()) {
+        writeUtf8Line(imports.joinToString("\n") { "import ${it.`package`}.${it.typeName}" })
+        writeUtf8Line()
+      }
       writeUtf8Line(code)
     }
   }
@@ -47,11 +49,14 @@ public fun FileSystem.program(
   val rawSpec = source(pathSpec.toPath()).buffer().use(BufferedSource::readUtf8)
   val openAPI = OpenAPI.fromJson(rawSpec)
 
-  openAPI.models().forEach { model ->
+  val models = openAPI.models()
+  println(models.joinToString(separator = "\n"))
+  models.forEach { model ->
     file(model.typeName, model.imports(), model.toKotlinCode(0))
   }
 }
 
+// TODO include nicer message about expected format
 val predef = """
 class OneOfSerializationException(
   val payload: JsonElement,

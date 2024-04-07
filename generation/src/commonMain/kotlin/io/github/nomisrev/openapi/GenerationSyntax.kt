@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi
 import io.github.nomisrev.openapi.Model.Import
 import io.github.nomisrev.openapi.Model.Primitive
 import io.github.nomisrev.openapi.Model.Product
+import io.github.nomisrev.openapi.Model.Union
 import io.github.nomisrev.openapi.Route.Param
 import io.github.nomisrev.openapi.Route.ReturnType
 import io.github.nomisrev.openapi.Schema.Type
@@ -50,7 +51,8 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
   fun models(): Models =
     Models(
       routes().flatMap { (_, routes) ->
-        routes.map { it.returnType.type } + routes.flatMap { r -> r.parameters.map { it.type } }
+        routes.map { it.returnType.type } + routes.flatMap { r -> r.parameters.map { it.type } } +
+          openAPI.components.schemas.entries.mapNotNull { (key, s) -> s.getOrNull()?.toModel(key, key) }
       }.filterNotStdModel().toSet()
     )
 
@@ -117,14 +119,14 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
     }
 
   fun ReferenceOr<Schema>.getOrNull(): Schema? =
-    when(this) {
+    when (this) {
       is ReferenceOr.Reference -> null
       is ReferenceOr.Value -> value
     }
 
-  private fun Schema.arrayTypes(types: List<Type.Basic>, operationId: String?, paramName: String?): Model {
+  private fun Schema.arrayTypes(types: List<Type.Basic>, operationId: String?, paramName: String?): Union.TypeArray {
     requireNotNull(paramName) { "Currently arrayTypes is only supported for OpenAPI specs with operationId specified. $operationId: $paramName $types" }
-    return Model.OneOf("${paramName.toPascalCase()}Type", types.sorted().map { type ->
+    return Union.TypeArray(paramName.toPascalCase(), types.sorted().map { type ->
       when (type) {
         Type.Basic.Boolean -> Primitive.Boolean
         Type.Basic.Integer -> Primitive.Int
@@ -137,6 +139,7 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
     })
   }
 
+
   /**
    * The OpenAPI `object` type can have many shapes, so we need to handle the different cases.
    * - An `object` with properties defined is a `Product` type (a data class in Kotlin).
@@ -145,14 +148,19 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
    *   - [AdditionalProperties.Allowed] any additional properties are allowed, so we use KotlinX JsonObject.
    * - If nothing is known about the object, we default to a `Map` type.
    */
-  private fun Schema.asObject(operationId: String?, paramName: String?): Model {
+  private fun Schema.asObject(
+    operationId: String?,
+    paramName: String?
+  ): Model {
     val props = properties
     val additionalProps = additionalProperties
     return when {
       props != null -> Product(
         className(operationId),
         description,
-        props.mapValues { (paramName, ref) -> Property(operationId, paramName, ref.get()) },
+        props.mapValues { (paramName, ref) ->
+          Property(operationId, paramName, ref.get())
+        },
         props.mapNotNull { (paramName, ref) -> ref.getOrNull()?.toModel(operationId, paramName) }
           .filterNotStdModel()
       )
@@ -174,24 +182,26 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
     requireNotNull(type) { "Enum requires an inner type" }
     val enum = requireNotNull(enum)
     require(enum.isNotEmpty()) { "Enum requires at least 1 possible value" }
+    val typeName =
+      requireNotNull(paramName?.let { className(it) }?.toPascalCase()) { "ParamName cannot be null for enum" }
     return Model.Enum(
-      requireNotNull(paramName?.toPascalCase()) { "ParamName cannot be null for enum" },
+      typeName,
       // We erase the enum values, so that we can resolve the inner type
       copy(enum = null).toModel(operationId, paramName),
       enum
     )
   }
 
-  private fun Schema.oneOf(operationId: String?, paramName: String?): Model.OneOf {
+  private fun Schema.oneOf(operationId: String?, paramName: String?): Union.OneOf {
     requireNotNull(operationId) { "Currently oneOf is only supported for OpenAPI specs with operationId specified." }
     val oneOf = requireNotNull(oneOf) { "Impossible, oneOf being generated for $this" }
-    return Model.OneOf("${operationId.toPascalCase()}OneOf", oneOf.map { it.get().toModel(operationId, paramName) })
+    return Union.OneOf(operationId.toPascalCase(), oneOf.map { it.get().toModel(operationId, paramName) })
   }
 
-  private fun Schema.anyOf(operationId: String?, paramName: String?): Model.AnyOf {
+  private fun Schema.anyOf(operationId: String?, paramName: String?): Union.AnyOf {
     requireNotNull(operationId) { "Currently oneOf is only supported for OpenAPI specs with operationId specified." }
     val anyOf = requireNotNull(anyOf) { "Impossible, oneOf being generated for $this" }
-    return Model.AnyOf("${operationId.toPascalCase()}AnyOf", anyOf.map { it.get().toModel(operationId, paramName) })
+    return Union.AnyOf(operationId.toPascalCase(), anyOf.map { it.get().toModel(operationId, paramName) })
   }
 
   // TODO support multiple responses, or formats??
@@ -336,7 +346,7 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
     if (enum != null) {
       val defaultValue = (default as? ExampleValue.Single)?.value
       if (defaultValue != null) "${paramName.toPascalCase()}.${(default as? ExampleValue.Single)?.value}"
-      else "null"
+      else null
     } else default?.toString()
 
   private fun Response.isEmpty(): Boolean =

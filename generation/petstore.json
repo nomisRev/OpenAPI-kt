@@ -157,7 +157,8 @@
         "description": "A pet for sale in the pet store",
         "required": [
           "id",
-          "name"
+          "name",
+          "status"
         ],
         "properties": {
           "id": {
@@ -174,6 +175,9 @@
           },
           "tag": {
             "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PetStatus"
           }
         }
       },
@@ -197,6 +201,14 @@
             "type": "string"
           }
         }
+      },
+      "PetStatus": {
+        "type": "string",
+        "enum": [
+          "available",
+          "pending",
+          "sold"
+        ]
       }
     }
   }
