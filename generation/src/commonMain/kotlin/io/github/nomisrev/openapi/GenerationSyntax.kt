@@ -4,6 +4,7 @@ import io.github.nomisrev.openapi.Model.Import
 import io.github.nomisrev.openapi.Model.Primitive
 import io.github.nomisrev.openapi.Model.Product
 import io.github.nomisrev.openapi.Model.Union
+import io.github.nomisrev.openapi.Route.Body
 import io.github.nomisrev.openapi.Route.Param
 import io.github.nomisrev.openapi.Route.ReturnType
 import io.github.nomisrev.openapi.Schema.Type
@@ -51,7 +52,14 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
   fun models(): Models =
     Models(
       routes().flatMap { (_, routes) ->
-        routes.map { it.returnType.type } + routes.flatMap { r -> r.parameters.map { it.type } } +
+        routes.flatMap {
+          when (it.body) {
+            is Body.Json -> listOf(it.body.param.type)
+            is Body.Multipart -> it.body.parameters.map(Param::type)
+            null -> emptyList()
+          }
+        } + routes.flatMap { r -> r.input.map { it.parameter.type } } +
+          routes.map { it.returnType.type } +
           openAPI.components.schemas.entries.mapNotNull { (key, s) -> s.getOrNull()?.toModel(key, key) }
       }.filterNotStdModel().toSet()
     )
@@ -62,7 +70,7 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
     }
 
   fun Operation.toRoute(name: String): Route =
-    Route(name, description, allParameters(), returnType())
+    Route(name, description, bodyParam(), parameters(), returnType())
 
   fun routes(): Routes =
     Routes(openAPI.operationsByTag().mapValues { (_, operation) ->
@@ -227,20 +235,24 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
       else -> throw IllegalStateException("We don't support multiple formats yet: $responses")
     }
 
-  private fun Operation.allParameters(): List<Param> {
-    val parameters = parameters.map { referenceOrParameter ->
+  private fun Operation.parameters(): List<Route.Input> =
+    parameters.map { referenceOrParameter ->
       val parameter = referenceOrParameter.get()
       val schema = requireNotNull(parameter.schema) {
         "Schema is required for parameter: $referenceOrParameter"
       }.get()
-      Param(operationId, schema, parameter.name)
+      val param = Param(operationId, schema, parameter.name)
+      when (parameter.input) {
+        Parameter.Input.Query -> Route.Input.Query(param)
+        Parameter.Input.Header -> Route.Input.Header(param)
+        Parameter.Input.Path -> Route.Input.Path(param)
+        Parameter.Input.Cookie -> Route.Input.Cookie(param)
+      }
     }
-    return bodyParam() + parameters
-  }
 
   /** Body currently supports JSON, and multipart/form-data. */
-  private fun Operation.bodyParam(): List<Param> = when (val requestBody = requestBody?.get()) {
-    null -> emptyList()
+  private fun Operation.bodyParam(): Body? = when (val requestBody = requestBody?.get()) {
+    null -> null
     else -> {
       // TODO support XML through KotlinX Serialization XML, Yaml, Others???
       require(requestBody.content.entries.size == 1) {
@@ -253,14 +265,14 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
           val jsonSchema = requireNotNull(jsonContent.schema) {
             "application/json is required, but no schema was found for $operationId."
           }.get()
-          listOf(Param(operationId, jsonSchema, paramNameOrType = null))
+          Body.Json(Param(operationId, jsonSchema, paramNameOrType = null))
         }
 
         multipartContent != null -> {
           val schema = requireNotNull(multipartContent.schema) {
             "multipart/form-data schema is required, but no schema was found for $operationId."
           }.get()
-          schema.multipartParameters(operationId)
+          Body.Multipart(schema.multipartParameters(operationId))
         }
 
         else -> TODO("RequestBody content type: $requestBody not yet supported.")

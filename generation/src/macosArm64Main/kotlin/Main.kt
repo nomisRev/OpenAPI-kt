@@ -3,6 +3,6 @@ import okio.FileSystem
 
 public fun main() {
   FileSystem.SYSTEM.program(
-    pathSpec = "petstore.json"
+    pathSpec = "openai.json"
   )
 }

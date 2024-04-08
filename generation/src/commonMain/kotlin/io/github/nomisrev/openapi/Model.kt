@@ -133,19 +133,19 @@ public sealed interface Model {
     public data class OneOf(
       override val simpleName: String,
       override val schemas: KList<Model>,
-      override val postfix: String = "OneOf"
+      override val postfix: String = ""
     ) : Union
 
     public data class AnyOf(
       override val simpleName: String,
       override val schemas: KList<Model>,
-      override val postfix: String = "AnyOf"
+      override val postfix: String = ""
     ) : Union
 
     public data class TypeArray(
       override val simpleName: String,
       override val schemas: KList<Model>,
-      override val postfix: String = "Type"
+      override val postfix: String = ""
     ) : Union
 
     override fun imports(): Set<Import> =
