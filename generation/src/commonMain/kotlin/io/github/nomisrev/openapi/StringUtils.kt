@@ -32,8 +32,14 @@ internal fun String.decapitalize(): String =
 internal fun String.capitalize(): String =
   replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
 
-fun String.sanitize(delimiter: String = ".", prefix: String = "") =
-  splitToSequence(delimiter).joinToString(delimiter, prefix) { if (it in KOTLIN_KEYWORDS) "`$it`" else it }
+private val classNameRegex = Regex("^[a-zA-Z_$][a-zA-Z\\d_$]*$")
+
+internal fun String.isValidClassname(): Boolean =
+  classNameRegex.matches(this)
+
+internal fun String.sanitize(delimiter: String = ".", prefix: String = ""): String =
+  splitToSequence(delimiter)
+    .joinToString(delimiter, prefix) { if (it in KOTLIN_KEYWORDS) "`$it`" else it }
 
 // This list only contains words that need to be escaped.
 private val KOTLIN_KEYWORDS = setOf(

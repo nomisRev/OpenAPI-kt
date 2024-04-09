@@ -3,8 +3,8 @@ package io.github.nomisrev.openapi
 import kotlin.collections.Set
 import kotlin.jvm.JvmInline
 import kotlin.collections.List as KList
-import kotlin.collections.Set as KSet
 import kotlin.collections.Map as KMap
+import kotlin.collections.Set as KSet
 
 @JvmInline
 public value class Models(private val models: KSet<Model>) : KSet<Model> by models
@@ -33,17 +33,31 @@ public sealed interface Model {
     override fun imports(): KSet<Import> = setOf(this)
   }
 
-  public data class List(val inner: Model) : Model {
-    override val typeName: String = "List<${inner.typeName}>"
-    override fun toKotlinCode(indent: Int): String = typeName
-    override fun imports(): Set<Import> = inner.imports()
-  }
+  public sealed interface BuiltIns : Model {
+    public data class List(val inner: Model) : BuiltIns {
+      override val typeName: String = "List<${inner.typeName}>"
+      override fun toKotlinCode(indent: Int): String = typeName
+      override fun imports(): KSet<Import> = inner.imports()
+    }
 
-  public data class Map(val value: Model) : Model {
-    public val key: Primitive = Primitive.String
-    override val typeName: String = "Map<${key.typeName}, ${value.typeName}>"
-    override fun toKotlinCode(indent: Int): String = typeName
-    override fun imports(): Set<Import> = value.imports()
+    public data class Set(val inner: Model) : BuiltIns {
+      override val typeName: String = "List<${inner.typeName}>"
+      override fun toKotlinCode(indent: Int): String = typeName
+      override fun imports(): KSet<Import> = inner.imports()
+    }
+
+    public data class Map(val value: Model) : BuiltIns {
+      public val key: Primitive = Primitive.String
+      override val typeName: String = "Map<${key.typeName}, ${value.typeName}>"
+      override fun toKotlinCode(indent: Int): String = typeName
+      override fun imports(): KSet<Import> = value.imports()
+    }
+
+    public data object Unit : Model {
+      override val typeName: String = "Unit"
+      override fun imports(): KSet<Import> = setOf()
+      override fun toKotlinCode(indent: Int): String = typeName
+    }
   }
 
   public data class Product(
@@ -67,7 +81,7 @@ public sealed interface Model {
     }
 
     // TODO these need to be filtered, this will have unnecessary imports
-    override fun imports(): Set<Import> =
+    override fun imports(): KSet<Import> =
       properties.values.flatMapToSet { it.type.imports() } +
         nestedInlineModels.flatMapToSet { it.imports() } +
         setOf(Import("kotlinx.serialization", "Serializable"))
@@ -117,10 +131,10 @@ public sealed interface Model {
     }
   }
 
-  sealed interface Union : Model {
-    val simpleName: String
-    val schemas: KList<Model>
-    val postfix: String
+  public sealed interface Union : Model {
+    public val simpleName: String
+    public val schemas: KList<Model>
+    public val postfix: String
     override val typeName: String
       get() = "$simpleName$postfix"
 
@@ -148,7 +162,7 @@ public sealed interface Model {
       override val postfix: String = ""
     ) : Union
 
-    override fun imports(): Set<Import> =
+    override fun imports(): KSet<Import> =
       schemas.flatMapToSet { it.imports() } + Import("kotlin.jvm", "JvmInline") + kotlinXSerializerImports
 
     override fun toKotlinCode(indent: Int): String {
@@ -157,14 +171,17 @@ public sealed interface Model {
       val iiiii = "  ".repeat(indent + 4)
       val iiiiii = "  ".repeat(indent + 5)
       val descriptorCases = schemas.joinToString(separator = "\n") {
+        val className = it.oneOfName()
         // TODO serializer function for List, Map, etc.
-        "${iiiii}element(\"Case${it.typeName}\", ${it.typeName}.serializer().descriptor)"
+        "${iiiii}element(\"Case$className\", ${it.serializer()}.descriptor)"
       }
       val deserializeCases = schemas.joinToString(separator = "\n") {
-        "${iiiiii}Pair(Case${it.typeName}::class) { Case${it.typeName}(Json.decodeFromJsonElement(${it.typeName}.serializer(), json)) },"
+        val className = it.oneOfName()
+        "${iiiiii}Pair(Case$className::class) { Case$className(Json.decodeFromJsonElement(${it.serializer()}, json)) },"
       }
       val serializeCases = schemas.joinToString(separator = "\n") {
-        "${iiiiii}is Case${it.typeName} -> encoder.encodeSerializableValue(${it.typeName}.serializer(), value.value)"
+        val className = it.oneOfName()
+        "${iiiiii}is Case$className -> encoder.encodeSerializableValue(${it.serializer()}, value.value)"
       }
       val serializer = """
       |${ii}object Serializer : KSerializer<$typeName> {
@@ -189,9 +206,10 @@ public sealed interface Model {
       |${ii}}
       """.trimMargin()
       val cases = schemas.joinToString(separator = "\n") {
+        val className = it.oneOfName()
         """
         |${ii}@JvmInline
-        |${ii}value class Case${it.typeName}(val value: ${it.typeName}): $typeName
+        |${ii}value class Case$className(val value: ${it.typeName}): $typeName
         """.trimMargin()
       }
       return """
@@ -205,28 +223,28 @@ public sealed interface Model {
     }
   }
 
-
   public data class Enum(
     override val typeName: String,
     val inner: Model,
     val values: KList<String>
   ) : Model {
-    override fun imports(): Set<Import> = inner.imports()
+    override fun imports(): KSet<Import> =
+      inner.imports() + kotlinXSerializerImports
+
     override fun toKotlinCode(indent: Int): String {
-      val cases = values.joinToString(postfix = ";")
       val i = "  ".repeat(indent)
+      val cases = values.joinToString(separator = ",\n", postfix = ";") {
+        if (it.isValidClassname()) "$i  $it"
+        else "$i  @SerialName(\"$it\") `${it.sanitize()}`(\"$it\")"
+      }
+      val simpleName = typeName.substringAfterLast(".")
       return """
-      |${i}enum class $typeName {
-      |${i}  $cases
+      |${i}@Serializable
+      |${i}enum class $simpleName {
+      |$cases
       |${i}}
       """.trimMargin()
     }
-  }
-
-  public data object Unit : Model {
-    override val typeName: String = "Unit"
-    override fun imports(): Set<Import> = setOf()
-    override fun toKotlinCode(indent: Int): String = typeName
   }
 }
 
@@ -238,7 +256,11 @@ private val kotlinXSerializerImports = listOf(
   Model.Import("kotlinx.serialization", "InternalSerializationApi"),
   Model.Import("kotlinx.serialization", "KSerializer"),
   Model.Import("kotlinx.serialization", "Serializable"),
+  Model.Import("kotlinx.serialization", "SerialName"),
   Model.Import("kotlinx.serialization.builtins", "serializer"),
+  Model.Import("kotlinx.serialization.builtins", "ListSerializer"),
+  Model.Import("kotlinx.serialization.builtins", "MapSerializer"),
+  Model.Import("kotlinx.serialization.builtins", "SetSerializer"),
   Model.Import("kotlinx.serialization.descriptors", "PolymorphicKind"),
   Model.Import("kotlinx.serialization.descriptors", "SerialDescriptor"),
   Model.Import("kotlinx.serialization.descriptors", "buildSerialDescriptor"),
@@ -247,3 +269,42 @@ private val kotlinXSerializerImports = listOf(
   Model.Import("kotlinx.serialization.json", "Json"),
   Model.Import("kotlinx.serialization.json", "JsonElement"),
 )
+
+private fun Model.serializer(): String =
+  when (this) {
+    is Model.BuiltIns.List -> "ListSerializer(${inner.serializer()})"
+    is Model.BuiltIns.Map -> "MapSerializer(${key.serializer()}, ${value.serializer()})"
+    is Model.BuiltIns.Set -> "SetSerializer(${inner.serializer()})"
+    else -> "$typeName.serializer()"
+  }
+
+private fun Model.oneOfName(depth: KList<Model> = emptyList()): String =
+  when (this) {
+    is Model.BuiltIns.List -> inner.oneOfName(depth + listOf(this))
+    is Model.BuiltIns.Map -> value.oneOfName(depth + listOf(this))
+    is Model.BuiltIns.Set -> inner.oneOfName(depth + listOf(this))
+    else -> {
+      val head = depth.firstOrNull()
+      val s = when (head) {
+        is Model.BuiltIns.List -> "s"
+        is Model.BuiltIns.Set -> "s"
+        is Model.BuiltIns.Map -> "Map"
+        else -> ""
+      }
+      val postfix = depth.drop(1).joinToString(separator = "") {
+        when (it) {
+          is Model.BuiltIns.List -> "List"
+          is Model.BuiltIns.Map -> "Map"
+          is Model.BuiltIns.Set -> "Set"
+          else -> ""
+        }
+      }
+      val typeName = when (this) {
+        is Model.BuiltIns.List -> "List"
+        is Model.BuiltIns.Map -> "Map"
+        is Model.BuiltIns.Set -> "Set"
+        else -> typeName
+      }
+      "$typeName${s}$postfix"
+    }
+  }

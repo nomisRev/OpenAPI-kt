@@ -1,35 +1,21 @@
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-
 plugins {
   kotlin("multiplatform")
 }
 
-repositories {
-  mavenCentral()
-}
-
 kotlin {
-
-  @Suppress("OPT_IN_USAGE")
-  compilerOptions {
-    languageVersion.set(KotlinVersion.KOTLIN_2_0)
-    apiVersion.set(KotlinVersion.KOTLIN_2_0)
-  }
-//  explicitApi()
+// TODO re-enable platforms after finishing core / generation
+//   Not worth dealing with all extra platforms during initial phase
+  explicitApi()
   jvm()
-  linuxX64()
   macosArm64 {
     binaries {
       executable { entryPoint = "main" }
     }
   }
-//  js {
-//    nodejs()
-//  }
 
   sourceSets {
     commonMain {
-      kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
+//      kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
 
       dependencies {
         implementation(project(":core"))

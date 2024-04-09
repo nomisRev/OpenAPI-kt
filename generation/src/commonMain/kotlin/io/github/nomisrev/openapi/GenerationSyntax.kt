@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.Model.BuiltIns
 import io.github.nomisrev.openapi.Model.Import
 import io.github.nomisrev.openapi.Model.Primitive
 import io.github.nomisrev.openapi.Model.Product
@@ -8,6 +9,7 @@ import io.github.nomisrev.openapi.Route.Body
 import io.github.nomisrev.openapi.Route.Param
 import io.github.nomisrev.openapi.Route.ReturnType
 import io.github.nomisrev.openapi.Schema.Type
+import kotlin.collections.List
 import kotlin.jvm.JvmInline
 
 private const val schemaRef = "#/components/schemas/"
@@ -60,14 +62,21 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
           }
         } + routes.flatMap { r -> r.input.map { it.parameter.type } } +
           routes.map { it.returnType.type } +
-          openAPI.components.schemas.entries.mapNotNull { (key, s) -> s.getOrNull()?.toModel(key, key) }
-      }.filterNotStdModel().toSet()
+          openAPI.components.schemas.entries.mapNotNull { (name, s) ->
+            s.getOrNull()?.toModel(null, null, name)
+          }
+      }.flattenStdTypes().toSet()
     )
 
-  private fun List<Model>.filterNotStdModel(): List<Model> =
-    filterNot { model ->
-      model is Primitive || model is Model.List || model is Import || model is Model.Unit
-    }
+  private fun List<Model>.flattenStdTypes(): List<Model> =
+    map { model ->
+      when(model) {
+        is BuiltIns.List -> model.inner
+        is BuiltIns.Set -> model.inner
+        is BuiltIns.Map -> model.value
+        else -> model
+      }
+    }.filterNot { it is Primitive || it is Import }
 
   fun Operation.toRoute(name: String): Route =
     Route(name, description, bodyParam(), parameters(), returnType())
@@ -97,34 +106,68 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
 
   /* Class name is either defined in one of the referenced schemas,
    * or we generate a unique name for inline schemas. */
+  private fun Schema.className(): String? =
+    topLevel()?.key
+
+  private fun Schema.topLevel(): Map.Entry<String, ReferenceOr<Schema>>? =
+    openAPI.components.schemas.entries.find { (_, r) -> r.get() == this }
+
+  private fun Schema.isTopLevel(): Boolean =
+    topLevel() != null
+
   private fun Schema.className(operationId: String?): String =
-    openAPI.components.schemas.entries.find { (_, r) -> r.get() == this }?.key ?: "${operationId}Response"
+    className() ?: "${operationId}Response"
 
   /* Map a `Schema` into a `Model`.
    * - anyOf: can support one or more schema
    * - oneOf support: can support exactly one schema
    * - allOf support: union of all schemas ?? */
-  private fun Schema.toModel(operationId: String?, paramName: String? = null): Model =
+  private fun Schema.toModel(
+    operationId: String?,
+    paramName: String?,
+    className: String?
+  ): Model =
     when {
-      anyOf != null -> anyOf(operationId, paramName)
-      oneOf != null -> oneOf(operationId, paramName)
+      anyOf != null -> anyOf(operationId, paramName, className)
+      oneOf != null && oneOf?.size == 1 ->
+        asObject(operationId, paramName, className)
+
+      oneOf != null -> oneOf(operationId, paramName, className)
       allOf != null -> TODO("allOf")
-      enum != null -> enum(operationId, paramName)
-      type != null -> when (type) {
-        is Type.Array -> arrayTypes((type as Type.Array).value, operationId, paramName)
-        Type.Basic.Boolean -> Primitive.Boolean
-        Type.Basic.Integer -> Primitive.Int
-        Type.Basic.Number -> Primitive.Double
-        Type.Basic.String -> Primitive.String
-        Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
-        Type.Basic.Object -> asObject(operationId, paramName)
-        Type.Basic.Array -> Model.List(items!!.get().toModel(operationId, paramName))
-        null -> throw IllegalStateException("analysis loses smartcast between null-check & nested when.")
-      }
+      enum != null -> enum(operationId, paramName, className)
+      type != null -> toModel(type!!, operationId, paramName, className)
       // Attempt object in case type was missing
-      properties != null -> asObject(operationId, paramName)
+      properties != null -> asObject(operationId, paramName, className)
       else -> TODO("Schema: $this not yet supported. Please report to issue tracker.")
     }
+
+  private tailrec fun Schema.toModel(
+    type: Type,
+    operationId: String?,
+    paramName: String?,
+    className: String?
+  ): Model = when (type) {
+    is Type.Array -> when {
+      // Flatten Single type array
+      type.value.size == 1 -> toModel(type.value.single(), operationId, paramName, className)
+      else -> arrayTypes(type.value, operationId, paramName, className)
+    }
+
+    Type.Basic.Boolean -> Primitive.Boolean
+    Type.Basic.Integer -> Primitive.Int
+    Type.Basic.Number -> Primitive.Double
+    Type.Basic.String -> Primitive.String
+    Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
+    Type.Basic.Object -> asObject(operationId, paramName, className)
+    Type.Basic.Array -> {
+      val inner = requireNotNull(items) { "Array type requires items to be defined." }
+        .get().toModel(operationId, paramName, className)
+      if (uniqueItems == true) BuiltIns.Set(inner) else BuiltIns.List(inner)
+    }
+
+    @Suppress("SENSELESS_NULL_IN_WHEN")
+    null -> throw IllegalStateException("analysis loses smartcast between null-check & nested when.")
+  }
 
   fun ReferenceOr<Schema>.getOrNull(): Schema? =
     when (this) {
@@ -132,7 +175,12 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
       is ReferenceOr.Value -> value
     }
 
-  private fun Schema.arrayTypes(types: List<Type.Basic>, operationId: String?, paramName: String?): Union.TypeArray {
+  private fun Schema.arrayTypes(
+    types: List<Type.Basic>,
+    operationId: String?,
+    paramName: String?,
+    className: String?
+  ): Union.TypeArray {
     requireNotNull(paramName) { "Currently arrayTypes is only supported for OpenAPI specs with operationId specified. $operationId: $paramName $types" }
     return Union.TypeArray(paramName.toPascalCase(), types.sorted().map { type ->
       when (type) {
@@ -141,12 +189,13 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
         Type.Basic.Number -> Primitive.Double
         Type.Basic.String -> Primitive.String
         Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
-        Type.Basic.Object -> asObject(operationId, paramName)
-        Type.Basic.Array -> Model.List(items!!.get().toModel(operationId, paramName))
+        Type.Basic.Object -> asObject(operationId, paramName, className)
+        Type.Basic.Array ->
+          if (uniqueItems == true) BuiltIns.Set(items!!.get().toModel(operationId, paramName, className))
+          else BuiltIns.List(items!!.get().toModel(operationId, paramName, className))
       }
     })
   }
-
 
   /**
    * The OpenAPI `object` type can have many shapes, so we need to handle the different cases.
@@ -158,58 +207,94 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
    */
   private fun Schema.asObject(
     operationId: String?,
-    paramName: String?
+    paramName: String?,
+    className: String?
   ): Model {
     val props = properties
     val additionalProps = additionalProperties
+    val topLevel = className()
+    val paramName =
+      if (topLevel != null && paramName != null) "$topLevel.${paramName.toPascalCase()}"
+      else paramName
+    val cn = when {
+      topLevel != null && paramName != null -> paramName.toPascalCase()
+      else -> className(operationId)
+    }
     return when {
       props != null -> Product(
-        className(operationId),
+        cn,
         description,
         props.mapValues { (paramName, ref) ->
-          Property(operationId, paramName, ref.get())
+//          when(val schema = ref.getOrNull()) {
+//            null -> Property(operationId, paramName, ref.get(), cn)
+//            else -> Property(operationId, paramName, ref.get(), cn)
+//          }
+          Property(operationId, paramName, ref.get(), cn)
         },
-        props.mapNotNull { (paramName, ref) -> ref.getOrNull()?.toModel(operationId, paramName) }
-          .filterNotStdModel()
+        props.mapNotNull { (paramName, ref) -> ref.getOrNull()?.toModel(operationId, paramName, cn) }
+          .flattenStdTypes()
       )
 
       additionalProps != null -> when (additionalProps) {
         is AdditionalProperties.PSchema ->
-          Model.Map(additionalProps.value.get().toModel(operationId, paramName))
+          BuiltIns.Map(additionalProps.value.get().toModel(operationId, paramName, className))
 
-        is AdditionalProperties.Allowed -> if (additionalProps.value) {
-          Import("kotlinx.serialization.json", "JsonObject")
-        } else throw IllegalStateException("Illegal State: No additional properties allowed on empty object.")
+        is AdditionalProperties.Allowed ->
+          if (additionalProps.value) Import("kotlinx.serialization.json", "JsonObject")
+          else throw IllegalStateException("Illegal State: No additional properties allowed on empty object.")
       }
-      // TODO what if Allowed(false)???
-      else -> Model.Map(Primitive.String)
+
+      else -> BuiltIns.Map(Primitive.String)
     }
   }
 
-  private fun Schema.enum(operationId: String?, paramName: String?): Model.Enum {
+  private fun Schema.enum(operationId: String?, paramName: String?, className: String?): Model.Enum {
     requireNotNull(type) { "Enum requires an inner type" }
     val enum = requireNotNull(enum)
     require(enum.isNotEmpty()) { "Enum requires at least 1 possible value" }
-    val typeName =
-      requireNotNull(paramName?.let { className(it) }?.toPascalCase()) { "ParamName cannot be null for enum" }
+    // TODO Enum Naming Strategy
+    val topLevel = className()
+    val typeName = when {
+      topLevel != null -> topLevel
+      paramName != null && className != null -> "$className.${paramName.toPascalCase()}"
+      className != null -> className
+      paramName != null && operationId != null -> "${operationId.toPascalCase()}${paramName.toPascalCase()}"
+      else -> throw IllegalStateException("Could not generate enum class name for operationId: $operationId, param: $paramName, or $className")
+    }
     return Model.Enum(
       typeName,
       // We erase the enum values, so that we can resolve the inner type
-      copy(enum = null).toModel(operationId, paramName),
+      copy(enum = null).toModel(operationId, paramName, className),
       enum
     )
   }
 
-  private fun Schema.oneOf(operationId: String?, paramName: String?): Union.OneOf {
-    requireNotNull(operationId) { "Currently oneOf is only supported for OpenAPI specs with operationId specified." }
+  private fun Schema.oneOf(
+    operationId: String?,
+    paramName: String?,
+    className: String?
+  ): Union.OneOf {
+    val simpleName = when {
+      paramName != null && className != null -> "$className${paramName.toPascalCase()}"
+      paramName == null && className != null -> className
+      operationId != null -> operationId.toPascalCase()
+      else -> throw IllegalStateException("Currently oneOf is only supported for OpenAPI specs with operationId($operationId), or if defined as top-level schema($className) or combination ($paramName) specified.")
+    }
     val oneOf = requireNotNull(oneOf) { "Impossible, oneOf being generated for $this" }
-    return Union.OneOf(operationId.toPascalCase(), oneOf.map { it.get().toModel(operationId, paramName) })
+    return Union.OneOf(simpleName, oneOf.map { ref: ReferenceOr<Schema> ->
+      val schema = ref.get()
+      // If we drill down into a deeper class, then the className needs to match the new top-level className
+      ref.get().toModel(operationId, paramName, schema.className() ?: className)
+    })
   }
 
-  private fun Schema.anyOf(operationId: String?, paramName: String?): Union.AnyOf {
-    requireNotNull(operationId) { "Currently oneOf is only supported for OpenAPI specs with operationId specified." }
+  /* In OpenAI this is for example used for open enumeration. */
+  private fun Schema.anyOf(operationId: String?, paramName: String?, className: String?): Union.AnyOf {
+    val simpleName = requireNotNull(operationId ?: paramName) {
+      "Currently oneOf is only supported for OpenAPI specs with operationId specified."
+    }
     val anyOf = requireNotNull(anyOf) { "Impossible, oneOf being generated for $this" }
-    return Union.AnyOf(operationId.toPascalCase(), anyOf.map { it.get().toModel(operationId, paramName) })
+    return Union.AnyOf(simpleName.toPascalCase(), anyOf.map { it.get().toModel(operationId, paramName, className) })
   }
 
   // TODO support multiple responses, or formats??
@@ -224,10 +309,10 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
           response.content.contains(applicationJson) -> {
             val mediaType = response.content.getValue(applicationJson)
             val schema = requireNotNull(mediaType.schema) { "Schema is required for response: $response" }.get()
-            ReturnType(schema.toModel(operationId), schema.isNullable ?: false)
+            ReturnType(schema.toModel(operationId, null, null), schema.isNullable ?: false)
           }
 
-          response.isEmpty() -> ReturnType(Model.Unit, true)
+          response.isEmpty() -> ReturnType(BuiltIns.Unit, true)
           else -> throw IllegalStateException("Response: $response")
         }
       }
@@ -241,7 +326,7 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
       val schema = requireNotNull(parameter.schema) {
         "Schema is required for parameter: $referenceOrParameter"
       }.get()
-      val param = Param(operationId, schema, parameter.name)
+      val param = Param(operationId, schema, parameter.name, null)
       when (parameter.input) {
         Parameter.Input.Query -> Route.Input.Query(param)
         Parameter.Input.Header -> Route.Input.Header(param)
@@ -265,14 +350,16 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
           val jsonSchema = requireNotNull(jsonContent.schema) {
             "application/json is required, but no schema was found for $operationId."
           }.get()
-          Body.Json(Param(operationId, jsonSchema, paramNameOrType = null))
+          Body.Json(Param(operationId, jsonSchema, paramName = null, className = null))
         }
 
         multipartContent != null -> {
           val schema = requireNotNull(multipartContent.schema) {
             "multipart/form-data schema is required, but no schema was found for $operationId."
           }.get()
-          Body.Multipart(schema.multipartParameters(operationId))
+          Body.Multipart(schema.properties!!.entries.map { (key, value) ->
+            Param(operationId, value.get(), key, null)
+          })
         }
 
         else -> TODO("RequestBody content type: $requestBody not yet supported.")
@@ -325,16 +412,11 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
       }
     }
 
-  private fun Schema.multipartParameters(operationId: String?): List<Param> =
-    properties!!.entries.map { (key, value) ->
-      Param(operationId, value.get(), key)
-    }
-
-  private fun Param(operationId: String?, schema: Schema, paramNameOrType: String?): Param {
-    val paramName = (paramNameOrType ?: schema.className(operationId)).toCamelCase()
+  private fun Param(operationId: String?, schema: Schema, paramName: String?, className: String?): Param {
+    val paramName = (paramName ?: schema.className(operationId)).toCamelCase()
     return Param(
       paramName,
-      schema.toModel(operationId, paramName),
+      schema.toModel(operationId, paramName, className),
       schema.isNullable ?: !schema.required.contains(paramName),
       schema.description,
       schema.defaultArgument(paramName)
@@ -344,11 +426,12 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
   private fun Schema.Property(
     operationId: String?,
     paramName: String,
-    schema: Schema
+    schema: Schema,
+    className: String?
   ): Product.Property =
     Product.Property(
-      paramName.toCamelCase(),
-      schema.toModel(operationId, paramName),
+      paramName.sanitize().toCamelCase(),
+      schema.toModel(operationId, paramName, className),
       schema.isNullable ?: !required.contains(paramName),
       schema.description,
       schema.defaultArgument(paramName)
@@ -359,7 +442,8 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
       val defaultValue = (default as? ExampleValue.Single)?.value
       if (defaultValue != null) "${paramName.toPascalCase()}.${(default as? ExampleValue.Single)?.value}"
       else null
-    } else default?.toString()
+    } else if (default?.toString() == "[]") "emptyList()"
+    else default?.toString()
 
   private fun Response.isEmpty(): Boolean =
     headers.isEmpty() && content.isEmpty() && links.isEmpty() && extensions.isEmpty()

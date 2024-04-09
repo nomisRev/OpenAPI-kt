@@ -1,32 +1,14 @@
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-
 plugins {
     kotlin("multiplatform")
-    kotlin("plugin.serialization") version "2.0.0-Beta5"
-}
-
-repositories {
-    mavenCentral()
+    kotlin("plugin.serialization") version "1.9.23"
 }
 
 kotlin {
-    @Suppress("OPT_IN_USAGE")
-    compilerOptions {
-        languageVersion.set(KotlinVersion.KOTLIN_2_0)
-        apiVersion.set(KotlinVersion.KOTLIN_2_0)
-    }
     explicitApi()
+
+    // TODO Setup targets
     jvm()
     macosArm64()
-    androidNativeArm32()
-    androidNativeArm64()
-    linuxX64()
-    wasmJs()
-    wasmWasi()
-    js(IR) {
-        nodejs()
-        browser()
-    }
 
     sourceSets {
         commonMain {

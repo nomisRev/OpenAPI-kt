@@ -7,11 +7,11 @@ import okio.Path.Companion.toPath
 import okio.buffer
 import okio.use
 
-fun BufferedSink.writeUtf8Line(line: String) {
+private fun BufferedSink.writeUtf8Line(line: String) {
   writeUtf8("$line\n")
 }
 
-fun BufferedSink.writeUtf8Line() {
+private fun BufferedSink.writeUtf8Line() {
   writeUtf8("\n")
 }
 
@@ -37,7 +37,7 @@ public fun FileSystem.program(
 
   createDirectories("$generationPath/models".toPath())
   file(
-    "predef.kt",
+    "predef",
     setOf(
       Model.Import("kotlin.reflect", "KClass"),
       Model.Import("kotlinx.serialization", "SerializationException"),
@@ -57,7 +57,7 @@ public fun FileSystem.program(
 }
 
 // TODO include nicer message about expected format
-val predef = """
+private val predef = """
 class OneOfSerializationException(
   val payload: JsonElement,
   val errors: Map<KClass<*>, SerializationException>,

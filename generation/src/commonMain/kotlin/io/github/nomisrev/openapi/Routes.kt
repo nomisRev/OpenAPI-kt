@@ -12,24 +12,24 @@ public data class Route(
   val input: List<Input>,
   val returnType: ReturnType
 ) {
-  sealed interface Body {
+  public sealed interface Body {
     @JvmInline
-    value class Json(val param: Param) : Body
+    public value class Json(public val param: Param) : Body
 
-    data class Multipart(val parameters: List<Param>) : Body
+    public data class Multipart(val parameters: List<Param>) : Body
   }
 
-  sealed interface Input {
-    val parameter: Param
+  public sealed interface Input {
+    public val parameter: Param
 
     @JvmInline
-    value class Query(override val parameter: Param) : Input
+    public value class Query(override val parameter: Param) : Input
     @JvmInline
-    value class Path(override val parameter: Param) : Input
+    public value class Path(override val parameter: Param) : Input
     @JvmInline
-    value class Header(override val parameter: Param) : Input
+    public value class Header(override val parameter: Param) : Input
     @JvmInline
-    value class Cookie(override val parameter: Param) : Input
+    public value class Cookie(override val parameter: Param) : Input
   }
 
   // TODO Turn into actual types: Query, Path, Param, etc.
