@@ -12,14 +12,14 @@ import io.github.nomisrev.openapi.Schema.Type
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 
-private const val schemaRef = "#/components/schemas/"
-private const val responsesRef = "#/components/responses/"
-private const val parametersRef = "#/components/parameters/"
-private const val requestBodiesRef = "#/components/requestBodies/"
-private const val pathItemsRef = "#/components/pathItems/"
+internal const val schemaRef = "#/components/schemas/"
+internal const val responsesRef = "#/components/responses/"
+internal const val parametersRef = "#/components/parameters/"
+internal const val requestBodiesRef = "#/components/requestBodies/"
+internal const val pathItemsRef = "#/components/pathItems/"
 
-private const val applicationJson = "application/json"
-private const val multipartData = "multipart/form-data"
+internal const val applicationJson = "application/json"
+internal const val multipartData = "multipart/form-data"
 
 /**
  * Returns a structured presentation of the OpenAPI operations,
@@ -149,8 +149,8 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
   ): Model = when (type) {
     is Type.Array -> when {
       // Flatten Single type array
-      type.value.size == 1 -> toModel(type.value.single(), operationId, paramName, className)
-      else -> arrayTypes(type.value, operationId, paramName, className)
+      type.types.size == 1 -> toModel(type.types.single(), operationId, paramName, className)
+      else -> arrayTypes(type.types, operationId, paramName, className)
     }
 
     Type.Basic.Boolean -> Primitive.Boolean
@@ -168,12 +168,6 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
     @Suppress("SENSELESS_NULL_IN_WHEN")
     null -> throw IllegalStateException("analysis loses smartcast between null-check & nested when.")
   }
-
-  fun ReferenceOr<Schema>.getOrNull(): Schema? =
-    when (this) {
-      is ReferenceOr.Reference -> null
-      is ReferenceOr.Value -> value
-    }
 
   private fun Schema.arrayTypes(
     types: List<Type.Basic>,
@@ -225,10 +219,6 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
         cn,
         description,
         props.mapValues { (paramName, ref) ->
-//          when(val schema = ref.getOrNull()) {
-//            null -> Property(operationId, paramName, ref.get(), cn)
-//            else -> Property(operationId, paramName, ref.get(), cn)
-//          }
           Property(operationId, paramName, ref.get(), cn)
         },
         props.mapNotNull { (paramName, ref) -> ref.getOrNull()?.toModel(operationId, paramName, cn) }
@@ -309,7 +299,7 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
           response.content.contains(applicationJson) -> {
             val mediaType = response.content.getValue(applicationJson)
             val schema = requireNotNull(mediaType.schema) { "Schema is required for response: $response" }.get()
-            ReturnType(schema.toModel(operationId, null, null), schema.isNullable ?: false)
+            ReturnType(schema.toModel(operationId, null, null), schema.nullable ?: false)
           }
 
           response.isEmpty() -> ReturnType(BuiltIns.Unit, true)
@@ -417,7 +407,7 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
     return Param(
       paramName,
       schema.toModel(operationId, paramName, className),
-      schema.isNullable ?: !schema.required.contains(paramName),
+      schema.nullable ?: (schema.required?.contains(paramName) == false),
       schema.description,
       schema.defaultArgument(paramName)
     )
@@ -432,19 +422,19 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
     Product.Property(
       paramName.sanitize().toCamelCase(),
       schema.toModel(operationId, paramName, className),
-      schema.isNullable ?: !required.contains(paramName),
+      schema.nullable ?: (schema.required?.contains(paramName) == false),
       schema.description,
       schema.defaultArgument(paramName)
     )
-
-  private fun Schema.defaultArgument(paramName: String): String? =
-    if (enum != null) {
-      val defaultValue = (default as? ExampleValue.Single)?.value
-      if (defaultValue != null) "${paramName.toPascalCase()}.${(default as? ExampleValue.Single)?.value}"
-      else null
-    } else if (default?.toString() == "[]") "emptyList()"
-    else default?.toString()
-
-  private fun Response.isEmpty(): Boolean =
-    headers.isEmpty() && content.isEmpty() && links.isEmpty() && extensions.isEmpty()
 }
+
+internal fun Schema.defaultArgument(paramName: String): String? =
+  if (enum != null) {
+    val defaultValue = (default as? ExampleValue.Single)?.value
+    if (defaultValue != null) "${paramName.toPascalCase()}.${(default as? ExampleValue.Single)?.value}"
+    else null
+  } else if (default?.toString() == "[]") "emptyList()"
+  else default?.toString()
+
+internal fun Response.isEmpty(): Boolean =
+  headers.isEmpty() && content.isEmpty() && links.isEmpty() && extensions.isEmpty()

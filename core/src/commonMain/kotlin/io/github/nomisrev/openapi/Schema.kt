@@ -32,8 +32,8 @@ public fun main() {
 public data class Schema(
   val title: String? = null,
   val description: String? = null,
-  val required: List<String> = emptyList(),
-  @SerialName("nullable") val isNullable: Boolean? = null,
+  val required: List<String>? = null,
+  val nullable: Boolean? = null,
   val allOf: List<ReferenceOr<Schema>>? = null,
   val oneOf: List<ReferenceOr<Schema>>? = null,
   val not: ReferenceOr<Schema>? = null,
@@ -80,7 +80,7 @@ public data class Schema(
   @Serializable(with = Type.Serializer::class)
   public sealed interface Type {
 
-    public data class Array(val value: List<Basic>) : Type
+    public data class Array(val types: List<Basic>) : Type
 
     public enum class Basic(public val value: kotlin.String): Type {
       @SerialName("array") Array("array"),
@@ -118,7 +118,7 @@ public data class Schema(
         when(value) {
           is Array -> encoder.encodeSerializableValue(
             ListSerializer(String.serializer()),
-            value.value.map { it.value }
+            value.types.map { it.value }
           )
           is Basic -> encoder.encodeString(value.value)
         }

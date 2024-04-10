@@ -7,7 +7,7 @@
         <compositeConfiguration>
           <compositeBuild compositeDefinitionSource="SCRIPT">
             <builds>
-              <build path="$PROJECT_DIR$/plugin-build" name="plugin-build">
+              <build path="$PROJECT_DIR$/plugin-build" name="plugin">
                 <projects>
                   <project path="$PROJECT_DIR$/plugin-build" />
                 </projects>

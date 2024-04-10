@@ -1,5 +1,11 @@
 plugins {
   kotlin("multiplatform")
+  kotlin("plugin.serialization") version "1.9.23"
+  id("com.bnorm.power.kotlin-power-assert") version "0.13.0"
+}
+
+configure<com.bnorm.power.PowerAssertGradleExtension> {
+  functions = listOf("kotlin.assert", "kotlin.test.assertTrue")
 }
 
 kotlin {
@@ -21,7 +27,13 @@ kotlin {
         implementation(project(":core"))
         implementation("com.squareup.okio:okio:3.9.0")
         // for build debugging example
+        implementation("io.exoquery:pprint-kotlin-kmp:2.0.2")
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+      }
+    }
+    commonTest {
+      dependencies {
+        implementation(kotlin("test"))
       }
     }
 //    jsMain {

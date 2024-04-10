@@ -31,13 +31,31 @@ public sealed interface ReferenceOr<out A> {
   @JvmInline
   public value class Value<A>(public val value: A) : ReferenceOr<A>
 
-  public fun <B> map(f: (A) -> B): ReferenceOr<B> =
+  public fun getOrNull(): A? =
     when (this) {
-      is Value -> Value(f(value))
-      is Reference -> this
+      is Reference -> null
+      is Value -> value
+    }
+
+  public fun isValue(): Boolean =
+    when (this) {
+      is Reference -> false
+      is Value -> true
     }
 
   public companion object {
+    private const val schema: String = "#/components/schemas/"
+    private const val responses: String = "#/components/responses/"
+    private const val parameters: String = "#/components/parameters/"
+    private const val requestBodies: String = "#/components/requestBodies/"
+    private const val pathItems: String = "#/components/pathItems/"
+
+    public fun schema(name: String): Reference =
+      Reference("$schema$name")
+
+    public fun <A> value(value: A): ReferenceOr<A> =
+      Value(value)
+
     public operator fun invoke(prefix: String, ref: String): Reference = Reference("$prefix$ref")
 
     internal class Serializer<T>(private val dataSerializer: KSerializer<T>) : KSerializer<ReferenceOr<T>> {
