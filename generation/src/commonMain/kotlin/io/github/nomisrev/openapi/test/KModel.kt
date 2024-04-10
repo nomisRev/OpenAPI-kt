@@ -31,7 +31,7 @@ public sealed interface KModel {
     Int, Double, Boolean, String, Unit;
   }
 
-  public data object OctetStream : KModel
+  public data object Binary : KModel
   public data object JsonObject : KModel
 
   public sealed interface Collection : KModel {

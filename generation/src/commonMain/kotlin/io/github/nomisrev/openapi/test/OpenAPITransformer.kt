@@ -2,7 +2,6 @@ package io.github.nomisrev.openapi.test
 
 import io.github.nomisrev.openapi.AdditionalProperties
 import io.github.nomisrev.openapi.AdditionalProperties.Allowed
-import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.OpenAPI
 import io.github.nomisrev.openapi.Operation
 import io.github.nomisrev.openapi.Parameter
@@ -10,26 +9,15 @@ import io.github.nomisrev.openapi.PathItem
 import io.github.nomisrev.openapi.ReferenceOr
 import io.github.nomisrev.openapi.RequestBody
 import io.github.nomisrev.openapi.Response
-import io.github.nomisrev.openapi.Responses
 import io.github.nomisrev.openapi.Schema
-import io.github.nomisrev.openapi.applicationJson
-import io.github.nomisrev.openapi.isEmpty
-import io.github.nomisrev.openapi.multipartData
 import io.github.nomisrev.openapi.parametersRef
 import io.github.nomisrev.openapi.pathItemsRef
 import io.github.nomisrev.openapi.requestBodiesRef
 import io.github.nomisrev.openapi.responsesRef
 import io.github.nomisrev.openapi.schemaRef
 import io.github.nomisrev.openapi.test.KModel.Collection
-import io.github.nomisrev.openapi.test.KModel.Primitive
-import io.github.nomisrev.openapi.test.OpenAPIInterceptor.Default
-import io.github.nomisrev.openapi.test.OpenAPIInterceptor.Default.toInlineResponsesOrNull
-import io.github.nomisrev.openapi.test.OpenAPIInterceptor.Default.toRawJson
-import io.github.nomisrev.openapi.test.OpenAPIInterceptor.Default.toRequestBodyOrNull
-import io.github.nomisrev.openapi.test.OpenAPIInterceptor.Default.toResponses
-import io.github.nomisrev.openapi.toPascalCase
 
-public fun OpenAPI.models(): List<KModel> =
+public fun OpenAPI.models(): Set<KModel> =
   with(OpenAPITransformer(this)) {
     operationModels() + schemas()
   }.map { model ->
@@ -37,7 +25,7 @@ public fun OpenAPI.models(): List<KModel> =
       is Collection -> model.value
       else -> model
     }
-  }
+  }.toSet()
 
 public interface OpenAPISyntax {
   public fun Schema.toModel(context: NamingContext): KModel
@@ -63,17 +51,17 @@ private class OpenAPITransformer(
   interceptor: OpenAPIInterceptor = OpenAPIInterceptor.Default
 ) : OpenAPISyntax, OpenAPIInterceptor by interceptor {
 
-  public fun operations(): List<Triple<String, HttpMethod, Operation>> =
+  public fun operations(): List<Triple<String, Method, Operation>> =
     openAPI.paths.entries.flatMap { (path, p) ->
       listOfNotNull(
-        p.get?.let { Triple(path, HttpMethod.Get, it) },
-        p.put?.let { Triple(path, HttpMethod.Put, it) },
-        p.post?.let { Triple(path, HttpMethod.Post, it) },
-        p.delete?.let { Triple(path, HttpMethod.Delete, it) },
-        p.head?.let { Triple(path, HttpMethod.Head, it) },
-        p.options?.let { Triple(path, HttpMethod.Options, it) },
-        p.trace?.let { Triple(path, HttpMethod.Trace, it) },
-        p.patch?.let { Triple(path, HttpMethod.Patch, it) },
+        p.get?.let { Triple(path, Method.GET, it) },
+        p.put?.let { Triple(path, Method.PUT, it) },
+        p.post?.let { Triple(path, Method.POST, it) },
+        p.delete?.let { Triple(path, Method.DELETE, it) },
+        p.head?.let { Triple(path, Method.HEAD, it) },
+        p.options?.let { Triple(path, Method.OPTIONS, it) },
+        p.trace?.let { Triple(path, Method.TRACE, it) },
+        p.patch?.let { Triple(path, Method.PATCH, it) },
       )
     }
 
@@ -83,9 +71,9 @@ private class OpenAPITransformer(
         operation = operation,
         path = path,
         method = method,
-        body = operation.requestBody?.let { toRequestBody(operation, it.get()) },
+        body = toRequestBody(operation, operation.requestBody?.get()),
         input = operation.input(),
-        returnType = toResponses(operation)?.let { KRoute.ReturnType(it) },
+        returnType = toResponses(operation),
         extensions = operation.extensions
       )
     }
@@ -113,11 +101,11 @@ private class OpenAPITransformer(
       }
     }
 
-  fun KRoute.Body.model(): List<KModel> =
+  private fun KRoute.Body.model(): List<KModel> =
     when (this) {
       is KRoute.Body.Json -> listOf(type)
       is KRoute.Body.Multipart -> parameters.map { it.type }
-      KRoute.Body.OctetStream -> listOf(KModel.OctetStream)
+      is KRoute.Body.OctetStream -> listOf(KModel.Binary)
     }
 
   /**
@@ -129,14 +117,20 @@ private class OpenAPITransformer(
     operations().flatMap { (_, _, operation) ->
       // TODO this can probably be removed in favor of `Set` to remove duplication
       // Gather the **inline** request bodies & returnType, ignore top-level
-      operation.requestBody?.get()?.let { toRequestBodyOrNull(operation, it) }?.model().orEmpty() +
-        listOfNotNull(toInlineResponsesOrNull(operation)) +
-        operation.parameters.mapNotNull { refOrParam ->
-          refOrParam.getOrNull()?.let { param ->
-            param.schema?.getOrNull()
-              ?.toModel(NamingContext.OperationParam(param.name, operation.operationId, "Request"))
-          }
+      val bodies = operation.requestBody?.get()
+        ?.let { toRequestBody(operation, it).types.values }
+        ?.flatMap { it.model() }
+        .orEmpty()
+
+      val responses = toResponses(operation).map { it.value.type }
+
+      val parameters = operation.parameters.mapNotNull { refOrParam ->
+        refOrParam.getOrNull()?.let { param ->
+          param.schema?.getOrNull()
+            ?.toModel(NamingContext.OperationParam(param.name, operation.operationId, "Request"))
         }
+      }
+      bodies + responses + parameters
     }
 
   /** Gathers all "top-level", or components schemas. */

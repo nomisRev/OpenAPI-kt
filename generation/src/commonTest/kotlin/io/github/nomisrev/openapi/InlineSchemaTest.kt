@@ -86,7 +86,7 @@ class InlineSchemaTest {
         )
       )
     ).models()
-    val models = listOf(kpet, kenum.copy(typeName = "TopEnum"))
+    val models = setOf(kpet, kenum.copy(typeName = "TopEnum"))
     assertTrue(models == actual)
   }
 
@@ -104,7 +104,7 @@ class InlineSchemaTest {
       ),
       components = Components(schemas = mapOf("TopEnum" to enum.second))
     ).models()
-    val expected = listOf(
+    val expected = setOf(
       KModel.Object(
         "ListPetsResponse", null, listOf(
           KModel.Object.Property(
@@ -147,7 +147,7 @@ class InlineSchemaTest {
       ),
       components = Components(schemas = mapOf("TopEnum" to enum.second))
     ).models()
-    val expected = listOf(
+    val expected = setOf(
       KModel.Object(
         "ListPetsRequest", null, listOf(
           KModel.Object.Property(
@@ -198,7 +198,7 @@ class InlineSchemaTest {
         )
       )
     ).models()
-    val expected = listOf(
+    val expected = setOf(
       KModel.Primitive.Unit,
       KModel.Object(
         "Pets", null, listOf(

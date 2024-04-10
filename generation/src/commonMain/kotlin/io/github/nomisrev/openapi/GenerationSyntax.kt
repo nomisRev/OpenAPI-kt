@@ -19,7 +19,8 @@ internal const val requestBodiesRef = "#/components/requestBodies/"
 internal const val pathItemsRef = "#/components/pathItems/"
 
 internal const val applicationJson = "application/json"
-internal const val multipartData = "multipart/form-data"
+internal const val applicationOctectStream = "application/octet-stream"
+internal const val multipartFormData = "multipart/form-data"
 
 /**
  * Returns a structured presentation of the OpenAPI operations,
@@ -334,7 +335,7 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
         "Only a single content type is supported. Found ${requestBody.content.keys}. Please open a feature request."
       }
       val jsonContent = requestBody.content[applicationJson]
-      val multipartContent = requestBody.content[multipartData]
+      val multipartContent = requestBody.content[multipartFormData]
       when {
         jsonContent != null -> {
           val jsonSchema = requireNotNull(jsonContent.schema) {

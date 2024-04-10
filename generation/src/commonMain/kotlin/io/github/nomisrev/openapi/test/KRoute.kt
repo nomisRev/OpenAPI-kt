@@ -1,31 +1,33 @@
 package io.github.nomisrev.openapi.test
 
-import io.github.nomisrev.openapi.ExternalDocs
-import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Operation
-import io.github.nomisrev.openapi.Schema
+import io.github.nomisrev.openapi.test.KRoute.Body.Multipart.FormData
 import kotlinx.serialization.json.JsonElement
-import kotlin.jvm.JvmInline
-
-public enum class HttpMethod {
-  Get, Put, Post, Delete, Head, Options, Trace, Patch;
-}
 
 public data class KRoute(
   val operation: Operation,
   val path: String,
-  val method: HttpMethod,
-  val body: Body?,
+  val method: Method,
+  val body: Bodies,
   val input: List<Input>,
-  val returnType: ReturnType?,
+  val returnType: Returns,
   val extensions: Map<String, JsonElement>
 ) {
+
+  public data class Bodies(
+    public val types: Map<MediaType, Body>,
+    public val extensions: Map<String, JsonElement>
+  ) : Map<MediaType, Body> by types
+
   // Required, isNullable
   public sealed interface Body {
-    public data object OctetStream : Body
-    public data class Json(public val type: KModel) : Body
+    public val extensions: Map<String, JsonElement>
 
-    public data class Multipart(val parameters: List<FormData>) : Body {
+    public data class OctetStream(override val extensions: Map<String, JsonElement>) : Body
+    public data class Json(public val type: KModel, override val extensions: Map<String, JsonElement>) : Body
+
+    public data class Multipart(val parameters: List<FormData>, override val extensions: Map<String, JsonElement>) :
+      Body, List<FormData> by parameters {
       public data class FormData(public val name: String, public val type: KModel)
     }
   }
@@ -41,7 +43,14 @@ public data class KRoute(
     public data class Cookie(override val name: String, override val type: KModel) : Input
   }
 
-  // Required, isNullable
-  @JvmInline
-  public value class ReturnType(public val type: KModel)
+  public data class Returns(
+    public val types: Map<StatusCode, ReturnType>,
+    public val extensions: Map<String, JsonElement>
+  ) : Map<StatusCode, ReturnType> by types
+
+  // Required, isNullable ???
+  public data class ReturnType(
+    public val type: KModel,
+    public val extensions: Map<String, JsonElement>
+  )
 }
