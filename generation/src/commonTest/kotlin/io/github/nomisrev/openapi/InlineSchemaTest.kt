@@ -36,6 +36,7 @@ class InlineSchemaTest {
     )
   )
   val pet = "Pet" to Value(Schema(required = listOf("age"), properties = mapOf(name, age, enum, oneOf, anyOf)))
+  val pets = Value(Schema(type = Schema.Type.Basic.Array, items = pet.second))
 
   val kenum = KModel.Enum("Enum", String, listOf("deceased", "alive"))
   val koneOf = KModel.Union.OneOf(
@@ -171,6 +172,48 @@ class InlineSchemaTest {
       KModel.Primitive.Unit,
       kenum.copy(typeName = "TopEnum")
     )
+    assertTrue(expected == actual)
+  }
+
+  @Test
+  fun operationRefBody() {
+    val actual = OpenAPI(
+      info = Info(title = "Test Spec", version = "1.0"),
+      paths = mapOf(
+        "/pets" to PathItem(
+          get = Operation(
+            operationId = "listPets",
+            parameters = listOf(Value(Parameter(name = "limit", input = Query))),
+            requestBody = Value(
+              RequestBody(content = mapOf(applicationJson to MediaType(ReferenceOr.schema("Pets"))))
+            ),
+            responses = Responses(200, Response())
+          )
+        )
+      ),
+      components = Components(
+        schemas = mapOf(
+          "Pets" to Value(Schema(type = Schema.Type.Basic.Object, properties = mapOf("value" to pets))),
+          "TopEnum" to enum.second
+        )
+      )
+    ).models()
+    val expected = listOf(
+      KModel.Primitive.Unit,
+      KModel.Object(
+        "Pets", null, listOf(
+          KModel.Object.Property(
+            "value", KModel.Collection.List(kpet.copy(typeName = "value")),
+            isRequired = false,
+            isNullable = true,
+            description = null,
+            defaultValue = null
+          ),
+        ), listOf(kpet.copy(typeName = "value"))
+      ),
+      kenum.copy(typeName = "TopEnum")
+    )
+
     assertTrue(expected == actual)
   }
 }

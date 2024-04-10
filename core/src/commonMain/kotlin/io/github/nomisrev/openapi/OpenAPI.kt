@@ -67,23 +67,10 @@ public data class OpenAPI(
 ) {
 
   public fun operationsByTag(): Map<String, List<Operation>> =
-    tags.associateBy(Tag::name) { tag ->
-      operations().filter { it.tags.contains(tag.name) }
-    }
-
-  public fun operations(): List<Operation> =
-    paths.values.flatMap { pathItem ->
-      listOfNotNull(
-        pathItem.get,
-        pathItem.put,
-        pathItem.post,
-        pathItem.delete,
-        pathItem.head,
-        pathItem.options,
-        pathItem.trace,
-        pathItem.patch
-      )
-    }
+    TODO()
+//    tags.associateBy(Tag::name) { tag ->
+//      operations().filter { it.tags.contains(tag.name) }
+//    }
 
   public fun withComponents(components: Components): OpenAPI =
     copy(components = components)

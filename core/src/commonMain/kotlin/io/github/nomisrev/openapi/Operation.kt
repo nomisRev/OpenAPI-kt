@@ -14,7 +14,7 @@ public data class Operation(
    * A list of tags for API documentation control. Tags can be used for logical grouping of
    * operations by resources or any other qualifier.
    */
-  public val tags: List<String> = emptyList(),
+  public val tags: List<String>? = null,
   /** A short summary of what the operation does. */
   public val summary: String? = null,
   /**

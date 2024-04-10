@@ -2,9 +2,10 @@ package io.github.nomisrev.openapi.test
 
 import io.github.nomisrev.openapi.AdditionalProperties
 import io.github.nomisrev.openapi.AdditionalProperties.Allowed
+import io.github.nomisrev.openapi.Operation
 import io.github.nomisrev.openapi.ReferenceOr
 import io.github.nomisrev.openapi.RequestBody
-import io.github.nomisrev.openapi.Responses
+import io.github.nomisrev.openapi.Response
 import io.github.nomisrev.openapi.Schema
 import io.github.nomisrev.openapi.Schema.Type
 import io.github.nomisrev.openapi.applicationJson
@@ -102,8 +103,13 @@ public interface OpenAPIInterceptor {
     caseIndex: Int
   ): NamingContext
 
-  public fun OpenAPISyntax.toRequestBody(operationId: String?, requestBody: RequestBody): List<KModel>
-  public fun OpenAPISyntax.toResponses(operationId: String?, responses: Responses): KModel?
+  public fun OpenAPISyntax.toRequestBody(operation: Operation, body: RequestBody): KRoute.Body
+  public fun OpenAPISyntax.toInlineResponsesOrNull(operation: Operation): KModel?
+  public fun OpenAPISyntax.toResponses(operation: Operation): KModel?
+
+  // Recover from missing responses
+  public fun OpenAPISyntax.responseNotSupported(operation: Operation, response: Response, code: Int): KModel? =
+    throw IllegalStateException("OpenAPI requires at least 1 response")
 
   // model transformers
   public fun `object`(
@@ -161,7 +167,7 @@ public interface OpenAPIInterceptor {
   ): List<KModel> = models
 
   public fun response(
-    operationId: String?,
+    operation: Operation,
     model: KModel
   ): KModel = model
 
@@ -178,18 +184,19 @@ public interface OpenAPIInterceptor {
         val pContext = ref.getOrNull()?.let {
           NamingContext.Inline(paramName, context)
         } ?: NamingContext.Ref(paramName, context)
-        val schema = ref.get()
+        val pSchema = ref.get()
         Property(
           paramName,
-          schema.toModel(pContext),
+          pSchema.toModel(pContext),
           required.contains(paramName),
-          schema.nullable ?: true,
-          schema.description,
-          schema.defaultArgument(paramName)
+          pSchema.nullable ?: true,
+          pSchema.description,
+          pSchema.defaultArgument(paramName)
         )
       },
       properties.mapNotNull { (paramName, ref) ->
-        ref.getOrNull()?.toModel(NamingContext.Inline(paramName, context))
+        val model = ref.getOrNull()?.toModel(NamingContext.Inline(paramName, context))
+        if (model is Collection) model.value else model
       }.filterNot { it is Primitive }
     ).let { `object`(context, schema, required, properties, it) }
 
@@ -270,21 +277,20 @@ public interface OpenAPIInterceptor {
         is NamingContext.OperationParam -> context.content.toPascalCase()
       }
 
+    // Support AnyOf = null | A, should become A?
     public override fun OpenAPISyntax.toAnyOf(
       context: NamingContext,
       schema: Schema,
       anyOf: List<ReferenceOr<Schema>>,
     ): KModel =
-      toUnion(context, schema, anyOf, KModel.Union::AnyOf)
-        .let { anyOf(context, schema, anyOf, it) }
+      anyOf(context, schema, anyOf, toUnion(context, schema, anyOf, KModel.Union::AnyOf))
 
     public override fun OpenAPISyntax.toOneOf(
       context: NamingContext,
       schema: Schema,
       oneOf: List<ReferenceOr<Schema>>,
     ): KModel =
-      toUnion(context, schema, oneOf, KModel.Union::OneOf)
-        .let { oneOf(context, schema, oneOf, it) }
+      oneOf(context, schema, oneOf, toUnion(context, schema, oneOf, KModel.Union::OneOf))
 
     public override fun OpenAPISyntax.toUnionCaseContext(
       context: NamingContext,
@@ -316,53 +322,110 @@ public interface OpenAPIInterceptor {
       })
     }
 
-    public override fun OpenAPISyntax.toRequestBody(operationId: String?, requestBody: RequestBody): List<KModel> {
-      require(requestBody.content.entries.size == 1) {
-        "Only a single content type is supported. Found ${requestBody.content.keys}. Please open a feature request."
-      }
-      val jsonContent = requestBody.content[applicationJson]
-      val multipartContent = requestBody.content[multipartData]
-      return when {
-        jsonContent != null ->
-          listOfNotNull(jsonContent.schema?.getOrNull()?.toModel(
-            requireNotNull(
-              operationId?.let { NamingContext.ClassName("${operationId.toPascalCase()}Request") }
-            ) { "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name" }
-          ))
+    /** Null if [RequestBody.content]'s [MediaType.content] is null */
+    public fun OpenAPISyntax.toRequestBodyOrNull(
+      operation: Operation,
+      body: RequestBody
+    ): KRoute.Body? = toRequestBody(operation, body) { null }
 
-        multipartContent != null ->
-          multipartContent.schema?.getOrNull()?.properties?.mapNotNull { (name, ref) ->
-            ref.getOrNull()?.toModel(NamingContext.OperationParam(name, operationId, "Request"))
-          }.orEmpty()
-
-        else -> throw IllegalStateException("RequestBody content type: $this not yet supported.")
-      }.let { requestBodies(operationId, requestBody, it) }
+    public override fun OpenAPISyntax.toRequestBody(
+      operation: Operation,
+      body: RequestBody
+    ): KRoute.Body = toRequestBody(operation, body) {
+      val (name, schema) = it.namedSchema()
+      KRoute.Body.Json(schema.toModel(NamingContext.ClassName(name)))
     }
 
-    public override fun OpenAPISyntax.toResponses(operationId: String?, responses: Responses): KModel? =
-      when (responses.responses.size) {
-        1 -> {
-          val response = responses.responses.values.first().getOrNull()
-          when {
-            response?.content?.contains("application/octet-stream") == true ->
-              KModel.OctetStream
+    private fun <A : KRoute.Body?> OpenAPISyntax.toRequestBody(
+      operation: Operation,
+      body: RequestBody,
+      onReference: (ref: ReferenceOr.Reference) -> A
+    ): A {
+      require(body.content.entries.size == 1) {
+        "Only a single content type is supported. Found ${body.content.keys}. Please open a feature request."
+      }
+      val jsonContent = body.content[applicationJson]
+      val multipartContent = body.content[multipartData]
 
-            response?.content?.contains(applicationJson) == true -> {
-              val mediaType = response.content.getValue(applicationJson)
-              mediaType.schema
-                ?.getOrNull()
-                ?.toModel(
-                  requireNotNull(operationId?.let { NamingContext.ClassName("${it.toPascalCase()}Response") }) {
-                    "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
-                  }) ?: toRawJson(Allowed(true))
-            }
-
-            response?.isEmpty() == true -> Primitive.Unit
-            else -> null
+      return when {
+        jsonContent?.schema != null -> {
+          when (val s = jsonContent.schema!!) {
+            is ReferenceOr.Reference -> onReference(s)
+            is ReferenceOr.Value ->
+              KRoute.Body.Json(
+                s.value.toModel(
+                  requireNotNull(
+                    operation.operationId?.let { NamingContext.ClassName("${it.toPascalCase()}Request") }
+                  ) { "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name" }
+                )
+              )
           }
         }
 
-        else -> throw IllegalStateException("We don't support multiple formats yet: $responses")
-      }?.let { response(operationId, it) }
+        jsonContent != null -> KRoute.Body.Json(KModel.JsonObject)
+
+        multipartContent?.schema != null -> {
+          fun ctx(name: String): NamingContext = when (val s = multipartContent.schema) {
+            is ReferenceOr.Reference -> NamingContext.ClassName(s.namedSchema().first)
+            is ReferenceOr.Value -> NamingContext.OperationParam(name, operation.operationId, "Request")
+            null -> throw IllegalStateException("$multipartContent without a schema. Generation doesn't know what to do, please open a ticket!")
+          }
+
+          val props = requireNotNull(multipartContent.schema!!.get().properties) {
+            "Generating multipart/form-data bodies without properties is not possible."
+          }
+          require(props.isNotEmpty()) { "Generating multipart/form-data bodies without properties is not possible." }
+          KRoute.Body.Multipart(props.map { (name, ref) ->
+            KRoute.Body.Multipart.FormData(
+              name,
+              ref.get().toModel(ctx(name))
+            )
+          })
+        }
+
+        else -> throw IllegalStateException("RequestBody content type: $this not yet supported.")
+      } as A // Kotlin not smart enough
+    }
+
+    /** Null if [Responses.content]'s [MediaType.content] is null */
+    public override fun OpenAPISyntax.toInlineResponsesOrNull(operation: Operation): KModel? =
+      toResponses(operation) { null }
+
+    public override fun OpenAPISyntax.toResponses(operation: Operation): KModel? =
+      toResponses(operation) { s ->
+        val (name, schema) = s.namedSchema()
+        schema.toModel(NamingContext.ClassName(name))
+      }
+
+    private fun OpenAPISyntax.toResponses(
+      operation: Operation,
+      onReference: (ref: ReferenceOr.Reference) -> KModel?
+    ): KModel? =
+      when (operation.responses.responses.size) {
+        1 -> {
+          val (code, refOrResponse) = operation.responses.responses.entries.first()
+          val response = refOrResponse.get()
+          when {
+            response.content.contains("application/octet-stream") -> KModel.OctetStream
+            response.content.contains(applicationJson) -> {
+              val mediaType = response.content.getValue(applicationJson)
+              when (val s = mediaType.schema) {
+                is ReferenceOr.Reference -> onReference(s)
+                is ReferenceOr.Value -> s.value.toModel(
+                  requireNotNull(operation.operationId?.let { NamingContext.ClassName("${it.toPascalCase()}Response") }) {
+                    "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
+                  })
+
+                null -> toRawJson(Allowed(true))
+              }
+            }
+
+            response.isEmpty() -> Primitive.Unit
+            else -> responseNotSupported(operation, response, code)
+          }
+        }
+        // TODO best effort for now, look for JSON which we support and generate that.
+        else -> throw IllegalStateException("We don't support multiple formats yet: ${operation.responses}")
+      }?.let { response(operation, it) }
   }
 }
