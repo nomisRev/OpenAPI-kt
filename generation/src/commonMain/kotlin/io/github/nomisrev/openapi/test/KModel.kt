@@ -53,7 +53,7 @@ public sealed interface KModel {
 
   @Serializable
   public data class Object(
-    val typeName: String,
+    val simpleName: String,
     val description: String?,
     val properties: List<Property>,
     val inline: List<KModel>
@@ -98,7 +98,7 @@ public sealed interface KModel {
   }
 
   public data class Enum(
-    val typeName: String,
+    val simpleName: String,
     val inner: KModel,
     val values: List<String>,
   ) : KModel

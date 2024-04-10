@@ -6,6 +6,8 @@ import io.github.nomisrev.openapi.Schema.Type
 import io.github.nomisrev.openapi.test.KModel
 import io.github.nomisrev.openapi.test.KModel.Primitive.String
 import io.github.nomisrev.openapi.test.models
+import io.github.nomisrev.openapi.test.template
+import io.github.nomisrev.openapi.test.toCode
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -86,7 +88,7 @@ class InlineSchemaTest {
         )
       )
     ).models()
-    val models = setOf(kpet, kenum.copy(typeName = "TopEnum"))
+    val models = setOf(kpet, kenum.copy(simpleName = "TopEnum"))
     assertTrue(models == actual)
   }
 
@@ -126,7 +128,7 @@ class InlineSchemaTest {
           KModel.Object.Property("anyOf", kanyOf, false, true, null, null)
         ), listOf(kenum, koneOf, kanyOf)
       ),
-      kenum.copy(typeName = "TopEnum")
+      kenum.copy(simpleName = "TopEnum")
     )
     assertTrue(expected == actual)
   }
@@ -170,7 +172,7 @@ class InlineSchemaTest {
         ), listOf(kenum, koneOf, kanyOf)
       ),
       KModel.Primitive.Unit,
-      kenum.copy(typeName = "TopEnum")
+      kenum.copy(simpleName = "TopEnum")
     )
     assertTrue(expected == actual)
   }
@@ -203,17 +205,31 @@ class InlineSchemaTest {
       KModel.Object(
         "Pets", null, listOf(
           KModel.Object.Property(
-            "value", KModel.Collection.List(kpet.copy(typeName = "value")),
+            "value", KModel.Collection.List(kpet.copy(simpleName = "value")),
             isRequired = false,
             isNullable = true,
             description = null,
             defaultValue = null
           ),
-        ), listOf(kpet.copy(typeName = "value"))
+        ), listOf(kpet.copy(simpleName = "value"))
       ),
-      kenum.copy(typeName = "TopEnum")
+      kenum.copy(simpleName = "TopEnum")
     )
 
     assertTrue(expected == actual)
+  }
+
+  @Test
+  fun test() {
+    val actual = OpenAPI(
+      info = Info(title = "Test Spec", version = "1.0"),
+      components = Components(
+        schemas = mapOf(
+          "Pet" to Value(Schema(required = listOf("age"), properties = mapOf(name, age, enum, oneOf, anyOf))),
+          "TopEnum" to enum.second
+        )
+      )
+    ).models().first()
+    println(template { toCode(actual) })
   }
 }
