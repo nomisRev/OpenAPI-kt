@@ -9,7 +9,7 @@ import io.github.nomisrev.openapi.test.models
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-class SyntaxTest {
+class InlineSchemaTest {
   val name = "name" to Value(Schema(nullable = false, type = Type.Basic.String, description = "test"))
   val age = "age" to Value(Schema(type = Type.Basic.Integer, default = ExampleValue.Single("1")))
   val enum = "enum" to Value(Schema(type = Type.Basic.String, enum = listOf("deceased", "alive")))
@@ -71,14 +71,11 @@ class SyntaxTest {
       KModel.Object.Property("anyOf", kanyOf, false, true, null, null)
     ), listOf(kenum, koneOf, kanyOf)
   )
+  val mediaType =
+    mapOf(applicationJson to MediaType(Value(Schema(type = Schema.Type.Basic.Array, items = pet.second))))
 
-  /**
-   * Test file with an object that holds:
-   *   - an inline enum
-   *   - an inline oneOf type
-   */
   @Test
-  fun schemaObjectWithAllInline() {
+  fun toplevelSchema() {
     val actual = OpenAPI(
       info = Info(title = "Test Spec", version = "1.0"),
       components = Components(
@@ -93,7 +90,48 @@ class SyntaxTest {
   }
 
   @Test
-  fun operationInlineModel() {
+  fun operationResponse() {
+    val actual = OpenAPI(
+      info = Info(title = "Test Spec", version = "1.0"),
+      paths = mapOf(
+        "/pets" to PathItem(
+          get = Operation(
+            operationId = "listPets",
+            responses = Responses(200 to Value(Response(content = mediaType)))
+          )
+        )
+      ),
+      components = Components(schemas = mapOf("TopEnum" to enum.second))
+    ).models()
+    val expected = listOf(
+      KModel.Object(
+        "ListPetsResponse", null, listOf(
+          KModel.Object.Property(
+            "name", String,
+            isRequired = false,
+            isNullable = false,
+            description = "test",
+            defaultValue = null
+          ),
+          KModel.Object.Property(
+            "age", KModel.Primitive.Int,
+            isRequired = true,
+            isNullable = true,
+            description = null,
+            defaultValue = "1"
+          ),
+          KModel.Object.Property("enum", kenum, false, true, null, null),
+          KModel.Object.Property("oneOf", koneOf, false, true, null, null),
+          KModel.Object.Property("anyOf", kanyOf, false, true, null, null)
+        ), listOf(kenum, koneOf, kanyOf)
+      ),
+      kenum.copy(typeName = "TopEnum")
+    )
+    assertTrue(expected == actual)
+  }
+
+  @Test
+  fun operationBody() {
     val actual = OpenAPI(
       info = Info(title = "Test Spec", version = "1.0"),
       paths = mapOf(
@@ -101,9 +139,8 @@ class SyntaxTest {
           get = Operation(
             operationId = "listPets",
             parameters = listOf(Value(Parameter(name = "limit", input = Query))),
-            responses = Responses(
-              200 to Value(Response(content = mapOf(applicationJson to MediaType(pet.second))))
-            )
+            requestBody = Value(RequestBody(content = mediaType)),
+            responses = Responses(200, Response())
           )
         )
       ),
@@ -131,6 +168,7 @@ class SyntaxTest {
           KModel.Object.Property("anyOf", kanyOf, false, true, null, null)
         ), listOf(kenum, koneOf, kanyOf)
       ),
+      KModel.Primitive.Unit,
       kenum.copy(typeName = "TopEnum")
     )
     assertTrue(expected == actual)

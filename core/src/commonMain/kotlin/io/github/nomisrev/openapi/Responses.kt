@@ -44,7 +44,8 @@ public data class Responses(
   public val extensions: Map<String, JsonElement> = emptyMap()
 ) {
 
-  public constructor(vararg responses: Pair<Int, ReferenceOr<Response>>) : this(null, responses.toMap())
+  public constructor(statusCode: Int, response: Response) : this(null, mapOf(statusCode to ReferenceOr.Value(response)))
+  public constructor(head: Pair<Int, ReferenceOr<Response>>, vararg responses: Pair<Int, ReferenceOr<Response>>) : this(null, mapOf(head) + responses)
 
   public operator fun plus(other: Responses): Responses =
     Responses(other.default ?: default, responses + other.responses)

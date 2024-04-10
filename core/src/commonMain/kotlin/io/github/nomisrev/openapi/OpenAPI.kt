@@ -141,6 +141,3 @@ public data class OpenAPI(
     }
   }
 }
-
-private operator fun <K, V> Pair<K, V>.plus(other: Map<K, V>): Map<K, V> =
-  mapOf(this) + other
