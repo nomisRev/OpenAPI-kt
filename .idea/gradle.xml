@@ -23,6 +23,7 @@
             <option value="$PROJECT_DIR$/core" />
             <option value="$PROJECT_DIR$/example" />
             <option value="$PROJECT_DIR$/generation" />
+            <option value="$PROJECT_DIR$/generic" />
             <option value="$PROJECT_DIR$/plugin-build" />
           </set>
         </option>

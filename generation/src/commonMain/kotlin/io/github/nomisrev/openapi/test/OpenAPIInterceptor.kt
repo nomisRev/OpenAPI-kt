@@ -18,6 +18,8 @@ import io.github.nomisrev.openapi.test.KModel.Object.Property
 import io.github.nomisrev.openapi.test.KModel.Primitive
 import io.github.nomisrev.openapi.test.KModel.Union.TypeArray
 import io.github.nomisrev.openapi.test.MediaType.Companion.ApplicationJson
+import io.github.nomisrev.openapi.test.MediaType.Companion.ApplicationOctetStream
+import io.github.nomisrev.openapi.test.MediaType.Companion.ApplicationXml
 import io.github.nomisrev.openapi.test.MediaType.Companion.MultipartFormData
 import io.github.nomisrev.openapi.toPascalCase
 
@@ -333,6 +335,7 @@ public interface OpenAPIInterceptor {
       KRoute.Bodies(
         body?.content?.entries?.associate { (contentType, mediaType) ->
           when {
+            ApplicationXml.matches(contentType) -> TODO("Add support for XML.")
             ApplicationJson.matches(contentType) -> {
               val json = when (val s = mediaType.schema) {
                 is ReferenceOr.Reference -> {
@@ -372,7 +375,8 @@ public interface OpenAPIInterceptor {
                 )
               }, mediaType.extensions))
             }
-            // TODO OctectStream?
+            ApplicationOctetStream.matches(contentType) ->
+              Pair(ApplicationOctetStream, KRoute.Body.OctetStream(mediaType.extensions))
             else -> throw IllegalStateException("RequestBody content type: $this not yet supported.")
           }
         }.orEmpty(), body?.extensions.orEmpty()

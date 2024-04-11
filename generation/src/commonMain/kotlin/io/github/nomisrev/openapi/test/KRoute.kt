@@ -25,6 +25,7 @@ public data class KRoute(
 
     public data class OctetStream(override val extensions: Map<String, JsonElement>) : Body
     public data class Json(public val type: KModel, override val extensions: Map<String, JsonElement>) : Body
+    public data class Xml(public val type: KModel, override val extensions: Map<String, JsonElement>) : Body
 
     public data class Multipart(val parameters: List<FormData>, override val extensions: Map<String, JsonElement>) :
       Body, List<FormData> by parameters {
