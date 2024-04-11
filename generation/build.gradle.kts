@@ -21,8 +21,6 @@ kotlin {
 
   sourceSets {
     commonMain {
-//      kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
-
       dependencies {
         implementation(project(":core"))
         implementation("com.squareup.okio:okio:3.9.0")

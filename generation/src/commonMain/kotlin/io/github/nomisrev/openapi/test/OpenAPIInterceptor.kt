@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi.test
 
 import io.github.nomisrev.openapi.AdditionalProperties
 import io.github.nomisrev.openapi.AdditionalProperties.Allowed
+import io.github.nomisrev.openapi.ExampleValue
 import io.github.nomisrev.openapi.Operation
 import io.github.nomisrev.openapi.ReferenceOr
 import io.github.nomisrev.openapi.RequestBody
@@ -12,6 +13,7 @@ import io.github.nomisrev.openapi.applicationJson
 import io.github.nomisrev.openapi.applicationOctectStream
 import io.github.nomisrev.openapi.defaultArgument
 import io.github.nomisrev.openapi.isEmpty
+import io.github.nomisrev.openapi.sanitize
 import io.github.nomisrev.openapi.schemaRef
 import io.github.nomisrev.openapi.test.KModel.Collection
 import io.github.nomisrev.openapi.test.KModel.Object.Property
@@ -21,6 +23,7 @@ import io.github.nomisrev.openapi.test.MediaType.Companion.ApplicationJson
 import io.github.nomisrev.openapi.test.MediaType.Companion.ApplicationOctetStream
 import io.github.nomisrev.openapi.test.MediaType.Companion.ApplicationXml
 import io.github.nomisrev.openapi.test.MediaType.Companion.MultipartFormData
+import io.github.nomisrev.openapi.toCamelCase
 import io.github.nomisrev.openapi.toPascalCase
 
 /**
@@ -77,7 +80,10 @@ public interface OpenAPIInterceptor {
     enum: List<String>
   ): KModel
 
-  public fun toUnionName(context: NamingContext): String
+  public fun OpenAPISyntax.toUnionName(
+    schema: Schema,
+    context: NamingContext
+  ): String
 
   public fun OpenAPISyntax.toAnyOf(
     context: NamingContext,
@@ -153,6 +159,8 @@ public interface OpenAPIInterceptor {
     model: KModel
   ): KModel = model
 
+  public fun KModel.oneOfName(depth: List<KModel> = emptyList()): String
+
   public fun anyOf(
     context: NamingContext,
     schema: Schema,
@@ -180,31 +188,63 @@ public interface OpenAPIInterceptor {
   ): KRoute.ReturnType = model
 
   public companion object Default : OpenAPIInterceptor {
+    public fun OpenAPISyntax.toPropertyContext(
+      baseName: String,
+      propSchema: Schema,
+      parentSchema: Schema,
+      original: NamingContext
+    ): NamingContext.Param {
+      val paramName = baseName.sanitize().toCamelCase()
+      return if (propSchema.isTopLevel()) NamingContext.Ref(paramName, original)
+      else NamingContext.Inline(paramName, original)
+    }
+
+    // TODO interceptor
+    public fun OpenAPISyntax.toProperty(
+      baseName: String,
+      propSchema: ReferenceOr<Schema>,
+      parentSchema: Schema,
+      original: NamingContext
+    ): Property {
+      val pContext = propSchema.getOrNull()?.let {
+        NamingContext.Inline(baseName, original)
+      } ?: NamingContext.Ref(baseName, original)
+      val paramName = baseName.sanitize().toCamelCase()
+      val pSchema = propSchema.get()
+      return Property(
+        baseName,
+        paramName,
+        pSchema.toModel(pContext),
+        parentSchema.required?.contains(baseName) == true,
+        pSchema.nullable ?: true,
+        pSchema.description,
+        defaultArgument(pSchema, pContext)
+      )
+    }
+
     public override fun OpenAPISyntax.toObject(
       context: NamingContext,
       schema: Schema,
       required: List<String>,
       properties: Map<String, ReferenceOr<Schema>>
     ): KModel = KModel.Object(
-      context.content,
+      context.content.toPascalCase(),
       schema.description,
-      properties.map { (paramName, ref) ->
-        val pContext = ref.getOrNull()?.let {
-          NamingContext.Inline(paramName, context)
-        } ?: NamingContext.Ref(paramName, context)
+      properties.map { (baseName, ref) ->
         val pSchema = ref.get()
+        val pContext = toPropertyContext(baseName, pSchema, schema, context)
         Property(
-          paramName,
+          baseName,
+          pContext.content,
           pSchema.toModel(pContext),
-          required.contains(paramName),
+          schema.required?.contains(baseName) == true,
           pSchema.nullable ?: true,
           pSchema.description,
-          pSchema.defaultArgument(paramName)
+          defaultArgument(pSchema, pContext)
         )
       },
-      properties.mapNotNull { (paramName, ref) ->
-        val model = ref.getOrNull()?.toModel(NamingContext.Inline(paramName, context))
-        if (model is Collection) model.value else model
+      properties.mapNotNull { (baseName, ref) ->
+        ref.getOrNull()?.toModel(toPropertyContext(baseName, ref.get(), schema, context))
       }.filterNot { it is Primitive }
     ).let { `object`(context, schema, required, properties, it) }
 
@@ -240,8 +280,9 @@ public interface OpenAPIInterceptor {
     ): KModel = when (type) {
       is Type.Array -> when {
         type.types.size == 1 -> type(context, schema.copy(type = type.types.single()), type.types.single())
-        else -> TypeArray(toUnionName(context), type.types.sorted().map {
-          toPrimitive(context, Schema(type = it), it)
+        else -> TypeArray(toUnionName(schema, context), type.types.sorted().map {
+          val model = toPrimitive(context, Schema(type = it), it)
+          KModel.Union.UnionCase(model.oneOfName(), model)
         })
       }
 
@@ -277,9 +318,15 @@ public interface OpenAPIInterceptor {
       ).let { enum(context, schema, type, enum, it) }
     }
 
-    public override fun toUnionName(context: NamingContext): String =
+    public override fun OpenAPISyntax.toUnionName(
+      schema: Schema,
+      context: NamingContext
+    ): String =
       when (context) {
-        is NamingContext.Ref -> throw IllegalStateException("OneOf is never called for Param!")
+        is NamingContext.Ref -> requireNotNull(schema.topLevelNameOrNull()) {
+          "NamingContext.Ref Schema without top-level name is impossible."
+        }
+
         is NamingContext.Inline -> context.content.toPascalCase()
         is NamingContext.ClassName -> context.content.toPascalCase()
         is NamingContext.OperationParam -> context.content.toPascalCase()
@@ -322,11 +369,12 @@ public interface OpenAPIInterceptor {
       context: NamingContext,
       schema: Schema,
       subtypes: List<ReferenceOr<Schema>>,
-      transform: (String, List<KModel>) -> A
+      transform: (String, List<KModel.Union.UnionCase>) -> A
     ): A {
-      val name = toUnionName(context)
+      val name = toUnionName(schema, context)
       return transform(name, subtypes.mapIndexed { index, ref ->
-        ref.get().toModel(toUnionCaseContext(context, name, schema, ref, index))
+        val model = ref.get().toModel(toUnionCaseContext(context, name, schema, ref, index))
+        KModel.Union.UnionCase(model.oneOfName(), model)
       })
     }
 
@@ -375,8 +423,10 @@ public interface OpenAPIInterceptor {
                 )
               }, mediaType.extensions))
             }
+
             ApplicationOctetStream.matches(contentType) ->
               Pair(ApplicationOctetStream, KRoute.Body.OctetStream(mediaType.extensions))
+
             else -> throw IllegalStateException("RequestBody content type: $this not yet supported.")
           }
         }.orEmpty(), body?.extensions.orEmpty()
@@ -420,5 +470,59 @@ public interface OpenAPIInterceptor {
         },
         operation.responses.extensions
       )
+
+    public fun OpenAPISyntax.defaultArgument(schema: Schema, context: NamingContext): String? =
+      when {
+        schema.enum != null -> {
+          val defaultValue = (schema.default as? ExampleValue.Single)?.value
+          if (defaultValue != null) "${context.content.toPascalCase()}.${(schema.default as? ExampleValue.Single)?.value}"
+          else null
+        }
+
+        schema.oneOf != null ->
+          schema.oneOf!!.firstNotNullOfOrNull { refOrSchema ->
+            val s = refOrSchema.get()
+            if (s.type == Schema.Type.Basic.String) s else null
+          }?.toModel(context)?.oneOfName()?.let { caseName ->
+            (schema.default as? ExampleValue.Single)?.value?.let { defaultValue ->
+              "$caseName(\"$defaultValue\")"
+            }
+          }
+
+        schema.default?.toString() == "[]" -> "emptyList()"
+        else -> schema.default?.toString()
+      }
+
+    // TODO add interceptor
+    override fun KModel.oneOfName(depth: List<KModel>): String =
+      when (this) {
+        is Collection.List -> value.oneOfName(depth + listOf(this))
+        is Collection.Map -> value.oneOfName(depth + listOf(this))
+        is Collection.Set -> value.oneOfName(depth + listOf(this))
+        else -> {
+          val head = depth.firstOrNull()
+          val s = when (head) {
+            is Collection.List -> "s"
+            is Collection.Set -> "s"
+            is Collection.Map -> "Map"
+            else -> ""
+          }
+          val postfix = depth.drop(1).joinToString(separator = "") {
+            when (it) {
+              is Collection.List -> "List"
+              is Collection.Map -> "Map"
+              is Collection.Set -> "Set"
+              else -> ""
+            }
+          }
+          val typeName = when (this) {
+            is Collection.List -> "List"
+            is Collection.Map -> "Map"
+            is Collection.Set -> "Set"
+            else -> typeName()
+          }
+          "Case$typeName${s}$postfix"
+        }
+      }
   }
 }

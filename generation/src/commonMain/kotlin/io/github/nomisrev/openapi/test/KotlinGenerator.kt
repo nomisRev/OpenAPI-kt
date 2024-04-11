@@ -1,7 +1,6 @@
 package io.github.nomisrev.openapi.test
 
 import io.github.nomisrev.openapi.isValidClassname
-import io.github.nomisrev.openapi.sanitize
 
 public fun Template.toCode(code: KModel) {
   when (code) {
@@ -15,16 +14,27 @@ public fun Template.toCode(code: KModel) {
   }
 }
 
-public fun Template.toCode(enum: KModel.Enum) {
+public fun Template.Serializable() {
+  addImport("kotlinx.serialization.Serializable")
   +"@Serializable"
+}
+
+public fun Template.toCode(enum: KModel.Enum) {
+  fun Template.serialNameEnumCase(name: String) {
+    addImport("kotlinx.serialization.SerialName")
+    append("@SerialName(\"$name\") `$name`(\"$name\")")
+  }
+
+  Serializable()
   block("enum class ${enum.simpleName} {") {
     enum.values.indented(separator = ",\n", postfix = ";\n") {
       if (it.isValidClassname()) append(it)
-      else append("@SerialName(\"$it\") `${it.sanitize()}`(\"$it\")")
+      else serialNameEnumCase(it)
     }
   }
 }
 
+// TODO fix indentation, and multiline (param) descriptions.
 public fun Template.description(obj: KModel.Object) {
   val descriptions = obj.properties.mapNotNull { p -> p.description?.let { Pair(p.name, it) } }
   when {
@@ -44,22 +54,23 @@ public fun Template.description(obj: KModel.Object) {
 }
 
 public fun Template.toCode(obj: KModel.Object) {
-  description(obj)
-  +"@Serializable"
+//  description(obj)
+  Serializable()
   +"data class ${obj.simpleName}("
   obj.properties.indented(separator = ",\n") { append(it.toCode()) }
-  +") ${if (obj.inline.isNotEmpty()) "{" else ""}"
-  if (obj.inline.isNotEmpty()) indented {
-    obj.inline.forEach {
-      toCode(it)
-      line()
-    }
+  append(")")
+  indented {
+    obj.inline.indented(
+      prefix = " {\n",
+      postfix = "}"
+    ) { toCode(it) }
   }
 }
 
 public fun KModel.Object.Property.toCode(): String {
   val nullable = if (isNullable) "?" else ""
   val default = defaultValue?.let { " = $it" } ?: ""
+  // import??? Could be done in typename.
   return "val $name: ${type.typeName()}$nullable$default"
 }
 
@@ -77,18 +88,19 @@ public fun KModel.typeName(): String =
   }
 
 public fun Template.toCode(union: KModel.Union) {
+  unionImports()
   +"@Serializable(with = ${union.simpleName}.Serializer::class)"
   block("sealed interface ${union.simpleName} {") {
     union.schemas.joinTo {
       +"@JvmInline"
-      +"value class Case${it.oneOfName()}(val value: ${it.typeName()}): ${union.simpleName}"
+      +"value class ${it.caseName}(val value: ${it.caseName}): ${union.simpleName}"
     }
     block("object Serializer : KSerializer<${union.simpleName}> {") {
       +"@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)"
       expression("override val descriptor: SerialDescriptor =") {
         block("buildSerialDescriptor(\"${union.simpleName}\", PolymorphicKind.SEALED) {") {
           union.schemas.indented {
-            append("element(\"Case${it.oneOfName()}\", ${it.serializer()}.descriptor)")
+            append("element(\"${it.caseName}\", ${serializer(it.model)}.descriptor)")
           }
         }
       }
@@ -97,8 +109,7 @@ public fun Template.toCode(union: KModel.Union) {
         +"val json = decoder.decodeSerializableValue(JsonElement.serializer())"
         +"return attemptDeserialize(json,"
         union.schemas.indented(separator = ",\n") {
-          val className = it.oneOfName()
-          append("Pair(Case$className::class) { Case$className(Json.decodeFromJsonElement(${it.serializer()}, json)) }")
+          append("Pair(${it.caseName}::class) { ${it.caseName}(Json.decodeFromJsonElement(${serializer(it.model)}, json)) }")
         }
         +")"
       }
@@ -106,7 +117,7 @@ public fun Template.toCode(union: KModel.Union) {
       block("override fun serialize(encoder: Encoder, value: ${union.simpleName}) {") {
         +"when(value) {"
         union.schemas.indented {
-          append("is Case${it.typeName()} -> encoder.encodeSerializableValue(${it.serializer()}, value.value)")
+          append("is ${it.caseName} -> encoder.encodeSerializableValue(${serializer(it.model)}, value.value)")
         }
         +"}"
       }
@@ -114,46 +125,60 @@ public fun Template.toCode(union: KModel.Union) {
   }
 }
 
-private fun KModel.serializer(): String =
-  when (this) {
-    is KModel.Collection.List -> "ListSerializer(${value.serializer()})"
-    is KModel.Collection.Map -> "MapSerializer(${key.serializer()}, ${value.serializer()})"
-    is KModel.Collection.Set -> "SetSerializer(${value.serializer()})"
-    is KModel.Primitive -> "$name.serializer()"
-    is KModel.Enum -> "$simpleName.serializer()"
-    is KModel.Object -> "$simpleName.serializer()"
-    is KModel.Union -> "$simpleName.serializer()"
+private fun Template.serializer(model: KModel): String =
+  when (model) {
+    is KModel.Collection.List -> {
+      addImport("kotlinx.serialization.builtins.ListSerializer")
+      "ListSerializer(${serializer(model.value)})"
+    }
+    is KModel.Collection.Map -> {
+      addImport("kotlinx.serialization.builtins.MapSerializer")
+      "MapSerializer(${serializer(model.key)}, ${serializer(model.value)})"
+    }
+    is KModel.Collection.Set -> {
+      addImport("kotlinx.serialization.builtins.SetSerializer")
+      "SetSerializer(${serializer(model.value)})"
+    }
+    is KModel.Primitive -> {
+      addImport("kotlinx.serialization.builtins.serializer")
+      "${model.name}.serializer()"
+    }
+    is KModel.Enum -> "${model.simpleName}.serializer()"
+    is KModel.Object -> "${model.simpleName}.serializer()"
+    is KModel.Union -> "${model.simpleName}.serializer()"
     KModel.Binary -> TODO("Cannot serializer File?")
-    KModel.JsonObject -> "JsonElement.serializer()"
-  }
-
-private fun KModel.oneOfName(depth: List<KModel> = emptyList()): String =
-  when (this) {
-    is KModel.Collection.List -> value.oneOfName(depth + listOf(this))
-    is KModel.Collection.Map -> value.oneOfName(depth + listOf(this))
-    is KModel.Collection.Set -> value.oneOfName(depth + listOf(this))
-    else -> {
-      val head = depth.firstOrNull()
-      val s = when (head) {
-        is KModel.Collection.List -> "s"
-        is KModel.Collection.Set -> "s"
-        is KModel.Collection.Map -> "Map"
-        else -> ""
-      }
-      val postfix = depth.drop(1).joinToString(separator = "") {
-        when (it) {
-          is KModel.Collection.List -> "List"
-          is KModel.Collection.Map -> "Map"
-          is KModel.Collection.Set -> "Set"
-          else -> ""
-        }
-      }
-      val typeName = when (this) {
-        is KModel.Collection.List -> "List"
-        is KModel.Collection.Map -> "Map"
-        is KModel.Collection.Set -> "Set"
-        else -> typeName()
-      }
-      "$typeName${s}$postfix"
+    KModel.JsonObject -> {
+      addImport("kotlinx.serialization.json.JsonElement")
+      "JsonElement.serializer()"
     }
   }
+
+public fun Template.unionImports() {
+  addImports(
+    "kotlinx.serialization.Serializable",
+    "kotlinx.serialization.KSerializer",
+    "kotlinx.serialization.InternalSerializationApi",
+    "kotlinx.serialization.descriptors.PolymorphicKind",
+    "kotlinx.serialization.descriptors.SerialDescriptor",
+    "kotlinx.serialization.descriptors.buildSerialDescriptor",
+    "kotlinx.serialization.encoding.Decoder",
+    "kotlinx.serialization.encoding.Encoder",
+    "kotlinx.serialization.json.Json",
+    "kotlinx.serialization.json.JsonElement",
+  )
+}
+
+//import kotlin.jvm.JvmInline
+//import kotlinx.serialization.Serializable
+//import kotlinx.serialization.KSerializer
+//import kotlinx.serialization.InternalSerializationApi
+//import kotlinx.serialization.ExperimentalSerializationApi
+//import kotlinx.serialization.builtins.ListSerializer
+//import kotlinx.serialization.builtins.serializer
+//import kotlinx.serialization.descriptors.PolymorphicKind
+//import kotlinx.serialization.descriptors.SerialDescriptor
+//import kotlinx.serialization.descriptors.buildSerialDescriptor
+//import kotlinx.serialization.encoding.Decoder
+//import kotlinx.serialization.encoding.Encoder
+//import kotlinx.serialization.json.Json
+//import kotlinx.serialization.json.JsonElement

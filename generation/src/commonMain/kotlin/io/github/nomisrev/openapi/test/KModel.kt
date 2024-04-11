@@ -2,19 +2,47 @@ package io.github.nomisrev.openapi.test
 
 import io.github.nomisrev.openapi.OpenAPI
 import kotlinx.serialization.Serializable
+import okio.BufferedSink
 import okio.BufferedSource
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.buffer
 import okio.use
 
-public fun FileSystem.test(pathSpec: String) {
+private fun BufferedSink.writeUtf8Line(line: String) {
+  writeUtf8("$line\n")
+}
+
+private fun BufferedSink.writeUtf8Line() {
+  writeUtf8("\n")
+}
+
+public fun FileSystem.test(
+  pathSpec: String,
+  `package`: String = "io.github.nomisrev.openapi",
+  modelPackage: String = "$`package`.models",
+  generationPath: String =
+    "build/generated/openapi/src/commonMain/kotlin/${`package`.replace(".", "/")}"
+) {
+  fun file(name: String, imports: Set<String>, code: String) {
+    write("$generationPath/models/$name.kt".toPath()) {
+      writeUtf8Line("package $modelPackage")
+      writeUtf8Line()
+//      if (imports.isNotEmpty()) {
+//        writeUtf8Line(imports.joinToString("\n") { "import ${it.`package`}.${it.typeName}" })
+//        writeUtf8Line()
+//      }
+      writeUtf8Line(code)
+    }
+  }
+
+  deleteRecursively(generationPath.toPath())
+  createDirectories("$generationPath/models".toPath())
   val rawSpec = source(pathSpec.toPath()).buffer().use(BufferedSource::readUtf8)
   val openAPI = OpenAPI.fromJson(rawSpec)
-  val toplevel = openAPI.models()
-  println(toplevel.size)
-  println(toplevel)
-//  println(openAPI.toplevel().joinToString(separator = "\n\n"))
+  openAPI.models().forEach { model ->
+    file(model.typeName(), setOf(), template { toCode(model) })
+  }
 }
 
 public data class TopLevel(val key: String, val model: KModel)
@@ -60,6 +88,7 @@ public sealed interface KModel {
   ) : KModel {
     @Serializable
     public data class Property(
+      val baseName: String,
       val name: String,
       val type: KModel,
       /**
@@ -79,21 +108,23 @@ public sealed interface KModel {
   public sealed interface Union : KModel {
     // TODO, get rid of simpleName? It's a Kotlin detail.
     public val simpleName: String
-    public val schemas: List<KModel>
+    public val schemas: List<UnionCase>
+
+    public data class UnionCase(val caseName: String, val model: KModel)
 
     public data class OneOf(
       override val simpleName: String,
-      override val schemas: List<KModel>
+      override val schemas: List<UnionCase>
     ) : Union
 
     public data class AnyOf(
       override val simpleName: String,
-      override val schemas: List<KModel>
+      override val schemas: List<UnionCase>
     ) : Union
 
     public data class TypeArray(
       override val simpleName: String,
-      override val schemas: List<KModel>,
+      override val schemas: List<UnionCase>,
     ) : Union
   }
 

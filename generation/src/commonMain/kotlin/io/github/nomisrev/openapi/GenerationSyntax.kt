@@ -9,6 +9,8 @@ import io.github.nomisrev.openapi.Route.Body
 import io.github.nomisrev.openapi.Route.Param
 import io.github.nomisrev.openapi.Route.ReturnType
 import io.github.nomisrev.openapi.Schema.Type
+import io.github.nomisrev.openapi.test.KModel
+import io.github.nomisrev.openapi.test.typeName
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 
@@ -429,13 +431,18 @@ private value class GenerationSyntax(private val openAPI: OpenAPI) {
     )
 }
 
-internal fun Schema.defaultArgument(paramName: String): String? =
-  if (enum != null) {
-    val defaultValue = (default as? ExampleValue.Single)?.value
-    if (defaultValue != null) "${paramName.toPascalCase()}.${(default as? ExampleValue.Single)?.value}"
-    else null
-  } else if (default?.toString() == "[]") "emptyList()"
-  else default?.toString()
+internal fun Schema.defaultArgument(
+  paramName: String
+): String? =
+  when {
+    enum != null -> {
+      val defaultValue = (default as? ExampleValue.Single)?.value
+      if (defaultValue != null) "${paramName.toPascalCase()}.${(default as? ExampleValue.Single)?.value}"
+      else null
+    }
+    default?.toString() == "[]" -> "emptyList()"
+    else -> default?.toString()
+  }
 
 internal fun Response.isEmpty(): Boolean =
   headers.isEmpty() && content.isEmpty() && links.isEmpty() && extensions.isEmpty()

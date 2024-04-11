@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi.test
 
 import io.github.nomisrev.openapi.AdditionalProperties
 import io.github.nomisrev.openapi.AdditionalProperties.Allowed
+import io.github.nomisrev.openapi.ExampleValue
 import io.github.nomisrev.openapi.OpenAPI
 import io.github.nomisrev.openapi.Operation
 import io.github.nomisrev.openapi.Parameter
@@ -10,6 +11,7 @@ import io.github.nomisrev.openapi.ReferenceOr
 import io.github.nomisrev.openapi.RequestBody
 import io.github.nomisrev.openapi.Response
 import io.github.nomisrev.openapi.Schema
+import io.github.nomisrev.openapi.Schema.Type
 import io.github.nomisrev.openapi.parametersRef
 import io.github.nomisrev.openapi.pathItemsRef
 import io.github.nomisrev.openapi.requestBodiesRef
@@ -29,8 +31,13 @@ public fun OpenAPI.models(): Set<KModel> =
 
 public interface OpenAPISyntax {
   public fun Schema.toModel(context: NamingContext): KModel
-  public fun ReferenceOr<Schema>.get(): Schema
+
   public fun ReferenceOr.Reference.namedSchema(): Pair<String, Schema>
+  public fun Schema.topLevelNameOrNull(): String?
+  public fun Schema.isTopLevel(): Boolean =
+    topLevelNameOrNull() != null
+
+  public fun ReferenceOr<Schema>.get(): Schema
   public fun ReferenceOr<Response>.get(): Response
   public fun ReferenceOr<Parameter>.get(): Parameter
   public fun ReferenceOr<RequestBody>.get(): RequestBody
@@ -106,6 +113,7 @@ private class OpenAPITransformer(
       is KRoute.Body.Json -> listOf(type)
       is KRoute.Body.Multipart -> parameters.map { it.type }
       is KRoute.Body.OctetStream -> listOf(KModel.Binary)
+      is KRoute.Body.Xml -> TODO("We don't support XML yet")
     }
 
   /**
@@ -175,6 +183,11 @@ private class OpenAPITransformer(
       is ReferenceOr.Reference -> namedSchema().second
     }
 
+  override fun Schema.topLevelNameOrNull(): String? =
+    openAPI.components.schemas.entries.find { (_, ref) ->
+      ref.get() == this
+    }?.key
+
   override fun ReferenceOr.Reference.namedSchema(): Pair<String, Schema> {
     val typeName = this.ref.drop(schemaRef.length)
     val schema = requireNotNull(openAPI.components.schemas[typeName]) {
@@ -183,9 +196,7 @@ private class OpenAPITransformer(
     return Pair(typeName, schema)
   }
 
-  override tailrec fun ReferenceOr<Response>.get()
-
-    : Response =
+  override tailrec fun ReferenceOr<Response>.get(): Response =
     when (this) {
       is ReferenceOr.Value -> value
       is ReferenceOr.Reference -> {
@@ -207,9 +218,7 @@ private class OpenAPITransformer(
       }
     }
 
-  override tailrec fun ReferenceOr<RequestBody>.get()
-
-    : RequestBody =
+  override tailrec fun ReferenceOr<RequestBody>.get(): RequestBody =
     when (this) {
       is ReferenceOr.Value -> value
       is ReferenceOr.Reference -> {
