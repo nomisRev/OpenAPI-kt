@@ -11,7 +11,7 @@ configure<com.bnorm.power.PowerAssertGradleExtension> {
 kotlin {
 // TODO re-enable platforms after finishing core / generation
 //   Not worth dealing with all extra platforms during initial phase
-  explicitApi()
+//  explicitApi()
   jvm()
   macosArm64 {
     binaries {
@@ -21,7 +21,10 @@ kotlin {
 
   sourceSets {
     commonMain {
+      kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
+
       dependencies {
+        implementation("net.pearx.kasechange:kasechange:1.4.1")
         implementation(project(":core"))
         implementation("com.squareup.okio:okio:3.9.0")
         // for build debugging example

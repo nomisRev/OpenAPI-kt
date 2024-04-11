@@ -1,7 +1,7 @@
 package io.github.nomisrev.openapi
 
 internal fun String.toPascalCase(): String {
-  val words = split("_", "-")
+  val words = split("_", "-", ".")
   return when (words.size) {
     1 -> words[0].capitalize()
     else -> buildString {

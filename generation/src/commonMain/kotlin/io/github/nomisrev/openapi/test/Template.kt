@@ -13,6 +13,10 @@ public interface IndentedSyntax {
   public fun append(line: String)
 }
 
+@DslMarker
+annotation class Templating
+
+@Templating
 public class Template(
   private val index: Int,
   private val content: StringBuilder,
@@ -24,25 +28,31 @@ public class Template(
   public override operator fun String.unaryPlus(): Unit =
     line(this)
 
+  @Templating
   public fun addImport(import: String): Boolean =
     imports.add(import)
 
+  @Templating
   public fun addImports(vararg imports: String): Boolean =
     this.imports.addAll(imports)
 
+  @Templating
   public override fun append(line: String) {
     content.append("$indent$line")
   }
 
+  @Templating
   public fun line(line: String) {
     content.append("$indent$line\n")
   }
 
+  @Templating
   public fun line() {
     content.append("\n")
   }
 
-  public fun <T> Iterable<T>.joinTo(
+  @Templating
+  public fun <T> Collection<T>.joinTo(
     separator: String = "\n",
     prefix: String = "",
     postfix: String = "\n",
@@ -51,7 +61,8 @@ public class Template(
     indented(index = { it }, separator, prefix, postfix, transform)
   }
 
-  public fun <T> Iterable<T>.indented(
+  @Templating
+  public fun <T> Collection<T>.indented(
     index: (Int) -> Int = Int::inc,
     separator: String = "\n",
     prefix: String = "",
@@ -60,7 +71,7 @@ public class Template(
   ) {
     val template = Template(index(this@Template.index), content, indentConfig, imports)
     fun transform(element: T) = transform?.invoke(template, element) ?: element
-    template.content.append(prefix)
+    if (isNotEmpty()) template.content.append(prefix)
     firstOrNull()?.let { head ->
       transform(head)
       drop(1).forEach {
@@ -71,15 +82,18 @@ public class Template(
     }
   }
 
+  @Templating
   public fun indented(init: Template.() -> Unit) {
     Template(index + 1, content, indentConfig, imports).init()
   }
 
+  @Templating
   public fun expression(
     text: String,
     init: Template.() -> Unit
   ): Unit = block(text, false, init)
 
+  @Templating
   public fun block(
     text: String,
     closeAfter: Boolean = true,
@@ -90,6 +104,7 @@ public class Template(
     if (closeAfter) +"}"
   }
 
+  @Templating
   override fun toString(): String {
 //    content.insert(0, "package test")
     content.insert(

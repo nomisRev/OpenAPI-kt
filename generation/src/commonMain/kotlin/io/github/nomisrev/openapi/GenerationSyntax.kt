@@ -9,8 +9,6 @@ import io.github.nomisrev.openapi.Route.Body
 import io.github.nomisrev.openapi.Route.Param
 import io.github.nomisrev.openapi.Route.ReturnType
 import io.github.nomisrev.openapi.Schema.Type
-import io.github.nomisrev.openapi.test.KModel
-import io.github.nomisrev.openapi.test.typeName
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 

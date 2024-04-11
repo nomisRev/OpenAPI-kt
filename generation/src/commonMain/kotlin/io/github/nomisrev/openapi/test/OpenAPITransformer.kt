@@ -2,7 +2,6 @@ package io.github.nomisrev.openapi.test
 
 import io.github.nomisrev.openapi.AdditionalProperties
 import io.github.nomisrev.openapi.AdditionalProperties.Allowed
-import io.github.nomisrev.openapi.ExampleValue
 import io.github.nomisrev.openapi.OpenAPI
 import io.github.nomisrev.openapi.Operation
 import io.github.nomisrev.openapi.Parameter
@@ -11,7 +10,6 @@ import io.github.nomisrev.openapi.ReferenceOr
 import io.github.nomisrev.openapi.RequestBody
 import io.github.nomisrev.openapi.Response
 import io.github.nomisrev.openapi.Schema
-import io.github.nomisrev.openapi.Schema.Type
 import io.github.nomisrev.openapi.parametersRef
 import io.github.nomisrev.openapi.pathItemsRef
 import io.github.nomisrev.openapi.requestBodiesRef
@@ -142,11 +140,13 @@ private class OpenAPITransformer(
     }
 
   /** Gathers all "top-level", or components schemas. */
-  fun schemas(): List<KModel> =
-    openAPI.components.schemas.entries.map { (schemaName, refOrSchema) ->
+  fun schemas(): List<KModel> {
+    val schemas = openAPI.components.schemas.entries.map { (schemaName, refOrSchema) ->
       refOrSchema.getOrNull()?.toModel(NamingContext.ClassName(schemaName))
         ?: throw IllegalStateException("Remote schemas not supported yet.")
     }
+    return schemas
+  }
 
   override fun Schema.toModel(context: NamingContext): KModel =
     when {

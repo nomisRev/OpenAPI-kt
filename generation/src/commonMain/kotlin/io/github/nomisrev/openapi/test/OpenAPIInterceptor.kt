@@ -11,7 +11,6 @@ import io.github.nomisrev.openapi.Schema
 import io.github.nomisrev.openapi.Schema.Type
 import io.github.nomisrev.openapi.applicationJson
 import io.github.nomisrev.openapi.applicationOctectStream
-import io.github.nomisrev.openapi.defaultArgument
 import io.github.nomisrev.openapi.isEmpty
 import io.github.nomisrev.openapi.sanitize
 import io.github.nomisrev.openapi.schemaRef
@@ -188,39 +187,16 @@ public interface OpenAPIInterceptor {
   ): KRoute.ReturnType = model
 
   public companion object Default : OpenAPIInterceptor {
+    // TODO add interceptor
     public fun OpenAPISyntax.toPropertyContext(
-      baseName: String,
+      key: String,
       propSchema: Schema,
       parentSchema: Schema,
       original: NamingContext
-    ): NamingContext.Param {
-      val paramName = baseName.sanitize().toCamelCase()
-      return if (propSchema.isTopLevel()) NamingContext.Ref(paramName, original)
-      else NamingContext.Inline(paramName, original)
-    }
-
-    // TODO interceptor
-    public fun OpenAPISyntax.toProperty(
-      baseName: String,
-      propSchema: ReferenceOr<Schema>,
-      parentSchema: Schema,
-      original: NamingContext
-    ): Property {
-      val pContext = propSchema.getOrNull()?.let {
-        NamingContext.Inline(baseName, original)
-      } ?: NamingContext.Ref(baseName, original)
-      val paramName = baseName.sanitize().toCamelCase()
-      val pSchema = propSchema.get()
-      return Property(
-        baseName,
-        paramName,
-        pSchema.toModel(pContext),
-        parentSchema.required?.contains(baseName) == true,
-        pSchema.nullable ?: true,
-        pSchema.description,
-        defaultArgument(pSchema, pContext)
-      )
-    }
+    ): NamingContext.Param =
+      propSchema.topLevelNameOrNull()?.let { name ->
+        NamingContext.Ref(name, original)
+      } ?: NamingContext.Inline(key.toCamelCase(), original)
 
     public override fun OpenAPISyntax.toObject(
       context: NamingContext,
@@ -230,21 +206,21 @@ public interface OpenAPIInterceptor {
     ): KModel = KModel.Object(
       context.content.toPascalCase(),
       schema.description,
-      properties.map { (baseName, ref) ->
+      properties.map { (key, ref) ->
         val pSchema = ref.get()
-        val pContext = toPropertyContext(baseName, pSchema, schema, context)
+        val pContext = toPropertyContext(key, pSchema, schema, context)
         Property(
-          baseName,
-          pContext.content,
+          key,
+          pContext.content.sanitize(),
           pSchema.toModel(pContext),
-          schema.required?.contains(baseName) == true,
+          schema.required?.contains(key) == true,
           pSchema.nullable ?: true,
           pSchema.description,
           defaultArgument(pSchema, pContext)
         )
       },
-      properties.mapNotNull { (baseName, ref) ->
-        ref.getOrNull()?.toModel(toPropertyContext(baseName, ref.get(), schema, context))
+      properties.mapNotNull { (key, ref) ->
+        ref.getOrNull()?.toModel(toPropertyContext(key, ref.get(), schema, context))
       }.filterNot { it is Primitive }
     ).let { `object`(context, schema, required, properties, it) }
 
@@ -301,6 +277,14 @@ public interface OpenAPIInterceptor {
         }
       }
 
+    public fun toEnumEntry(
+      baseName: String,
+      context: NamingContext,
+      schema: Schema,
+      inner: KModel,
+    ): KModel.Enum.Entry =
+      KModel.Enum.Entry(baseName, baseName.sanitize().toPascalCase())
+
     public override fun OpenAPISyntax.toEnum(
       context: NamingContext,
       schema: Schema,
@@ -309,13 +293,12 @@ public interface OpenAPIInterceptor {
     ): KModel {
       require(enum.isNotEmpty()) { "Enum requires at least 1 possible value" }
       val enumName = toEnumName(context)
-      return KModel.Enum(
-        enumName,
-        /* To resolve the inner type, we erase the enum values.
-        * Since the schema is still on the same level - we keep the topLevelName */
-        schema.copy(enum = null).toModel(context),
-        enum
-      ).let { enum(context, schema, type, enum, it) }
+      /* To resolve the inner type, we erase the enum values.
+       * Since the schema is still on the same level - we keep the topLevelName */
+      val inner = schema.copy(enum = null).toModel(context)
+      val enums = enum.map { baseName ->  toEnumEntry(baseName, context, schema, inner)  }
+      val kenum = KModel.Enum(enumName, inner, enums)
+      return enum(context, schema, type, enum, kenum)
     }
 
     public override fun OpenAPISyntax.toUnionName(
@@ -519,7 +502,7 @@ public interface OpenAPIInterceptor {
             is Collection.List -> "List"
             is Collection.Map -> "Map"
             is Collection.Set -> "Set"
-            else -> typeName()
+            else -> this.typeName()
           }
           "Case$typeName${s}$postfix"
         }
