@@ -1,8 +1,0 @@
-<component name="ArtifactManager">
-  <artifact type="jar" name="generation-jvm">
-    <output-path>$PROJECT_DIR$/generation/build/libs</output-path>
-    <root id="archive" name="generation-jvm.jar">
-      <element id="module-output" name="kotlin-openapi.generation.jvmMain" />
-    </root>
-  </artifact>
-</component>
