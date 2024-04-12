@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.OpenAPIInterceptor.Default.DefaultArgument
 import io.github.nomisrev.openapi.http.MediaType
 import io.github.nomisrev.openapi.http.Method
 import io.github.nomisrev.openapi.http.StatusCode
@@ -112,8 +111,18 @@ public sealed interface Model {
       val isNullable: Boolean,
       val description: String?,
       /** This type is **guaranteed** to be of the same type as Model */
-      val defaultValue: DefaultArgument?
-    )
+      val default: DefaultArgument?
+    ) {
+      sealed interface DefaultArgument {
+        data class Enum(val enum: Model, val value: String) : DefaultArgument
+        data class Union(
+          val union: NamingContext,
+          val case: Model,
+          val value: String
+        ) : DefaultArgument
+        data class Other(val value: String) : DefaultArgument
+      }
+    }
   }
 
   // TODO Currently doesn't deal with nested code

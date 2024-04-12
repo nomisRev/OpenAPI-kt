@@ -4,6 +4,7 @@ import io.github.nomisrev.openapi.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.Schema.Type
 import io.github.nomisrev.openapi.Model.Collection
 import io.github.nomisrev.openapi.Model.Object.Property
+import io.github.nomisrev.openapi.Model.Object.Property.DefaultArgument
 import io.github.nomisrev.openapi.Model.Primitive
 import io.github.nomisrev.openapi.Model.Union.TypeArray
 import io.github.nomisrev.openapi.http.MediaType.Companion.ApplicationJson
@@ -65,6 +66,8 @@ public interface OpenAPISyntax {
  * This is more convenient to modify simple things like `required`, `isNullable`, etc.
  */
 public interface OpenAPIInterceptor {
+  public fun OpenAPISyntax.defaultArgument(model: Model, pSchema: Schema, context: NamingContext): DefaultArgument?
+
   public fun OpenAPISyntax.toObject(
     context: NamingContext,
     schema: Schema,
@@ -190,27 +193,34 @@ public interface OpenAPIInterceptor {
         NamingContext.Ref(name, original)
       } ?: NamingContext.Inline(key, original)
 
-    sealed interface DefaultArgument {
-      data class Enum(val value: String) : DefaultArgument
-      data class Union(val unionCaseName: Model, val value: String) : DefaultArgument
-      data class Other(val value: String) : DefaultArgument
-    }
-
     private fun Schema.singleDefaultOrNull(): String? =
       (default as? ExampleValue.Single)?.value
 
-    fun OpenAPISyntax.defaultArgument(schema: Schema, context: NamingContext): DefaultArgument? =
+    // Enum with single value, also get it as a default param?
+    override fun OpenAPISyntax.defaultArgument(
+      model: Model,
+      pSchema: Schema,
+      pContext: NamingContext
+    ): DefaultArgument? =
       when {
-        schema.enum != null -> schema.singleDefaultOrNull()?.let(DefaultArgument::Enum)
-        schema.oneOf != null ->
-          schema.oneOf!!.firstNotNullOfOrNull { refOfS ->
-            val s = refOfS.get()
-            s.takeIf { it.type == Schema.Type.Basic.String }
-              ?.singleDefaultOrNull()
-              ?.let { DefaultArgument.Union(s.toModel(context), it) }
+        pSchema.enum != null -> pSchema.singleDefaultOrNull()?.let { DefaultArgument.Enum(model, it) }
+        pSchema.oneOf != null ->
+          pSchema.oneOf!!.firstNotNullOfOrNull { refOfS ->
+            refOfS.get()
+              .takeIf { it.type == Schema.Type.Basic.String }
+              ?.let { s ->
+                s.singleDefaultOrNull()
+                  ?.let {
+                    DefaultArgument.Union(
+                      pContext,
+                      s.toModel(toUnionCaseContext(pContext, refOfS)),
+                      it
+                    )
+                  }
+              }
           }
 
-        else -> schema.default?.toString()?.let { DefaultArgument.Other(it) }
+        else -> pSchema.default?.toString()?.let { DefaultArgument.Other(it) }
       }
 
     public override fun OpenAPISyntax.toObject(
@@ -224,15 +234,16 @@ public interface OpenAPIInterceptor {
       properties.map { (name, ref) ->
         val pSchema = ref.get()
         val pContext = toPropertyContext(name, pSchema, schema, context)
+        val model = pSchema.toModel(pContext)
         // TODO Property interceptor
         Property(
           name,
           pContext.content,
-          pSchema.toModel(pContext),
+          model,
           schema.required?.contains(name) == true,
           pSchema.nullable ?: true,
           pSchema.description,
-          defaultArgument(pSchema, context)
+          defaultArgument(model, pSchema, pContext)
         )
       },
       properties.mapNotNull { (name, ref) ->

@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi.generation
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Collection
+import io.github.nomisrev.openapi.Model.Object.Property.DefaultArgument
 import io.github.nomisrev.openapi.NamingContext
 
 public tailrec fun Templating.toCode(
@@ -96,11 +97,26 @@ public fun Templating.toCode(obj: Model.Object, naming: NamingStrategy) {
   nested()
 }
 
-public fun Model.Object.Property.toCode(parent: NamingContext, naming: NamingStrategy): String {
+public fun Model.Object.Property.defaultValue(context: NamingContext, naming: NamingStrategy): String {
+  val defaultValue = when (default) {
+    is DefaultArgument.Enum ->
+      naming.toEnumValueName(default.value)
+
+    is DefaultArgument.Other -> if (default.value == "[]") "emptyList()" else default.value
+    is DefaultArgument.Union -> {
+      val unionName = naming.toUnionClassName(default.union)
+      val caseName = naming.toUnionCaseName(context, default.case)
+      "$unionName.$caseName(\"${default.value}\")"
+    }
+    null -> null
+  }
+  return defaultValue?.let { " = $it" } ?: ""
+}
+
+public fun Model.Object.Property.toCode(context: NamingContext, naming: NamingStrategy): String {
   val nullable = if (isNullable) "?" else ""
-  // TODO fix default value, whilst supporting name casing for enum
-  val default = /*defaultValue?.let { " = $it" } ?:*/ ""
-  val paramName = naming.toParamName(parent, name)
+  val default = defaultValue(context, naming)
+  val paramName = naming.toParamName(context, name)
   val typeName = naming.typeName(type)
   return "val $paramName: $typeName$nullable$default"
 }
