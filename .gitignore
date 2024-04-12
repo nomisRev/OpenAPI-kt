@@ -214,4 +214,7 @@ gradle-app.setting
 # Java heap dump
 *.hprof
 
+#Kotlin
+.kotlin
+
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,gradle,kotlin,java,intellij+all

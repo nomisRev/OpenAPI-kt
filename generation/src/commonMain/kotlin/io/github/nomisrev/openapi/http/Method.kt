@@ -1,4 +1,4 @@
-package io.github.nomisrev.openapi.test
+package io.github.nomisrev.openapi.http
 
 import kotlin.jvm.JvmInline
 

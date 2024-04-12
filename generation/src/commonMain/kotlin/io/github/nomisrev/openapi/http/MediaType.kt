@@ -1,6 +1,8 @@
-package io.github.nomisrev.openapi.test
+package io.github.nomisrev.openapi.http
 
+import kotlinx.serialization.Serializable
 
+@Serializable
 public data class MediaType(
   val mainType: String,
   val subType: String,

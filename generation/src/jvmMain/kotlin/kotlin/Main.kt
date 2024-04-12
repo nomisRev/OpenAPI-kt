@@ -1,4 +1,4 @@
-import io.github.nomisrev.openapi.test.test
+import io.github.nomisrev.openapi.test
 import okio.FileSystem
 
 public fun main() {

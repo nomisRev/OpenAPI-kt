@@ -50,10 +50,8 @@ public data class Schema(
   val maxProperties: Int? = null,
   val minProperties: Int? = null,
   /**
-   * Declares the value of the parameter that the server will use if none is provided, for example a
-   * @"count"@ to control the number of results per page might default to @100@ if not supplied by
-   * the client in the request. (Note: "default" has no meaning for required parameters.) Unlike
-   * JSON Schema this value MUST conform to the defined type for this parameter.
+   * Unlike JSON Schema this value MUST conform to the defined type for this parameter.
+   * Note: is ignored for required parameters.
    */
   val default: ExampleValue? = null,
   val type: Type? = null,

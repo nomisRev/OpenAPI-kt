@@ -9,19 +9,19 @@ configure<com.bnorm.power.PowerAssertGradleExtension> {
 }
 
 kotlin {
+//  explicitApi()
 // TODO re-enable platforms after finishing core / generation
 //   Not worth dealing with all extra platforms during initial phase
-//  explicitApi()
   jvm()
-  macosArm64 {
-    binaries {
-      executable { entryPoint = "main" }
-    }
-  }
+//  macosArm64 {
+//    binaries {
+//      executable { entryPoint = "main" }
+//    }
+//  }
 
   sourceSets {
     commonMain {
-      kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
+//      kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
 
       dependencies {
         implementation("net.pearx.kasechange:kasechange:1.4.1")

@@ -1,4 +1,4 @@
-package io.github.nomisrev.openapi.test
+package io.github.nomisrev.openapi
 
 /**
  * A type name is decided by the context it belongs to,

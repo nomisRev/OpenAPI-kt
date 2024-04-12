@@ -1,23 +1,10 @@
-package io.github.nomisrev.openapi.test
+package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.AdditionalProperties
 import io.github.nomisrev.openapi.AdditionalProperties.Allowed
-import io.github.nomisrev.openapi.OpenAPI
-import io.github.nomisrev.openapi.Operation
-import io.github.nomisrev.openapi.Parameter
-import io.github.nomisrev.openapi.PathItem
-import io.github.nomisrev.openapi.ReferenceOr
-import io.github.nomisrev.openapi.RequestBody
-import io.github.nomisrev.openapi.Response
-import io.github.nomisrev.openapi.Schema
-import io.github.nomisrev.openapi.parametersRef
-import io.github.nomisrev.openapi.pathItemsRef
-import io.github.nomisrev.openapi.requestBodiesRef
-import io.github.nomisrev.openapi.responsesRef
-import io.github.nomisrev.openapi.schemaRef
-import io.github.nomisrev.openapi.test.KModel.Collection
+import io.github.nomisrev.openapi.Model.Collection
+import io.github.nomisrev.openapi.http.Method
 
-public fun OpenAPI.models(): Set<KModel> =
+public fun OpenAPI.models(): Set<Model> =
   with(OpenAPITransformer(this)) {
     operationModels() + schemas()
   }.map { model ->
@@ -26,21 +13,6 @@ public fun OpenAPI.models(): Set<KModel> =
       else -> model
     }
   }.toSet()
-
-public interface OpenAPISyntax {
-  public fun Schema.toModel(context: NamingContext): KModel
-
-  public fun ReferenceOr.Reference.namedSchema(): Pair<String, Schema>
-  public fun Schema.topLevelNameOrNull(): String?
-  public fun Schema.isTopLevel(): Boolean =
-    topLevelNameOrNull() != null
-
-  public fun ReferenceOr<Schema>.get(): Schema
-  public fun ReferenceOr<Response>.get(): Response
-  public fun ReferenceOr<Parameter>.get(): Parameter
-  public fun ReferenceOr<RequestBody>.get(): RequestBody
-  public fun ReferenceOr<PathItem>.get(): PathItem
-}
 
 /**
  * This class implements the traverser,
@@ -53,7 +25,7 @@ public interface OpenAPISyntax {
  */
 private class OpenAPITransformer(
   private val openAPI: OpenAPI,
-  interceptor: OpenAPIInterceptor = OpenAPIInterceptor.Default
+  interceptor: OpenAPIInterceptor = OpenAPIInterceptor
 ) : OpenAPISyntax, OpenAPIInterceptor by interceptor {
 
   public fun operations(): List<Triple<String, Method, Operation>> =
@@ -70,9 +42,9 @@ private class OpenAPITransformer(
       )
     }
 
-  fun routes(): List<KRoute> =
+  fun routes(): List<Route> =
     operations().map { (path, method, operation) ->
-      KRoute(
+      Route(
         operation = operation,
         path = path,
         method = method,
@@ -84,7 +56,7 @@ private class OpenAPITransformer(
     }
 
   // TODO can we re-share logic with models?
-  fun Operation.input(): List<KRoute.Input> =
+  fun Operation.input(): List<Route.Input> =
     parameters.map { p ->
       val param = p.get()
       val model = when (val s = param.schema) {
@@ -99,19 +71,19 @@ private class OpenAPITransformer(
         null -> throw IllegalStateException("No Schema for Parameter. Fallback to JsonObject?")
       }
       when (param.input) {
-        Parameter.Input.Query -> KRoute.Input.Query(param.name, model)
-        Parameter.Input.Header -> KRoute.Input.Header(param.name, model)
-        Parameter.Input.Path -> KRoute.Input.Path(param.name, model)
-        Parameter.Input.Cookie -> KRoute.Input.Cookie(param.name, model)
+        Parameter.Input.Query -> Route.Input.Query(param.name, model)
+        Parameter.Input.Header -> Route.Input.Header(param.name, model)
+        Parameter.Input.Path -> Route.Input.Path(param.name, model)
+        Parameter.Input.Cookie -> Route.Input.Cookie(param.name, model)
       }
     }
 
-  private fun KRoute.Body.model(): List<KModel> =
+  private fun Route.Body.model(): List<Model> =
     when (this) {
-      is KRoute.Body.Json -> listOf(type)
-      is KRoute.Body.Multipart -> parameters.map { it.type }
-      is KRoute.Body.OctetStream -> listOf(KModel.Binary)
-      is KRoute.Body.Xml -> TODO("We don't support XML yet")
+      is Route.Body.Json -> listOf(type)
+      is Route.Body.Multipart -> parameters.map { it.type }
+      is Route.Body.OctetStream -> listOf(Model.Binary)
+      is Route.Body.Xml -> TODO("We don't support XML yet")
     }
 
   /**
@@ -119,7 +91,7 @@ private class OpenAPITransformer(
    * and gathers them in the nesting that they occur within the document.
    * So they can be generated whilst maintaining their order of nesting.
    */
-  fun operationModels(): List<KModel> =
+  fun operationModels(): List<Model> =
     operations().flatMap { (_, _, operation) ->
       // TODO this can probably be removed in favor of `Set` to remove duplication
       // Gather the **inline** request bodies & returnType, ignore top-level
@@ -140,7 +112,7 @@ private class OpenAPITransformer(
     }
 
   /** Gathers all "top-level", or components schemas. */
-  fun schemas(): List<KModel> {
+  fun schemas(): List<Model> {
     val schemas = openAPI.components.schemas.entries.map { (schemaName, refOrSchema) ->
       refOrSchema.getOrNull()?.toModel(NamingContext.ClassName(schemaName))
         ?: throw IllegalStateException("Remote schemas not supported yet.")
@@ -148,7 +120,7 @@ private class OpenAPITransformer(
     return schemas
   }
 
-  override fun Schema.toModel(context: NamingContext): KModel =
+  override fun Schema.toModel(context: NamingContext): Model =
     when {
       anyOf != null -> toAnyOf(context, this, anyOf ?: emptyList())
       oneOf != null && oneOf?.size == 1 -> asObject(context)
@@ -166,7 +138,7 @@ private class OpenAPITransformer(
       else -> TODO("Schema: $this not yet supported. Please report to issue tracker.")
     }
 
-  private fun Schema.asObject(context: NamingContext): KModel =
+  private fun Schema.asObject(context: NamingContext): Model =
     when {
       properties != null -> toObject(context, this, required ?: emptyList(), properties!!)
       additionalProperties != null -> when (val aProps = additionalProperties!!) {
