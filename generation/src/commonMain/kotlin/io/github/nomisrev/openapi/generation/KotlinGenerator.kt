@@ -58,10 +58,10 @@ public fun Templating.description(obj: Model.Object) {
   }
 }
 
-public fun Templating.addImports(obj: Model.Object) =
+public fun Templating.addImports(obj: Model.Object): Unit =
   obj.properties.forEach { p ->
     when (p.type) {
-      is Model.Binary -> addImport("io.FileUpload")
+//      is Model.Binary -> addImport("io.FileUpload")
       is Model.FreeFormJson -> addImport("kotlinx.serialization.json.JsonElement")
       else -> Unit
     }
@@ -86,21 +86,21 @@ public fun Templating.toCode(obj: Model.Object, naming: NamingStrategy) {
     obj.properties.indented(separator = ",\n") { append(it.toCode(obj.context, naming)) }
 
   fun nested() =
-    indented { obj.inline.filterModels().indented(prefix = " {\n", postfix = "}") { toCode(it, naming) } }
+    indented { obj.inline.filterModels().indented(prefix = " {\n", postfix = "\n}") { toCode(it, naming) } }
 
 //  description(obj)
   addImports(obj)
   Serializable()
   +"data class ${naming.toObjectClassName(obj.context)}("
   properties()
-  +")"
+  append(")")
   nested()
 }
 
 public fun Model.Object.Property.defaultValue(context: NamingContext, naming: NamingStrategy): String {
   val defaultValue = when (default) {
     is DefaultArgument.Enum ->
-      naming.toEnumValueName(default.value)
+      "${naming.toEnumClassName(default.context)}.${naming.toEnumValueName(default.value)}"
 
     is DefaultArgument.Other -> if (default.value == "[]") "emptyList()" else default.value
     is DefaultArgument.Union -> {
@@ -108,6 +108,9 @@ public fun Model.Object.Property.defaultValue(context: NamingContext, naming: Na
       val caseName = naming.toUnionCaseName(context, default.case)
       "$unionName.$caseName(\"${default.value}\")"
     }
+    is DefaultArgument.Double -> default.value.toString()
+    is DefaultArgument.Int -> default.value.toString()
+    is DefaultArgument.List -> default.value.joinToString(prefix = "listOf(", postfix = ")")
     null -> null
   }
   return defaultValue?.let { " = $it" } ?: ""
@@ -118,6 +121,12 @@ public fun Model.Object.Property.toCode(context: NamingContext, naming: NamingSt
   val default = defaultValue(context, naming)
   val paramName = naming.toParamName(context, name)
   val typeName = naming.typeName(type)
+  // TODO update defaultValue
+  //   nullable + required + default = default
+  //   non-nullable + required + default = default
+  //   non-nullable + non-required = default
+  //   nullable + non-required + default = null
+  //   ==> This allows KotlinX `encodeDefaults = true` to safe on data
   return "val $paramName: $typeName$nullable$default"
 }
 
@@ -130,6 +139,9 @@ public fun Templating.toCode(union: Model.Union, naming: NamingStrategy) {
       +"@JvmInline"
       +"value class ${naming.toUnionCaseName(ctx, model)}(val value: ${naming.typeName(model)}): $unionClassName"
     }
+
+    union.inline.filterModels().indented { toCode(it, naming) }
+    line()
     block("object Serializer : KSerializer<$unionClassName> {") {
       +"@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)"
       expression("override val descriptor: SerialDescriptor =") {
@@ -173,12 +185,12 @@ private fun Templating.serializer(model: Model, naming: NamingStrategy): String 
       "ListSerializer(${serializer(model.value, naming)})"
     }
 
-    is Model.Collection.Map -> {
+    is Collection.Map -> {
       addImport("kotlinx.serialization.builtins.MapSerializer")
       "MapSerializer(${serializer(model.key, naming)}, ${serializer(model.value, naming)})"
     }
 
-    is Model.Collection.Set -> {
+    is Collection.Set -> {
       addImport("kotlinx.serialization.builtins.SetSerializer")
       "SetSerializer(${serializer(model.value, naming)})"
     }

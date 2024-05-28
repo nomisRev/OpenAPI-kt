@@ -55,7 +55,7 @@ public sealed interface Generic {
     public value class Double(override val value: kotlin.Double) : Number<kotlin.Double>
   }
 
-  public data class Inline(
+  public data class Value(
     override val info: Info,
     val element: Generic
   ) : Object
@@ -242,7 +242,7 @@ private class GenericEncoder(override val serializersModule: SerializersModule) 
       }
 
       State.EncodeInline -> {
-        genericValue = Generic.Inline(
+        genericValue = Generic.Value(
           Generic.Info(descriptor!!.serialName),
           generic
         )
@@ -334,7 +334,7 @@ private class GenericEncoder(override val serializersModule: SerializersModule) 
       }
 
       State.EncodeInline -> {
-        genericValue = Generic.Inline(
+        genericValue = Generic.Value(
           Generic.Info(descriptor!!.serialName),
           encoder.result(serializer)
         )
@@ -478,7 +478,6 @@ private class GenericDecoder(
 
   override fun decodeChar(): Char =
     expect<Generic.Char>().value
-
 
   override fun decodeByte(): Byte =
     expect<Generic.Number.Byte>().value

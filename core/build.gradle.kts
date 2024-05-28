@@ -6,9 +6,10 @@ plugins {
 kotlin {
     explicitApi()
 
-    // TODO Setup targets
+
     jvm()
     macosArm64()
+    linuxX64()
 
     sourceSets {
         commonMain {

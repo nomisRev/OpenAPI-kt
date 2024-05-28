@@ -3727,7 +3727,11 @@
       "ChatCompletionToolChoiceOption": {
         "description": "Controls which (if any) function is called by the model.\n`none` means the model will not call a function and instead generates a message.\n`auto` means the model can pick between generating a message or calling a function.\nSpecifying a particular function via `{\"type\": \"function\", \"function\": {\"name\": \"my_function\"}}` forces the model to call that function.\n\n`none` is the default when no functions are present. `auto` is the default if functions are present.\n",
         "oneOf": [
+          // "type": String
           {
+            // CaseString
+            // CaseEnum
+            // CaseNoneOrAuto
             "type": "string",
             "description": "`none` means the model will not call a function and instead generates a message. `auto` means the model can pick between generating a message or calling a function.\n",
             "enum": [
@@ -3736,6 +3740,7 @@
             ]
           },
           {
+            // CaseChatCompletionNamedToolChoice
             "$ref": "#/components/schemas/ChatCompletionNamedToolChoice"
           }
         ],

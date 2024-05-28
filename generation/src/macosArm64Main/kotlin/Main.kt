@@ -1,8 +1,8 @@
-import io.github.nomisrev.openapi.program
-import okio.FileSystem
+import io.github.nomisrev.openapi.test
+import kotlinx.io.files.SystemFileSystem
 
 public fun main() {
-  FileSystem.SYSTEM.program(
+  SystemFileSystem.test(
     pathSpec = "openai.json"
   )
 }

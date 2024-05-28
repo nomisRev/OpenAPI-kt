@@ -22,7 +22,6 @@ class SumSpec : StringSpec({
     checkAll(Arb.string(), Arb.string(), Arb.string()) { a, b, c ->
       val tree: Tree<String> =
         Branch(Leaf(a), Branch(Leaf(b), Leaf(c)))
-
       val actual = Generic.encode(tree, serializersModule = serializersModule)
       val expected = branch(leaf(a), branch(leaf(b), leaf(c)))
       actual shouldBe expected

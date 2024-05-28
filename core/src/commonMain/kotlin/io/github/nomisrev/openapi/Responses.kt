@@ -56,7 +56,6 @@ public data class Responses(
       private val responseSerializer = ReferenceOr.serializer(Response.serializer())
       private val responsesSerializer = MapSerializer(Int.serializer(), responseSerializer)
 
-      // TODO add support for extensions
       override fun deserialize(decoder: Decoder): Responses {
         val json = decoder.decodeSerializableValue(JsonElement.serializer()).jsonObject
         val default = if (json.contains("default")) Json.decodeFromJsonElement(responseSerializer, json.getValue("default"))
@@ -68,7 +67,6 @@ public data class Responses(
         return Responses(default, responses, extensions)
       }
 
-      // TODO add support for extensions
       override fun serialize(encoder: Encoder, value: Responses) {
         val default = value.default?.let {
           Json.encodeToJsonElement(ReferenceOr.serializer(Response.serializer()), it).jsonObject
@@ -76,18 +74,6 @@ public data class Responses(
         val responses = Json.encodeToJsonElement(responsesSerializer, value.responses).jsonObject
         val json = JsonObject((default ?: emptyMap()) + responses + value.extensions)
         encoder.encodeSerializableValue(JsonElement.serializer(), json)
-//        val size = value.responses.size + (value.default?.let { 1 } ?: 0)
-//        val composite = encoder.beginCollection(descriptor, size)
-//        var index = 0
-//        value.default?.let {
-//          composite.encodeStringElement(descriptor, index++, "default")
-//          composite.encodeSerializableElement(descriptor, index++, elementSerializer, it)
-//        }
-//        value.responses.forEach { (statusCode, response) ->
-//          composite.encodeIntElement(descriptor, index++, statusCode)
-//          composite.encodeSerializableElement(descriptor, index++, elementSerializer, response)
-//        }
-//        composite.endStructure(descriptor)
       }
     }
   }

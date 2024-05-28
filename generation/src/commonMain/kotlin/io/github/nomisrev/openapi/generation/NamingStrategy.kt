@@ -3,10 +3,12 @@ package io.github.nomisrev.openapi.generation
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Collection
 import io.github.nomisrev.openapi.NamingContext
+import net.pearx.kasechange.splitter.WordSplitterConfig
+import net.pearx.kasechange.splitter.WordSplitterConfigurable
 import net.pearx.kasechange.toCamelCase
 import net.pearx.kasechange.toPascalCase
 
-interface NamingStrategy {
+public interface NamingStrategy {
   public fun typeName(model: Model): String
   public fun toBinary(binary: Model.Binary): String
   public fun toFreeFormJson(json: Model.FreeFormJson): String
@@ -29,10 +31,25 @@ interface NamingStrategy {
    *     => Int, Ints for List<Int>, IntsList for List<List<Int>>.
    *     => duplicate schemas can be filtered out.
    */
-  fun toUnionCaseName(context: NamingContext, model: Model, depth: List<Model> = emptyList()): String
+  public fun toUnionCaseName(context: NamingContext, model: Model, depth: List<Model> = emptyList()): String
 }
 
-object DefaultNamingStrategy : NamingStrategy {
+public object DefaultNamingStrategy : NamingStrategy {
+  // OpenAI adds '/', so this WordSplitter takes that into account
+  private val wordSplitter = WordSplitterConfigurable(
+    WordSplitterConfig(
+      boundaries = setOf(' ', '-', '_', '.', '/'),
+      handleCase = true,
+      treatDigitsAsUppercase = true
+    )
+  )
+
+  private fun String.toPascalCase(): String =
+    toPascalCase(wordSplitter)
+
+  private fun String.toCamelCase(): String =
+    toCamelCase(wordSplitter)
+
   public override fun typeName(model: Model): String =
     when (model) {
       is Model.Binary -> toBinary(model)
@@ -44,7 +61,7 @@ object DefaultNamingStrategy : NamingStrategy {
       is Model.Primitive -> toPrimitiveName(model)
     }
 
-  override fun toBinary(binary: Model.Binary): String = "FileUpload"
+  override fun toBinary(binary: Model.Binary): String = "Unit"
 
   override fun toFreeFormJson(json: Model.FreeFormJson): String = "JsonElement"
 
@@ -74,19 +91,35 @@ object DefaultNamingStrategy : NamingStrategy {
         // $MyObject$Param$Request, this allows for multiple custom objects in a single operation
         "${context.operationId.toPascalCase()}${context.content.toPascalCase()}${context.postfix.toPascalCase()}"
       }
-    }
+    }.dropArraySyntax()
 
-  override fun toEnumValueName(value: String): String =
-    value.toPascalCase()
+  override fun toEnumValueName(value: String): String {
+    val pascalCase = value.toPascalCase()
+    return if (pascalCase.isValidClassname()) pascalCase
+    else {
+      val sanitise = pascalCase
+      .run { if(startsWith("[")) drop(1) else this }
+      .run { if(startsWith("]")) dropLast(1) else this }
+      if (sanitise.isValidClassname()) sanitise
+      else "`$sanitise`"
+    }
+  }
 
   override fun toObjectClassName(context: NamingContext): String =
-    context.content.toPascalCase()
+    context.content.dropArraySyntax().toPascalCase()
+
+  // Workaround for OpenAI
+  private fun String.dropArraySyntax(): String =
+    replace("[]", "")
 
   override fun toParamName(objContext: NamingContext, paramName: String): String =
-    paramName.sanitize().toCamelCase()
+    paramName.sanitize().dropArraySyntax().toCamelCase()
 
   override fun toUnionClassName(context: NamingContext): String =
-    context.content.toPascalCase()
+    when(context) {
+      is NamingContext.Inline -> "${context.outer.content.toPascalCase()}${context.content.toPascalCase()}"
+      else -> context.content.toPascalCase()
+    }
 
   override fun toPrimitiveName(model: Model.Primitive): String =
     model.name
@@ -112,13 +145,8 @@ object DefaultNamingStrategy : NamingStrategy {
             else -> ""
           }
         }
-        val typeName = when (model) {
-          is Collection.List -> "List"
-          is Collection.Map -> "Map"
-          is Collection.Set -> "Set"
-          else -> typeName(model)
-        }
-        "Case$typeName${s}$postfix"
+
+        "Case${typeName(model)}${s}$postfix"
       }
     }
 }

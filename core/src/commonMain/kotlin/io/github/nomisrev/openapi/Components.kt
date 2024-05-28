@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi
 
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import io.github.nomisrev.openapi.Example.Companion.Serializer as ExampleSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray

@@ -7,13 +7,6 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-// TODO support extensions ????
-//@Serializable
-//public data class Paths(
-//  val paths: Map<String, PathItem>,
-//  public val extensions: Map<String, JsonElement> = emptyMap()
-//)
-
 @Serializable
 public data class PathItem(
   /**

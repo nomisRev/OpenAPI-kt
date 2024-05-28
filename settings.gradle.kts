@@ -10,7 +10,7 @@ plugins {
 
 include("generation")
 include("core")
-include("generic")
+//include("generic")
 include("example")
 
 includeBuild("plugin-build")

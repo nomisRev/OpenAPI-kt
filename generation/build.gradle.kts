@@ -1,32 +1,37 @@
+import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+
 plugins {
   kotlin("multiplatform")
-  kotlin("plugin.serialization") version "1.9.23"
-  id("com.bnorm.power.kotlin-power-assert") version "0.13.0"
+  kotlin("plugin.serialization") version "2.0.0"
+  kotlin("plugin.power-assert") version "2.0.0"
 }
 
-configure<com.bnorm.power.PowerAssertGradleExtension> {
-  functions = listOf("kotlin.assert", "kotlin.test.assertTrue")
+@Suppress("OPT_IN_USAGE")
+powerAssert {
+  functions = listOf("kotlin.test.assertEquals", "kotlin.test.assertTrue")
 }
 
 kotlin {
 //  explicitApi()
-// TODO re-enable platforms after finishing core / generation
-//   Not worth dealing with all extra platforms during initial phase
-  jvm()
-//  macosArm64 {
-//    binaries {
-//      executable { entryPoint = "main" }
-//    }
-//  }
+  jvm {
+    @OptIn(ExperimentalKotlinGradlePluginApi::class)
+    mainRun { mainClass.set("io.github.nomisrev.openapi.MainKt") }
+  }
+  macosArm64 {
+    binaries {
+      executable { entryPoint = "main" }
+    }
+  }
+  linuxX64()
 
   sourceSets {
     commonMain {
-//      kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
+      kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
 
       dependencies {
+        implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.3.5")
         implementation("net.pearx.kasechange:kasechange:1.4.1")
         implementation(project(":core"))
-        implementation("com.squareup.okio:okio:3.9.0")
         // for build debugging example
         implementation("io.exoquery:pprint-kotlin-kmp:2.0.2")
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")

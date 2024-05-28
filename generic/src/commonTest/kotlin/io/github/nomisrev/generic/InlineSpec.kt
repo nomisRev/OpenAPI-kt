@@ -1,32 +1,15 @@
 package io.github.nomisrev.generic
 
-import io.github.nomisrev.generic.Generic.Inline
-import io.github.nomisrev.generic.Generic.String
-import io.github.nomisrev.generic.Generic.Boolean
-import io.github.nomisrev.generic.Generic.Char
+import io.github.nomisrev.generic.Generic.Value
 import io.github.nomisrev.generic.Generic.Info
-import io.github.nomisrev.generic.Generic.Number.Int
-import io.github.nomisrev.generic.Generic.Number.Long
-import io.github.nomisrev.generic.Generic.Number.Double
-import io.github.nomisrev.generic.Generic.Number.Float
-import io.github.nomisrev.generic.Generic.Number.Byte
-import io.github.nomisrev.generic.Generic.Number.Short
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
-import io.kotest.property.arbitrary.bool
-import io.kotest.property.arbitrary.byte
-import io.kotest.property.arbitrary.char
-import io.kotest.property.arbitrary.double
-import io.kotest.property.arbitrary.float
-import io.kotest.property.arbitrary.int
-import io.kotest.property.arbitrary.long
-import io.kotest.property.arbitrary.map
-import io.kotest.property.arbitrary.short
 import io.kotest.property.arbitrary.string
 import io.kotest.property.checkAll
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlin.jvm.JvmInline
@@ -83,7 +66,7 @@ class InlineSpec : StringSpec({
 
   testInline(Arb.bind(Arb.string(), Arb.string(), Arb.string()) { a, b, c ->
     ITree(Branch(Leaf(a), Branch(Leaf(b), Leaf(c))))
-  }, serializersModule) { Inline(Info(ITree::class.qualifiedName!!), tree(it.value)) }
+  }, serializersModule) { Value(Info(ITree::class.qualifiedName!!), tree(it.value)) }
 })
 
 inline fun <reified A> StringSpec.testInline(

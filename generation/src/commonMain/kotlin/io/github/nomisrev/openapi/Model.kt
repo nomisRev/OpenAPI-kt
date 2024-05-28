@@ -113,43 +113,44 @@ public sealed interface Model {
       /** This type is **guaranteed** to be of the same type as Model */
       val default: DefaultArgument?
     ) {
-      sealed interface DefaultArgument {
-        data class Enum(val enum: Model, val value: String) : DefaultArgument
-        data class Union(
+      public sealed interface DefaultArgument {
+        public data class Enum(val enum: Model, val context: NamingContext, val value: String) : DefaultArgument
+        public data class Union(
           val union: NamingContext,
           val case: Model,
           val value: String
         ) : DefaultArgument
-        data class Other(val value: String) : DefaultArgument
+        public data class Double(val value: kotlin.Double): DefaultArgument
+        public data class Int(val value: kotlin.Int): DefaultArgument
+        public data class List(val value: kotlin.collections.List<DefaultArgument>): DefaultArgument
+        public data class Other(val value: String) : DefaultArgument
       }
     }
   }
 
-  // TODO Currently doesn't deal with nested code
-  //   When we have nested inline schemas, they should be generated in a nested way.
   public sealed interface Union : Model {
-    // TODO, get rid of simpleName? It's a Kotlin detail.
     public val context: NamingContext
     public val schemas: List<UnionEntry>
+    public val inline: List<Model>
 
-    // TODO seems we only need `model` for generating the case names
-    //   We also always have access to our other context,
-    //   but perhaps still
-    data class UnionEntry(val context: NamingContext, val model: Model)
+    public data class UnionEntry(val context: NamingContext, val model: Model)
 
     public data class OneOf(
       override val context: NamingContext,
-      override val schemas: List<UnionEntry>
+      override val schemas: List<UnionEntry>,
+      override val inline: List<Model>
     ) : Union
 
     public data class AnyOf(
       override val context: NamingContext,
-      override val schemas: List<UnionEntry>
+      override val schemas: List<UnionEntry>,
+      override val inline: List<Model>
     ) : Union
 
     public data class TypeArray(
       override val context: NamingContext,
       override val schemas: List<UnionEntry>,
+      override val inline: List<Model>
     ) : Union
   }
 

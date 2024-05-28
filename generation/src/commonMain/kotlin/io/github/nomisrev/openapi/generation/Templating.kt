@@ -14,11 +14,11 @@ public fun template(
     .build()
 
 @DslMarker
-annotation class TemplatingDSL
+public annotation class TemplatingDSL
 
-data class Content(val imports: Set<String>, val code: String)
+public data class Content(val imports: Set<String>, val code: String)
 
-interface Templating {
+public interface Templating {
   @TemplatingDSL
   public fun append(line: String)
 
@@ -44,10 +44,10 @@ interface Templating {
   public fun addImport(import: String): Boolean = addImports(import)
 
   @TemplatingDSL
-  public fun line(line: String) = append("$line\n")
+  public fun line(line: String): Unit = append("$line\n")
 
   @TemplatingDSL
-  public fun line() = append("\n")
+  public fun line(): Unit = append("\n")
 
   @TemplatingDSL
   public fun <T> Collection<T>.joinTo(

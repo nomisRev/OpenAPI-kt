@@ -114,7 +114,8 @@ private class OpenAPITransformer(
   /** Gathers all "top-level", or components schemas. */
   fun schemas(): List<Model> {
     val schemas = openAPI.components.schemas.entries.map { (schemaName, refOrSchema) ->
-      refOrSchema.getOrNull()?.toModel(NamingContext.ClassName(schemaName))
+      val ctx = NamingContext.ClassName(schemaName)
+      refOrSchema.getOrNull()?.toModel(ctx)
         ?: throw IllegalStateException("Remote schemas not supported yet.")
     }
     return schemas
