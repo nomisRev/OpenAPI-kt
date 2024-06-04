@@ -7,9 +7,14 @@ import io.github.nomisrev.openapi.http.Method
 public fun OpenAPI.models(): Set<Model> =
   with(OpenAPITransformer(this)) {
     operationModels() + schemas()
-  }.map { model ->
+  }.mapNotNull { model ->
     when (model) {
       is Collection -> model.value
+      Model.Primitive.Int,
+      Model.Primitive.Double,
+      Model.Primitive.Boolean,
+      Model.Primitive.String,
+      Model.Primitive.Unit -> null
       else -> model
     }
   }.toSet()
@@ -62,11 +67,11 @@ private class OpenAPITransformer(
       val model = when (val s = param.schema) {
         is ReferenceOr.Reference -> {
           val (name, schema) = s.namedSchema()
-          schema.toModel(NamingContext.ClassName(name))
+          schema.toModel(NamingContext.TopLevelSchema(name))
         }
 
         is ReferenceOr.Value ->
-          s.value.toModel(NamingContext.OperationParam(param.name, operationId, "Request"))
+          s.value.toModel(NamingContext.RouteParam(param.name, operationId, "Request"))
 
         null -> throw IllegalStateException("No Schema for Parameter. Fallback to JsonObject?")
       }
@@ -105,7 +110,7 @@ private class OpenAPITransformer(
       val parameters = operation.parameters.mapNotNull { refOrParam ->
         refOrParam.getOrNull()?.let { param ->
           param.schema?.getOrNull()
-            ?.toModel(NamingContext.OperationParam(param.name, operation.operationId, "Request"))
+            ?.toModel(NamingContext.RouteParam(param.name, operation.operationId, "Request"))
         }
       }
       bodies + responses + parameters
@@ -114,7 +119,7 @@ private class OpenAPITransformer(
   /** Gathers all "top-level", or components schemas. */
   fun schemas(): List<Model> {
     val schemas = openAPI.components.schemas.entries.map { (schemaName, refOrSchema) ->
-      val ctx = NamingContext.ClassName(schemaName)
+      val ctx = NamingContext.TopLevelSchema(schemaName)
       refOrSchema.getOrNull()?.toModel(ctx)
         ?: throw IllegalStateException("Remote schemas not supported yet.")
     }

@@ -29,8 +29,9 @@ kotlin {
       kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
 
       dependencies {
-        implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.3.5")
+//        implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.3.5")
         implementation("net.pearx.kasechange:kasechange:1.4.1")
+        implementation("com.squareup.okio:okio:3.9.0")
         implementation(project(":core"))
         // for build debugging example
         implementation("io.exoquery:pprint-kotlin-kmp:2.0.2")

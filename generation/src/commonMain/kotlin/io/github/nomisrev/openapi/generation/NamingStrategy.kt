@@ -83,13 +83,13 @@ public object DefaultNamingStrategy : NamingStrategy {
 
   override fun toEnumClassName(context: NamingContext): String =
     when (context) {
-      is NamingContext.Inline -> context.content.toPascalCase()
-      is NamingContext.Ref -> context.outer.content.toPascalCase()
-      is NamingContext.ClassName -> context.content.toPascalCase()
-      is NamingContext.OperationParam -> {
+      is NamingContext.Inline -> context.name.toPascalCase()
+      is NamingContext.Ref -> context.outer.name.toPascalCase()
+      is NamingContext.TopLevelSchema -> context.name.toPascalCase()
+      is NamingContext.RouteParam -> {
         requireNotNull(context.operationId) { "Need operationId to generate enum name" }
         // $MyObject$Param$Request, this allows for multiple custom objects in a single operation
-        "${context.operationId.toPascalCase()}${context.content.toPascalCase()}${context.postfix.toPascalCase()}"
+        "${context.operationId.toPascalCase()}${context.name.toPascalCase()}${context.postfix.toPascalCase()}"
       }
     }.dropArraySyntax()
 
@@ -106,7 +106,7 @@ public object DefaultNamingStrategy : NamingStrategy {
   }
 
   override fun toObjectClassName(context: NamingContext): String =
-    context.content.dropArraySyntax().toPascalCase()
+    context.name.dropArraySyntax().toPascalCase()
 
   // Workaround for OpenAI
   private fun String.dropArraySyntax(): String =
@@ -117,8 +117,8 @@ public object DefaultNamingStrategy : NamingStrategy {
 
   override fun toUnionClassName(context: NamingContext): String =
     when(context) {
-      is NamingContext.Inline -> "${context.outer.content.toPascalCase()}${context.content.toPascalCase()}"
-      else -> context.content.toPascalCase()
+      is NamingContext.Inline -> "${context.outer.name.toPascalCase()}${context.name.toPascalCase()}"
+      else -> context.name.toPascalCase()
     }
 
   override fun toPrimitiveName(model: Model.Primitive): String =

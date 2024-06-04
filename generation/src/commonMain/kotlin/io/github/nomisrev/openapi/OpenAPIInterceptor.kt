@@ -199,12 +199,28 @@ public interface OpenAPIInterceptor {
             (default as? ExampleValue.Single)?.value
 
         // Enum with single value, also get it as a default param?
+
+        fun OpenAPISyntax.isOpenEnumeration(schema: Schema): Boolean =
+            schema.anyOf != null
+                    && schema.anyOf?.size == 2
+                    && schema.anyOf?.count { it.get().enum != null } == 1
+                    && schema.anyOf?.count() { it.get().type == Type.Basic.String } == 2
+
+        // text-moderation-latest
+        // CreateModerationRequestModel.CaseModelEnum(CreateModerationRequestModel.ModelEnum.TextModerationLatest)
         override fun OpenAPISyntax.defaultArgument(
             model: Model,
             pSchema: Schema,
             pContext: NamingContext
         ): DefaultArgument? =
             when {
+//                isOpenEnumeration(pSchema) -> {
+//                    pSchema.singleDefaultOrNull()?.let { default ->
+//                        val enum = pSchema.anyOf?.find { it.get().enum?.contains(default) ?: false }
+//
+//                    }
+//                    TODO("Open enumeration")
+//                }
                 pSchema.type is Type.Array ->
                     DefaultArgument.List(
                         (pSchema.type as Type.Array).types.mapNotNull {
@@ -227,6 +243,23 @@ public interface OpenAPIInterceptor {
                                     }
                             }
                     }
+                pSchema.anyOf != null ->
+                    pSchema.anyOf!!.firstNotNullOfOrNull { refOfS ->
+                        refOfS.get()
+                            .takeIf { it.type == Schema.Type.Basic.String }
+                            ?.let { s ->
+                                s.singleDefaultOrNull()
+                                    ?.let {
+                                        val u =DefaultArgument.Union(
+                                            pContext,
+                                            s.toModel(toUnionCaseContext(pContext, refOfS)),
+                                            it
+                                        )
+                                        println(u)
+                                        u
+                                    }
+                            }
+                    }
 
                 pSchema.type == Type.Basic.Number ->
                     pSchema.default?.toString()?.toDoubleOrNull()?.let(DefaultArgument::Double)
@@ -234,7 +267,9 @@ public interface OpenAPIInterceptor {
                 pSchema.type == Type.Basic.Integer ->
                     pSchema.default?.toString()?.toIntOrNull()?.let(DefaultArgument::Int)
 
-                else -> pSchema.default?.toString()?.let { DefaultArgument.Other(it) }
+                else -> pSchema.default?.toString()?.let { s ->
+                    DefaultArgument.Other(s)
+                }
             }
 
         public override fun OpenAPISyntax.toObject(
@@ -252,7 +287,7 @@ public interface OpenAPIInterceptor {
                 // TODO Property interceptor
                 Property(
                     name,
-                    pContext.content,
+                    pContext.name,
                     model,
                     schema.required?.contains(name) == true,
                     pSchema.nullable ?: true,
@@ -343,13 +378,13 @@ public interface OpenAPIInterceptor {
             context: NamingContext,
             caseSchema: ReferenceOr<Schema>
         ): NamingContext = when (caseSchema) {
-            is ReferenceOr.Reference -> NamingContext.ClassName(caseSchema.ref.drop(schemaRef.length))
+            is ReferenceOr.Reference -> NamingContext.TopLevelSchema(caseSchema.ref.drop(schemaRef.length))
             is ReferenceOr.Value -> when (context) {
                 is NamingContext.Inline -> when {
                     caseSchema.value.type != null && caseSchema.value.type is Type.Array ->
                         throw IllegalStateException("Cannot generate name for $caseSchema, ctx: $context.")
 
-                    caseSchema.value.enum != null -> context.copy(content = context.content + "_enum")
+                    caseSchema.value.enum != null -> context.copy(name = context.name + "_enum")
                     else -> context
                 }
                 /*
@@ -361,17 +396,17 @@ public interface OpenAPIInterceptor {
                  *  -> enum (???)
                  *  -> ChatCompletionNamedToolChoice
                  */
-                is NamingContext.ClassName -> generateName(context, caseSchema.value)
+                is NamingContext.TopLevelSchema -> generateName(context, caseSchema.value)
 
-                is NamingContext.OperationParam -> context
+                is NamingContext.RouteParam -> context
                 is NamingContext.Ref -> context
             }
         }
 
         private fun OpenAPISyntax.generateName(
-            context: NamingContext.ClassName,
+            context: NamingContext.TopLevelSchema,
             schema: Schema
-        ): NamingContext.ClassName =
+        ): NamingContext.TopLevelSchema =
             when (val type = schema.type) {
                 is Type.Array -> TODO()
                 Type.Basic.Array -> {
@@ -381,14 +416,14 @@ public interface OpenAPIInterceptor {
                     TODO()
                 }
 
-                Type.Basic.Object -> context.copy(content = "CaseJson")
-                Type.Basic.Number -> context.copy(content = "CaseDouble")
-                Type.Basic.Boolean -> context.copy(content = "CaseBool")
-                Type.Basic.Integer -> context.copy(content = "CaseInt")
+                Type.Basic.Object -> context.copy(name = "CaseJson")
+                Type.Basic.Number -> context.copy(name = "CaseDouble")
+                Type.Basic.Boolean -> context.copy(name = "CaseBool")
+                Type.Basic.Integer -> context.copy(name = "CaseInt")
                 Type.Basic.Null -> TODO()
                 Type.Basic.String -> when (val enum = schema.enum) {
-                    null -> context.copy(content = "CaseString")
-                    else -> context.copy(content = enum.joinToString(prefix = "", separator = "Or"))
+                    null -> context.copy(name = "CaseString")
+                    else -> context.copy(name = enum.joinToString(prefix = "", separator = "Or"))
                 }
 
                 null -> TODO()
@@ -418,14 +453,14 @@ public interface OpenAPIInterceptor {
                             val json = when (val s = mediaType.schema) {
                                 is ReferenceOr.Reference -> {
                                     val (name, schema) = s.namedSchema()
-                                    Route.Body.Json(schema.toModel(NamingContext.ClassName(name)), mediaType.extensions)
+                                    Route.Body.Json(schema.toModel(NamingContext.TopLevelSchema(name)), mediaType.extensions)
                                 }
 
                                 is ReferenceOr.Value ->
                                     Route.Body.Json(
                                         s.value.toModel(
                                             requireNotNull(
-                                                operation.operationId?.let { NamingContext.ClassName("${it}Request") }
+                                                operation.operationId?.let { NamingContext.TopLevelSchema("${it}Request") }
                                             ) { "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name" }
                                         ), mediaType.extensions
                                     )
@@ -437,8 +472,8 @@ public interface OpenAPIInterceptor {
 
                         MultipartFormData.matches(contentType) -> {
                             fun ctx(name: String): NamingContext = when (val s = mediaType.schema) {
-                                is ReferenceOr.Reference -> NamingContext.ClassName(s.namedSchema().first)
-                                is ReferenceOr.Value -> NamingContext.OperationParam(
+                                is ReferenceOr.Reference -> NamingContext.TopLevelSchema(s.namedSchema().first)
+                                is ReferenceOr.Value -> NamingContext.RouteParam(
                                     name,
                                     operation.operationId,
                                     "Request"
@@ -488,14 +523,14 @@ public interface OpenAPIInterceptor {
                                     Pair(
                                         statusCode,
                                         Route.ReturnType(
-                                            schema.toModel(NamingContext.ClassName(name)),
+                                            schema.toModel(NamingContext.TopLevelSchema(name)),
                                             operation.responses.extensions
                                         )
                                     )
                                 }
 
                                 is ReferenceOr.Value -> Pair(statusCode, Route.ReturnType(s.value.toModel(
-                                    requireNotNull(operation.operationId?.let { NamingContext.ClassName("${it}Response") }) {
+                                    requireNotNull(operation.operationId?.let { NamingContext.TopLevelSchema("${it}Response") }) {
                                         "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
                                     }), response.extensions
                                 )
