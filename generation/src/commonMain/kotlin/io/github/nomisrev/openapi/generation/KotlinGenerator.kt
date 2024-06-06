@@ -127,8 +127,10 @@ public tailrec fun Templating.addImports(model: Model): Boolean =
   }
 
 public fun Templating.toObjectCode(obj: Model.Object, naming: NamingStrategy) {
-  fun properties() =
+  fun properties() {
+    if (obj.properties.any { it.isRequired }) addImports("kotlinx.serialization.Required")
     obj.properties.indented(separator = ",\n") { append(it.toPropertyCode(obj.context, naming)) }
+  }
 
   fun nested() =
     indented {
@@ -141,7 +143,6 @@ public fun Templating.toObjectCode(obj: Model.Object, naming: NamingStrategy) {
   addImports(obj)
   Serializable()
   +"data class ${naming.toObjectClassName(obj.context)}("
-  if(obj.properties.any { it.isRequired }) addImports("kotlinx.serialization.Required")
   properties()
   append(")")
   nested()
@@ -193,17 +194,16 @@ fun Model.default(naming: NamingStrategy): String? = when (this) {
 }
 
 public fun Model.Object.Property.toPropertyCode(context: NamingContext, naming: NamingStrategy): String {
-  val nullable = if (isNullable) "?" else ""
-  val default = type.default(naming)?.let { " = $it" } ?: ""
+  val nullable =
+    if (isNullable) "?" else ""
+
+  // Add explicit default value, or add default ` = null` if nullable and not required.
+  val default =
+    type.default(naming)?.let { " = $it" } ?: if (isNullable && !isRequired) " = null" else ""
+  // This allows KotlinX `encodeDefaults = true` to safe on data
+  val required = if (isRequired && default != "") "@Required" else ""
   val paramName = naming.toParamName(context, name)
   val typeName = naming.typeName(type)
-  val required = if (isRequired) "@Required" else ""
-  // TODO update defaultValue
-  //   nullable + required + default = default
-  //   non-nullable + required + default = default
-  //   non-nullable + non-required = default
-  //   nullable + non-required + default = null
-  //   ==> This allows KotlinX `encodeDefaults = true` to safe on data
   return "$required val $paramName: $typeName$nullable$default"
 }
 

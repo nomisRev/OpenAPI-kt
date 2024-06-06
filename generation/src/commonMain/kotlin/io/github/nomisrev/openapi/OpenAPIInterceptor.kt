@@ -249,7 +249,7 @@ interface OpenAPIInterceptor {
           pContext.name,
           model,
           schema.required?.contains(name) == true,
-          pSchema.nullable ?: true,
+          pSchema.nullable ?: schema.required?.contains(name)?.not() ?: true,
           pSchema.description
         )
       },
