@@ -163,8 +163,8 @@ fun Model.default(naming: NamingStrategy): String? = when (this) {
     }
 
   is Model.Enum ->
-    default?.let {
-      "${naming.toEnumClassName(context)}.${naming.toEnumValueName(default)}"
+    (default ?: values.singleOrNull())?.let {
+      "${naming.toEnumClassName(context)}.${naming.toEnumValueName(it)}"
     }
 
   is Model.Primitive -> default()
