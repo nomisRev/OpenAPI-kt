@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import io.exoquery.fansi.Str
 import io.github.nomisrev.openapi.Schema.Type
 import io.github.nomisrev.openapi.http.MediaType
 import io.github.nomisrev.openapi.http.Method
@@ -78,6 +79,15 @@ sealed interface Model {
         data class Boolean(val schema: Schema, val default: kotlin.Boolean?) : Primitive
         data class String(val schema: Schema, val default: kotlin.String?) : Primitive
         data object Unit : Primitive
+
+      fun default(): kotlin.String? =
+        when (this) {
+          is Int -> default?.toString()
+          is Double -> default?.toString()
+          is Boolean -> default?.toString()
+          is String -> default?.let { "\"$it\"" }
+          is Unit -> null
+        }
     }
 
     data object Binary : Model
@@ -91,24 +101,19 @@ sealed interface Model {
             override val schema: Schema,
             override val value: Model,
             val default: kotlin.collections.List<String>?
-        ) : Collection {
-            val simpleName: String = "List"
-        }
+        ) : Collection
 
         data class Set(
             override val schema: Schema,
-            override val value: Model
-        ) : Collection {
-            val simpleName: String = "Set"
-        }
+            override val value: Model,
+            val default: kotlin.collections.List<String>?
+        ) : Collection
 
         data class Map(
             override val schema: Schema,
             override val value: Model
         ) : Collection {
-            val key: Primitive =
-                Primitive.String(Schema(type = Schema.Type.Basic.String), null)
-            val simpleName: String = "Map"
+            val key = Primitive.String(Schema(type = Schema.Type.Basic.String), null)
         }
     }
 
@@ -198,8 +203,7 @@ sealed interface Model {
             override val schema: Schema,
             override val context: NamingContext,
             override val schemas: List<UnionEntry>,
-            override val inline: List<Model>,
-            val default: List<String>?
+            override val inline: List<Model>
         ) : Union
     }
 

@@ -3,7 +3,7 @@ package io.github.nomisrev.openapi
 import io.github.nomisrev.openapi.generation.DefaultNamingStrategy
 import io.github.nomisrev.openapi.generation.ModelPredef
 import io.github.nomisrev.openapi.generation.template
-import io.github.nomisrev.openapi.generation.toCode
+import io.github.nomisrev.openapi.generation.toPropertyCode
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
@@ -34,7 +34,7 @@ public fun FileSystem.generateClient(
     file("predef", emptySet(), ModelPredef)
     openAPI.models().forEach { model ->
         val strategy = DefaultNamingStrategy
-        val content = template { toCode(model, strategy) }
+        val content = template { toPropertyCode(model, strategy) }
         val name = strategy.typeName(model)
         if (name in setOf("MessageStreamEvent", "RunStepStreamEvent", "RunStreamEvent", "AssistantStreamEvent")) Unit
         else file(name, content.imports, content.code)

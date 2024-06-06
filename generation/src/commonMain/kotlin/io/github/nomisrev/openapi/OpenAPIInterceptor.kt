@@ -239,7 +239,6 @@ interface OpenAPIInterceptor {
       context,
       schema.description,
       properties.map { (name, ref) ->
-
         val pSchema = ref.get()
         val pContext = toPropertyContext(name, pSchema, schema, context)
         val model = pSchema.toModel(pContext)
@@ -280,37 +279,37 @@ interface OpenAPIInterceptor {
         Type.Basic.Boolean -> Primitive.Boolean(schema, schema.default?.toString()?.toBoolean())
         Type.Basic.Integer -> Primitive.Int(schema, schema.default?.toString()?.toIntOrNull())
         Type.Basic.Number -> Primitive.Double(schema, schema.default?.toString()?.toDoubleOrNull())
-        Type.Basic.String -> if (schema.format == "binary") Model.Binary else Primitive.String(
-          schema,
-          schema.default?.toString()
-        )
-
+        Type.Basic.Array -> collection(schema, context)
+        Type.Basic.String ->
+          if (schema.format == "binary") Model.Binary
+          else Primitive.String(schema, schema.default?.toString())
         Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
-        Type.Basic.Array -> {
-          val items = requireNotNull(schema.items) { "Array type requires items to be defined." }
-          val inner = when (items) {
-            is ReferenceOr.Reference ->
-              schema.items!!.get().toModel(NamingContext.TopLevelSchema(items.ref.drop(schemaRef.length)))
-
-            is ReferenceOr.Value -> items.value.toModel(context)
-          }
-          if (schema.uniqueItems == true) Collection.Set(schema, inner)
-          else Collection.List(
-            schema,
-            inner,
-            when (val example = schema.default) {
-              is ExampleValue.Multiple -> example.values
-              is ExampleValue.Single ->
-                when (val value = example.value) {
-                  "[]" -> emptyList()
-                  else -> listOf(value)
-                }
-
-              null -> null
-            }
-          )
-        }
       }.let { primitive(context, schema, basic, it) }
+
+    private fun OpenAPISyntax.collection(
+      schema: Schema,
+      context: NamingContext
+    ): Collection {
+      val items = requireNotNull(schema.items) { "Array type requires items to be defined." }
+      val inner = when (items) {
+        is ReferenceOr.Reference ->
+          schema.items!!.get().toModel(NamingContext.TopLevelSchema(items.ref.drop(schemaRef.length)))
+
+        is ReferenceOr.Value -> items.value.toModel(context)
+      }
+      val default = when (val example = schema.default) {
+        is ExampleValue.Multiple -> example.values
+        is ExampleValue.Single ->
+          when (val value = example.value) {
+            "[]" -> emptyList()
+            else -> listOf(value)
+          }
+
+        null -> null
+      }
+      return if (schema.uniqueItems == true) Collection.Set(schema, inner, default)
+      else Collection.List(schema, inner, default)
+    }
 
     override fun OpenAPISyntax.type(
       context: NamingContext,
@@ -321,8 +320,7 @@ interface OpenAPIInterceptor {
         type.types.size == 1 -> type(context, schema.copy(type = type.types.single()), type.types.single())
         else -> TypeArray(schema, context, type.types.sorted().map {
           Model.Union.UnionEntry(context, Schema(type = it).toModel(context))
-        }, emptyList(), null) // Only supports basic types
-        // TODO: how to properly support defaults?
+        }, emptyList())
       }
 
       is Type.Basic -> toPrimitive(context, schema, type)
