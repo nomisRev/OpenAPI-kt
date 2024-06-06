@@ -27,9 +27,8 @@ public fun FileSystem.generateClient(
         }
     }
 
-
     deleteRecursively(Path(generationPath), false)
-    createDirectories(Path("$generationPath/models"))
+    runCatching { createDirectories(Path("$generationPath/models"), mustCreate = false) }
     val rawSpec = read(Path(pathSpec)) { readUtf8() }
     val openAPI = OpenAPI.fromJson(rawSpec)
     file("predef", emptySet(), ModelPredef)

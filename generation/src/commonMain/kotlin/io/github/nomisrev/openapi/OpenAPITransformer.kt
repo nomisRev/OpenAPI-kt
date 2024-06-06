@@ -10,11 +10,12 @@ public fun OpenAPI.models(): Set<Model> =
   }.mapNotNull { model ->
     when (model) {
       is Collection -> model.value
-      Model.Primitive.Int,
-      Model.Primitive.Double,
-      Model.Primitive.Boolean,
-      Model.Primitive.String,
-      Model.Primitive.Unit -> null
+      is Model.Primitive.Int,
+      is Model.Primitive.Double,
+      is Model.Primitive.Boolean,
+      is Model.Primitive.String,
+      is Model.Primitive.Unit -> null
+
       else -> model
     }
   }.toSet()
@@ -108,8 +109,8 @@ private class OpenAPITransformer(
       val responses = toResponses(operation).map { it.value.type }
 
       val parameters = operation.parameters.mapNotNull { refOrParam ->
-        refOrParam.getOrNull()?.let { param ->
-          param.schema?.getOrNull()
+        refOrParam.valueOrNull()?.let { param ->
+          param.schema?.valueOrNull()
             ?.toModel(NamingContext.RouteParam(param.name, operation.operationId, "Request"))
         }
       }
@@ -120,7 +121,7 @@ private class OpenAPITransformer(
   fun schemas(): List<Model> {
     val schemas = openAPI.components.schemas.entries.map { (schemaName, refOrSchema) ->
       val ctx = NamingContext.TopLevelSchema(schemaName)
-      refOrSchema.getOrNull()?.toModel(ctx)
+      refOrSchema.valueOrNull()?.toModel(ctx)
         ?: throw IllegalStateException("Remote schemas not supported yet.")
     }
     return schemas
@@ -148,7 +149,7 @@ private class OpenAPITransformer(
     when {
       properties != null -> toObject(context, this, required ?: emptyList(), properties!!)
       additionalProperties != null -> when (val aProps = additionalProperties!!) {
-        is AdditionalProperties.PSchema -> toMap(context, aProps)
+        is AdditionalProperties.PSchema -> toMap(context, this, aProps)
         is Allowed -> toRawJson(aProps)
       }
 
@@ -167,11 +168,11 @@ private class OpenAPITransformer(
     }?.key
 
   override fun ReferenceOr.Reference.namedSchema(): Pair<String, Schema> {
-    val typeName = this.ref.drop(schemaRef.length)
-    val schema = requireNotNull(openAPI.components.schemas[typeName]) {
-      "Schema $typeName could not be found in ${openAPI.components.schemas}. Is it missing?"
-    }.getOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
-    return Pair(typeName, schema)
+    val name = ref.drop(schemaRef.length)
+    val schema = requireNotNull(openAPI.components.schemas[name]) {
+      "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+    }.valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
+    return Pair(name, schema)
   }
 
   override tailrec fun ReferenceOr<Response>.get(): Response =

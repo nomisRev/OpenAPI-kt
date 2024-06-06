@@ -2,7 +2,6 @@ package io.github.nomisrev.openapi.generation
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Collection
-import io.github.nomisrev.openapi.Model.Object.Property.DefaultArgument
 import io.github.nomisrev.openapi.NamingContext
 
 public tailrec fun Templating.toCode(
@@ -14,23 +13,77 @@ public tailrec fun Templating.toCode(
     is Model.FreeFormJson -> Unit
     is Model.Primitive -> Unit
     is Collection -> toCode(model.value, naming)
-    is Model.Enum -> toCode(model, naming)
-    is Model.Object -> toCode(model, naming)
-    is Model.Union -> toCode(model, naming)
+    is Model.Enum -> toEnumCode(model, naming)
+    is Model.Object -> toObjectCode(model, naming)
+    is Model.Union -> {
+      val isOpenEnumeration = model.isOpenEnumeration()
+      if (isOpenEnumeration) toOpenEnumCode(model, naming)
+      else toUnionCode(model, naming)
+    }
   }
+
+fun Templating.toOpenEnumCode(model: Model.Union, naming: NamingStrategy) {
+  openEnumImports()
+  val enum = model.schemas.firstNotNullOf { it.model as? Model.Enum }
+  val rawToName = enum.values.map { rawName -> Pair(rawName, naming.toEnumValueName(rawName)) }
+  val enumName = naming.toEnumClassName(model.context)
+  Serializable()
+  block("sealed interface $enumName {") {
+    line("val value: String")
+    line()
+    rawToName.joinTo { (rawName, valueName) ->
+      block("data object $valueName : $enumName {") {
+        line("override val value: String = \"$rawName\"")
+        line("override fun toString(): String = \"$rawName\"")
+      }
+    }
+    line()
+    line("@JvmInline")
+    line("value class Custom(override val value: String) : $enumName")
+    line()
+    block("companion object {") {
+      block("val defined: List<$enumName> =", closeAfter = false) {
+        block("listOf(", closeAfter = false) {
+          rawToName.indented(separator = ",\n") { (_, valueName) ->
+            append(valueName)
+          }
+          line(")")
+        }
+      }
+    }
+    line()
+    block("object Serializer : KSerializer<$enumName> {") {
+      line("override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor(\"$enumName\", PrimitiveKind.STRING)")
+      line()
+      block("override fun serialize(encoder: Encoder, value: $enumName) {") {
+        line("encoder.encodeString(value.value)")
+      }
+      line()
+      block("override fun deserialize(decoder: Decoder): $enumName {") {
+        +"val value = decoder.decodeString()"
+        +"return attemptDeserialize(value,"
+        rawToName.indented(separator = ",\n", postfix = ",\n") { (raw, name) ->
+          append("Pair($name::class) { defined.find { it.value == value } }")
+        }
+        line("  Pair(Custom::class) { Custom(value) }")
+        +")"
+      }
+    }
+  }
+}
 
 public fun Templating.Serializable() {
   addImport("kotlinx.serialization.Serializable")
   +"@Serializable"
 }
 
-public fun Templating.toCode(enum: Model.Enum, naming: NamingStrategy) {
-  Serializable()
+public fun Templating.toEnumCode(enum: Model.Enum, naming: NamingStrategy) {
   val rawToName = enum.values.map { rawName -> Pair(rawName, naming.toEnumValueName(rawName)) }
   val isSimple = rawToName.all { (rawName, valueName) -> rawName == valueName }
   val constructor = if (isSimple) "" else "(val value: ${naming.typeName(enum.inner)})"
   if (!isSimple) addImport("kotlinx.serialization.SerialName")
   val enumName = naming.toEnumClassName(enum.context)
+  Serializable()
   block("enum class $enumName$constructor {") {
     rawToName.indented(separator = ",\n", postfix = ";\n") { (rawName, valueName) ->
       if (isSimple) append(rawName)
@@ -60,33 +113,27 @@ public fun Templating.description(obj: Model.Object) {
 
 public fun Templating.addImports(obj: Model.Object): Unit =
   obj.properties.forEach { p ->
-    when (p.type) {
-//      is Model.Binary -> addImport("io.FileUpload")
-      is Model.FreeFormJson -> addImport("kotlinx.serialization.json.JsonElement")
-      else -> Unit
-    }
+    addImports(p.type)
   }
 
-/* Filter models that don't need to be generated */
-private fun List<Model>.filterModels(): List<Model> =
-  mapNotNull { model ->
+public tailrec fun Templating.addImports(model: Model): Boolean =
     when (model) {
-      is Model.Binary -> null
-      is Model.FreeFormJson -> null
-      is Model.Primitive -> null
-      is Collection -> model
-      is Model.Enum -> model
-      is Model.Object -> model
-      is Model.Union -> model
+//      is Model.Binary -> addImport("io.FileUpload")
+      is Model.FreeFormJson ->
+        addImport("kotlinx.serialization.json.JsonElement")
+      is Collection -> addImports(model.value)
+      else -> false
     }
-  }
 
-public fun Templating.toCode(obj: Model.Object, naming: NamingStrategy) {
+public fun Templating.toObjectCode(obj: Model.Object, naming: NamingStrategy) {
   fun properties() =
     obj.properties.indented(separator = ",\n") { append(it.toCode(obj.context, naming)) }
 
   fun nested() =
-    indented { obj.inline.filterModels().indented(prefix = " {\n", postfix = "\n}") { toCode(it, naming) } }
+    indented {
+      obj.inline.indented(prefix = " {\n", postfix = "\n}") {
+        toCode(it, naming) }
+    }
 
 //  description(obj)
   addImports(obj)
@@ -97,28 +144,28 @@ public fun Templating.toCode(obj: Model.Object, naming: NamingStrategy) {
   nested()
 }
 
-public fun Model.Object.Property.defaultValue(context: NamingContext, naming: NamingStrategy): String {
-  val defaultValue = when (default) {
-    is DefaultArgument.Enum ->
-      "${naming.toEnumClassName(default.context)}.${naming.toEnumValueName(default.value)}"
-
-    is DefaultArgument.Other -> if (default.value == "[]") "emptyList()" else default.value
-    is DefaultArgument.Union -> {
-      val unionName = naming.toUnionClassName(default.union)
-      val caseName = naming.toUnionCaseName(context, default.case)
-      "$unionName.$caseName(\"${default.value}\")"
-    }
-    is DefaultArgument.Double -> default.value.toString()
-    is DefaultArgument.Int -> default.value.toString()
-    is DefaultArgument.List -> default.value.joinToString(prefix = "listOf(", postfix = ")")
-    null -> null
-  }
-  return defaultValue?.let { " = $it" } ?: ""
-}
+//public fun Model.Object.Property.defaultValue(context: NamingContext, naming: NamingStrategy): String {
+//  val defaultValue = when (default) {
+//    is DefaultArgument.Enum ->
+//      "${naming.toEnumClassName(default.context)}.${naming.toEnumValueName(default.value)}"
+//
+//    is DefaultArgument.Other -> if (default.value == "[]") "emptyList()" else default.value
+//    is DefaultArgument.Union -> {
+//      val unionName = naming.toUnionClassName(default.union)
+//      val caseName = naming.toUnionCaseName(context, default.case)
+//      "$unionName.$caseName(\"${default.value}\")"
+//    }
+//    is DefaultArgument.Double -> default.value.toString()
+//    is DefaultArgument.Int -> default.value.toString()
+//    is DefaultArgument.List -> default.value.joinToString(prefix = "listOf(", postfix = ")")
+//    null -> null
+//  }
+//  return defaultValue?.let { " = $it" } ?: ""
+//}
 
 public fun Model.Object.Property.toCode(context: NamingContext, naming: NamingStrategy): String {
   val nullable = if (isNullable) "?" else ""
-  val default = defaultValue(context, naming)
+//  val default = defaultValue(context, naming)
   val paramName = naming.toParamName(context, name)
   val typeName = naming.typeName(type)
   // TODO update defaultValue
@@ -127,54 +174,85 @@ public fun Model.Object.Property.toCode(context: NamingContext, naming: NamingSt
   //   non-nullable + non-required = default
   //   nullable + non-required + default = null
   //   ==> This allows KotlinX `encodeDefaults = true` to safe on data
-  return "val $paramName: $typeName$nullable$default"
+  return "val $paramName: $typeName$nullable"//$default
 }
 
-public fun Templating.toCode(union: Model.Union, naming: NamingStrategy) {
+public fun Templating.toUnionCode(union: Model.Union, naming: NamingStrategy) {
   unionImports()
   val unionClassName = naming.typeName(union)
   +"@Serializable(with = $unionClassName.Serializer::class)"
   block("sealed interface $unionClassName {") {
-    union.schemas.joinTo { (ctx, model) ->
+    union.schemas.joinTo { (_, model) ->
       +"@JvmInline"
-      +"value class ${naming.toUnionCaseName(ctx, model)}(val value: ${naming.typeName(model)}): $unionClassName"
+      +"value class ${naming.toUnionCaseName(model)}(val value: ${naming.typeName(model)}): $unionClassName"
     }
 
-    union.inline.filterModels().indented { toCode(it, naming) }
-    line()
+    union.inline.indented { toCode(it, naming) }
+
     block("object Serializer : KSerializer<$unionClassName> {") {
       +"@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)"
-      expression("override val descriptor: SerialDescriptor =") {
-        block("buildSerialDescriptor(\"$unionClassName\", PolymorphicKind.SEALED) {") {
-          union.schemas.indented { (ctx, model) ->
-            append("element(\"${naming.toUnionCaseName(ctx, model)}\", ${serializer(model, naming)}.descriptor)")
-          }
-        }
-      }
+      descriptor(unionClassName, union, naming)
       line()
-      block("override fun deserialize(decoder: Decoder): $unionClassName {") {
-        +"val json = decoder.decodeSerializableValue(JsonElement.serializer())"
-        +"return attemptDeserialize(json,"
-        union.schemas.indented(separator = ",\n") { (ctx, model) ->
-          val caseName = naming.toUnionCaseName(ctx, model)
-          val serializer = serializer(model, naming)
-          append(
-            "Pair($caseName::class) { $caseName(Json.decodeFromJsonElement($serializer, json)) }"
-          )
-        }
-        +")"
-      }
+      deserializer(unionClassName, union, naming)
       line()
-      block("override fun serialize(encoder: Encoder, value: $unionClassName) {") {
-        +"when(value) {"
-        union.schemas.indented { (ctx, model) ->
-          val caseName = naming.toUnionCaseName(ctx, model)
-          val serializer = serializer(model, naming)
-          append("is $caseName -> encoder.encodeSerializableValue($serializer, value.value)")
-        }
-        +"}"
+      serializer(unionClassName, union, naming)
+    }
+  }
+}
+
+private fun Templating.descriptor(
+  unionClassName: String,
+  union: Model.Union,
+  naming: NamingStrategy
+) {
+  expression("override val descriptor: SerialDescriptor =") {
+    block("buildSerialDescriptor(\"$unionClassName\", PolymorphicKind.SEALED) {") {
+      union.schemas.indented { (ctx, model) ->
+        append(
+          "element(\"${naming.toUnionCaseName(model)}\", ${
+            serializer(
+              model,
+              naming
+            )
+          }.descriptor)"
+        )
       }
     }
+  }
+}
+
+private fun Templating.serializer(
+  unionClassName: String,
+  union: Model.Union,
+  naming: NamingStrategy
+) {
+  block("override fun serialize(encoder: Encoder, value: $unionClassName) {") {
+    +"when(value) {"
+    union.schemas.indented { (ctx, model) ->
+      val caseName = naming.toUnionCaseName(model)
+      val serializer = serializer(model, naming)
+      append("is $caseName -> encoder.encodeSerializableValue($serializer, value.value)")
+    }
+    +"}"
+  }
+}
+
+private fun Templating.deserializer(
+  unionClassName: String,
+  union: Model.Union,
+  naming: NamingStrategy
+) {
+  block("override fun deserialize(decoder: Decoder): $unionClassName {") {
+    +"val json = decoder.decodeSerializableValue(JsonElement.serializer())"
+    +"return attemptDeserialize(json,"
+    union.schemas.indented(separator = ",\n") { (ctx, model) ->
+      val caseName = naming.toUnionCaseName(model)
+      val serializer = serializer(model, naming)
+      append(
+        "Pair($caseName::class) { $caseName(Json.decodeFromJsonElement($serializer, json)) }"
+      )
+    }
+    +")"
   }
 }
 
@@ -209,6 +287,21 @@ private fun Templating.serializer(model: Model, naming: NamingStrategy): String 
       "JsonElement.serializer()"
     }
   }
+
+public fun Templating.openEnumImports() {
+  addImports(
+    "kotlin.jvm.JvmInline",
+    "kotlinx.serialization.Serializable",
+    "kotlinx.serialization.KSerializer",
+    "kotlinx.serialization.descriptors.PrimitiveKind",
+    "kotlinx.serialization.descriptors.SerialDescriptor",
+    "kotlinx.serialization.descriptors.PrimitiveSerialDescriptor",
+    "kotlinx.serialization.encoding.Decoder",
+    "kotlinx.serialization.encoding.Encoder",
+    "kotlinx.serialization.json.Json",
+    "kotlinx.serialization.json.JsonElement",
+  )
+}
 
 public fun Templating.unionImports() {
   addImports(

@@ -20,7 +20,7 @@ public interface NamingStrategy {
   public fun toEnumValueName(value: String): String
   public fun toObjectClassName(context: NamingContext): String
   public fun toParamName(objContext: NamingContext, paramName: String): String
-  public fun toUnionClassName(context: NamingContext): String
+  public fun toUnionClassName(model: Model.Union): String
   public fun toPrimitiveName(model: Model.Primitive): String
 
   /**
@@ -31,7 +31,7 @@ public interface NamingStrategy {
    *     => Int, Ints for List<Int>, IntsList for List<List<Int>>.
    *     => duplicate schemas can be filtered out.
    */
-  public fun toUnionCaseName(context: NamingContext, model: Model, depth: List<Model> = emptyList()): String
+  public fun toUnionCaseName(model: Model, depth: List<Model> = emptyList()): String
 }
 
 public object DefaultNamingStrategy : NamingStrategy {
@@ -57,7 +57,7 @@ public object DefaultNamingStrategy : NamingStrategy {
       is Collection -> toCollection(model)
       is Model.Enum -> toEnumClassName(model.context)
       is Model.Object -> toObjectClassName(model.context)
-      is Model.Union -> toUnionClassName(model.context)
+      is Model.Union -> toUnionClassName(model)
       is Model.Primitive -> toPrimitiveName(model)
     }
 
@@ -98,8 +98,8 @@ public object DefaultNamingStrategy : NamingStrategy {
     return if (pascalCase.isValidClassname()) pascalCase
     else {
       val sanitise = pascalCase
-      .run { if(startsWith("[")) drop(1) else this }
-      .run { if(startsWith("]")) dropLast(1) else this }
+        .run { if (startsWith("[")) drop(1) else this }
+        .run { if (startsWith("]")) dropLast(1) else this }
       if (sanitise.isValidClassname()) sanitise
       else "`$sanitise`"
     }
@@ -115,20 +115,29 @@ public object DefaultNamingStrategy : NamingStrategy {
   override fun toParamName(objContext: NamingContext, paramName: String): String =
     paramName.sanitize().dropArraySyntax().toCamelCase()
 
-  override fun toUnionClassName(context: NamingContext): String =
-    when(context) {
-      is NamingContext.Inline -> "${context.outer.name.toPascalCase()}${context.name.toPascalCase()}"
+  override fun toUnionClassName(model: Model.Union): String {
+    val context = model.context
+    return when {
+      model.isOpenEnumeration() -> toEnumClassName(context)
+      context is NamingContext.Inline -> "${context.outer.name.toPascalCase()}${context.name.toPascalCase()}"
       else -> context.name.toPascalCase()
     }
+  }
 
   override fun toPrimitiveName(model: Model.Primitive): String =
-    model.name
-
-  override fun toUnionCaseName(context: NamingContext, model: Model, depth: List<Model>): String =
     when (model) {
-      is Collection.List -> toUnionCaseName(context, model.value, depth + listOf(model))
-      is Collection.Map -> toUnionCaseName(context, model.value, depth + listOf(model))
-      is Collection.Set -> toUnionCaseName(context, model.value, depth + listOf(model))
+      is Model.Primitive.Boolean -> "Boolean"
+      is Model.Primitive.Double -> "Double"
+      is Model.Primitive.Int -> "Int"
+      is Model.Primitive.String -> "String"
+      Model.Primitive.Unit -> "Unit"
+    }
+
+  override fun toUnionCaseName(model: Model, depth: List<Model>): String =
+    when (model) {
+      is Collection.List -> toUnionCaseName(model.value, depth + listOf(model))
+      is Collection.Map -> toUnionCaseName(model.value, depth + listOf(model))
+      is Collection.Set -> toUnionCaseName(model.value, depth + listOf(model))
       else -> {
         val head = depth.firstOrNull()
         val s = when (head) {

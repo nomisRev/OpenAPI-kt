@@ -31,7 +31,7 @@ public sealed interface ReferenceOr<out A> {
   @JvmInline
   public value class Value<A>(public val value: A) : ReferenceOr<A>
 
-  public fun getOrNull(): A? =
+  public fun valueOrNull(): A? =
     when (this) {
       is Reference -> null
       is Value -> value

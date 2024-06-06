@@ -52,4 +52,20 @@ internal fun <A> attemptDeserialize(
   }
   throw OneOfSerializationException(json, errors)
 }
+
+internal fun <A: Any> attemptDeserialize(
+  value: String,
+  vararg block: Pair<KClass<*>, (value: String) -> A?>
+): A {
+  val errors = linkedMapOf<KClass<*>, SerializationException>()
+  block.forEach { (kclass, f) ->
+    try {
+      f(value)?.let { res -> return res }
+    } catch (e: SerializationException) {
+      errors[kclass] = e
+    }
+  }
+  // TODO Improve this error message
+  throw RuntimeException("BOOM! Improve this error message")
+}
 """.trimIndent()

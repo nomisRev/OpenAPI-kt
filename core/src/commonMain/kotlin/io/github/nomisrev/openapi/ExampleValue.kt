@@ -54,20 +54,5 @@ public sealed interface ExampleValue {
     }
 
     public operator fun invoke(v: String): ExampleValue = Single(v)
-//    @Suppress("UNCHECKED_CAST")
-//    public operator fun invoke(codec: Codec<*, *, *>, e: Any?): ExampleValue? =
-//      invoke(codec.schema(), (codec as Codec<*, Any?, *>).encode(e))
-
-//    public operator fun invoke(schema: arrow.endpoint.Schema<*>, raw: Any?): ExampleValue? =
-//      when (raw) {
-//        is Iterable<*> ->
-//          when (schema) {
-//            is arrow.endpoint.Schema.List -> Multiple(raw.map(Any?::toString))
-//            else -> raw.firstOrNull()?.let { Single(it.toString()) }
-//          }
-//        is Option<*> -> raw.fold({ null }) { Single(it.toString()) }
-//        null -> null
-//        else -> Single(raw.toString())
-//      }
   }
 }
