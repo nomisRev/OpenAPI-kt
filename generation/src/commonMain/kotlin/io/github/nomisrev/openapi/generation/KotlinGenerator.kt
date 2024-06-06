@@ -141,6 +141,7 @@ public fun Templating.toObjectCode(obj: Model.Object, naming: NamingStrategy) {
   addImports(obj)
   Serializable()
   +"data class ${naming.toObjectClassName(obj.context)}("
+  if(obj.properties.any { it.isRequired }) addImports("kotlinx.serialization.Required")
   properties()
   append(")")
   nested()
@@ -196,13 +197,14 @@ public fun Model.Object.Property.toPropertyCode(context: NamingContext, naming: 
   val default = type.default(naming)?.let { " = $it" } ?: ""
   val paramName = naming.toParamName(context, name)
   val typeName = naming.typeName(type)
+  val required = if (isRequired) "@Required" else ""
   // TODO update defaultValue
   //   nullable + required + default = default
   //   non-nullable + required + default = default
   //   non-nullable + non-required = default
   //   nullable + non-required + default = null
   //   ==> This allows KotlinX `encodeDefaults = true` to safe on data
-  return "val $paramName: $typeName$nullable$default"
+  return "$required val $paramName: $typeName$nullable$default"
 }
 
 public fun Templating.toUnionCode(union: Model.Union, naming: NamingStrategy) {

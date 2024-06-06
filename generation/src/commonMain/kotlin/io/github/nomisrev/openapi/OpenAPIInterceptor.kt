@@ -244,6 +244,7 @@ interface OpenAPIInterceptor {
         val model = pSchema.toModel(pContext)
         // TODO Property interceptor
         Property(
+          pSchema,
           name,
           pContext.name,
           model,
