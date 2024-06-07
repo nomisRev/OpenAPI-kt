@@ -5,9 +5,13 @@ import kotlin.jvm.JvmInline
 @JvmInline
 public value class StatusCode(public val code: Int) {
   public fun isInformational(): Boolean = code / 100 == 1
+
   public fun isSuccess(): Boolean = code / 100 == 2
+
   public fun isRedirect(): Boolean = code / 100 == 3
+
   public fun isClientError(): Boolean = code / 100 == 4
+
   public fun isServerError(): Boolean = code / 100 == 5
 
   public companion object {

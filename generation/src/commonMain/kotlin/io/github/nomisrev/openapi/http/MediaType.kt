@@ -11,14 +11,13 @@ public data class MediaType(
 
   // TODO kotlinx-io-core offers a MPP Charset implementation.
   // Only offers UTF_8 & ISO_8859_1
-//  public fun charset(c: Charset): MediaType = charset(c.name())
+  //  public fun charset(c: Charset): MediaType = charset(c.name())
 
   public fun charset(c: String): MediaType = copy(charset = c)
 
   public fun noCharset(): MediaType = copy(charset = null)
 
-  public fun matches(mediaType: String): Boolean =
-    mediaType.startsWith(toString())
+  public fun matches(mediaType: String): Boolean = mediaType.startsWith(toString())
 
   override fun toString(): String =
     "$mainType/$subType${charset?.let { c -> "; charset=$c" } ?: ""}"

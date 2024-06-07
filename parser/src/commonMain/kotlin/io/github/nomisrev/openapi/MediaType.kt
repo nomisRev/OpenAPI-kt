@@ -26,26 +26,30 @@ public data class MediaType(
    * if referencing a schema which contains an example, the examples value SHALL override the
    * example provided by the schema.
    */
-  public val examples: Map<String, ReferenceOr<@Serializable(with= Example.Companion.Serializer::class) Example>> = emptyMap(),
+  public val examples:
+    Map<String, ReferenceOr<@Serializable(with = Example.Companion.Serializer::class) Example>> =
+    emptyMap(),
   /**
    * A map between a property name and its encoding information. The key, being the property name,
    * MUST exist in the schema as a property. The encoding object SHALL only apply to requestBody
    * objects when the media type is multipart or application/x-www-form-urlencoded.
    */
-  public val encoding: Map<String, @Serializable(with = EncodingSerializer::class) Encoding> = emptyMap(),
+  public val encoding: Map<String, @Serializable(with = EncodingSerializer::class) Encoding> =
+    emptyMap(),
   /**
-   * Any additional external documentation for this OpenAPI document.
-   * The key is the name of the extension (beginning with x-), and the value is the data.
-   * The value can be a [JsonNull], [JsonPrimitive], [JsonArray] or [JsonObject].
+   * Any additional external documentation for this OpenAPI document. The key is the name of the
+   * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
+   * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
   public val extensions: Map<String, JsonElement> = emptyMap()
 ) {
   public companion object {
-    internal object Serializer : KSerializerWithExtensions<MediaType>(
-      OpenAPI.Json,
-      serializer(),
-      MediaType::extensions,
-      { op, extensions -> op.copy(extensions = extensions) }
-    )
+    internal object Serializer :
+      KSerializerWithExtensions<MediaType>(
+        OpenAPI.Json,
+        serializer(),
+        MediaType::extensions,
+        { op, extensions -> op.copy(extensions = extensions) }
+      )
   }
 }

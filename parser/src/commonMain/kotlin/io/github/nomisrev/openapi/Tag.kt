@@ -2,7 +2,6 @@ package io.github.nomisrev.openapi
 
 import kotlinx.serialization.Serializable
 
-
 /**
  * Allows adding metadata to a single tag that is used by @Operation@. It is not mandatory to have
  * a @Tag@ per tag used there.

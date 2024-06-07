@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import kotlin.jvm.JvmInline
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -12,7 +13,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
-import kotlin.jvm.JvmInline
 
 @Serializable(with = ExampleValue.Companion.Serializer::class)
 public sealed interface ExampleValue {
@@ -39,8 +39,7 @@ public sealed interface ExampleValue {
       override fun serialize(encoder: Encoder, value: ExampleValue) {
         when (value) {
           is Single -> encoder.encodeString(value.value)
-          is Multiple ->
-            encoder.encodeSerializableValue(multipleSerializer, value.values)
+          is Multiple -> encoder.encodeSerializableValue(multipleSerializer, value.values)
         }
       }
 
@@ -48,7 +47,10 @@ public sealed interface ExampleValue {
         return when (val json = decoder.decodeSerializableValue(JsonElement.serializer())) {
           is JsonArray -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
           is JsonPrimitive -> Single(json.content)
-          else -> throw SerializationException("ExampleValue can only be a primitive or an array, found $json")
+          else ->
+            throw SerializationException(
+              "ExampleValue can only be a primitive or an array, found $json"
+            )
         }
       }
     }

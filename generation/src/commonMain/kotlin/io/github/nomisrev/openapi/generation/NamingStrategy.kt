@@ -10,45 +10,55 @@ import net.pearx.kasechange.toPascalCase
 
 public interface NamingStrategy {
   public fun typeName(model: Model): String
+
   public fun toBinary(binary: Model.Binary): String
+
   public fun toFreeFormJson(json: Model.FreeFormJson): String
+
   public fun toCollection(collection: Collection): String
+
   public fun toList(list: Collection.List): String
+
   public fun toSet(set: Collection.Set): String
+
   public fun toMap(map: Collection.Map): String
+
   public fun toEnumClassName(context: NamingContext): String
+
   public fun toEnumValueName(value: String): String
+
   public fun toObjectClassName(context: NamingContext): String
+
   public fun toParamName(objContext: NamingContext, paramName: String): String
+
   public fun toUnionClassName(model: Model.Union): String
+
   public fun toPrimitiveName(model: Model.Primitive): String
 
   /**
-   * Union types are a hard piece to generate (oneOf, anyOf).
-   * Depending on where the union occurs, we need a different name.
-   *  1. Top-level case schema, use user defined name
-   *  2. _Inline case schema_, if primitive we generate CasePrimitive
-   *     => Int, Ints for List<Int>, IntsList for List<List<Int>>.
-   *     => duplicate schemas can be filtered out.
+   * Union types are a hard piece to generate (oneOf, anyOf). Depending on where the union occurs,
+   * we need a different name.
+   * 1. Top-level case schema, use user defined name
+   * 2. _Inline case schema_, if primitive we generate CasePrimitive => Int, Ints for List<Int>,
+   *    IntsList for List<List<Int>>. => duplicate schemas can be filtered out.
    */
   public fun toUnionCaseName(model: Model, depth: List<Model> = emptyList()): String
 }
 
 public object DefaultNamingStrategy : NamingStrategy {
   // OpenAI adds '/', so this WordSplitter takes that into account
-  private val wordSplitter = WordSplitterConfigurable(
-    WordSplitterConfig(
-      boundaries = setOf(' ', '-', '_', '.', '/'),
-      handleCase = true,
-      treatDigitsAsUppercase = true
+  private val wordSplitter =
+    WordSplitterConfigurable(
+      WordSplitterConfig(
+        boundaries = setOf(' ', '-', '_', '.', '/'),
+        handleCase = true,
+        treatDigitsAsUppercase = true
+      )
     )
-  )
 
-  private fun String.toPascalCase(): String =
-    toPascalCase(wordSplitter)
+  private fun String.toPascalCase(): String = toPascalCase(wordSplitter)
 
-  private fun String.toCamelCase(): String =
-    toCamelCase(wordSplitter)
+  private fun String.toCamelCase(): String = toCamelCase(wordSplitter)
 
   public override fun typeName(model: Model): String =
     when (model) {
@@ -72,11 +82,9 @@ public object DefaultNamingStrategy : NamingStrategy {
       is Collection.Set -> toSet(collection)
     }
 
-  override fun toList(list: Collection.List): String =
-    "List<${typeName(list.value)}>"
+  override fun toList(list: Collection.List): String = "List<${typeName(list.value)}>"
 
-  override fun toSet(set: Collection.Set): String =
-    "Set<${typeName(set.value)}>"
+  override fun toSet(set: Collection.Set): String = "Set<${typeName(set.value)}>"
 
   override fun toMap(map: Collection.Map): String =
     "Map<${typeName(map.key)}, ${typeName(map.value)}>"
@@ -97,11 +105,11 @@ public object DefaultNamingStrategy : NamingStrategy {
     val pascalCase = value.toPascalCase()
     return if (pascalCase.isValidClassname()) pascalCase
     else {
-      val sanitise = pascalCase
-        .run { if (startsWith("[")) drop(1) else this }
-        .run { if (startsWith("]")) dropLast(1) else this }
-      if (sanitise.isValidClassname()) sanitise
-      else "`$sanitise`"
+      val sanitise =
+        pascalCase
+          .run { if (startsWith("[")) drop(1) else this }
+          .run { if (startsWith("]")) dropLast(1) else this }
+      if (sanitise.isValidClassname()) sanitise else "`$sanitise`"
     }
   }
 
@@ -109,8 +117,7 @@ public object DefaultNamingStrategy : NamingStrategy {
     context.name.dropArraySyntax().toPascalCase()
 
   // Workaround for OpenAI
-  private fun String.dropArraySyntax(): String =
-    replace("[]", "")
+  private fun String.dropArraySyntax(): String = replace("[]", "")
 
   override fun toParamName(objContext: NamingContext, paramName: String): String =
     paramName.sanitize().dropArraySyntax().toCamelCase()
@@ -119,7 +126,8 @@ public object DefaultNamingStrategy : NamingStrategy {
     val context = model.context
     return when {
       model.isOpenEnumeration() -> toEnumClassName(context)
-      context is NamingContext.Inline -> "${context.outer.name.toPascalCase()}${context.name.toPascalCase()}"
+      context is NamingContext.Inline ->
+        "${context.outer.name.toPascalCase()}${context.name.toPascalCase()}"
       else -> context.name.toPascalCase()
     }
   }
@@ -140,20 +148,22 @@ public object DefaultNamingStrategy : NamingStrategy {
       is Collection.Set -> toUnionCaseName(model.value, depth + listOf(model))
       else -> {
         val head = depth.firstOrNull()
-        val s = when (head) {
-          is Collection.List -> "s"
-          is Collection.Set -> "s"
-          is Collection.Map -> "Map"
-          else -> ""
-        }
-        val postfix = depth.drop(1).joinToString(separator = "") {
-          when (it) {
-            is Collection.List -> "List"
+        val s =
+          when (head) {
+            is Collection.List -> "s"
+            is Collection.Set -> "s"
             is Collection.Map -> "Map"
-            is Collection.Set -> "Set"
             else -> ""
           }
-        }
+        val postfix =
+          depth.drop(1).joinToString(separator = "") {
+            when (it) {
+              is Collection.List -> "List"
+              is Collection.Map -> "Map"
+              is Collection.Set -> "Set"
+              else -> ""
+            }
+          }
 
         "Case${typeName(model)}${s}$postfix"
       }

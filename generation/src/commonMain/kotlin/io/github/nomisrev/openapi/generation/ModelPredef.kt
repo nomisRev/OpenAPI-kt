@@ -1,11 +1,12 @@
 package io.github.nomisrev.openapi.generation
 
 // TODO include nicer message about expected format
-internal val ModelPredef: String = """
+internal val ModelPredef: String =
+  """
 import kotlin.reflect.KClass
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.json.JsonElement  
-  
+import kotlinx.serialization.json.JsonElement
+
 class OneOfSerializationException(
   val payload: JsonElement,
   val errors: Map<KClass<*>, SerializationException>,
@@ -68,4 +69,5 @@ internal fun <A: Any> attemptDeserialize(
   // TODO Improve this error message
   throw RuntimeException("BOOM! Improve this error message")
 }
-""".trimIndent()
+"""
+    .trimIndent()

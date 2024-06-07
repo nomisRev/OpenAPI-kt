@@ -1,7 +1,6 @@
-import io.github.nomisrev.openapi.generateClient
+import io.github.nomisrev.openapi.generateModel
 import okio.FileSystem
 
 public fun main() {
-  FileSystem.SYSTEM
-    .generateClient("openai.json")
+  FileSystem.SYSTEM.generateModel("openai.json")
 }

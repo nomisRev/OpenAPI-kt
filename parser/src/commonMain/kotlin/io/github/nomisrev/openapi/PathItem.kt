@@ -49,9 +49,9 @@ public data class PathItem(
    */
   public val parameters: List<ReferenceOr<Parameter>> = emptyList(),
   /**
-   * Any additional external documentation for this OpenAPI document.
-   * The key is the name of the extension (beginning with x-), and the value is the data.
-   * The value can be a [JsonNull], [JsonPrimitive], [JsonArray] or [JsonObject].
+   * Any additional external documentation for this OpenAPI document. The key is the name of the
+   * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
+   * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
   public val extensions: Map<String, JsonElement> = emptyMap()
 ) {

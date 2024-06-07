@@ -1,6 +1,6 @@
 package io.github.nomisrev.openapi.plugin
 
-import io.github.nomisrev.openapi.generateClient
+import io.github.nomisrev.openapi.generateModel
 import okio.FileSystem
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
@@ -17,17 +17,20 @@ abstract class GenerateClientTask : DefaultTask() {
   }
 
   @get:InputFile
-  @get:Option(option = "spec", description = "The OpenAPI json file. Future will be supported soon.")
+  @get:Option(
+    option = "spec",
+    description = "The OpenAPI json file. Future will be supported soon."
+  )
   abstract val spec: RegularFileProperty
 
-  @get:OutputFile
-  abstract val outputDir: RegularFileProperty
+  @get:OutputFile abstract val outputDir: RegularFileProperty
 
   @TaskAction
   fun sampleAction() {
-    val specPath = requireNotNull(spec.orNull?.asFile?.toPath()?.toString()) {
-      "No OpenAPI Specification specified. Please provide a spec file."
-    }
-    FileSystem.SYSTEM.generateClient(specPath)
+    val specPath =
+      requireNotNull(spec.orNull?.asFile?.toPath()?.toString()) {
+        "No OpenAPI Specification specified. Please provide a spec file."
+      }
+    FileSystem.SYSTEM.generateModel(specPath)
   }
 }

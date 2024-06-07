@@ -24,9 +24,9 @@ public data class RequestBody(
   /** Determines if the request body is required in the request. Defaults to false. */
   public val required: Boolean = false,
   /**
-   * Any additional external documentation for this OpenAPI document.
-   * The key is the name of the extension (beginning with x-), and the value is the data.
-   * The value can be a [JsonNull], [JsonPrimitive], [JsonArray] or [JsonObject].
+   * Any additional external documentation for this OpenAPI document. The key is the name of the
+   * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
+   * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
   public val extensions: Map<String, JsonElement> = emptyMap()
 )

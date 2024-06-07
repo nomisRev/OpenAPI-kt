@@ -37,15 +37,22 @@ public data class Responses(
    */
   public val responses: Map<Int, ReferenceOr<Response>>,
   /**
-   * Any additional external documentation for this OpenAPI document.
-   * The key is the name of the extension (beginning with x-), and the value is the data.
-   * The value can be a [JsonNull], [JsonPrimitive], [JsonArray] or [JsonObject].
+   * Any additional external documentation for this OpenAPI document. The key is the name of the
+   * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
+   * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
   public val extensions: Map<String, JsonElement> = emptyMap()
 ) {
 
-  public constructor(statusCode: Int, response: Response) : this(null, mapOf(statusCode to ReferenceOr.Value(response)))
-  public constructor(head: Pair<Int, ReferenceOr<Response>>, vararg responses: Pair<Int, ReferenceOr<Response>>) : this(null, mapOf(head) + responses)
+  public constructor(
+    statusCode: Int,
+    response: Response
+  ) : this(null, mapOf(statusCode to ReferenceOr.Value(response)))
+
+  public constructor(
+    head: Pair<Int, ReferenceOr<Response>>,
+    vararg responses: Pair<Int, ReferenceOr<Response>>
+  ) : this(null, mapOf(head) + responses)
 
   public operator fun plus(other: Responses): Responses =
     Responses(other.default ?: default, responses + other.responses)
@@ -58,19 +65,24 @@ public data class Responses(
 
       override fun deserialize(decoder: Decoder): Responses {
         val json = decoder.decodeSerializableValue(JsonElement.serializer()).jsonObject
-        val default = if (json.contains("default")) Json.decodeFromJsonElement(responseSerializer, json.getValue("default"))
-        else null
+        val default =
+          if (json.contains("default"))
+            Json.decodeFromJsonElement(responseSerializer, json.getValue("default"))
+          else null
         val responsesJs = json.filterNot { it.key.startsWith("x-") || it.key == "default" }
-        val responses = if(responsesJs.isNotEmpty()) Json.decodeFromJsonElement(responsesSerializer, JsonObject(responsesJs))
-        else emptyMap()
+        val responses =
+          if (responsesJs.isNotEmpty())
+            Json.decodeFromJsonElement(responsesSerializer, JsonObject(responsesJs))
+          else emptyMap()
         val extensions = json.filter { it.key.startsWith("x-") }
         return Responses(default, responses, extensions)
       }
 
       override fun serialize(encoder: Encoder, value: Responses) {
-        val default = value.default?.let {
-          Json.encodeToJsonElement(ReferenceOr.serializer(Response.serializer()), it).jsonObject
-        }
+        val default =
+          value.default?.let {
+            Json.encodeToJsonElement(ReferenceOr.serializer(Response.serializer()), it).jsonObject
+          }
         val responses = Json.encodeToJsonElement(responsesSerializer, value.responses).jsonObject
         val json = JsonObject((default ?: emptyMap()) + responses + value.extensions)
         encoder.encodeSerializableValue(JsonElement.serializer(), json)
@@ -89,6 +101,7 @@ private object ResponsesDescriptor : SerialDescriptor {
     ReferenceOr.serializer(Response.serializer()).descriptor
 
   override fun getElementName(index: Int): String = index.toString()
+
   override fun getElementIndex(name: String): Int =
     name.toIntOrNull() ?: throw IllegalArgumentException("$name is not a valid list index")
 

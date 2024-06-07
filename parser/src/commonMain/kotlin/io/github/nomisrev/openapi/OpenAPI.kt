@@ -1,21 +1,20 @@
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.Components.Companion.Serializer as ComponentsSerializer
+import kotlin.jvm.JvmStatic
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
 import kotlinx.serialization.ExperimentalSerializationApi
-import io.github.nomisrev.openapi.Components.Companion.Serializer as ComponentsSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
-import kotlin.jvm.JvmStatic
-
 
 /** This is the root document object for the API specification. */
 @OptIn(ExperimentalSerializationApi::class)
@@ -34,13 +33,16 @@ public data class OpenAPI(
   /** The available paths and operations for the API. */
   public val paths: Map<String, PathItem> = emptyMap(),
   /**
-   * The incoming webhooks that MAY be received as part of this API and that the API consumer MAY choose to implement.
-   * Closely related to the callbacks feature, this section describes requests initiated other than by an API call, for example by an out of band registration.
-   * The key name is a unique string to refer to each webhook, while the (optionally referenced) Path Item Object describes a request that may be initiated by the API provider and the expected responses.
+   * The incoming webhooks that MAY be received as part of this API and that the API consumer MAY
+   * choose to implement. Closely related to the callbacks feature, this section describes requests
+   * initiated other than by an API call, for example by an out of band registration. The key name
+   * is a unique string to refer to each webhook, while the (optionally referenced) Path Item Object
+   * describes a request that may be initiated by the API provider and the expected responses.
    */
   public val webhooks: Map<String, ReferenceOr<PathItem>> = emptyMap(),
   /** An element to hold various schemas for the specification. */
-  public val components: @Serializable(with = ComponentsSerializer::class) Components = Components(),
+  public val components: @Serializable(with = ComponentsSerializer::class) Components =
+    Components(),
   /**
    * A declaration of which security mechanisms can be used across the API. The list of values
    * includes alternative security requirement objects that can be used. Only one of the security
@@ -59,21 +61,19 @@ public data class OpenAPI(
   /** Additional external documentation. */
   public val externalDocs: ExternalDocs? = null,
   /**
-   * Any additional external documentation for this OpenAPI document.
-   * The key is the name of the extension (beginning with x-), and the value is the data.
-   * The value can be a [JsonNull], [JsonPrimitive], [JsonArray] or [JsonObject].
+   * Any additional external documentation for this OpenAPI document. The key is the name of the
+   * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
+   * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
   public val extensions: Map<String, JsonElement> = emptyMap()
 ) {
 
-  public fun operationsByTag(): Map<String, List<Operation>> =
-    TODO()
-//    tags.associateBy(Tag::name) { tag ->
-//      operations().filter { it.tags.contains(tag.name) }
-//    }
+  public fun operationsByTag(): Map<String, List<Operation>> = TODO()
+  //    tags.associateBy(Tag::name) { tag ->
+  //      operations().filter { it.tags.contains(tag.name) }
+  //    }
 
-  public fun withComponents(components: Components): OpenAPI =
-    copy(components = components)
+  public fun withComponents(components: Components): OpenAPI = copy(components = components)
 
   public fun withPathItem(path: String, pathItem: PathItem): OpenAPI {
     val newPathItem =
@@ -85,20 +85,16 @@ public data class OpenAPI(
     return copy(paths = paths + Pair(path, newPathItem))
   }
 
-  public fun withServers(servers: List<Server>): OpenAPI =
-    copy(servers = this.servers + servers)
+  public fun withServers(servers: List<Server>): OpenAPI = copy(servers = this.servers + servers)
 
   public fun withServers(vararg servers: Server): OpenAPI =
     copy(servers = this.servers + servers.toList())
 
-  public fun withServer(server: Server): OpenAPI =
-    copy(servers = this.servers + listOf(server))
+  public fun withServer(server: Server): OpenAPI = copy(servers = this.servers + listOf(server))
 
-  public fun withTags(tags: Set<Tag>): OpenAPI =
-    copy(tags = this.tags + tags)
+  public fun withTags(tags: Set<Tag>): OpenAPI = copy(tags = this.tags + tags)
 
-  public fun withTag(tag: Tag): OpenAPI =
-    copy(tags = this.tags + setOf(tag))
+  public fun withTag(tag: Tag): OpenAPI = copy(tags = this.tags + setOf(tag))
 
   public fun withExternalDocs(externalDocs: ExternalDocs): OpenAPI =
     copy(externalDocs = externalDocs)
@@ -106,15 +102,12 @@ public data class OpenAPI(
   public fun withExtensions(extensions: Map<String, JsonElement>): OpenAPI =
     copy(extensions = this.extensions + extensions)
 
-  public fun toJson(): String =
-    Json.encodeToString(this)
+  public fun toJson(): String = Json.encodeToString(this)
 
-  public fun toJsObject(): JsonObject =
-    Json.encodeToJsonElement(this).jsonObject
+  public fun toJsObject(): JsonObject = Json.encodeToJsonElement(this).jsonObject
 
   public companion object {
-    public fun fromJson(json: String): OpenAPI =
-      Json.decodeFromString(serializer(), json)
+    public fun fromJson(json: String): OpenAPI = Json.decodeFromString(serializer(), json)
 
     @JvmStatic
     internal val Json: Json = Json {

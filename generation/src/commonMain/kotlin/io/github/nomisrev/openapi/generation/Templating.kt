@@ -2,31 +2,22 @@ package io.github.nomisrev.openapi.generation
 
 /**
  * Small DSL for two functionalities:
- *  - automatic indenting
- *  - being able to add/inject imports
+ * - automatic indenting
+ * - being able to add/inject imports
  */
-public fun template(
-  indent: String = "  ",
-  init: Templating.() -> Unit
-): Content =
-  Template(0, StringBuilder(), indent, mutableSetOf())
-    .also(init)
-    .build()
+public fun template(indent: String = "  ", init: Templating.() -> Unit): Content =
+  Template(0, StringBuilder(), indent, mutableSetOf()).also(init).build()
 
-@DslMarker
-public annotation class TemplatingDSL
+@DslMarker public annotation class TemplatingDSL
 
 public data class Content(val imports: Set<String>, val code: String)
 
 public interface Templating {
-  @TemplatingDSL
-  public fun append(line: String)
+  @TemplatingDSL public fun append(line: String)
 
-  @TemplatingDSL
-  public fun addImports(vararg imports: String): Boolean
+  @TemplatingDSL public fun addImports(vararg imports: String): Boolean
 
-  @TemplatingDSL
-  public fun indented(init: Templating.() -> Unit)
+  @TemplatingDSL public fun indented(init: Templating.() -> Unit)
 
   @TemplatingDSL
   public fun <T> Collection<T>.indented(
@@ -37,17 +28,13 @@ public interface Templating {
     transform: (Templating.(T) -> Unit)? = null
   )
 
-  @TemplatingDSL
-  public operator fun String.unaryPlus(): Unit = line(this)
+  @TemplatingDSL public operator fun String.unaryPlus(): Unit = line(this)
 
-  @TemplatingDSL
-  public fun addImport(import: String): Boolean = addImports(import)
+  @TemplatingDSL public fun addImport(import: String): Boolean = addImports(import)
 
-  @TemplatingDSL
-  public fun line(line: String): Unit = append("$line\n")
+  @TemplatingDSL public fun line(line: String): Unit = append("$line\n")
 
-  @TemplatingDSL
-  public fun line(): Unit = append("\n")
+  @TemplatingDSL public fun line(): Unit = append("\n")
 
   @TemplatingDSL
   public fun <T> Collection<T>.joinTo(
@@ -60,17 +47,10 @@ public interface Templating {
   }
 
   @TemplatingDSL
-  public fun expression(
-    text: String,
-    init: Templating.() -> Unit
-  ): Unit = block(text, false, init)
+  public fun expression(text: String, init: Templating.() -> Unit): Unit = block(text, false, init)
 
   @TemplatingDSL
-  public fun block(
-    text: String,
-    closeAfter: Boolean = true,
-    block: Templating.() -> Unit
-  ) {
+  public fun block(text: String, closeAfter: Boolean = true, block: Templating.() -> Unit) {
     line(text)
     indented(block)
     if (closeAfter) +"}"
@@ -86,16 +66,12 @@ private class Template(
 ) : Templating {
   private val indent: String = indentConfig.repeat(index)
 
-  public override operator fun String.unaryPlus(): Unit =
-    line(this)
+  public override operator fun String.unaryPlus(): Unit = line(this)
+
+  @TemplatingDSL public override fun addImport(import: String): Boolean = imports.add(import)
 
   @TemplatingDSL
-  public override fun addImport(import: String): Boolean =
-    imports.add(import)
-
-  @TemplatingDSL
-  public override fun addImports(vararg imports: String): Boolean =
-    this.imports.addAll(imports)
+  public override fun addImports(vararg imports: String): Boolean = this.imports.addAll(imports)
 
   @TemplatingDSL
   public override fun append(line: String) {
@@ -128,6 +104,5 @@ private class Template(
     Template(index + 1, content, indentConfig, imports).init()
   }
 
-  fun build(): Content =
-    Content(imports, content.toString())
+  fun build(): Content = Content(imports, content.toString())
 }

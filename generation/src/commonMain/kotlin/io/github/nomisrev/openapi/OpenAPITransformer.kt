@@ -4,33 +4,30 @@ import io.github.nomisrev.openapi.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.Model.Collection
 import io.github.nomisrev.openapi.http.Method
 
-public fun OpenAPI.routes(): List<Route> =
-  OpenAPITransformer(this).routes()
+public fun OpenAPI.routes(): List<Route> = OpenAPITransformer(this).routes()
 
 public fun OpenAPI.models(): Set<Model> =
-  with(OpenAPITransformer(this)) {
-    operationModels() + schemas()
-  }.mapNotNull { model ->
-    when (model) {
-      is Collection -> model.value
-      is Model.Primitive.Int,
-      is Model.Primitive.Double,
-      is Model.Primitive.Boolean,
-      is Model.Primitive.String,
-      is Model.Primitive.Unit -> null
-
-      else -> model
+  with(OpenAPITransformer(this)) { operationModels() + schemas() }
+    .mapNotNull { model ->
+      when (model) {
+        is Collection -> model.value
+        is Model.Primitive.Int,
+        is Model.Primitive.Double,
+        is Model.Primitive.Boolean,
+        is Model.Primitive.String,
+        is Model.Primitive.Unit -> null
+        else -> model
+      }
     }
-  }.toSet()
+    .toSet()
 
 /**
- * This class implements the traverser,
- * it goes through the [OpenAPI] file, and gathers all the information.
- * It calls the [OpenAPIInterceptor],
- * and invokes the relevant methods for the appropriate models and operations.
+ * This class implements the traverser, it goes through the [OpenAPI] file, and gathers all the
+ * information. It calls the [OpenAPIInterceptor], and invokes the relevant methods for the
+ * appropriate models and operations.
  *
- * It does the heavy lifting of figuring out what a `Schema` is,
- * a `String`, `enum=[alive, dead]`, object, etc.
+ * It does the heavy lifting of figuring out what a `Schema` is, a `String`, `enum=[alive, dead]`,
+ * object, etc.
  */
 private class OpenAPITransformer(
   private val openAPI: OpenAPI,
@@ -67,17 +64,16 @@ private class OpenAPITransformer(
   fun Operation.input(): List<Route.Input> =
     parameters.map { p ->
       val param = p.get()
-      val model = when (val s = param.schema) {
-        is ReferenceOr.Reference -> {
-          val (name, schema) = s.namedSchema()
-          schema.toModel(NamingContext.TopLevelSchema(name))
+      val model =
+        when (val s = param.schema) {
+          is ReferenceOr.Reference -> {
+            val (name, schema) = s.namedSchema()
+            schema.toModel(NamingContext.TopLevelSchema(name))
+          }
+          is ReferenceOr.Value ->
+            s.value.toModel(NamingContext.RouteParam(param.name, operationId, "Request"))
+          null -> throw IllegalStateException("No Schema for Parameter. Fallback to JsonObject?")
         }
-
-        is ReferenceOr.Value ->
-          s.value.toModel(NamingContext.RouteParam(param.name, operationId, "Request"))
-
-        null -> throw IllegalStateException("No Schema for Parameter. Fallback to JsonObject?")
-      }
       when (param.input) {
         Parameter.Input.Query -> Route.Input.Query(param.name, model)
         Parameter.Input.Header -> Route.Input.Header(param.name, model)
@@ -95,37 +91,41 @@ private class OpenAPITransformer(
     }
 
   /**
-   * Gets all the **inline** schemas for operations,
-   * and gathers them in the nesting that they occur within the document.
-   * So they can be generated whilst maintaining their order of nesting.
+   * Gets all the **inline** schemas for operations, and gathers them in the nesting that they occur
+   * within the document. So they can be generated whilst maintaining their order of nesting.
    */
   fun operationModels(): List<Model> =
     operations().flatMap { (_, _, operation) ->
       // TODO this can probably be removed in favor of `Set` to remove duplication
       // Gather the **inline** request bodies & returnType, ignore top-level
-      val bodies = operation.requestBody?.get()
-        ?.let { toRequestBody(operation, it).types.values }
-        ?.flatMap { it.model() }
-        .orEmpty()
+      val bodies =
+        operation.requestBody
+          ?.get()
+          ?.let { toRequestBody(operation, it).types.values }
+          ?.flatMap { it.model() }
+          .orEmpty()
 
       val responses = toResponses(operation).map { it.value.type }
 
-      val parameters = operation.parameters.mapNotNull { refOrParam ->
-        refOrParam.valueOrNull()?.let { param ->
-          param.schema?.valueOrNull()
-            ?.toModel(NamingContext.RouteParam(param.name, operation.operationId, "Request"))
+      val parameters =
+        operation.parameters.mapNotNull { refOrParam ->
+          refOrParam.valueOrNull()?.let { param ->
+            param.schema
+              ?.valueOrNull()
+              ?.toModel(NamingContext.RouteParam(param.name, operation.operationId, "Request"))
+          }
         }
-      }
       bodies + responses + parameters
     }
 
   /** Gathers all "top-level", or components schemas. */
   fun schemas(): List<Model> {
-    val schemas = openAPI.components.schemas.entries.map { (schemaName, refOrSchema) ->
-      val ctx = NamingContext.TopLevelSchema(schemaName)
-      refOrSchema.valueOrNull()?.toModel(ctx)
-        ?: throw IllegalStateException("Remote schemas not supported yet.")
-    }
+    val schemas =
+      openAPI.components.schemas.entries.map { (schemaName, refOrSchema) ->
+        val ctx = NamingContext.TopLevelSchema(schemaName)
+        refOrSchema.valueOrNull()?.toModel(ctx)
+          ?: throw IllegalStateException("Remote schemas not supported yet.")
+      }
     return schemas
   }
 
@@ -133,15 +133,15 @@ private class OpenAPITransformer(
     when {
       anyOf != null -> toAnyOf(context, this, anyOf!!)
       oneOf != null && oneOf?.size == 1 -> asObject(context)
-      oneOf != null -> toOneOf(context, this, oneOf !!)
+      oneOf != null -> toOneOf(context, this, oneOf!!)
       allOf != null -> TODO("allOf")
-      enum != null -> toEnum(
-        context,
-        this,
-        requireNotNull(type) { "Enum requires an inner type" },
-        enum.orEmpty()
-      )
-
+      enum != null ->
+        toEnum(
+          context,
+          this,
+          requireNotNull(type) { "Enum requires an inner type" },
+          enum.orEmpty()
+        )
       properties != null -> asObject(context)
       type != null -> type(context, this, type!!)
       else -> TODO("Schema: $this not yet supported. Please report to issue tracker.")
@@ -150,11 +150,11 @@ private class OpenAPITransformer(
   private fun Schema.asObject(context: NamingContext): Model =
     when {
       properties != null -> toObject(context, this, required ?: emptyList(), properties!!)
-      additionalProperties != null -> when (val aProps = additionalProperties!!) {
-        is AdditionalProperties.PSchema -> toMap(context, this, aProps)
-        is Allowed -> toRawJson(aProps)
-      }
-
+      additionalProperties != null ->
+        when (val aProps = additionalProperties!!) {
+          is AdditionalProperties.PSchema -> toMap(context, this, aProps)
+          is Allowed -> toRawJson(aProps)
+        }
       else -> toRawJson(Allowed(true))
     }
 
@@ -165,15 +165,16 @@ private class OpenAPITransformer(
     }
 
   override fun Schema.topLevelNameOrNull(): String? =
-    openAPI.components.schemas.entries.find { (_, ref) ->
-      ref.get() == this
-    }?.key
+    openAPI.components.schemas.entries.find { (_, ref) -> ref.get() == this }?.key
 
   override fun ReferenceOr.Reference.namedSchema(): Pair<String, Schema> {
     val name = ref.drop(schemaRef.length)
-    val schema = requireNotNull(openAPI.components.schemas[name]) {
-      "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
-    }.valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
+    val schema =
+      requireNotNull(openAPI.components.schemas[name]) {
+          "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+        }
+        .valueOrNull()
+        ?: throw IllegalStateException("Remote schemas are not yet supported.")
     return Pair(name, schema)
   }
 
@@ -183,8 +184,9 @@ private class OpenAPITransformer(
       is ReferenceOr.Reference -> {
         val typeName = ref.drop(responsesRef.length)
         requireNotNull(openAPI.components.responses[typeName]) {
-          "Response $typeName could not be found in ${openAPI.components.responses}. Is it missing?"
-        }.get()
+            "Response $typeName could not be found in ${openAPI.components.responses}. Is it missing?"
+          }
+          .get()
       }
     }
 
@@ -194,8 +196,9 @@ private class OpenAPITransformer(
       is ReferenceOr.Reference -> {
         val typeName = ref.drop(parametersRef.length)
         requireNotNull(openAPI.components.parameters[typeName]) {
-          "Parameter $typeName could not be found in ${openAPI.components.parameters}. Is it missing?"
-        }.get()
+            "Parameter $typeName could not be found in ${openAPI.components.parameters}. Is it missing?"
+          }
+          .get()
       }
     }
 
@@ -205,8 +208,9 @@ private class OpenAPITransformer(
       is ReferenceOr.Reference -> {
         val typeName = ref.drop(requestBodiesRef.length)
         requireNotNull(openAPI.components.requestBodies[typeName]) {
-          "RequestBody $typeName could not be found in ${openAPI.components.requestBodies}. Is it missing?"
-        }.get()
+            "RequestBody $typeName could not be found in ${openAPI.components.requestBodies}. Is it missing?"
+          }
+          .get()
       }
     }
 
@@ -216,8 +220,9 @@ private class OpenAPITransformer(
       is ReferenceOr.Reference -> {
         val typeName = ref.drop(pathItemsRef.length)
         requireNotNull(openAPI.components.pathItems[typeName]) {
-          "PathItem $typeName could not be found in ${openAPI.components.pathItems}. Is it missing?"
-        }.get()
+            "PathItem $typeName could not be found in ${openAPI.components.pathItems}. Is it missing?"
+          }
+          .get()
       }
     }
 }
