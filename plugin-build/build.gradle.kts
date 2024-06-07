@@ -1,43 +1,46 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "1.9.23"
-    `java-gradle-plugin`
+  id(libs.plugins.jvm.get().pluginId)
+  `java-gradle-plugin`
+  id(libs.plugins.publish.get().pluginId)
 }
 
 repositories {
-    mavenCentral()
+  mavenCentral()
 }
 
 dependencies {
-    implementation(kotlin("stdlib"))
-    implementation(gradleApi())
-    implementation(kotlin("test"))
+  implementation(libs.stdlib)
+  implementation(libs.gradle)
+  implementation(projects.generation)
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
 }
 
 tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
+  compilerOptions.jvmTarget.set(JvmTarget.JVM_1_8)
 }
 
 gradlePlugin {
-    website.set(property("WEBSITE").toString())
-    vcsUrl.set(property("VCS_URL").toString())
-    plugins {
-        create(property("ID").toString()) {
-            id = property("ID").toString()
-            implementationClass = property("IMPLEMENTATION_CLASS").toString()
-            version = property("VERSION").toString()
-            description = property("DESCRIPTION").toString()
-            displayName = property("DISPLAY_NAME").toString()
-            tags.set(listOf("plugin", "gradle", "sample", "template"))
-        }
+  @Suppress("UnstableApiUsage")
+  website.set(property("WEBSITE").toString())
+  @Suppress("UnstableApiUsage")
+  vcsUrl.set(property("VCS_URL").toString())
+  plugins {
+    create(property("ID").toString()) {
+      id = property("ID").toString()
+      implementationClass = property("IMPLEMENTATION_CLASS").toString()
+      version = property("VERSION").toString()
+      description = property("DESCRIPTION").toString()
+      displayName = property("DISPLAY_NAME").toString()
+      @Suppress("UnstableApiUsage")
+      tags.set(listOf("Kotlin", "OpenAPI", "Code Generation"))
     }
+  }
 }
 

@@ -1,12 +1,11 @@
 package io.github.nomisrev.openapi
 
-import io.exoquery.fansi.Str
 import io.github.nomisrev.openapi.Schema.Type
 import io.github.nomisrev.openapi.http.MediaType
 import io.github.nomisrev.openapi.http.Method
 import io.github.nomisrev.openapi.http.StatusCode
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.Serializable
 
 data class Route(
   val operation: Operation,

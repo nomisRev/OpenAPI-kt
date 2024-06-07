@@ -284,6 +284,7 @@ interface OpenAPIInterceptor {
         Type.Basic.String ->
           if (schema.format == "binary") Model.Binary
           else Primitive.String(schema, schema.default?.toString())
+
         Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
       }.let { primitive(context, schema, basic, it) }
 
@@ -386,12 +387,19 @@ interface OpenAPIInterceptor {
       }
     }
 
+    /**
+     * TODO
+     *   This needs a rock solid implementation,
+     *   and should be super easy to override from Gradle.
+     *   This is what we use to generate names for inline schemas,
+     *   most of the time we can get away with other information,
+     *   but not always.
+     */
     private fun OpenAPISyntax.generateName(
       context: NamingContext.TopLevelSchema,
       schema: Schema
     ): NamingContext.TopLevelSchema =
       when (val type = schema.type) {
-        is Type.Array -> TODO()
         Type.Basic.Array -> {
           val inner =
             requireNotNull(schema.items) { "Array type requires items to be defined." }
@@ -399,10 +407,20 @@ interface OpenAPIInterceptor {
           TODO()
         }
 
-        Type.Basic.Object -> context.copy(name = "CaseJson")
-        Type.Basic.Number -> context.copy(name = "CaseDouble")
-        Type.Basic.Boolean -> context.copy(name = "CaseBool")
-        Type.Basic.Integer -> context.copy(name = "CaseInt")
+        Type.Basic.Object -> {
+          // TODO OpenAI specific
+          context.copy(
+            name = schema.properties
+              ?.firstNotNullOfOrNull { (key, value) ->
+                if (key == "event") value.get().enum else null
+              }?.singleOrNull() ?: TODO()
+          )
+        }
+
+        is Type.Array -> TODO()
+        Type.Basic.Number -> TODO()
+        Type.Basic.Boolean -> TODO()
+        Type.Basic.Integer -> TODO()
         Type.Basic.Null -> TODO()
         Type.Basic.String -> when (val enum = schema.enum) {
           null -> context.copy(name = "CaseString")

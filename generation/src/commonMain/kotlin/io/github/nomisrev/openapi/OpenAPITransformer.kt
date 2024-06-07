@@ -4,6 +4,9 @@ import io.github.nomisrev.openapi.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.Model.Collection
 import io.github.nomisrev.openapi.http.Method
 
+public fun OpenAPI.routes(): List<Route> =
+  OpenAPITransformer(this).routes()
+
 public fun OpenAPI.models(): Set<Model> =
   with(OpenAPITransformer(this)) {
     operationModels() + schemas()
@@ -61,7 +64,6 @@ private class OpenAPITransformer(
       )
     }
 
-  // TODO can we re-share logic with models?
   fun Operation.input(): List<Route.Input> =
     parameters.map { p ->
       val param = p.get()
@@ -129,9 +131,9 @@ private class OpenAPITransformer(
 
   override fun Schema.toModel(context: NamingContext): Model =
     when {
-      anyOf != null -> toAnyOf(context, this, anyOf ?: emptyList())
+      anyOf != null -> toAnyOf(context, this, anyOf!!)
       oneOf != null && oneOf?.size == 1 -> asObject(context)
-      oneOf != null -> toOneOf(context, this, oneOf ?: emptyList())
+      oneOf != null -> toOneOf(context, this, oneOf !!)
       allOf != null -> TODO("allOf")
       enum != null -> toEnum(
         context,
