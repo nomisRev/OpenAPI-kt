@@ -1,9 +1,9 @@
 package io.github.nomisrev.openapi.plugin
 
 import java.io.File
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Assert.assertEquals
-import org.junit.Test
 
 class TemplatePluginTest {
   @Test

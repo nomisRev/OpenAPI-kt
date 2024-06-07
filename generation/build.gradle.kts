@@ -13,7 +13,6 @@ powerAssert {
 }
 
 kotlin {
-//  explicitApi()
   jvm {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     mainRun { mainClass.set("io.github.nomisrev.openapi.MainKt") }

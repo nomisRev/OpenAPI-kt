@@ -1,7 +1,9 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
+import org.jetbrains.kotlin.powerassert.gradle.PowerAssertGradleExtension
 
 plugins {
   alias(libs.plugins.multiplatform) apply false
+  alias(libs.plugins.assert)
   alias(libs.plugins.publish)
   alias(libs.plugins.spotless)
 }
@@ -17,4 +19,9 @@ configure<SpotlessExtension> {
     trimTrailingWhitespace()
     endWithNewline()
   }
+}
+
+@Suppress("OPT_IN_USAGE")
+configure<PowerAssertGradleExtension> {
+  functions = listOf("kotlin.test.assertEquals")
 }

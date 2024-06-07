@@ -15,6 +15,7 @@ dependencies {
   implementation(libs.stdlib)
   implementation(libs.gradle)
   implementation(projects.generation)
+  testImplementation(libs.test)
 }
 
 java {
