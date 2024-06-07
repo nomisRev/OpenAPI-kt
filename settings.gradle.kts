@@ -11,8 +11,6 @@ plugins {
 }
 
 include("generation")
-include("core")
+include("parser")
+include("plugin-build")
 //include("generic")
-include("example")
-
-includeBuild("plugin-build")

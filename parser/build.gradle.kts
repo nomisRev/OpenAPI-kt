@@ -1,30 +1,31 @@
 plugins {
-    kotlin("multiplatform")
-    kotlin("plugin.serialization") version "1.9.23"
+  id(libs.plugins.multiplatform.get().pluginId)
+  alias(libs.plugins.serialization)
+  id(libs.plugins.publish.get().pluginId)
 }
 
 kotlin {
-    explicitApi()
+  explicitApi()
 
 
-    jvm()
-    macosArm64()
-    linuxX64()
+  jvm()
+  macosArm64()
+  linuxX64()
 
-    sourceSets {
-        commonMain {
-            dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
-            }
-        }
-        jvmTest {
-            dependencies {
-                implementation(kotlin("test"))
-            }
-        }
+  sourceSets {
+    commonMain {
+      dependencies {
+        api(libs.json)
+      }
     }
+    jvmTest {
+      dependencies {
+        implementation(libs.test)
+      }
+    }
+  }
 }
 
 tasks.withType<Test> {
-    useJUnitPlatform()
+  useJUnitPlatform()
 }

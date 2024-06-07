@@ -1,9 +1,10 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 
 plugins {
-  kotlin("multiplatform")
-  kotlin("plugin.serialization") version "2.0.0"
-  kotlin("plugin.power-assert") version "2.0.0"
+  id(libs.plugins.multiplatform.get().pluginId)
+  alias(libs.plugins.serialization)
+  alias(libs.plugins.assert)
+  id(libs.plugins.publish.get().pluginId)
 }
 
 @Suppress("OPT_IN_USAGE")
@@ -29,18 +30,14 @@ kotlin {
       kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
 
       dependencies {
-//        implementation("org.jetbrains.kotlinx:kotlinx-io-core:0.3.5")
-        implementation("net.pearx.kasechange:kasechange:1.4.1")
-        implementation("com.squareup.okio:okio:3.9.0")
-        implementation(project(":core"))
-        // for build debugging example
-        implementation("io.exoquery:pprint-kotlin-kmp:2.0.2")
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+        api(libs.kasechange)
+        api(libs.okio)
+        api(projects.parser)
       }
     }
     commonTest {
       dependencies {
-        implementation(kotlin("test"))
+        implementation(libs.test)
       }
     }
 //    jsMain {
@@ -50,7 +47,7 @@ kotlin {
 //    }
     commonTest {
       dependencies {
-        implementation("com.squareup.okio:okio-fakefilesystem:3.9.0")
+        implementation(libs.okio.fakefilesystem)
       }
     }
   }
