@@ -7,11 +7,6 @@ plugins {
   id(libs.plugins.publish.get().pluginId)
 }
 
-@Suppress("OPT_IN_USAGE")
-powerAssert {
-  functions = listOf("kotlin.test.assertEquals", "kotlin.test.assertTrue")
-}
-
 kotlin {
   jvm {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
@@ -39,6 +34,11 @@ kotlin {
         implementation(libs.test)
       }
     }
+    jvmMain {
+      dependencies {
+        implementation("com.squareup:kotlinpoet:1.17.0")
+      }
+    }
 //    jsMain {
 //      dependencies {
 //        implementation("com.squareup.okio:okio-nodefilesystem:3.9.0")
@@ -50,10 +50,6 @@ kotlin {
       }
     }
   }
-}
-
-tasks.withType<Test> {
-  useJUnitPlatform()
 }
 
 task("runMacosArm64") {

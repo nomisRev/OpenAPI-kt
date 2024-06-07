@@ -29,6 +29,9 @@ public interface NamingStrategy {
 
   public fun toObjectClassName(context: NamingContext): String
 
+  public fun toFunctionName(context: NamingContext): String =
+    toObjectClassName(context).replaceFirstChar { it.lowercase() }
+
   public fun toParamName(objContext: NamingContext, paramName: String): String
 
   public fun toUnionClassName(model: Model.Union): String

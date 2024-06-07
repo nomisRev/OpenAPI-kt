@@ -1,14 +1,7 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
   id(libs.plugins.jvm.get().pluginId)
   `java-gradle-plugin`
   id(libs.plugins.publish.get().pluginId)
-}
-
-repositories {
-  mavenCentral()
 }
 
 dependencies {
@@ -16,15 +9,6 @@ dependencies {
   implementation(libs.gradle)
   implementation(projects.generation)
   testImplementation(libs.test)
-}
-
-java {
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
-}
-
-tasks.withType<KotlinCompile> {
-  compilerOptions.jvmTarget.set(JvmTarget.JVM_1_8)
 }
 
 gradlePlugin {

@@ -4,7 +4,8 @@ import io.github.nomisrev.openapi.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.Model.Collection
 import io.github.nomisrev.openapi.http.Method
 
-public fun OpenAPI.routes(): List<Route> = OpenAPITransformer(this).routes()
+public suspend fun OpenAPI.routes(sorter: ApiSorter = ApiSorter.ByPath): Root =
+  sorter.sort(OpenAPITransformer(this).routes())
 
 public fun OpenAPI.models(): Set<Model> =
   with(OpenAPITransformer(this)) { operationModels() + schemas() }
@@ -74,12 +75,14 @@ private class OpenAPITransformer(
             s.value.toModel(NamingContext.RouteParam(param.name, operationId, "Request"))
           null -> throw IllegalStateException("No Schema for Parameter. Fallback to JsonObject?")
         }
-      when (param.input) {
-        Parameter.Input.Query -> Route.Input.Query(param.name, model)
-        Parameter.Input.Header -> Route.Input.Header(param.name, model)
-        Parameter.Input.Path -> Route.Input.Path(param.name, model)
-        Parameter.Input.Cookie -> Route.Input.Cookie(param.name, model)
-      }
+
+      Route.Input(
+        param.name,
+        model, // TODO the nullable param should be configurable
+        param.schema!!.get().nullable ?: true,
+        param.required,
+        param.input
+      )
     }
 
   private fun Route.Body.model(): List<Model> =

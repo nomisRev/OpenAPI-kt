@@ -39,18 +39,13 @@ data class Route(
   }
 
   // A Parameter can be isNullable, required while the model is not!
-  sealed interface Input {
-    val name: String
-    val type: Model
-
-    data class Query(override val name: String, override val type: Model) : Input
-
-    data class Path(override val name: String, override val type: Model) : Input
-
-    data class Header(override val name: String, override val type: Model) : Input
-
-    data class Cookie(override val name: String, override val type: Model) : Input
-  }
+  data class Input(
+    val name: String,
+    val type: Model,
+    val isNullable: Boolean,
+    val isRequired: Boolean,
+    val input: Parameter.Input
+  )
 
   data class Returns(
     val types: Map<StatusCode, ReturnType>,

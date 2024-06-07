@@ -7,7 +7,6 @@ plugins {
 kotlin {
   explicitApi()
 
-
   jvm()
   macosArm64()
   linuxX64()
@@ -26,6 +25,3 @@ kotlin {
   }
 }
 
-tasks.withType<Test> {
-  useJUnitPlatform()
-}
