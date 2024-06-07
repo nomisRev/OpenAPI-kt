@@ -290,9 +290,7 @@ interface OpenAPIInterceptor {
       val inner =
         when (items) {
           is ReferenceOr.Reference ->
-            schema.items!!
-              .get()
-              .toModel(NamingContext.TopLevelSchema(items.ref.drop(schemaRef.length)))
+            schema.items!!.get().toModel(NamingContext.Named(items.ref.drop(schemaRef.length)))
           is ReferenceOr.Value -> items.value.toModel(context)
         }
       val default =
@@ -361,8 +359,7 @@ interface OpenAPIInterceptor {
       caseSchema: ReferenceOr<Schema>
     ): NamingContext =
       when (caseSchema) {
-        is ReferenceOr.Reference ->
-          NamingContext.TopLevelSchema(caseSchema.ref.drop(schemaRef.length))
+        is ReferenceOr.Reference -> NamingContext.Named(caseSchema.ref.drop(schemaRef.length))
         is ReferenceOr.Value ->
           when (context) {
             is NamingContext.Inline ->
@@ -383,7 +380,7 @@ interface OpenAPIInterceptor {
              *  -> enum (???)
              *  -> ChatCompletionNamedToolChoice
              */
-            is NamingContext.TopLevelSchema -> generateName(context, caseSchema.value)
+            is NamingContext.Named -> generateName(context, caseSchema.value)
             is NamingContext.RouteParam -> context
             is NamingContext.Ref -> context
           }
@@ -395,9 +392,9 @@ interface OpenAPIInterceptor {
      * away with other information, but not always.
      */
     private fun OpenAPISyntax.generateName(
-      context: NamingContext.TopLevelSchema,
+      context: NamingContext.Named,
       schema: Schema
-    ): NamingContext.TopLevelSchema =
+    ): NamingContext.Named =
       when (val type = schema.type) {
         Type.Basic.Array -> {
           val inner = requireNotNull(schema.items) { "Array type requires items to be defined." }
@@ -469,7 +466,7 @@ interface OpenAPIInterceptor {
                     is ReferenceOr.Reference -> {
                       val (name, schema) = s.namedSchema()
                       Route.Body.Json(
-                        schema.toModel(NamingContext.TopLevelSchema(name)),
+                        schema.toModel(NamingContext.Named(name)),
                         mediaType.extensions
                       )
                     }
@@ -477,9 +474,7 @@ interface OpenAPIInterceptor {
                       Route.Body.Json(
                         s.value.toModel(
                           requireNotNull(
-                            operation.operationId?.let {
-                              NamingContext.TopLevelSchema("${it}Request")
-                            }
+                            operation.operationId?.let { NamingContext.Named("${it}Request") }
                           ) {
                             "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
                           }
@@ -493,7 +488,7 @@ interface OpenAPIInterceptor {
               MultipartFormData.matches(contentType) -> {
                 fun ctx(name: String): NamingContext =
                   when (val s = mediaType.schema) {
-                    is ReferenceOr.Reference -> NamingContext.TopLevelSchema(s.namedSchema().first)
+                    is ReferenceOr.Reference -> NamingContext.Named(s.namedSchema().first)
                     is ReferenceOr.Value ->
                       NamingContext.RouteParam(name, operation.operationId, "Request")
                     null ->
@@ -549,7 +544,7 @@ interface OpenAPIInterceptor {
                   Pair(
                     statusCode,
                     Route.ReturnType(
-                      schema.toModel(NamingContext.TopLevelSchema(name)),
+                      schema.toModel(NamingContext.Named(name)),
                       operation.responses.extensions
                     )
                   )
@@ -560,9 +555,7 @@ interface OpenAPIInterceptor {
                     Route.ReturnType(
                       s.value.toModel(
                         requireNotNull(
-                          operation.operationId?.let {
-                            NamingContext.TopLevelSchema("${it}Response")
-                          }
+                          operation.operationId?.let { NamingContext.Named("${it}Response") }
                         ) {
                           "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
                         }

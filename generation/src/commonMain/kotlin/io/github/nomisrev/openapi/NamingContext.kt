@@ -13,7 +13,7 @@ package io.github.nomisrev.openapi
 public sealed interface NamingContext {
   public val name: String
 
-  public data class TopLevelSchema(override val name: String) : NamingContext
+  public data class Named(override val name: String) : NamingContext
 
   public data class RouteParam(
     override val name: String,

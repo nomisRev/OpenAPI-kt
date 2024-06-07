@@ -96,7 +96,7 @@ public object DefaultNamingStrategy : NamingStrategy {
     when (context) {
       is NamingContext.Inline -> context.name.toPascalCase()
       is NamingContext.Ref -> context.outer.name.toPascalCase()
-      is NamingContext.TopLevelSchema -> context.name.toPascalCase()
+      is NamingContext.Named -> context.name.toPascalCase()
       is NamingContext.RouteParam -> {
         requireNotNull(context.operationId) { "Need operationId to generate enum name" }
         // $MyObject$Param$Request, this allows for multiple custom objects in a single operation

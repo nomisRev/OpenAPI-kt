@@ -69,7 +69,7 @@ private class OpenAPITransformer(
         when (val s = param.schema) {
           is ReferenceOr.Reference -> {
             val (name, schema) = s.namedSchema()
-            schema.toModel(NamingContext.TopLevelSchema(name))
+            schema.toModel(NamingContext.Named(name))
           }
           is ReferenceOr.Value ->
             s.value.toModel(NamingContext.RouteParam(param.name, operationId, "Request"))
@@ -125,7 +125,7 @@ private class OpenAPITransformer(
   fun schemas(): List<Model> {
     val schemas =
       openAPI.components.schemas.entries.map { (schemaName, refOrSchema) ->
-        val ctx = NamingContext.TopLevelSchema(schemaName)
+        val ctx = NamingContext.Named(schemaName)
         refOrSchema.valueOrNull()?.toModel(ctx)
           ?: throw IllegalStateException("Remote schemas not supported yet.")
       }
