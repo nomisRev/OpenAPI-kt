@@ -134,8 +134,9 @@ private class OpenAPITransformer(
 
   override fun Schema.toModel(context: NamingContext): Model =
     when {
-      anyOf != null -> toAnyOf(context, this, anyOf!!)
-      oneOf != null && oneOf?.size == 1 -> asObject(context)
+      anyOf != null && anyOf?.size == 1 -> anyOf!![0].get().toModel(context)
+        anyOf != null -> toAnyOf(context, this, anyOf!!)
+      oneOf != null && oneOf?.size == 1 -> oneOf!![0].get().toModel(context)
       oneOf != null -> toOneOf(context, this, oneOf!!)
       allOf != null -> TODO("allOf")
       enum != null ->

@@ -68,15 +68,14 @@ private object ByPathApiSorter : ApiSorter {
             new
           }
 
-      val remaining = parts.drop(1)
-      if (remaining.isEmpty()) Unit else addRoute(api, parts.drop(1), route)
+      addRoute(api, parts.drop(1), route)
     }
     return root.build()
   }
 
   private fun addRoute(builder: APIBuilder, parts: List<String>, route: Route) {
-    if (parts.isEmpty()) builder.routes.add(route)
-    else {
+    builder.routes.add(route)
+    if (parts.isNotEmpty()) {
       val part = parts[0]
       val api = builder.nested.firstOrNull { it.name == part }
       if (api == null) {

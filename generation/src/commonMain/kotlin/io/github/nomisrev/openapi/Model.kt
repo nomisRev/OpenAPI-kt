@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.Schema.Type
 import io.github.nomisrev.openapi.http.MediaType
 import io.github.nomisrev.openapi.http.Method
 import io.github.nomisrev.openapi.http.StatusCode
@@ -17,10 +16,26 @@ data class Route(
   val extensions: Map<String, JsonElement>
 ) {
 
-  data class Bodies(val types: Map<MediaType, Body>, val extensions: Map<String, JsonElement>) :
-    Map<MediaType, Body> by types
+  data class Bodies(
+    /** Request bodies are optional by default! */
+    val required: Boolean,
+    val types: Map<MediaType, Body>,
+    val extensions: Map<String, JsonElement>
+  ) :
+    Map<MediaType, Body> by types {
+      fun jsonOrNull(): Body.Json? =
+        types.getOrElse(MediaType.ApplicationJson) { null } as? Body.Json
 
-  // Required, isNullable
+    fun octetStreamOrNull(): Body.OctetStream? =
+      types.getOrElse(MediaType.ApplicationOctetStream) { null } as? Body.OctetStream
+
+    fun xmlOrNull(): Body.Xml? =
+      types.getOrElse(MediaType.ApplicationXml) { null } as? Body.Xml
+
+    fun multipartOrNull(): Body.Multipart? =
+      types.getOrElse(MediaType.MultipartFormData) { null } as? Body.Multipart
+    }
+
   sealed interface Body {
     val extensions: Map<String, JsonElement>
 
@@ -31,6 +46,7 @@ data class Route(
     data class Xml(val type: Model, override val extensions: Map<String, JsonElement>) : Body
 
     data class Multipart(
+      val model: Model?,
       val parameters: List<FormData>,
       override val extensions: Map<String, JsonElement>
     ) : Body, List<Multipart.FormData> by parameters {

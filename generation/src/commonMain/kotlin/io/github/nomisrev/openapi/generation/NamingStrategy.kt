@@ -111,7 +111,7 @@ public object DefaultNamingStrategy : NamingStrategy {
       val sanitise =
         pascalCase
           .run { if (startsWith("[")) drop(1) else this }
-          .run { if (startsWith("]")) dropLast(1) else this }
+          .run { if (endsWith("]")) dropLast(1) else this }
       if (sanitise.isValidClassname()) sanitise else "`$sanitise`"
     }
   }

@@ -21,11 +21,11 @@ public sealed interface NamingContext {
     val postfix: String
   ) : NamingContext
 
-  public sealed interface Param : NamingContext {
+  public sealed interface Nested : NamingContext {
     public val outer: NamingContext
   }
 
-  public data class Inline(override val name: String, override val outer: NamingContext) : Param
+  public data class Inline(override val name: String, override val outer: NamingContext) : Nested
 
-  public data class Ref(override val name: String, override val outer: NamingContext) : Param
+  public data class Ref(override val name: String, override val outer: NamingContext) : Nested
 }

@@ -6,6 +6,7 @@ import io.github.nomisrev.openapi.Model.Object.Property
 import io.github.nomisrev.openapi.Model.Object.Property.DefaultArgument
 import io.github.nomisrev.openapi.Model.Primitive
 import io.github.nomisrev.openapi.Model.Union.TypeArray
+import io.github.nomisrev.openapi.NamingContext.Named
 import io.github.nomisrev.openapi.Schema.Type
 import io.github.nomisrev.openapi.http.MediaType.Companion.ApplicationJson
 import io.github.nomisrev.openapi.http.MediaType.Companion.ApplicationOctetStream
@@ -34,9 +35,8 @@ interface OpenAPISyntax {
 
   fun Schema.topLevelNameOrNull(): String?
 
-  fun Schema.isTopLevel(): Boolean = topLevelNameOrNull() != null
-
   fun ReferenceOr.Reference.namedSchema(): Pair<String, Schema>
+  fun ReferenceOr.Reference.name(): String = namedSchema().first
 
   fun ReferenceOr<Schema>.get(): Schema
 
@@ -65,18 +65,12 @@ interface OpenAPISyntax {
  * This is more convenient to modify simple things like `required`, `isNullable`, etc.
  */
 interface OpenAPIInterceptor {
-  fun OpenAPISyntax.defaultArgument(
-    model: Model,
-    pSchema: Schema,
-    context: NamingContext
-  ): DefaultArgument?
-
   fun OpenAPISyntax.toPropertyContext(
     key: String,
-    propSchema: Schema,
+    propSchema: ReferenceOr<Schema>,
     parentSchema: Schema,
     original: NamingContext
-  ): NamingContext.Param
+  ): NamingContext
 
   fun OpenAPISyntax.toObject(
     context: NamingContext,
@@ -189,32 +183,16 @@ interface OpenAPIInterceptor {
   companion object Default : OpenAPIInterceptor {
     override fun OpenAPISyntax.toPropertyContext(
       key: String,
-      propSchema: Schema,
+      propSchema: ReferenceOr<Schema>,
       parentSchema: Schema,
       original: NamingContext
-    ): NamingContext.Param =
-      propSchema.topLevelNameOrNull()?.let { name -> NamingContext.Ref(name, original) }
-        ?: NamingContext.Inline(key, original)
+    ): NamingContext =
+      when(propSchema) {
+        is ReferenceOr.Reference -> Named(propSchema.name())
+        is ReferenceOr.Value -> NamingContext.Inline(key, original)
+      }
 
     private fun Schema.singleDefaultOrNull(): String? = (default as? ExampleValue.Single)?.value
-
-    // text-moderation-latest
-    // CreateModerationRequestModel.CaseModelEnum(CreateModerationRequestModel.ModelEnum.TextModerationLatest)
-    override fun OpenAPISyntax.defaultArgument(
-      model: Model,
-      pSchema: Schema,
-      pContext: NamingContext
-    ): DefaultArgument? =
-      when {
-        //                pSchema.type is Type.Array ->
-        //                    DefaultArgument.List(
-        //                        (pSchema.type as Type.Array).types.mapNotNull {
-        //                            defaultArgument(Schema(type = it).toModel(pContext), pSchema,
-        // pContext)
-        //                        })
-
-        else -> pSchema.default?.toString()?.let { s -> DefaultArgument.Other(s) }
-      }
 
     override fun OpenAPISyntax.toObject(
       context: NamingContext,
@@ -223,31 +201,35 @@ interface OpenAPIInterceptor {
       properties: Map<String, ReferenceOr<Schema>>
     ): Model =
       Model.Object(
-          schema,
-          context,
-          schema.description,
-          properties.map { (name, ref) ->
-            val pSchema = ref.get()
-            val pContext = toPropertyContext(name, pSchema, schema, context)
-            val model = pSchema.toModel(pContext)
-            // TODO Property interceptor
-            Property(
-              pSchema,
-              name,
-              pContext.name,
-              model,
-              schema.required?.contains(name) == true,
-              pSchema.nullable ?: schema.required?.contains(name)?.not() ?: true,
-              pSchema.description
-            )
-          },
-          properties
-            .mapNotNull { (name, ref) ->
-              val pSchema = ref.get()
-              pSchema.toModel(toPropertyContext(name, pSchema, schema, context))
+        schema,
+        context,
+        schema.description,
+        properties.map { (name, ref) ->
+          val pContext = toPropertyContext(name, ref, schema, context)
+          val pSchema = ref.get()
+          val model = pSchema.toModel(pContext)
+          // TODO Property interceptor
+          Property(
+            pSchema,
+            name,
+            pContext.name,
+            model,
+            schema.required?.contains(name) == true,
+            pSchema.nullable ?: schema.required?.contains(name)?.not() ?: true,
+            pSchema.description
+          )
+        },
+        properties
+          .mapNotNull { (name, ref) ->
+            ref.valueOrNull()?.let { pSchema ->
+              when(val model = pSchema.toModel(toPropertyContext(name, ref, schema, context))) {
+                is Collection ->
+                  model.schema.items?.valueOrNull()?.toModel(toPropertyContext(name, model.schema.items!!, schema, context))
+                else -> model
+              }
             }
-            .filterNot { it is Primitive }
-        )
+          }
+      )
         .let { `object`(context, schema, required, properties, it) }
 
     override fun OpenAPISyntax.toMap(
@@ -282,6 +264,7 @@ interface OpenAPIInterceptor {
         Type.Basic.String ->
           if (schema.format == "binary") Model.Binary
           else Primitive.String(schema, schema.default?.toString())
+
         Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
       }.let { primitive(context, schema, basic, it) }
 
@@ -290,7 +273,8 @@ interface OpenAPIInterceptor {
       val inner =
         when (items) {
           is ReferenceOr.Reference ->
-            schema.items!!.get().toModel(NamingContext.Named(items.ref.drop(schemaRef.length)))
+            schema.items!!.get().toModel(Named(items.ref.drop(schemaRef.length)))
+
           is ReferenceOr.Value -> items.value.toModel(context)
         }
       val default =
@@ -301,6 +285,7 @@ interface OpenAPIInterceptor {
               "[]" -> emptyList()
               else -> listOf(value)
             }
+
           null -> null
         }
       return if (schema.uniqueItems == true) Collection.Set(schema, inner, default)
@@ -313,6 +298,7 @@ interface OpenAPIInterceptor {
           when {
             type.types.size == 1 ->
               type(context, schema.copy(type = type.types.single()), type.types.single())
+
             else ->
               TypeArray(
                 schema,
@@ -323,6 +309,7 @@ interface OpenAPIInterceptor {
                 emptyList()
               )
           }
+
         is Type.Basic -> toPrimitive(context, schema, type)
       }.let { type(context, schema, type, it) }
 
@@ -359,7 +346,7 @@ interface OpenAPIInterceptor {
       caseSchema: ReferenceOr<Schema>
     ): NamingContext =
       when (caseSchema) {
-        is ReferenceOr.Reference -> NamingContext.Named(caseSchema.ref.drop(schemaRef.length))
+        is ReferenceOr.Reference -> Named(caseSchema.ref.drop(schemaRef.length))
         is ReferenceOr.Value ->
           when (context) {
             is NamingContext.Inline ->
@@ -368,6 +355,7 @@ interface OpenAPIInterceptor {
                   throw IllegalStateException(
                     "Cannot generate name for $caseSchema, ctx: $context."
                   )
+
                 caseSchema.value.enum != null -> context.copy(name = context.name + "_enum")
                 else -> context
               }
@@ -380,7 +368,7 @@ interface OpenAPIInterceptor {
              *  -> enum (???)
              *  -> ChatCompletionNamedToolChoice
              */
-            is NamingContext.Named -> generateName(context, caseSchema.value)
+            is Named -> generateName(context, caseSchema.value)
             is NamingContext.RouteParam -> context
             is NamingContext.Ref -> context
           }
@@ -392,27 +380,29 @@ interface OpenAPIInterceptor {
      * away with other information, but not always.
      */
     private fun OpenAPISyntax.generateName(
-      context: NamingContext.Named,
+      context: Named,
       schema: Schema
-    ): NamingContext.Named =
+    ): NamingContext =
       when (val type = schema.type) {
         Type.Basic.Array -> {
           val inner = requireNotNull(schema.items) { "Array type requires items to be defined." }
           inner.get().type
           TODO()
         }
+
         Type.Basic.Object -> {
           // TODO OpenAI specific
-          context.copy(
-            name =
-              schema.properties
-                ?.firstNotNullOfOrNull { (key, value) ->
-                  if (key == "event") value.get().enum else null
-                }
-                ?.singleOrNull()
-                ?: TODO()
+          NamingContext.Inline(
+            schema.properties
+              ?.firstNotNullOfOrNull { (key, value) ->
+                if (key == "event") value.get().enum else null
+              }
+              ?.singleOrNull()
+              ?: TODO(),
+            context
           )
         }
+
         is Type.Array -> TODO()
         Type.Basic.Number -> TODO()
         Type.Basic.Boolean -> TODO()
@@ -421,8 +411,15 @@ interface OpenAPIInterceptor {
         Type.Basic.String ->
           when (val enum = schema.enum) {
             null -> context.copy(name = "CaseString")
-            else -> context.copy(name = enum.joinToString(prefix = "", separator = "Or"))
+            else ->
+              NamingContext.Inline(
+                name = enum.joinToString(prefix = "", separator = "Or") {
+                  it.replaceFirstChar(Char::uppercaseChar)
+                },
+                context
+              )
           }
+
         null -> TODO()
       }
 
@@ -433,8 +430,13 @@ interface OpenAPIInterceptor {
       transform:
         (Schema, NamingContext, List<Model.Union.UnionEntry>, inline: List<Model>, String?) -> A
     ): A {
-      val inline =
-        subtypes.mapNotNull { ref -> ref.valueOrNull()?.toModel(toUnionCaseContext(context, ref)) }
+      val inline = subtypes.mapNotNull { ref ->
+        when(val model = ref.valueOrNull()?.toModel(toUnionCaseContext(context, ref))) {
+          is Collection ->
+            model.schema.items?.valueOrNull()?.toModel(toUnionCaseContext(context, model.schema.items!!))
+          else -> model
+        }
+      }
       return transform(
         schema,
         context,
@@ -454,6 +456,7 @@ interface OpenAPIInterceptor {
       body: RequestBody?
     ): Route.Bodies =
       Route.Bodies(
+        body?.required ?: false,
         body
           ?.content
           ?.entries
@@ -466,56 +469,58 @@ interface OpenAPIInterceptor {
                     is ReferenceOr.Reference -> {
                       val (name, schema) = s.namedSchema()
                       Route.Body.Json(
-                        schema.toModel(NamingContext.Named(name)),
+                        schema.toModel(Named(name)),
                         mediaType.extensions
                       )
                     }
+
                     is ReferenceOr.Value ->
                       Route.Body.Json(
                         s.value.toModel(
                           requireNotNull(
-                            operation.operationId?.let { NamingContext.Named("${it}Request") }
+                            operation.operationId?.let { Named("${it}Request") }
                           ) {
                             "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
                           }
                         ),
                         mediaType.extensions
                       )
+
                     null -> Route.Body.Json(Model.FreeFormJson, mediaType.extensions)
                   }
                 Pair(ApplicationJson, json)
               }
+
               MultipartFormData.matches(contentType) -> {
                 fun ctx(name: String): NamingContext =
                   when (val s = mediaType.schema) {
-                    is ReferenceOr.Reference -> NamingContext.Named(s.namedSchema().first)
+                    is ReferenceOr.Reference -> Named(s.namedSchema().first)
                     is ReferenceOr.Value ->
                       NamingContext.RouteParam(name, operation.operationId, "Request")
+
                     null ->
                       throw IllegalStateException(
                         "$mediaType without a schema. Generation doesn't know what to do, please open a ticket!"
                       )
                   }
 
-                val props =
-                  requireNotNull(mediaType.schema!!.get().properties) {
-                    "Generating multipart/form-data bodies without properties is not possible."
+                val (model, formData) = when(val ref = mediaType.schema!!) {
+                  is ReferenceOr.Reference -> {
+                    val (name, schema) = ref.namedSchema()
+                    val model = schema.toModel(ctx(name))
+                    Pair(model, listOf(Route.Body.Multipart.FormData(name, schema.toModel(ctx(name)))))
                   }
-                require(props.isNotEmpty()) {
-                  "Generating multipart/form-data bodies without properties is not possible."
+                  is ReferenceOr.Value -> Pair(null, ref.value.properties!!.map { (name, ref) ->
+                    Route.Body.Multipart.FormData(name, ref.get().toModel(ctx(name)))
+                  })
                 }
-                Pair(
-                  MultipartFormData,
-                  Route.Body.Multipart(
-                    props.map { (name, ref) ->
-                      Route.Body.Multipart.FormData(name, ref.get().toModel(ctx(name)))
-                    },
-                    mediaType.extensions
-                  )
-                )
+
+                Pair(MultipartFormData, Route.Body.Multipart(model, formData, mediaType.extensions))
               }
+
               ApplicationOctetStream.matches(contentType) ->
                 Pair(ApplicationOctetStream, Route.Body.OctetStream(mediaType.extensions))
+
               else ->
                 throw IllegalStateException("RequestBody content type: $this not yet supported.")
             }
@@ -536,6 +541,7 @@ interface OpenAPIInterceptor {
           when {
             response.content.contains(applicationOctectStream) ->
               Pair(statusCode, Route.ReturnType(Model.Binary, response.extensions))
+
             response.content.contains(applicationJson) -> {
               val mediaType = response.content.getValue(applicationJson)
               when (val s = mediaType.schema) {
@@ -544,18 +550,19 @@ interface OpenAPIInterceptor {
                   Pair(
                     statusCode,
                     Route.ReturnType(
-                      schema.toModel(NamingContext.Named(name)),
+                      schema.toModel(Named(name)),
                       operation.responses.extensions
                     )
                   )
                 }
+
                 is ReferenceOr.Value ->
                   Pair(
                     statusCode,
                     Route.ReturnType(
                       s.value.toModel(
                         requireNotNull(
-                          operation.operationId?.let { NamingContext.Named("${it}Response") }
+                          operation.operationId?.let { Named("${it}Response") }
                         ) {
                           "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
                         }
@@ -563,10 +570,12 @@ interface OpenAPIInterceptor {
                       response.extensions
                     )
                   )
+
                 null ->
                   Pair(statusCode, Route.ReturnType(toRawJson(Allowed(true)), response.extensions))
               }
             }
+
             response.isEmpty() ->
               Pair(
                 statusCode,
@@ -575,6 +584,7 @@ interface OpenAPIInterceptor {
                   response.extensions
                 )
               )
+
             else -> Pair(statusCode, responseNotSupported(operation, response, statusCode))
           }.let { (code, response) -> Pair(code, response(operation, statusCode, response)) }
         },

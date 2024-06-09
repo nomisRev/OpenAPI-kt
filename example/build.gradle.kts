@@ -12,6 +12,7 @@ kotlin {
     commonMain {
       kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
       dependencies {
+        implementation("io.ktor:ktor-client-core:2.3.6")
         implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
       }
     }
