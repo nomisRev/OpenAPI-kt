@@ -9,14 +9,15 @@ import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import io.github.nomisrev.openapi.NamingContext.Named
+import io.github.nomisrev.openapi.generation.DefaultNamingStrategy
 import io.github.nomisrev.openapi.generation.NamingStrategy
 
-fun apis(root: Root, naming: NamingStrategy): List<FileSpec> =
-  endpoints(root, naming) + root(root, naming)
+fun Root.toFileSpecs(naming: NamingStrategy = DefaultNamingStrategy): List<FileSpec> =
+  endpoints(this, naming) + root(this, naming)
 
 private fun endpoints(root: Root, naming: NamingStrategy): List<FileSpec> =
   root.endpoints.map { api ->
-    FileSpec.builder("io.github.nomisrev.openapi", api.name).addType(api.toCode(naming)).build()
+    FileSpec.builder("io.github.nomisrev.openapi", api.name).addType(api.toTypeSpec(naming)).build()
   }
 
 private fun root(root: Root, naming: NamingStrategy) =
@@ -40,20 +41,40 @@ private fun root(root: Root, naming: NamingStrategy) =
     )
     .build()
 
-private fun TypeSpec.Builder.addProperty(api: API, naming: NamingStrategy) {
+private fun propertySpec(api: API, naming: NamingStrategy): PropertySpec {
   val className = naming.toObjectClassName(Named(api.name))
-  addProperty(api.name, ClassName.bestGuess(className))
+  return PropertySpec.builder(api.name, ClassName.bestGuess(className)).build()
 }
 
-private fun API.toCode(naming: NamingStrategy): TypeSpec =
+private fun Route.nestedTypes(naming: NamingStrategy): List<TypeSpec> =
+  inputs(naming) + returns(naming) + bodies(naming)
+
+private fun Route.inputs(naming: NamingStrategy): List<TypeSpec> =
+  input.mapNotNull { (it.type as? Resolved.Value)?.value?.toTypeSpec(naming) }
+
+private fun Route.returns(naming: NamingStrategy): List<TypeSpec> =
+  returnType.types.values.mapNotNull { (it.type as? Resolved.Value)?.value?.toTypeSpec(naming) }
+
+private fun Route.bodies(naming: NamingStrategy): List<TypeSpec> =
+  body.types.values.flatMap { body ->
+    when (body) {
+      is Route.Body.Json.Defined ->
+        listOfNotNull((body.type as? Resolved.Value)?.value?.toTypeSpec(naming))
+      is Route.Body.Multipart.Value ->
+        body.parameters.mapNotNull { it.type.value.toTypeSpec(naming) }
+      is Route.Body.Multipart.Ref,
+      is Route.Body.Xml,
+      is Route.Body.Json.FreeForm,
+      is Route.Body.OctetStream -> emptyList()
+    }
+  }
+
+private fun API.toTypeSpec(naming: NamingStrategy): TypeSpec =
   TypeSpec.interfaceBuilder(naming.toObjectClassName(Named(name)))
     .addFunctions(routes.map { it.toFun(naming).abstract() })
-    .apply {
-      nested.forEach { api ->
-        addType(api.toCode(naming))
-        addProperty(api, naming)
-      }
-    }
+    .addTypes(routes.flatMap { it.nestedTypes(naming) })
+    .addTypes(nested.map { it.toTypeSpec(naming) })
+    .addProperties(nested.map { propertySpec(it, naming) })
     .build()
 
 private fun FunSpec.abstract(): FunSpec = toBuilder().addModifiers(KModifier.ABSTRACT).build()
@@ -61,7 +82,7 @@ private fun FunSpec.abstract(): FunSpec = toBuilder().addModifiers(KModifier.ABS
 fun FunSpec.Builder.addParameter(
   naming: NamingStrategy,
   name: String,
-  type: Model,
+  type: Resolved<Model>,
   nullable: Boolean,
 ): FunSpec.Builder =
   addParameter(
@@ -101,7 +122,7 @@ private fun Route.toFun(naming: NamingStrategy): FunSpec =
 private fun Route.returnType(naming: NamingStrategy): TypeName {
   val success =
     returnType.types.toSortedMap { s1, s2 -> s1.code.compareTo(s2.code) }.entries.first()
-  return when (success.value.type) {
+  return when (success.value.type.value) {
     is Model.Binary -> ClassName("io.ktor.client.statement", "HttpResponse")
     else -> success.value.type.toTypeName(naming)
   }

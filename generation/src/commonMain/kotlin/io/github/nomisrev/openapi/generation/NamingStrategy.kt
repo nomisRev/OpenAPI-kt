@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi.generation
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Collection
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.Resolved
 import net.pearx.kasechange.splitter.WordSplitterConfig
 import net.pearx.kasechange.splitter.WordSplitterConfigurable
 import net.pearx.kasechange.toCamelCase
@@ -46,6 +47,9 @@ interface NamingStrategy {
    *    IntsList for List<List<Int>>. => duplicate schemas can be filtered out.
    */
   fun toUnionCaseName(model: Model, depth: List<Model> = emptyList()): String
+
+  fun toUnionCaseName(model: Resolved<Model>, depth: List<Model> = emptyList()): String =
+    toUnionCaseName(model.value, depth)
 }
 
 object DefaultNamingStrategy : NamingStrategy {
@@ -85,12 +89,12 @@ object DefaultNamingStrategy : NamingStrategy {
       is Collection.Set -> toSet(collection)
     }
 
-  override fun toList(list: Collection.List): String = "List<${typeName(list.value)}>"
+  override fun toList(list: Collection.List): String = "List<${typeName(list.resolved.value)}>"
 
-  override fun toSet(set: Collection.Set): String = "Set<${typeName(set.value)}>"
+  override fun toSet(set: Collection.Set): String = "Set<${typeName(set.resolved.value)}>"
 
   override fun toMap(map: Collection.Map): String =
-    "Map<${typeName(map.key)}, ${typeName(map.value)}>"
+    "Map<${typeName(map.key)}, ${typeName(map.resolved.value)}>"
 
   override fun toEnumClassName(context: NamingContext): String =
     when (context) {
@@ -144,9 +148,9 @@ object DefaultNamingStrategy : NamingStrategy {
 
   override fun toUnionCaseName(model: Model, depth: List<Model>): String =
     when (model) {
-      is Collection.List -> toUnionCaseName(model.value, depth + listOf(model))
-      is Collection.Map -> toUnionCaseName(model.value, depth + listOf(model))
-      is Collection.Set -> toUnionCaseName(model.value, depth + listOf(model))
+      is Collection.List -> toUnionCaseName(model.resolved.value, depth + listOf(model))
+      is Collection.Map -> toUnionCaseName(model.resolved.value, depth + listOf(model))
+      is Collection.Set -> toUnionCaseName(model.resolved.value, depth + listOf(model))
       else -> {
         val head = depth.firstOrNull()
         val s =

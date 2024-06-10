@@ -21,7 +21,7 @@ fun OpenAPI.models(): Set<Model> =
   with(OpenAPITransformer(this)) { schemas() }
     .mapNotNull { model ->
       when (model) {
-        is Collection -> model.value
+        is Collection -> model.resolved.value
         is Primitive.Int,
         is Primitive.Double,
         is Primitive.Boolean,
@@ -81,81 +81,53 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       Route.Input(
         param.name,
         model, // TODO the nullable param should be configurable
-        param.schema!!.get().nullable ?: true,
+        resolved.value.nullable ?: true,
         param.required,
-        param.input
+        param.input,
+        param.description
       )
     }
-
-  private fun Route.Body.model(): List<Model> =
-    when (this) {
-      is Route.Body.Json -> listOf(type)
-      is Route.Body.Multipart -> parameters.map { it.type }
-      is Route.Body.OctetStream -> listOf(Model.Binary)
-      is Route.Body.Xml -> TODO("We don't support XML yet")
-    }
-
-  /**
-   * Gets all the **inline** schemas for operations, and gathers them in the nesting that they occur
-   * within the document. So they can be generated whilst maintaining their order of nesting.
-   */
-  //  fun operationModels(): List<Model> =
-  //    operations().flatMap { (_, _, operation) ->
-  //      // TODO this can probably be removed in favor of `Set` to remove duplication
-  //      // Gather the **inline** request bodies & returnType, ignore top-level
-  //      val bodies =
-  //        operation.requestBody
-  //          ?.get()
-  //          ?.let { toRequestBody(operation, it).types.values }
-  //          ?.flatMap { it.model() }
-  //          .orEmpty()
-  //
-  //      val responses = toResponses(operation).map { it.value.type }
-  //
-  //      val parameters =
-  //        operation.parameters.mapNotNull { refOrParam ->
-  //          refOrParam.valueOrNull()?.let { param ->
-  //            param.schema
-  //              ?.valueOrNull()
-  //              ?.toModel(NamingContext.RouteParam(param.name, operation.operationId, "Request"))
-  //          }
-  //        }
-  //      bodies + responses + parameters
-  //    }
 
   /** Gathers all "top-level", or components schemas. */
   fun schemas(): List<Model> =
     openAPI.components.schemas.map { (name, refOrSchema) ->
       when (val resolved = refOrSchema.resolve()) {
         is Resolved.Ref -> throw IllegalStateException("Remote schemas not supported yet.")
-        is Resolved.Value -> resolved.toModel(Named(name))
+        is Resolved.Value -> Resolved.Ref(name, resolved.value).toModel(Named(name)).value
       }
     }
 
-  fun Resolved<Schema>.toModel(context: NamingContext): Model =
-    with(value) {
+  fun Resolved<Schema>.toModel(context: NamingContext): Resolved<Model> {
+    val model =
       when {
-        isOpenEnumeration() ->
-          toOpenEnum(context, anyOf!!.firstNotNullOf { it.resolve().value.enum })
-        // Flatten anyOf, and oneOf, when they have a single schema
-        anyOf != null && anyOf?.size == 1 -> anyOf!![0].resolve().toModel(context)
-        oneOf != null && oneOf?.size == 1 -> oneOf!![0].resolve().toModel(context)
-        anyOf != null -> toUnion(context, anyOf!!)
-        oneOf != null -> toUnion(context, oneOf!!)
-        allOf != null -> TODO("allOf")
-        enum != null -> toEnum(context, enum.orEmpty())
-        properties != null -> asObject(context)
+        value.isOpenEnumeration() ->
+          value.toOpenEnum(context, value.anyOf!!.firstNotNullOf { it.resolve().value.enum })
+
+        // We don't modify the existing schema's, or specification
+        //      this is Resolved.Value && value.anyOf != null && value.anyOf?.size == 1 ->
+        // value.anyOf!![0].resolve().toModel(context)
+        //      this is Resolved.Value && value.oneOf != null && value.oneOf?.size == 1 ->
+        // value.oneOf!![0].resolve().toModel(context)
+        value.anyOf != null -> value.toUnion(context, value.anyOf!!)
+        value.oneOf != null -> value.toUnion(context, value.oneOf!!)
+        value.allOf != null -> TODO("allOf")
+        value.enum != null -> value.toEnum(context, value.enum.orEmpty())
+        value.properties != null -> value.asObject(context)
         // If no values, properties, or schemas, were found, lets check the types
-        type != null -> type(context, type!!)
-        else -> TODO("Schema: $this not yet supported. Please report to issue tracker.")
+        value.type != null -> value.type(context, value.type!!)
+        else -> TODO("Schema: $value not yet supported. Please report to issue tracker.")
       }
+    return when (this) {
+      is Resolved.Ref -> Resolved.Ref(name, model)
+      is Resolved.Value -> Resolved.Value(model)
     }
+  }
 
   fun Schema.isOpenEnumeration(): Boolean =
     anyOf != null &&
       anyOf!!.size == 2 &&
-      anyOf!!.count { it.get().enum != null } == 1 &&
-      anyOf!!.count { it.get().type == Type.Basic.String } == 1
+      anyOf!!.count { it.resolve().value.enum != null } == 1 &&
+      anyOf!!.count { it.resolve().value.type == Type.Basic.String } == 1
 
   fun ReferenceOr<Schema>.resolve(): Resolved<Schema> =
     when (this) {
@@ -171,15 +143,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         Resolved.Ref(name, schema)
       }
     }
-
-  fun ReferenceOr<Schema>.get(): Schema =
-    when (this) {
-      is ReferenceOr.Value -> value
-      is ReferenceOr.Reference -> namedSchema().second
-    }
-
-  fun ReferenceOr.Reference.namedSchema(): Pair<String, Schema> =
-    (resolve() as Resolved.Ref<Schema>).let { (name, schema) -> Pair(name, schema) }
 
   tailrec fun ReferenceOr<Response>.get(): Response =
     when (this) {
@@ -229,36 +192,31 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       }
     }
 
-  private fun Resolved<Schema>.asObject(context: NamingContext): Model =
+  private fun Schema.asObject(context: NamingContext): Model =
     when {
-      value.properties != null -> toObject(context, value.properties!!)
-      value.additionalProperties != null ->
-        when (val aProps = value.additionalProperties!!) {
+      properties != null -> toObject(context, properties!!)
+      additionalProperties != null ->
+        when (val aProps = additionalProperties!!) {
           is AdditionalProperties.PSchema -> toMap(context, aProps)
           is Allowed -> toRawJson(aProps)
         }
       else -> toRawJson(Allowed(true))
     }
 
-  fun Resolved<Schema>.toObject(
-    context: NamingContext,
-    properties: Map<String, ReferenceOr<Schema>>
-  ): Model =
+  fun Schema.toObject(context: NamingContext, properties: Map<String, ReferenceOr<Schema>>): Model =
     Model.Object(
-      this,
       context,
-      value.description,
+      description,
       properties.map { (name, ref) ->
         val pContext = toPropertyContext(name, ref, context)
         val pSchema = ref.resolve()
         val model = pSchema.toModel(pContext)
         Property(
-          pSchema,
           name,
           pContext.name,
           model,
-          value.required?.contains(name) == true,
-          pSchema.value.nullable ?: value.required?.contains(name)?.not() ?: true,
+          required?.contains(name) == true,
+          pSchema.value.nullable ?: required?.contains(name)?.not() ?: true,
           pSchema.value.description
         )
       }
@@ -269,23 +227,21 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     propSchema: ReferenceOr<Schema>,
     original: NamingContext
   ): NamingContext =
-    when (propSchema) {
-      is ReferenceOr.Reference -> Named(propSchema.namedSchema().first)
-      is ReferenceOr.Value -> NamingContext.Nested(key, original)
+    when (val resolved = propSchema.resolve()) {
+      is Resolved.Ref -> Named(resolved.name)
+      is Resolved.Value -> NamingContext.Nested(key, original)
     }
 
   private fun Schema.singleDefaultOrNull(): String? = (default as? ExampleValue.Single)?.value
 
-  fun Resolved<Schema>.toOpenEnum(context: NamingContext, values: List<String>): Enum.Open {
+  fun Schema.toOpenEnum(context: NamingContext, values: List<String>): Enum.Open {
     require(values.isNotEmpty()) { "OpenEnum requires at least 1 possible value" }
-    val default = value.singleDefaultOrNull()
-    return Enum.Open(this, context, values, default)
+    val default = singleDefaultOrNull()
+    return Enum.Open(context, values, default, description)
   }
 
-  fun Resolved<Schema>.toMap(
-    context: NamingContext,
-    additionalSchema: AdditionalProperties.PSchema
-  ): Model = Collection.Map(this, additionalSchema.value.resolve().toModel(context))
+  fun toMap(context: NamingContext, additionalSchema: AdditionalProperties.PSchema): Model =
+    Collection.Map(additionalSchema.value.resolve().toModel(context))
 
   fun toRawJson(allowed: Allowed): Model =
     if (allowed.value) Model.FreeFormJson
@@ -294,26 +250,23 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         "Illegal State: No additional properties allowed on empty object."
       )
 
-  fun Resolved<Schema>.toPrimitive(context: NamingContext, basic: Type.Basic): Model =
-    with(value) {
-      when (basic) {
-        Type.Basic.Object -> toRawJson(Allowed(true))
-        Type.Basic.Boolean -> Primitive.Boolean(this, default?.toString()?.toBoolean())
-        Type.Basic.Integer -> Primitive.Int(this, default?.toString()?.toIntOrNull())
-        Type.Basic.Number -> Primitive.Double(this, default?.toString()?.toDoubleOrNull())
-        Type.Basic.Array -> collection(context)
-        Type.Basic.String ->
-          if (format == "binary") Model.Binary else Primitive.String(this, default?.toString())
-        Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
-      }
+  fun Schema.toPrimitive(context: NamingContext, basic: Type.Basic): Model =
+    when (basic) {
+      Type.Basic.Object -> toRawJson(Allowed(true))
+      Type.Basic.Boolean -> Primitive.Boolean(default?.toString()?.toBoolean())
+      Type.Basic.Integer -> Primitive.Int(default?.toString()?.toIntOrNull())
+      Type.Basic.Number -> Primitive.Double(default?.toString()?.toDoubleOrNull())
+      Type.Basic.Array -> collection(context)
+      Type.Basic.String ->
+        if (format == "binary") Model.Binary else Primitive.String(default?.toString())
+      Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
     }
 
-  private fun Resolved<Schema>.collection(context: NamingContext): Collection {
-    val items =
-      requireNotNull(value.items?.resolve()) { "Array type requires items to be defined." }
+  private fun Schema.collection(context: NamingContext): Collection {
+    val items = requireNotNull(items?.resolve()) { "Array type requires items to be defined." }
     val inner = items.toModel(items.namedOr { context })
     val default =
-      when (val example = value.default) {
+      when (val example = default) {
         is ExampleValue.Multiple -> example.values
         is ExampleValue.Single ->
           when (val value = example.value) {
@@ -322,38 +275,37 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           }
         null -> null
       }
-    return if (value.uniqueItems == true) Collection.Set(this, inner, default)
-    else Collection.List(this, inner, default)
+    return if (uniqueItems == true) Collection.Set(inner, default)
+    else Collection.List(inner, default)
   }
 
-  fun Resolved<Schema>.type(context: NamingContext, type: Type): Model =
+  fun Schema.type(context: NamingContext, type: Type): Model =
     when (type) {
       is Type.Array ->
         when {
           type.types.size == 1 ->
-            Resolved.Value(value.copy(type = type.types.single()))
-              .type(context, type.types.single())
+            copy(type = type.types.single()).type(context, type.types.single())
           else ->
             Model.Union(
-              this,
               context,
-              type.types.sorted().map {
-                val resolved = Resolved.Value(Schema(type = it))
-                Model.Union.Entry(resolved, context, resolved.toModel(context))
+              type.types.sorted().map { t ->
+                val resolved = Resolved.Value(Schema(type = t))
+                Model.Union.Case(context, resolved.toModel(context))
               },
-              null
+              null,
+              description
             )
         }
       is Type.Basic -> toPrimitive(context, type)
     }
 
-  fun Resolved<Schema>.toEnum(context: NamingContext, enums: List<String>): Model.Enum.Closed {
+  fun Schema.toEnum(context: NamingContext, enums: List<String>): Enum.Closed {
     require(enums.isNotEmpty()) { "Enum requires at least 1 possible value" }
     /* To resolve the inner type, we erase the enum values.
      * Since the schema is still on the same level - we keep the topLevelName */
-    val inner = Resolved.Value(value.copy(enum = null)).toModel(context)
-    val default = value.singleDefaultOrNull()
-    return Enum.Closed(this, context, inner, enums, default)
+    val inner = Resolved.Value(copy(enum = null)).toModel(context)
+    val default = singleDefaultOrNull()
+    return Enum.Closed(context, inner, enums, default, description)
   }
 
   fun toUnionCaseContext(context: NamingContext, caseSchema: ReferenceOr<Schema>): NamingContext =
@@ -395,7 +347,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     when (schema.type) {
       Type.Basic.Array -> {
         val inner = requireNotNull(schema.items) { "Array type requires items to be defined." }
-        inner.get().type
+        inner.resolve().value.type
         TODO("Name generation for Type Arrays not yet supported")
       }
       Type.Basic.Object -> {
@@ -405,7 +357,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         NamingContext.Nested(
           schema.properties
             ?.firstNotNullOfOrNull { (key, value) ->
-              if (key == "event") value.get().enum else null
+              if (key == "event") value.resolve().value.enum else null
             }
             ?.singleOrNull()
             ?: TODO("Name Generated for inline objects of unions not yet supported."),
@@ -432,7 +384,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       null -> TODO()
     }
 
-  private fun Resolved<Schema>.toUnion(
+  private fun Schema.toUnion(
     context: NamingContext,
     subtypes: List<ReferenceOr<Schema>>
   ): Model.Union {
@@ -440,14 +392,14 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       subtypes.map { ref ->
         val caseContext = toUnionCaseContext(context, ref)
         val resolved = ref.resolve()
-        Model.Union.Entry(resolved, caseContext, resolved.toModel(caseContext))
+        Model.Union.Case(caseContext, resolved.toModel(caseContext))
       }
     return Model.Union(
-      this,
       context,
       cases,
-      // TODO We need to check the parent for default?
-      cases.firstNotNullOfOrNull { (it.model as? Primitive.String)?.schema?.singleDefaultOrNull() }
+      singleDefaultOrNull()
+        ?: subtypes.firstNotNullOfOrNull { it.resolve().value.singleDefaultOrNull() },
+      description
     )
   }
 
@@ -470,9 +422,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                         "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
                       }
                     }
-                  Route.Body.Json(json, json.toModel(context), mediaType.extensions)
+                  Route.Body.Json.Defined(json.toModel(context), mediaType.extensions)
                 }
-                  ?: Route.Body.Json(null, Model.FreeFormJson, mediaType.extensions)
+                  ?: Route.Body.Json.FreeForm(mediaType.extensions)
               Pair(ApplicationJson, json)
             }
             MultipartFormData.matches(contentType) -> {
@@ -487,26 +439,23 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   NamingContext.RouteParam(name, operation.operationId, "Request")
                 }
 
-              val (model, formData) =
+              val multipart =
                 when (resolved) {
                   is Resolved.Ref -> {
-                    val model = resolved.toModel(Named(resolved.name))
-                    Pair(
-                      model,
-                      listOf(Route.Body.Multipart.FormData(resolved, resolved.name, model))
-                    )
+                    val model = resolved.toModel(Named(resolved.name)) as Resolved.Ref
+                    Route.Body.Multipart.Ref(model, mediaType.extensions)
                   }
                   is Resolved.Value ->
-                    Pair(
-                      null,
+                    Route.Body.Multipart.Value(
                       resolved.value.properties!!.map { (name, ref) ->
                         val resolved = ref.resolve()
-                        Route.Body.Multipart.FormData(resolved, name, resolved.toModel(ctx(name)))
-                      }
+                        Route.Body.Multipart.FormData(name, resolved.toModel(ctx(name)))
+                      },
+                      mediaType.extensions
                     )
                 }
 
-              Pair(MultipartFormData, Route.Body.Multipart(model, formData, mediaType.extensions))
+              Pair(MultipartFormData, multipart)
             }
             ApplicationOctetStream.matches(contentType) ->
               Pair(ApplicationOctetStream, Route.Body.OctetStream(mediaType.extensions))
@@ -529,7 +478,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val response = refOrResponse.get()
         when {
           response.content.contains("application/octet-stream") ->
-            Pair(statusCode, Route.ReturnType(Model.Binary, response.extensions))
+            Pair(statusCode, Route.ReturnType(Resolved.Value(Model.Binary), response.extensions))
           response.content.contains("application/json") -> {
             val mediaType = response.content.getValue("application/json")
             when (val resolved = mediaType.schema?.resolve()) {
@@ -543,7 +492,11 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   statusCode,
                   Route.ReturnType(
                     resolved.toModel(
-                      requireNotNull(operation.operationId?.let { Named("${it}Response") }) {
+                      requireNotNull(
+                        operation.operationId?.let {
+                          NamingContext.Nested("${it}Response", Named(it))
+                        }
+                      ) {
                         "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
                       }
                     ),
@@ -551,16 +504,16 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   )
                 )
               null ->
-                Pair(statusCode, Route.ReturnType(toRawJson(Allowed(true)), response.extensions))
+                Pair(
+                  statusCode,
+                  Route.ReturnType(Resolved.Value(toRawJson(Allowed(true))), response.extensions)
+                )
             }
           }
           response.isEmpty() ->
             Pair(
               statusCode,
-              Route.ReturnType(
-                Primitive.String(Schema(type = Schema.Type.Basic.String), null),
-                response.extensions
-              )
+              Route.ReturnType(Resolved.Value(Primitive.String(null)), response.extensions)
             )
           else ->
             throw IllegalStateException("OpenAPI requires at least 1 valid response. $response")

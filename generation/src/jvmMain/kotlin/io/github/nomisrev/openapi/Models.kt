@@ -31,9 +31,14 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PolymorphicKind
 
+fun Iterable<Model>.toFileSpecs(naming: NamingStrategy = DefaultNamingStrategy): List<FileSpec> =
+  mapNotNull {
+    it.toFileSpec(naming)
+  }
+
 fun Model.toFileSpec(naming: NamingStrategy): FileSpec? =
   when (this) {
-    is Collection -> value.toFileSpec(naming)
+    is Collection -> resolved.value.toFileSpec(naming)
     is Model.Enum ->
       FileSpec.builder("io.github.nomisrev.openapi", naming.toEnumClassName(context))
         .addType(toTypeSpec(DefaultNamingStrategy))
@@ -56,7 +61,7 @@ tailrec fun Model.toTypeSpec(naming: NamingStrategy): TypeSpec? =
     is Model.Binary,
     is Model.FreeFormJson,
     is Model.Primitive -> null
-    is Collection -> value.toTypeSpec(naming)
+    is Collection -> resolved.value.toTypeSpec(naming)
     is Model.Enum -> toTypeSpec(naming)
     is Model.Object -> toTypeSpec(naming)
     is Model.Union -> toTypeSpec(naming)
@@ -202,7 +207,7 @@ fun Model.Object.toTypeSpec(naming: NamingStrategy): TypeSpec =
     // point...
     // This occurs when request bodies are defined using top-level schemas.
     .apply {
-      if (properties.none { it.model is Model.Binary })
+      if (properties.none { it.model.value is Model.Binary })
         addAnnotation(annotationSpec<Serializable>())
     }
     .primaryConstructor(
@@ -239,6 +244,11 @@ fun Model.Object.toTypeSpec(naming: NamingStrategy): TypeSpec =
     .addTypes(inline.mapNotNull { it.toTypeSpec(naming) })
     .build()
 
+fun Resolved<Model>.toTypeName(
+  naming: NamingStrategy,
+  `package`: String = "io.github.nomisrev.openapi"
+): TypeName = value.toTypeName(naming, `package`)
+
 fun Model.toTypeName(
   naming: NamingStrategy,
   `package`: String = "io.github.nomisrev.openapi"
@@ -249,26 +259,35 @@ fun Model.toTypeName(
     is Model.Primitive.Int -> INT
     is Model.Primitive.String -> STRING
     Model.Primitive.Unit -> UNIT
-    is Collection.List -> LIST.parameterizedBy(value.toTypeName(naming, `package`))
-    is Collection.Set -> SET.parameterizedBy(value.toTypeName(naming, `package`))
-    is Collection.Map -> MAP.parameterizedBy(STRING, value.toTypeName(naming, `package`))
+    is Collection.List -> LIST.parameterizedBy(resolved.toTypeName(naming, `package`))
+    is Collection.Set -> SET.parameterizedBy(resolved.toTypeName(naming, `package`))
+    is Collection.Map -> MAP.parameterizedBy(STRING, resolved.toTypeName(naming, `package`))
     Model.Binary -> ClassName(`package`, "UploadFile")
     Model.FreeFormJson -> ClassName("kotlinx.serialization.json", "JsonElement")
-    is Model.Enum ->
-      when (context) {
-        is NamingContext.Named -> ClassName(`package`, naming.toEnumClassName(context))
-        else -> ClassName.bestGuess(naming.toEnumClassName(context))
-      }
-    is Model.Object ->
-      when (context) {
-        is NamingContext.Named -> ClassName(`package`, naming.toObjectClassName(context))
-        else -> ClassName.bestGuess(naming.toObjectClassName(context))
-      }
-    is Model.Union ->
-      when (context) {
-        is NamingContext.Named -> ClassName(`package`, naming.toUnionClassName(this))
-        else -> ClassName.bestGuess(naming.toUnionClassName(this))
-      }
+    is Model.Enum -> toTypeName(`package`, naming)
+    is Model.Object -> toTypeName(`package`, naming)
+    is Model.Union -> toTypeName(naming, `package`)
+  }
+
+private fun Model.Enum.toTypeName(`package`: String, naming: NamingStrategy) =
+  when (context) {
+    is NamingContext.Named -> ClassName(`package`, naming.toEnumClassName(context))
+    else -> ClassName.bestGuess(naming.toEnumClassName(context))
+  }
+
+private fun Model.Object.toTypeName(`package`: String, naming: NamingStrategy) =
+  when (context) {
+    is NamingContext.Named -> ClassName(`package`, naming.toObjectClassName(context))
+    else -> ClassName.bestGuess(naming.toObjectClassName(context))
+  }
+
+fun Model.Union.toTypeName(
+  naming: NamingStrategy,
+  `package`: String = "io.github.nomisrev.openapi"
+): ClassName =
+  when (context) {
+    is NamingContext.Named -> ClassName(`package`, naming.toUnionClassName(this))
+    else -> ClassName.bestGuess(naming.toUnionClassName(this))
   }
 
 fun Model.Enum.toTypeSpec(naming: NamingStrategy): TypeSpec =
@@ -432,32 +451,33 @@ private val SetSerializer = MemberName("kotlinx.serialization.builtins", "SetSer
 
 private val MapSerializer = MemberName("kotlinx.serialization.builtins", "MapSerializer")
 
-private fun Model.serializer(naming: NamingStrategy): Pair<String, Array<Any>> {
-  val values: MutableList<Any> = mutableListOf()
-  fun Model.placeholder(): String =
-    when (this) {
-      is Collection.List -> {
-        values.add(ListSerializer)
-        "%M(${value.placeholder()})"
+private fun Resolved<Model>.serializer(naming: NamingStrategy): Pair<String, Array<Any>> =
+  with(value) {
+    val values: MutableList<Any> = mutableListOf()
+    fun Model.placeholder(): String =
+      when (this) {
+        is Collection.List -> {
+          values.add(ListSerializer)
+          "%M(${resolved.value.placeholder()})"
+        }
+        is Collection.Map -> {
+          values.add(MapSerializer)
+          "%M(${key.placeholder()}, ${resolved.value.placeholder()})"
+        }
+        is Collection.Set -> {
+          values.add(SetSerializer)
+          "%M(${resolved.value.placeholder()})"
+        }
+        is Model.Primitive -> {
+          values.add(toTypeName(naming))
+          values.add(MemberName("kotlinx.serialization.builtins", "serializer", isExtension = true))
+          "%T.%M()"
+        }
+        else -> {
+          values.add(toTypeName(naming))
+          "%T.serializer()"
+        }
       }
-      is Collection.Map -> {
-        values.add(MapSerializer)
-        "%M(${key.placeholder()}, ${value.placeholder()})"
-      }
-      is Collection.Set -> {
-        values.add(SetSerializer)
-        "%M(${value.placeholder()})"
-      }
-      is Model.Primitive -> {
-        values.add(toTypeName(naming))
-        values.add(MemberName("kotlinx.serialization.builtins", "serializer", isExtension = true))
-        "%T.%M()"
-      }
-      else -> {
-        values.add(toTypeName(naming))
-        "%T.serializer()"
-      }
-    }
 
-  return Pair(placeholder(), values.toTypedArray())
-}
+    return Pair(placeholder(), values.toTypedArray())
+  }
