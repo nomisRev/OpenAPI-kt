@@ -94,13 +94,12 @@ object DefaultNamingStrategy : NamingStrategy {
 
   override fun toEnumClassName(context: NamingContext): String =
     when (context) {
-      is NamingContext.Inline -> context.name.toPascalCase()
-      is NamingContext.Ref -> context.outer.name.toPascalCase()
+      is NamingContext.Nested -> context.name.toPascalCase()
       is NamingContext.Named -> context.name.toPascalCase()
       is NamingContext.RouteParam -> {
         requireNotNull(context.operationId) { "Need operationId to generate enum name" }
-        // $MyObject$Param$Request, this allows for multiple custom objects in a single operation
-        "${context.operationId.toPascalCase()}${context.name.toPascalCase()}${context.postfix.toPascalCase()}"
+        // $MyObject$Param, this allows for multiple custom objects in a single operation
+        "${context.operationId.toPascalCase()}${context.name.toPascalCase()}"
       }
     }.dropArraySyntax()
 
@@ -128,8 +127,7 @@ object DefaultNamingStrategy : NamingStrategy {
   override fun toUnionClassName(model: Model.Union): String {
     val context = model.context
     return when {
-      model.isOpenEnumeration() -> toEnumClassName(context)
-      context is NamingContext.Inline ->
+      context is NamingContext.Nested ->
         "${context.outer.name.toPascalCase()}${context.name.toPascalCase()}"
       else -> context.name.toPascalCase()
     }

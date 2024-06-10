@@ -23,23 +23,7 @@ fun Model.default(naming: NamingStrategy): String? =
         "${naming.toEnumClassName(context)}.${naming.toEnumValueName(it)}"
       }
     is Model.Primitive -> default()
-    is Model.Union.AnyOf ->
-      when {
-        default == null -> null
-        isOpenEnumeration() -> {
-          val case = schemas.firstNotNullOf { it.model as? Model.Enum }
-          val defaultEnum =
-            case.values.find { it == default }?.let { naming.toEnumClassName(case.context) }
-          defaultEnum ?: "Custom(\"${default}\")"
-        }
-        else ->
-          schemas
-            .find { it.model is Model.Primitive.String }
-            ?.let { case ->
-              "${naming.toUnionClassName(this)}.${naming.toUnionCaseName(case.model)}(\"${default}\")"
-            }
-      }
-    is Model.Union.OneOf ->
+    is Model.Union ->
       schemas
         .find { it.model is Model.Primitive.String }
         ?.takeIf { default != null }

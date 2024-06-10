@@ -168,59 +168,35 @@ sealed interface Model {
     }
   }
 
-  sealed interface Union : Model {
-    val schema: Schema
-    val context: NamingContext
-    val schemas: List<UnionEntry>
-    val inline: List<Model>
-
-    fun isOpenEnumeration(): Boolean =
-      this is AnyOf &&
-        schemas.size == 2 &&
-        schemas.count { it.model is Enum } == 1 &&
-        schemas.count { it.model is Primitive.String } == 1
-
-    data class UnionEntry(val context: NamingContext, val model: Model)
-
-    /** [OneOf] is an untagged union. This is in Kotlin represented by a `sealed interface`. */
-    data class OneOf(
-      override val schema: Schema,
-      override val context: NamingContext,
-      override val schemas: List<UnionEntry>,
-      override val inline: List<Model>,
-      val default: String?
-    ) : Union
-
-    /**
-     * [AnyOf] is an untagged union, with overlapping schema.
-     *
-     * Typically:
-     * - open enumeration: anyOf a `string`, and [Enum] (also type: `string`).
-     * - [Object] with a [FreeFormJson], where [FreeFormJson] has overlapping schema with the
-     *   [Object].
-     */
-    data class AnyOf(
-      override val schema: Schema,
-      override val context: NamingContext,
-      override val schemas: List<UnionEntry>,
-      override val inline: List<Model>,
-      val default: String?
-    ) : Union
-
-    /** [TypeArray] */
-    data class TypeArray(
-      override val schema: Schema,
-      override val context: NamingContext,
-      override val schemas: List<UnionEntry>,
-      override val inline: List<Model>
-    ) : Union
-  }
-
-  data class Enum(
+  data class Union(
     val schema: Schema,
     val context: NamingContext,
-    val inner: Model,
-    val values: List<String>,
+    val schemas: List<Entry>,
+    val inline: List<Model>,
     val default: String?
-  ) : Model
+  ) : Model {
+    data class Entry(val context: NamingContext, val model: Model)
+  }
+
+  sealed interface Enum : Model {
+    val schema: Schema
+    val context: NamingContext
+    val values: List<String>
+    val default: String?
+
+    data class Closed(
+      override val schema: Schema,
+      override val context: NamingContext,
+      val inner: Model,
+      override val values: List<String>,
+      override val default: String?
+    ) : Enum
+
+    data class Open(
+      override val schema: Schema,
+      override val context: NamingContext,
+      override val values: List<String>,
+      override val default: String?
+    ) : Enum
+  }
 }

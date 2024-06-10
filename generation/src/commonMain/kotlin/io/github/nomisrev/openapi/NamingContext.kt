@@ -15,14 +15,8 @@ sealed interface NamingContext {
 
   data class Named(override val name: String) : NamingContext
 
+  data class Nested(override val name: String, val outer: NamingContext) : NamingContext
+
   data class RouteParam(override val name: String, val operationId: String?, val postfix: String) :
     NamingContext
-
-  sealed interface Nested : NamingContext {
-    val outer: NamingContext
-  }
-
-  data class Inline(override val name: String, override val outer: NamingContext) : Nested
-
-  data class Ref(override val name: String, override val outer: NamingContext) : Nested
 }

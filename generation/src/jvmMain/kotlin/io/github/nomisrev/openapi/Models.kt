@@ -25,6 +25,7 @@ import io.github.nomisrev.openapi.Model.Collection
 import io.github.nomisrev.openapi.generation.DefaultNamingStrategy
 import io.github.nomisrev.openapi.generation.NamingStrategy
 import io.github.nomisrev.openapi.generation.default
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -58,12 +59,10 @@ tailrec fun Model.toTypeSpec(naming: NamingStrategy): TypeSpec? =
     is Collection -> value.toTypeSpec(naming)
     is Model.Enum -> toTypeSpec(naming)
     is Model.Object -> toTypeSpec(naming)
-    is Model.Union -> {
-      val isOpenEnumeration = isOpenEnumeration()
-      if (isOpenEnumeration) toOpenEnumTypeSpec(naming) else toTypeSpec(naming)
-    }
+    is Model.Union -> toTypeSpec(naming)
   }
 
+@OptIn(ExperimentalSerializationApi::class)
 fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
   TypeSpec.interfaceBuilder(naming.toUnionClassName(this))
     .addModifiers(KModifier.SEALED)
@@ -181,30 +180,6 @@ fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
     )
     .build()
 
-fun Model.Enum.toTypeSpec(naming: NamingStrategy): TypeSpec {
-  val rawToName = values.map { rawName -> Pair(rawName, naming.toEnumValueName(rawName)) }
-  val isSimple = rawToName.all { (rawName, valueName) -> rawName == valueName }
-  val enumName = naming.toEnumClassName(context)
-  return TypeSpec.enumBuilder(enumName)
-    .apply {
-      if (!isSimple)
-        primaryConstructor(FunSpec.constructorBuilder().addParameter("value", STRING).build())
-      rawToName.forEach { (rawName, valueName) ->
-        if (isSimple) addEnumConstant(rawName)
-        else
-          addEnumConstant(
-            valueName,
-            TypeSpec.anonymousClassBuilder()
-              .addAnnotation(serialName(rawName))
-              .addSuperclassConstructorParameter("\"$rawName\"")
-              .build()
-          )
-      }
-    }
-    .addAnnotation(annotationSpec<Serializable>())
-    .build()
-}
-
 private inline fun <reified A : Annotation> annotationSpec(): AnnotationSpec =
   AnnotationSpec.builder(A::class).build()
 
@@ -268,26 +243,26 @@ fun Model.toTypeName(
   `package`: String = "io.github.nomisrev.openapi"
 ): TypeName =
   when (this) {
-    Model.Binary -> ClassName(`package`, "UploadFile")
-    is Collection.List -> LIST.parameterizedBy(value.toTypeName(naming, `package`))
-    is Collection.Set -> SET.parameterizedBy(value.toTypeName(naming, `package`))
-    is Collection.Map -> MAP.parameterizedBy(STRING, value.toTypeName(naming, `package`))
-    is Model.Enum ->
-      when (context) {
-        is NamingContext.Named -> ClassName(`package`, naming.toEnumClassName(context))
-        else -> ClassName.bestGuess(naming.toEnumClassName(context))
-      }
-    Model.FreeFormJson -> ClassName("kotlinx.serialization.json", "JsonElement")
-    is Model.Object ->
-      when (context) {
-        is NamingContext.Named -> ClassName(`package`, naming.toObjectClassName(context))
-        else -> ClassName.bestGuess(naming.toObjectClassName(context))
-      }
     is Model.Primitive.Boolean -> BOOLEAN
     is Model.Primitive.Double -> DOUBLE
     is Model.Primitive.Int -> INT
     is Model.Primitive.String -> STRING
     Model.Primitive.Unit -> UNIT
+    is Collection.List -> LIST.parameterizedBy(value.toTypeName(naming, `package`))
+    is Collection.Set -> SET.parameterizedBy(value.toTypeName(naming, `package`))
+    is Collection.Map -> MAP.parameterizedBy(STRING, value.toTypeName(naming, `package`))
+    Model.Binary -> ClassName(`package`, "UploadFile")
+    Model.FreeFormJson -> ClassName("kotlinx.serialization.json", "JsonElement")
+    is Model.Enum ->
+      when (context) {
+        is NamingContext.Named -> ClassName(`package`, naming.toEnumClassName(context))
+        else -> ClassName.bestGuess(naming.toEnumClassName(context))
+      }
+    is Model.Object ->
+      when (context) {
+        is NamingContext.Named -> ClassName(`package`, naming.toObjectClassName(context))
+        else -> ClassName.bestGuess(naming.toObjectClassName(context))
+      }
     is Model.Union ->
       when (context) {
         is NamingContext.Named -> ClassName(`package`, naming.toUnionClassName(this))
@@ -295,9 +270,38 @@ fun Model.toTypeName(
       }
   }
 
-fun Model.Union.toOpenEnumTypeSpec(naming: NamingStrategy): TypeSpec {
-  val enum = schemas.firstNotNullOf { it.model as? Model.Enum }
-  val rawToName = enum.values.map { rawName -> Pair(rawName, naming.toEnumValueName(rawName)) }
+fun Model.Enum.toTypeSpec(naming: NamingStrategy): TypeSpec =
+  when (this) {
+    is Model.Enum.Closed -> toTypeSpec(naming)
+    is Model.Enum.Open -> toTypeSpec(naming)
+  }
+
+fun Model.Enum.Closed.toTypeSpec(naming: NamingStrategy): TypeSpec {
+  val rawToName = values.map { rawName -> Pair(rawName, naming.toEnumValueName(rawName)) }
+  val isSimple = rawToName.all { (rawName, valueName) -> rawName == valueName }
+  val enumName = naming.toEnumClassName(context)
+  return TypeSpec.enumBuilder(enumName)
+    .apply {
+      if (!isSimple)
+        primaryConstructor(FunSpec.constructorBuilder().addParameter("value", STRING).build())
+      rawToName.forEach { (rawName, valueName) ->
+        if (isSimple) addEnumConstant(rawName)
+        else
+          addEnumConstant(
+            valueName,
+            TypeSpec.anonymousClassBuilder()
+              .addAnnotation(serialName(rawName))
+              .addSuperclassConstructorParameter("\"$rawName\"")
+              .build()
+          )
+      }
+    }
+    .addAnnotation(annotationSpec<Serializable>())
+    .build()
+}
+
+fun Model.Enum.Open.toTypeSpec(naming: NamingStrategy): TypeSpec {
+  val rawToName = values.map { rawName -> Pair(rawName, naming.toEnumValueName(rawName)) }
   val enumName = naming.toEnumClassName(context)
   return TypeSpec.interfaceBuilder(enumName)
     .addModifiers(KModifier.SEALED)
