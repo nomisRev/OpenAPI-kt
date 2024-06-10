@@ -149,23 +149,7 @@ sealed interface Model {
       val isRequired: Boolean,
       val isNullable: Boolean,
       val description: String?
-    ) {
-      sealed interface DefaultArgument {
-        data class Enum(val enum: Model, val context: NamingContext, val value: String) :
-          DefaultArgument
-
-        data class Union(val union: NamingContext, val case: Model, val value: String) :
-          DefaultArgument
-
-        data class Double(val value: kotlin.Double) : DefaultArgument
-
-        data class Int(val value: kotlin.Int) : DefaultArgument
-
-        data class List(val value: kotlin.collections.List<DefaultArgument>) : DefaultArgument
-
-        data class Other(val value: String) : DefaultArgument
-      }
-    }
+    )
   }
 
   data class Union(
