@@ -21,20 +21,17 @@ data class Route(
     val required: Boolean,
     val types: Map<MediaType, Body>,
     val extensions: Map<String, JsonElement>
-  ) :
-    Map<MediaType, Body> by types {
-      fun jsonOrNull(): Body.Json? =
-        types.getOrElse(MediaType.ApplicationJson) { null } as? Body.Json
+  ) : Map<MediaType, Body> by types {
+    fun jsonOrNull(): Body.Json? = types.getOrElse(MediaType.ApplicationJson) { null } as? Body.Json
 
     fun octetStreamOrNull(): Body.OctetStream? =
       types.getOrElse(MediaType.ApplicationOctetStream) { null } as? Body.OctetStream
 
-    fun xmlOrNull(): Body.Xml? =
-      types.getOrElse(MediaType.ApplicationXml) { null } as? Body.Xml
+    fun xmlOrNull(): Body.Xml? = types.getOrElse(MediaType.ApplicationXml) { null } as? Body.Xml
 
     fun multipartOrNull(): Body.Multipart? =
       types.getOrElse(MediaType.MultipartFormData) { null } as? Body.Multipart
-    }
+  }
 
   sealed interface Body {
     val extensions: Map<String, JsonElement>

@@ -10,7 +10,6 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LIST
-import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.MAP
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
@@ -31,37 +30,31 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PolymorphicKind
 
-public fun Model.toFileSpec(naming: NamingStrategy): FileSpec? =
+fun Model.toFileSpec(naming: NamingStrategy): FileSpec? =
   when (this) {
     is Collection -> value.toFileSpec(naming)
     is Model.Enum ->
       FileSpec.builder("io.github.nomisrev.openapi", naming.toEnumClassName(context))
         .addType(toTypeSpec(DefaultNamingStrategy))
         .build()
-
     is Model.Object ->
       FileSpec.builder("io.github.nomisrev.openapi", naming.toObjectClassName(context))
         .addType(toTypeSpec(DefaultNamingStrategy))
         .build()
-
     is Model.Union ->
       FileSpec.builder("io.github.nomisrev.openapi", naming.toUnionClassName(this))
         .addType(toTypeSpec(DefaultNamingStrategy))
         .build()
-
     Model.Binary,
     is Model.Primitive,
     Model.FreeFormJson -> null
   }
 
-public tailrec fun Model.toTypeSpec(
-  naming: NamingStrategy
-): TypeSpec? =
+tailrec fun Model.toTypeSpec(naming: NamingStrategy): TypeSpec? =
   when (this) {
     is Model.Binary,
     is Model.FreeFormJson,
     is Model.Primitive -> null
-
     is Collection -> value.toTypeSpec(naming)
     is Model.Enum -> toTypeSpec(naming)
     is Model.Object -> toTypeSpec(naming)
@@ -71,7 +64,7 @@ public tailrec fun Model.toTypeSpec(
     }
   }
 
-public fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
+fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
   TypeSpec.interfaceBuilder(naming.toUnionClassName(this))
     .addModifiers(KModifier.SEALED)
     .addAnnotation(annotationSpec<Serializable>())
@@ -83,29 +76,27 @@ public fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
           .addAnnotation(annotationSpec<JvmInline>())
           .primaryConstructor(
             FunSpec.constructorBuilder()
-              .addParameter(
-                ParameterSpec
-                  .builder("value", model.toTypeName(naming))
-                  .build()
-              ).build()
+              .addParameter(ParameterSpec.builder("value", model.toTypeName(naming)).build())
+              .build()
           )
           .addProperty(
-            PropertySpec.builder("value", model.toTypeName(naming))
-              .initializer("value")
-              .build()
+            PropertySpec.builder("value", model.toTypeName(naming)).initializer("value").build()
           )
           .addSuperinterface(toTypeName(naming))
           .build()
       }
-    ).addTypes(inline.mapNotNull { it.toTypeSpec(naming) })
+    )
+    .addTypes(inline.mapNotNull { it.toTypeSpec(naming) })
     .addType(
       TypeSpec.objectBuilder("Serializer")
         .addSuperinterface(
-          ClassName("kotlinx.serialization", "KSerializer")
-            .parameterizedBy(toTypeName(naming))
+          ClassName("kotlinx.serialization", "KSerializer").parameterizedBy(toTypeName(naming))
         )
         .addProperty(
-          PropertySpec.builder("descriptor", ClassName("kotlinx.serialization.descriptors", "SerialDescriptor"))
+          PropertySpec.builder(
+              "descriptor",
+              ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
+            )
             .addModifiers(KModifier.OVERRIDE)
             .addAnnotation(
               AnnotationSpec.builder(ClassName("kotlinx.serialization", "InternalSerializationApi"))
@@ -125,7 +116,7 @@ public fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
                     add(
                       "element(%S, $placeholder.descriptor)\n",
                       naming.toUnionCaseName(case.model),
-                      * values
+                      *values
                     )
                   }
                 }
@@ -148,7 +139,7 @@ public fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
                     addStatement(
                       "is %T -> encoder.encodeSerializableValue($placeholder, value.value)",
                       ClassName.bestGuess(naming.toUnionCaseName(case.model)),
-                      * values
+                      *values
                     )
                   }
                 }
@@ -156,7 +147,8 @@ public fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
                 .build()
             )
             .build()
-        ).addFunction(
+        )
+        .addFunction(
           FunSpec.builder("deserialize")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("decoder", ClassName("kotlinx.serialization.encoding", "Decoder"))
@@ -176,7 +168,7 @@ public fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
                       ClassName.bestGuess(naming.toUnionCaseName(case.model)),
                       ClassName.bestGuess(naming.toUnionCaseName(case.model)),
                       ClassName("kotlinx.serialization.json", "Json"),
-                      * values
+                      *values
                     )
                   }
                 }
@@ -189,31 +181,32 @@ public fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
     )
     .build()
 
-public fun Model.Enum.toTypeSpec(naming: NamingStrategy): TypeSpec {
+fun Model.Enum.toTypeSpec(naming: NamingStrategy): TypeSpec {
   val rawToName = values.map { rawName -> Pair(rawName, naming.toEnumValueName(rawName)) }
   val isSimple = rawToName.all { (rawName, valueName) -> rawName == valueName }
   val enumName = naming.toEnumClassName(context)
-  return TypeSpec.enumBuilder(enumName).apply {
-    if (!isSimple) primaryConstructor(
-      FunSpec.constructorBuilder()
-        .addParameter("value", STRING)
-        .build()
-    )
-    rawToName.forEach { (rawName, valueName) ->
-      if (isSimple) addEnumConstant(rawName)
-      else addEnumConstant(
-        valueName, TypeSpec.anonymousClassBuilder()
-          .addAnnotation(serialName(rawName))
-          .addSuperclassConstructorParameter("\"$rawName\"")
-          .build()
-      )
+  return TypeSpec.enumBuilder(enumName)
+    .apply {
+      if (!isSimple)
+        primaryConstructor(FunSpec.constructorBuilder().addParameter("value", STRING).build())
+      rawToName.forEach { (rawName, valueName) ->
+        if (isSimple) addEnumConstant(rawName)
+        else
+          addEnumConstant(
+            valueName,
+            TypeSpec.anonymousClassBuilder()
+              .addAnnotation(serialName(rawName))
+              .addSuperclassConstructorParameter("\"$rawName\"")
+              .build()
+          )
+      }
     }
-  }.addAnnotation(annotationSpec<Serializable>()).build()
+    .addAnnotation(annotationSpec<Serializable>())
+    .build()
 }
 
 private inline fun <reified A : Annotation> annotationSpec(): AnnotationSpec =
-  AnnotationSpec.builder(A::class)
-    .build()
+  AnnotationSpec.builder(A::class).build()
 
 private fun serialName(rawName: String): AnnotationSpec =
   annotationSpec<SerialName>().toBuilder().addMember("\"$rawName\"").build()
@@ -227,35 +220,47 @@ fun List<ParameterSpec>.sorted(): List<ParameterSpec> {
  * Generating data classes with KotlinPoet!?
  * https://stackoverflow.com/questions/44483831/generate-data-class-with-kotlinpoet
  */
-public fun Model.Object.toTypeSpec(naming: NamingStrategy): TypeSpec =
+fun Model.Object.toTypeSpec(naming: NamingStrategy): TypeSpec =
   TypeSpec.classBuilder(naming.toObjectClassName(context))
     .addModifiers(KModifier.DATA)
-    // We cannot serialize files, these are used for multipart requests, but we cannot check at this point...
+    // We cannot serialize files, these are used for multipart requests, but we cannot check at this
+    // point...
     // This occurs when request bodies are defined using top-level schemas.
-    .apply { if (properties.none { it.type is Model.Binary }) addAnnotation(annotationSpec<Serializable>()) }
+    .apply {
+      if (properties.none { it.type is Model.Binary }) addAnnotation(annotationSpec<Serializable>())
+    }
     .primaryConstructor(
-      FunSpec.constructorBuilder().addParameters(
-        properties.map { prop ->
-          val default = prop.type.default(naming)
-          val isRequired = prop.isRequired && default != null
-          ParameterSpec.builder(
-            naming.toParamName(context, prop.name),
-            prop.type.toTypeName(naming).copy(nullable = prop.isNullable)
-          ).apply {
-            default?.let { defaultValue(it) }
-            if (isRequired) addAnnotation(annotationSpec<Required>())
-          }.build()
-        }.sorted()
-      ).build()
-    ).addProperties(
+      FunSpec.constructorBuilder()
+        .addParameters(
+          properties
+            .map { prop ->
+              val default = prop.type.default(naming)
+              val isRequired = prop.isRequired && default != null
+              ParameterSpec.builder(
+                  naming.toParamName(context, prop.name),
+                  prop.type.toTypeName(naming).copy(nullable = prop.isNullable)
+                )
+                .apply {
+                  default?.let { defaultValue(it) }
+                  if (isRequired) addAnnotation(annotationSpec<Required>())
+                }
+                .build()
+            }
+            .sorted()
+        )
+        .build()
+    )
+    .addProperties(
       properties.map { prop ->
         PropertySpec.builder(
-          naming.toParamName(context, prop.name),
-          prop.type.toTypeName(naming).copy(nullable = prop.isNullable)
-        ).initializer(naming.toParamName(context, prop.name))
+            naming.toParamName(context, prop.name),
+            prop.type.toTypeName(naming).copy(nullable = prop.isNullable)
+          )
+          .initializer(naming.toParamName(context, prop.name))
           .build()
       }
-    ).addTypes(inline.mapNotNull { it.toTypeSpec(naming) })
+    )
+    .addTypes(inline.mapNotNull { it.toTypeSpec(naming) })
     .build()
 
 fun Model.toTypeName(
@@ -263,28 +268,21 @@ fun Model.toTypeName(
   `package`: String = "io.github.nomisrev.openapi"
 ): TypeName =
   when (this) {
-    Model.Binary ->
-      ClassName(`package`, "UploadFile")
-
+    Model.Binary -> ClassName(`package`, "UploadFile")
     is Collection.List -> LIST.parameterizedBy(value.toTypeName(naming, `package`))
     is Collection.Set -> SET.parameterizedBy(value.toTypeName(naming, `package`))
     is Collection.Map -> MAP.parameterizedBy(STRING, value.toTypeName(naming, `package`))
     is Model.Enum ->
       when (context) {
-        is NamingContext.Named ->
-          ClassName(`package`, naming.toEnumClassName(context))
-
+        is NamingContext.Named -> ClassName(`package`, naming.toEnumClassName(context))
         else -> ClassName.bestGuess(naming.toEnumClassName(context))
       }
-
     Model.FreeFormJson -> ClassName("kotlinx.serialization.json", "JsonElement")
-    is Model.Object -> when (context) {
-      is NamingContext.Named ->
-        ClassName(`package`, naming.toObjectClassName(context))
-
-      else -> ClassName.bestGuess(naming.toObjectClassName(context))
-    }
-
+    is Model.Object ->
+      when (context) {
+        is NamingContext.Named -> ClassName(`package`, naming.toObjectClassName(context))
+        else -> ClassName.bestGuess(naming.toObjectClassName(context))
+      }
     is Model.Primitive.Boolean -> BOOLEAN
     is Model.Primitive.Double -> DOUBLE
     is Model.Primitive.Int -> INT
@@ -292,37 +290,24 @@ fun Model.toTypeName(
     Model.Primitive.Unit -> UNIT
     is Model.Union ->
       when (context) {
-        is NamingContext.Named ->
-          ClassName(`package`, naming.toUnionClassName(this))
-
+        is NamingContext.Named -> ClassName(`package`, naming.toUnionClassName(this))
         else -> ClassName.bestGuess(naming.toUnionClassName(this))
       }
-
   }
 
-fun Model.Union.toOpenEnumTypeSpec(
-  naming: NamingStrategy
-): TypeSpec {
+fun Model.Union.toOpenEnumTypeSpec(naming: NamingStrategy): TypeSpec {
   val enum = schemas.firstNotNullOf { it.model as? Model.Enum }
   val rawToName = enum.values.map { rawName -> Pair(rawName, naming.toEnumValueName(rawName)) }
   val enumName = naming.toEnumClassName(context)
   return TypeSpec.interfaceBuilder(enumName)
     .addModifiers(KModifier.SEALED)
-    .addProperty(
-      PropertySpec.builder("value", STRING)
-        .addModifiers(KModifier.ABSTRACT)
-        .build()
-    )
+    .addProperty(PropertySpec.builder("value", STRING).addModifiers(KModifier.ABSTRACT).build())
     .addAnnotation(annotationSpec<Serializable>())
     .addType(
       TypeSpec.classBuilder("Custom")
         .addModifiers(KModifier.VALUE)
         .addAnnotation(annotationSpec<JvmInline>())
-        .primaryConstructor(
-          FunSpec.constructorBuilder()
-            .addParameter("value", STRING)
-            .build()
-        )
+        .primaryConstructor(FunSpec.constructorBuilder().addParameter("value", STRING).build())
         .addProperty(
           PropertySpec.builder("value", STRING)
             .initializer("value")
@@ -371,31 +356,40 @@ fun Model.Union.toOpenEnumTypeSpec(
                 .parameterizedBy(ClassName.bestGuess(enumName))
             )
             .addProperty(
-              PropertySpec.builder("descriptor", ClassName("kotlinx.serialization.descriptors", "SerialDescriptor"))
+              PropertySpec.builder(
+                  "descriptor",
+                  ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
+                )
                 .addModifiers(KModifier.OVERRIDE)
                 .addAnnotation(
-                  AnnotationSpec.builder(ClassName("kotlinx.serialization", "InternalSerializationApi"))
+                  AnnotationSpec.builder(
+                      ClassName("kotlinx.serialization", "InternalSerializationApi")
+                    )
                     .build()
-                ).initializer(
+                )
+                .initializer(
                   CodeBlock.builder()
                     .addStatement(
                       "%M(%S, %T.STRING)",
                       MemberName("kotlinx.serialization.descriptors", "PrimitiveSerialDescriptor"),
                       enumName,
                       ClassName("kotlinx.serialization.descriptors", "PrimitiveKind")
-                    ).build()
-                ).build()
-            ).addFunction(
+                    )
+                    .build()
+                )
+                .build()
+            )
+            .addFunction(
               FunSpec.builder("serialize")
                 .addModifiers(KModifier.OVERRIDE)
                 .addParameter("encoder", ClassName("kotlinx.serialization.encoding", "Encoder"))
                 .addParameter("value", ClassName.bestGuess(enumName))
                 .addCode(
-                  CodeBlock.builder()
-                    .addStatement("encoder.encodeString(value.value)")
-                    .build()
-                ).build()
-            ).addFunction(
+                  CodeBlock.builder().addStatement("encoder.encodeString(value.value)").build()
+                )
+                .build()
+            )
+            .addFunction(
               FunSpec.builder("deserialize")
                 .addModifiers(KModifier.OVERRIDE)
                 .addParameter("decoder", ClassName("kotlinx.serialization.encoding", "Decoder"))
@@ -403,9 +397,7 @@ fun Model.Union.toOpenEnumTypeSpec(
                 .addCode(
                   CodeBlock.builder()
                     .addStatement("val value = decoder.decodeString()")
-                    .addStatement(
-                      "return attemptDeserialize(value,"
-                    )
+                    .addStatement("return attemptDeserialize(value,")
                     .apply {
                       indent()
                       rawToName.forEach { (_, name) ->
@@ -419,30 +411,21 @@ fun Model.Union.toOpenEnumTypeSpec(
                     }
                     .addStatement(")")
                     .build()
-                ).build()
+                )
+                .build()
             )
             .build()
-        ).build()
-    ).build()
+        )
+        .build()
+    )
+    .build()
 }
 
-private val ListSerializer =
-  MemberName(
-    "kotlinx.serialization.builtins",
-    "ListSerializer"
-  )
+private val ListSerializer = MemberName("kotlinx.serialization.builtins", "ListSerializer")
 
-private val SetSerializer =
-  MemberName(
-    "kotlinx.serialization.builtins",
-    "SetSerializer"
-  )
+private val SetSerializer = MemberName("kotlinx.serialization.builtins", "SetSerializer")
 
-private val MapSerializer =
-  MemberName(
-    "kotlinx.serialization.builtins",
-    "MapSerializer"
-  )
+private val MapSerializer = MemberName("kotlinx.serialization.builtins", "MapSerializer")
 
 private fun Model.serializer(naming: NamingStrategy): Pair<String, Array<Any>> {
   val values: MutableList<Any> = mutableListOf()
@@ -452,29 +435,19 @@ private fun Model.serializer(naming: NamingStrategy): Pair<String, Array<Any>> {
         values.add(ListSerializer)
         "%M(${value.placeholder()})"
       }
-
       is Collection.Map -> {
         values.add(MapSerializer)
         "%M(${key.placeholder()}, ${value.placeholder()})"
       }
-
       is Collection.Set -> {
         values.add(SetSerializer)
         "%M(${value.placeholder()})"
       }
-
       is Model.Primitive -> {
         values.add(toTypeName(naming))
-        values.add(
-          MemberName(
-            "kotlinx.serialization.builtins",
-            "serializer",
-            isExtension = true
-          )
-        )
+        values.add(MemberName("kotlinx.serialization.builtins", "serializer", isExtension = true))
         "%T.%M()"
       }
-
       else -> {
         values.add(toTypeName(naming))
         "%T.serializer()"

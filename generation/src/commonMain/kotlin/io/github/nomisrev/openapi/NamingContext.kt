@@ -10,22 +10,19 @@ package io.github.nomisrev.openapi
  * - (inline | top-level) Object param `foo` with primitive => Primitive | List | Set | Map |
  *   JsonObject
  */
-public sealed interface NamingContext {
-  public val name: String
+sealed interface NamingContext {
+  val name: String
 
-  public data class Named(override val name: String) : NamingContext
+  data class Named(override val name: String) : NamingContext
 
-  public data class RouteParam(
-    override val name: String,
-    val operationId: String?,
-    val postfix: String
-  ) : NamingContext
+  data class RouteParam(override val name: String, val operationId: String?, val postfix: String) :
+    NamingContext
 
-  public sealed interface Nested : NamingContext {
-    public val outer: NamingContext
+  sealed interface Nested : NamingContext {
+    val outer: NamingContext
   }
 
-  public data class Inline(override val name: String, override val outer: NamingContext) : Nested
+  data class Inline(override val name: String, override val outer: NamingContext) : Nested
 
-  public data class Ref(override val name: String, override val outer: NamingContext) : Nested
+  data class Ref(override val name: String, override val outer: NamingContext) : Nested
 }

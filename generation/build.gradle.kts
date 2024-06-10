@@ -12,11 +12,7 @@ kotlin {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     mainRun { mainClass.set("io.github.nomisrev.openapi.MainKt") }
   }
-  macosArm64 {
-    binaries {
-      executable { entryPoint = "main" }
-    }
-  }
+  macosArm64()
   linuxX64()
 
   sourceSets {

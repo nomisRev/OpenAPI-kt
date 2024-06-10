@@ -68,7 +68,6 @@ internal fun <A: Any> attemptDeserialize(
 """
     .trimIndent()
 
-
 private val ContentType = ClassName("io.ktor.http", "ContentType").copy(nullable = true)
 
 private val UploadTypeSpec =
@@ -78,46 +77,46 @@ private val UploadTypeSpec =
       FunSpec.constructorBuilder()
         .addParameter("filename", String::class)
         .addParameter(
-          ParameterSpec.builder(
-            "contentType",
-            ContentType
-          ).defaultValue("null").build()
+          ParameterSpec.builder("contentType", ContentType).defaultValue("null").build()
         )
         .addParameter(
-          ParameterSpec.builder("size", Long::class.asTypeName().copy(nullable = true)).defaultValue("null").build()
+          ParameterSpec.builder("size", Long::class.asTypeName().copy(nullable = true))
+            .defaultValue("null")
+            .build()
         )
         .addParameter(
           ParameterSpec.builder(
-            "bodyBuilder", LambdaTypeName.get(
-              receiver = ClassName("io.ktor.utils.io.core", "BytePacketBuilder"),
-              returnType = Unit::class.asTypeName()
+              "bodyBuilder",
+              LambdaTypeName.get(
+                receiver = ClassName("io.ktor.utils.io.core", "BytePacketBuilder"),
+                returnType = Unit::class.asTypeName()
+              )
             )
-          ).build()
+            .build()
         )
-        .build()
-    ).addProperty(
-      PropertySpec.builder("filename", String::class)
-        .initializer("filename")
         .build()
     )
+    .addProperty(PropertySpec.builder("filename", String::class).initializer("filename").build())
     .addProperty(
-      PropertySpec.builder("contentType", ContentType)
-        .initializer("contentType")
-        .build()
-    ).addProperty(
+      PropertySpec.builder("contentType", ContentType).initializer("contentType").build()
+    )
+    .addProperty(
       PropertySpec.builder("size", Long::class.asTypeName().copy(nullable = true))
         .initializer("size")
         .build()
-    ).addProperty(
-      PropertySpec.builder("bodyBuilder", LambdaTypeName.get(
-        receiver = ClassName("io.ktor.utils.io.core", "BytePacketBuilder"),
-        returnType = Unit::class.asTypeName()
-      ))
+    )
+    .addProperty(
+      PropertySpec.builder(
+          "bodyBuilder",
+          LambdaTypeName.get(
+            receiver = ClassName("io.ktor.utils.io.core", "BytePacketBuilder"),
+            returnType = Unit::class.asTypeName()
+          )
+        )
         .initializer("bodyBuilder")
         .build()
     )
     .build()
-
 
 val errors =
   ClassName("kotlin.collections", "Map")
@@ -138,15 +137,9 @@ val predef: FileSpec =
         )
         .superclass(SerializationException::class)
         .addProperty(
-          PropertySpec.builder("payload", JsonElement::class)
-            .initializer("payload")
-            .build()
+          PropertySpec.builder("payload", JsonElement::class).initializer("payload").build()
         )
-        .addProperty(
-          PropertySpec.builder("errors", errors)
-            .initializer("errors")
-            .build()
-        )
+        .addProperty(PropertySpec.builder("errors", errors).initializer("errors").build())
         .addProperty(
           PropertySpec.builder("message", String::class, KModifier.OVERRIDE)
             .initializer(
@@ -159,12 +152,14 @@ val predef: FileSpec =
                   }
                 }
                 ${'"'}${'"'}${'"'}.trimIndent()
-                """.trimIndent()
+                """
+                .trimIndent()
             )
             .build()
         )
         .build()
-    ).addFunction(
+    )
+    .addFunction(
       FunSpec.builder("attemptDeserialize")
         .addTypeVariable(TypeVariableName("A"))
         .returns(TypeVariableName("A"))
@@ -173,16 +168,19 @@ val predef: FileSpec =
           "block",
           ClassName("kotlin", "Pair")
             .parameterizedBy(
-              ClassName("kotlin.reflect", "KClass")
-                .parameterizedBy(TypeVariableName("*")),
+              ClassName("kotlin.reflect", "KClass").parameterizedBy(TypeVariableName("*")),
               LambdaTypeName.get(
                 receiver = null,
                 returnType = TypeVariableName("A"),
-                parameters = listOf(ParameterSpec.unnamed(ClassName("kotlinx.serialization.json", "JsonElement")))
+                parameters =
+                  listOf(
+                    ParameterSpec.unnamed(ClassName("kotlinx.serialization.json", "JsonElement"))
+                  )
               )
             ),
           KModifier.VARARG
-        ).addCode(
+        )
+        .addCode(
           """
           val errors = linkedMapOf<KClass<*>, SerializationException>()
           block.forEach { (kclass, f) ->
@@ -193,10 +191,12 @@ val predef: FileSpec =
             }
           }
           throw OneOfSerializationException(json, errors)
-          """.trimIndent()
+          """
+            .trimIndent()
         )
         .build()
-    ).addFunction(
+    )
+    .addFunction(
       FunSpec.builder("attemptDeserialize")
         .addTypeVariable(TypeVariableName("A"))
         .returns(TypeVariableName("A"))
@@ -205,8 +205,7 @@ val predef: FileSpec =
           "block",
           ClassName("kotlin", "Pair")
             .parameterizedBy(
-              ClassName("kotlin.reflect", "KClass")
-                .parameterizedBy(TypeVariableName("*")),
+              ClassName("kotlin.reflect", "KClass").parameterizedBy(TypeVariableName("*")),
               LambdaTypeName.get(
                 receiver = null,
                 returnType = TypeVariableName("A").copy(nullable = true),
@@ -214,7 +213,8 @@ val predef: FileSpec =
               )
             ),
           KModifier.VARARG
-        ).addCode(
+        )
+        .addCode(
           """
           val errors = linkedMapOf<KClass<*>, SerializationException>()
           block.forEach { (kclass, f) ->
@@ -226,8 +226,10 @@ val predef: FileSpec =
           }
           // TODO Improve this error message
           throw RuntimeException("BOOM! Improve this error message")
-          """.trimIndent()
+          """
+            .trimIndent()
         )
         .build()
-    ).addType(UploadTypeSpec)
+    )
+    .addType(UploadTypeSpec)
     .build()

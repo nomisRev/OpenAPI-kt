@@ -1,7 +1,5 @@
 package io.github.nomisrev.openapi.plugin
 
-import io.github.nomisrev.openapi.generateModel
-import okio.FileSystem
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.plugins.BasePlugin
@@ -31,6 +29,5 @@ abstract class GenerateClientTask : DefaultTask() {
       requireNotNull(spec.orNull?.asFile?.toPath()?.toString()) {
         "No OpenAPI Specification specified. Please provide a spec file."
       }
-    FileSystem.SYSTEM.generateModel(specPath)
   }
 }

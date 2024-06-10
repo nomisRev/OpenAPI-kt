@@ -8,35 +8,35 @@ import net.pearx.kasechange.splitter.WordSplitterConfigurable
 import net.pearx.kasechange.toCamelCase
 import net.pearx.kasechange.toPascalCase
 
-public interface NamingStrategy {
-  public fun typeName(model: Model): String
+interface NamingStrategy {
+  fun typeName(model: Model): String
 
-  public fun toBinary(binary: Model.Binary): String
+  fun toBinary(binary: Model.Binary): String
 
-  public fun toFreeFormJson(json: Model.FreeFormJson): String
+  fun toFreeFormJson(json: Model.FreeFormJson): String
 
-  public fun toCollection(collection: Collection): String
+  fun toCollection(collection: Collection): String
 
-  public fun toList(list: Collection.List): String
+  fun toList(list: Collection.List): String
 
-  public fun toSet(set: Collection.Set): String
+  fun toSet(set: Collection.Set): String
 
-  public fun toMap(map: Collection.Map): String
+  fun toMap(map: Collection.Map): String
 
-  public fun toEnumClassName(context: NamingContext): String
+  fun toEnumClassName(context: NamingContext): String
 
-  public fun toEnumValueName(value: String): String
+  fun toEnumValueName(value: String): String
 
-  public fun toObjectClassName(context: NamingContext): String
+  fun toObjectClassName(context: NamingContext): String
 
-  public fun toFunctionName(context: NamingContext): String =
+  fun toFunctionName(context: NamingContext): String =
     toObjectClassName(context).replaceFirstChar { it.lowercase() }
 
-  public fun toParamName(objContext: NamingContext, paramName: String): String
+  fun toParamName(objContext: NamingContext, paramName: String): String
 
-  public fun toUnionClassName(model: Model.Union): String
+  fun toUnionClassName(model: Model.Union): String
 
-  public fun toPrimitiveName(model: Model.Primitive): String
+  fun toPrimitiveName(model: Model.Primitive): String
 
   /**
    * Union types are a hard piece to generate (oneOf, anyOf). Depending on where the union occurs,
@@ -45,10 +45,10 @@ public interface NamingStrategy {
    * 2. _Inline case schema_, if primitive we generate CasePrimitive => Int, Ints for List<Int>,
    *    IntsList for List<List<Int>>. => duplicate schemas can be filtered out.
    */
-  public fun toUnionCaseName(model: Model, depth: List<Model> = emptyList()): String
+  fun toUnionCaseName(model: Model, depth: List<Model> = emptyList()): String
 }
 
-public object DefaultNamingStrategy : NamingStrategy {
+object DefaultNamingStrategy : NamingStrategy {
   // OpenAI adds '/', so this WordSplitter takes that into account
   private val wordSplitter =
     WordSplitterConfigurable(
@@ -63,7 +63,7 @@ public object DefaultNamingStrategy : NamingStrategy {
 
   private fun String.toCamelCase(): String = toCamelCase(wordSplitter)
 
-  public override fun typeName(model: Model): String =
+  override fun typeName(model: Model): String =
     when (model) {
       is Model.Binary -> toBinary(model)
       is Model.FreeFormJson -> toFreeFormJson(model)
