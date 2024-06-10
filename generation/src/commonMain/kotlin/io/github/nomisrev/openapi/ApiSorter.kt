@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi
 
+// TODO: make hard-coded.
+//  We're opinionated about the API structure
 fun interface ApiSorter {
   suspend fun sort(routes: Iterable<Route>): Root
 

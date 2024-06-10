@@ -148,19 +148,19 @@ sealed interface Model {
   data object FreeFormJson : Model
 
   sealed interface Collection : Model {
-    val resolved: Resolved<Model>
+    val inner: Resolved<Model>
 
     data class List(
-      override val resolved: Resolved<Model>,
+      override val inner: Resolved<Model>,
       val default: kotlin.collections.List<String>?
     ) : Collection
 
     data class Set(
-      override val resolved: Resolved<Model>,
+      override val inner: Resolved<Model>,
       val default: kotlin.collections.List<String>?
     ) : Collection
 
-    data class Map(override val resolved: Resolved<Model>) : Collection {
+    data class Map(override val inner: Resolved<Model>) : Collection {
       val key = Primitive.String(null)
     }
   }
@@ -176,9 +176,9 @@ sealed interface Model {
         if (it.model is Resolved.Value)
           when (val model = it.model.value) {
             is Collection ->
-              when (model.resolved) {
+              when (model.inner) {
                 is Resolved.Ref -> null
-                is Resolved.Value -> model.resolved.value
+                is Resolved.Value -> model.inner.value
               }
             else -> model
           }
@@ -188,7 +188,6 @@ sealed interface Model {
     @Serializable
     data class Property(
       val baseName: String,
-      val name: String,
       val model: Resolved<Model>,
       /**
        * isRequired != not-null. This means the value _has to be included_ in the payload, but it
@@ -211,9 +210,9 @@ sealed interface Model {
         if (it.model is Resolved.Value)
           when (val model = it.model.value) {
             is Collection ->
-              when (model.resolved) {
+              when (model.inner) {
                 is Resolved.Ref -> null
-                is Resolved.Value -> model.resolved.value
+                is Resolved.Value -> model.inner.value
               }
             else -> model
           }

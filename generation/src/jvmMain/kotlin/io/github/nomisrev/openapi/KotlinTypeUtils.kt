@@ -1,4 +1,4 @@
-package io.github.nomisrev.openapi.generation
+package io.github.nomisrev.openapi
 
 private val classNameRegex = Regex("^[a-zA-Z_$][a-zA-Z\\d_$]*$")
 

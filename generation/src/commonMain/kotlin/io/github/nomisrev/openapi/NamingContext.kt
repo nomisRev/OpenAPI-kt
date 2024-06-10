@@ -1,22 +1,22 @@
 package io.github.nomisrev.openapi
 
 /**
- * A type name needs to be generated using the surrounding context.
- * - inline bodies (postfix `Request`)
- * - inline responses (postfix `Response`)
- * - inline operation parameters,
- * - (inline | top-level) Object param `foo` inline schema => Type.Foo (nested)
- * - (inline | top-level) Object param `foo` with top-level schema => top-level name
- * - (inline | top-level) Object param `foo` with primitive => Primitive | List | Set | Map |
- *   JsonObject
+ * [NamingContext] is a critical part of how the models and routes are named.
+ * Following the context is important to generate the correct class names for
+ * all schemas that are defined inline, rather than named reference.
  */
 sealed interface NamingContext {
-  val name: String
+  /**
+   * This tracks nested, which is important for generating the correct class names.
+   * For example, /threads/{thread_id}/runs/{run_id}/submit_tool_outputs.
+   *
+   *
+   */
+  data class Nested(val inner: NamingContext, val outer: NamingContext) : NamingContext
 
-  data class Named(override val name: String) : NamingContext
-
-  data class Nested(override val name: String, val outer: NamingContext) : NamingContext
-
-  data class RouteParam(override val name: String, val operationId: String?, val postfix: String) :
+  data class Named(val name: String) : NamingContext
+  data class RouteParam(val name: String, val operationId: String, val postfix: String) :
     NamingContext
+
+  data class RouteBody(val name: String, val postfix: String) : NamingContext
 }
