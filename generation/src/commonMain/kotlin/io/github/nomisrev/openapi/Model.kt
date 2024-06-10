@@ -77,7 +77,6 @@ data class Route(
   data class Input(
     val name: String,
     val type: Resolved<Model>,
-    val isNullable: Boolean,
     val isRequired: Boolean,
     val input: Parameter.Input,
     val description: String?

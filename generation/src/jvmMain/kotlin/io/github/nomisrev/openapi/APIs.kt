@@ -11,21 +11,22 @@ import com.squareup.kotlinpoet.TypeSpec
 import io.github.nomisrev.openapi.NamingContext.Named
 import io.github.nomisrev.openapi.generation.DefaultNamingStrategy
 import io.github.nomisrev.openapi.generation.NamingStrategy
+import io.github.nomisrev.openapi.generation.default
 
 fun Root.toFileSpecs(naming: NamingStrategy = DefaultNamingStrategy): List<FileSpec> =
-  endpoints(this, naming) + root(this, naming)
+  this.endpoints(naming) + this.root(naming)
 
-private fun endpoints(root: Root, naming: NamingStrategy): List<FileSpec> =
-  root.endpoints.map { api ->
+private fun Root.endpoints(naming: NamingStrategy): List<FileSpec> =
+  endpoints.map { api ->
     FileSpec.builder("io.github.nomisrev.openapi", api.name).addType(api.toTypeSpec(naming)).build()
   }
 
-private fun root(root: Root, naming: NamingStrategy) =
+private fun Root.root(naming: NamingStrategy) =
   FileSpec.builder("io.github.nomisrev.openapi", "OpenAPI")
     .addType(
       TypeSpec.interfaceBuilder("OpenAPI")
         .apply {
-          root.endpoints.forEach { api ->
+          endpoints.forEach { api ->
             val className = naming.toObjectClassName(Named(api.name))
             val name = naming.toFunctionName(Named(api.name))
             addProperty(
@@ -39,11 +40,13 @@ private fun root(root: Root, naming: NamingStrategy) =
         }
         .build()
     )
+    .addFunctions(operations.map { it.toFun(naming).abstract() })
     .build()
 
-private fun propertySpec(api: API, naming: NamingStrategy): PropertySpec {
-  val className = naming.toObjectClassName(Named(api.name))
-  return PropertySpec.builder(api.name, ClassName.bestGuess(className)).build()
+private fun API.propertySpec(naming: NamingStrategy): PropertySpec {
+  val className = naming.toObjectClassName(Named(name))
+  return PropertySpec.builder(naming.toFunctionName(Named(name)), ClassName.bestGuess(className))
+    .build()
 }
 
 private fun Route.nestedTypes(naming: NamingStrategy): List<TypeSpec> =
@@ -74,7 +77,7 @@ private fun API.toTypeSpec(naming: NamingStrategy): TypeSpec =
     .addFunctions(routes.map { it.toFun(naming).abstract() })
     .addTypes(routes.flatMap { it.nestedTypes(naming) })
     .addTypes(nested.map { it.toTypeSpec(naming) })
-    .addProperties(nested.map { propertySpec(it, naming) })
+    .addProperties(nested.map { it.propertySpec(naming) })
     .build()
 
 private fun FunSpec.abstract(): FunSpec = toBuilder().addModifiers(KModifier.ABSTRACT).build()
@@ -93,6 +96,22 @@ fun FunSpec.Builder.addParameter(
 
 private fun Route.toFun(naming: NamingStrategy): FunSpec =
   FunSpec.builder(naming.toFunctionName(Named(operation.operationId!!)))
+    .addParameters(
+      input.map { input ->
+        ParameterSpec.builder(
+            naming.toFunctionName(Named(input.name)),
+            input.type.toTypeName(naming).copy(nullable = !input.isRequired)
+          )
+          .apply {
+            val default = input.type.value.default(naming)
+            when {
+              default != null -> defaultValue(default)
+              !input.isRequired -> defaultValue("null")
+            }
+          }
+          .build()
+      }
+    )
     .apply {
       // TODO support binary, and Xml
       body.jsonOrNull()?.let { json -> addParameter(naming, "body", json.type, !body.required) }
@@ -106,14 +125,6 @@ private fun Route.toFun(naming: NamingStrategy): FunSpec =
             )
           }
         }
-
-      // TODO isRequired
-      input.forEach { input ->
-        addParameter(
-          naming.toFunctionName(Named(input.name)),
-          input.type.toTypeName(naming).copy(nullable = input.isNullable)
-        )
-      }
     }
     .returns(returnType(naming))
     .build()

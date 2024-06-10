@@ -81,7 +81,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       Route.Input(
         param.name,
         model, // TODO the nullable param should be configurable
-        resolved.value.nullable ?: true,
         param.required,
         param.input,
         param.description

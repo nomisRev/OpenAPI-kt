@@ -21,6 +21,7 @@ fun interface ApiSorter {
 data class Root(
   /* `info.title`, or custom name */
   val name: String,
+  val operations: List<Route>,
   val endpoints: List<API>
 )
 
@@ -31,7 +32,7 @@ private data class RootBuilder(
   val operations: MutableList<Route>,
   val nested: MutableList<APIBuilder>
 ) {
-  fun build(): Root = Root(name, nested.map { it.build() })
+  fun build(): Root = Root(name, operations, nested.map { it.build() })
 }
 
 private data class APIBuilder(
@@ -46,12 +47,10 @@ private object ByPathApiSorter : ApiSorter {
   override suspend fun sort(routes: Iterable<Route>): Root {
     val root = RootBuilder("OpenAPI", mutableListOf(), mutableListOf())
     routes.forEach { route ->
-      // For now we reduce paths like `/file/{file_id}/content` to `file`
-      val normalised =
-        route.path.takeWhile { it != '{' }.dropLastWhile { it == '/' }.dropWhile { it == '/' }
+      // Reduce paths like `/threads/{thread_id}/runs/{run_id}/submit_tool_outputs`
+      // into [threads, runs, submit_tool_outputs]
+      val parts = route.path.replace(Regex("\\{.*?\\}"), "").split("/").filter { it.isNotEmpty() }
 
-      // We split /chat/completions into ["chat", "completions"]
-      val parts = normalised.split("/").filter { it.isNotEmpty() }
       val first =
         parts.getOrNull(0)
           ?: run {
@@ -74,8 +73,8 @@ private object ByPathApiSorter : ApiSorter {
   }
 
   private fun addRoute(builder: APIBuilder, parts: List<String>, route: Route) {
-    builder.routes.add(route)
-    if (parts.isNotEmpty()) {
+    if (parts.isEmpty()) builder.routes.add(route)
+    else {
       val part = parts[0]
       val api = builder.nested.firstOrNull { it.name == part }
       if (api == null) {
