@@ -24,7 +24,7 @@ fun Model.default(naming: NamingStrategy): String? =
       }
     is Model.Primitive -> default()
     is Model.Union ->
-      schemas
+      cases
         .find { it.model is Model.Primitive.String }
         ?.takeIf { default != null }
         ?.let { case ->

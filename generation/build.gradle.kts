@@ -12,8 +12,8 @@ kotlin {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     mainRun { mainClass.set("io.github.nomisrev.openapi.MainKt") }
   }
-  macosArm64()
-  linuxX64()
+//  macosArm64()
+//  linuxX64()
 
   sourceSets {
     commonMain {

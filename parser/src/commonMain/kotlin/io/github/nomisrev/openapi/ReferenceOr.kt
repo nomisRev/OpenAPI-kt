@@ -36,12 +36,6 @@ public sealed interface ReferenceOr<out A> {
       is Value -> value
     }
 
-  public fun isValue(): Boolean =
-    when (this) {
-      is Reference -> false
-      is Value -> true
-    }
-
   public companion object {
     private const val schema: String = "#/components/schemas/"
     private const val responses: String = "#/components/responses/"

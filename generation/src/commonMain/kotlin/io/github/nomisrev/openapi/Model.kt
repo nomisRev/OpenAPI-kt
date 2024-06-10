@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi
 import io.github.nomisrev.openapi.http.MediaType
 import io.github.nomisrev.openapi.http.Method
 import io.github.nomisrev.openapi.http.StatusCode
+import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -38,7 +39,11 @@ data class Route(
 
     data class OctetStream(override val extensions: Map<String, JsonElement>) : Body
 
-    data class Json(val type: Model, override val extensions: Map<String, JsonElement>) : Body
+    data class Json(
+      val schema: Resolved<Schema>?,
+      val type: Model,
+      override val extensions: Map<String, JsonElement>
+    ) : Body
 
     data class Xml(val type: Model, override val extensions: Map<String, JsonElement>) : Body
 
@@ -47,7 +52,7 @@ data class Route(
       val parameters: List<FormData>,
       override val extensions: Map<String, JsonElement>
     ) : Body, List<Multipart.FormData> by parameters {
-      data class FormData(val name: String, val type: Model)
+      data class FormData(val schema: Resolved<Schema>, val name: String, val type: Model)
     }
   }
 
@@ -67,6 +72,20 @@ data class Route(
 
   // Required, isNullable ???
   data class ReturnType(val type: Model, val extensions: Map<String, JsonElement>)
+}
+
+sealed interface Resolved<A> {
+  val value: A
+
+  data class Ref<A>(val name: String, override val value: A) : Resolved<A>
+
+  @JvmInline value class Value<A>(override val value: A) : Resolved<A>
+
+  fun namedOr(orElse: () -> NamingContext): NamingContext =
+    when (this) {
+      is Ref -> NamingContext.Named(name)
+      is Value -> orElse()
+    }
 }
 
 /**
@@ -108,40 +127,49 @@ sealed interface Model {
   data object FreeFormJson : Model
 
   sealed interface Collection : Model {
+    val schema: Resolved<Schema>
     val value: Model
-    val schema: Schema
 
     data class List(
-      override val schema: Schema,
+      override val schema: Resolved<Schema>,
       override val value: Model,
       val default: kotlin.collections.List<String>?
     ) : Collection
 
     data class Set(
-      override val schema: Schema,
+      override val schema: Resolved<Schema>,
       override val value: Model,
       val default: kotlin.collections.List<String>?
     ) : Collection
 
-    data class Map(override val schema: Schema, override val value: Model) : Collection {
+    data class Map(override val schema: Resolved<Schema>, override val value: Model) : Collection {
       val key = Primitive.String(Schema(type = Schema.Type.Basic.String), null)
     }
   }
 
   @Serializable
   data class Object(
-    val schema: Schema,
+    val schema: Resolved<Schema>,
     val context: NamingContext,
     val description: String?,
-    val properties: List<Property>,
-    val inline: List<Model>
+    val properties: List<Property>
   ) : Model {
+    val inline: List<Model> =
+      properties.mapNotNull {
+        if (it.schema is Resolved.Value)
+          when (it.model) {
+            is Collection -> it.model.value
+            else -> it.model
+          }
+        else null
+      }
+
     @Serializable
     data class Property(
-      val schema: Schema,
+      val schema: Resolved<Schema>,
       val baseName: String,
       val name: String,
-      val type: Model,
+      val model: Model,
       /**
        * isRequired != not-null. This means the value _has to be included_ in the payload, but it
        * might be [isNullable].
@@ -153,23 +181,32 @@ sealed interface Model {
   }
 
   data class Union(
-    val schema: Schema,
+    val schema: Resolved<Schema>,
     val context: NamingContext,
-    val schemas: List<Entry>,
-    val inline: List<Model>,
+    val cases: List<Entry>,
     val default: String?
   ) : Model {
-    data class Entry(val context: NamingContext, val model: Model)
+    val inline: List<Model> =
+      cases.mapNotNull {
+        if (it.schema is Resolved.Value)
+          when (it.model) {
+            is Collection -> it.model.value
+            else -> it.model
+          }
+        else null
+      }
+
+    data class Entry(val schema: Resolved<Schema>, val context: NamingContext, val model: Model)
   }
 
   sealed interface Enum : Model {
-    val schema: Schema
+    val schema: Resolved<Schema>
     val context: NamingContext
     val values: List<String>
     val default: String?
 
     data class Closed(
-      override val schema: Schema,
+      override val schema: Resolved<Schema>,
       override val context: NamingContext,
       val inner: Model,
       override val values: List<String>,
@@ -177,7 +214,7 @@ sealed interface Model {
     ) : Enum
 
     data class Open(
-      override val schema: Schema,
+      override val schema: Resolved<Schema>,
       override val context: NamingContext,
       override val values: List<String>,
       override val default: String?

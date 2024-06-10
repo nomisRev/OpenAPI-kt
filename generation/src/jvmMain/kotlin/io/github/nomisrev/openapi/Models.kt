@@ -68,7 +68,7 @@ fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
     .addModifiers(KModifier.SEALED)
     .addAnnotation(annotationSpec<Serializable>())
     .addTypes(
-      schemas.map { case ->
+      cases.map { case ->
         val model = case.model
         TypeSpec.classBuilder(naming.toUnionCaseName(model))
           .addModifiers(KModifier.VALUE)
@@ -110,7 +110,7 @@ fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
                   PolymorphicKind::class
                 )
                 .withIndent {
-                  schemas.forEach { case ->
+                  cases.forEach { case ->
                     val (placeholder, values) = case.model.serializer(naming)
                     add(
                       "element(%S, $placeholder.descriptor)\n",
@@ -133,7 +133,7 @@ fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
               CodeBlock.builder()
                 .add("when(value) {\n")
                 .apply {
-                  schemas.forEach { case ->
+                  cases.forEach { case ->
                     val (placeholder, values) = case.model.serializer(naming)
                     addStatement(
                       "is %T -> encoder.encodeSerializableValue($placeholder, value.value)",
@@ -160,7 +160,7 @@ fun Model.Union.toTypeSpec(naming: NamingStrategy): TypeSpec =
                 )
                 .add("return attemptDeserialize(json,\n")
                 .apply {
-                  schemas.forEach { case ->
+                  cases.forEach { case ->
                     val (placeholder, values) = case.model.serializer(naming)
                     add(
                       "Pair(%T::class) { %T(%T.decodeFromJsonElement($placeholder, json)) },\n",
@@ -202,18 +202,19 @@ fun Model.Object.toTypeSpec(naming: NamingStrategy): TypeSpec =
     // point...
     // This occurs when request bodies are defined using top-level schemas.
     .apply {
-      if (properties.none { it.type is Model.Binary }) addAnnotation(annotationSpec<Serializable>())
+      if (properties.none { it.model is Model.Binary })
+        addAnnotation(annotationSpec<Serializable>())
     }
     .primaryConstructor(
       FunSpec.constructorBuilder()
         .addParameters(
           properties
             .map { prop ->
-              val default = prop.type.default(naming)
+              val default = prop.model.default(naming)
               val isRequired = prop.isRequired && default != null
               ParameterSpec.builder(
                   naming.toParamName(context, prop.name),
-                  prop.type.toTypeName(naming).copy(nullable = prop.isNullable)
+                  prop.model.toTypeName(naming).copy(nullable = prop.isNullable)
                 )
                 .apply {
                   default?.let { defaultValue(it) }
@@ -229,7 +230,7 @@ fun Model.Object.toTypeSpec(naming: NamingStrategy): TypeSpec =
       properties.map { prop ->
         PropertySpec.builder(
             naming.toParamName(context, prop.name),
-            prop.type.toTypeName(naming).copy(nullable = prop.isNullable)
+            prop.model.toTypeName(naming).copy(nullable = prop.isNullable)
           )
           .initializer(naming.toParamName(context, prop.name))
           .build()
