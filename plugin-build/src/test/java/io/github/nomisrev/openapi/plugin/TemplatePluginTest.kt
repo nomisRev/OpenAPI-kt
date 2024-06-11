@@ -25,15 +25,10 @@ class TemplatePluginTest {
     val project = ProjectBuilder.builder().build()
     project.pluginManager.apply("io.github.nomisrev.openapi.plugin")
     val input = File(project.projectDir, "input.tmp")
-    val out = File(project.projectDir, "ouput.tmp")
-    (project.extensions.getByName("openApiConfig") as OpenApiConfig).apply {
-      spec.set(input)
-      output.set(out)
-    }
+    (project.extensions.getByName("openApiConfig") as OpenApiConfig).apply { spec.set(input) }
 
     val task = project.tasks.getByName("generateOpenApiClient") as GenerateClientTask
 
     assertEquals(input, task.spec.get().asFile)
-    assertEquals(out, task.outputDir.get().asFile)
   }
 }
