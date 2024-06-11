@@ -80,7 +80,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         method = method,
         body = toRequestBody(operation, operation.requestBody?.get(), ::context),
         input = operation.input(::context),
-        returnType = toResponses(operation),
+        returnType = toResponses(operation, ::context),
         extensions = operation.extensions
       )
     }
@@ -400,6 +400,31 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       null -> TODO()
     }
 
+  /**
+   * This Comparator will sort union cases by their most complex schema first
+   * Such that if we have { "text" : String } & { "text" : String, "id" : Int }
+   * That we don't accidentally result in the first case, when we receive the second case.
+   * Primitive.String always comes last.
+   */
+  private val unionSchemaComparator: Comparator<Model.Union.Case> =
+    Comparator { o1, o2 ->
+      val m1 = o1.model.value
+      val m2 = o2.model.value
+      val m1Complexity = when (m1) {
+        is Model.Object -> m1.properties.size
+        is Enum -> m1.values.size
+        is Primitive.String -> -1
+        else -> 0
+      }
+      val m2Complexity = when (m2) {
+        is Model.Object -> m2.properties.size
+        is Enum -> m2.values.size
+        is Primitive.String -> -1
+        else -> 0
+      }
+      m2Complexity - m1Complexity
+    }
+
   private fun Schema.toUnion(
     context: NamingContext,
     subtypes: List<ReferenceOr<Schema>>
@@ -409,7 +434,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val caseContext = toUnionCaseContext(context, ref)
         val resolved = ref.resolve()
         Model.Union.Case(caseContext, resolved.toModel(caseContext))
-      }
+      }.sortedWith(unionSchemaComparator)
     return Model.Union(
       context,
       cases,
@@ -495,7 +520,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     headers.isEmpty() && content.isEmpty() && links.isEmpty() && extensions.isEmpty()
 
   // TODO interceptor
-  fun toResponses(operation: Operation): Route.Returns =
+  fun toResponses(operation: Operation, create: (NamingContext) -> NamingContext): Route.Returns =
     Route.Returns(
       operation.responses.responses.entries.associate { (code, refOrResponse) ->
         val statusCode = StatusCode.orThrow(code)
@@ -506,41 +531,27 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
           response.content.contains("application/json") -> {
             val mediaType = response.content.getValue("application/json")
-            when (val resolved = mediaType.schema?.resolve()) {
-              is Resolved.Ref ->
-                Pair(
-                  statusCode,
-                  Route.ReturnType(resolved.toModel(Named(resolved.name)), response.extensions)
-                )
+            val route = when (val resolved = mediaType.schema?.resolve()) {
+              is Resolved -> {
+                val context = resolved.namedOr {
+                  val operationId =
+                    requireNotNull(operation.operationId) {
+                      "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
+                    }
+                  NamingContext.RouteBody(operationId, "Response")
+                }.let(create)
+                Route.ReturnType(resolved.toModel(context), response.extensions)
+              }
 
-              is Resolved.Value ->
-                Pair(
-                  statusCode,
-                  Route.ReturnType(
-                    resolved.toModel(
-                      requireNotNull(
-                        operation.operationId?.let { NamingContext.RouteBody(it, "Response") }
-                      ) {
-                        "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
-                      }
-                    ),
-                    response.extensions
-                  )
-                )
-
-              null ->
-                Pair(
-                  statusCode,
-                  Route.ReturnType(Resolved.Value(toRawJson(Allowed(true))), response.extensions)
-                )
+              null -> Route.ReturnType(Resolved.Value(toRawJson(Allowed(true))), response.extensions)
             }
+            Pair(statusCode, route)
           }
 
-          response.isEmpty() ->
-            Pair(
-              statusCode,
-              Route.ReturnType(Resolved.Value(Primitive.String(null)), response.extensions)
-            )
+          response.isEmpty() -> Pair(
+            statusCode,
+            Route.ReturnType(Resolved.Value(Primitive.String(null)), response.extensions)
+          )
 
           else ->
             throw IllegalStateException("OpenAPI requires at least 1 valid response. $response")

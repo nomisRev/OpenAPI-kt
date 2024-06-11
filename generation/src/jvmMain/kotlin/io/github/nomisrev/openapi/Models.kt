@@ -112,15 +112,17 @@ fun Model.Union.toTypeSpec(): TypeSpec =
                 .add(
                   "%M(%S, %T.SEALED) {\n",
                   MemberName("kotlinx.serialization.descriptors", "buildSerialDescriptor"),
-                  Nam.toClassName(context),
+                  Nam.toClassName(context)
+                    .simpleNames.joinToString("."),
                   PolymorphicKind::class
                 )
                 .withIndent {
                   cases.forEach { case ->
                     val (placeholder, values) = case.model.serializer()
                     add(
-                      "element(%T, $placeholder.descriptor)\n",
-                      Nam.toCaseClassName(this@toTypeSpec, case.model.value),
+                      "element(%S, $placeholder.descriptor)\n",
+                      Nam.toCaseClassName(this@toTypeSpec, case.model.value)
+                        .simpleNames.joinToString("."),
                       *values
                     )
                   }
@@ -143,7 +145,7 @@ fun Model.Union.toTypeSpec(): TypeSpec =
                     val (placeholder, values) = case.model.serializer()
                     addStatement(
                       "is %T -> encoder.encodeSerializableValue($placeholder, value.value)",
-                      Nam.toClassName(context),
+                      Nam.toCaseClassName(this@toTypeSpec, case.model.value),
                       *values
                     )
                   }
@@ -170,8 +172,8 @@ fun Model.Union.toTypeSpec(): TypeSpec =
                     val (placeholder, values) = case.model.serializer()
                     add(
                       "Pair(%T::class) { %T(%T.decodeFromJsonElement($placeholder, json)) },\n",
-                      case.model.toTypeName(),
-                      case.model.toTypeName(),
+                      Nam.toCaseClassName(this@toTypeSpec, case.model.value),
+                      Nam.toCaseClassName(this@toTypeSpec, case.model.value),
                       ClassName("kotlinx.serialization.json", "Json"),
                       *values
                     )

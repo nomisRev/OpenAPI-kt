@@ -5,6 +5,8 @@ import io.github.nomisrev.openapi.Model.Collection
 fun Resolved<Model>.default(): String? =
   value.default()
 
+// TODO refactor to ParameterSpec.Builder
+//   And use proper %T.%S using ClassName, etc.
 fun Model.default(): String? =
   when (this) {
     Model.Primitive.Unit -> "Unit"

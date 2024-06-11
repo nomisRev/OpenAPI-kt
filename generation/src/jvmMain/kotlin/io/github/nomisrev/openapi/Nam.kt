@@ -29,14 +29,10 @@ object Nam {
       is NamingContext.Nested -> {
         val outer = toClassName(context.outer)
         val inner = toClassName(context.inner)
-        val result = ClassName(
+        ClassName(
           `package`,
           outer.simpleNames + inner.simpleNames
         )
-        // TODO achterstevoren!!
-        //Nested(name=assistants, outer=RouteParam(name=order, operationId=listAssistants, postfix=Request))
-        println(result)
-        result
       }
 
       is NamingContext.Named ->

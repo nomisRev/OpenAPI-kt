@@ -20,7 +20,7 @@ private fun Root.endpoints(): List<FileSpec> =
   endpoints.map { api ->
     FileSpec.builder("io.github.nomisrev.openapi", api.name)
       .addType(api.toTypeSpec())
-//      .addType(api.toTypeSpec2())
+      .addType(api.toTypeSpec2())
       .build()
   }
 
@@ -80,12 +80,29 @@ private fun API.toTypeSpec(outerContext: NamingContext? = null): TypeSpec {
     .build()
 }
 
-private fun API.toTypeSpec2(): TypeSpec =
-  TypeSpec.classBuilder("Ktor${Nam.toClassName(Named(name)).simpleName}")
-    .addSuperinterface(Nam.toClassName(Named(name)))
+private fun ClassName.postfix(postfix: String): ClassName =
+  ClassName(
+    packageName,
+    simpleNames.dropLast(1) + "${simpleNames.last()}$postfix"
+  )
+
+private fun API.toTypeSpec2(outerContext: NamingContext? = null): TypeSpec {
+  val outer = outerContext?.let { Nested(Named(name), it) } ?: Named(name)
+  return TypeSpec.classBuilder(Nam.toClassName(outer).postfix("Ktor"))
+    .addSuperinterface(Nam.toClassName(outer))
     .addFunctions(routes.map { it.implemented() })
-    .addTypes(nested.map { it.toTypeSpec2() })
+    .addTypes(nested.map { it.toTypeSpec2(outer) })
+    .addProperties(nested.map {
+      PropertySpec.builder(
+        Nam.toParamName(Named(it.name)),
+        Nam.toClassName(Nested(Named(it.name), outer))
+      ).addModifiers(KModifier.OVERRIDE)
+        .initializer("%M()", TODO).build()
+    })
     .build()
+}
+
+val TODO = MemberName("kotlin", "TODO")
 
 private fun Route.implemented(): FunSpec =
   FunSpec.builder(Nam.toParamName(Named(operation.operationId!!)))
