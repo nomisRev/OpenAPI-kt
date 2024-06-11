@@ -95,6 +95,10 @@ data class Route(
  * Allows tracking whether data was referenced by name, or defined inline. This is important to be
  * able to maintain the structure of the specification.
  */
+// TODO this can be removed.
+//   Move 'nested' logic to OpenAPITransformer
+//   Inline `namedOr` logic where used
+//   Rely on `ReferenceOr<Schema>` everywhere within `OpenAPITransformer`?
 sealed interface Resolved<A> {
   val value: A
 

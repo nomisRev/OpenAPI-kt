@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -80,12 +79,6 @@ private fun API.toTypeSpec(outerContext: NamingContext? = null): TypeSpec {
     .build()
 }
 
-private fun ClassName.postfix(postfix: String): ClassName =
-  ClassName(
-    packageName,
-    simpleNames.dropLast(1) + "${simpleNames.last()}$postfix"
-  )
-
 private fun API.toTypeSpec2(outerContext: NamingContext? = null): TypeSpec {
   val outer = outerContext?.let { Nested(Named(name), it) } ?: Named(name)
   return TypeSpec.classBuilder(Nam.toClassName(outer).postfix("Ktor"))
@@ -101,8 +94,6 @@ private fun API.toTypeSpec2(outerContext: NamingContext? = null): TypeSpec {
     })
     .build()
 }
-
-val TODO = MemberName("kotlin", "TODO")
 
 private fun Route.implemented(): FunSpec =
   FunSpec.builder(Nam.toParamName(Named(operation.operationId!!)))
@@ -160,7 +151,7 @@ private fun Route.returnType(): TypeName {
   val success =
     returnType.types.toSortedMap { s1, s2 -> s1.code.compareTo(s2.code) }.entries.first()
   return when (success.value.type.value) {
-    is Model.Binary -> ClassName("io.ktor.client.statement", "HttpResponse")
+    is Model.Binary -> HttpResponse
     else -> success.value.type.toTypeName()
   }
 }

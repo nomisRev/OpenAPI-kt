@@ -148,7 +148,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     anyOf != null &&
       anyOf!!.size == 2 &&
       anyOf!!.count { it.resolve().value.enum != null } == 1 &&
-      anyOf!!.count { it.resolve().value.type == Type.Basic.String } == 1
+      anyOf!!.count { it.resolve().value.type == Type.Basic.String } == 2
 
   fun ReferenceOr<Schema>.resolve(): Resolved<Schema> =
     when (this) {

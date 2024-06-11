@@ -1,7 +1,20 @@
 package io.github.nomisrev.openapi
 
+import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.DOUBLE
+import com.squareup.kotlinpoet.INT
+import com.squareup.kotlinpoet.LIST
+import com.squareup.kotlinpoet.MAP
+import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.SET
+import com.squareup.kotlinpoet.STRING
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.UNIT
+import com.squareup.kotlinpoet.asTypeName
 import io.github.nomisrev.openapi.Model.Collection
+import kotlinx.serialization.json.JsonElement
 import net.pearx.kasechange.splitter.WordSplitterConfig
 import net.pearx.kasechange.splitter.WordSplitterConfigurable
 import net.pearx.kasechange.toCamelCase
@@ -126,3 +139,43 @@ object Nam {
       }
     }
 }
+
+val ContentType =
+  ClassName("io.ktor.http", "ContentType")
+
+val HttpResponse =
+  ClassName("io.ktor.client.statement", "HttpResponse")
+
+val PrimitiveSerialDescriptor =
+  MemberName("kotlinx.serialization.descriptors", "PrimitiveSerialDescriptor")
+
+val ListSerializer = MemberName("kotlinx.serialization.builtins", "ListSerializer")
+
+val SetSerializer = MemberName("kotlinx.serialization.builtins", "SetSerializer")
+
+val MapSerializer = MemberName("kotlinx.serialization.builtins", "MapSerializer")
+
+val TODO = MemberName("kotlin", "TODO")
+
+val SerialDescriptor =
+  ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
+
+fun Resolved<Model>.toTypeName(): TypeName =
+  value.toTypeName()
+
+fun Model.toTypeName(): TypeName =
+  when (this) {
+    is Model.Primitive.Boolean -> BOOLEAN
+    is Model.Primitive.Double -> DOUBLE
+    is Model.Primitive.Int -> INT
+    is Model.Primitive.String -> STRING
+    Model.Primitive.Unit -> UNIT
+    is Collection.List -> LIST.parameterizedBy(inner.toTypeName())
+    is Collection.Set -> SET.parameterizedBy(inner.toTypeName())
+    is Collection.Map -> MAP.parameterizedBy(STRING, inner.toTypeName())
+    Model.Binary -> ClassName(`package`, "UploadFile")
+    Model.FreeFormJson -> JsonElement::class.asTypeName()
+    is Model.Enum -> Nam.toClassName(context)
+    is Model.Object -> Nam.toClassName(context)
+    is Model.Union -> Nam.toClassName(context)
+  }
