@@ -12,47 +12,36 @@ import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.serializer
 
-class ListSpec : StringSpec({
-  "top-level list" {
-    checkAll(Arb.list(Arb.int())) { l ->
-      Generic.encode(l) shouldBe list(l)
+class ListSpec :
+  StringSpec({
+    "top-level list" { checkAll(Arb.list(Arb.int())) { l -> Generic.encode(l) shouldBe list(l) } }
+
+    "list inside polymorphic product" {
+      checkAll(Arb.list(Arb.int())) { l -> Generic.encode(Id(l)) shouldBe list(l).id() }
     }
-  }
 
-  "list inside polymorphic product" {
-    checkAll(Arb.list(Arb.int())) { l ->
-      Generic.encode(Id(l)) shouldBe list(l).id()
+    "list inside inline" {
+      checkAll(Arb.list(Arb.int().map(::IInt))) { l -> Generic.encode(Id(l)) shouldBe list(l).id() }
     }
-  }
 
-  "list inside inline" {
-    checkAll(Arb.list(Arb.int().map(::IInt))) { l ->
-      Generic.encode(Id(l)) shouldBe list(l).id()
-    }
-  }
+    "list inside sum-type"
+      .config(enabled = false) {
+        checkAll(Arb.list(Arb.int()), Arb.list(Arb.int()), Arb.list(Arb.int())) { a, b, c ->
+          val tree: Tree<List<Int>> = Branch(Leaf(a), Branch(Leaf(b), Leaf(c)))
 
-  "list inside sum-type".config(enabled = false) {
-    checkAll(Arb.list(Arb.int()), Arb.list(Arb.int()), Arb.list(Arb.int())) { a, b, c ->
-      val tree: Tree<List<Int>> =
-        Branch(Leaf(a), Branch(Leaf(b), Leaf(c)))
+          Generic.encode(
+            tree,
+            //         TODO Caused by SerializationException: Class 'ArrayList' is not registered
+            // for polymorphic serialization in the scope of 'Any'.
+            Tree.serializer(ListSerializer(Int.serializer())),
+            serializersModule = serializersModule
+          ) shouldBe branch(leaf(list(a)), branch(leaf(list(b)), leaf(list(c))))
+        }
+      }
+  })
 
-      Generic.encode(
-        tree,
-//         TODO Caused by SerializationException: Class 'ArrayList' is not registered for polymorphic serialization in the scope of 'Any'.
-        Tree.serializer(ListSerializer(Int.serializer())),
-        serializersModule = serializersModule
-      ) shouldBe branch(leaf(list(a)), branch(leaf(list(b)), leaf(list(c))))
-    }
-  }
-})
-
-inline fun <reified A> list(
-  list: List<A>,
-  serializer: KSerializer<A> = serializer()
-): Generic =
+inline fun <reified A> list(list: List<A>, serializer: KSerializer<A> = serializer()): Generic =
   Generic.Product(
     Generic.Info("kotlin.collections.ArrayList"),
-    list.mapIndexed { index: Int, a: A ->
-      Pair(index.toString(), Generic.encode(a, serializer))
-    }
+    list.mapIndexed { index: Int, a: A -> Pair(index.toString(), Generic.encode(a, serializer)) }
   )

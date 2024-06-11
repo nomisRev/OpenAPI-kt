@@ -1,12 +1,12 @@
-//package io.github.nomisrev.openapi
+// package io.github.nomisrev.openapi
 //
-//import io.github.nomisrev.openapi.OpenAPI.Companion.Json
-//import java.io.BufferedReader
-//import kotlin.test.Ignore
-//import kotlin.test.Test
-//import kotlin.test.assertEquals
+// import io.github.nomisrev.openapi.OpenAPI.Companion.Json
+// import java.io.BufferedReader
+// import kotlin.test.Ignore
+// import kotlin.test.Test
+// import kotlin.test.assertEquals
 //
-//class OpenAPISerializerEnd2EndTest {
+// class OpenAPISerializerEnd2EndTest {
 //
 //  fun resourceText(path: String): String =
 //    requireNotNull(
@@ -104,4 +104,4 @@
 //      resourceText("securitySchemes_3_1_0.json"),
 //    )
 //  }
-//}
+// }

@@ -12,7 +12,7 @@ kasechange="1.4.1"
 [libraries]
 gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
-test = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "json" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 okio-fakefilesystem = { module = "com.squareup.okio:okio-fakefilesystem", version.ref = "okio" }

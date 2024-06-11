@@ -14,20 +14,25 @@ internal abstract class KSerializerWithExtensions<T>(
   private val serializer: KSerializer<T>,
   private val extensions: (T) -> Map<String, JsonElement>,
   private val withExtensions: (T, Map<String, JsonElement>) -> T
-): KSerializer<T> {
+) : KSerializer<T> {
   override val descriptor: SerialDescriptor = serializer.descriptor
 
   override fun deserialize(decoder: Decoder): T {
     val jsObject = decoder.decodeSerializableValue(JsonElement.serializer())
-    val value = json.decodeFromJsonElement(serializer,
-      JsonObject(jsObject.jsonObject.filterNot { (key, _) -> key.startsWith("x-") })
-    )
+    val value =
+      json.decodeFromJsonElement(
+        serializer,
+        JsonObject(jsObject.jsonObject.filterNot { (key, _) -> key.startsWith("x-") })
+      )
     val extensions = jsObject.jsonObject.filter { (key, _) -> key.startsWith("x-") }
     return withExtensions(value, extensions)
   }
 
   override fun serialize(encoder: Encoder, value: T) {
     val jsObject = json.encodeToJsonElement(serializer, value).jsonObject - "extensions"
-    encoder.encodeSerializableValue(JsonElement.serializer(), JsonObject(jsObject + extensions(value)))
+    encoder.encodeSerializableValue(
+      JsonElement.serializer(),
+      JsonObject(jsObject + extensions(value))
+    )
   }
 }

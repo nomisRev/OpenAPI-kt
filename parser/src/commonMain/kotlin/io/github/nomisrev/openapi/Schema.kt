@@ -50,8 +50,8 @@ public data class Schema(
   val maxProperties: Int? = null,
   val minProperties: Int? = null,
   /**
-   * Unlike JSON Schema this value MUST conform to the defined type for this parameter.
-   * Note: is ignored for required parameters.
+   * Unlike JSON Schema this value MUST conform to the defined type for this parameter. Note: is
+   * ignored for required parameters.
    */
   val default: ExampleValue? = null,
   val type: Type? = null,
@@ -73,14 +73,17 @@ public data class Schema(
   @SerialName("\$anchor") val anchor: String? = null
 ) {
   @Serializable
-  public data class Discriminator(val propertyName: String, val mapping: Map<String, String>? = null)
+  public data class Discriminator(
+    val propertyName: String,
+    val mapping: Map<String, String>? = null
+  )
 
   @Serializable(with = Type.Serializer::class)
   public sealed interface Type {
 
     public data class Array(val types: List<Basic>) : Type
 
-    public enum class Basic(public val value: kotlin.String): Type {
+    public enum class Basic(public val value: kotlin.String) : Type {
       @SerialName("array") Array("array"),
       @SerialName("object") Object("object"),
       @SerialName("number") Number("number"),
@@ -103,21 +106,25 @@ public data class Schema(
       override fun deserialize(decoder: Decoder): Type {
         val json = decoder.decodeSerializableValue(JsonElement.serializer())
         return when {
-          json is JsonArray -> Array(
-            decoder.decodeSerializableValue(ListSerializer(String.serializer())).mapNotNull(Basic.Companion::fromString)
-          )
-          json is JsonPrimitive && json.isString ->  Basic.fromString(json.content)
-            ?: throw SerializationException("Invalid Basic.Type value: ${json.content}")
+          json is JsonArray ->
+            Array(
+              decoder
+                .decodeSerializableValue(ListSerializer(String.serializer()))
+                .mapNotNull(Basic.Companion::fromString)
+            )
+          json is JsonPrimitive && json.isString -> Basic.fromString(json.content)
+              ?: throw SerializationException("Invalid Basic.Type value: ${json.content}")
           else -> throw SerializationException("Schema.Type can only be a string or an array")
         }
       }
 
       override fun serialize(encoder: Encoder, value: Type) {
-        when(value) {
-          is Array -> encoder.encodeSerializableValue(
-            ListSerializer(String.serializer()),
-            value.types.map { it.value }
-          )
+        when (value) {
+          is Array ->
+            encoder.encodeSerializableValue(
+              ListSerializer(String.serializer()),
+              value.types.map { it.value }
+            )
           is Basic -> encoder.encodeString(value.value)
         }
       }

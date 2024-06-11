@@ -7,23 +7,13 @@ plugins {
   id(libs.plugins.publish.get().pluginId)
 }
 
-@Suppress("OPT_IN_USAGE")
-powerAssert {
-  functions = listOf("kotlin.test.assertEquals", "kotlin.test.assertTrue")
-}
-
 kotlin {
-//  explicitApi()
   jvm {
     @OptIn(ExperimentalKotlinGradlePluginApi::class)
     mainRun { mainClass.set("io.github.nomisrev.openapi.MainKt") }
   }
-  macosArm64 {
-    binaries {
-      executable { entryPoint = "main" }
-    }
-  }
-  linuxX64()
+//  macosArm64()
+//  linuxX64()
 
   sourceSets {
     commonMain {
@@ -32,12 +22,18 @@ kotlin {
       dependencies {
         api(libs.kasechange)
         api(libs.okio)
+        implementation("io.ktor:ktor-client-core:2.3.6")
         api(projects.parser)
       }
     }
     commonTest {
       dependencies {
         implementation(libs.test)
+      }
+    }
+    jvmMain {
+      dependencies {
+        implementation("com.squareup:kotlinpoet:1.17.0")
       }
     }
 //    jsMain {
@@ -51,10 +47,6 @@ kotlin {
       }
     }
   }
-}
-
-tasks.withType<Test> {
-  useJUnitPlatform()
 }
 
 task("runMacosArm64") {

@@ -1,18 +1,19 @@
-//package io.github.nomisrev.openapi
+// package io.github.nomisrev.openapi
 //
-//import io.github.nomisrev.openapi.Parameter.Input.Query
-//import io.github.nomisrev.openapi.ReferenceOr.Value
-//import io.github.nomisrev.openapi.Schema.Type
-//import io.github.nomisrev.openapi.test.KModel
-//import io.github.nomisrev.openapi.test.KModel.Primitive.String
-//import io.github.nomisrev.openapi.test.models
-//import io.github.nomisrev.openapi.test.template
-//import io.github.nomisrev.openapi.test.toCode
-//import kotlin.test.Test
-//import kotlin.test.assertTrue
+// import io.github.nomisrev.openapi.Parameter.Input.Query
+// import io.github.nomisrev.openapi.ReferenceOr.Value
+// import io.github.nomisrev.openapi.Schema.Type
+// import io.github.nomisrev.openapi.test.KModel
+// import io.github.nomisrev.openapi.test.KModel.Primitive.String
+// import io.github.nomisrev.openapi.test.models
+// import io.github.nomisrev.openapi.test.template
+// import io.github.nomisrev.openapi.test.toCode
+// import kotlin.test.Test
+// import kotlin.test.assertTrue
 //
-//class InlineSchemaTest {
-//  val name = "name" to Value(Schema(nullable = false, type = Type.Basic.String, description = "test"))
+// class InlineSchemaTest {
+//  val name = "name" to Value(Schema(nullable = false, type = Type.Basic.String, description =
+// "test"))
 //  val age = "age" to Value(Schema(type = Type.Basic.Integer, default = ExampleValue.Single("1")))
 //  val enum = "enum" to Value(Schema(type = Type.Basic.String, enum = listOf("deceased", "alive")))
 //  val oneOf = "oneOf" to Value(
@@ -37,7 +38,8 @@
 //      )
 //    )
 //  )
-//  val pet = "Pet" to Value(Schema(required = listOf("age"), properties = mapOf(name, age, enum, oneOf, anyOf)))
+//  val pet = "Pet" to Value(Schema(required = listOf("age"), properties = mapOf(name, age, enum,
+// oneOf, anyOf)))
 //  val pets = Value(Schema(type = Schema.Type.Basic.Array, items = pet.second))
 //
 //  val kenum = KModel.Enum("Enum", String, listOf("deceased", "alive"))
@@ -75,7 +77,8 @@
 //    ), listOf(kenum, koneOf, kanyOf)
 //  )
 //  val mediaType =
-//    mapOf(applicationJson to MediaType(Value(Schema(type = Schema.Type.Basic.Array, items = pet.second))))
+//    mapOf(applicationJson to MediaType(Value(Schema(type = Schema.Type.Basic.Array, items =
+// pet.second))))
 //
 //  @Test
 //  fun toplevelSchema() {
@@ -83,7 +86,8 @@
 //      info = Info(title = "Test Spec", version = "1.0"),
 //      components = Components(
 //        schemas = mapOf(
-//          "Pet" to Value(Schema(required = listOf("age"), properties = mapOf(name, age, enum, oneOf, anyOf))),
+//          "Pet" to Value(Schema(required = listOf("age"), properties = mapOf(name, age, enum,
+// oneOf, anyOf))),
 //          "TopEnum" to enum.second
 //        )
 //      )
@@ -187,7 +191,8 @@
 //            operationId = "listPets",
 //            parameters = listOf(Value(Parameter(name = "limit", input = Query))),
 //            requestBody = Value(
-//              RequestBody(content = mapOf(applicationJson to MediaType(ReferenceOr.schema("Pets"))))
+//              RequestBody(content = mapOf(applicationJson to
+// MediaType(ReferenceOr.schema("Pets"))))
 //            ),
 //            responses = Responses(200, Response())
 //          )
@@ -195,7 +200,8 @@
 //      ),
 //      components = Components(
 //        schemas = mapOf(
-//          "Pets" to Value(Schema(type = Schema.Type.Basic.Object, properties = mapOf("value" to pets))),
+//          "Pets" to Value(Schema(type = Schema.Type.Basic.Object, properties = mapOf("value" to
+// pets))),
 //          "TopEnum" to enum.second
 //        )
 //      )
@@ -225,11 +231,12 @@
 //      info = Info(title = "Test Spec", version = "1.0"),
 //      components = Components(
 //        schemas = mapOf(
-//          "Pet" to Value(Schema(required = listOf("age"), properties = mapOf(name, age, enum, oneOf, anyOf))),
+//          "Pet" to Value(Schema(required = listOf("age"), properties = mapOf(name, age, enum,
+// oneOf, anyOf))),
 //          "TopEnum" to enum.second
 //        )
 //      )
 //    ).models().first()
 //    println(template { toCode(actual) })
 //  }
-//}
+// }

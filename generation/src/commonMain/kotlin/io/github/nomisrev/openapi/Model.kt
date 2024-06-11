@@ -1,11 +1,11 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.Schema.Type
 import io.github.nomisrev.openapi.http.MediaType
 import io.github.nomisrev.openapi.http.Method
 import io.github.nomisrev.openapi.http.StatusCode
-import kotlinx.serialization.json.JsonElement
+import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 data class Route(
   val operation: Operation,
@@ -16,36 +16,84 @@ data class Route(
   val returnType: Returns,
   val extensions: Map<String, JsonElement>
 ) {
-
   data class Bodies(
+    /** Request bodies are optional by default! */
+    val required: Boolean,
     val types: Map<MediaType, Body>,
     val extensions: Map<String, JsonElement>
-  ) : Map<MediaType, Body> by types
+  ) : Map<MediaType, Body> by types {
+    fun jsonOrNull(): Body.Json? = types.getOrElse(MediaType.ApplicationJson) { null } as? Body.Json
 
-  // Required, isNullable
+    fun octetStreamOrNull(): Body.OctetStream? =
+      types.getOrElse(MediaType.ApplicationOctetStream) { null } as? Body.OctetStream
+
+    fun xmlOrNull(): Body.Xml? = types.getOrElse(MediaType.ApplicationXml) { null } as? Body.Xml
+
+    fun multipartOrNull(): Body.Multipart? =
+      types.getOrElse(MediaType.MultipartFormData) { null } as? Body.Multipart
+  }
+
   sealed interface Body {
+    val description: String?
     val extensions: Map<String, JsonElement>
 
-    data class OctetStream(override val extensions: Map<String, JsonElement>) : Body
-    data class Json(val type: Model, override val extensions: Map<String, JsonElement>) : Body
-    data class Xml(val type: Model, override val extensions: Map<String, JsonElement>) : Body
+    data class OctetStream(
+      override val description: String?,
+      override val extensions: Map<String, JsonElement>
+    ) : Body
 
-    data class Multipart(val parameters: List<FormData>, override val extensions: Map<String, JsonElement>) :
-      Body, List<Multipart.FormData> by parameters {
-      data class FormData(val name: String, val type: Model)
+    sealed interface Json : Body {
+      val type: Resolved<Model>
+
+      data class FreeForm(
+        override val description: String?,
+        override val extensions: Map<String, JsonElement>
+      ) : Json {
+        override val type: Resolved<Model> = Resolved.Value(Model.FreeFormJson(description))
+      }
+
+      data class Defined(
+        override val type: Resolved<Model>,
+        override val description: String?,
+        override val extensions: Map<String, JsonElement>
+      ) : Json
+    }
+
+    data class Xml(
+      val type: Model,
+      override val description: String?,
+      override val extensions: Map<String, JsonElement>
+    ) : Body
+
+    sealed interface Multipart : Body {
+      val parameters: List<FormData>
+
+      data class FormData(val name: String, val type: Resolved<Model>)
+
+      data class Value(
+        val parameters: List<FormData>,
+        override val description: String?,
+        override val extensions: Map<String, JsonElement>
+      ) : Body, List<FormData> by parameters
+
+      data class Ref(
+        val value: Resolved.Ref<Model>,
+        override val description: String?,
+        override val extensions: Map<String, JsonElement>
+      ) : Multipart {
+        override val parameters: List<FormData> = listOf(FormData(value.name, value))
+      }
     }
   }
 
   // A Parameter can be isNullable, required while the model is not!
-  sealed interface Input {
-    val name: String
-    val type: Model
-
-    data class Query(override val name: String, override val type: Model) : Input
-    data class Path(override val name: String, override val type: Model) : Input
-    data class Header(override val name: String, override val type: Model) : Input
-    data class Cookie(override val name: String, override val type: Model) : Input
-  }
+  data class Input(
+    val name: String,
+    val type: Resolved<Model>,
+    val isRequired: Boolean,
+    val input: Parameter.Input,
+    val description: String?
+  )
 
   data class Returns(
     val types: Map<StatusCode, ReturnType>,
@@ -53,31 +101,58 @@ data class Route(
   ) : Map<StatusCode, ReturnType> by types
 
   // Required, isNullable ???
-  data class ReturnType(
-    val type: Model,
-    val extensions: Map<String, JsonElement>
-  )
+  data class ReturnType(val type: Resolved<Model>, val extensions: Map<String, JsonElement>)
 }
 
 /**
- * Our own "Generated" oriented KModel.
- * The goal of this KModel is to make generation as easy as possible,
- * so we gather all information ahead of time.
+ * Allows tracking whether data was referenced by name, or defined inline. This is important to be
+ * able to maintain the structure of the specification.
+ */
+// TODO this can be removed.
+//   Move 'nested' logic to OpenAPITransformer
+//   Inline `namedOr` logic where used
+//   Rely on `ReferenceOr<Schema>` everywhere within `OpenAPITransformer`?
+sealed interface Resolved<A> {
+  val value: A
+
+  data class Ref<A>(val name: String, override val value: A) : Resolved<A>
+
+  @JvmInline value class Value<A>(override val value: A) : Resolved<A>
+
+  fun namedOr(orElse: () -> NamingContext): NamingContext =
+    when (this) {
+      is Ref -> NamingContext.Named(name)
+      is Value -> orElse()
+    }
+}
+
+/**
+ * Our own "Generated" oriented KModel. The goal of this KModel is to make generation as easy as
+ * possible, so we gather all information ahead of time.
  *
- * This KModel can/should be updated overtime to include all information we need for code generation.
+ * This KModel can/should be updated overtime to include all information we need for code
+ * generation.
  *
- * The naming mechanism forces the same ordering as defined in the OpenAPI Specification,
- * this gives us the best logical structure, and makes it easier to compare code and spec.
- * Every type that needs to generate a name has a [NamingContext], see [NamingContext] for more details.
+ * The naming mechanism forces the same ordering as defined in the OpenAPI Specification, this gives
+ * us the best logical structure, and makes it easier to compare code and spec. Every type that
+ * needs to generate a name has a [NamingContext], see [NamingContext] for more details.
  */
 sealed interface Model {
+  val description: String?
 
   sealed interface Primitive : Model {
-    data class Int(val schema: Schema, val default: kotlin.Int?) : Primitive
-    data class Double(val schema: Schema, val default: kotlin.Double?) : Primitive
-    data class Boolean(val schema: Schema, val default: kotlin.Boolean?) : Primitive
-    data class String(val schema: Schema, val default: kotlin.String?) : Primitive
-    data object Unit : Primitive
+    data class Int(val default: kotlin.Int?, override val description: kotlin.String?) : Primitive
+
+    data class Double(val default: kotlin.Double?, override val description: kotlin.String?) :
+      Primitive
+
+    data class Boolean(val default: kotlin.Boolean?, override val description: kotlin.String?) :
+      Primitive
+
+    data class String(val default: kotlin.String?, override val description: kotlin.String?) :
+      Primitive
+
+    data class Unit(override val description: kotlin.String?) : Primitive
 
     fun default(): kotlin.String? =
       when (this) {
@@ -89,129 +164,107 @@ sealed interface Model {
       }
   }
 
-  data object Binary : Model
-  data object FreeFormJson : Model
+  data class OctetStream(override val description: String?) : Model
+
+  data class FreeFormJson(override val description: String?) : Model
 
   sealed interface Collection : Model {
-    val value: Model
-    val schema: Schema
+    val inner: Resolved<Model>
 
     data class List(
-      override val schema: Schema,
-      override val value: Model,
-      val default: kotlin.collections.List<String>?
+      override val inner: Resolved<Model>,
+      val default: kotlin.collections.List<String>?,
+      override val description: String?
     ) : Collection
 
     data class Set(
-      override val schema: Schema,
-      override val value: Model,
-      val default: kotlin.collections.List<String>?
+      override val inner: Resolved<Model>,
+      val default: kotlin.collections.List<String>?,
+      override val description: String?
     ) : Collection
 
-    data class Map(
-      override val schema: Schema,
-      override val value: Model
-    ) : Collection {
-      val key = Primitive.String(Schema(type = Schema.Type.Basic.String), null)
+    data class Map(override val inner: Resolved<Model>, override val description: String?) :
+      Collection {
+      val key = Primitive.String(null, null)
     }
   }
 
   @Serializable
   data class Object(
-    val schema: Schema,
     val context: NamingContext,
-    val description: String?,
-    val properties: List<Property>,
-    val inline: List<Model>
+    override val description: String?,
+    val properties: List<Property>
   ) : Model {
+    val inline: List<Model> =
+      properties.mapNotNull {
+        if (it.model is Resolved.Value)
+          when (val model = it.model.value) {
+            is Collection ->
+              when (model.inner) {
+                is Resolved.Ref -> null
+                is Resolved.Value -> model.inner.value
+              }
+            else -> model
+          }
+        else null
+      }
+
     @Serializable
     data class Property(
-      val schema: Schema,
       val baseName: String,
-      val name: String,
-      val type: Model,
+      val model: Resolved<Model>,
       /**
-       * isRequired != not-null.
-       * This means the value _has to be included_ in the payload,
-       * but it might be [isNullable].
+       * isRequired != not-null. This means the value _has to be included_ in the payload, but it
+       * might be [isNullable].
        */
       val isRequired: Boolean,
       val isNullable: Boolean,
       val description: String?
-    ) {
-      sealed interface DefaultArgument {
-        data class Enum(val enum: Model, val context: NamingContext, val value: String) : DefaultArgument
-        data class Union(
-          val union: NamingContext,
-          val case: Model,
-          val value: String
-        ) : DefaultArgument
-
-        data class Double(val value: kotlin.Double) : DefaultArgument
-        data class Int(val value: kotlin.Int) : DefaultArgument
-        data class List(val value: kotlin.collections.List<DefaultArgument>) : DefaultArgument
-        data class Other(val value: String) : DefaultArgument
-      }
-    }
+    )
   }
 
-  sealed interface Union : Model {
-    val schema: Schema
-    val context: NamingContext
-    val schemas: List<UnionEntry>
-    val inline: List<Model>
-
-    fun isOpenEnumeration(): Boolean =
-      this is AnyOf &&
-        schemas.size == 2
-        && schemas.count { it.model is Enum } == 1
-        && schemas.count { it.model is Primitive.String } == 1
-
-    data class UnionEntry(val context: NamingContext, val model: Model)
-
-    /**
-     * [OneOf] is an untagged union.
-     * This is in Kotlin represented by a `sealed interface`.
-     */
-    data class OneOf(
-      override val schema: Schema,
-      override val context: NamingContext,
-      override val schemas: List<UnionEntry>,
-      override val inline: List<Model>,
-      val default: String?
-    ) : Union
-
-    /**
-     * [AnyOf] is an untagged union, with overlapping schema.
-     *
-     * Typically:
-     *  - open enumeration: anyOf a `string`, and [Enum] (also type: `string`).
-     *  - [Object] with a [FreeFormJson], where [FreeFormJson] has overlapping schema with the [Object].
-     */
-    data class AnyOf(
-      override val schema: Schema,
-      override val context: NamingContext,
-      override val schemas: List<UnionEntry>,
-      override val inline: List<Model>,
-      val default: String?
-    ) : Union
-
-    /**
-     * [TypeArray]
-     */
-    data class TypeArray(
-      override val schema: Schema,
-      override val context: NamingContext,
-      override val schemas: List<UnionEntry>,
-      override val inline: List<Model>
-    ) : Union
-  }
-
-  data class Enum(
-    val schema: Schema,
+  data class Union(
     val context: NamingContext,
-    val inner: Model,
-    val values: List<String>,
+    val cases: List<Case>,
+    val default: String?,
+    override val description: String?
+  ) : Model {
+    val inline: List<Model> =
+      cases.mapNotNull {
+        if (it.model is Resolved.Value)
+          when (val model = it.model.value) {
+            is Collection ->
+              when (model.inner) {
+                is Resolved.Ref -> null
+                is Resolved.Value -> model.inner.value
+              }
+            else -> model
+          }
+        else null
+      }
+
+    data class Case(val context: NamingContext, val model: Resolved<Model>)
+  }
+
+  sealed interface Enum : Model {
+    val context: NamingContext
+    val values: List<String>
     val default: String?
-  ) : Model
+    override val description: String?
+
+    data class Closed(
+      override val context: NamingContext,
+      val inner: Resolved<Model>,
+      override val values: List<String>,
+      override val default: String?,
+      override val description: String?
+    ) : Enum
+
+    data class Open(
+      override val context: NamingContext,
+      override val values: List<String>,
+      override val default: String?,
+      override val description: String?
+    ) : Enum
+  }
 }

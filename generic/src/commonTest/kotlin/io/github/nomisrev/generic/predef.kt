@@ -11,8 +11,7 @@ import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import kotlinx.serialization.modules.subclass
 
-fun <T> Arb.Companion.of(collection: Array<T>): Arb<T> =
-  element(collection.toList())
+fun <T> Arb.Companion.of(collection: Array<T>): Arb<T> = element(collection.toList())
 
 val serializersModule = SerializersModule {
   polymorphic(Any::class) {
@@ -28,9 +27,16 @@ val serializersModule = SerializersModule {
     subclass(UInt.serializer())
     subclass(ULong.serializer())
 
-    // TODO Caused by SerializationException: Class 'ArrayList' is not registered for polymorphic serialization in the scope of 'Any'.
+    // TODO Caused by SerializationException: Class 'ArrayList' is not registered for polymorphic
+    // serialization in the scope of 'Any'.
     subclass(ListSerializer(PolymorphicSerializer(Any::class).nullable))
-    // TODO Caused by SerializationException: Class 'LinkedHashMap' is not registered for polymorphic serialization in the scope of 'Any'.
-    subclass(MapSerializer(PolymorphicSerializer(Any::class).nullable, PolymorphicSerializer(Any::class).nullable))
+    // TODO Caused by SerializationException: Class 'LinkedHashMap' is not registered for
+    // polymorphic serialization in the scope of 'Any'.
+    subclass(
+      MapSerializer(
+        PolymorphicSerializer(Any::class).nullable,
+        PolymorphicSerializer(Any::class).nullable
+      )
+    )
   }
 }

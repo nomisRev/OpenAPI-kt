@@ -32,9 +32,9 @@ public data class Info(
    */
   public val version: String,
   /**
-   * Any additional external documentation for this OpenAPI document.
-   * The key is the name of the extension (beginning with x-), and the value is the data.
-   * The value can be a [JsonNull], [JsonPrimitive], [JsonArray] or [JsonObject].
+   * Any additional external documentation for this OpenAPI document. The key is the name of the
+   * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
+   * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
   public val extensions: Map<String, JsonElement> = emptyMap()
 ) {
@@ -51,9 +51,9 @@ public data class Info(
      */
     public val email: String? = null,
     /**
-     * Any additional external documentation for this OpenAPI document.
-     * The key is the name of the extension (beginning with x-), and the value is the data.
-     * The value can be a [JsonNull], [JsonPrimitive], [JsonArray] or [JsonObject].
+     * Any additional external documentation for this OpenAPI document. The key is the name of the
+     * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
+     * [JsonPrimitive], [JsonArray] or [JsonObject].
      */
     public val extensions: Map<String, JsonElement> = emptyMap()
   )
@@ -67,9 +67,9 @@ public data class Info(
     public val url: String? = null,
     private val identifier: String? = null,
     /**
-     * Any additional external documentation for this OpenAPI document.
-     * The key is the name of the extension (beginning with x-), and the value is the data.
-     * The value can be a [JsonNull], [JsonPrimitive], [JsonArray] or [JsonObject].
+     * Any additional external documentation for this OpenAPI document. The key is the name of the
+     * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
+     * [JsonPrimitive], [JsonArray] or [JsonObject].
      */
     public val extensions: Map<String, JsonElement> = emptyMap()
   )

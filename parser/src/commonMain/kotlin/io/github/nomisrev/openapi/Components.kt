@@ -1,7 +1,5 @@
 package io.github.nomisrev.openapi
 
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KeepGeneratedSerializer
 import io.github.nomisrev.openapi.Example.Companion.Serializer as ExampleSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -21,26 +19,29 @@ public data class Components(
   public val schemas: Map<String, ReferenceOr<Schema>> = emptyMap(),
   public val responses: Map<String, ReferenceOr<Response>> = emptyMap(),
   public val parameters: Map<String, ReferenceOr<Parameter>> = emptyMap(),
-  public val examples: Map<String, ReferenceOr<@Serializable(with= ExampleSerializer::class) Example>> = emptyMap(),
+  public val examples:
+    Map<String, ReferenceOr<@Serializable(with = ExampleSerializer::class) Example>> =
+    emptyMap(),
   public val requestBodies: Map<String, ReferenceOr<RequestBody>> = emptyMap(),
   public val headers: Map<String, ReferenceOr<Header>> = emptyMap(),
-//    val securitySchemes: Definitions<SecurityScheme>,
+  //    val securitySchemes: Definitions<SecurityScheme>,
   public val links: Map<String, Link> = emptyMap(),
   public val callbacks: Map<String, Callback> = emptyMap(),
   public val pathItems: Map<String, ReferenceOr<PathItem>> = emptyMap(),
   /**
-   * Any additional external documentation for this OpenAPI document.
-   * The key is the name of the extension (beginning with x-), and the value is the data.
-   * The value can be a [JsonNull], [JsonPrimitive], [JsonArray] or [JsonObject].
+   * Any additional external documentation for this OpenAPI document. The key is the name of the
+   * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
+   * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
   public val extensions: Map<String, JsonElement> = emptyMap()
 ) {
   public companion object {
-    internal object Serializer : KSerializerWithExtensions<Components>(
-      OpenAPI.Json,
-      serializer(),
-      Components::extensions,
-      { op, extensions -> op.copy(extensions = extensions) }
-    )
+    internal object Serializer :
+      KSerializerWithExtensions<Components>(
+        OpenAPI.Json,
+        serializer(),
+        Components::extensions,
+        { op, extensions -> op.copy(extensions = extensions) }
+      )
   }
 }

@@ -3,7 +3,6 @@ package io.github.nomisrev.openapi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-
 /**
  * Describes a single operation parameter.
  *
@@ -85,26 +84,22 @@ public data class Parameter(
    * of the _paramExample field. Furthermore, if referencing a schema that contains an example, the
    * examples value SHALL override the example provided by the schema.
    */
-  public val examples: Map<String, ReferenceOr<@Serializable(with = Example.Companion.Serializer::class) Example>>? = emptyMap()
+  public val examples:
+    Map<String, ReferenceOr<@Serializable(with = Example.Companion.Serializer::class) Example>>? =
+    emptyMap()
 ) {
   init {
-    if (input == Input.Path) require(required) {
-      "${required}Determines whether this parameter is mandatory. If the parameter location is \"path\", this property is REQUIRED and its value MUST be true. Otherwise, the property MAY be included and its default value is false."
-    }
+    if (input == Input.Path)
+      require(required) {
+        "${required}Determines whether this parameter is mandatory. If the parameter location is \"path\", this property is REQUIRED and its value MUST be true. Otherwise, the property MAY be included and its default value is false."
+      }
   }
 
   @Serializable
   public enum class Input(public val value: String) {
-    @SerialName("query")
-    Query("query"),
-
-    @SerialName("header")
-    Header("header"),
-
-    @SerialName("path")
-    Path("path"),
-
-    @SerialName("cookie")
-    Cookie("cookie")
+    @SerialName("query") Query("query"),
+    @SerialName("header") Header("header"),
+    @SerialName("path") Path("path"),
+    @SerialName("cookie") Cookie("cookie")
   }
 }
