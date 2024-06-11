@@ -44,14 +44,14 @@ fun Model.toFileSpec(): FileSpec? =
       FileSpec.builder(`package`, Nam.toClassName(context).simpleName).addType(toTypeSpec()).build()
     is Model.Union ->
       FileSpec.builder(`package`, Nam.toClassName(context).simpleName).addType(toTypeSpec()).build()
-    Model.Binary,
+    is Model.OctetStream,
     is Model.Primitive,
-    Model.FreeFormJson -> null
+    is Model.FreeFormJson -> null
   }
 
 tailrec fun Model.toTypeSpec(): TypeSpec? =
   when (this) {
-    is Model.Binary,
+    is Model.OctetStream,
     is Model.FreeFormJson,
     is Model.Primitive -> null
     is Collection -> inner.value.toTypeSpec()
@@ -64,12 +64,14 @@ tailrec fun Model.toTypeSpec(): TypeSpec? =
 @OptIn(ExperimentalSerializationApi::class)
 fun Model.Union.toTypeSpec(): TypeSpec =
   TypeSpec.interfaceBuilder(Nam.toClassName(context))
+    .description(description)
     .addModifiers(KModifier.SEALED)
     .addAnnotation(annotationSpec<Serializable>())
     .addTypes(
       cases.map { case ->
         val model = case.model
         TypeSpec.classBuilder(Nam.toCaseClassName(this@toTypeSpec, case.model.value).simpleName)
+          .description(model.value.description)
           .addModifiers(KModifier.VALUE)
           .addAnnotation(annotationSpec<JvmInline>())
           .primaryConstructor(
@@ -196,10 +198,12 @@ fun Model.Object.toTypeSpec(): TypeSpec =
               Nam.toPropName(prop),
               prop.model.toTypeName().copy(nullable = prop.isNullable)
             )
+            .description(prop.description)
             .defaultValue(prop.model.value)
             .apply {
-              if (prop.isRequired && !prop.model.value.hasDefault())
-                addAnnotation(annotationSpec<Required>())
+              val hasDefault = prop.model.value.hasDefault()
+              if (prop.isRequired && hasDefault) addAnnotation(annotationSpec<Required>())
+              else if (!prop.isRequired && !hasDefault && prop.isNullable) defaultValue("null")
             }
             .build()
         }
@@ -208,7 +212,7 @@ fun Model.Object.toTypeSpec(): TypeSpec =
     .apply {
       // Cannot serialize binary, these are used for multipart requests.
       // This occurs when request bodies are defined using top-level schemas.
-      if (properties.none { it.model.value is Model.Binary })
+      if (properties.none { it.model.value is Model.OctetStream })
         addAnnotation(annotationSpec<Serializable>())
     }
     .addTypes(inline.mapNotNull { it.toTypeSpec() })
@@ -219,6 +223,7 @@ fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
   val isSimple = rawToName.all { (rawName, valueName) -> rawName == valueName }
   val enumName = Nam.toClassName(context)
   return TypeSpec.enumBuilder(enumName)
+    .description(description)
     .apply {
       if (!isSimple)
         primaryConstructor(FunSpec.constructorBuilder().addParameter("value", STRING).build())
@@ -244,11 +249,12 @@ fun Model.Enum.Open.toTypeSpec(): TypeSpec {
   val rawToName = values.map { rawName -> Pair(rawName, Nam.toEnumValueName(rawName)) }
   val enumName = Nam.toClassName(context)
   return TypeSpec.interfaceBuilder(enumName)
+    .description(description)
     .addModifiers(KModifier.SEALED)
     .addProperty(PropertySpec.builder("value", STRING).addModifiers(KModifier.ABSTRACT).build())
     .addAnnotation(annotationSpec<Serializable>())
     .addType(
-      TypeSpec.classBuilder("Custom")
+      TypeSpec.classBuilder("OpenCase")
         .addModifiers(KModifier.VALUE)
         .addAnnotation(annotationSpec<JvmInline>())
         .primaryConstructor(FunSpec.constructorBuilder().addParameter("value", STRING).build())
@@ -344,7 +350,7 @@ fun Model.Enum.Open.toTypeSpec(): TypeSpec {
                           Nam.toClassName(nested)
                         )
                       }
-                      addStatement("Pair(Custom::class) { Custom(value) }")
+                      addStatement("Pair(OpenCase::class) { OpenCase(value) }")
                     }
                     .addStatement(")")
                     .build()

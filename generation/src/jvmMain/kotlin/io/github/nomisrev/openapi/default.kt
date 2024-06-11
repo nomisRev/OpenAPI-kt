@@ -10,9 +10,9 @@ fun ParameterSpec.Builder.defaultValue(model: Model): ParameterSpec.Builder =
 
 private fun defaultValueImpl(model: Model): Pair<String, List<Any>>? =
   when (model) {
-    Model.Binary -> null
+    is Model.OctetStream -> null
     is Collection.Map -> null
-    Model.FreeFormJson -> null
+    is Model.FreeFormJson -> null
     is Collection.List -> default(model, "listOf", model.default)
     is Collection.Set -> default(model, "setOf", model.default)
     is Model.Union ->
@@ -32,8 +32,8 @@ private fun defaultValueImpl(model: Model): Pair<String, List<Any>>? =
       (model.default ?: model.values.singleOrNull())?.let {
         Pair("%T.%L", listOf(Nam.toClassName(model.context), Nam.toEnumValueName(it)))
       }
+    is Model.Primitive.Unit -> Pair("Unit", emptyList())
     is Model.Primitive -> model.default()?.let { Pair(it, emptyList()) }
-    Model.Primitive.Unit -> Pair("Unit", emptyList())
   }
 
 private fun default(

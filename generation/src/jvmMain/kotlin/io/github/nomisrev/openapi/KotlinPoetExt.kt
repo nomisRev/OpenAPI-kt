@@ -14,6 +14,14 @@ fun TypeName.nullable(): TypeName = copy(nullable = true)
 inline fun <reified A : Annotation> annotationSpec(): AnnotationSpec =
   AnnotationSpec.builder(A::class).build()
 
+fun TypeSpec.Builder.description(kdoc: String?): TypeSpec.Builder = apply {
+  kdoc?.let { addKdoc("%L", it) }
+}
+
+fun ParameterSpec.Builder.description(kdoc: String?): ParameterSpec.Builder = apply {
+  kdoc?.let { addKdoc("%L", it) }
+}
+
 fun TypeSpec.Companion.dataClassBuilder(
   className: ClassName,
   parameters: List<ParameterSpec>

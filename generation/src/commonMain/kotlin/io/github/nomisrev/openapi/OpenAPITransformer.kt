@@ -220,10 +220,16 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       properties != null -> toObject(context, properties!!)
       additionalProperties != null ->
         when (val aProps = additionalProperties!!) {
-          is AdditionalProperties.PSchema -> toMap(context, aProps)
-          is Allowed -> toRawJson(aProps)
+          is AdditionalProperties.PSchema ->
+            Collection.Map(aProps.value.resolve().toModel(context), description)
+          is Allowed ->
+            if (aProps.value) Model.FreeFormJson(description)
+            else
+              throw IllegalStateException(
+                "Illegal State: No additional properties allowed on empty object."
+              )
         }
-      else -> toRawJson(Allowed(true))
+      else -> Model.FreeFormJson(description)
     }
 
   fun Schema.toObject(context: NamingContext, properties: Map<String, ReferenceOr<Schema>>): Model =
@@ -256,25 +262,21 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     return Enum.Open(context, values, default, description)
   }
 
-  fun toMap(context: NamingContext, additionalSchema: AdditionalProperties.PSchema): Model =
-    Collection.Map(additionalSchema.value.resolve().toModel(context))
-
-  fun toRawJson(allowed: Allowed): Model =
-    if (allowed.value) Model.FreeFormJson
-    else
-      throw IllegalStateException(
-        "Illegal State: No additional properties allowed on empty object."
-      )
-
   fun Schema.toPrimitive(context: NamingContext, basic: Type.Basic): Model =
     when (basic) {
-      Type.Basic.Object -> toRawJson(Allowed(true))
-      Type.Basic.Boolean -> Primitive.Boolean(default?.toString()?.toBoolean())
-      Type.Basic.Integer -> Primitive.Int(default?.toString()?.toIntOrNull())
-      Type.Basic.Number -> Primitive.Double(default?.toString()?.toDoubleOrNull())
+      Type.Basic.Object ->
+        if (Allowed(true).value) Model.FreeFormJson(description)
+        else
+          throw IllegalStateException(
+            "Illegal State: No additional properties allowed on empty object."
+          )
+      Type.Basic.Boolean -> Primitive.Boolean(default?.toString()?.toBoolean(), description)
+      Type.Basic.Integer -> Primitive.Int(default?.toString()?.toIntOrNull(), description)
+      Type.Basic.Number -> Primitive.Double(default?.toString()?.toDoubleOrNull(), description)
       Type.Basic.Array -> collection(context)
       Type.Basic.String ->
-        if (format == "binary") Model.Binary else Primitive.String(default?.toString())
+        if (format == "binary") Model.OctetStream(description)
+        else Primitive.String(default?.toString(), description)
       Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
     }
 
@@ -294,8 +296,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         }
         null -> null
       }
-    return if (uniqueItems == true) Collection.Set(inner, default)
-    else Collection.List(inner, default)
+    return if (uniqueItems == true) Collection.Set(inner, default, description)
+    else Collection.List(inner, default, description)
   }
 
   fun Schema.type(context: NamingContext, type: Type): Model =
@@ -472,9 +474,14 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                         }
                       }
                       .let(create)
-                  Route.Body.Json.Defined(json.toModel(context), mediaType.extensions)
+
+                  Route.Body.Json.Defined(
+                    json.toModel(context),
+                    body.description,
+                    mediaType.extensions
+                  )
                 }
-                  ?: Route.Body.Json.FreeForm(mediaType.extensions)
+                  ?: Route.Body.Json.FreeForm(body.description, mediaType.extensions)
               Pair(ApplicationJson, json)
             }
             MultipartFormData.matches(contentType) -> {
@@ -499,7 +506,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                 when (resolved) {
                   is Resolved.Ref -> {
                     val model = resolved.toModel(Named(resolved.name)) as Resolved.Ref
-                    Route.Body.Multipart.Ref(model, mediaType.extensions)
+                    Route.Body.Multipart.Ref(model, body.description, mediaType.extensions)
                   }
                   is Resolved.Value ->
                     Route.Body.Multipart.Value(
@@ -507,6 +514,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                         val resolved = ref.resolve()
                         Route.Body.Multipart.FormData(name, resolved.toModel(ctx(name)))
                       },
+                      body.description,
                       mediaType.extensions
                     )
                 }
@@ -514,7 +522,10 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               Pair(MultipartFormData, multipart)
             }
             ApplicationOctetStream.matches(contentType) ->
-              Pair(ApplicationOctetStream, Route.Body.OctetStream(mediaType.extensions))
+              Pair(
+                ApplicationOctetStream,
+                Route.Body.OctetStream(body.description, mediaType.extensions)
+              )
             else ->
               throw IllegalStateException("RequestBody content type: $this not yet supported.")
           }
@@ -534,7 +545,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val response = refOrResponse.get()
         when {
           response.content.contains("application/octet-stream") ->
-            Pair(statusCode, Route.ReturnType(Resolved.Value(Model.Binary), response.extensions))
+            Pair(
+              statusCode,
+              Route.ReturnType(
+                Resolved.Value(Model.OctetStream(response.description)),
+                response.extensions
+              )
+            )
           response.content.contains("application/json") -> {
             val mediaType = response.content.getValue("application/json")
             val route =
@@ -553,14 +570,26 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   Route.ReturnType(resolved.toModel(context), response.extensions)
                 }
                 null ->
-                  Route.ReturnType(Resolved.Value(toRawJson(Allowed(true))), response.extensions)
+                  Route.ReturnType(
+                    Resolved.Value(
+                      if (Allowed(true).value) Model.FreeFormJson(response.description)
+                      else
+                        throw IllegalStateException(
+                          "Illegal State: No additional properties allowed on empty object."
+                        )
+                    ),
+                    response.extensions
+                  )
               }
             Pair(statusCode, route)
           }
           response.isEmpty() ->
             Pair(
               statusCode,
-              Route.ReturnType(Resolved.Value(Primitive.String(null)), response.extensions)
+              Route.ReturnType(
+                Resolved.Value(Primitive.String(null, response.description)),
+                response.extensions
+              )
             )
           else ->
             throw IllegalStateException("OpenAPI requires at least 1 valid response. $response")

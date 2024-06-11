@@ -34,37 +34,51 @@ data class Route(
   }
 
   sealed interface Body {
+    val description: String?
     val extensions: Map<String, JsonElement>
 
-    data class OctetStream(override val extensions: Map<String, JsonElement>) : Body
+    data class OctetStream(
+      override val description: String?,
+      override val extensions: Map<String, JsonElement>
+    ) : Body
 
     sealed interface Json : Body {
       val type: Resolved<Model>
 
-      data class FreeForm(override val extensions: Map<String, JsonElement>) : Json {
-        override val type: Resolved<Model> = Resolved.Value(Model.FreeFormJson)
+      data class FreeForm(
+        override val description: String?,
+        override val extensions: Map<String, JsonElement>
+      ) : Json {
+        override val type: Resolved<Model> = Resolved.Value(Model.FreeFormJson(description))
       }
 
       data class Defined(
         override val type: Resolved<Model>,
+        override val description: String?,
         override val extensions: Map<String, JsonElement>
       ) : Json
     }
 
-    data class Xml(val type: Model, override val extensions: Map<String, JsonElement>) : Body
+    data class Xml(
+      val type: Model,
+      override val description: String?,
+      override val extensions: Map<String, JsonElement>
+    ) : Body
 
     sealed interface Multipart : Body {
-      val parameters: List<Multipart.FormData>
+      val parameters: List<FormData>
 
       data class FormData(val name: String, val type: Resolved<Model>)
 
       data class Value(
         val parameters: List<FormData>,
+        override val description: String?,
         override val extensions: Map<String, JsonElement>
       ) : Body, List<FormData> by parameters
 
       data class Ref(
         val value: Resolved.Ref<Model>,
+        override val description: String?,
         override val extensions: Map<String, JsonElement>
       ) : Multipart {
         override val parameters: List<FormData> = listOf(FormData(value.name, value))
@@ -124,17 +138,21 @@ sealed interface Resolved<A> {
  * needs to generate a name has a [NamingContext], see [NamingContext] for more details.
  */
 sealed interface Model {
+  val description: String?
 
   sealed interface Primitive : Model {
-    data class Int(val default: kotlin.Int?) : Primitive
+    data class Int(val default: kotlin.Int?, override val description: kotlin.String?) : Primitive
 
-    data class Double(val default: kotlin.Double?) : Primitive
+    data class Double(val default: kotlin.Double?, override val description: kotlin.String?) :
+      Primitive
 
-    data class Boolean(val default: kotlin.Boolean?) : Primitive
+    data class Boolean(val default: kotlin.Boolean?, override val description: kotlin.String?) :
+      Primitive
 
-    data class String(val default: kotlin.String?) : Primitive
+    data class String(val default: kotlin.String?, override val description: kotlin.String?) :
+      Primitive
 
-    data object Unit : Primitive
+    data class Unit(override val description: kotlin.String?) : Primitive
 
     fun default(): kotlin.String? =
       when (this) {
@@ -146,32 +164,35 @@ sealed interface Model {
       }
   }
 
-  data object Binary : Model
+  data class OctetStream(override val description: String?) : Model
 
-  data object FreeFormJson : Model
+  data class FreeFormJson(override val description: String?) : Model
 
   sealed interface Collection : Model {
     val inner: Resolved<Model>
 
     data class List(
       override val inner: Resolved<Model>,
-      val default: kotlin.collections.List<String>?
+      val default: kotlin.collections.List<String>?,
+      override val description: String?
     ) : Collection
 
     data class Set(
       override val inner: Resolved<Model>,
-      val default: kotlin.collections.List<String>?
+      val default: kotlin.collections.List<String>?,
+      override val description: String?
     ) : Collection
 
-    data class Map(override val inner: Resolved<Model>) : Collection {
-      val key = Primitive.String(null)
+    data class Map(override val inner: Resolved<Model>, override val description: String?) :
+      Collection {
+      val key = Primitive.String(null, null)
     }
   }
 
   @Serializable
   data class Object(
     val context: NamingContext,
-    val description: String?,
+    override val description: String?,
     val properties: List<Property>
   ) : Model {
     val inline: List<Model> =
@@ -206,7 +227,7 @@ sealed interface Model {
     val context: NamingContext,
     val cases: List<Case>,
     val default: String?,
-    val description: String?
+    override val description: String?
   ) : Model {
     val inline: List<Model> =
       cases.mapNotNull {
@@ -229,7 +250,7 @@ sealed interface Model {
     val context: NamingContext
     val values: List<String>
     val default: String?
-    val description: String?
+    override val description: String?
 
     data class Closed(
       override val context: NamingContext,

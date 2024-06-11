@@ -179,6 +179,7 @@ private fun API.toImplementation(outerContext: NamingContext? = null): TypeSpec 
 
 private fun Route.toFun(implemented: Boolean): FunSpec =
   FunSpec.builder(Nam.toParamName(Named(operation.operationId!!)))
+    .apply { operation.summary?.let { addKdoc(it) } }
     .addModifiers(KModifier.SUSPEND, if (implemented) KModifier.OVERRIDE else KModifier.ABSTRACT)
     .addParameters(params(defaults = !implemented))
     .addParameters(requestBody(defaults = !implemented))
@@ -290,6 +291,7 @@ private fun Route.params(defaults: Boolean): List<ParameterSpec> =
         input.type.toTypeName().copy(nullable = !input.isRequired)
       )
       .apply {
+        input.description?.let { addKdoc(it) }
         if (defaults) {
           defaultValue(input.type.value)
           if (!input.isRequired && !input.type.value.hasDefault()) {
@@ -302,15 +304,27 @@ private fun Route.params(defaults: Boolean): List<ParameterSpec> =
 
 // TODO support binary, and Xml
 private fun Route.requestBody(defaults: Boolean): List<ParameterSpec> {
-  fun parameter(name: String, type: Resolved<Model>, nullable: Boolean): ParameterSpec =
+  fun parameter(
+    name: String,
+    type: Resolved<Model>,
+    nullable: Boolean,
+    description: String?
+  ): ParameterSpec =
     ParameterSpec.builder(name, type.toTypeName().copy(nullable = nullable))
       .apply { if (defaults && nullable) defaultValue("null") }
       .build()
 
-  return (body.jsonOrNull()?.let { json -> listOf(parameter("body", json.type, !body.required)) }
+  return (body.jsonOrNull()?.let { json ->
+      listOf(parameter("body", json.type, !body.required, json.description))
+    }
       ?: body.multipartOrNull()?.let { multipart ->
         multipart.parameters.map { parameter ->
-          parameter(Nam.toParamName(Named(parameter.name)), parameter.type, !body.required)
+          parameter(
+            Nam.toParamName(Named(parameter.name)),
+            parameter.type,
+            !body.required,
+            parameter.type.value.description
+          )
         }
       })
     .orEmpty()
@@ -321,7 +335,7 @@ private fun Route.returnType(): TypeName {
   val success =
     returnType.types.toSortedMap { s1, s2 -> s1.code.compareTo(s2.code) }.entries.first()
   return when (success.value.type.value) {
-    is Model.Binary -> HttpResponse
+    is Model.OctetStream -> HttpResponse
     else -> success.value.type.toTypeName()
   }
 }
