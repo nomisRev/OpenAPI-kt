@@ -17,25 +17,24 @@ import kotlinx.serialization.json.JsonElement
 
 private val UploadTypeSpec: TypeSpec =
   TypeSpec.dataClassBuilder(
-    ClassName(`package`, "UploadFile"),
-    listOf(
-      ParameterSpec.builder("filename", String::class).build(),
-      ParameterSpec.builder("contentType", ContentType.nullable())
-        .defaultValue("null")
-        .build(),
-      ParameterSpec.builder("size", Long::class.asTypeName().nullable())
-        .defaultValue("null")
-        .build(),
-      ParameterSpec.builder(
-        "bodyBuilder",
-        LambdaTypeName.get(
-          receiver = ClassName("io.ktor.utils.io.core", "BytePacketBuilder"),
-          returnType = Unit::class.asTypeName()
-        )
+      ClassName(`package`, "UploadFile"),
+      listOf(
+        ParameterSpec.builder("filename", String::class).build(),
+        ParameterSpec.builder("contentType", ContentType.nullable()).defaultValue("null").build(),
+        ParameterSpec.builder("size", Long::class.asTypeName().nullable())
+          .defaultValue("null")
+          .build(),
+        ParameterSpec.builder(
+            "bodyBuilder",
+            LambdaTypeName.get(
+              receiver = ClassName("io.ktor.utils.io.core", "BytePacketBuilder"),
+              returnType = Unit::class.asTypeName()
+            )
+          )
+          .build()
       )
-        .build()
     )
-  ).build()
+    .build()
 
 private val errors: ParameterizedTypeName =
   ClassName("kotlin.collections", "Map")
@@ -92,9 +91,9 @@ val predef: FileSpec =
                 receiver = null,
                 returnType = TypeVariableName("A"),
                 parameters =
-                listOf(
-                  ParameterSpec.unnamed(ClassName("kotlinx.serialization.json", "JsonElement"))
-                )
+                  listOf(
+                    ParameterSpec.unnamed(ClassName("kotlinx.serialization.json", "JsonElement"))
+                  )
               )
             ),
           KModifier.VARARG

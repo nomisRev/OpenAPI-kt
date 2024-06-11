@@ -16,7 +16,6 @@ data class Route(
   val returnType: Returns,
   val extensions: Map<String, JsonElement>
 ) {
-
   data class Bodies(
     /** Request bodies are optional by default! */
     val required: Boolean,

@@ -42,26 +42,23 @@ object Nam {
       is NamingContext.Nested -> {
         val outer = toClassName(context.outer)
         val inner = toClassName(context.inner)
-        ClassName(
-          `package`,
-          outer.simpleNames + inner.simpleNames
-        )
+        ClassName(`package`, outer.simpleNames + inner.simpleNames)
       }
-
-      is NamingContext.Named ->
-        ClassName(`package`, context.name.toPascalCase().dropArraySyntax())
-
+      is NamingContext.Named -> ClassName(`package`, context.name.toPascalCase().dropArraySyntax())
       is NamingContext.RouteParam -> {
         requireNotNull(context.operationId) { "Need operationId to generate enum name" }
         ClassName(
           `package`,
-          // $OuterClass$MyOperation$Param, this allows for multiple custom objects in a single operation
+          // $OuterClass$MyOperation$Param, this allows for multiple custom objects in a single
+          // operation
           "${context.operationId.toPascalCase()}${context.name.toPascalCase()}".dropArraySyntax()
         )
       }
-
       is NamingContext.RouteBody ->
-        ClassName(`package`, "${context.name.toPascalCase()}${context.postfix.toPascalCase()}".dropArraySyntax())
+        ClassName(
+          `package`,
+          "${context.name.toPascalCase()}${context.postfix.toPascalCase()}".dropArraySyntax()
+        )
     }
 
   fun toEnumValueName(rawToName: String): String {
@@ -91,14 +88,13 @@ object Nam {
       Model.Primitive.Unit -> "Unit"
     }
 
-  fun toPropName(objContext: NamingContext, param: Model.Object.Property): String =
+  fun toPropName(param: Model.Object.Property): String =
     param.baseName.sanitize().dropArraySyntax().toCamelCase()
 
-  fun toParamName(named: NamingContext.Named): String =
-    toClassName(named)
-      .simpleNames
-      .last()
-      .replaceFirstChar { it.lowercase() }
+  fun toParamName(className: ClassName): String =
+    className.simpleName.replaceFirstChar { it.lowercase() }
+
+  fun toParamName(named: NamingContext.Named): String = toParamName(toClassName(named))
 
   // Workaround for OpenAI
   private fun String.dropArraySyntax(): String = replace("[]", "")
@@ -132,19 +128,14 @@ object Nam {
           }
 
         val unionCaseName = "Case${typeName(case)}${s}$postfix"
-        ClassName(
-          `package`,
-          toClassName(union.context).simpleNames + unionCaseName
-        )
+        ClassName(`package`, toClassName(union.context).simpleNames + unionCaseName)
       }
     }
 }
 
-val ContentType =
-  ClassName("io.ktor.http", "ContentType")
+val ContentType = ClassName("io.ktor.http", "ContentType")
 
-val HttpResponse =
-  ClassName("io.ktor.client.statement", "HttpResponse")
+val HttpResponse = ClassName("io.ktor.client.statement", "HttpResponse")
 
 val PrimitiveSerialDescriptor =
   MemberName("kotlinx.serialization.descriptors", "PrimitiveSerialDescriptor")
@@ -157,11 +148,9 @@ val MapSerializer = MemberName("kotlinx.serialization.builtins", "MapSerializer"
 
 val TODO = MemberName("kotlin", "TODO")
 
-val SerialDescriptor =
-  ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
+val SerialDescriptor = ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
 
-fun Resolved<Model>.toTypeName(): TypeName =
-  value.toTypeName()
+fun Resolved<Model>.toTypeName(): TypeName = value.toTypeName()
 
 fun Model.toTypeName(): TypeName =
   when (this) {

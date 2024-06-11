@@ -21,15 +21,15 @@ value class Method private constructor(val value: String) {
   fun isSafe(m: Method): Boolean = safe.contains(m)
 
   companion object {
-    val GET: Method = Method("GET")
-    val HEAD: Method = Method("HEAD")
-    val POST: Method = Method("POST")
-    val PUT: Method = Method("PUT")
-    val DELETE: Method = Method("DELETE")
-    val OPTIONS: Method = Method("OPTIONS")
-    val PATCH: Method = Method("PATCH")
-    val CONNECT: Method = Method("CONNECT")
-    val TRACE: Method = Method("TRACE")
+    val GET: Method = Method("Get")
+    val HEAD: Method = Method("Head")
+    val POST: Method = Method("Post")
+    val PUT: Method = Method("Put")
+    val DELETE: Method = Method("Delete")
+    val OPTIONS: Method = Method("Options")
+    val PATCH: Method = Method("Patch")
+    val CONNECT: Method = Method("Connect")
+    val TRACE: Method = Method("Trace")
 
     val entries: Set<Method> = setOf(GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH, CONNECT, TRACE)
 

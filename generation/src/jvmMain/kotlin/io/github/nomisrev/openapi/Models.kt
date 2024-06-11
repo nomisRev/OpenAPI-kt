@@ -1,25 +1,18 @@
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
-import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
-import com.squareup.kotlinpoet.DOUBLE
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
-import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LIST
-import com.squareup.kotlinpoet.MAP
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.SET
 import com.squareup.kotlinpoet.STRING
-import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.withIndent
 import io.github.nomisrev.openapi.Model.Collection
@@ -38,31 +31,19 @@ import kotlinx.serialization.json.JsonElement
 
 const val `package` = "io.github.nomisrev.openapi"
 
-fun Iterable<Model>.toFileSpecs(): List<FileSpec> =
-  mapNotNull { it.toFileSpec() }
+fun Iterable<Model>.toFileSpecs(): List<FileSpec> = mapNotNull { it.toFileSpec() }
 
 fun Model.toFileSpec(): FileSpec? =
   when (this) {
     is Collection -> inner.value.toFileSpec()
     is Model.Enum.Closed ->
-      FileSpec.builder(`package`, Nam.toClassName(context).simpleName)
-        .addType(toTypeSpec())
-        .build()
+      FileSpec.builder(`package`, Nam.toClassName(context).simpleName).addType(toTypeSpec()).build()
     is Model.Enum.Open ->
-      FileSpec.builder(`package`, Nam.toClassName(context).simpleName)
-        .addType(toTypeSpec())
-        .build()
-
+      FileSpec.builder(`package`, Nam.toClassName(context).simpleName).addType(toTypeSpec()).build()
     is Model.Object ->
-      FileSpec.builder(`package`, Nam.toClassName(context).simpleName)
-        .addType(toTypeSpec())
-        .build()
-
+      FileSpec.builder(`package`, Nam.toClassName(context).simpleName).addType(toTypeSpec()).build()
     is Model.Union ->
-      FileSpec.builder(`package`, Nam.toClassName(context).simpleName)
-        .addType(toTypeSpec())
-        .build()
-
+      FileSpec.builder(`package`, Nam.toClassName(context).simpleName).addType(toTypeSpec()).build()
     Model.Binary,
     is Model.Primitive,
     Model.FreeFormJson -> null
@@ -73,7 +54,6 @@ tailrec fun Model.toTypeSpec(): TypeSpec? =
     is Model.Binary,
     is Model.FreeFormJson,
     is Model.Primitive -> null
-
     is Collection -> inner.value.toTypeSpec()
     is Model.Enum.Closed -> toTypeSpec()
     is Model.Enum.Open -> toTypeSpec()
@@ -107,7 +87,9 @@ fun Model.Union.toTypeSpec(): TypeSpec =
     .addTypes(inline.mapNotNull { it.toTypeSpec() })
     .addType(
       TypeSpec.objectBuilder("Serializer")
-        .addSuperinterface(KSerializer::class.asTypeName().parameterizedBy(Nam.toClassName(context)))
+        .addSuperinterface(
+          KSerializer::class.asTypeName().parameterizedBy(Nam.toClassName(context))
+        )
         .addProperty(
           PropertySpec.builder("descriptor", SerialDescriptor)
             .addModifiers(KModifier.OVERRIDE)
@@ -120,8 +102,7 @@ fun Model.Union.toTypeSpec(): TypeSpec =
                 .add(
                   "%M(%S, %T.SEALED) {\n",
                   MemberName("kotlinx.serialization.descriptors", "buildSerialDescriptor"),
-                  Nam.toClassName(context)
-                    .simpleNames.joinToString("."),
+                  Nam.toClassName(context).simpleNames.joinToString("."),
                   PolymorphicKind::class
                 )
                 .withIndent {
@@ -130,7 +111,8 @@ fun Model.Union.toTypeSpec(): TypeSpec =
                     add(
                       "element(%S, $placeholder.descriptor)\n",
                       Nam.toCaseClassName(this@toTypeSpec, case.model.value)
-                        .simpleNames.joinToString("."),
+                        .simpleNames
+                        .joinToString("."),
                       *values
                     )
                   }
@@ -207,23 +189,22 @@ private fun List<ParameterSpec>.sorted(): List<ParameterSpec> {
  */
 fun Model.Object.toTypeSpec(): TypeSpec =
   TypeSpec.dataClassBuilder(
-    Nam.toClassName(context),
-    properties
-      .map { prop ->
-        val default = prop.model.default()
-        val isRequired = prop.isRequired && default != null
-        ParameterSpec.builder(
-          Nam.toPropName(context, prop),
-          prop.model.toTypeName().copy(nullable = prop.isNullable)
-        )
-          .apply {
-            default?.let { defaultValue(it) }
-            if (isRequired) addAnnotation(annotationSpec<Required>())
-          }
-          .build()
-      }
-      .sorted()
-  )
+      Nam.toClassName(context),
+      properties
+        .map { prop ->
+          ParameterSpec.builder(
+              Nam.toPropName(prop),
+              prop.model.toTypeName().copy(nullable = prop.isNullable)
+            )
+            .defaultValue(prop.model.value)
+            .apply {
+              if (prop.isRequired && !prop.model.value.hasDefault())
+                addAnnotation(annotationSpec<Required>())
+            }
+            .build()
+        }
+        .sorted()
+    )
     .apply {
       // Cannot serialize binary, these are used for multipart requests.
       // This occurs when request bodies are defined using top-level schemas.
@@ -247,7 +228,9 @@ fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
           addEnumConstant(
             valueName,
             TypeSpec.anonymousClassBuilder()
-              .addAnnotation(annotationSpec<SerialName>().toBuilder().addMember("\"$rawName\"").build())
+              .addAnnotation(
+                annotationSpec<SerialName>().toBuilder().addMember("\"$rawName\"").build()
+              )
               .addSuperclassConstructorParameter("\"$rawName\"")
               .build()
           )
@@ -312,12 +295,16 @@ fun Model.Enum.Open.toTypeSpec(): TypeSpec {
         )
         .addType(
           TypeSpec.objectBuilder("Serializer")
-            .addSuperinterface(KSerializer::class.asTypeName().parameterizedBy(Nam.toClassName(context)))
+            .addSuperinterface(
+              KSerializer::class.asTypeName().parameterizedBy(Nam.toClassName(context))
+            )
             .addProperty(
               PropertySpec.builder("descriptor", SerialDescriptor)
                 .addModifiers(KModifier.OVERRIDE)
                 .addAnnotation(
-                  AnnotationSpec.builder(ClassName("kotlinx.serialization", "InternalSerializationApi"))
+                  AnnotationSpec.builder(
+                      ClassName("kotlinx.serialization", "InternalSerializationApi")
+                    )
                     .build()
                 )
                 .initializer(
@@ -380,23 +367,19 @@ private fun Resolved<Model>.serializer(): Pair<String, Array<Any>> =
           values.add(ListSerializer)
           "%M(${inner.value.placeholder()})"
         }
-
         is Collection.Map -> {
           values.add(MapSerializer)
           "%M(${key.placeholder()}, ${inner.value.placeholder()})"
         }
-
         is Collection.Set -> {
           values.add(SetSerializer)
           "%M(${inner.value.placeholder()})"
         }
-
         is Model.Primitive -> {
           values.add(toTypeName())
           values.add(MemberName("kotlinx.serialization.builtins", "serializer", isExtension = true))
           "%T.%M()"
         }
-
         else -> {
           values.add(toTypeName())
           "%T.serializer()"

@@ -22,6 +22,7 @@ kotlin {
       dependencies {
         api(libs.kasechange)
         api(libs.okio)
+        implementation("io.ktor:ktor-client-core:2.3.6")
         api(projects.parser)
       }
     }
