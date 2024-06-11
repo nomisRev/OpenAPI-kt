@@ -1,10 +1,12 @@
 package io.github.nomisrev.openapi
 
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LambdaTypeName
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -42,6 +44,87 @@ private val errors: ParameterizedTypeName =
       ClassName("kotlin.reflect", "KClass").parameterizedBy(TypeVariableName("*")),
       ClassName("kotlinx.serialization", "SerializationException")
     )
+
+private val appendAll: FunSpec =
+  FunSpec.builder("appendAll")
+    .addAnnotation(
+      AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+        .addMember("%L::class", "io.ktor.util.InternalAPI")
+        .build()
+    )
+    .addTypeVariable(TypeVariableName("T", Any::class))
+    .receiver(ClassName("io.ktor.client.request.forms", "FormBuilder"))
+    .addParameter("key", String::class)
+    .addParameter("value", TypeVariableName("T").nullable())
+    .addParameter(
+      ParameterSpec.builder("headers", ClassName("io.ktor.http", "Headers"))
+        .defaultValue("%T.Empty", ClassName("io.ktor.http", "Headers"))
+        .build()
+    )
+    .addCode(
+      """
+      when (value) {
+        is String -> append(key, value, headers)
+        is Number -> append(key, value, headers)
+        is Boolean -> append(key, value, headers)
+        is ByteArray -> append(key, value, headers)
+        is %T -> append(key, value, headers)
+        is %T -> append(key, value, headers)
+        is %T -> append(key, value, headers)
+        is UploadFile -> appendUploadedFile(key, value)
+        is Enum<*> -> append(key, serialNameOrEnumValue(value), headers)
+        null -> Unit
+        else -> append(key, value, headers)
+      }
+      """
+        .trimIndent(),
+      ClassName("io.ktor.utils.io.core", "ByteReadPacket"),
+      ClassName("io.ktor.client.request.forms", "InputProvider"),
+      ClassName("io.ktor.client.request.forms", "ChannelProvider")
+    )
+    .build()
+
+private val appendUploadedFile: FunSpec =
+  FunSpec.builder("appendUploadedFile")
+    .receiver(ClassName("io.ktor.client.request.forms", "FormBuilder"))
+    .addModifiers(KModifier.PRIVATE)
+    .addParameter("key", String::class)
+    .addParameter("file", ClassName(`package`, "UploadFile"))
+    .addCode(
+      """
+      %M(
+        key = key,
+        filename = file.filename,
+        contentType = file.contentType ?: %T.Application.OctetStream,
+        size = file.size,
+        bodyBuilder = file.bodyBuilder
+      )
+      """
+        .trimIndent(),
+      MemberName("io.ktor.client.request.forms", "append", isExtension = true),
+      ContentType
+    )
+    .build()
+
+private val serialNameOrEnumValue: FunSpec =
+  FunSpec.builder("serialNameOrEnumValue")
+    .addModifiers(KModifier.PRIVATE)
+    .addAnnotation(
+      AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+        .addMember("%L::class", "kotlinx.serialization.ExperimentalSerializationApi")
+        .addMember("%L::class", "kotlinx.serialization.InternalSerializationApi")
+        .build()
+    )
+    .addTypeVariable(
+      TypeVariableName("T", ClassName("kotlin", "Enum").parameterizedBy(TypeVariableName("T")))
+    )
+    .returns(String::class)
+    .addParameter("enum", ClassName("kotlin", "Enum").parameterizedBy(TypeVariableName("T")))
+    .addCode(
+      "return enum::class.%M()?.descriptor?.getElementName(enum.ordinal) ?: enum.toString()",
+      MemberName("kotlinx.serialization", "serializerOrNull", isExtension = true)
+    )
+    .build()
 
 val predef: FileSpec =
   FileSpec.builder("io.github.nomisrev.openapi", "Predef")
@@ -150,4 +233,5 @@ val predef: FileSpec =
         .build()
     )
     .addType(UploadTypeSpec)
+    .addFunctions(listOf(appendAll, appendUploadedFile, serialNameOrEnumValue))
     .build()

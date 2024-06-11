@@ -3,7 +3,7 @@ package io.github.nomisrev.openapi
 // TODO: make hard-coded.
 //  We're opinionated about the API structure
 internal fun interface ApiSorter {
-  suspend fun sort(routes: Iterable<Route>): Root
+  fun sort(routes: Iterable<Route>): Root
 
   companion object {
     val ByPath: ApiSorter = ByPathApiSorter
@@ -46,7 +46,7 @@ private data class APIBuilder(
 }
 
 private object ByPathApiSorter : ApiSorter {
-  override suspend fun sort(routes: Iterable<Route>): Root {
+  override fun sort(routes: Iterable<Route>): Root {
     val root = RootBuilder("OpenAPI", mutableListOf(), mutableListOf())
     routes.forEach { route ->
       // Reduce paths like `/threads/{thread_id}/runs/{run_id}/submit_tool_outputs`

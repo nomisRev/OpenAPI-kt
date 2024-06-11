@@ -9,7 +9,6 @@ abstract class OpenAPIPlugin : Plugin<Project> {
 
     project.tasks.register("generateOpenApiClient", GenerateClientTask::class.java) {
       it.spec.set(extension.spec)
-      it.outputDir.set(extension.output)
     }
   }
 }

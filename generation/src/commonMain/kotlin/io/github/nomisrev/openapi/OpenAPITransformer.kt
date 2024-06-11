@@ -14,8 +14,7 @@ import io.github.nomisrev.openapi.http.MediaType.Companion.MultipartFormData
 import io.github.nomisrev.openapi.http.Method
 import io.github.nomisrev.openapi.http.StatusCode
 
-suspend fun OpenAPI.routes(): Root =
-  OpenAPITransformer(this).routes().let { ApiSorter.ByPath.sort(it) }
+fun OpenAPI.routes(): Root = OpenAPITransformer(this).routes().let { ApiSorter.ByPath.sort(it) }
 
 fun OpenAPI.models(): Set<Model> =
   with(OpenAPITransformer(this)) { schemas() }

@@ -62,7 +62,7 @@ tailrec fun Model.toTypeSpec(): TypeSpec? =
   }
 
 @OptIn(ExperimentalSerializationApi::class)
-fun Model.Union.toTypeSpec(): TypeSpec =
+private fun Model.Union.toTypeSpec(): TypeSpec =
   TypeSpec.interfaceBuilder(Nam.toClassName(context))
     .description(description)
     .addModifiers(KModifier.SEALED)
@@ -189,7 +189,7 @@ private fun List<ParameterSpec>.sorted(): List<ParameterSpec> {
  * Generating data classes with KotlinPoet!?
  * https://stackoverflow.com/questions/44483831/generate-data-class-with-kotlinpoet
  */
-fun Model.Object.toTypeSpec(): TypeSpec =
+private fun Model.Object.toTypeSpec(): TypeSpec =
   TypeSpec.dataClassBuilder(
       Nam.toClassName(context),
       properties
@@ -218,7 +218,7 @@ fun Model.Object.toTypeSpec(): TypeSpec =
     .addTypes(inline.mapNotNull { it.toTypeSpec() })
     .build()
 
-fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
+private fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
   val rawToName = values.map { rawName -> Pair(rawName, Nam.toEnumValueName(rawName)) }
   val isSimple = rawToName.all { (rawName, valueName) -> rawName == valueName }
   val enumName = Nam.toClassName(context)
@@ -245,7 +245,7 @@ fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
     .build()
 }
 
-fun Model.Enum.Open.toTypeSpec(): TypeSpec {
+private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
   val rawToName = values.map { rawName -> Pair(rawName, Nam.toEnumValueName(rawName)) }
   val enumName = Nam.toClassName(context)
   return TypeSpec.interfaceBuilder(enumName)
