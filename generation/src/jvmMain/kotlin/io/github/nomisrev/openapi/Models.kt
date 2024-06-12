@@ -194,10 +194,20 @@ private fun Model.Object.toTypeSpec(): TypeSpec =
       Nam.toClassName(context),
       properties
         .map { prop ->
+          val propName = Nam.toPropName(prop)
           ParameterSpec.builder(
               Nam.toPropName(prop),
               prop.model.toTypeName().copy(nullable = prop.isNullable)
             )
+            .apply {
+              if (propName != prop.baseName)
+                addAnnotation(
+                  annotationSpec<SerialName>()
+                    .toBuilder()
+                    .addMember("%S", prop.baseName)
+                    .build()
+                )
+            }
             .description(prop.description)
             .defaultValue(prop.model.value)
             .apply {
