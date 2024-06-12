@@ -7,12 +7,7 @@ import io.github.nomisrev.openapi.Model.Object.Property
 import io.github.nomisrev.openapi.Model.Primitive
 import io.github.nomisrev.openapi.NamingContext.Named
 import io.github.nomisrev.openapi.Schema.Type
-import io.github.nomisrev.openapi.http.MediaType.Companion.ApplicationJson
-import io.github.nomisrev.openapi.http.MediaType.Companion.ApplicationOctetStream
-import io.github.nomisrev.openapi.http.MediaType.Companion.ApplicationXml
-import io.github.nomisrev.openapi.http.MediaType.Companion.MultipartFormData
-import io.github.nomisrev.openapi.http.Method
-import io.github.nomisrev.openapi.http.StatusCode
+import io.ktor.http.*
 
 fun OpenAPI.routes(): List<Route> =
   OpenAPITransformer(this).routes()
@@ -41,17 +36,17 @@ fun OpenAPI.models(): Set<Model> =
  */
 private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
-  fun operations(): List<Triple<String, Method, Operation>> =
+  fun operations(): List<Triple<String, HttpMethod, Operation>> =
     openAPI.paths.entries.flatMap { (path, p) ->
       listOfNotNull(
-        p.get?.let { Triple(path, Method.GET, it) },
-        p.put?.let { Triple(path, Method.PUT, it) },
-        p.post?.let { Triple(path, Method.POST, it) },
-        p.delete?.let { Triple(path, Method.DELETE, it) },
-        p.head?.let { Triple(path, Method.HEAD, it) },
-        p.options?.let { Triple(path, Method.OPTIONS, it) },
-        p.trace?.let { Triple(path, Method.TRACE, it) },
-        p.patch?.let { Triple(path, Method.PATCH, it) },
+        p.get?.let { Triple(path, HttpMethod.Get, it) },
+        p.put?.let { Triple(path, HttpMethod.Put, it) },
+        p.post?.let { Triple(path, HttpMethod.Post, it) },
+        p.delete?.let { Triple(path, HttpMethod.Delete, it) },
+        p.head?.let { Triple(path, HttpMethod.Head, it) },
+        p.options?.let { Triple(path, HttpMethod.Options, it) },
+        p.trace?.let { Triple(path, HttpMethod.parse("Trace"), it) },
+        p.patch?.let { Triple(path, HttpMethod.Patch, it) },
       )
     }
 
@@ -462,8 +457,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         ?.entries
         ?.associate { (contentType, mediaType) ->
           when {
-            ApplicationXml.matches(contentType) -> TODO("Add support for XML.")
-            ApplicationJson.matches(contentType) -> {
+            ContentType.Application.Xml.match(contentType) -> TODO("Add support for XML.")
+            ContentType.Application.Json.match(contentType) -> {
               val json =
                 mediaType.schema?.resolve()?.let { json ->
                   val context =
@@ -482,9 +477,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   )
                 }
                   ?: Route.Body.Json.FreeForm(body.description, mediaType.extensions)
-              Pair(ApplicationJson, json)
+              Pair(ContentType.Application.Json, json)
             }
-            MultipartFormData.matches(contentType) -> {
+            ContentType.MultiPart.FormData.match(contentType) -> {
               val resolved =
                 mediaType.schema?.resolve()
                   ?: throw IllegalStateException(
@@ -519,11 +514,11 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                     )
                 }
 
-              Pair(MultipartFormData, multipart)
+              Pair(ContentType.MultiPart.FormData, multipart)
             }
-            ApplicationOctetStream.matches(contentType) ->
+            ContentType.Application.OctetStream.match(contentType) ->
               Pair(
-                ApplicationOctetStream,
+                ContentType.Application.OctetStream,
                 Route.Body.OctetStream(body.description, mediaType.extensions)
               )
             else ->
@@ -541,7 +536,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   fun toResponses(operation: Operation, create: (NamingContext) -> NamingContext): Route.Returns =
     Route.Returns(
       operation.responses.responses.entries.associate { (code, refOrResponse) ->
-        val statusCode = StatusCode.orThrow(code)
+        val statusCode = HttpStatusCode.fromValue(code)
         val response = refOrResponse.get()
         when {
           response.content.contains("application/octet-stream") ->

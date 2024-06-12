@@ -333,7 +333,7 @@ private fun Route.requestBody(defaults: Boolean): List<ParameterSpec> {
 // TODO generate an ADT to properly support all return types
 private fun Route.returnType(): TypeName {
   val success =
-    returnType.types.toSortedMap { s1, s2 -> s1.code.compareTo(s2.code) }.entries.first()
+    returnType.types.toSortedMap { s1, s2 -> s1.compareTo(s2) }.entries.first()
   return when (success.value.type.value) {
     is Model.OctetStream -> HttpResponse
     else -> success.value.type.toTypeName()

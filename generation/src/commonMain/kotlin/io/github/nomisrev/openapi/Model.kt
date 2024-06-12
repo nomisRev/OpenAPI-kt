@@ -1,8 +1,8 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.http.MediaType
-import io.github.nomisrev.openapi.http.Method
-import io.github.nomisrev.openapi.http.StatusCode
+import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonElement
 data class Route(
   val operation: Operation,
   val path: String,
-  val method: Method,
+  val method: HttpMethod,
   val body: Bodies,
   val input: List<Input>,
   val returnType: Returns,
@@ -19,18 +19,18 @@ data class Route(
   data class Bodies(
     /** Request bodies are optional by default! */
     val required: Boolean,
-    val types: Map<MediaType, Body>,
+    val types: Map<ContentType, Body>,
     val extensions: Map<String, JsonElement>
-  ) : Map<MediaType, Body> by types {
-    fun jsonOrNull(): Body.Json? = types.getOrElse(MediaType.ApplicationJson) { null } as? Body.Json
+  ) : Map<ContentType, Body> by types {
+    fun jsonOrNull(): Body.Json? = types.getOrElse(ContentType.Application.Json) { null } as? Body.Json
 
     fun octetStreamOrNull(): Body.OctetStream? =
-      types.getOrElse(MediaType.ApplicationOctetStream) { null } as? Body.OctetStream
+      types.getOrElse(ContentType.Application.OctetStream) { null } as? Body.OctetStream
 
-    fun xmlOrNull(): Body.Xml? = types.getOrElse(MediaType.ApplicationXml) { null } as? Body.Xml
+    fun xmlOrNull(): Body.Xml? = types.getOrElse(ContentType.Application.Xml) { null } as? Body.Xml
 
     fun multipartOrNull(): Body.Multipart? =
-      types.getOrElse(MediaType.MultipartFormData) { null } as? Body.Multipart
+      types.getOrElse(ContentType.MultiPart.FormData) { null } as? Body.Multipart
   }
 
   sealed interface Body {
@@ -96,9 +96,9 @@ data class Route(
   )
 
   data class Returns(
-    val types: Map<StatusCode, ReturnType>,
+    val types: Map<HttpStatusCode, ReturnType>,
     val extensions: Map<String, JsonElement>
-  ) : Map<StatusCode, ReturnType> by types
+  ) : Map<HttpStatusCode, ReturnType> by types
 
   // Required, isNullable ???
   data class ReturnType(val type: Resolved<Model>, val extensions: Map<String, JsonElement>)
@@ -117,7 +117,8 @@ sealed interface Resolved<A> {
 
   data class Ref<A>(val name: String, override val value: A) : Resolved<A>
 
-  @JvmInline value class Value<A>(override val value: A) : Resolved<A>
+  @JvmInline
+  value class Value<A>(override val value: A) : Resolved<A>
 
   fun namedOr(orElse: () -> NamingContext): NamingContext =
     when (this) {
@@ -204,6 +205,7 @@ sealed interface Model {
                 is Resolved.Ref -> null
                 is Resolved.Value -> model.inner.value
               }
+
             else -> model
           }
         else null
@@ -238,6 +240,7 @@ sealed interface Model {
                 is Resolved.Ref -> null
                 is Resolved.Value -> model.inner.value
               }
+
             else -> model
           }
         else null
