@@ -17,7 +17,8 @@ import com.squareup.kotlinpoet.asTypeName
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 
-private val UploadTypeSpec: TypeSpec =
+context(OpenAPIContext)
+private fun uploadTypeSpec(): TypeSpec =
   TypeSpec.dataClassBuilder(
       ClassName(`package`, "UploadFile"),
       listOf(
@@ -84,7 +85,8 @@ private val appendAll: FunSpec =
     )
     .build()
 
-private val appendUploadedFile: FunSpec =
+context(OpenAPIContext)
+private fun appendUploadedFile(): FunSpec =
   FunSpec.builder("appendUploadedFile")
     .receiver(ClassName("io.ktor.client.request.forms", "FormBuilder"))
     .addModifiers(KModifier.PRIVATE)
@@ -126,8 +128,9 @@ private val serialNameOrEnumValue: FunSpec =
     )
     .build()
 
-val predef: FileSpec =
-  FileSpec.builder("io.github.nomisrev.openapi", "Predef")
+context(OpenAPIContext)
+fun predef(): FileSpec =
+  FileSpec.builder(`package`, "Predef")
     .addType(
       TypeSpec.classBuilder("OneOfSerializationException")
         .primaryConstructor(
@@ -232,6 +235,6 @@ val predef: FileSpec =
         )
         .build()
     )
-    .addType(UploadTypeSpec)
-    .addFunctions(listOf(appendAll, appendUploadedFile, serialNameOrEnumValue))
+    .addType(uploadTypeSpec())
+    .addFunctions(listOf(appendAll, appendUploadedFile(), serialNameOrEnumValue))
     .build()

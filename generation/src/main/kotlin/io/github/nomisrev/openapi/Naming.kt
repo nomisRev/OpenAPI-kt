@@ -1,26 +1,24 @@
 package io.github.nomisrev.openapi
 
-import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.DOUBLE
-import com.squareup.kotlinpoet.INT
-import com.squareup.kotlinpoet.LIST
-import com.squareup.kotlinpoet.MAP
-import com.squareup.kotlinpoet.MemberName
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.SET
-import com.squareup.kotlinpoet.STRING
-import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.UNIT
-import com.squareup.kotlinpoet.asTypeName
 import io.github.nomisrev.openapi.Model.Collection
-import kotlinx.serialization.json.JsonElement
 import net.pearx.kasechange.splitter.WordSplitterConfig
 import net.pearx.kasechange.splitter.WordSplitterConfigurable
 import net.pearx.kasechange.toCamelCase
 import net.pearx.kasechange.toPascalCase
 
-object Nam {
+fun Naming(`package`: String): Naming = Nam(`package`)
+
+interface Naming {
+  fun toClassName(context: NamingContext): ClassName
+  fun toEnumValueName(rawToName: String): String
+  fun toPropName(param: Model.Object.Property): String
+  fun toCaseClassName(union: Model.Union, case: Model): ClassName
+  fun toParamName(named: NamingContext.Named): String
+}
+
+private class Nam(private val `package`: String) : Naming {
+
   // OpenAI adds '/', so this WordSplitter takes that into account
   private val wordSplitter =
     WordSplitterConfigurable(
@@ -35,15 +33,14 @@ object Nam {
 
   private fun String.toCamelCase(): String = toCamelCase(wordSplitter)
 
-  private const val `package`: String = "io.github.nomisrev.openapi"
-
-  fun toClassName(context: NamingContext): ClassName =
+  override fun toClassName(context: NamingContext): ClassName =
     when (context) {
       is NamingContext.Nested -> {
         val outer = toClassName(context.outer)
         val inner = toClassName(context.inner)
         ClassName(`package`, outer.simpleNames + inner.simpleNames)
       }
+
       is NamingContext.Named -> ClassName(`package`, context.name.toPascalCase().dropArraySyntax())
       is NamingContext.RouteParam -> {
         requireNotNull(context.operationId) { "Need operationId to generate enum name" }
@@ -54,6 +51,7 @@ object Nam {
           "${context.operationId.toPascalCase()}${context.name.toPascalCase()}".dropArraySyntax()
         )
       }
+
       is NamingContext.RouteBody ->
         ClassName(
           `package`,
@@ -61,7 +59,7 @@ object Nam {
         )
     }
 
-  fun toEnumValueName(rawToName: String): String {
+  override fun toEnumValueName(rawToName: String): String {
     val pascalCase = rawToName.toPascalCase()
     return if (pascalCase.isValidClassname()) pascalCase
     else {
@@ -73,36 +71,27 @@ object Nam {
     }
   }
 
-  private fun typeName(model: Model): String =
-    when (model) {
-      is Collection -> TODO("Cannot occur")
-      is Model.OctetStream -> "Binary"
-      is Model.FreeFormJson -> "JsonElement"
-      is Model.Enum -> toClassName(model.context).simpleName
-      is Model.Object -> toClassName(model.context).simpleName
-      is Model.Union -> toClassName(model.context).simpleName
-      is Model.Primitive.Boolean -> "Boolean"
-      is Model.Primitive.Double -> "Double"
-      is Model.Primitive.Int -> "Int"
-      is Model.Primitive.String -> "String"
-      is Model.Primitive.Unit -> "Unit"
-    }
-
-  fun toPropName(param: Model.Object.Property): String =
+  override fun toPropName(param: Model.Object.Property): String =
     param.baseName.sanitize().dropArraySyntax().toCamelCase()
 
   private fun toParamName(className: ClassName): String =
     className.simpleName.replaceFirstChar { it.lowercase() }
 
-  fun toParamName(named: NamingContext.Named): String = toParamName(toClassName(named))
+  override fun toParamName(named: NamingContext.Named): String = toParamName(toClassName(named))
 
   // Workaround for OpenAI
   private fun String.dropArraySyntax(): String = replace("[]", "")
 
-  fun toCaseClassName(
+  override fun toCaseClassName(
+    union: Model.Union,
+    case: Model
+  ): ClassName =
+    toCaseClassName(union, case, emptyList())
+
+  private fun toCaseClassName(
     union: Model.Union,
     case: Model,
-    depth: List<Collection> = emptyList()
+    depth: List<Collection>
   ): ClassName =
     when (case) {
       is Collection.List -> toCaseClassName(union, case.inner.value, depth + listOf(case))
@@ -127,42 +116,23 @@ object Nam {
             }
           }
 
-        val unionCaseName = "Case${typeName(case)}${s}$postfix"
+        val typeName: String =
+          when (case) {
+            is Collection -> throw RuntimeException("Impossible path.")
+            is Model.OctetStream -> "Binary"
+            is Model.FreeFormJson -> "JsonElement"
+            is Model.Enum -> toClassName(case.context).simpleName
+            is Model.Object -> toClassName(case.context).simpleName
+            is Model.Union -> toClassName(case.context).simpleName
+            is Model.Primitive.Boolean -> "Boolean"
+            is Model.Primitive.Double -> "Double"
+            is Model.Primitive.Int -> "Int"
+            is Model.Primitive.String -> "String"
+            is Model.Primitive.Unit -> "Unit"
+          }
+
+        val unionCaseName = "Case$typeName${s}$postfix"
         ClassName(`package`, toClassName(union.context).simpleNames + unionCaseName)
       }
     }
 }
-
-val ContentType = ClassName("io.ktor.http", "ContentType")
-
-val HttpResponse = ClassName("io.ktor.client.statement", "HttpResponse")
-
-val PrimitiveSerialDescriptor =
-  MemberName("kotlinx.serialization.descriptors", "PrimitiveSerialDescriptor")
-
-val ListSerializer = MemberName("kotlinx.serialization.builtins", "ListSerializer")
-
-val SetSerializer = MemberName("kotlinx.serialization.builtins", "SetSerializer")
-
-val MapSerializer = MemberName("kotlinx.serialization.builtins", "MapSerializer")
-
-val SerialDescriptor = ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
-
-fun Resolved<Model>.toTypeName(): TypeName = value.toTypeName()
-
-fun Model.toTypeName(): TypeName =
-  when (this) {
-    is Model.Primitive.Boolean -> BOOLEAN
-    is Model.Primitive.Double -> DOUBLE
-    is Model.Primitive.Int -> INT
-    is Model.Primitive.String -> STRING
-    is Model.Primitive.Unit -> UNIT
-    is Collection.List -> LIST.parameterizedBy(inner.toTypeName())
-    is Collection.Set -> SET.parameterizedBy(inner.toTypeName())
-    is Collection.Map -> MAP.parameterizedBy(STRING, inner.toTypeName())
-    is Model.OctetStream -> ClassName(`package`, "UploadFile")
-    is Model.FreeFormJson -> JsonElement::class.asTypeName()
-    is Model.Enum -> Nam.toClassName(context)
-    is Model.Object -> Nam.toClassName(context)
-    is Model.Union -> Nam.toClassName(context)
-  }

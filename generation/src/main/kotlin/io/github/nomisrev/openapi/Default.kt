@@ -3,11 +3,14 @@ package io.github.nomisrev.openapi
 import com.squareup.kotlinpoet.ParameterSpec
 import io.github.nomisrev.openapi.Model.Collection
 
+context(OpenAPIContext)
 fun Model.hasDefault(): Boolean = defaultValueImpl(this) != null
 
+context(OpenAPIContext)
 fun ParameterSpec.Builder.defaultValue(model: Model): ParameterSpec.Builder =
   defaultValueImpl(model)?.let { (code, args) -> defaultValue(code, *args.toTypedArray()) } ?: this
 
+context(OpenAPIContext)
 private fun defaultValueImpl(model: Model): Pair<String, List<Any>>? =
   when (model) {
     is Model.OctetStream -> null
@@ -20,22 +23,23 @@ private fun defaultValueImpl(model: Model): Pair<String, List<Any>>? =
         .find { it.model.value is Model.Primitive.String }
         ?.let { case ->
           model.default?.let {
-            val typeName = Nam.toCaseClassName(model, case.model.value)
+            val typeName = toCaseClassName(model, case.model.value)
             Pair("%T(%S)", listOf(typeName, model.default))
           }
         }
     is Model.Object ->
       if (model.properties.all { it.model.value.hasDefault() })
-        Pair("%T()", listOf(Nam.toClassName(model.context)))
+        Pair("%T()", listOf(toClassName(model.context)))
       else null
     is Model.Enum ->
       (model.default ?: model.values.singleOrNull())?.let {
-        Pair("%T.%L", listOf(Nam.toClassName(model.context), Nam.toEnumValueName(it)))
+        Pair("%T.%L", listOf(toClassName(model.context), toEnumValueName(it)))
       }
     is Model.Primitive.Unit -> Pair("Unit", emptyList())
     is Model.Primitive -> model.default()?.let { Pair(it, emptyList()) }
   }
 
+context(OpenAPIContext)
 private fun default(
   model: Collection,
   builder: String,
@@ -46,9 +50,9 @@ private fun default(
     default.isEmpty() -> Pair("emptyList()", emptyList())
     model.inner.value is Model.Enum -> {
       val enum = model.inner.value as Model.Enum
-      val enumClassName = Nam.toClassName(enum.context)
+      val enumClassName = toClassName(enum.context)
       val content = default.joinToString { "%T.%L" }
-      val args = default.flatMap { listOf(enumClassName, Nam.toEnumValueName(it)) }
+      val args = default.flatMap { listOf(enumClassName, toEnumValueName(it)) }
       Pair("$builder($content)", args)
     }
     else -> Pair("$builder(${default.joinToString()})", emptyList())

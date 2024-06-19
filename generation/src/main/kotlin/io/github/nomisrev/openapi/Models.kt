@@ -29,21 +29,21 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
-const val `package` = "io.github.nomisrev.openapi"
-
+context(OpenAPIContext)
 fun Iterable<Model>.toFileSpecs(): List<FileSpec> = mapNotNull { it.toFileSpec() }
 
+context(OpenAPIContext)
 fun Model.toFileSpec(): FileSpec? =
   when (this) {
     is Collection -> inner.value.toFileSpec()
     is Model.Enum.Closed ->
-      FileSpec.builder(`package`, Nam.toClassName(context).simpleName).addType(toTypeSpec()).build()
+      FileSpec.builder(`package`, toClassName(context).simpleName).addType(toTypeSpec()).build()
     is Model.Enum.Open ->
-      FileSpec.builder(`package`, Nam.toClassName(context).simpleName).addType(toTypeSpec()).build()
+      FileSpec.builder(`package`, toClassName(context).simpleName).addType(toTypeSpec()).build()
     is Model.Object ->
-      FileSpec.builder(`package`, Nam.toClassName(context).simpleName).addType(toTypeSpec()).build()
+      FileSpec.builder(`package`, toClassName(context).simpleName).addType(toTypeSpec()).build()
     is Model.Union ->
-      FileSpec.builder(`package`, Nam.toClassName(context).simpleName).addType(toTypeSpec()).build()
+      FileSpec.builder(`package`, toClassName(context).simpleName).addType(toTypeSpec()).build()
     is Model.OctetStream,
     is Model.Primitive,
     is Model.FreeFormJson -> null
@@ -61,16 +61,17 @@ tailrec fun Model.toTypeSpec(): TypeSpec? =
     is Model.Union -> toTypeSpec()
   }
 
+context(OpenAPIContext)
 @OptIn(ExperimentalSerializationApi::class)
 private fun Model.Union.toTypeSpec(): TypeSpec =
-  TypeSpec.interfaceBuilder(Nam.toClassName(context))
+  TypeSpec.interfaceBuilder(toClassName(context))
     .description(description)
     .addModifiers(KModifier.SEALED)
     .addAnnotation(annotationSpec<Serializable>())
     .addTypes(
       cases.map { case ->
         val model = case.model
-        TypeSpec.classBuilder(Nam.toCaseClassName(this@toTypeSpec, case.model.value).simpleName)
+        TypeSpec.classBuilder(toCaseClassName(this@toTypeSpec, case.model.value).simpleName)
           .description(model.value.description)
           .addModifiers(KModifier.VALUE)
           .addAnnotation(annotationSpec<JvmInline>())
@@ -82,7 +83,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
           .addProperty(
             PropertySpec.builder("value", model.toTypeName()).initializer("value").build()
           )
-          .addSuperinterface(Nam.toClassName(context))
+          .addSuperinterface(toClassName(context))
           .build()
       }
     )
@@ -90,7 +91,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
     .addType(
       TypeSpec.objectBuilder("Serializer")
         .addSuperinterface(
-          KSerializer::class.asTypeName().parameterizedBy(Nam.toClassName(context))
+          KSerializer::class.asTypeName().parameterizedBy(toClassName(context))
         )
         .addProperty(
           PropertySpec.builder("descriptor", SerialDescriptor)
@@ -104,7 +105,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
                 .add(
                   "%M(%S, %T.SEALED) {\n",
                   MemberName("kotlinx.serialization.descriptors", "buildSerialDescriptor"),
-                  Nam.toClassName(context).simpleNames.joinToString("."),
+                  toClassName(context).simpleNames.joinToString("."),
                   PolymorphicKind::class
                 )
                 .withIndent {
@@ -112,7 +113,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
                     val (placeholder, values) = case.model.serializer()
                     add(
                       "element(%S, $placeholder.descriptor)\n",
-                      Nam.toCaseClassName(this@toTypeSpec, case.model.value)
+                      toCaseClassName(this@toTypeSpec, case.model.value)
                         .simpleNames
                         .joinToString("."),
                       *values
@@ -128,7 +129,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
           FunSpec.builder("serialize")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("encoder", ClassName("kotlinx.serialization.encoding", "Encoder"))
-            .addParameter("value", Nam.toClassName(context))
+            .addParameter("value", toClassName(context))
             .addCode(
               CodeBlock.builder()
                 .add("when(value) {\n")
@@ -137,7 +138,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
                     val (placeholder, values) = case.model.serializer()
                     addStatement(
                       "is %T -> encoder.encodeSerializableValue($placeholder, value.value)",
-                      Nam.toCaseClassName(this@toTypeSpec, case.model.value),
+                      toCaseClassName(this@toTypeSpec, case.model.value),
                       *values
                     )
                   }
@@ -151,7 +152,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
           FunSpec.builder("deserialize")
             .addModifiers(KModifier.OVERRIDE)
             .addParameter("decoder", Decoder::class.asTypeName())
-            .returns(Nam.toClassName(context))
+            .returns(toClassName(context))
             .addCode(
               CodeBlock.builder()
                 .add(
@@ -164,8 +165,8 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
                     val (placeholder, values) = case.model.serializer()
                     add(
                       "Pair(%T::class) { %T(%T.decodeFromJsonElement($placeholder, json)) },\n",
-                      Nam.toCaseClassName(this@toTypeSpec, case.model.value),
-                      Nam.toCaseClassName(this@toTypeSpec, case.model.value),
+                      toCaseClassName(this@toTypeSpec, case.model.value),
+                      toCaseClassName(this@toTypeSpec, case.model.value),
                       Json::class.asTypeName(),
                       *values
                     )
@@ -189,14 +190,15 @@ private fun List<ParameterSpec>.sorted(): List<ParameterSpec> {
  * Generating data classes with KotlinPoet!?
  * https://stackoverflow.com/questions/44483831/generate-data-class-with-kotlinpoet
  */
+context(OpenAPIContext)
 private fun Model.Object.toTypeSpec(): TypeSpec =
   TypeSpec.dataClassBuilder(
-      Nam.toClassName(context),
+      toClassName(context),
       properties
         .map { prop ->
-          val propName = Nam.toPropName(prop)
+          val propName = toPropName(prop)
           ParameterSpec.builder(
-              Nam.toPropName(prop),
+              toPropName(prop),
               prop.model.toTypeName().copy(nullable = prop.isNullable)
             )
             .apply {
@@ -228,10 +230,11 @@ private fun Model.Object.toTypeSpec(): TypeSpec =
     .addTypes(inline.mapNotNull { it.toTypeSpec() })
     .build()
 
+context(OpenAPIContext)
 private fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
-  val rawToName = values.map { rawName -> Pair(rawName, Nam.toEnumValueName(rawName)) }
+  val rawToName = values.map { rawName -> Pair(rawName, toEnumValueName(rawName)) }
   val isSimple = rawToName.all { (rawName, valueName) -> rawName == valueName }
-  val enumName = Nam.toClassName(context)
+  val enumName = toClassName(context)
   return TypeSpec.enumBuilder(enumName)
     .description(description)
     .apply {
@@ -255,9 +258,10 @@ private fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
     .build()
 }
 
+context(OpenAPIContext)
 private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
-  val rawToName = values.map { rawName -> Pair(rawName, Nam.toEnumValueName(rawName)) }
-  val enumName = Nam.toClassName(context)
+  val rawToName = values.map { rawName -> Pair(rawName, toEnumValueName(rawName)) }
+  val enumName = toClassName(context)
   return TypeSpec.interfaceBuilder(enumName)
     .description(description)
     .addModifiers(KModifier.SEALED)
@@ -274,14 +278,14 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
             .addModifiers(KModifier.OVERRIDE)
             .build()
         )
-        .addSuperinterface(Nam.toClassName(context))
+        .addSuperinterface(toClassName(context))
         .build()
     )
     .addTypes(
       rawToName.map { (rawName, valueName) ->
         TypeSpec.objectBuilder(valueName)
           .addModifiers(KModifier.DATA)
-          .addSuperinterface(Nam.toClassName(context))
+          .addSuperinterface(toClassName(context))
           .addProperty(
             PropertySpec.builder("value", STRING)
               .initializer("\"$rawName\"")
@@ -294,7 +298,7 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
     .addType(
       TypeSpec.companionObjectBuilder()
         .addProperty(
-          PropertySpec.builder("defined", LIST.parameterizedBy(Nam.toClassName(context)))
+          PropertySpec.builder("defined", LIST.parameterizedBy(toClassName(context)))
             .initializer(
               CodeBlock.builder()
                 .add("listOf(")
@@ -312,7 +316,7 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
         .addType(
           TypeSpec.objectBuilder("Serializer")
             .addSuperinterface(
-              KSerializer::class.asTypeName().parameterizedBy(Nam.toClassName(context))
+              KSerializer::class.asTypeName().parameterizedBy(toClassName(context))
             )
             .addProperty(
               PropertySpec.builder("descriptor", SerialDescriptor)
@@ -339,7 +343,7 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
               FunSpec.builder("serialize")
                 .addModifiers(KModifier.OVERRIDE)
                 .addParameter("encoder", Encoder::class.asTypeName())
-                .addParameter("value", Nam.toClassName(context))
+                .addParameter("value", toClassName(context))
                 .addCode("encoder.encodeString(value.value)")
                 .build()
             )
@@ -347,7 +351,7 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
               FunSpec.builder("deserialize")
                 .addModifiers(KModifier.OVERRIDE)
                 .addParameter("decoder", Decoder::class.asTypeName())
-                .returns(Nam.toClassName(context))
+                .returns(toClassName(context))
                 .addCode(
                   CodeBlock.builder()
                     .addStatement("val value = decoder.decodeString()")
@@ -357,7 +361,7 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
                         val nested = NamingContext.Nested(Named(name), context)
                         addStatement(
                           "Pair(%T::class) { defined.find { it.value == value } },",
-                          Nam.toClassName(nested)
+                          toClassName(nested)
                         )
                       }
                       addStatement("Pair(OpenCase::class) { OpenCase(value) }")
@@ -374,6 +378,7 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
     .build()
 }
 
+context(OpenAPIContext)
 private fun Resolved<Model>.serializer(): Pair<String, Array<Any>> =
   with(value) {
     val values: MutableList<Any> = mutableListOf()
