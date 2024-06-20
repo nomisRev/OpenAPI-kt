@@ -22,7 +22,8 @@ data class Route(
     val types: Map<ContentType, Body>,
     val extensions: Map<String, JsonElement>
   ) : Map<ContentType, Body> by types {
-    fun jsonOrNull(): Body.Json? = types.getOrElse(ContentType.Application.Json) { null } as? Body.Json
+    fun jsonOrNull(): Body.Json? =
+      types.getOrElse(ContentType.Application.Json) { null } as? Body.Json
 
     fun octetStreamOrNull(): Body.OctetStream? =
       types.getOrElse(ContentType.Application.OctetStream) { null } as? Body.OctetStream
@@ -71,10 +72,10 @@ data class Route(
       data class FormData(val name: String, val type: Resolved<Model>)
 
       data class Value(
-        val parameters: List<FormData>,
+        override val parameters: List<FormData>,
         override val description: String?,
         override val extensions: Map<String, JsonElement>
-      ) : Body, List<FormData> by parameters
+      ) : Multipart, List<FormData> by parameters
 
       data class Ref(
         val value: Resolved.Ref<Model>,
@@ -117,8 +118,7 @@ sealed interface Resolved<A> {
 
   data class Ref<A>(val name: String, override val value: A) : Resolved<A>
 
-  @JvmInline
-  value class Value<A>(override val value: A) : Resolved<A>
+  @JvmInline value class Value<A>(override val value: A) : Resolved<A>
 
   fun namedOr(orElse: () -> NamingContext): NamingContext =
     when (this) {
@@ -205,7 +205,6 @@ sealed interface Model {
                 is Resolved.Ref -> null
                 is Resolved.Value -> model.inner.value
               }
-
             else -> model
           }
         else null
@@ -240,7 +239,6 @@ sealed interface Model {
                 is Resolved.Ref -> null
                 is Resolved.Value -> model.inner.value
               }
-
             else -> model
           }
         else null

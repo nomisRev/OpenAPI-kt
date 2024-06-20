@@ -9,8 +9,7 @@ import io.github.nomisrev.openapi.NamingContext.Named
 import io.github.nomisrev.openapi.Schema.Type
 import io.ktor.http.*
 
-fun OpenAPI.routes(): List<Route> =
-  OpenAPITransformer(this).routes()
+fun OpenAPI.routes(): List<Route> = OpenAPITransformer(this).routes()
 
 fun OpenAPI.models(): Set<Model> =
   with(OpenAPITransformer(this)) { schemas() }

@@ -1,6 +1,6 @@
 [versions]
 dokka = "1.9.10"
-kotlin = "2.0.0"
+kotlin = "2.0.20-Beta1"
 kover = "0.7.4"
 knit = "0.5.0"
 spotless="6.22.0"
@@ -8,6 +8,8 @@ publish="0.28.0"
 json="1.6.3"
 okio="3.9.0"
 kasechange="1.4.1"
+ktor="2.3.6"
+kotlinpoet="1.17.0"
 
 [libraries]
 gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -17,6 +19,8 @@ json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.re
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 okio-fakefilesystem = { module = "com.squareup.okio:okio-fakefilesystem", version.ref = "okio" }
 kasechange = { module = "net.pearx.kasechange:kasechange", version.ref = "kasechange" }
+ktor-client = { module= "io.ktor:ktor-client-core", version.ref="ktor" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref="kotlinpoet" }
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

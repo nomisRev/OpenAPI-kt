@@ -26,35 +26,44 @@ import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 
 context(OpenAPIContext)
-fun Iterable<Model>.toFileSpecs(): List<FileSpec> = mapNotNull { it.toFileSpec() }
+fun Iterable<Model>.toFileSpecs(): List<FileSpec> =
+  mapNotNull { it.toFileSpec() }
 
 context(OpenAPIContext)
 fun Model.toFileSpec(): FileSpec? =
   when (this) {
-    is Collection -> inner.value.toFileSpec()
+    is Collection ->
+      inner.value.toFileSpec()
+
     is Model.Enum.Closed ->
       FileSpec.builder(`package`, toClassName(context).simpleName).addType(toTypeSpec()).build()
+
     is Model.Enum.Open ->
       FileSpec.builder(`package`, toClassName(context).simpleName).addType(toTypeSpec()).build()
+
     is Model.Object ->
       FileSpec.builder(`package`, toClassName(context).simpleName).addType(toTypeSpec()).build()
+
     is Model.Union ->
       FileSpec.builder(`package`, toClassName(context).simpleName).addType(toTypeSpec()).build()
+
     is Model.OctetStream,
     is Model.Primitive,
     is Model.FreeFormJson -> null
   }
 
-tailrec fun Model.toTypeSpec(): TypeSpec? =
+context(OpenAPIContext)
+tailrec fun Model.toTypeSpecOrNull(): TypeSpec? =
   when (this) {
     is Model.OctetStream,
     is Model.FreeFormJson,
     is Model.Primitive -> null
-    is Collection -> inner.value.toTypeSpec()
+
+    is Collection -> inner.value.toTypeSpecOrNull()
     is Model.Enum.Closed -> toTypeSpec()
     is Model.Enum.Open -> toTypeSpec()
     is Model.Object -> toTypeSpec()
@@ -87,7 +96,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
           .build()
       }
     )
-    .addTypes(inline.mapNotNull { it.toTypeSpec() })
+    .addTypes(inline.mapNotNull { it.toTypeSpecOrNull() })
     .addType(
       TypeSpec.objectBuilder("Serializer")
         .addSuperinterface(
@@ -96,10 +105,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
         .addProperty(
           PropertySpec.builder("descriptor", SerialDescriptor)
             .addModifiers(KModifier.OVERRIDE)
-            .addAnnotation(
-              AnnotationSpec.builder(ClassName("kotlinx.serialization", "InternalSerializationApi"))
-                .build()
-            )
+            .addAnnotation(SerializationOptIn)
             .initializer(
               CodeBlock.builder()
                 .add(
@@ -155,19 +161,23 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
             .returns(toClassName(context))
             .addCode(
               CodeBlock.builder()
-                .add(
-                  "val json = decoder.decodeSerializableValue(%T.serializer())\n",
+                .addStatement(
+                  "val value = decoder.decodeSerializableValue(%T.serializer())",
                   JsonElement::class.asTypeName()
                 )
-                .add("return attemptDeserialize(json,\n")
-                .apply {
+                .addStatement(
+                  "val json = requireNotNull(decoder as? %T) { %S }.json",
+                  JsonDecoder::class.asTypeName(),
+                  "Currently only supporting Json"
+                )
+                .addStatement("return attemptDeserialize(value,")
+                .withIndent {
                   cases.forEach { case ->
                     val (placeholder, values) = case.model.serializer()
                     add(
-                      "Pair(%T::class) { %T(%T.decodeFromJsonElement($placeholder, json)) },\n",
+                      "Pair(%T::class) { %T(json.decodeFromJsonElement($placeholder, value)) },\n",
                       toCaseClassName(this@toTypeSpec, case.model.value),
                       toCaseClassName(this@toTypeSpec, case.model.value),
-                      Json::class.asTypeName(),
                       *values
                     )
                   }
@@ -181,11 +191,6 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
     )
     .build()
 
-private fun List<ParameterSpec>.sorted(): List<ParameterSpec> {
-  val (required, optional) = partition { it.defaultValue == null }
-  return required + optional
-}
-
 /*
  * Generating data classes with KotlinPoet!?
  * https://stackoverflow.com/questions/44483831/generate-data-class-with-kotlinpoet
@@ -193,41 +198,40 @@ private fun List<ParameterSpec>.sorted(): List<ParameterSpec> {
 context(OpenAPIContext)
 private fun Model.Object.toTypeSpec(): TypeSpec =
   TypeSpec.dataClassBuilder(
-      toClassName(context),
-      properties
-        .map { prop ->
-          val propName = toPropName(prop)
-          ParameterSpec.builder(
-              toPropName(prop),
-              prop.model.toTypeName().copy(nullable = prop.isNullable)
-            )
-            .apply {
-              if (propName != prop.baseName)
-                addAnnotation(
-                  annotationSpec<SerialName>()
-                    .toBuilder()
-                    .addMember("%S", prop.baseName)
-                    .build()
-                )
-            }
-            .description(prop.description)
-            .defaultValue(prop.model.value)
-            .apply {
-              val hasDefault = prop.model.value.hasDefault()
-              if (prop.isRequired && hasDefault) addAnnotation(annotationSpec<Required>())
-              else if (!prop.isRequired && !hasDefault && prop.isNullable) defaultValue("null")
-            }
-            .build()
-        }
-        .sorted()
-    )
+    toClassName(context),
+    properties
+      .map { prop ->
+        val propName = toPropName(prop)
+        ParameterSpec.builder(
+          toPropName(prop),
+          prop.model.toTypeName().copy(nullable = prop.isNullable)
+        )
+          .apply {
+            if (propName != prop.baseName)
+              addAnnotation(
+                annotationSpec<SerialName>()
+                  .toBuilder()
+                  .addMember("%S", prop.baseName)
+                  .build()
+              )
+          }
+          .description(prop.description)
+          .defaultValue(prop.model.value)
+          .apply {
+            val hasDefault = prop.model.value.hasDefault()
+            if (prop.isRequired && hasDefault) addAnnotation(annotationSpec<Required>())
+            else if (!prop.isRequired && !hasDefault && prop.isNullable) defaultValue("null")
+          }
+          .build()
+      }
+  )
     .apply {
       // Cannot serialize binary, these are used for multipart requests.
       // This occurs when request bodies are defined using top-level schemas.
       if (properties.none { it.model.value is Model.OctetStream })
         addAnnotation(annotationSpec<Serializable>())
     }
-    .addTypes(inline.mapNotNull { it.toTypeSpec() })
+    .addTypes(inline.mapNotNull { it.toTypeSpecOrNull() })
     .build()
 
 context(OpenAPIContext)
@@ -323,8 +327,8 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
                 .addModifiers(KModifier.OVERRIDE)
                 .addAnnotation(
                   AnnotationSpec.builder(
-                      ClassName("kotlinx.serialization", "InternalSerializationApi")
-                    )
+                    ClassName("kotlinx.serialization", "InternalSerializationApi")
+                  )
                     .build()
                 )
                 .initializer(
@@ -379,33 +383,38 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
 }
 
 context(OpenAPIContext)
-private fun Resolved<Model>.serializer(): Pair<String, Array<Any>> =
-  with(value) {
-    val values: MutableList<Any> = mutableListOf()
-    fun Model.placeholder(): String =
-      when (this) {
-        is Collection.List -> {
-          values.add(ListSerializer)
-          "%M(${inner.value.placeholder()})"
-        }
-        is Collection.Map -> {
-          values.add(MapSerializer)
-          "%M(${key.placeholder()}, ${inner.value.placeholder()})"
-        }
-        is Collection.Set -> {
-          values.add(SetSerializer)
-          "%M(${inner.value.placeholder()})"
-        }
-        is Model.Primitive -> {
-          values.add(toTypeName())
-          values.add(MemberName("kotlinx.serialization.builtins", "serializer", isExtension = true))
-          "%T.%M()"
-        }
-        else -> {
-          values.add(toTypeName())
-          "%T.serializer()"
-        }
-      }
+private fun Resolved<Model>.serializer(): Pair<String, Array<Any>> {
+  val buffer = mutableListOf<Any>()
+  val placeholder = value.placeholder(buffer)
+  return Pair(placeholder, buffer.toTypedArray())
+}
 
-    return Pair(placeholder(), values.toTypedArray())
+context(OpenAPIContext)
+private fun Model.placeholder(buffer: MutableList<Any>): String =
+  when (this) {
+    is Collection.List -> {
+      buffer.add(ListSerializer)
+      "%M(${inner.value.placeholder(buffer)})"
+    }
+
+    is Collection.Map -> {
+      buffer.add(MapSerializer)
+      "%M(${key.placeholder(buffer)}, ${inner.value.placeholder(buffer)})"
+    }
+
+    is Collection.Set -> {
+      buffer.add(SetSerializer)
+      "%M(${inner.value.placeholder(buffer)})"
+    }
+
+    is Model.Primitive -> {
+      buffer.add(toTypeName())
+      buffer.add(MemberName("kotlinx.serialization.builtins", "serializer", isExtension = true))
+      "%T.%M()"
+    }
+
+    else -> {
+      buffer.add(toTypeName())
+      "%T.serializer()"
+    }
   }

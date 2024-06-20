@@ -1,57 +1,36 @@
-import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
+import com.diffplug.gradle.spotless.SpotlessExtension
 
 plugins {
   id(libs.plugins.multiplatform.get().pluginId)
   alias(libs.plugins.serialization)
-  alias(libs.plugins.assert)
   id(libs.plugins.publish.get().pluginId)
+  alias(libs.plugins.spotless)
+}
+
+configure<SpotlessExtension> {
+  kotlin {
+    target("**/*.kt")
+    ktfmt().kotlinlangStyle().configure {
+      it.setBlockIndent(2)
+      it.setContinuationIndent(2)
+      it.setRemoveUnusedImport(true)
+    }
+    trimTrailingWhitespace()
+    endWithNewline()
+  }
 }
 
 kotlin {
-  compilerOptions.freeCompilerArgs.add("-Xcontext-receivers")
-  jvm {
-    @OptIn(ExperimentalKotlinGradlePluginApi::class)
-    mainRun { mainClass.set("io.github.nomisrev.openapi.MainKt") }
-  }
-//  macosArm64()
-//  linuxX64()
+  jvm()
+  macosArm64()
+  linuxX64()
 
   sourceSets {
     commonMain {
-      kotlin.srcDir(project.file("build/generated/openapi/src/commonMain/kotlin"))
-
       dependencies {
-        api(libs.kasechange)
-        api(libs.okio)
-        implementation("io.ktor:ktor-client-core:2.3.6")
         api(projects.parser)
-      }
-    }
-    commonTest {
-      dependencies {
-        implementation(libs.test)
-      }
-    }
-    jvmMain {
-      dependencies {
-        implementation("com.squareup:kotlinpoet:1.17.0")
-      }
-    }
-//    jsMain {
-//      dependencies {
-//        implementation("com.squareup.okio:okio-nodefilesystem:3.9.0")
-//      }
-//    }
-    commonTest {
-      dependencies {
-        implementation(libs.okio.fakefilesystem)
+        api(libs.ktor.client)
       }
     }
   }
-}
-
-task("runMacosArm64") {
-  dependsOn("linkDebugExecutableMacosArm64")
-  dependsOn("runDebugExecutableMacosArm64")
-  group = "run"
 }

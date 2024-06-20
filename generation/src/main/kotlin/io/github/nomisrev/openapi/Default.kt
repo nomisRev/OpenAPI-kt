@@ -22,9 +22,9 @@ private fun defaultValueImpl(model: Model): Pair<String, List<Any>>? =
       model.cases
         .find { it.model.value is Model.Primitive.String }
         ?.let { case ->
-          model.default?.let {
+          model.default?.let { default ->
             val typeName = toCaseClassName(model, case.model.value)
-            Pair("%T(%S)", listOf(typeName, model.default))
+            Pair("%T(%S)", listOf(typeName, default))
           }
         }
     is Model.Object ->

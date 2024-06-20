@@ -59,21 +59,53 @@ fun ParameterSpec.Builder.description(kdoc: String?): ParameterSpec.Builder = ap
 fun TypeSpec.Companion.dataClassBuilder(
   className: ClassName,
   parameters: List<ParameterSpec>
-): TypeSpec.Builder =
-  classBuilder(className)
+): TypeSpec.Builder {
+  val sorted = parameters.sorted()
+  return classBuilder(className)
     .addModifiers(KModifier.DATA)
-    .primaryConstructor(FunSpec.constructorBuilder().addParameters(parameters).build())
+    .primaryConstructor(
+      FunSpec.constructorBuilder()
+        .addParameters(sorted)
+        .build()
+    )
     .addProperties(
-      parameters.map { param ->
+      sorted.map { param ->
         PropertySpec.builder(param.name, param.type).initializer(param.name).build()
       }
     )
+}
 
-val PrimitiveSerialDescriptor =
-  MemberName("kotlinx.serialization.descriptors", "PrimitiveSerialDescriptor")
+private fun List<ParameterSpec>.sorted(): List<ParameterSpec> {
+  val (required, optional) = partition { it.defaultValue == null }
+  return required + optional
+}
+
+fun ClassName.nested(name: String): ClassName =
+  ClassName(packageName, simpleName, name)
+
 val ContentType = ClassName("io.ktor.http", "ContentType")
 val HttpResponse = ClassName("io.ktor.client.statement", "HttpResponse")
+val SerialDescriptor = ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
+
+val PrimitiveSerialDescriptor = MemberName("kotlinx.serialization.descriptors", "PrimitiveSerialDescriptor")
 val ListSerializer = MemberName("kotlinx.serialization.builtins", "ListSerializer")
 val SetSerializer = MemberName("kotlinx.serialization.builtins", "SetSerializer")
 val MapSerializer = MemberName("kotlinx.serialization.builtins", "MapSerializer")
-val SerialDescriptor = ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
+val contentType = MemberName("io.ktor.http", "contentType")
+val setBody = MemberName("io.ktor.client.request", "setBody", isExtension = true)
+val formData = MemberName("io.ktor.client.request.forms", "formData", isExtension = true)
+val accept = MemberName("io.ktor.client.request", "accept", isExtension = true)
+val header = MemberName("io.ktor.client.request", "header", isExtension = true)
+val request = MemberName("io.ktor.client.request", "request", isExtension = true)
+val HttpHeaders = ClassName("io.ktor.http", "HttpHeaders")
+val HttpMethod = ClassName("io.ktor.http", "HttpMethod")
+val seconds =
+  MemberName("kotlin.time.Duration.Companion", "seconds", isExtension = true)
+val DurationUnit =
+  ClassName("kotlin.time", "DurationUnit")
+
+val SerializationOptIn =
+  AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
+    .addMember("%T::class", ClassName("kotlinx.serialization", "ExperimentalSerializationApi"))
+    .addMember("%T::class", ClassName("kotlinx.serialization", "InternalSerializationApi"))
+    .build()

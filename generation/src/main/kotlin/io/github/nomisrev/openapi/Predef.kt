@@ -111,12 +111,7 @@ private fun appendUploadedFile(): FunSpec =
 private val serialNameOrEnumValue: FunSpec =
   FunSpec.builder("serialNameOrEnumValue")
     .addModifiers(KModifier.PRIVATE)
-    .addAnnotation(
-      AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
-        .addMember("%L::class", "kotlinx.serialization.ExperimentalSerializationApi")
-        .addMember("%L::class", "kotlinx.serialization.InternalSerializationApi")
-        .build()
-    )
+    .addAnnotation(SerializationOptIn)
     .addTypeVariable(
       TypeVariableName("T", ClassName("kotlin", "Enum").parameterizedBy(TypeVariableName("T")))
     )

@@ -101,21 +101,25 @@ private fun TypeSpec.Builder.apiConstructor(): TypeSpec.Builder =
         .build()
     )
 
+context(OpenAPIContext)
 private fun Route.nestedTypes(): List<TypeSpec> = inputs() + returns() + bodies()
 
+context(OpenAPIContext)
 private fun Route.inputs(): List<TypeSpec> =
-  input.mapNotNull { (it.type as? Resolved.Value)?.value?.toTypeSpec() }
+  input.mapNotNull { (it.type as? Resolved.Value)?.value?.toTypeSpecOrNull() }
 
+context(OpenAPIContext)
 private fun Route.returns(): List<TypeSpec> =
-  returnType.types.values.mapNotNull { (it.type as? Resolved.Value)?.value?.toTypeSpec() }
+  returnType.types.values.mapNotNull { (it.type as? Resolved.Value)?.value?.toTypeSpecOrNull() }
 
+context(OpenAPIContext)
 private fun Route.bodies(): List<TypeSpec> =
   body.types.values.flatMap { body ->
     when (body) {
       is Route.Body.Json.Defined ->
-        listOfNotNull((body.type as? Resolved.Value)?.value?.toTypeSpec())
+        listOfNotNull((body.type as? Resolved.Value)?.value?.toTypeSpecOrNull())
 
-      is Route.Body.Multipart.Value -> body.parameters.mapNotNull { it.type.value.toTypeSpec() }
+      is Route.Body.Multipart.Value -> body.parameters.mapNotNull { it.type.value.toTypeSpecOrNull() }
       is Route.Body.Multipart.Ref,
       is Route.Body.Xml,
       is Route.Body.Json.FreeForm,
@@ -198,85 +202,67 @@ private fun Route.toFun(implemented: Boolean): FunSpec =
       if (implemented) {
         addCode(
           CodeBlock.builder()
-            .addStatement(
-              "val response = client.%M {",
-              MemberName("io.ktor.client.request", "request", isExtension = true)
-            )
+            .addStatement("val response = client.%M {", request)
             .withIndent {
               addStatement("configure()")
-              addStatement("method = %T.%L", ClassName("io.ktor.http", "HttpMethod"), method.value)
-              val replace =
-                input
-                  .mapNotNull {
-                    if (it.input == Parameter.Input.Path)
-                      ".replace(\"{${it.name}}\", ${toParamName(Named(it.name))})"
-                    else null
-                  }
-                  .joinToString(separator = "")
-              addStatement(
-                "url { %M(%S$replace) }",
-                MemberName("io.ktor.http", "path", isExtension = true),
-                path
-              )
-              addContentType(body)
-              addBody(body)
+              addStatement("method = %T.%L", HttpMethod, method.name())
+              addPathAndContent()
+              addBody()
             }
             .addStatement("}")
-            .addStatement(
-              "return response.%M()",
-              MemberName("io.ktor.client.call", "body", isExtension = true)
-            )
+            .addStatement("return response.%M()", MemberName("io.ktor.client.call", "body", isExtension = true))
             .build()
         )
       }
     }
     .build()
 
-context(OpenAPIContext)
-fun CodeBlock.Builder.addContentType(bodies: Route.Bodies): CodeBlock.Builder =
+context(OpenAPIContext, CodeBlock.Builder)
+fun Route.addPathAndContent() {
+  val replace = input
+    .mapNotNull {
+      if (it.input == Parameter.Input.Path)
+        ".replace(\"{${it.name}}\", ${toParamName(Named(it.name))})"
+      else null
+    }
+    .joinToString(separator = "")
+  addStatement(
+    "url { %M(%S$replace) }",
+    MemberName("io.ktor.http", "path", isExtension = true),
+    path
+  )
+  addContentType(body)
+}
+
+context(OpenAPIContext, CodeBlock.Builder)
+fun addContentType(bodies: Route.Bodies) {
   bodies.firstNotNullOfOrNull { (_, body) ->
     when (body) {
       is Route.Body.Json -> addStatement(
-        "%M(%T.%L)",
-        MemberName("io.ktor.http", "contentType"),
-        ClassName("io.ktor.http", "ContentType", "Application"),
-        "Json"
+        "%M(%T.%L)", contentType, ContentType.nested("Application"), "Json"
       )
 
       is Route.Body.Xml -> TODO("Xml input body not supported yet.")
       is Route.Body.OctetStream -> TODO("OctetStream  input body not supported yet.")
       is Route.Body.Multipart.Ref,
-      is Route.Body.Multipart.Value -> addStatement(
-        "%M(%T.%L)",
-        MemberName("io.ktor.http", "contentType"),
-        ClassName("io.ktor.http", "ContentType", "MultiPart"),
-        "FormData"
-      )
+      is Route.Body.Multipart.Value ->
+        addStatement("%M(%T.%L)", contentType, ContentType.nested("MultiPart"), "FormData")
     }
   }
-    ?: this
+}
 
-context(OpenAPIContext)
-fun CodeBlock.Builder.addBody(bodies: Route.Bodies): CodeBlock.Builder =
-  bodies.firstNotNullOfOrNull { (_, body) ->
+context(OpenAPIContext, CodeBlock.Builder)
+fun Route.addBody() {
+  body.firstNotNullOfOrNull { (_, body) ->
     when (body) {
-      is Route.Body.Json -> addStatement(
-        "%M(%L)",
-        MemberName("io.ktor.client.request", "setBody", isExtension = true),
-        "body"
-      )
+      is Route.Body.Json -> addStatement("%M(%L)", setBody, "body")
 
       is Route.Body.Xml -> TODO("Xml input body not supported yet.")
       is Route.Body.OctetStream -> TODO("OctetStream  input body not supported yet.")
-      is Route.Body.Multipart.Ref,
-      is Route.Body.Multipart.Value -> {
-        body as Route.Body.Multipart
-        addStatement("%M(", MemberName("io.ktor.client.request", "setBody", isExtension = true))
+      is Route.Body.Multipart -> {
+        addStatement("%M(", setBody)
         withIndent {
-          addStatement(
-            "%M {",
-            MemberName("io.ktor.client.request.forms", "formData", isExtension = true)
-          )
+          addStatement("%M {", formData)
           withIndent {
             when (body) {
               is Route.Body.Multipart.Value ->
@@ -304,7 +290,7 @@ fun CodeBlock.Builder.addBody(bodies: Route.Bodies): CodeBlock.Builder =
       }
     }
   }
-    ?: this
+}
 
 context(OpenAPIContext)
 fun Route.params(defaults: Boolean): List<ParameterSpec> =
@@ -335,6 +321,7 @@ fun Route.requestBody(defaults: Boolean): List<ParameterSpec> {
     description: String?
   ): ParameterSpec =
     ParameterSpec.builder(name, type.toTypeName().copy(nullable = nullable))
+      .description(description)
       .apply { if (defaults && nullable) defaultValue("null") }
       .build()
 
