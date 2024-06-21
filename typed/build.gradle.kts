@@ -21,8 +21,6 @@ configure<SpotlessExtension> {
 }
 
 kotlin {
-  explicitApi()
-
   jvm()
   macosArm64()
   linuxX64()
@@ -30,14 +28,9 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        api(libs.json)
-      }
-    }
-    jvmTest {
-      dependencies {
-        implementation(libs.test)
+        api(projects.parser)
+        api(libs.ktor.client)
       }
     }
   }
 }
-
