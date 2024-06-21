@@ -86,6 +86,7 @@ fun ClassName.nested(name: String): ClassName =
 val ContentType = ClassName("io.ktor.http", "ContentType")
 val HttpResponse = ClassName("io.ktor.client.statement", "HttpResponse")
 val SerialDescriptor = ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
+val ByteReadChannel = ClassName("io.ktor.utils.io", "ByteReadChannel")
 
 val PrimitiveSerialDescriptor = MemberName("kotlinx.serialization.descriptors", "PrimitiveSerialDescriptor")
 val ListSerializer = MemberName("kotlinx.serialization.builtins", "ListSerializer")
