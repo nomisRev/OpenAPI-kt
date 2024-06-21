@@ -8,7 +8,7 @@ publish="0.28.0"
 json="1.6.3"
 okio="3.9.0"
 kasechange="1.4.1"
-ktor="2.3.6"
+ktor="2.3.12"
 kotlinpoet="1.17.0"
 
 [libraries]
