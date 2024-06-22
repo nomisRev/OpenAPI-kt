@@ -7,7 +7,7 @@ import org.jetbrains.kotlin.powerassert.gradle.PowerAssertGradleExtension
 plugins {
   alias(libs.plugins.multiplatform) apply false
   alias(libs.plugins.assert)
-  alias(libs.plugins.publish)
+  alias(libs.plugins.publish) apply false
 }
 
 @Suppress("OPT_IN_USAGE")
