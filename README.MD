@@ -1,4 +1,4 @@
-# OpenAPI-kt
+# Module OpenAPI-kt
 
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.nomisrev/openapi-kt-parser?color=4caf50&label=latest%20release)](https://central.sonatype.com/search?q=g:io.github.nomisrev/openapi-kt-parser)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)

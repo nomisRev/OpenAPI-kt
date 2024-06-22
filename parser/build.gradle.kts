@@ -1,10 +1,12 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
+import org.jetbrains.dokka.gradle.DokkaTaskPartial
 
 plugins {
   id(libs.plugins.multiplatform.get().pluginId)
   alias(libs.plugins.serialization)
   id(libs.plugins.publish.get().pluginId)
   alias(libs.plugins.spotless)
+  alias(libs.plugins.dokka)
 }
 
 configure<SpotlessExtension> {
@@ -41,3 +43,16 @@ kotlin {
   }
 }
 
+tasks.withType<DokkaTaskPartial>().configureEach {
+  moduleName.set("OpenAPI Kotlin Parser")
+  dokkaSourceSets {
+    named("commonMain") {
+      includes.from("README.md")
+      sourceLink {
+        localDirectory.set(file("src/commonMain/kotlin"))
+        remoteUrl.set(uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/parser/src/commonMain").toURL())
+        remoteLineSuffix.set("#L")
+      }
+    }
+  }
+}
