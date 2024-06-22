@@ -1,7 +1,10 @@
+import org.jetbrains.dokka.gradle.DokkaTaskPartial
+
 plugins {
   id(libs.plugins.jvm.get().pluginId)
   `java-gradle-plugin`
   id(libs.plugins.publish.get().pluginId)
+  alias(libs.plugins.dokka)
 }
 
 dependencies {
@@ -29,3 +32,16 @@ gradlePlugin {
   }
 }
 
+tasks.withType<DokkaTaskPartial>().configureEach {
+  moduleName.set("OpenAPI Kotlin Gradle Plugin")
+  dokkaSourceSets {
+    named("main") {
+      includes.from("README.md")
+      sourceLink {
+        localDirectory.set(file("src/main/kotlin"))
+        remoteUrl.set(uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/gradle-plugin/src/main").toURL())
+        remoteLineSuffix.set("#L")
+      }
+    }
+  }
+}
