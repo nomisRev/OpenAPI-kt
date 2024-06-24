@@ -16,9 +16,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: gradle/gradle-build-action@v3
-        with:
-          arguments: -Pversion=${{ github.event.release.tag_name }} dokkaHtml
+      - uses: gradle/actions/setup-gradle@v3
+
+      - run: ./gradlew -Pversion=${{ github.event.release.tag_name }} dokkaHtml
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
