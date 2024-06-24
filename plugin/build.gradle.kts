@@ -23,7 +23,7 @@ gradlePlugin {
     create(property("ID").toString()) {
       id = property("ID").toString()
       implementationClass = property("IMPLEMENTATION_CLASS").toString()
-      version = property("VERSION").toString()
+      version = properties["version"].toString()
       description = property("DESCRIPTION").toString()
       displayName = property("DISPLAY_NAME").toString()
       @Suppress("UnstableApiUsage")

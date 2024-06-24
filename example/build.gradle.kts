@@ -1,6 +1,6 @@
 plugins {
   kotlin("multiplatform") version "2.0.0"
-  id("io.github.nomisrev.openapi.plugin") version "1.0.0"
+  id("io.github.nomisrev.openapi-kt-plugin") version "0.0.2"
   kotlin("plugin.serialization") version "2.0.0"
 }
 

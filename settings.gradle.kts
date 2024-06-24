@@ -21,5 +21,5 @@ gradleEnterprise {
 include("parser")
 include("typed")
 include("generation")
-include("gradle-plugin")
+include("plugin")
 //include("generic")
