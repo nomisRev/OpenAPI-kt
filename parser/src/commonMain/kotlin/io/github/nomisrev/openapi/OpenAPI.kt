@@ -1,11 +1,14 @@
 package io.github.nomisrev.openapi
 
+import com.charleskorn.kaml.Yaml
+import com.charleskorn.kaml.YamlConfiguration
 import io.github.nomisrev.openapi.Components.Companion.Serializer as ComponentsSerializer
 import kotlin.jvm.JvmStatic
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -109,8 +112,19 @@ public data class OpenAPI(
   public companion object {
     public fun fromJson(json: String): OpenAPI = Json.decodeFromString(serializer(), json)
 
+    public fun fromYaml(yaml: String): OpenAPI =
+      Yaml.decodeFromString(serializer(), yaml)
+
     @JvmStatic
-    internal val Json: Json = Json {
+    private val Yaml: Yaml = Yaml(
+      configuration = YamlConfiguration(
+        encodeDefaults = false,
+        strictMode = false
+      )
+    )
+
+    @JvmStatic
+    private val Json: Json = Json {
       encodeDefaults = false
       prettyPrint = true
       // TODO: Should this somehow be configurable?

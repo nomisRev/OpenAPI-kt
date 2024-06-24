@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.OpenAPI.Companion.Json
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -12,7 +11,9 @@ import kotlinx.serialization.descriptors.StructureKind
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -63,27 +64,39 @@ public data class Responses(
       private val responseSerializer = ReferenceOr.serializer(Response.serializer())
       private val responsesSerializer = MapSerializer(Int.serializer(), responseSerializer)
 
-      override fun deserialize(decoder: Decoder): Responses {
+      override fun deserialize(decoder: Decoder): Responses =
+        when (decoder) {
+          is JsonDecoder -> deserializeJson(decoder)
+          else -> throw UnsupportedOperationException("Unsupported decoder: $decoder")
+        }
+
+      private fun deserializeJson(decoder: JsonDecoder): Responses {
         val json = decoder.decodeSerializableValue(JsonElement.serializer()).jsonObject
         val default =
           if (json.contains("default"))
-            Json.decodeFromJsonElement(responseSerializer, json.getValue("default"))
+            decoder.json.decodeFromJsonElement(responseSerializer, json.getValue("default"))
           else null
         val responsesJs = json.filterNot { it.key.startsWith("x-") || it.key == "default" }
         val responses =
           if (responsesJs.isNotEmpty())
-            Json.decodeFromJsonElement(responsesSerializer, JsonObject(responsesJs))
+            decoder.json.decodeFromJsonElement(responsesSerializer, JsonObject(responsesJs))
           else emptyMap()
         val extensions = json.filter { it.key.startsWith("x-") }
         return Responses(default, responses, extensions)
       }
 
-      override fun serialize(encoder: Encoder, value: Responses) {
+      override fun serialize(encoder: Encoder, value: Responses) =
+        when (encoder) {
+          is JsonEncoder -> serializeJson(encoder, value)
+          else -> throw UnsupportedOperationException("Unsupported encoder: $encoder")
+        }
+
+      private fun serializeJson(encoder: JsonEncoder, value: Responses) {
         val default =
           value.default?.let {
-            Json.encodeToJsonElement(ReferenceOr.serializer(Response.serializer()), it).jsonObject
+            encoder.json.encodeToJsonElement(ReferenceOr.serializer(Response.serializer()), it).jsonObject
           }
-        val responses = Json.encodeToJsonElement(responsesSerializer, value.responses).jsonObject
+        val responses = encoder.json.encodeToJsonElement(responsesSerializer, value.responses).jsonObject
         val json = JsonObject((default ?: emptyMap()) + responses + value.extensions)
         encoder.encodeSerializableValue(JsonElement.serializer(), json)
       }

@@ -1,15 +1,22 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.OpenAPI.Companion.Json
+import com.charleskorn.kaml.YamlInput
+import com.charleskorn.kaml.YamlMap
+import com.charleskorn.kaml.YamlNode
+import com.charleskorn.kaml.YamlPath
+import com.charleskorn.kaml.YamlPathSegment
+import com.charleskorn.kaml.yamlMap
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -28,7 +35,8 @@ public sealed interface ReferenceOr<out A> {
   @Serializable
   public data class Reference(@SerialName(RefKey) public val ref: String) : ReferenceOr<Nothing>
 
-  @JvmInline public value class Value<A>(public val value: A) : ReferenceOr<A>
+  @JvmInline
+  public value class Value<A>(public val value: A) : ReferenceOr<A>
 
   public fun valueOrNull(): A? =
     when (this) {
@@ -68,11 +76,41 @@ public sealed interface ReferenceOr<out A> {
         }
       }
 
-      override fun deserialize(decoder: Decoder): ReferenceOr<T> {
+      override fun deserialize(decoder: Decoder): ReferenceOr<T> =
+        when (decoder) {
+          is JsonDecoder -> deserializeJson(decoder)
+          is YamlInput -> deserializeYaml(decoder)
+          else -> throw UnsupportedOperationException("Unsupported decoder: $decoder")
+        }
+
+      private fun deserializeJson(decoder: JsonDecoder): ReferenceOr<T> {
         val json = decoder.decodeSerializableValue(JsonElement.serializer())
         return if ((json as JsonObject).contains(RefKey))
           Reference(json[RefKey]!!.jsonPrimitive.content)
-        else Value(Json.decodeFromJsonElement(dataSerializer, json))
+        else Value(decoder.json.decodeFromJsonElement(dataSerializer, json))
+      }
+
+      private fun YamlNode.find(paths: List<YamlPathSegment>): YamlNode {
+        if (paths.isNotEmpty()) yamlMap.get<YamlNode>().find(paths.drop(1))
+        else this
+        get<YamlNode>(paths)
+      }
+
+      private fun deserializeYaml(decoder: YamlInput): ReferenceOr<T> {
+        decoder.node
+        val map = decoder.node as? YamlMap
+        val isRef = map?.entries?.entries?.singleOrNull()?.key?.content == "\$Ref"
+        return if (isRef) Reference(TODO())
+        else {
+          val key = decoder.getCurrentPath()
+            .segments
+            .reversed()
+            .firstNotNullOfOrNull {
+              it as? YamlPathSegment.MapElementKey
+            }?.key
+          val entry = map?.entries?.entries?.find { it.key.content == key }
+          Value(decoder.yaml.decodeFromYamlNode(dataSerializer, entry!!.value))
+        }
       }
     }
   }
