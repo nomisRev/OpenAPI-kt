@@ -96,7 +96,7 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
                 // TODO turn into warning!?
                 requireNotNull(body.jsonOrNull()) {
                   "Only OpenAI JSON Streaming supported right now."
-                }.type.value.toTypeName(),
+                }.type.toTypeName(),
                 toParamName(Named("body"))
               )
               addStatement(

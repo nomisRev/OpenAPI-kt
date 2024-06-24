@@ -106,20 +106,20 @@ private fun Route.nestedTypes(): List<TypeSpec> = inputs() + returns() + bodies(
 
 context(OpenAPIContext)
 private fun Route.inputs(): List<TypeSpec> =
-  input.mapNotNull { (it.type as? Resolved.Value)?.value?.toTypeSpecOrNull() }
+  input.mapNotNull { it.type.toTypeSpecOrNull() }
 
 context(OpenAPIContext)
 private fun Route.returns(): List<TypeSpec> =
-  returnType.types.values.mapNotNull { (it.type as? Resolved.Value)?.value?.toTypeSpecOrNull() }
+  returnType.types.values.mapNotNull { it.type.toTypeSpecOrNull() }
 
 context(OpenAPIContext)
 private fun Route.bodies(): List<TypeSpec> =
   body.types.values.flatMap { body ->
     when (body) {
       is Route.Body.Json.Defined ->
-        listOfNotNull((body.type as? Resolved.Value)?.value?.toTypeSpecOrNull())
+        listOfNotNull(body.type.toTypeSpecOrNull())
 
-      is Route.Body.Multipart.Value -> body.parameters.mapNotNull { it.type.value.toTypeSpecOrNull() }
+      is Route.Body.Multipart.Value -> body.parameters.mapNotNull { it.type.toTypeSpecOrNull() }
       is Route.Body.Multipart.Ref,
       is Route.Body.Xml,
       is Route.Body.Json.FreeForm,
@@ -270,10 +270,10 @@ fun Route.addBody() {
 
               is Route.Body.Multipart.Ref -> {
                 val obj =
-                  requireNotNull(body.value.value as? Model.Object) {
+                  requireNotNull(body.value as? Model.Object) {
                     "Only supports objects for FreeForm Multipart"
                   }
-                val name = toParamName(Named(body.value.name))
+                val name = toParamName(Named(body.name))
                 obj.properties.forEach { prop ->
                   addStatement(
                     "appendAll(%S, $name.%L)",
@@ -302,8 +302,8 @@ fun Route.params(defaults: Boolean): List<ParameterSpec> =
       .apply {
         input.description?.let { addKdoc(it) }
         if (defaults) {
-          defaultValue(input.type.value)
-          if (!input.isRequired && !input.type.value.hasDefault()) {
+          defaultValue(input.type)
+          if (!input.isRequired && !input.type.hasDefault()) {
             defaultValue("null")
           }
         }
@@ -316,7 +316,7 @@ context(OpenAPIContext)
 fun Route.requestBody(defaults: Boolean): List<ParameterSpec> {
   fun parameter(
     name: String,
-    type: Resolved<Model>,
+    type: Model,
     nullable: Boolean,
     description: String?
   ): ParameterSpec =
@@ -334,7 +334,7 @@ fun Route.requestBody(defaults: Boolean): List<ParameterSpec> {
           toParamName(Named(parameter.name)),
           parameter.type,
           !body.required,
-          parameter.type.value.description
+          parameter.type.description
         )
       }
     })
@@ -346,7 +346,7 @@ context(OpenAPIContext)
 fun Route.returnType(): TypeName {
   val success =
     returnType.types.toSortedMap { s1, s2 -> s1.compareTo(s2) }.entries.first()
-  return when (success.value.type.value) {
+  return when (success.value.type) {
     is Model.OctetStream -> HttpResponse
     else -> success.value.type.toTypeName()
   }

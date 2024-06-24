@@ -3,7 +3,6 @@ package io.github.nomisrev.openapi
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -44,17 +43,17 @@ data class Route(
     ) : Body
 
     sealed interface Json : Body {
-      val type: Resolved<Model>
+      val type: Model
 
       data class FreeForm(
         override val description: String?,
         override val extensions: Map<String, JsonElement>
       ) : Json {
-        override val type: Resolved<Model> = Resolved.Value(Model.FreeFormJson(description))
+        override val type: Model = Model.FreeFormJson(description)
       }
 
       data class Defined(
-        override val type: Resolved<Model>,
+        override val type: Model,
         override val description: String?,
         override val extensions: Map<String, JsonElement>
       ) : Json
@@ -69,7 +68,7 @@ data class Route(
     sealed interface Multipart : Body {
       val parameters: List<FormData>
 
-      data class FormData(val name: String, val type: Resolved<Model>)
+      data class FormData(val name: String, val type: Model)
 
       data class Value(
         override val parameters: List<FormData>,
@@ -78,11 +77,12 @@ data class Route(
       ) : Multipart, List<FormData> by parameters
 
       data class Ref(
-        val value: Resolved.Ref<Model>,
+        val name: String,
+        val value: Model,
         override val description: String?,
         override val extensions: Map<String, JsonElement>
       ) : Multipart {
-        override val parameters: List<FormData> = listOf(FormData(value.name, value))
+        override val parameters: List<FormData> = listOf(FormData(name, value))
       }
     }
   }
@@ -90,7 +90,7 @@ data class Route(
   // A Parameter can be isNullable, required while the model is not!
   data class Input(
     val name: String,
-    val type: Resolved<Model>,
+    val type: Model,
     val isRequired: Boolean,
     val input: Parameter.Input,
     val description: String?
@@ -102,29 +102,7 @@ data class Route(
   ) : Map<HttpStatusCode, ReturnType> by types
 
   // Required, isNullable ???
-  data class ReturnType(val type: Resolved<Model>, val extensions: Map<String, JsonElement>)
-}
-
-/**
- * Allows tracking whether data was referenced by name, or defined inline. This is important to be
- * able to maintain the structure of the specification.
- */
-// TODO this can be removed.
-//   Move 'nested' logic to OpenAPITransformer
-//   Inline `namedOr` logic where used
-//   Rely on `ReferenceOr<Schema>` everywhere within `OpenAPITransformer`?
-sealed interface Resolved<A> {
-  val value: A
-
-  data class Ref<A>(val name: String, override val value: A) : Resolved<A>
-
-  @JvmInline value class Value<A>(override val value: A) : Resolved<A>
-
-  fun namedOr(orElse: () -> NamingContext): NamingContext =
-    when (this) {
-      is Ref -> NamingContext.Named(name)
-      is Value -> orElse()
-    }
+  data class ReturnType(val type: Model, val extensions: Map<String, JsonElement>)
 }
 
 /**
@@ -170,22 +148,21 @@ sealed interface Model {
   data class FreeFormJson(override val description: String?) : Model
 
   sealed interface Collection : Model {
-    val inner: Resolved<Model>
+    val inner: Model
 
     data class List(
-      override val inner: Resolved<Model>,
+      override val inner: Model,
       val default: kotlin.collections.List<String>?,
       override val description: String?
     ) : Collection
 
     data class Set(
-      override val inner: Resolved<Model>,
+      override val inner: Model,
       val default: kotlin.collections.List<String>?,
       override val description: String?
     ) : Collection
 
-    data class Map(override val inner: Resolved<Model>, override val description: String?) :
-      Collection {
+    data class Map(override val inner: Model, override val description: String?) : Collection {
       val key = Primitive.String(null, null)
     }
   }
@@ -194,26 +171,27 @@ sealed interface Model {
   data class Object(
     val context: NamingContext,
     override val description: String?,
-    val properties: List<Property>
+    val properties: List<Property>,
+    val inline: List<Model>
   ) : Model {
-    val inline: List<Model> =
-      properties.mapNotNull {
-        if (it.model is Resolved.Value)
-          when (val model = it.model.value) {
-            is Collection ->
-              when (model.inner) {
-                is Resolved.Ref -> null
-                is Resolved.Value -> model.inner.value
-              }
-            else -> model
-          }
-        else null
-      }
+    //    val inline: List<Model> =
+    //      properties.mapNotNull {
+    //        if (it.model is Resolved.Value)
+    //          when (val model = it.model.value) {
+    //            is Collection ->
+    //              when (model.inner) {
+    //                is Resolved.Ref -> null
+    //                is Resolved.Value -> model.inner.value
+    //              }
+    //            else -> model
+    //          }
+    //        else null
+    //      }
 
     @Serializable
     data class Property(
       val baseName: String,
-      val model: Resolved<Model>,
+      val model: Model,
       /**
        * isRequired != not-null. This means the value _has to be included_ in the payload, but it
        * might be [isNullable].
@@ -228,23 +206,24 @@ sealed interface Model {
     val context: NamingContext,
     val cases: List<Case>,
     val default: String?,
-    override val description: String?
+    override val description: String?,
+    val inline: List<Model>
   ) : Model {
-    val inline: List<Model> =
-      cases.mapNotNull {
-        if (it.model is Resolved.Value)
-          when (val model = it.model.value) {
-            is Collection ->
-              when (model.inner) {
-                is Resolved.Ref -> null
-                is Resolved.Value -> model.inner.value
-              }
-            else -> model
-          }
-        else null
-      }
+    //    val inline: List<Model> =
+    //      cases.mapNotNull {
+    //        if (it.model is Resolved.Value)
+    //          when (val model = it.model.value) {
+    //            is Collection ->
+    //              when (model.inner) {
+    //                is Resolved.Ref -> null
+    //                is Resolved.Value -> model.inner.value
+    //              }
+    //            else -> model
+    //          }
+    //        else null
+    //      }
 
-    data class Case(val context: NamingContext, val model: Resolved<Model>)
+    data class Case(val context: NamingContext, val model: Model)
   }
 
   sealed interface Enum : Model {
@@ -255,7 +234,7 @@ sealed interface Model {
 
     data class Closed(
       override val context: NamingContext,
-      val inner: Resolved<Model>,
+      val inner: Model,
       override val values: List<String>,
       override val default: String?,
       override val description: String?
