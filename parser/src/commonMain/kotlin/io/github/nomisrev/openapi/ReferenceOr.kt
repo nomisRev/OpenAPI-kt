@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.OpenAPI.Companion.Json
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
@@ -10,6 +9,7 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.descriptors.element
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -69,10 +69,11 @@ public sealed interface ReferenceOr<out A> {
       }
 
       override fun deserialize(decoder: Decoder): ReferenceOr<T> {
+        decoder as JsonDecoder
         val json = decoder.decodeSerializableValue(JsonElement.serializer())
         return if ((json as JsonObject).contains(RefKey))
           Reference(json[RefKey]!!.jsonPrimitive.content)
-        else Value(Json.decodeFromJsonElement(dataSerializer, json))
+        else Value(decoder.json.decodeFromJsonElement(dataSerializer, json))
       }
     }
   }

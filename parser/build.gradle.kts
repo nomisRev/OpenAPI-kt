@@ -26,13 +26,14 @@ kotlin {
   explicitApi()
 
   jvm()
-  macosArm64()
-  linuxX64()
+//  macosArm64()
+//  linuxX64()
 
   sourceSets {
     commonMain {
       dependencies {
         api(libs.json)
+        api("com.charleskorn.kaml:kaml:0.60.0")
       }
     }
     jvmTest {

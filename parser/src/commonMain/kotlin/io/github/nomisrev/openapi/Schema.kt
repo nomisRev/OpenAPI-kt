@@ -15,11 +15,6 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
-public fun main() {
-  val s = Schema()
-  println(OpenAPI.Json.encodeToString(s))
-}
-
 /**
  * The Schema Object allows the definition of input and output data types. These types can be
  * objects, but also primitives and arrays. This object is an extended subset of the

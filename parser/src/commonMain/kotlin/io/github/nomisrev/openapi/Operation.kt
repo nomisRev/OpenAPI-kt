@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.OpenAPI.Companion.Json
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -82,7 +81,6 @@ public data class Operation(
   public companion object {
     internal object Serializer :
       KSerializerWithExtensions<Operation>(
-        Json,
         serializer(),
         Operation::extensions,
         { op, extensions -> op.copy(extensions = extensions) }
