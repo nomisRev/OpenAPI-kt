@@ -9,18 +9,7 @@ plugins {
   alias(libs.plugins.dokka)
 }
 
-configure<SpotlessExtension> {
-  kotlin {
-    target("**/*.kt")
-    ktfmt().kotlinlangStyle().configure {
-      it.setBlockIndent(2)
-      it.setContinuationIndent(2)
-      it.setRemoveUnusedImport(true)
-    }
-    trimTrailingWhitespace()
-    endWithNewline()
-  }
-}
+
 
 kotlin {
   explicitApi()
