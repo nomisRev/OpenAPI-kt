@@ -23,9 +23,6 @@ import io.github.nomisrev.openapi.Model.Collection
 import kotlinx.serialization.json.JsonElement
 
 context(OpenAPIContext)
-fun Resolved<Model>.toTypeName(): TypeName = value.toTypeName()
-
-context(OpenAPIContext)
 fun Model.toTypeName(): TypeName =
   when (this) {
     is Model.Primitive.Boolean -> BOOLEAN
