@@ -35,13 +35,14 @@ private fun Root.apis(): List<FileSpec> =
   endpoints
     .map { intercept(it) }
     .map { api ->
-      val className = toClassName(Named(api.name))
+      val namingContext = Named(api.name)
+      val className = toClassName(namingContext)
       FileSpec.builder(`package`, className.simpleName)
         .addType(api.toInterface())
         .addFunction(
           FunSpec.builder(className.simpleName)
             .addParameter("client", ClassName("io.ktor.client", "HttpClient"))
-            .addStatement("return %T(client)", className)
+            .addStatement("return %T(client)", api.toImplementationClassName(namingContext))
             .returns(className)
             .build()
         )
@@ -148,9 +149,15 @@ private fun API.toInterface(outerContext: NamingContext? = null): TypeSpec {
 }
 
 context(OpenAPIContext)
-private fun API.toImplementation(outerContext: NamingContext? = null): TypeSpec {
+private fun API.toImplementationClassName(namingContext: NamingContext): ClassName {
   fun ClassName.postfix(postfix: String): ClassName =
     ClassName(packageName, simpleNames.map { it + postfix })
+
+  return toClassName(namingContext).postfix("Ktor")
+}
+
+context(OpenAPIContext)
+private fun API.toImplementation(outerContext: NamingContext? = null): TypeSpec {
 
   fun ClassName.toContext(): NamingContext {
     val names = simpleNames
@@ -164,7 +171,7 @@ private fun API.toImplementation(outerContext: NamingContext? = null): TypeSpec 
   }
 
   val outer = outerContext?.let { Nested(Named(name), it) } ?: Named(name)
-  val className = toClassName(outer).postfix("Ktor")
+  val className = toImplementationClassName(outer)
   val nested = nested.map { intercept(it) }
   val typeSpec = TypeSpec.classBuilder(className)
     .addModifiers(KModifier.PRIVATE)
