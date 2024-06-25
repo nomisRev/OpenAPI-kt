@@ -1,4 +1,3 @@
-import com.diffplug.gradle.spotless.SpotlessExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -10,7 +9,6 @@ plugins {
   alias(libs.plugins.publish) apply false
   alias(libs.plugins.assert)
   alias(libs.plugins.dokka)
-  alias(libs.plugins.spotless)
 }
 
 @Suppress("OPT_IN_USAGE")
@@ -48,19 +46,4 @@ subprojects {
 
 tasks.dokkaHtmlMultiModule {
   moduleName.set("OpenAPI-kt")
-}
-
-configure<SpotlessExtension> {
-  kotlin {
-    target("**/*.kt")
-    // can't deal with context receivers
-    targetExclude("/generation/src/**")
-    ktfmt().kotlinlangStyle().configure {
-      it.setBlockIndent(2)
-      it.setContinuationIndent(2)
-      it.setRemoveUnusedImport(true)
-    }
-    trimTrailingWhitespace()
-    endWithNewline()
-  }
 }

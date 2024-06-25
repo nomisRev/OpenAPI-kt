@@ -1,15 +1,11 @@
-import com.diffplug.gradle.spotless.SpotlessExtension
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 
 plugins {
   id(libs.plugins.multiplatform.get().pluginId)
   alias(libs.plugins.serialization)
   id(libs.plugins.publish.get().pluginId)
-  alias(libs.plugins.spotless)
   alias(libs.plugins.dokka)
 }
-
-
 
 kotlin {
   explicitApi()
