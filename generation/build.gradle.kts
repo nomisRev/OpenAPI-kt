@@ -5,8 +5,6 @@ plugins {
   alias(libs.plugins.serialization)
   id(libs.plugins.publish.get().pluginId)
   alias(libs.plugins.dokka)
-// Failing on Interceptors.kt
-//  alias(libs.plugins.spotless)
 }
 
 kotlin {

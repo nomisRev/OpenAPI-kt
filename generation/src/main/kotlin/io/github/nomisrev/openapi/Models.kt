@@ -37,7 +37,7 @@ context(OpenAPIContext)
 fun Model.toFileSpec(): FileSpec? =
   when (this) {
     is Collection ->
-      inner.value.toFileSpec()
+      inner.toFileSpec()
 
     is Model.Enum.Closed ->
       FileSpec.builder(`package`, toClassName(context).simpleName).addType(toTypeSpec()).build()
@@ -63,7 +63,7 @@ tailrec fun Model.toTypeSpecOrNull(): TypeSpec? =
     is Model.FreeFormJson,
     is Model.Primitive -> null
 
-    is Collection -> inner.value.toTypeSpecOrNull()
+    is Collection -> inner.toTypeSpecOrNull()
     is Model.Enum.Closed -> toTypeSpec()
     is Model.Enum.Open -> toTypeSpec()
     is Model.Object -> toTypeSpec()
@@ -80,8 +80,8 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
     .addTypes(
       cases.map { case ->
         val model = case.model
-        TypeSpec.classBuilder(toCaseClassName(this@toTypeSpec, case.model.value).simpleName)
-          .description(model.value.description)
+        TypeSpec.classBuilder(toCaseClassName(this@toTypeSpec, case.model).simpleName)
+          .description(model.description)
           .addModifiers(KModifier.VALUE)
           .addAnnotation(annotationSpec<JvmInline>())
           .primaryConstructor(
@@ -119,7 +119,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
                     val (placeholder, values) = case.model.serializer()
                     add(
                       "element(%S, $placeholder.descriptor)\n",
-                      toCaseClassName(this@toTypeSpec, case.model.value)
+                      toCaseClassName(this@toTypeSpec, case.model)
                         .simpleNames
                         .joinToString("."),
                       *values
@@ -144,7 +144,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
                     val (placeholder, values) = case.model.serializer()
                     addStatement(
                       "is %T -> encoder.encodeSerializableValue($placeholder, value.value)",
-                      toCaseClassName(this@toTypeSpec, case.model.value),
+                      toCaseClassName(this@toTypeSpec, case.model),
                       *values
                     )
                   }
@@ -176,8 +176,8 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
                     val (placeholder, values) = case.model.serializer()
                     add(
                       "Pair(%T::class) { %T(json.decodeFromJsonElement($placeholder, value)) },\n",
-                      toCaseClassName(this@toTypeSpec, case.model.value),
-                      toCaseClassName(this@toTypeSpec, case.model.value),
+                      toCaseClassName(this@toTypeSpec, case.model),
+                      toCaseClassName(this@toTypeSpec, case.model),
                       *values
                     )
                   }
@@ -216,9 +216,9 @@ private fun Model.Object.toTypeSpec(): TypeSpec =
               )
           }
           .description(prop.description)
-          .defaultValue(prop.model.value)
+          .defaultValue(prop.model)
           .apply {
-            val hasDefault = prop.model.value.hasDefault()
+            val hasDefault = prop.model.hasDefault()
             if (prop.isRequired && hasDefault) addAnnotation(annotationSpec<Required>())
             else if (!prop.isRequired && !hasDefault && prop.isNullable) defaultValue("null")
           }
@@ -228,7 +228,7 @@ private fun Model.Object.toTypeSpec(): TypeSpec =
     .apply {
       // Cannot serialize binary, these are used for multipart requests.
       // This occurs when request bodies are defined using top-level schemas.
-      if (properties.none { it.model.value is Model.OctetStream })
+      if (properties.none { it.model is Model.OctetStream })
         addAnnotation(annotationSpec<Serializable>())
     }
     .addTypes(inline.mapNotNull { it.toTypeSpecOrNull() })
@@ -398,9 +398,9 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
 }
 
 context(OpenAPIContext)
-private fun Resolved<Model>.serializer(): Pair<String, Array<Any>> {
+private fun Model.serializer(): Pair<String, Array<Any>> {
   val buffer = mutableListOf<Any>()
-  val placeholder = value.placeholder(buffer)
+  val placeholder = placeholder(buffer)
   return Pair(placeholder, buffer.toTypedArray())
 }
 
@@ -409,17 +409,17 @@ private fun Model.placeholder(buffer: MutableList<Any>): String =
   when (this) {
     is Collection.List -> {
       buffer.add(ListSerializer)
-      "%M(${inner.value.placeholder(buffer)})"
+      "%M(${inner.placeholder(buffer)})"
     }
 
     is Collection.Map -> {
       buffer.add(MapSerializer)
-      "%M(${key.placeholder(buffer)}, ${inner.value.placeholder(buffer)})"
+      "%M(${key.placeholder(buffer)}, ${inner.placeholder(buffer)})"
     }
 
     is Collection.Set -> {
       buffer.add(SetSerializer)
-      "%M(${inner.value.placeholder(buffer)})"
+      "%M(${inner.placeholder(buffer)})"
     }
 
     is Model.Primitive -> {

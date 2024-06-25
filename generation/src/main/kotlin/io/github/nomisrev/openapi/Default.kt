@@ -20,15 +20,15 @@ private fun defaultValueImpl(model: Model): Pair<String, List<Any>>? =
     is Collection.Set -> default(model, "setOf", model.default)
     is Model.Union ->
       model.cases
-        .find { it.model.value is Model.Primitive.String }
+        .find { it.model is Model.Primitive.String }
         ?.let { case ->
           model.default?.let { default ->
-            val typeName = toCaseClassName(model, case.model.value)
+            val typeName = toCaseClassName(model, case.model)
             Pair("%T(%S)", listOf(typeName, default))
           }
         }
     is Model.Object ->
-      if (model.properties.all { it.model.value.hasDefault() })
+      if (model.properties.all { it.model.hasDefault() })
         Pair("%T()", listOf(toClassName(model.context)))
       else null
     is Model.Enum ->
@@ -48,8 +48,8 @@ private fun default(
   when {
     default == null -> null
     default.isEmpty() -> Pair("emptyList()", emptyList())
-    model.inner.value is Model.Enum -> {
-      val enum = model.inner.value as Model.Enum
+    model.inner is Model.Enum -> {
+      val enum = model.inner as Model.Enum
       val enumClassName = toClassName(enum.context)
       val content = default.joinToString { "%T.%L" }
       val args = default.flatMap { listOf(enumClassName, toEnumValueName(it)) }

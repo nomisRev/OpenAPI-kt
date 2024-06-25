@@ -94,9 +94,9 @@ private class Nam(private val `package`: String) : Naming {
     depth: List<Collection>
   ): ClassName =
     when (case) {
-      is Collection.List -> toCaseClassName(union, case.inner.value, depth + listOf(case))
-      is Collection.Map -> toCaseClassName(union, case.inner.value, depth + listOf(case))
-      is Collection.Set -> toCaseClassName(union, case.inner.value, depth + listOf(case))
+      is Collection.List -> toCaseClassName(union, case.inner, depth + listOf(case))
+      is Collection.Map -> toCaseClassName(union, case.inner, depth + listOf(case))
+      is Collection.Set -> toCaseClassName(union, case.inner, depth + listOf(case))
       else -> {
         val head = depth.firstOrNull()
         val s =
