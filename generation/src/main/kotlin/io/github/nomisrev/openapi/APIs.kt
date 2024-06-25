@@ -103,7 +103,8 @@ private fun TypeSpec.Builder.apiConstructor(): TypeSpec.Builder =
     )
 
 context(OpenAPIContext)
-private fun Route.nestedTypes(): List<TypeSpec> = inputs() + returns() + bodies()
+private fun Route.nestedTypes(): List<TypeSpec> =
+  inputs() + returns() + bodies()
 
 context(OpenAPIContext)
 private fun Route.inputs(): List<TypeSpec> =
@@ -134,7 +135,7 @@ private fun API.toInterface(outerContext: NamingContext? = null): TypeSpec {
   val nested = nested.map { intercept(it) }
   val typeSpec = TypeSpec.interfaceBuilder(toClassName(outer))
     .addFunctions(routes.map { it.toFun(implemented = false) })
-    .addTypes(routes.flatMap { it.nestedTypes() })
+    .addTypes(routes.flatMap { r -> r.nested.mapNotNull { it.toTypeSpecOrNull() } })
     .addTypes(nested.map { it.toInterface(outer) })
     .addProperties(
       nested.map {
