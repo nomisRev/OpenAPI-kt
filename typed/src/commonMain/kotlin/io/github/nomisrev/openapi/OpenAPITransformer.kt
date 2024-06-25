@@ -115,24 +115,36 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     }
 
   fun Resolved<Schema>.toModel(context: NamingContext): Resolved<Model> {
+    val schema: Schema = value
     val model =
       when {
-        value.isOpenEnumeration() ->
-          value.toOpenEnum(context, value.anyOf!!.firstNotNullOf { it.resolve().value.enum })
+        schema.isOpenEnumeration() ->
+          schema.toOpenEnum(context, schema.anyOf!!.firstNotNullOf { it.resolve().value.enum })
 
-        // We don't modify the existing schema's, or specification
-        //      this is Resolved.Value && value.anyOf != null && value.anyOf?.size == 1 ->
-        // value.anyOf!![0].resolve().toModel(context)
-        //      this is Resolved.Value && value.oneOf != null && value.oneOf?.size == 1 ->
-        // value.oneOf!![0].resolve().toModel(context)
-        value.anyOf != null -> value.toUnion(context, value.anyOf!!)
-        value.oneOf != null -> value.toUnion(context, value.oneOf!!)
-        value.allOf != null -> TODO("allOf")
-        value.enum != null -> value.toEnum(context, value.enum.orEmpty())
-        value.properties != null -> value.asObject(context)
+        /*
+         * We're modifying the schema here... Should we...?
+         * This is to flatten the following to just `String`
+         * "model": {
+         *   "description": "ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models/overview) for descriptions of them.\n",
+         *   "anyOf": [
+         *     {
+         *       "type": "string"
+         *     }
+         *   ]
+         * }
+         */
+        this is Resolved.Value && value.anyOf != null && value.anyOf?.size == 1 ->
+          value.anyOf!![0].resolve().toModel(context).value
+        this is Resolved.Value && value.oneOf != null && value.oneOf?.size == 1 ->
+          value.oneOf!![0].resolve().toModel(context).value
+        schema.anyOf != null -> schema.toUnion(context, schema.anyOf!!)
+        schema.oneOf != null -> schema.toUnion(context, schema.oneOf!!)
+        schema.allOf != null -> TODO("allOf")
+        schema.enum != null -> schema.toEnum(context, schema.enum.orEmpty())
+        schema.properties != null -> schema.asObject(context)
         // If no values, properties, or schemas, were found, lets check the types
-        value.type != null -> value.type(context, value.type!!)
-        else -> TODO("Schema: $value not yet supported. Please report to issue tracker.")
+        schema.type != null -> schema.type(context, schema.type!!)
+        else -> TODO("Schema: $schema not yet supported. Please report to issue tracker.")
       }
     return when (this) {
       is Resolved.Ref -> Resolved.Ref(name, model)

@@ -1,10 +1,10 @@
 package io.github.nomisrev.openapi
 
-import kotlinx.serialization.json.Json
 import java.io.BufferedReader
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.serialization.json.Json
 
 class OpenAPIJsonEnd2EndTest {
   @Test
@@ -16,8 +16,7 @@ class OpenAPIJsonEnd2EndTest {
   // TODO Has default response, without default key??
   @Ignore
   fun petstoreJsonIsomorphic() {
-    val openAPI =
-      OpenAPI.fromJson(resourceText("petstore.json"))
+    val openAPI = OpenAPI.fromJson(resourceText("petstore.json"))
     val json = Json.encodeToString(OpenAPI.serializer(), openAPI)
     assertEquals(openAPI, OpenAPI.fromJson(json))
   }

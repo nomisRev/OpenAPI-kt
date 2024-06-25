@@ -7,7 +7,6 @@ import com.charleskorn.kaml.YamlMap
 import com.charleskorn.kaml.YamlNode
 import com.charleskorn.kaml.YamlNull
 import com.charleskorn.kaml.YamlScalar
-import com.charleskorn.kaml.YamlScalarFormatException
 import com.charleskorn.kaml.YamlTaggedNode
 import io.github.nomisrev.openapi.Components.Companion.Serializer as ComponentsSerializer
 import kotlin.jvm.JvmStatic
@@ -22,7 +21,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
 
@@ -120,12 +118,16 @@ public data class OpenAPI(
     public fun fromJson(json: String): OpenAPI = Json.decodeFromString(serializer(), json)
 
     public fun fromYaml(yaml: String): OpenAPI {
-      val yaml = Yaml(
-        configuration = YamlConfiguration(
-          encodeDefaults = false,
-          strictMode = false,
-        )
-      ).parseToYamlNode(yaml)
+      val yaml =
+        Yaml(
+            configuration =
+              YamlConfiguration(
+                encodeDefaults = false,
+                strictMode = false,
+                allowAnchorsAndAliases = true
+              )
+          )
+          .parseToYamlNode(yaml)
       val json = yaml.toJsonElement()
       return Json.decodeFromJsonElement(serializer(), json)
     }
@@ -145,29 +147,20 @@ public data class OpenAPI(
 
 private fun YamlNode.toJsonElement(): JsonElement =
   when (this) {
-    is YamlList ->
-      JsonArray(items.map { it.toJsonElement() })
-
-    is YamlMap -> JsonObject(
-      entries.map { (k, v) ->
-        Pair(k.content, v.toJsonElement())
-      }.toMap()
-    )
-
+    is YamlList -> JsonArray(items.map { it.toJsonElement() })
+    is YamlMap -> JsonObject(entries.map { (k, v) -> Pair(k.content, v.toJsonElement()) }.toMap())
     is YamlNull -> JsonNull
-    is YamlScalar -> attempt(
-      { JsonPrimitive(toLong()) },
-      { JsonPrimitive(toDouble()) },
-      { JsonPrimitive(toBoolean()) },
-      { JsonPrimitive(content) }
-    )
-
+    is YamlScalar ->
+      attempt(
+        { JsonPrimitive(toLong()) },
+        { JsonPrimitive(toDouble()) },
+        { JsonPrimitive(toBoolean()) },
+        { JsonPrimitive(content) }
+      )
     is YamlTaggedNode -> innerNode.toJsonElement()
   }
 
-private fun <A> attempt(
-  vararg block: () -> A
-): A {
+private fun <A> attempt(vararg block: () -> A): A {
   var lastException: Throwable? = null
   for (b in block) {
     try {

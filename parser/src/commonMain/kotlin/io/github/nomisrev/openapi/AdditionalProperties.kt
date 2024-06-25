@@ -32,7 +32,9 @@ public sealed interface AdditionalProperties {
         return when {
           json is JsonPrimitive && json.booleanOrNull != null -> Allowed(json.boolean)
           json is JsonObject ->
-            PSchema(decoder.json.decodeFromJsonElement(ReferenceOr.serializer(Schema.serializer()), json))
+            PSchema(
+              decoder.json.decodeFromJsonElement(ReferenceOr.serializer(Schema.serializer()), json)
+            )
           else ->
             throw SerializationException("AdditionalProperties can only be a boolean or a schema")
         }

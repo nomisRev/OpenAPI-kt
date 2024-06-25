@@ -84,9 +84,12 @@ public data class Responses(
         encoder as JsonEncoder
         val default =
           value.default?.let {
-            encoder.json.encodeToJsonElement(ReferenceOr.serializer(Response.serializer()), it).jsonObject
+            encoder.json
+              .encodeToJsonElement(ReferenceOr.serializer(Response.serializer()), it)
+              .jsonObject
           }
-        val responses = encoder.json.encodeToJsonElement(responsesSerializer, value.responses).jsonObject
+        val responses =
+          encoder.json.encodeToJsonElement(responsesSerializer, value.responses).jsonObject
         val json = JsonObject((default ?: emptyMap()) + responses + value.extensions)
         encoder.encodeSerializableValue(JsonElement.serializer(), json)
       }
