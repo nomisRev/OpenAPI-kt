@@ -1,13 +1,5 @@
 package io.github.nomisrev.openapi
 
-import com.charleskorn.kaml.Yaml
-import com.charleskorn.kaml.YamlConfiguration
-import com.charleskorn.kaml.YamlList
-import com.charleskorn.kaml.YamlMap
-import com.charleskorn.kaml.YamlNode
-import com.charleskorn.kaml.YamlNull
-import com.charleskorn.kaml.YamlScalar
-import com.charleskorn.kaml.YamlTaggedNode
 import io.github.nomisrev.openapi.Components.Companion.Serializer as ComponentsSerializer
 import kotlin.jvm.JvmStatic
 import kotlinx.serialization.EncodeDefault
@@ -23,6 +15,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
+import org.yaml.snakeyaml.Yaml
 
 /** This is the root document object for the API specification. */
 @OptIn(ExperimentalSerializationApi::class)
@@ -118,17 +111,7 @@ public data class OpenAPI(
     public fun fromJson(json: String): OpenAPI = Json.decodeFromString(serializer(), json)
 
     public fun fromYaml(yaml: String): OpenAPI {
-      val yaml =
-        Yaml(
-            configuration =
-              YamlConfiguration(
-                encodeDefaults = false,
-                strictMode = false,
-                allowAnchorsAndAliases = true
-              )
-          )
-          .parseToYamlNode(yaml)
-      val json = yaml.toJsonElement()
+      val json = Yaml().load<Any?>(yaml).toJsonElement()
       return Json.decodeFromJsonElement(serializer(), json)
     }
 
@@ -145,29 +128,17 @@ public data class OpenAPI(
   }
 }
 
-private fun YamlNode.toJsonElement(): JsonElement =
+private fun Any?.toJsonElement(): JsonElement =
   when (this) {
-    is YamlList -> JsonArray(items.map { it.toJsonElement() })
-    is YamlMap -> JsonObject(entries.map { (k, v) -> Pair(k.content, v.toJsonElement()) }.toMap())
-    is YamlNull -> JsonNull
-    is YamlScalar ->
-      attempt(
-        { JsonPrimitive(toLong()) },
-        { JsonPrimitive(toDouble()) },
-        { JsonPrimitive(toBoolean()) },
-        { JsonPrimitive(content) }
-      )
-    is YamlTaggedNode -> innerNode.toJsonElement()
-  }
+    is List<*> -> JsonArray(map { it.toJsonElement() })
 
-private fun <A> attempt(vararg block: () -> A): A {
-  var lastException: Throwable? = null
-  for (b in block) {
-    try {
-      return b()
-    } catch (e: Throwable) {
-      lastException = e
-    }
+    is Map<*, *> ->
+      @Suppress("UNCHECKED_CAST")
+      JsonObject((this as Map<String, Any?>).mapValues { (_, v) -> v.toJsonElement() })
+
+    null -> JsonNull
+    is Number -> JsonPrimitive(this)
+    is Boolean -> JsonPrimitive(this)
+    is String -> JsonPrimitive(this)
+    else -> throw IllegalArgumentException("Unsupported type: ${this::class.simpleName}")
   }
-  throw lastException!!
-}

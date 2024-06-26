@@ -7,7 +7,7 @@ import kotlin.io.path.Path
 fun main() {
   generate(
     GenerationConfig(
-      "example/openai.json",
+      "openai-api.yaml",
       "generation/build/geneated",
       "io.github.nomisrev.openapi",
       "OpenAI"

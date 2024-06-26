@@ -18,7 +18,9 @@ kotlin {
     commonMain {
       dependencies {
         api(libs.json)
-        api("com.charleskorn.kaml:kaml:0.60.0")
+        // This should be KAML, but parsing OpenAI takes 57seconds
+        // Compared to 100ms with SnakeYAML
+        implementation("org.yaml:snakeyaml:2.1")
       }
     }
     jvmTest {
