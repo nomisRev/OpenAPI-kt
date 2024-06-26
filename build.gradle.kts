@@ -21,11 +21,11 @@ configure<PowerAssertGradleExtension> {
 
 subprojects {
   tasks {
-    withType(Jar::class.java) {
-      manifest {
-        attributes("Automatic-Module-Name" to "io.github.nomisrev")
-      }
-    }
+//    withType(Jar::class.java) {
+//      manifest {
+//        attributes("Automatic-Module-Name" to "io.github.nomisrev")
+//      }
+//    }
     withType<JavaCompile> {
       options.release.set(8)
     }

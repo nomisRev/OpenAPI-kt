@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi
 
-fun OpenAPI.root(): Root = routes().sort()
+fun OpenAPI.root(name: String): Root =
+  routes().sort(name)
 
 /**
  * ADT that models how to generate the API. Our OpenAPI document dictates the structure of the API,
@@ -37,8 +38,8 @@ private data class APIBuilder(
   fun build(): API = API(name, routes, nested.map { it.build() })
 }
 
-fun Iterable<Route>.sort(): Root {
-  val root = RootBuilder("OpenAPI", mutableListOf(), mutableListOf())
+private fun Iterable<Route>.sort(name: String): Root {
+  val root = RootBuilder(name, mutableListOf(), mutableListOf())
   forEach { route ->
     // Reduce paths like `/threads/{thread_id}/runs/{run_id}/submit_tool_outputs`
     // into [threads, runs, submit_tool_outputs]

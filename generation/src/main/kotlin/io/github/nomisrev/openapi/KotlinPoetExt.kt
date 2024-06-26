@@ -80,6 +80,12 @@ private fun List<ParameterSpec>.sorted(): List<ParameterSpec> {
 fun ClassName.nested(name: String): ClassName =
   ClassName(packageName, simpleName, name)
 
+fun ClassName.postfix(postfix: String): ClassName =
+  ClassName(
+    packageName,
+    simpleNames.dropLast(1) + (simpleNames.last() + postfix)
+  )
+
 val ContentType = ClassName("io.ktor.http", "ContentType")
 val HttpResponse = ClassName("io.ktor.client.statement", "HttpResponse")
 val SerialDescriptor = ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")

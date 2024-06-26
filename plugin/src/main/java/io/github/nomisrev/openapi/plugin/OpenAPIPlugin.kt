@@ -8,7 +8,7 @@ abstract class OpenAPIPlugin : Plugin<Project> {
     val extension = project.extensions.create("openApiConfig", OpenApiConfig::class.java, project)
 
     project.tasks.register("generateOpenApiClient", GenerateClientTask::class.java) {
-      it.spec.set(extension.spec)
+      it.spec.set(extension.specs)
     }
   }
 }

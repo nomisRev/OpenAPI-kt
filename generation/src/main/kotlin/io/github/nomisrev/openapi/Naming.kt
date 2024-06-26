@@ -2,10 +2,12 @@ package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.ClassName
 import io.github.nomisrev.openapi.Model.Collection
+import net.pearx.kasechange.splitToWords
 import net.pearx.kasechange.splitter.WordSplitterConfig
 import net.pearx.kasechange.splitter.WordSplitterConfigurable
 import net.pearx.kasechange.toCamelCase
 import net.pearx.kasechange.toPascalCase
+import java.util.*
 
 fun Naming(`package`: String): Naming = Nam(`package`)
 
@@ -29,9 +31,16 @@ private class Nam(private val `package`: String) : Naming {
       )
     )
 
-  private fun String.toPascalCase(): String = toPascalCase(wordSplitter)
+  private fun String.toPascalCase(): String =
+    splitToWords(wordSplitter).joinToString("") { word ->
+      word.replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase()
+        else it.toString()
+      }
+    }
 
-  private fun String.toCamelCase(): String = toCamelCase(wordSplitter)
+  private fun String.toCamelCase(): String =
+    toPascalCase().replaceFirstChar { it.lowercase() }
 
   override fun toClassName(context: NamingContext): ClassName =
     when (context) {
