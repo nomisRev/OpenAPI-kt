@@ -1,39 +1,44 @@
 package io.github.nomisrev.openapi.plugin
 
-import io.github.nomisrev.openapi.generate
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.RegularFileProperty
-import org.gradle.api.plugins.BasePlugin
-import org.gradle.api.tasks.InputFile
+import org.gradle.api.provider.ListProperty
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
+import org.gradle.workers.WorkerExecutor
+import javax.inject.Inject
 
 abstract class GenerateClientTask : DefaultTask() {
   init {
-    description = "A task to generate a Kotlin client based on OpenAPI"
-    group = BasePlugin.ASSEMBLE_TASK_NAME
+    description = "Generate a Kotlin client based on a configure OpenAPI Specification."
+    group = "openapi"
   }
 
-  @get:InputFile
+  @get:Input
   @get:Option(
-    option = "spec",
-    description = "The OpenAPI json file. Future will be supported soon."
+    option = "OpenApiSpec",
+    description = "The OpenAPI configuration"
   )
-  abstract val spec: RegularFileProperty
+  abstract val spec: ListProperty<SpecDefinition>
+
+  @Inject
+  abstract fun getWorkerExecutor(): WorkerExecutor
 
   @TaskAction
   fun sampleAction() {
-    val specPath =
-      requireNotNull(spec.orNull?.asFile?.toPath()?.toString()) {
-        "No OpenAPI Specification specified. Please provide a spec file."
+    val workQueue = getWorkerExecutor().noIsolation()
+    val specPath = requireNotNull(spec.orNull) { "No OpenAPI Config found" }
+    require(specPath.isNotEmpty()) { "No OpenAPI Config found" }
+    val output = project.layout.buildDirectory
+      .dir("generated/openapi/src/commonMain/kotlin")
+
+    specPath.forEach { spec ->
+      workQueue.submit(GenerateClientAction::class.java) { parameters ->
+        parameters.name.set(spec.name)
+        parameters.packageName.set(spec.packageName)
+        parameters.file.set(spec.file)
+        parameters.output.set(output)
       }
-    val output =
-      project.layout.buildDirectory
-        .dir("generated/openapi/src/commonMain/kotlin")
-        .get()
-        .asFile
-        .also { it.mkdirs() }
-        .path
-    generate(specPath, output)
+    }
   }
 }

@@ -58,7 +58,6 @@ public data class Encoding(
   public companion object {
     internal object Serializer :
       KSerializerWithExtensions<Encoding>(
-        OpenAPI.Json,
         serializer(),
         Encoding::extensions,
         { op, extensions -> op.copy(extensions = extensions) }

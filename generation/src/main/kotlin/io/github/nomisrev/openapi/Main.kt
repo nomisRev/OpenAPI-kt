@@ -4,15 +4,40 @@ import okio.FileSystem
 import okio.Path.Companion.toPath
 import kotlin.io.path.Path
 
-fun generate(path: String, output: String) {
-  val rawSpec = FileSystem.SYSTEM.read(path.toPath()) { readUtf8() }
-  val openAPI = OpenAPI.fromJson(rawSpec)
-  with(OpenAPIContext("io.github.nomisrev.openapi")) {
-    val root = openAPI.root()
+fun main() {
+  generate(
+    GenerationConfig(
+      "openai-api.yaml",
+      "generation/build/geneated",
+      "io.github.nomisrev.openapi",
+      "OpenAI"
+    )
+  )
+}
+
+data class GenerationConfig(
+  val path: String,
+  val output: String,
+  val `package`: String,
+  val name: String
+)
+
+@JvmOverloads
+fun generate(config: GenerationConfig, fileSystem: FileSystem = FileSystem.SYSTEM) {
+  val rawSpec = fileSystem.read(config.path.toPath()) { readUtf8() }
+  val openAPI = when (val extension = config.path.substringAfterLast(".")) {
+    "json" -> OpenAPI.fromJson(rawSpec)
+    "yaml",
+    "yml" -> OpenAPI.fromYaml(rawSpec)
+
+    else -> throw IllegalArgumentException("Unsupported file extension: $extension")
+  }
+  with(OpenAPIContext(config.`package`)) {
+    val root = openAPI.root(config.name)
     val models = openAPI.models()
     val modelFileSpecs = models.toFileSpecs()
     val rootFileSpecs = root.toFileSpecs()
     val files = rootFileSpecs + modelFileSpecs + predef() + additionalFiles()
-    files.forEach { it.writeTo(Path(output)) }
+    files.forEach { it.writeTo(Path(config.output)) }
   }
 }

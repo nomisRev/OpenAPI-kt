@@ -12,7 +12,7 @@ kotlin {
 }
 
 dependencies {
-  implementation(libs.okio)
+  api(libs.okio)
   api(libs.ktor.client)
   api(projects.typed)
   api(libs.kasechange)

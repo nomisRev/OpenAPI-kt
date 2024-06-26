@@ -15,6 +15,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
+import org.yaml.snakeyaml.Yaml
 
 /** This is the root document object for the API specification. */
 @OptIn(ExperimentalSerializationApi::class)
@@ -109,8 +110,13 @@ public data class OpenAPI(
   public companion object {
     public fun fromJson(json: String): OpenAPI = Json.decodeFromString(serializer(), json)
 
+    public fun fromYaml(yaml: String): OpenAPI {
+      val json = Yaml().load<Any?>(yaml).toJsonElement()
+      return Json.decodeFromJsonElement(serializer(), json)
+    }
+
     @JvmStatic
-    internal val Json: Json = Json {
+    private val Json: Json = Json {
       encodeDefaults = false
       prettyPrint = true
       // TODO: Should this somehow be configurable?
@@ -121,3 +127,18 @@ public data class OpenAPI(
     }
   }
 }
+
+private fun Any?.toJsonElement(): JsonElement =
+  when (this) {
+    is List<*> -> JsonArray(map { it.toJsonElement() })
+
+    is Map<*, *> ->
+      @Suppress("UNCHECKED_CAST")
+      JsonObject((this as Map<String, Any?>).mapValues { (_, v) -> v.toJsonElement() })
+
+    null -> JsonNull
+    is Number -> JsonPrimitive(this)
+    is Boolean -> JsonPrimitive(this)
+    is String -> JsonPrimitive(this)
+    else -> throw IllegalArgumentException("Unsupported type: ${this::class.simpleName}")
+  }

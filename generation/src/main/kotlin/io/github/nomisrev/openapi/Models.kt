@@ -242,20 +242,35 @@ private fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
   return TypeSpec.enumBuilder(enumName)
     .description(description)
     .apply {
-      if (!isSimple)
+      if (!isSimple) {
         primaryConstructor(FunSpec.constructorBuilder().addParameter("value", STRING).build())
+        addProperty(
+          PropertySpec.builder("value", STRING)
+            .initializer("value")
+            .build()
+        )
+      }
       rawToName.forEach { (rawName, valueName) ->
         if (isSimple) addEnumConstant(rawName)
-        else
+        else {
           addEnumConstant(
             valueName,
             TypeSpec.anonymousClassBuilder()
               .addAnnotation(
                 annotationSpec<SerialName>().toBuilder().addMember("\"$rawName\"").build()
               )
+              .apply {
+                // If we're `9...` we need to drop backticks, and prefix with `_`
+                if (Regex("`[0-9]").matchesAt(valueName, 0)) addAnnotation(
+                  AnnotationSpec.builder(ClassName("kotlin.js", "JsName"))
+                    .addMember("\"_${valueName.drop(1).dropLast(1)}\"")
+                    .build()
+                )
+              }
               .addSuperclassConstructorParameter("\"$rawName\"")
               .build()
           )
+        }
       }
     }
     .addAnnotation(annotationSpec<Serializable>())

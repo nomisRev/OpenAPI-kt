@@ -46,7 +46,6 @@ public data class MediaType(
   public companion object {
     internal object Serializer :
       KSerializerWithExtensions<MediaType>(
-        OpenAPI.Json,
         serializer(),
         MediaType::extensions,
         { op, extensions -> op.copy(extensions = extensions) }

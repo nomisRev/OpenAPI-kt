@@ -9,8 +9,8 @@ plugins {
 
 kotlin {
   jvm()
-  macosArm64()
-  linuxX64()
+//  macosArm64()
+//  linuxX64()
 
   sourceSets {
     commonMain {

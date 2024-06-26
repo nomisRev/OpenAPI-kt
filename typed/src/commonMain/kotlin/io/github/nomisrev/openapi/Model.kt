@@ -13,7 +13,8 @@ data class Route(
   val body: Bodies,
   val input: List<Input>,
   val returnType: Returns,
-  val extensions: Map<String, JsonElement>
+  val extensions: Map<String, JsonElement>,
+  val nested: List<Model>
 ) {
   data class Bodies(
     /** Request bodies are optional by default! */
@@ -70,12 +71,15 @@ data class Route(
 
       data class FormData(val name: String, val type: Model)
 
+      // Inline schemas for multipart bodies do not generate a type,
+      // they should be defined as functions parameters.
       data class Value(
         override val parameters: List<FormData>,
         override val description: String?,
         override val extensions: Map<String, JsonElement>
       ) : Multipart, List<FormData> by parameters
 
+      // Top-level references get a top-level type.
       data class Ref(
         val name: String,
         val value: Model,

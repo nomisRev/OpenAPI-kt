@@ -9,12 +9,12 @@ import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.withIndent
 import io.github.nomisrev.openapi.NamingContext.Named
 import io.github.nomisrev.openapi.NamingContext.Nested
+import io.ktor.http.*
 
 fun configure(defaults: Boolean) =
   ParameterSpec.builder(
@@ -51,10 +51,14 @@ private fun Root.apis(): List<FileSpec> =
     }
 
 context(OpenAPIContext)
+private fun Root.className(): ClassName =
+  toClassName(Named(name))
+
+context(OpenAPIContext)
 private fun Root.root() =
-  FileSpec.builder(`package`, "OpenAPI")
+  FileSpec.builder(`package`, className().simpleName)
     .addType(
-      TypeSpec.interfaceBuilder("OpenAPI")
+      TypeSpec.interfaceBuilder(className())
         .addProperties(
           endpoints.map { api ->
             PropertySpec.builder(toParamName(Named(api.name)), toClassName(Named(api.name)))
@@ -65,16 +69,16 @@ private fun Root.root() =
     )
     .addFunctions(operations.map { it.toFun(implemented = false) })
     .addFunction(
-      FunSpec.builder("OpenAPI")
+      FunSpec.builder(className().simpleName)
         .addParameter("client", ClassName("io.ktor.client", "HttpClient"))
-        .addStatement("return %T(client)", ClassName(`package`, "OpenAPIKtor"))
-        .returns(ClassName(`package`, "OpenAPI"))
+        .addStatement("return %T(client)", className().postfix("Ktor"))
+        .returns(className())
         .build()
     )
     .addType(
-      TypeSpec.classBuilder(ClassName(`package`, "OpenAPIKtor"))
+      TypeSpec.classBuilder(className().postfix("Ktor"))
         .addModifiers(KModifier.PRIVATE)
-        .addSuperinterface(ClassName(`package`, "OpenAPI"))
+        .addSuperinterface(className())
         .apiConstructor()
         .addProperties(
           endpoints.map { api ->
@@ -103,38 +107,12 @@ private fun TypeSpec.Builder.apiConstructor(): TypeSpec.Builder =
     )
 
 context(OpenAPIContext)
-private fun Route.nestedTypes(): List<TypeSpec> = inputs() + returns() + bodies()
-
-context(OpenAPIContext)
-private fun Route.inputs(): List<TypeSpec> =
-  input.mapNotNull { it.type.toTypeSpecOrNull() }
-
-context(OpenAPIContext)
-private fun Route.returns(): List<TypeSpec> =
-  returnType.types.values.mapNotNull { it.type.toTypeSpecOrNull() }
-
-context(OpenAPIContext)
-private fun Route.bodies(): List<TypeSpec> =
-  body.types.values.flatMap { body ->
-    when (body) {
-      is Route.Body.Json.Defined ->
-        listOfNotNull(body.type.toTypeSpecOrNull())
-
-      is Route.Body.Multipart.Value -> body.parameters.mapNotNull { it.type.toTypeSpecOrNull() }
-      is Route.Body.Multipart.Ref,
-      is Route.Body.Xml,
-      is Route.Body.Json.FreeForm,
-      is Route.Body.OctetStream -> emptyList()
-    }
-  }
-
-context(OpenAPIContext)
 private fun API.toInterface(outerContext: NamingContext? = null): TypeSpec {
   val outer = outerContext?.let { Nested(Named(name), it) } ?: Named(name)
   val nested = nested.map { intercept(it) }
   val typeSpec = TypeSpec.interfaceBuilder(toClassName(outer))
     .addFunctions(routes.map { it.toFun(implemented = false) })
-    .addTypes(routes.flatMap { it.nestedTypes() })
+    .addTypes(routes.flatMap { r -> r.nested.mapNotNull { it.toTypeSpecOrNull() } })
     .addTypes(nested.map { it.toInterface(outer) })
     .addProperties(
       nested.map {
@@ -158,7 +136,6 @@ private fun API.toImplementationClassName(namingContext: NamingContext): ClassNa
 
 context(OpenAPIContext)
 private fun API.toImplementation(outerContext: NamingContext? = null): TypeSpec {
-
   fun ClassName.toContext(): NamingContext {
     val names = simpleNames
     return when (names.size) {
@@ -204,7 +181,7 @@ private fun Route.toFun(implemented: Boolean): FunSpec =
     .addParameters(params(defaults = !implemented))
     .addParameters(requestBody(defaults = !implemented))
     .addParameter(configure(defaults = !implemented))
-    .returns(returnType())
+    .returnType()
     .apply {
       if (implemented) {
         addCode(
@@ -349,12 +326,29 @@ fun Route.requestBody(defaults: Boolean): List<ParameterSpec> {
 }
 
 // TODO generate an ADT to properly support all return types
-context(OpenAPIContext)
-fun Route.returnType(): TypeName {
-  val success =
-    returnType.types.toSortedMap { s1, s2 -> s1.compareTo(s2) }.entries.first()
-  return when (success.value.type) {
-    is Model.OctetStream -> HttpResponse
-    else -> success.value.type.toTypeName()
+context(OpenAPIContext, Route)
+fun FunSpec.Builder.returnType(): FunSpec.Builder =
+  if (returnType.types.size == 1) {
+    val single = returnType.types.entries.single()
+    val typeName = when (single.value.type) {
+      is Model.OctetStream -> HttpResponse
+      else -> single.value.type.toTypeName()
+    }
+    returns(typeName)
+  } else {
+    val response = ClassName(`package`, "${operation.operationId}Response")
+    // TODO Add to FileSpec
+    TypeSpec.interfaceBuilder(response)
+      .addModifiers(KModifier.SEALED)
+      .addTypes(
+        returnType.types.map { (status: HttpStatusCode, type) ->
+          val case = ClassName(`package`, status.description.split(" ").joinToString(""))
+          TypeSpec.dataClassBuilder(
+            case,
+            listOf(ParameterSpec.builder("value", type.type.toTypeName()).build())
+          ).build()
+        }
+      )
+      .build()
+    returns(response)
   }
-}

@@ -38,7 +38,6 @@ public data class Components(
   public companion object {
     internal object Serializer :
       KSerializerWithExtensions<Components>(
-        OpenAPI.Json,
         serializer(),
         Components::extensions,
         { op, extensions -> op.copy(extensions = extensions) }
