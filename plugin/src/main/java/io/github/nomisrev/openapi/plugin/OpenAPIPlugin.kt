@@ -8,8 +8,6 @@ import java.io.File
 abstract class OpenAPIPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     val extension = project.extensions.create("openApiConfig", OpenApiConfig::class.java, project)
-    val sources by lazy { sources(project) }
-
     with(project.tasks) {
       val generateOpenApiClient =
         register("generateOpenApiClient", GenerateClientTask::class.java) {
@@ -17,7 +15,7 @@ abstract class OpenAPIPlugin : Plugin<Project> {
         }
 
       maybeCreate("prepareKotlinIdeaImport").dependsOn(generateOpenApiClient)
-      sources.forEach { source ->
+      project.sources().forEach { source ->
         val outputDirectoryProvider: Provider<File> =
           generateOpenApiClient.map { _ -> project.output }
         // Add the source dependency on the generated code.

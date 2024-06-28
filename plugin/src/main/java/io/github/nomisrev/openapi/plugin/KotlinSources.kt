@@ -7,7 +7,6 @@ package io.github.nomisrev.openapi.plugin
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
-import com.android.build.gradle.internal.crash.afterEvaluate
 import org.gradle.api.Project
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.provider.Provider
@@ -17,33 +16,15 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import java.io.File
 
-/**
- * @return A list of source roots and their dependencies.
- *
- * Examples:
- *   Multiplatform Environment. Ios target labeled "ios".
- *     -> iosMain deps [commonMain]
- *
- *   Android environment. internal, production, release, debug variants.
- *     -> internalDebug deps [internal, debug, main]
- *     -> internalRelease deps [internal, release, main]
- *     -> productionDebug deps [production, debug, main]
- *     -> productionRelease deps [production, release, main]
- *
- *    Multiplatform environment with android target (oh boy)
- */
-internal fun sources(project: Project): List<Source> {
-  project.extensions.findByType(KotlinMultiplatformExtension::class.java)?.let {
-    return it.sources()
-  }
+internal fun Project.sources(): List<Source> {
+  project.extensions.findByType(KotlinMultiplatformExtension::class.java)
+    ?.let { return it.sources() }
 
-  project.extensions.findByType(KotlinJsProjectExtension::class.java)?.let {
-    return it.sources()
-  }
+  project.extensions.findByType(KotlinJsProjectExtension::class.java)
+    ?.let { return it.sources() }
 
-  project.extensions.findByName("android")?.let {
-    return (it as BaseExtension).sources(project)
-  }
+  project.extensions.findByName("android")
+    ?.let { return (it as BaseExtension).sources(project) }
 
   val sourceSets = (project.extensions.getByName("kotlin") as KotlinProjectExtension).sourceSets
   return listOf(
@@ -73,11 +54,8 @@ private fun KotlinJsProjectExtension.sources(): List<Source> {
   )
 }
 
-private fun KotlinMultiplatformExtension.sources(): List<Source> {
-  // For multiplatform we only support SQLDelight in commonMain - to support other source sets
-  // we would need to generate expect/actual SQLDelight code which at least right now doesn't
-  // seem like there is a use case for. However this code is capable of running on any Target type.
-  return listOf(
+private fun KotlinMultiplatformExtension.sources(): List<Source> =
+  listOf(
     Source(
       type = KotlinPlatformType.common,
       nativePresetName = "common",
@@ -90,7 +68,6 @@ private fun KotlinMultiplatformExtension.sources(): List<Source> {
       },
     ),
   )
-}
 
 private fun BaseExtension.sources(project: Project): List<Source> {
   val variants = when (this) {

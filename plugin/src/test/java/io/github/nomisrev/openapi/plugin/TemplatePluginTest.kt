@@ -28,7 +28,6 @@ class TemplatePluginTest {
     (project.extensions.getByName("openApiConfig") as OpenApiConfig).apply {
       spec("Test", input) {
         packageName = "com.example"
-        output = project.layout.buildDirectory.dir("generated/openapi/src/commonMain/kotlin")
       }
     }
 
