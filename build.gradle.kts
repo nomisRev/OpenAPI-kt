@@ -1,4 +1,6 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
+import com.vanniktech.maven.publish.MavenPublishBasePlugin
+import com.vanniktech.maven.publish.SonatypeHost
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -17,6 +19,8 @@ val assertId =
   libs.plugins.assert.get().pluginId
 val spotlessId =
   libs.plugins.spotless.get().pluginId
+val publishId =
+  libs.plugins.publish.get().pluginId
 
 subprojects {
   apply(plugin = assertId)
@@ -27,6 +31,7 @@ subprojects {
       "kotlin.test.assertTrue"
     )
   }
+
   apply(plugin = spotlessId)
   configure<SpotlessExtension> {
     kotlin {
@@ -38,12 +43,14 @@ subprojects {
       }
     }
   }
+  apply(plugin = publishId)
+  configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
+    val shouldSign = project.gradle.startParameter.taskNames.none {
+      it.contains("publishToMavenLocal", ignoreCase = true)
+    }
+    if (shouldSign) signAllPublications()
+  }
   tasks {
-//    withType(Jar::class.java) {
-//      manifest {
-//        attributes("Automatic-Module-Name" to "io.github.nomisrev")
-//      }
-//    }
     withType<JavaCompile> {
       options.release.set(11)
     }
