@@ -1,5 +1,4 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   id(libs.plugins.multiplatform.get().pluginId)
@@ -10,8 +9,8 @@ plugins {
 
 kotlin {
   jvm()
-//  macosArm64()
-//  linuxX64()
+  //  macosArm64()
+  //  linuxX64()
 
   sourceSets {
     commonMain {
@@ -30,7 +29,9 @@ tasks.withType<DokkaTaskPartial>().configureEach {
       includes.from("README.md")
       sourceLink {
         localDirectory.set(file("src/commonMain/kotlin"))
-        remoteUrl.set(uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/typed/src/commonMain").toURL())
+        remoteUrl.set(
+          uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/typed/src/commonMain").toURL()
+        )
         remoteLineSuffix.set("#L")
       }
     }
