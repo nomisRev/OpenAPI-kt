@@ -1,4 +1,5 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   id(libs.plugins.multiplatform.get().pluginId)

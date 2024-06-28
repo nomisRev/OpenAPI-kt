@@ -1,4 +1,5 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   id(libs.plugins.jvm.get().pluginId)
@@ -8,9 +9,10 @@ plugins {
 }
 
 dependencies {
-  implementation(libs.stdlib)
-  implementation(libs.gradle)
   implementation(projects.generation)
+  implementation(libs.stdlib)
+  compileOnly(libs.gradle)
+  implementation(libs.android.plugin)
   testImplementation(libs.test)
 }
 
