@@ -18,15 +18,6 @@ abstract class OpenApiConfig @Inject constructor(private val project: Project) {
     val builder = OpenApiBuilder().apply(configure)
     specs.add(SpecDefinition(name, file, builder.packageName))
   }
-
-  fun spec(
-    name: String,
-    path: String,
-    configure: OpenApiBuilder.() -> Unit = {}
-  ) {
-    val builder = OpenApiBuilder().apply(configure)
-    specs.add(SpecDefinition(name, project.file(path), builder.packageName))
-  }
 }
 
 data class OpenApiBuilder(

@@ -29,15 +29,12 @@ abstract class GenerateClientTask : DefaultTask() {
     val workQueue = getWorkerExecutor().noIsolation()
     val specPath = requireNotNull(spec.orNull) { "No OpenAPI Config found" }
     require(specPath.isNotEmpty()) { "No OpenAPI Config found" }
-    val output = project.layout.buildDirectory
-      .dir("generated/openapi/src/commonMain/kotlin")
-
     specPath.forEach { spec ->
       workQueue.submit(GenerateClientAction::class.java) { parameters ->
         parameters.name.set(spec.name)
         parameters.packageName.set(spec.packageName)
         parameters.file.set(spec.file)
-        parameters.output.set(output)
+        parameters.output.set(project.output)
       }
     }
   }

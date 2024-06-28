@@ -27,11 +27,11 @@ subprojects {
 //      }
 //    }
     withType<JavaCompile> {
-      options.release.set(8)
+      options.release.set(11)
     }
     withType<KotlinCompile> {
       compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_1_8)
+        jvmTarget.set(JvmTarget.JVM_11)
       }
     }
     withType<Test> {
