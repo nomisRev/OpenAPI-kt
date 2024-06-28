@@ -22,7 +22,6 @@ fun OpenAPI.models(): Set<Model> =
         is Primitive.Boolean,
         is Primitive.String,
         is Primitive.Unit -> null
-
         else -> model
       }
     }
@@ -72,16 +71,16 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
       val inputs = operation.input(::context)
       val nestedInput = inputs.mapNotNull { (it as? Resolved.Value)?.value }
-      val nestedResponses = operation
-        .responses
-        .responses
-        .mapNotNull { (_, refOrResponse) ->
+      val nestedResponses =
+        operation.responses.responses.mapNotNull { (_, refOrResponse) ->
           when (refOrResponse) {
             is ReferenceOr.Reference -> null
             is ReferenceOr.Value -> {
-              val resolved = refOrResponse.value.content.getOrElse("application/json") { null }
-                ?.schema
-                ?.resolve() ?: return@mapNotNull null
+              val resolved =
+                refOrResponse.value.content
+                  .getOrElse("application/json") { null }
+                  ?.schema
+                  ?.resolve() ?: return@mapNotNull null
               val context =
                 resolved
                   .namedOr {
@@ -90,38 +89,42 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                         "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
                       }
                     NamingContext.RouteBody(operationId, "Response")
-                  }.let(::context)
+                  }
+                  .let(::context)
               (resolved.toModel(context) as? Resolved.Value)?.value
             }
           }
         }
 
-      val json = operation
-        .requestBody
-        ?.valueOrNull()
-        ?.content
-        ?.getOrElse("application/json") { null }
-        ?.schema
-        ?.resolve()
+      val json =
+        operation.requestBody
+          ?.valueOrNull()
+          ?.content
+          ?.getOrElse("application/json") { null }
+          ?.schema
+          ?.resolve()
 
-      val nestedBody = json?.namedOr {
-        requireNotNull(operation.operationId?.let { Named("${it}Request") }) {
-          "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
-        }
-      }
-        ?.let(::context)
-        ?.let { (json.toModel(it) as? Resolved.Value)?.value }
-        .let(::listOfNotNull)
+      val nestedBody =
+        json
+          ?.namedOr {
+            requireNotNull(operation.operationId?.let { Named("${it}Request") }) {
+              "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
+            }
+          }
+          ?.let(::context)
+          ?.let { (json.toModel(it) as? Resolved.Value)?.value }
+          .let(::listOfNotNull)
 
       Route(
         operation = operation,
         path = path,
         method = method,
         body = toRequestBody(operation, operation.requestBody?.get(), ::context),
-        input = inputs.zip(operation.parameters) { model, p ->
-          val param = p.get()
-          Route.Input(param.name, model.value, param.required, param.input, param.description)
-        },
+        input =
+          inputs.zip(operation.parameters) { model, p ->
+            val param = p.get()
+            Route.Input(param.name, model.value, param.required, param.input, param.description)
+          },
         returnType = toResponses(operation, ::context),
         extensions = operation.extensions,
         nested = nestedInput + nestedResponses + nestedBody
@@ -176,10 +179,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
          */
         this is Resolved.Value && value.anyOf != null && value.anyOf?.size == 1 ->
           value.anyOf!![0].resolve().toModel(context).value
-
         this is Resolved.Value && value.oneOf != null && value.oneOf?.size == 1 ->
           value.oneOf!![0].resolve().toModel(context).value
-
         schema.anyOf != null -> schema.toUnion(context, schema.anyOf!!)
         schema.oneOf != null -> schema.toUnion(context, schema.oneOf!!)
         schema.allOf != null -> TODO("allOf")
@@ -208,10 +209,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val name = ref.drop(schemaRef.length)
         val schema =
           requireNotNull(openAPI.components.schemas[name]) {
-            "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
-          }
-            .valueOrNull()
-            ?: throw IllegalStateException("Remote schemas are not yet supported.")
+              "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+            }
+            .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
         onRef(name, schema)
       }
     }
@@ -223,10 +223,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val name = ref.drop(schemaRef.length)
         val schema =
           requireNotNull(openAPI.components.schemas[name]) {
-            "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
-          }
-            .valueOrNull()
-            ?: throw IllegalStateException("Remote schemas are not yet supported.")
+              "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+            }
+            .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
         Resolved.Ref(name, schema)
       }
     }
@@ -237,8 +236,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/responses/".length)
         requireNotNull(openAPI.components.responses[typeName]) {
-          "Response $typeName could not be found in ${openAPI.components.responses}. Is it missing?"
-        }
+            "Response $typeName could not be found in ${openAPI.components.responses}. Is it missing?"
+          }
           .get()
       }
     }
@@ -249,8 +248,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/parameters/".length)
         requireNotNull(openAPI.components.parameters[typeName]) {
-          "Parameter $typeName could not be found in ${openAPI.components.parameters}. Is it missing?"
-        }
+            "Parameter $typeName could not be found in ${openAPI.components.parameters}. Is it missing?"
+          }
           .get()
       }
     }
@@ -261,8 +260,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/requestBodies/".length)
         requireNotNull(openAPI.components.requestBodies[typeName]) {
-          "RequestBody $typeName could not be found in ${openAPI.components.requestBodies}. Is it missing?"
-        }
+            "RequestBody $typeName could not be found in ${openAPI.components.requestBodies}. Is it missing?"
+          }
           .get()
       }
     }
@@ -273,8 +272,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/pathItems/".length)
         requireNotNull(openAPI.components.pathItems[typeName]) {
-          "PathItem $typeName could not be found in ${openAPI.components.pathItems}. Is it missing?"
-        }
+            "PathItem $typeName could not be found in ${openAPI.components.pathItems}. Is it missing?"
+          }
           .get()
       }
     }
@@ -286,7 +285,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         when (val aProps = additionalProperties!!) {
           is AdditionalProperties.PSchema ->
             Collection.Map(aProps.value.resolve().toModel(context).value, description)
-
           is Allowed ->
             if (aProps.value) Model.FreeFormJson(description)
             else
@@ -294,7 +292,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                 "Illegal State: No additional properties allowed on empty object."
               )
         }
-
       else -> Model.FreeFormJson(description)
     }
 
@@ -345,7 +342,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           throw IllegalStateException(
             "Illegal State: No additional properties allowed on empty object."
           )
-
       Type.Basic.Boolean -> Primitive.Boolean(default?.toString()?.toBoolean(), description)
       Type.Basic.Integer -> Primitive.Int(default?.toString()?.toIntOrNull(), description)
       Type.Basic.Number -> Primitive.Double(default?.toString()?.toDoubleOrNull(), description)
@@ -353,7 +349,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       Type.Basic.String ->
         if (format == "binary") Model.OctetStream(description)
         else Primitive.String(default?.toString(), description)
-
       Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
     }
 
@@ -371,7 +366,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             else -> listOf(value)
           }
         }
-
         null -> null
       }
     return if (uniqueItems == true) Collection.Set(inner.value, default, description)
@@ -384,7 +378,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         when {
           type.types.size == 1 ->
             copy(type = type.types.single()).type(context, type.types.single())
-
           else ->
             Model.Union(
               context,
@@ -397,7 +390,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               emptyList()
             )
         }
-
       is Type.Basic -> toPrimitive(context, type)
     }
 
@@ -447,7 +439,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         inner.resolve().value.type
         TODO("Name generation for Type Arrays not yet supported")
       }
-
       Type.Basic.Object -> {
         // OpenAI specific:
         //   When there is an `event` property,
@@ -463,7 +454,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           context
         )
       }
-
       is Type.Array -> TODO()
       Type.Basic.Number -> TODO()
       Type.Basic.Boolean -> TODO()
@@ -475,15 +465,14 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           else ->
             NamingContext.Nested(
               inner =
-              Named(
-                enum.joinToString(prefix = "", separator = "Or") {
-                  it.replaceFirstChar(Char::uppercaseChar)
-                }
-              ),
+                Named(
+                  enum.joinToString(prefix = "", separator = "Or") {
+                    it.replaceFirstChar(Char::uppercaseChar)
+                  }
+                ),
               context
             )
         }
-
       null -> TODO()
     }
 
@@ -549,7 +538,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               is Resolved.Ref -> null
               null -> throw RuntimeException("Impossible: List without inner type")
             }
-
           else -> model.value
         }
     }
@@ -585,11 +573,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                     body.description,
                     mediaType.extensions
                   )
-                }
-                  ?: Route.Body.Json.FreeForm(body.description, mediaType.extensions)
+                } ?: Route.Body.Json.FreeForm(body.description, mediaType.extensions)
               Pair(ContentType.Application.Json, json)
             }
-
             ContentType.MultiPart.FormData.match(contentType) -> {
               val resolved =
                 mediaType.schema?.resolve()
@@ -619,7 +605,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                       mediaType.extensions
                     )
                   }
-
                   is Resolved.Value ->
                     Route.Body.Multipart.Value(
                       resolved.value.properties!!.map { (name, ref) ->
@@ -632,13 +617,11 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
               Pair(ContentType.MultiPart.FormData, multipart)
             }
-
             ContentType.Application.OctetStream.match(contentType) ->
               Pair(
                 ContentType.Application.OctetStream,
                 Route.Body.OctetStream(body.description, mediaType.extensions)
               )
-
             else ->
               throw IllegalStateException("RequestBody content type: $this not yet supported.")
           }
@@ -661,7 +644,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               statusCode,
               Route.ReturnType(Model.OctetStream(response.description), response.extensions)
             )
-
           response.content.contains("application/json") -> {
             val mediaType = response.content.getValue("application/json")
             val route =
@@ -679,7 +661,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                       .let(create)
                   Route.ReturnType(resolved.toModel(context).value, response.extensions)
                 }
-
                 null ->
                   Route.ReturnType(
                     if (Allowed(true).value) Model.FreeFormJson(response.description)
@@ -692,13 +673,11 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               }
             Pair(statusCode, route)
           }
-
           response.isEmpty() ->
             Pair(
               statusCode,
               Route.ReturnType(Primitive.String(null, response.description), response.extensions)
             )
-
           else ->
             throw IllegalStateException("OpenAPI requires at least 1 valid response. $response")
         }
@@ -719,8 +698,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
     data class Ref<A>(val name: String, override val value: A) : Resolved<A>
 
-    @JvmInline
-    value class Value<A>(override val value: A) : Resolved<A>
+    @JvmInline value class Value<A>(override val value: A) : Resolved<A>
 
     fun namedOr(orElse: () -> NamingContext): NamingContext =
       when (this) {

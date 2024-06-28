@@ -1,8 +1,8 @@
 package io.github.nomisrev.openapi
 
+import kotlin.io.path.Path
 import okio.FileSystem
 import okio.Path.Companion.toPath
-import kotlin.io.path.Path
 
 fun main() {
   generate(
@@ -25,13 +25,13 @@ data class GenerationConfig(
 @JvmOverloads
 fun generate(config: GenerationConfig, fileSystem: FileSystem = FileSystem.SYSTEM) {
   val rawSpec = fileSystem.read(config.path.toPath()) { readUtf8() }
-  val openAPI = when (val extension = config.path.substringAfterLast(".")) {
-    "json" -> OpenAPI.fromJson(rawSpec)
-    "yaml",
-    "yml" -> OpenAPI.fromYaml(rawSpec)
-
-    else -> throw IllegalArgumentException("Unsupported file extension: $extension")
-  }
+  val openAPI =
+    when (val extension = config.path.substringAfterLast(".")) {
+      "json" -> OpenAPI.fromJson(rawSpec)
+      "yaml",
+      "yml" -> OpenAPI.fromYaml(rawSpec)
+      else -> throw IllegalArgumentException("Unsupported file extension: $extension")
+    }
   with(OpenAPIContext(config.`package`)) {
     val root = openAPI.root(config.name)
     val models = openAPI.models()

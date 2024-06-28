@@ -1,3 +1,4 @@
+import com.diffplug.gradle.spotless.SpotlessExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -8,18 +9,35 @@ plugins {
   alias(libs.plugins.multiplatform) apply false
   alias(libs.plugins.publish) apply false
   alias(libs.plugins.assert)
+  alias(libs.plugins.spotless)
   alias(libs.plugins.dokka)
 }
 
-@Suppress("OPT_IN_USAGE")
-configure<PowerAssertGradleExtension> {
-  functions = listOf(
-    "kotlin.test.assertEquals",
-    "kotlin.test.assertTrue"
-  )
-}
+val assertId =
+  libs.plugins.assert.get().pluginId
+val spotlessId =
+  libs.plugins.spotless.get().pluginId
 
 subprojects {
+  apply(plugin = assertId)
+  @Suppress("OPT_IN_USAGE")
+  configure<PowerAssertGradleExtension> {
+    functions = listOf(
+      "kotlin.test.assertEquals",
+      "kotlin.test.assertTrue"
+    )
+  }
+  apply(plugin = spotlessId)
+  configure<SpotlessExtension> {
+    kotlin {
+      target("**/*.kt")
+      ktfmt().kotlinlangStyle().configure {
+        it.setBlockIndent(2)
+        it.setContinuationIndent(2)
+        it.setRemoveUnusedImport(true)
+      }
+    }
+  }
   tasks {
 //    withType(Jar::class.java) {
 //      manifest {

@@ -1,12 +1,12 @@
 package io.github.nomisrev.openapi.plugin
 
+import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.workers.WorkerExecutor
-import javax.inject.Inject
 
 abstract class GenerateClientTask : DefaultTask() {
   init {
@@ -15,14 +15,10 @@ abstract class GenerateClientTask : DefaultTask() {
   }
 
   @get:Input
-  @get:Option(
-    option = "OpenApiSpec",
-    description = "The OpenAPI configuration"
-  )
+  @get:Option(option = "OpenApiSpec", description = "The OpenAPI configuration")
   abstract val spec: ListProperty<SpecDefinition>
 
-  @Inject
-  abstract fun getWorkerExecutor(): WorkerExecutor
+  @Inject abstract fun getWorkerExecutor(): WorkerExecutor
 
   @TaskAction
   fun sampleAction() {

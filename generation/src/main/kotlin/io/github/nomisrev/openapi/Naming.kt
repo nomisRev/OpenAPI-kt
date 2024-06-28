@@ -2,20 +2,24 @@ package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.ClassName
 import io.github.nomisrev.openapi.Model.Collection
+import java.util.*
 import net.pearx.kasechange.splitToWords
 import net.pearx.kasechange.splitter.WordSplitterConfig
 import net.pearx.kasechange.splitter.WordSplitterConfigurable
 import net.pearx.kasechange.toCamelCase
 import net.pearx.kasechange.toPascalCase
-import java.util.*
 
 fun Naming(`package`: String): Naming = Nam(`package`)
 
 interface Naming {
   fun toClassName(context: NamingContext): ClassName
+
   fun toEnumValueName(rawToName: String): String
+
   fun toPropName(param: Model.Object.Property): String
+
   fun toCaseClassName(union: Model.Union, case: Model): ClassName
+
   fun toParamName(named: NamingContext.Named): String
 }
 
@@ -33,14 +37,10 @@ private class Nam(private val `package`: String) : Naming {
 
   private fun String.toPascalCase(): String =
     splitToWords(wordSplitter).joinToString("") { word ->
-      word.replaceFirstChar {
-        if (it.isLowerCase()) it.titlecase()
-        else it.toString()
-      }
+      word.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
     }
 
-  private fun String.toCamelCase(): String =
-    toPascalCase().replaceFirstChar { it.lowercase() }
+  private fun String.toCamelCase(): String = toPascalCase().replaceFirstChar { it.lowercase() }
 
   override fun toClassName(context: NamingContext): ClassName =
     when (context) {
@@ -49,7 +49,6 @@ private class Nam(private val `package`: String) : Naming {
         val inner = toClassName(context.inner)
         ClassName(`package`, outer.simpleNames + inner.simpleNames)
       }
-
       is NamingContext.Named -> ClassName(`package`, context.name.toPascalCase().dropArraySyntax())
       is NamingContext.RouteParam -> {
         requireNotNull(context.operationId) { "Need operationId to generate enum name" }
@@ -60,7 +59,6 @@ private class Nam(private val `package`: String) : Naming {
           "${context.operationId.toPascalCase()}${context.name.toPascalCase()}".dropArraySyntax()
         )
       }
-
       is NamingContext.RouteBody ->
         ClassName(
           `package`,
@@ -91,17 +89,10 @@ private class Nam(private val `package`: String) : Naming {
   // Workaround for OpenAI
   private fun String.dropArraySyntax(): String = replace("[]", "")
 
-  override fun toCaseClassName(
-    union: Model.Union,
-    case: Model
-  ): ClassName =
+  override fun toCaseClassName(union: Model.Union, case: Model): ClassName =
     toCaseClassName(union, case, emptyList())
 
-  private fun toCaseClassName(
-    union: Model.Union,
-    case: Model,
-    depth: List<Collection>
-  ): ClassName =
+  private fun toCaseClassName(union: Model.Union, case: Model, depth: List<Collection>): ClassName =
     when (case) {
       is Collection.List -> toCaseClassName(union, case.inner, depth + listOf(case))
       is Collection.Map -> toCaseClassName(union, case.inner, depth + listOf(case))

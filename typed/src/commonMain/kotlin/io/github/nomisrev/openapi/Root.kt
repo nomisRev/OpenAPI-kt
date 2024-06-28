@@ -1,7 +1,6 @@
 package io.github.nomisrev.openapi
 
-fun OpenAPI.root(name: String): Root =
-  routes().sort(name)
+fun OpenAPI.root(name: String): Root = routes().sort(name)
 
 /**
  * ADT that models how to generate the API. Our OpenAPI document dictates the structure of the API,
