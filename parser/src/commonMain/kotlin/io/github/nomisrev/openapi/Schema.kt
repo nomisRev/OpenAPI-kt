@@ -106,7 +106,8 @@ public data class Schema(
                 .decodeSerializableValue(ListSerializer(String.serializer()))
                 .mapNotNull(Basic.Companion::fromString)
             )
-          json is JsonPrimitive && json.isString -> Basic.fromString(json.content)
+          json is JsonPrimitive && json.isString ->
+            Basic.fromString(json.content)
               ?: throw SerializationException("Invalid Basic.Type value: ${json.content}")
           else -> throw SerializationException("Schema.Type can only be a string or an array")
         }

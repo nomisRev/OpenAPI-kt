@@ -7,6 +7,7 @@ package io.github.nomisrev.openapi.plugin
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.BaseExtension
 import com.android.build.gradle.LibraryExtension
+import java.io.File
 import org.gradle.api.Project
 import org.gradle.api.file.SourceDirectorySet
 import org.gradle.api.provider.Provider
@@ -14,17 +15,19 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinJsProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
-import java.io.File
 
 internal fun Project.sources(): List<Source> {
-  project.extensions.findByType(KotlinMultiplatformExtension::class.java)
-    ?.let { return it.sources() }
+  project.extensions.findByType(KotlinMultiplatformExtension::class.java)?.let {
+    return it.sources()
+  }
 
-  project.extensions.findByType(KotlinJsProjectExtension::class.java)
-    ?.let { return it.sources() }
+  project.extensions.findByType(KotlinJsProjectExtension::class.java)?.let {
+    return it.sources()
+  }
 
-  project.extensions.findByName("android")
-    ?.let { return (it as BaseExtension).sources(project) }
+  project.extensions.findByName("android")?.let {
+    return (it as BaseExtension).sources(project)
+  }
 
   val sourceSets = (project.extensions.getByName("kotlin") as KotlinProjectExtension).sourceSets
   return listOf(
@@ -70,14 +73,16 @@ private fun KotlinMultiplatformExtension.sources(): List<Source> =
   )
 
 private fun BaseExtension.sources(project: Project): List<Source> {
-  val variants = when (this) {
-    is AppExtension -> applicationVariants
-    is LibraryExtension -> libraryVariants
-    else -> throw IllegalStateException("Unknown Android plugin $this")
-  }
-  val kotlinSourceSets = (project.extensions.getByName("kotlin") as KotlinProjectExtension).sourceSets
-  val sourceSets = sourceSets
-    .associate { sourceSet ->
+  val variants =
+    when (this) {
+      is AppExtension -> applicationVariants
+      is LibraryExtension -> libraryVariants
+      else -> throw IllegalStateException("Unknown Android plugin $this")
+    }
+  val kotlinSourceSets =
+    (project.extensions.getByName("kotlin") as KotlinProjectExtension).sourceSets
+  val sourceSets =
+    sourceSets.associate { sourceSet ->
       sourceSet.name to kotlinSourceSets.getByName(sourceSet.name).kotlin
     }
 

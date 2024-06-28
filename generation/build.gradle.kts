@@ -1,5 +1,4 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   id(libs.plugins.jvm.get().pluginId)
@@ -8,9 +7,7 @@ plugins {
   alias(libs.plugins.dokka)
 }
 
-kotlin {
-  compilerOptions.freeCompilerArgs.add("-Xcontext-receivers")
-}
+kotlin { compilerOptions.freeCompilerArgs.add("-Xcontext-receivers") }
 
 dependencies {
   api(libs.okio)
@@ -27,7 +24,9 @@ tasks.withType<DokkaTaskPartial>().configureEach {
       includes.from("README.md")
       sourceLink {
         localDirectory.set(file("src/main/kotlin"))
-        remoteUrl.set(uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/generation/src/main").toURL())
+        remoteUrl.set(
+          uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/generation/src/main").toURL()
+        )
         remoteLineSuffix.set("#L")
       }
     }

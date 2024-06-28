@@ -7,14 +7,14 @@ dependencyResolutionManagement {
   }
 }
 
-plugins {
-  id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0"
-}
+plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "0.8.0" }
 
 rootProject.name = "openapi-kt"
 
 include("parser")
+
 include("typed")
+
 include("generation")
-include("plugin")
-//include("generic")
+
+include("plugin") // include("generic")

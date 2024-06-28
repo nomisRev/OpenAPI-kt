@@ -1,5 +1,4 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   id(libs.plugins.jvm.get().pluginId)
@@ -17,10 +16,8 @@ dependencies {
 }
 
 gradlePlugin {
-  @Suppress("UnstableApiUsage")
-  website.set(property("WEBSITE").toString())
-  @Suppress("UnstableApiUsage")
-  vcsUrl.set(property("VCS_URL").toString())
+  @Suppress("UnstableApiUsage") website.set(property("WEBSITE").toString())
+  @Suppress("UnstableApiUsage") vcsUrl.set(property("VCS_URL").toString())
   plugins {
     create(property("ID").toString()) {
       id = property("ID").toString()
@@ -28,8 +25,7 @@ gradlePlugin {
       version = properties["version"].toString()
       description = property("DESCRIPTION").toString()
       displayName = property("DISPLAY_NAME").toString()
-      @Suppress("UnstableApiUsage")
-      tags.set(listOf("Kotlin", "OpenAPI", "Code Generation"))
+      @Suppress("UnstableApiUsage") tags.set(listOf("Kotlin", "OpenAPI", "Code Generation"))
     }
   }
 }
@@ -41,7 +37,9 @@ tasks.withType<DokkaTaskPartial>().configureEach {
       includes.from("README.md")
       sourceLink {
         localDirectory.set(file("src/main/kotlin"))
-        remoteUrl.set(uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/gradle-plugin/src/main").toURL())
+        remoteUrl.set(
+          uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/gradle-plugin/src/main").toURL()
+        )
         remoteLineSuffix.set("#L")
       }
     }

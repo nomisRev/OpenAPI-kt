@@ -1,9 +1,9 @@
 package io.github.nomisrev.openapi.plugin
 
+import java.io.File
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
-import java.io.File
 
 abstract class OpenAPIPlugin : Plugin<Project> {
   override fun apply(project: Project) {
@@ -30,7 +30,4 @@ abstract class OpenAPIPlugin : Plugin<Project> {
 
 @Suppress("DEPRECATION")
 internal val Project.output
-  get() = File(
-    buildDir,
-    "generated/openapi/src/commonMain/kotlin"
-  ).also { it.mkdirs() }
+  get() = File(buildDir, "generated/openapi/src/commonMain/kotlin").also { it.mkdirs() }

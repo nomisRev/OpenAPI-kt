@@ -354,7 +354,8 @@ private class GenericEncoder(override val serializersModule: SerializersModule) 
           )
 
         // Probably similar to SEALED. Extracting the values.
-        PolymorphicKind.OPEN -> genericProperties["value"]
+        PolymorphicKind.OPEN ->
+          genericProperties["value"]
             ?: throw RuntimeException(
               "Internal error: no value found for $value in $genericProperties."
             )

@@ -131,11 +131,9 @@ public data class OpenAPI(
 private fun Any?.toJsonElement(): JsonElement =
   when (this) {
     is List<*> -> JsonArray(map { it.toJsonElement() })
-
     is Map<*, *> ->
       @Suppress("UNCHECKED_CAST")
       JsonObject((this as Map<String, Any?>).mapValues { (_, v) -> v.toJsonElement() })
-
     null -> JsonNull
     is Number -> JsonPrimitive(this)
     is Boolean -> JsonPrimitive(this)
