@@ -137,14 +137,3 @@ private class Nam(private val `package`: String) : Naming {
     }
 }
 
-private val numbers =
-  listOf(
-    "First",
-    "Second",
-    "Third",
-    "Fourth",
-    "Fifth",
-    "Sixth",
-    "Eighth",
-    "Ninth",
-  )

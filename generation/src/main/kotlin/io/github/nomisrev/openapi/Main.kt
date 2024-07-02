@@ -4,17 +4,6 @@ import kotlin.io.path.Path
 import okio.FileSystem
 import okio.Path.Companion.toPath
 
-fun main() {
-  generate(
-    GenerationConfig(
-      "openai-api.yaml",
-      "generation/build/generated",
-      "io.github.nomisrev.openapi",
-      "OpenAI"
-    )
-  )
-}
-
 data class GenerationConfig(
   val path: String,
   val output: String,
