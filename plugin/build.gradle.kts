@@ -11,7 +11,7 @@ dependencies {
   implementation(projects.generation)
   implementation(libs.stdlib)
   compileOnly(libs.gradle)
-  implementation(libs.android.plugin)
+  compileOnly(libs.android.plugin)
   testImplementation(libs.test)
 }
 

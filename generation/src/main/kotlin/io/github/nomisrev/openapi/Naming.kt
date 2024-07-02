@@ -49,6 +49,7 @@ private class Nam(private val `package`: String) : Naming {
         val inner = toClassName(context.inner)
         ClassName(`package`, outer.simpleNames + inner.simpleNames)
       }
+
       is NamingContext.Named -> ClassName(`package`, context.name.toPascalCase().dropArraySyntax())
       is NamingContext.RouteParam -> {
         requireNotNull(context.operationId) { "Need operationId to generate enum name" }
@@ -59,6 +60,7 @@ private class Nam(private val `package`: String) : Naming {
           "${context.operationId.toPascalCase()}${context.name.toPascalCase()}".dropArraySyntax()
         )
       }
+
       is NamingContext.RouteBody ->
         ClassName(
           `package`,
@@ -121,8 +123,22 @@ private class Nam(private val `package`: String) : Naming {
             is Collection -> throw RuntimeException("Impossible path.")
             is Model.OctetStream -> "Binary"
             is Model.FreeFormJson -> "JsonElement"
-            is Model.Enum -> toClassName(case.context).simpleName
-            is Model.Object -> toClassName(case.context).simpleName
+            is Model.Enum ->
+              if (case.context is NamingContext.Nested)
+                case.values.joinToString(prefix = "", separator = "Or") {
+                  it.replaceFirstChar(Char::uppercaseChar)
+                } else toClassName(case.context).simpleName
+
+            is Model.Object ->
+              if (case.context is NamingContext.Nested) {
+                case.properties
+                  .firstNotNullOfOrNull { (key, value) ->
+                    if (key == "event" || key == "type") (value as? Model.Enum)?.values
+                    else null
+                  }?.singleOrNull()
+                  ?.let { toClassName(NamingContext.Named(it)).simpleName } ?: TODO()
+              } else toClassName(case.context).simpleName
+
             is Model.Union -> toClassName(case.context).simpleName
             is Model.Primitive.Boolean -> "Boolean"
             is Model.Primitive.Double -> "Double"
@@ -136,3 +152,15 @@ private class Nam(private val `package`: String) : Naming {
       }
     }
 }
+
+private val numbers =
+  listOf(
+    "First",
+    "Second",
+    "Third",
+    "Fourth",
+    "Fifth",
+    "Sixth",
+    "Eighth",
+    "Ninth",
+  )

@@ -8,7 +8,7 @@ fun main() {
   generate(
     GenerationConfig(
       "openai-api.yaml",
-      "generation/build/geneated",
+      "generation/build/generated",
       "io.github.nomisrev.openapi",
       "OpenAI"
     )
