@@ -199,10 +199,7 @@ sealed interface Model {
     override val description: String?,
     val inline: List<Model>
   ) : Model {
-    data class Case(
-      val context: NamingContext,
-      val model: Model
-    )
+    data class Case(val context: NamingContext, val model: Model)
   }
 
   sealed interface Enum : Model {
