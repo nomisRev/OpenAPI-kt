@@ -121,21 +121,8 @@ private class Nam(private val `package`: String) : Naming {
             is Collection -> throw RuntimeException("Impossible path.")
             is Model.OctetStream -> "Binary"
             is Model.FreeFormJson -> "JsonElement"
-            is Model.Enum ->
-              if (case.context is NamingContext.Nested)
-                case.values.joinToString(prefix = "", separator = "Or") {
-                  it.replaceFirstChar(Char::uppercaseChar)
-                }
-              else toClassName(case.context).simpleName
-            is Model.Object ->
-              if (case.context is NamingContext.Nested) {
-                case.properties
-                  .firstNotNullOfOrNull { (key, value) ->
-                    if (key == "event" || key == "type") (value as? Model.Enum)?.values else null
-                  }
-                  ?.singleOrNull()
-                  ?.let { toClassName(NamingContext.Named(it)).simpleName } ?: TODO()
-              } else toClassName(case.context).simpleName
+            is Model.Enum -> toClassName(case.context).simpleName
+            is Model.Object -> toClassName(case.context).simpleName
             is Model.Union -> toClassName(case.context).simpleName
             is Model.Primitive.Boolean -> "Boolean"
             is Model.Primitive.Double -> "Double"

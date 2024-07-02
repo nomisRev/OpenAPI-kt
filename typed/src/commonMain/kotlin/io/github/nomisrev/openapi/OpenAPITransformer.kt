@@ -55,19 +55,17 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       val parts = path.replace(Regex("\\{.*?\\}"), "").split("/").filter { it.isNotEmpty() }
 
       fun context(context: NamingContext): NamingContext =
-        if (context is Named) context
-        else
-          when (parts.size) {
-            0 -> context
-            1 -> NamingContext.Nested(context, Named(parts[0]))
-            else ->
-              NamingContext.Nested(
-                context,
-                parts.drop(1).fold<String, NamingContext>(Named(parts[0])) { acc, part ->
-                  NamingContext.Nested(Named(part), acc)
-                }
-              )
-          }
+        when (parts.size) {
+          0 -> context
+          1 -> NamingContext.Nested(context, Named(parts[0]))
+          else ->
+            NamingContext.Nested(
+              context,
+              parts.drop(1).fold<String, NamingContext>(Named(parts[0])) { acc, part ->
+                NamingContext.Nested(Named(part), acc)
+              }
+            )
+        }
 
       val inputs = operation.input(::context)
       val nestedInput = inputs.mapNotNull { (it as? Resolved.Value)?.value }
@@ -82,15 +80,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   ?.schema
                   ?.resolve() ?: return@mapNotNull null
               val context =
-                resolved
-                  .namedOr {
-                    val operationId =
-                      requireNotNull(operation.operationId) {
-                        "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
-                      }
-                    NamingContext.RouteBody(operationId, "Response")
-                  }
-                  .let(::context)
+                resolved.namedOr {
+                  val operationId =
+                    requireNotNull(operation.operationId) {
+                      "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
+                    }
+                  context(NamingContext.RouteBody(operationId, "Response"))
+                }
               (resolved.toModel(context) as? Resolved.Value)?.value
             }
           }
@@ -107,11 +103,12 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       val nestedBody =
         json
           ?.namedOr {
-            requireNotNull(operation.operationId?.let { Named("${it}Request") }) {
-              "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
-            }
+            val name =
+              requireNotNull(operation.operationId?.let { Named("${it}Request") }) {
+                "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
+              }
+            context(name)
           }
-          ?.let(::context)
           ?.let { (json.toModel(it) as? Resolved.Value)?.value }
           .let(::listOfNotNull)
 
@@ -137,15 +134,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       val resolved =
         param.schema?.resolve() ?: throw IllegalStateException("No Schema for Parameter.")
       val context =
-        resolved
-          .namedOr {
-            val operationId =
-              requireNotNull(operationId) {
-                "operationId currently required to generate inline schemas for operation parameters."
-              }
-            NamingContext.RouteParam(param.name, operationId, "Request")
-          }
-          .let(create)
+        resolved.namedOr {
+          val operationId =
+            requireNotNull(operationId) {
+              "operationId currently required to generate inline schemas for operation parameters."
+            }
+          create(NamingContext.RouteParam(param.name, operationId, "Request"))
+        }
       resolved.toModel(context)
     }
 
@@ -166,7 +161,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           schema.toOpenEnum(context, schema.anyOf!!.firstNotNullOf { it.resolve().value.enum })
 
         /*
-         * We're modifying the schema here... Should we...?
+         * We're modifying the schema here...
          * This is to flatten the following to just `String`
          * "model": {
          *   "description": "ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models/overview) for descriptions of them.\n",
@@ -177,9 +172,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
          *   ]
          * }
          */
-        this is Resolved.Value && value.anyOf != null && value.anyOf?.size == 1 ->
+        value.anyOf != null && value.anyOf?.size == 1 ->
           value.anyOf!![0].resolve().toModel(context).value
-        this is Resolved.Value && value.oneOf != null && value.oneOf?.size == 1 ->
+        value.oneOf != null && value.oneOf?.size == 1 ->
           value.oneOf!![0].resolve().toModel(context).value
         schema.anyOf != null -> schema.toUnion(context, schema.anyOf!!)
         // oneOf + properties => oneOf requirements: 'propA OR propB is required'.
@@ -455,38 +450,74 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     context: NamingContext,
     subtypes: List<ReferenceOr<Schema>>
   ): Model.Union {
-    val ctxToResolved =
-      subtypes.associate { referenceOr ->
-        Pair(
-          when (referenceOr) {
-            is ReferenceOr.Reference -> Named(referenceOr.ref.drop(schemaRef.length))
-            is ReferenceOr.Value -> context
-          },
-          referenceOr.resolve()
-        )
-      }
-    return Model.Union(
-      context,
-      ctxToResolved
-        .map { (caseContext, resolved) ->
+    val caseToContext =
+      subtypes.associate { ref -> Pair(ref.resolve(), toUnionCaseContext(context, ref)) }
+    val cases =
+      caseToContext
+        .map { (resolved, caseContext) ->
           Model.Union.Case(caseContext, resolved.toModel(caseContext).value)
         }
-        .sortedWith(unionSchemaComparator),
+        .sortedWith(unionSchemaComparator)
+    val inline =
+      caseToContext.mapNotNull { (resolved, caseContext) -> nestedModel(resolved, caseContext) }
+    return Model.Union(
+      context,
+      cases,
       singleDefaultOrNull()
         ?: subtypes.firstNotNullOfOrNull { it.resolve().value.singleDefaultOrNull() },
       description,
-      ctxToResolved.mapNotNull { (caseContext, resolved) -> nestedModel(resolved, caseContext) }
+      inline
     )
   }
 
-  private fun nestedModel(resolved: Resolved<Schema>, caseContext: NamingContext) =
+  fun NamingContext.isTop(name: String): Boolean =
+    when (this) {
+      is Named -> this.name == name
+      is NamingContext.Nested -> outer.isTop(name)
+      else -> false
+    }
+
+  fun toUnionCaseContext(context: NamingContext, case: ReferenceOr<Schema>): NamingContext =
+    when (case) {
+      is ReferenceOr.Reference -> Named(case.ref.drop(schemaRef.length))
+      is ReferenceOr.Value ->
+        when {
+          context is Named && case.value.type == Type.Basic.String && case.value.enum != null ->
+            NamingContext.Nested(
+              Named(
+                case.value.enum!!.joinToString(prefix = "", separator = "Or") {
+                  it.replaceFirstChar(Char::uppercaseChar)
+                }
+              ),
+              context
+            )
+          case.value.type == Type.Basic.Object ->
+            NamingContext.Nested(
+              case.value.properties
+                ?.firstNotNullOfOrNull { (key, value) ->
+                  if (key == "event" || key == "type") value.resolve().value.enum else null
+                }
+                ?.singleOrNull()
+                ?.let(::Named)
+                ?: TODO("Name Generated for inline objects of unions not yet supported."),
+              context
+            )
+          context is NamingContext.Nested &&
+            case.value.type == Type.Basic.Array &&
+            case.value.items?.valueOrNull()?.oneOf != null ->
+            NamingContext.Nested(Named("Array"), context)
+          else -> context
+        }
+    }
+
+  private fun nestedModel(resolved: Resolved<Schema>, caseContext: NamingContext): Model? =
     when (val model = resolved.toModel(caseContext)) {
       is Resolved.Ref -> null
       is Resolved.Value ->
         when (model.value) {
           is Collection ->
             when (val inner = resolved.value.items?.resolve()) {
-              is Resolved.Value -> inner.toModel(caseContext).value
+              is Resolved.Value -> nestedModel(Resolved.Value(inner.value), caseContext)
               is Resolved.Ref -> null
               null -> throw RuntimeException("Impossible: List without inner type")
             }
@@ -512,13 +543,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               val json =
                 mediaType.schema?.resolve()?.let { json ->
                   val context =
-                    json
-                      .namedOr {
+                    json.namedOr {
+                      val name =
                         requireNotNull(operation.operationId?.let { Named("${it}Request") }) {
                           "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
                         }
-                      }
-                      .let(create)
+                      create(name)
+                    }
 
                   Route.Body.Json.Defined(
                     json.toModel(context).value,
@@ -536,15 +567,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   )
 
               fun ctx(name: String): NamingContext =
-                resolved
-                  .namedOr {
-                    val operationId =
-                      requireNotNull(operation.operationId) {
-                        "operationId currently required to generate inline schemas for operation parameters."
-                      }
-                    NamingContext.RouteParam(name, operationId, "Request")
-                  }
-                  .let(create)
+                resolved.namedOr {
+                  val operationId =
+                    requireNotNull(operation.operationId) {
+                      "operationId currently required to generate inline schemas for operation parameters."
+                    }
+                  create(NamingContext.RouteParam(name, operationId, "Request"))
+                }
 
               val multipart =
                 when (resolved) {
@@ -602,15 +631,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               when (val resolved = mediaType.schema?.resolve()) {
                 is Resolved -> {
                   val context =
-                    resolved
-                      .namedOr {
-                        val operationId =
-                          requireNotNull(operation.operationId) {
-                            "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
-                          }
-                        NamingContext.RouteBody(operationId, "Response")
-                      }
-                      .let(create)
+                    resolved.namedOr {
+                      val operationId =
+                        requireNotNull(operation.operationId) {
+                          "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
+                        }
+                      create(NamingContext.RouteBody(operationId, "Response"))
+                    }
                   Route.ReturnType(resolved.toModel(context).value, response.extensions)
                 }
                 null ->
