@@ -178,20 +178,6 @@ sealed interface Model {
     val properties: List<Property>,
     val inline: List<Model>
   ) : Model {
-    //    val inline: List<Model> =
-    //      properties.mapNotNull {
-    //        if (it.model is Resolved.Value)
-    //          when (val model = it.model.value) {
-    //            is Collection ->
-    //              when (model.inner) {
-    //                is Resolved.Ref -> null
-    //                is Resolved.Value -> model.inner.value
-    //              }
-    //            else -> model
-    //          }
-    //        else null
-    //      }
-
     @Serializable
     data class Property(
       val baseName: String,
@@ -213,20 +199,6 @@ sealed interface Model {
     override val description: String?,
     val inline: List<Model>
   ) : Model {
-    //    val inline: List<Model> =
-    //      cases.mapNotNull {
-    //        if (it.model is Resolved.Value)
-    //          when (val model = it.model.value) {
-    //            is Collection ->
-    //              when (model.inner) {
-    //                is Resolved.Ref -> null
-    //                is Resolved.Value -> model.inner.value
-    //              }
-    //            else -> model
-    //          }
-    //        else null
-    //      }
-
     data class Case(val context: NamingContext, val model: Model)
   }
 
