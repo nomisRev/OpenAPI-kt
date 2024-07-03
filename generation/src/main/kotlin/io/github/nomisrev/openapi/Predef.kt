@@ -125,25 +125,27 @@ private val serialNameOrEnumValue: FunSpec =
 val bodyOrThrow: FunSpec =
   FunSpec.builder("bodyOrThrow")
     .addModifiers(KModifier.SUSPEND, KModifier.INLINE)
-    .receiver(HttpResponse::class)
+    .receiver(HttpResponse)
     .addTypeVariable(TypeVariableName("A").copy(reified = true))
     .returns(TypeVariableName("A"))
-    .addCode(
+    .addStatement(
       """
-      |try {
-      |  body() ?: throw SerializationException("Non-null response body of ${'$'}{A::class.simpleName} expected, but found null")
+      |return try {
+      |  %M<A>()
+      |    ?: throw SerializationException("Body of ${'$'}{A::class.simpleName} expected, but found null")
       |} catch (e: IllegalArgumentException) {
       |  val requestBody =
-      |    when (val content = this.request.content) {
-      |      is OutgoingContent.ByteArrayContent ->
-      |        kotlin.runCatching { content.bytes().decodeToString() }.getOrNull() ?: "ByteArrayContent (non-UTF8)"
+      |    when (val content = %M.content) {
+      |      is %T.ByteArrayContent ->
+      |        kotlin.runCatching { content.bytes().decodeToString() }
+      |          .getOrElse { "ByteArrayContent (non-UTF8)" }
       |      is OutgoingContent.NoContent -> "NoContent"
       |      is OutgoingContent.ProtocolUpgrade -> "ProtocolUpgrade"
       |      is OutgoingContent.ReadChannelContent -> "ReadChannelContent"
       |      is OutgoingContent.WriteChannelContent -> "WriteChannelContent"
       |      else -> "UnknownContent"
       |    }
-      |  val bodyAsText = kotlin.runCatching { bodyAsText() }.getOrNull()
+      |  val bodyAsText = kotlin.runCatching { %M() }.getOrNull()
       |  throw SerializationException(
       |    ${'"'}${'"'}${'"'}
       |    |Failed to serialize response body to ${'$'}{A::class.simpleName}
@@ -158,7 +160,11 @@ val bodyOrThrow: FunSpec =
       |    e
       |  )
       |}
-    """.trimMargin()
+    """.trimMargin(),
+      MemberName("io.ktor.client.call", "body", isExtension = true),
+      MemberName("io.ktor.client.statement", "request", isExtension = true),
+      ClassName("io.ktor.http.content", "OutgoingContent"),
+      MemberName("io.ktor.client.statement", "bodyAsText", isExtension = true)
     )
     .build()
 
