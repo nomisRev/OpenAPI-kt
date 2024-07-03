@@ -160,7 +160,8 @@ val bodyOrThrow: FunSpec =
       |    e
       |  )
       |}
-    """.trimMargin(),
+    """
+        .trimMargin(),
       MemberName("io.ktor.client.call", "body", isExtension = true),
       MemberName("io.ktor.client.statement", "request", isExtension = true),
       ClassName("io.ktor.http.content", "OutgoingContent"),
@@ -173,7 +174,7 @@ fun predef(): FileSpec =
   FileSpec.builder(`package`, "Predef")
     .addFunction(bodyOrThrow)
     .addType(
-      TypeSpec.classBuilder("OneOfSerializationException")
+      TypeSpec.classBuilder("UnionSerializationException")
         .primaryConstructor(
           FunSpec.constructorBuilder()
             .addParameter("payload", JsonElement::class)
@@ -235,7 +236,7 @@ fun predef(): FileSpec =
               errors[kclass] = e
             }
           }
-          throw OneOfSerializationException(json, errors)
+          throw UnionSerializationException(json, errors)
           """
             .trimIndent()
         )
@@ -279,4 +280,3 @@ fun predef(): FileSpec =
     .addType(uploadTypeSpec())
     .addFunctions(listOf(appendAll, appendUploadedFile(), serialNameOrEnumValue))
     .build()
-
