@@ -37,17 +37,21 @@ fun Model.toFileSpec(): FileSpec? =
   when (val model = intercept(this)) {
     is Collection -> model.inner.toFileSpec()
     is Model.Enum.Closed ->
-      FileSpec.builder(`package`, toClassName(model.context).simpleName).addType(model.toTypeSpec()).build()
-
+      FileSpec.builder(`package`, toClassName(model.context).simpleName)
+        .addType(model.toTypeSpec())
+        .build()
     is Model.Enum.Open ->
-      FileSpec.builder(`package`, toClassName(model.context).simpleName).addType(model.toTypeSpec()).build()
-
+      FileSpec.builder(`package`, toClassName(model.context).simpleName)
+        .addType(model.toTypeSpec())
+        .build()
     is Model.Object ->
-      FileSpec.builder(`package`, toClassName(model.context).simpleName).addType(model.toTypeSpec()).build()
-
+      FileSpec.builder(`package`, toClassName(model.context).simpleName)
+        .addType(model.toTypeSpec())
+        .build()
     is Model.Union ->
-      FileSpec.builder(`package`, toClassName(model.context).simpleName).addType(model.toTypeSpec()).build()
-
+      FileSpec.builder(`package`, toClassName(model.context).simpleName)
+        .addType(model.toTypeSpec())
+        .build()
     is Model.OctetStream,
     is Model.Primitive,
     is Model.FreeFormJson -> null
@@ -60,7 +64,6 @@ fun Model.toTypeSpecOrNull(): TypeSpec? {
       is Model.OctetStream,
       is Model.FreeFormJson,
       is Model.Primitive -> null
-
       is Collection -> toTypeSpecOrNull(model.inner)
       is Model.Enum.Closed -> model.toTypeSpec()
       is Model.Enum.Open -> model.toTypeSpec()
@@ -80,23 +83,19 @@ private fun Model.Union.toTypeSpec(): TypeSpec {
         buffer.add(ListSerializer)
         "%M(${inner.placeholder(buffer)})"
       }
-
       is Collection.Map -> {
         buffer.add(MapSerializer)
         "%M(${key.placeholder(buffer)}, ${inner.placeholder(buffer)})"
       }
-
       is Collection.Set -> {
         buffer.add(SetSerializer)
         "%M(${inner.placeholder(buffer)})"
       }
-
       is Model.Primitive -> {
         buffer.add(toTypeName())
         buffer.add(MemberName("kotlinx.serialization.builtins", "serializer", isExtension = true))
         "%T.%M()"
       }
-
       else -> {
         buffer.add(toTypeName())
         "%T.serializer()"
@@ -348,11 +347,11 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
               PropertySpec("descriptor", SerialDescriptor) {
                 addModifiers(KModifier.OVERRIDE)
                 addAnnotation(
-                  AnnotationSpec.builder(
-                    ClassName("kotlinx.serialization", "InternalSerializationApi")
+                    AnnotationSpec.builder(
+                        ClassName("kotlinx.serialization", "InternalSerializationApi")
+                      )
+                      .build()
                   )
-                    .build()
-                )
                   .initializer(
                     CodeBlock.builder()
                       .addStatement(

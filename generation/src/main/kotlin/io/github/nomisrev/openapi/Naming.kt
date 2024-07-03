@@ -12,8 +12,7 @@ import net.pearx.kasechange.toPascalCase
 fun Naming(`package`: String): Naming = Nam(`package`)
 
 context(Naming)
-fun Model.Union.toCaseClassName(case: Model): ClassName =
-  toCaseClassName(this, case)
+fun Model.Union.toCaseClassName(case: Model): ClassName = toCaseClassName(this, case)
 
 interface Naming {
   fun toClassName(context: NamingContext): ClassName
