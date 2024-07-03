@@ -24,11 +24,52 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
       mapOf(
         "createThreadAndRun" to ServerSentEvent,
         "createRun" to ServerSentEvent,
-        "submitToolOuputsToRun" to ServerSentEvent,
+        "submitToolOutputsToRun" to ServerSentEvent,
         "createChatCompletion" to ClassName(`package`, "CreateChatCompletionStreamResponse")
       )
 
-    override fun OpenAPIContext.intercept(api: API): API = api
+    val nonRequiredFields = mapOf(
+      ClassName(`package`, "ListAssistantFilesResponse") to listOf("first_id", "last_id"),
+      ClassName(`package`, "ListAssistantsResponse") to listOf("first_id", "last_id"),
+      ClassName(`package`, "ListMessageFilesResponse") to listOf("first_id", "last_id"),
+      ClassName(`package`, "ListMessagesResponse") to listOf("first_id", "last_id"),
+      ClassName(`package`, "ListRunsResponse") to listOf("first_id", "last_id"),
+      ClassName(`package`, "ListRunStepsResponse") to listOf("first_id", "last_id"),
+      ClassName(`package`, "ListThreadsResponse") to listOf("first_id", "last_id"),
+      ClassName(`package`, "MessageObject") to listOf("status", "metadata"),
+      ClassName(`package`, "MessageObject", "Content") to listOf("image_file", "text"),
+      ClassName(`package`, "RunObject") to listOf("expires_at", "required_action"),
+      ClassName(`package`, "RunStepDetailsToolCallsCodeObject", "CodeInterpreter", "Outputs") to listOf(
+        "logs",
+        "image"
+      ),
+      ClassName(`package`, "RunStepDetailsToolCallsFunctionObject") to listOf("id"),
+      ClassName(`package`, "RunStepDetailsToolCallsFunctionObject", "Function") to listOf(
+        "name",
+        "arguments",
+        "output"
+      ),
+      ClassName(`package`, "RunStepDetailsToolCallsObject", "ToolCalls") to listOf(
+        "code_interpreter",
+        "retrieval",
+        "function"
+      ),
+      ClassName(`package`, "RunStepDetailsToolCallsRetrievalObject") to listOf("retrieval"),
+      ClassName(`package`, "RunStepObject") to listOf("expiredAt", "metadata"),
+      ClassName(`package`, "MessageContentTextObject.Text.Annotations") to listOf("file_path", "file_citation"),
+    )
+
+    override fun OpenAPIContext.intercept(model: Model): Model {
+      val obj = (model as? Model.Object) ?: return model
+      val name = toClassName(model.context)
+      val hasNonRequired = nonRequiredFields[name] ?: return model
+      return obj.copy(
+        properties = obj.properties.map { prop ->
+          if (hasNonRequired.contains(prop.baseName)) prop.copy(isRequired = false)
+          else prop
+        }
+      )
+    }
 
     override fun OpenAPIContext.modifyInterface(
       api: API,
@@ -83,9 +124,9 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
                 )
                 .withIndent {
                   addStatement(
-                      "%M {",
-                      MemberName("io.ktor.client.plugins", "timeout", isExtension = true)
-                    )
+                    "%M {",
+                    MemberName("io.ktor.client.plugins", "timeout", isExtension = true)
+                  )
                     .withIndent {
                       addStatement(
                         "requestTimeoutMillis = 60.%M.toLong(%T.MILLISECONDS)",
@@ -110,8 +151,8 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
                     ClassName("kotlinx.serialization.json", "Json"),
                     // TODO turn into warning!?
                     requireNotNull(body.jsonOrNull()) {
-                        "Only OpenAI JSON Streaming supported right now."
-                      }
+                      "Only OpenAI JSON Streaming supported right now."
+                    }
                       .type
                       .toTypeName(),
                     toParamName(Named("body"))
