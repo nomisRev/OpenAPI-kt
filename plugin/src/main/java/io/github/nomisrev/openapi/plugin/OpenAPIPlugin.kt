@@ -12,6 +12,7 @@ abstract class OpenAPIPlugin : Plugin<Project> {
       val generateOpenApiClient =
         register("generateOpenApiClient", GenerateClientTask::class.java) {
           it.spec.set(extension.specs)
+          it.output.set(project.output)
         }
 
       maybeCreate("prepareKotlinIdeaImport").dependsOn(generateOpenApiClient)

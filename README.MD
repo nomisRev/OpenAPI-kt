@@ -19,15 +19,18 @@ Add the following to your `build.gradle.kts` file.
 
 ```kotlin
 plugin {
-  id("io.github.nomisrev.openapi.plugin") version "0.0.1"
+  id("io.github.nomisrev.openapi-kt-plugin") version "0.0.4"
 }
 
 openApiConfig {
-  spec.set(file("openapi.json"))
+  spec("OpenAI", file("openai.yaml")) {
+    // packageName = "my.company.openai.generated"
+  }
 }
 ```
 
-Then run the following command to generate the code.
+Then run the following command to generate the code,
+but it will also automatically run when you build your project.
 
 ```shell
 ./gradlew generateOpenApi
