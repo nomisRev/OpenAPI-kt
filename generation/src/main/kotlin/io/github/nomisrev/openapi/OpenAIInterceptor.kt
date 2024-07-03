@@ -6,7 +6,6 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
-import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
@@ -141,21 +140,21 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
 
 context(OpenAPIContext)
 private fun streamingPredef(): FileSpec {
-  val ServerSentEvent = ClassName(`package`, "ServerSentEvent")
   val serverSentEvent =
-    TypeSpec.dataClassBuilder(
-        ClassName(`package`, "ServerSentEvent"),
-        listOf(
-          ParameterSpec.builder("event", String::class.asTypeName().copy(nullable = true))
-            .defaultValue("null")
-            .build(),
-          ParameterSpec.builder("data", JsonElement::class.asTypeName().copy(nullable = true))
-            .defaultValue("null")
-            .build()
-        )
+    TypeSpec.dataClass(
+      ClassName(`package`, "ServerSentEvent"),
+      listOf(
+        ParameterSpec("event", String::class.asTypeName().copy(nullable = true)) {
+          defaultValue("null")
+        },
+        ParameterSpec("data", JsonElement::class.asTypeName().copy(nullable = true)) {
+          defaultValue("null")
+        }
       )
-      .addAnnotation(annotationSpec<Serializable>())
-      .build()
+    ) {
+      addAnnotation(annotationSpec<Serializable>())
+    }
+
   val streamEvents =
     FunSpec.builder("streamEvents")
       .addModifiers(KModifier.INTERNAL, KModifier.INLINE, KModifier.SUSPEND)
@@ -205,7 +204,7 @@ private fun streamingPredef(): FileSpec {
           )
           .addStatement(
             "val value: A = %T(event = nextEvent, data = eventData) as A",
-            ServerSentEvent
+            ClassName(`package`, "ServerSentEvent")
           )
           .addStatement("emit(value)")
           .endControlFlow()

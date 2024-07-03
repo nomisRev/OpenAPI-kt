@@ -42,8 +42,9 @@ fun Model.toTypeName(): TypeName =
 
 fun TypeName.nullable(): TypeName = copy(nullable = true)
 
-inline fun <reified A : Annotation> annotationSpec(): AnnotationSpec =
-  AnnotationSpec.builder(A::class).build()
+inline fun <reified A : Annotation> annotationSpec(
+  configure: AnnotationSpec.Builder.() -> Unit = {}
+): AnnotationSpec = AnnotationSpec.builder(A::class).apply(configure).build()
 
 fun TypeSpec.Builder.description(kdoc: String?): TypeSpec.Builder = apply {
   kdoc?.let { addKdoc("%L", it) }
@@ -53,10 +54,11 @@ fun ParameterSpec.Builder.description(kdoc: String?): ParameterSpec.Builder = ap
   kdoc?.let { addKdoc("%L", it) }
 }
 
-fun TypeSpec.Companion.dataClassBuilder(
+fun TypeSpec.Companion.dataClass(
   className: ClassName,
-  parameters: List<ParameterSpec>
-): TypeSpec.Builder {
+  parameters: List<ParameterSpec>,
+  configure: TypeSpec.Builder.() -> Unit = {}
+): TypeSpec {
   val sorted = parameters.sorted()
   return classBuilder(className)
     .addModifiers(KModifier.DATA)
@@ -66,7 +68,23 @@ fun TypeSpec.Companion.dataClassBuilder(
         PropertySpec.builder(param.name, param.type).initializer(param.name).build()
       }
     )
+    .apply(configure)
+    .build()
 }
+
+fun PropertySpec(
+  name: String,
+  type: TypeName,
+  vararg modifiers: KModifier,
+  configure: PropertySpec.Builder.() -> Unit = {}
+): PropertySpec = PropertySpec.builder(name, type, *modifiers).apply(configure).build()
+
+fun ParameterSpec(
+  name: String,
+  type: TypeName,
+  vararg modifiers: KModifier,
+  configure: ParameterSpec.Builder.() -> Unit = {}
+): ParameterSpec = ParameterSpec.builder(name, type, *modifiers).apply(configure).build()
 
 private fun List<ParameterSpec>.sorted(): List<ParameterSpec> {
   val (required, optional) = partition { it.defaultValue == null }

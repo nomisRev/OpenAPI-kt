@@ -19,25 +19,24 @@ import kotlinx.serialization.json.JsonElement
 
 context(OpenAPIContext)
 private fun uploadTypeSpec(): TypeSpec =
-  TypeSpec.dataClassBuilder(
-      ClassName(`package`, "UploadFile"),
-      listOf(
-        ParameterSpec.builder("filename", String::class).build(),
-        ParameterSpec.builder("contentType", ContentType.nullable()).defaultValue("null").build(),
-        ParameterSpec.builder("size", Long::class.asTypeName().nullable())
-          .defaultValue("null")
-          .build(),
-        ParameterSpec.builder(
-            "bodyBuilder",
-            LambdaTypeName.get(
-              receiver = ClassName("io.ktor.utils.io.core", "BytePacketBuilder"),
-              returnType = Unit::class.asTypeName()
-            )
+  TypeSpec.dataClass(
+    ClassName(`package`, "UploadFile"),
+    listOf(
+      ParameterSpec.builder("filename", String::class).build(),
+      ParameterSpec.builder("contentType", ContentType.nullable()).defaultValue("null").build(),
+      ParameterSpec.builder("size", Long::class.asTypeName().nullable())
+        .defaultValue("null")
+        .build(),
+      ParameterSpec.builder(
+          "bodyBuilder",
+          LambdaTypeName.get(
+            receiver = ClassName("io.ktor.utils.io.core", "BytePacketBuilder"),
+            returnType = Unit::class.asTypeName()
           )
-          .build()
-      )
+        )
+        .build()
     )
-    .build()
+  )
 
 private val errors: ParameterizedTypeName =
   ClassName("kotlin.collections", "Map")

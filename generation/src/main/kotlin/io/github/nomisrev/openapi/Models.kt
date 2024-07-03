@@ -81,9 +81,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
               .addParameter(ParameterSpec.builder("value", model.toTypeName()).build())
               .build()
           )
-          .addProperty(
-            PropertySpec.builder("value", model.toTypeName()).initializer("value").build()
-          )
+          .addProperty(PropertySpec("value", model.toTypeName()) { initializer("value") })
           .addSuperinterface(toClassName(context))
           .build()
       }
@@ -93,10 +91,10 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
       TypeSpec.objectBuilder("Serializer")
         .addSuperinterface(KSerializer::class.asTypeName().parameterizedBy(toClassName(context)))
         .addProperty(
-          PropertySpec.builder("descriptor", SerialDescriptor)
-            .addModifiers(KModifier.OVERRIDE)
-            .addAnnotation(SerializationOptIn)
-            .initializer(
+          PropertySpec("descriptor", SerialDescriptor) {
+            addModifiers(KModifier.OVERRIDE)
+            addAnnotation(SerializationOptIn)
+            initializer(
               CodeBlock.builder()
                 .add(
                   "%M(%S, %T.SEALED) {\n",
@@ -117,7 +115,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
                 .add("}\n")
                 .build()
             )
-            .build()
+          }
         )
         .addFunction(
           FunSpec.builder("serialize")
@@ -185,38 +183,26 @@ private fun Model.Union.toTypeSpec(): TypeSpec =
  */
 context(OpenAPIContext)
 private fun Model.Object.toTypeSpec(): TypeSpec =
-  TypeSpec.dataClassBuilder(
-      toClassName(context),
-      properties.map { prop ->
-        val propName = toPropName(prop)
-        ParameterSpec.builder(
-            toPropName(prop),
-            prop.model.toTypeName().copy(nullable = prop.isNullable)
-          )
-          .apply {
-            if (propName != prop.baseName)
-              addAnnotation(
-                annotationSpec<SerialName>().toBuilder().addMember("%S", prop.baseName).build()
-              )
-          }
-          .description(prop.description)
-          .defaultValue(prop.model)
-          .apply {
-            val hasDefault = prop.model.hasDefault()
-            if (prop.isRequired && hasDefault) addAnnotation(annotationSpec<Required>())
-            else if (!prop.isRequired && !hasDefault && prop.isNullable) defaultValue("null")
-          }
-          .build()
+  TypeSpec.dataClass(
+    toClassName(context),
+    properties.map { prop ->
+      ParameterSpec(toPropName(prop), prop.model.toTypeName().copy(nullable = prop.isNullable)) {
+        if (toPropName(prop) != prop.baseName)
+          addAnnotation(annotationSpec<SerialName> { addMember("%S", prop.baseName) })
+        description(prop.description)
+        defaultValue(prop.model)
+        val hasDefault = prop.model.hasDefault()
+        if (prop.isRequired && hasDefault) addAnnotation(annotationSpec<Required>())
+        else if (!prop.isRequired && !hasDefault && prop.isNullable) defaultValue("null")
       }
-    )
-    .apply {
-      // Cannot serialize binary, these are used for multipart requests.
-      // This occurs when request bodies are defined using top-level schemas.
-      if (properties.none { it.model is Model.OctetStream })
-        addAnnotation(annotationSpec<Serializable>())
     }
-    .addTypes(inline.mapNotNull { it.toTypeSpecOrNull() })
-    .build()
+  ) {
+    // Cannot serialize binary, these are used for multipart requests.
+    // This occurs when request bodies are defined using top-level schemas.
+    if (properties.none { it.model is Model.OctetStream })
+      addAnnotation(annotationSpec<Serializable>())
+    addTypes(inline.mapNotNull { it.toTypeSpecOrNull() })
+  }
 
 context(OpenAPIContext)
 private fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
@@ -236,9 +222,7 @@ private fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
           addEnumConstant(
             valueName,
             TypeSpec.anonymousClassBuilder()
-              .addAnnotation(
-                annotationSpec<SerialName>().toBuilder().addMember("\"$rawName\"").build()
-              )
+              .addAnnotation(annotationSpec<SerialName> { addMember("\"$rawName\"") })
               .apply {
                 // If we're `9...` we need to drop backticks, and prefix with `_`
                 if (Regex("`[0-9]").matchesAt(valueName, 0))
@@ -265,7 +249,7 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
   return TypeSpec.interfaceBuilder(enumName)
     .description(description)
     .addModifiers(KModifier.SEALED)
-    .addProperty(PropertySpec.builder("value", STRING).addModifiers(KModifier.ABSTRACT).build())
+    .addProperty(PropertySpec("value", STRING) { addModifiers(KModifier.ABSTRACT) })
     .addAnnotation(annotationSpec<Serializable>())
     .addType(
       TypeSpec.classBuilder("OpenCase")
@@ -273,10 +257,10 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
         .addAnnotation(annotationSpec<JvmInline>())
         .primaryConstructor(FunSpec.constructorBuilder().addParameter("value", STRING).build())
         .addProperty(
-          PropertySpec.builder("value", STRING)
-            .initializer("value")
-            .addModifiers(KModifier.OVERRIDE)
-            .build()
+          PropertySpec("value", STRING) {
+            initializer("value")
+            addModifiers(KModifier.OVERRIDE)
+          }
         )
         .addSuperinterface(toClassName(context))
         .build()
@@ -287,10 +271,10 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
           .addModifiers(KModifier.DATA)
           .addSuperinterface(toClassName(context))
           .addProperty(
-            PropertySpec.builder("value", STRING)
-              .initializer("\"$rawName\"")
-              .addModifiers(KModifier.OVERRIDE)
-              .build()
+            PropertySpec("value", STRING) {
+              initializer("\"$rawName\"")
+              addModifiers(KModifier.OVERRIDE)
+            }
           )
           .build()
       }
@@ -298,8 +282,8 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
     .addType(
       TypeSpec.companionObjectBuilder()
         .addProperty(
-          PropertySpec.builder("defined", LIST.parameterizedBy(toClassName(context)))
-            .initializer(
+          PropertySpec("defined", LIST.parameterizedBy(toClassName(context))) {
+            initializer(
               CodeBlock.builder()
                 .add("listOf(")
                 .apply {
@@ -311,7 +295,7 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
                 }
                 .build()
             )
-            .build()
+          }
         )
         .addType(
           TypeSpec.objectBuilder("Serializer")
@@ -319,25 +303,25 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
               KSerializer::class.asTypeName().parameterizedBy(toClassName(context))
             )
             .addProperty(
-              PropertySpec.builder("descriptor", SerialDescriptor)
-                .addModifiers(KModifier.OVERRIDE)
-                .addAnnotation(
-                  AnnotationSpec.builder(
-                      ClassName("kotlinx.serialization", "InternalSerializationApi")
-                    )
-                    .build()
-                )
-                .initializer(
-                  CodeBlock.builder()
-                    .addStatement(
-                      "%M(%S, %T.STRING)",
-                      PrimitiveSerialDescriptor,
-                      enumName,
-                      PrimitiveKind::class.asTypeName()
-                    )
-                    .build()
-                )
-                .build()
+              PropertySpec("descriptor", SerialDescriptor) {
+                addModifiers(KModifier.OVERRIDE)
+                addAnnotation(
+                    AnnotationSpec.builder(
+                        ClassName("kotlinx.serialization", "InternalSerializationApi")
+                      )
+                      .build()
+                  )
+                  .initializer(
+                    CodeBlock.builder()
+                      .addStatement(
+                        "%M(%S, %T.STRING)",
+                        PrimitiveSerialDescriptor,
+                        enumName,
+                        PrimitiveKind::class.asTypeName()
+                      )
+                      .build()
+                  )
+              }
             )
             .addFunction(
               FunSpec.builder("serialize")
