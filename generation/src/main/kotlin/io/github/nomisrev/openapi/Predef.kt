@@ -243,19 +243,25 @@ fun predef(): FileSpec =
         .build()
     )
     .addFunction(
-      FunSpec.builder("attemptDeserialize")
+      FunSpec.builder("deserializeOpenEnum")
         .addTypeVariable(TypeVariableName("A"))
         .returns(TypeVariableName("A"))
         .addParameter("value", String::class)
+        .addParameter(
+          "open",
+          LambdaTypeName.get(
+            parameters = listOf(ParameterSpec.unnamed(String::class)),
+            returnType = TypeVariableName("A")
+          )
+        )
         .addParameter(
           "block",
           ClassName("kotlin", "Pair")
             .parameterizedBy(
               ClassName("kotlin.reflect", "KClass").parameterizedBy(TypeVariableName("*")),
               LambdaTypeName.get(
-                receiver = null,
-                returnType = TypeVariableName("A").nullable(),
-                parameters = listOf(ParameterSpec.unnamed(String::class))
+                parameters = listOf(ParameterSpec.unnamed(String::class)),
+                returnType = TypeVariableName("A").nullable()
               )
             ),
           KModifier.VARARG
@@ -270,8 +276,7 @@ fun predef(): FileSpec =
               errors[kclass] = e
             }
           }
-          // TODO Improve this error message
-          throw RuntimeException("BOOM! Improve this error message")
+          return open(value)
           """
             .trimIndent()
         )
