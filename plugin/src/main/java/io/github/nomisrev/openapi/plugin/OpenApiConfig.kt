@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi.plugin
 
 import java.io.File
+import java.io.Serializable
 import javax.inject.Inject
 import org.gradle.api.Project
 import org.gradle.api.provider.ListProperty
@@ -18,4 +19,9 @@ abstract class OpenApiConfig @Inject constructor(private val project: Project) {
 
 data class OpenApiBuilder(var packageName: String? = null)
 
-data class SpecDefinition(val name: String, val file: File, val packageName: String?)
+data class SpecDefinition(val name: String, val file: File, val packageName: String?) :
+  Serializable {
+  companion object {
+    @JvmStatic val serialVersionUID = 1L
+  }
+}

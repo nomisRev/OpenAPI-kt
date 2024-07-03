@@ -11,6 +11,7 @@ import com.squareup.kotlinpoet.MemberSpecHolder
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeSpecHolder
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.withIndent
 import io.github.nomisrev.openapi.NamingContext.Named
@@ -55,12 +56,16 @@ context(OpenAPIContext)
 private fun Root.className(): ClassName = toClassName(Named(name))
 
 context(OpenAPIContext, FileSpec.Builder)
-private fun Root.addPaths() {
+private fun Root.addInterface() {
   val properties =
     endpoints.map { api ->
       PropertySpec(toParamName(Named(api.name)), toClassName(Named(api.name)))
     }
-  val type = TypeSpec.interfaceBuilder(className()).addProperties(properties).build()
+  val type =
+    TypeSpec.interfaceBuilder(className())
+      .addSuperinterface(AutoCloseable::class)
+      .addProperties(properties)
+      .build()
   addType(type)
 }
 
@@ -91,9 +96,15 @@ private fun Root.implementation() {
   addType(
     TypeSpec.classBuilder(className.postfix("Ktor"))
       .addModifiers(KModifier.PRIVATE)
-      .addSuperinterface(className)
+      .addSuperinterfaces(listOf(className, AutoCloseable::class.asClassName()))
       .apiConstructor()
       .addProperties(properties)
+      .addFunction(
+        FunSpec.builder("close")
+          .addModifiers(KModifier.OVERRIDE)
+          .addStatement("client.close()")
+          .build()
+      )
       .build()
   )
 }
@@ -102,7 +113,7 @@ context(OpenAPIContext)
 private fun Root.root() =
   FileSpec.builder(`package`, className().simpleName)
     .apply {
-      addPaths()
+      addInterface()
       operations.forEach { it.addFunction(implemented = false) }
       smartConstructor()
       implementation()
