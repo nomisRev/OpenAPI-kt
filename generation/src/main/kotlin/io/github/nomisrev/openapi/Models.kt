@@ -380,7 +380,7 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
                 .addCode(
                   CodeBlock.builder()
                     .addStatement("val value = decoder.decodeString()")
-                    .addStatement("return attemptDeserialize(value,")
+                    .addStatement("return deserializeOpenEnum(value, { OpenCase(value) },")
                     .withIndent {
                       rawToName.forEach { (_, name) ->
                         val nested = NamingContext.Nested(Named(name), context)
@@ -389,7 +389,6 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
                           toClassName(nested)
                         )
                       }
-                      addStatement("Pair(OpenCase::class) { OpenCase(value) }")
                     }
                     .addStatement(")")
                     .build()
