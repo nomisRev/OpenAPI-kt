@@ -206,7 +206,7 @@ private fun Route.addFunction(implemented: Boolean) {
               .addStatement("}")
               .addStatement(
                 "return response.%M()",
-                MemberName("io.ktor.client.call", "body", isExtension = true)
+                MemberName(`package`, "bodyOrThrow", isExtension = true)
               )
               .build()
           )

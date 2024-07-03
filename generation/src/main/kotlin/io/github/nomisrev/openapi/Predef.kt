@@ -122,9 +122,50 @@ private val serialNameOrEnumValue: FunSpec =
     )
     .build()
 
+val bodyOrThrow: FunSpec =
+  FunSpec.builder("bodyOrThrow")
+    .addModifiers(KModifier.SUSPEND, KModifier.INLINE)
+    .receiver(HttpResponse::class)
+    .addTypeVariable(TypeVariableName("A").copy(reified = true))
+    .returns(TypeVariableName("A"))
+    .addCode(
+      """
+      |try {
+      |  body() ?: throw SerializationException("Non-null response body of ${'$'}{A::class.simpleName} expected, but found null")
+      |} catch (e: IllegalArgumentException) {
+      |  val requestBody =
+      |    when (val content = this.request.content) {
+      |      is OutgoingContent.ByteArrayContent ->
+      |        kotlin.runCatching { content.bytes().decodeToString() }.getOrNull() ?: "ByteArrayContent (non-UTF8)"
+      |      is OutgoingContent.NoContent -> "NoContent"
+      |      is OutgoingContent.ProtocolUpgrade -> "ProtocolUpgrade"
+      |      is OutgoingContent.ReadChannelContent -> "ReadChannelContent"
+      |      is OutgoingContent.WriteChannelContent -> "WriteChannelContent"
+      |      else -> "UnknownContent"
+      |    }
+      |  val bodyAsText = kotlin.runCatching { bodyAsText() }.getOrNull()
+      |  throw SerializationException(
+      |    ${'"'}${'"'}${'"'}
+      |    |Failed to serialize response body to ${'$'}{A::class.simpleName}
+      |    |Request URL: ${'$'}{request.url}
+      |    |Request Method: ${'$'}{request.method}
+      |    |Request Body: ${'$'}requestBody
+      |    |Response Status: ${'$'}status
+      |    |Response Headers: ${'$'}headers
+      |    |Response bodyAsText: ${'$'}bodyAsText
+      |  ${'"'}${'"'}${'"'}
+      |      .trimMargin(),
+      |    e
+      |  )
+      |}
+    """.trimMargin()
+    )
+    .build()
+
 context(OpenAPIContext)
 fun predef(): FileSpec =
   FileSpec.builder(`package`, "Predef")
+    .addFunction(bodyOrThrow)
     .addType(
       TypeSpec.classBuilder("OneOfSerializationException")
         .primaryConstructor(
@@ -232,3 +273,4 @@ fun predef(): FileSpec =
     .addType(uploadTypeSpec())
     .addFunctions(listOf(appendAll, appendUploadedFile(), serialNameOrEnumValue))
     .build()
+
