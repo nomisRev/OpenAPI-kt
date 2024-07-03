@@ -24,8 +24,7 @@ abstract class GenerateClientTask : DefaultTask() {
   @get:Option(option = "OpenApiSpec", description = "The OpenAPI configuration")
   abstract val spec: ListProperty<SpecDefinition>
 
-  @get:OutputDirectory
-  abstract val output: DirectoryProperty
+  @get:OutputDirectory abstract val output: DirectoryProperty
 
   @Inject abstract fun getWorkerExecutor(): WorkerExecutor
 
