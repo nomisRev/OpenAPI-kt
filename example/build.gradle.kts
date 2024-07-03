@@ -4,7 +4,9 @@ plugins {
   id("io.github.nomisrev.openapi-kt-plugin") version "0.0.4"
 }
 
-openApiConfig { spec("OpenAI", file("openai.yaml")) { packageName = "io.github.nomisrev.openai" } }
+openApiConfig { spec("OpenAI", file("openai.yaml")) {
+  packageName = "io.github.nomisrev.openai" }
+}
 
 kotlin {
   jvm()

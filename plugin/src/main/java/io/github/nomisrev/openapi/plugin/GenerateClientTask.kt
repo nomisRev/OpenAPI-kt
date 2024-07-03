@@ -2,12 +2,16 @@ package io.github.nomisrev.openapi.plugin
 
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.workers.WorkerExecutor
 
+@CacheableTask
 abstract class GenerateClientTask : DefaultTask() {
   init {
     description = "Generate a Kotlin client based on a configure OpenAPI Specification."
@@ -17,6 +21,8 @@ abstract class GenerateClientTask : DefaultTask() {
   @get:Input
   @get:Option(option = "OpenApiSpec", description = "The OpenAPI configuration")
   abstract val spec: ListProperty<SpecDefinition>
+
+  @get:OutputDirectory abstract val output: DirectoryProperty
 
   @Inject abstract fun getWorkerExecutor(): WorkerExecutor
 
