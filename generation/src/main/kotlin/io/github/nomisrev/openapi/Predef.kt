@@ -122,11 +122,59 @@ private val serialNameOrEnumValue: FunSpec =
     )
     .build()
 
+val bodyOrThrow: FunSpec =
+  FunSpec.builder("bodyOrThrow")
+    .addModifiers(KModifier.SUSPEND, KModifier.INLINE)
+    .receiver(HttpResponse)
+    .addTypeVariable(TypeVariableName("A").copy(reified = true))
+    .returns(TypeVariableName("A"))
+    .addStatement(
+      """
+      |return try {
+      |  %M<A>()
+      |    ?: throw SerializationException("Body of ${'$'}{A::class.simpleName} expected, but found null")
+      |} catch (e: IllegalArgumentException) {
+      |  val requestBody =
+      |    when (val content = %M.content) {
+      |      is %T.ByteArrayContent ->
+      |        kotlin.runCatching { content.bytes().decodeToString() }
+      |          .getOrElse { "ByteArrayContent (non-UTF8)" }
+      |      is OutgoingContent.NoContent -> "NoContent"
+      |      is OutgoingContent.ProtocolUpgrade -> "ProtocolUpgrade"
+      |      is OutgoingContent.ReadChannelContent -> "ReadChannelContent"
+      |      is OutgoingContent.WriteChannelContent -> "WriteChannelContent"
+      |      else -> "UnknownContent"
+      |    }
+      |  val bodyAsText = kotlin.runCatching { %M() }.getOrNull()
+      |  throw SerializationException(
+      |    ${'"'}${'"'}${'"'}
+      |    |Failed to serialize response body to ${'$'}{A::class.simpleName}
+      |    |Request URL: ${'$'}{request.url}
+      |    |Request Method: ${'$'}{request.method}
+      |    |Request Body: ${'$'}requestBody
+      |    |Response Status: ${'$'}status
+      |    |Response Headers: ${'$'}headers
+      |    |Response bodyAsText: ${'$'}bodyAsText
+      |  ${'"'}${'"'}${'"'}
+      |      .trimMargin(),
+      |    e
+      |  )
+      |}
+    """
+        .trimMargin(),
+      MemberName("io.ktor.client.call", "body", isExtension = true),
+      MemberName("io.ktor.client.statement", "request", isExtension = true),
+      ClassName("io.ktor.http.content", "OutgoingContent"),
+      MemberName("io.ktor.client.statement", "bodyAsText", isExtension = true)
+    )
+    .build()
+
 context(OpenAPIContext)
 fun predef(): FileSpec =
   FileSpec.builder(`package`, "Predef")
+    .addFunction(bodyOrThrow)
     .addType(
-      TypeSpec.classBuilder("OneOfSerializationException")
+      TypeSpec.classBuilder("UnionSerializationException")
         .primaryConstructor(
           FunSpec.constructorBuilder()
             .addParameter("payload", JsonElement::class)
@@ -188,7 +236,7 @@ fun predef(): FileSpec =
               errors[kclass] = e
             }
           }
-          throw OneOfSerializationException(json, errors)
+          throw UnionSerializationException(json, errors)
           """
             .trimIndent()
         )

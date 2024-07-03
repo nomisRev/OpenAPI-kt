@@ -24,7 +24,7 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
       mapOf(
         "createThreadAndRun" to ServerSentEvent,
         "createRun" to ServerSentEvent,
-        "submitToolOutputsToRun" to ServerSentEvent,
+        "submitToolOuputsToRun" to ServerSentEvent,
         "createChatCompletion" to ClassName(`package`, "CreateChatCompletionStreamResponse")
       )
 
