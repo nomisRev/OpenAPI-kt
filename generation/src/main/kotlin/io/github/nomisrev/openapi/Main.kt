@@ -8,7 +8,8 @@ data class GenerationConfig(
   val path: String,
   val output: String,
   val `package`: String,
-  val name: String
+  val name: String,
+  val isK2: Boolean
 )
 
 @JvmOverloads
@@ -21,7 +22,7 @@ fun generate(config: GenerationConfig, fileSystem: FileSystem = FileSystem.SYSTE
       "yml" -> OpenAPI.fromYaml(rawSpec)
       else -> throw IllegalArgumentException("Unsupported file extension: $extension")
     }
-  with(OpenAPIContext(config.`package`)) {
+  with(OpenAPIContext(config)) {
     val root = openAPI.root(config.name)
     val models = openAPI.models()
     val modelFileSpecs = models.toFileSpecs()

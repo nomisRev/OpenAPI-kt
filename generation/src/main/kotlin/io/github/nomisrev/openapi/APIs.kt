@@ -11,12 +11,12 @@ import com.squareup.kotlinpoet.MemberSpecHolder
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeSpecHolder
-import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.withIndent
 import io.github.nomisrev.openapi.NamingContext.Named
 import io.github.nomisrev.openapi.NamingContext.Nested
 import io.ktor.http.*
+import io.ktor.utils.io.core.*
 
 fun configure(defaults: Boolean) =
   ParameterSpec(
@@ -63,11 +63,16 @@ private fun Root.addInterface() {
     }
   val type =
     TypeSpec.interfaceBuilder(className())
-      .addSuperinterface(AutoCloseable::class)
+      .addSuperinterface(autoCloseable())
       .addProperties(properties)
       .build()
   addType(type)
 }
+
+context(OpenAPIContext)
+fun autoCloseable(): ClassName =
+  if (isK2) ClassName("kotlin", "AutoCloseable")
+  else ClassName("io.ktor.utils.io.core", "Closeable")
 
 context(OpenAPIContext, FileSpec.Builder)
 private fun Root.smartConstructor() {
@@ -96,7 +101,7 @@ private fun Root.implementation() {
   addType(
     TypeSpec.classBuilder(className.postfix("Ktor"))
       .addModifiers(KModifier.PRIVATE)
-      .addSuperinterfaces(listOf(className, AutoCloseable::class.asClassName()))
+      .addSuperinterfaces(listOf(className, autoCloseable()))
       .apiConstructor()
       .addProperties(properties)
       .addFunction(
