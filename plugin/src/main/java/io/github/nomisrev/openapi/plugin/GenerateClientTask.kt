@@ -10,6 +10,7 @@ import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.options.Option
 import org.gradle.workers.WorkerExecutor
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 
 @CacheableTask
 abstract class GenerateClientTask : DefaultTask() {
@@ -31,12 +32,17 @@ abstract class GenerateClientTask : DefaultTask() {
     val workQueue = getWorkerExecutor().noIsolation()
     val specPath = requireNotNull(spec.orNull) { "No OpenAPI Config found" }
     require(specPath.isNotEmpty()) { "No OpenAPI Config found" }
+    val isK2 =
+      (project.extensions.getByName("kotlin") as KotlinProjectExtension)
+        .coreLibrariesVersion
+        .startsWith("2")
     specPath.forEach { spec ->
       workQueue.submit(GenerateClientAction::class.java) { parameters ->
         parameters.name.set(spec.name)
         parameters.packageName.set(spec.packageName)
         parameters.file.set(spec.file)
         parameters.output.set(project.output)
+        parameters.k2.set(isK2)
       }
     }
   }

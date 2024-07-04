@@ -5,6 +5,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 interface OpenAPIContext : Naming, APIInterceptor {
   val `package`: String
+  val isK2: Boolean
 
   fun addAdditionalFileSpec(fileSpec: FileSpec)
 
@@ -12,11 +13,12 @@ interface OpenAPIContext : Naming, APIInterceptor {
 }
 
 fun OpenAPIContext(
-  `package`: String,
-  interceptor: APIInterceptor = APIInterceptor.openAIStreaming(`package`)
+  config: GenerationConfig,
+  interceptor: APIInterceptor = APIInterceptor.openAIStreaming(config.`package`)
 ): OpenAPIContext =
-  object : OpenAPIContext, Naming by Naming(`package`), APIInterceptor by interceptor {
-    override val `package`: String = `package`
+  object : OpenAPIContext, Naming by Naming(config.`package`), APIInterceptor by interceptor {
+    override val `package`: String = config.`package`
+    override val isK2: Boolean = config.isK2
     private val files = AtomicReference<List<FileSpec>>(emptyList())
 
     override fun additionalFiles(): List<FileSpec> = files.get()

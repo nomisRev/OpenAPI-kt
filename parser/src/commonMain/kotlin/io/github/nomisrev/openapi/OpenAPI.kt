@@ -24,13 +24,8 @@ public data class OpenAPI(
   @EncodeDefault(ALWAYS) public val openapi: String = "3.1.0",
   /** Provides metadata about the API. The metadata can be used by the clients if needed. */
   public val info: Info,
-  /**
-   * An array of Server Objects, which provide connectivity information to a target server. If the
-   * servers property is not provided, or is an empty array, the default value would be a 'Server'
-   * object with an url value of @/@.
-   */
-  // Should this be a set??
-  public val servers: List<Server> = emptyList(),
+  /** An array of Server Objects, which provide connectivity information to a target server. */
+  public val servers: List<Server> = listOf(Server(url = "/")),
   /** The available paths and operations for the API. */
   public val paths: Map<String, PathItem> = emptyMap(),
   /**

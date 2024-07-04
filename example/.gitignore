@@ -216,5 +216,6 @@ gradle-app.setting
 
 #Kotlin
 .kotlin
+kotlin-js-store
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,gradle,kotlin,java,intellij+all

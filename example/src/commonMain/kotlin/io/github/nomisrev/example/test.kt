@@ -8,12 +8,13 @@ import io.github.nomisrev.openai.OpenAI
 import io.ktor.client.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 
 suspend fun main() {
-  val ai = OpenAI(configuredClient())
+  val ai = OpenAI(configuredClient("MY_API_KEY"))
   ai.chat.completions.createChatCompletion(
     CreateChatCompletionRequest(
       listOf(
@@ -26,28 +27,23 @@ suspend fun main() {
   )
 }
 
-private fun configuredClient(): HttpClient = HttpClient {
+private fun configuredClient(
+  token: String,
+  org: String? = null
+): HttpClient = HttpClient {
+  defaultRequest {
+    url("https://api.openai.com/v1/")
+    org?.let { headers.append("OpenAI-Organization", it) }
+    bearerAuth(token)
+  }
   install(ContentNegotiation) {
     json(
       Json {
         ignoreUnknownKeys = true
-        prettyPrint = false
         isLenient = true
         @Suppress("OPT_IN_USAGE")
         explicitNulls = false
-        classDiscriminator = "_type_"
       }
     )
-  }
-  install(HttpTimeout) {
-    requestTimeoutMillis = 45_000
-    connectTimeoutMillis = 45_000
-    socketTimeoutMillis = 45_000
-  }
-  install(HttpRequestRetry) {
-    maxRetries = 5
-    retryIf { _, response -> !response.status.isSuccess() }
-    retryOnExceptionIf { _, _ -> true }
-    delayMillis { retry -> retry * 1000L }
   }
 }

@@ -15,7 +15,8 @@ abstract class GenerateClientAction : WorkAction<GenerateClientAction.Parameters
         path = parameters.file.get().asFile.path,
         output = parameters.output.get().asFile.path,
         `package` = parameters.packageName.get() ?: "io.github.nomisrev.openapi",
-        name = parameters.name.get()
+        name = parameters.name.get(),
+        isK2 = parameters.k2.get()
       )
     )
   }
@@ -25,5 +26,7 @@ abstract class GenerateClientAction : WorkAction<GenerateClientAction.Parameters
     val file: RegularFileProperty
     val packageName: Property<String>
     val output: DirectoryProperty
+    // isK2 results in runtime Gradle error..
+    val k2: Property<Boolean>
   }
 }
