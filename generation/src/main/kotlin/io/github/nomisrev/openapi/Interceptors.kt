@@ -11,12 +11,15 @@ import io.ktor.http.HttpMethod.Companion.Post
 import io.ktor.http.HttpMethod.Companion.Put
 
 interface APIInterceptor {
-  fun OpenAPIContext.intercept(api: API): API
+  fun OpenAPIContext.intercept(api: API): API = api
 
-  fun OpenAPIContext.modifyInterface(api: API, typeSpec: TypeSpec.Builder): TypeSpec.Builder
+  fun OpenAPIContext.intercept(model: Model): Model = model
 
-  /** It's valid to discard the original typeSpec, and produce a new one. */
-  fun OpenAPIContext.modifyImplementation(api: API, typeSpec: TypeSpec.Builder): TypeSpec.Builder
+  fun OpenAPIContext.modifyInterface(api: API, typeSpec: TypeSpec.Builder): TypeSpec.Builder =
+    typeSpec
+
+  fun OpenAPIContext.modifyImplementation(api: API, typeSpec: TypeSpec.Builder): TypeSpec.Builder =
+    typeSpec
 
   companion object {
     val NoOp: APIInterceptor =
