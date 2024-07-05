@@ -470,13 +470,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     )
   }
 
-  fun NamingContext.isTop(name: String): Boolean =
-    when (this) {
-      is Named -> this.name == name
-      is NamingContext.Nested -> outer.isTop(name)
-      else -> false
-    }
-
   fun toUnionCaseContext(context: NamingContext, case: ReferenceOr<Schema>): NamingContext =
     when (case) {
       is ReferenceOr.Reference -> Named(case.ref.drop(schemaRef.length))

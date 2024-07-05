@@ -19,6 +19,7 @@ kotlin {
         api(libs.ktor.client)
       }
     }
+    commonTest { dependencies { implementation(libs.test) } }
   }
 }
 
