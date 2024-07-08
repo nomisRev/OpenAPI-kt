@@ -27,7 +27,8 @@ jobs:
 
       - uses: mi-kas/kover-report@v1
         with:
-          path: ${{ github.workspace }}/build/reports/kover/report.xml
+          path: build/reports/kover/report.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
           title: Code Coverage
           update-comment: true
           coverage-counter-type: LINE
