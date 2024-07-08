@@ -47,7 +47,7 @@ public data class Schema(
    * Unlike JSON Schema this value MUST conform to the defined type for this parameter. Note: is
    * ignored for required parameters.
    */
-  val default: ExampleValue? = null,
+  val default: DefaultValue? = null,
   val type: Type? = null,
   val format: String? = null,
   val items: ReferenceOr<Schema>? = null,
