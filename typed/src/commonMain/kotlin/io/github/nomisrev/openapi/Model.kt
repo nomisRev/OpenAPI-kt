@@ -103,7 +103,12 @@ data class Route(
   data class Returns(
     val types: Map<HttpStatusCode, ReturnType>,
     val extensions: Map<String, JsonElement>
-  ) : Map<HttpStatusCode, ReturnType> by types
+  ) : Map<HttpStatusCode, ReturnType> by types {
+    constructor(
+      vararg types: Pair<HttpStatusCode, ReturnType>,
+      extensions: Map<String, JsonElement> = emptyMap()
+    ) : this(types.toMap(), extensions)
+  }
 
   // Required, isNullable ???
   data class ReturnType(val type: Model, val extensions: Map<String, JsonElement>)

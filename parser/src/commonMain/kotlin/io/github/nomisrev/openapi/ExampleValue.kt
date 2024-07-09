@@ -14,6 +14,8 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
+public typealias DefaultValue = ExampleValue
+
 @Serializable(with = ExampleValue.Companion.Serializer::class)
 public sealed interface ExampleValue {
 

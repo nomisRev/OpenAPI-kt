@@ -1,4 +1,5 @@
 import com.diffplug.gradle.spotless.SpotlessExtension
+import kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -10,13 +11,24 @@ plugins {
   alias(libs.plugins.assert)
   alias(libs.plugins.spotless)
   alias(libs.plugins.dokka)
+  alias(libs.plugins.kover)
 }
 
 val assertId = libs.plugins.assert.get().pluginId
 val spotlessId = libs.plugins.spotless.get().pluginId
 val publishId = libs.plugins.publish.get().pluginId
+val koverId = libs.plugins.kover.get().pluginId
+
+
+dependencies {
+  kover(projects.parser)
+  kover(projects.typed)
+  kover(projects.generation)
+}
 
 subprojects {
+  apply(plugin = koverId)
+
   apply(plugin = assertId)
   @Suppress("OPT_IN_USAGE")
   configure<PowerAssertGradleExtension> {
