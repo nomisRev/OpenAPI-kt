@@ -12,20 +12,7 @@ import kotlin.jvm.JvmInline
 
 fun OpenAPI.routes(): List<Route> = OpenAPITransformer(this).routes()
 
-fun OpenAPI.models(): Set<Model> =
-  with(OpenAPITransformer(this)) { schemas() }
-    .mapNotNull { model ->
-      when (model) {
-        is Collection -> model.inner
-        is Primitive.Int,
-        is Primitive.Double,
-        is Primitive.Boolean,
-        is Primitive.String,
-        is Primitive.Unit -> null
-        else -> model
-      }
-    }
-    .toSet()
+fun OpenAPI.models(): Set<Model> = with(OpenAPITransformer(this)) { schemas() }.toSet()
 
 /**
  * This class implements the traverser, it goes through the [OpenAPI] file, and gathers all the
@@ -197,16 +184,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         when (val single = type.types.singleOrNull()) {
           null -> {
             require(type.types.isNotEmpty()) { "Array type requires types to be defined. $this" }
+            val resolved = type.types.sorted().map { t -> Resolved.Value(Schema(type = t)) }
             Model.Union(
               context = context,
-              cases =
-                type.types.sorted().map { t ->
-                  val resolved = Resolved.Value(Schema(type = t))
-                  Model.Union.Case(context, resolved.toModel(context).value)
-                },
+              cases = resolved.map { Model.Union.Case(context, it.toModel(context).value) },
               default = null,
               description = description,
-              inline = emptyList()
+              inline = resolved.mapNotNull { nestedModel(it, context) }
             )
           }
           else -> copy(type = single).type(context)
@@ -226,10 +210,12 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       null -> TODO("Schema: $this not yet supported. Please report to issue tracker.")
     }
 
-  fun Schema.isOpenEnumeration(): Boolean =
-    anyOf?.size == 2 &&
-      anyOf!!.count { it.resolve().value.enum != null } == 1 &&
-      anyOf!!.count { it.resolve().value.type == Type.Basic.String } == 2
+  fun Schema.isOpenEnumeration(): Boolean {
+    val anyOf = anyOf ?: return false
+    return anyOf.size == 2 &&
+      anyOf.count { it.resolve().value.enum != null } == 1 &&
+      anyOf.count { it.resolve().value.type == Type.Basic.String } == 2
+  }
 
   fun ReferenceOr<Schema>.resolve(): Resolved<Schema> =
     when (this) {
@@ -691,6 +677,12 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       when (this) {
         is Ref -> Named(name)
         is Value -> orElse()
+      }
+
+    fun valueOrNull(): A? =
+      when (this) {
+        is Ref -> null
+        is Value -> value
       }
   }
 }
