@@ -198,16 +198,40 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is Type.Basic ->
         when (type) {
           Type.Basic.Array -> collection(context)
-          Type.Basic.Boolean -> Primitive.Boolean(default?.toString()?.toBoolean(), description)
-          Type.Basic.Integer -> Primitive.Int(default?.toString()?.toIntOrNull(), description)
-          Type.Basic.Number -> Primitive.Double(default?.toString()?.toDoubleOrNull(), description)
+          Type.Basic.Boolean ->
+            Primitive.Boolean(default("Boolean", String::toBooleanStrictOrNull), description)
+          Type.Basic.Integer -> Primitive.Int(default("Integer", String::toIntOrNull), description)
+          Type.Basic.Number ->
+            Primitive.Double(default("Number", String::toDoubleOrNull), description)
           Type.Basic.String ->
             if (format == "binary") Model.OctetStream(description)
-            else Primitive.String(default?.toString(), description)
+            else
+              Primitive.String(
+                default("String", String::toString) { it.joinToString() },
+                description
+              )
           Type.Basic.Object -> toObject(context)
           Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
         }
       null -> TODO("Schema: $this not yet supported. Please report to issue tracker.")
+    }
+
+  private fun <A> Schema.default(
+    label: String,
+    onSingle: (String) -> A?,
+    onMultiple: (List<String>) -> A?
+  ): A? =
+    when (val default = default) {
+      is ExampleValue.Single ->
+        onSingle(default.value)
+          ?: throw IllegalStateException("Default value ${default.value} is not a $label.")
+      is ExampleValue.Multiple -> onMultiple(default.values)
+      null -> null
+    }
+
+  private fun <A> Schema.default(label: String, onSingle: (String) -> A?): A? =
+    default(label, onSingle) {
+      throw IllegalStateException("Multiple default values not supported for $label.")
     }
 
   fun Schema.isOpenEnumeration(): Boolean {

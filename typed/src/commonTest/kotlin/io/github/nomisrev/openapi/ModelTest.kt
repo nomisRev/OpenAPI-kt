@@ -11,6 +11,19 @@ import org.junit.jupiter.api.assertThrows
 
 class ModelTest {
   @Test
+  fun empty() {
+    val actual = testAPI.models()
+    assertEquals(emptySet(), actual)
+  }
+
+  @Test
+  fun emptySchema() {
+    assertThrows<NotImplementedError> {
+      testAPI.copy(components = Components(schemas = mapOf("Empty" to value(Schema())))).models()
+    }
+  }
+
+  @Test
   fun `object`() {
     val actual =
       testAPI
@@ -315,34 +328,6 @@ class ModelTest {
   }
 
   @Test
-  fun int() {
-    val actual =
-      testAPI
-        .copy(
-          components =
-            Components(schemas = mapOf("Primitive.Int" to value(Schema(type = Type.Basic.Integer))))
-        )
-        .models()
-    val expected = Primitive.Int(default = null, description = null)
-    assertEquals(setOf(expected), actual)
-  }
-
-  @Test
-  fun string() {
-    val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas = mapOf("Primitive.String" to value(Schema(type = Type.Basic.String)))
-            )
-        )
-        .models()
-    val expected = Primitive.String(default = null, description = null)
-    assertEquals(setOf(expected), actual)
-  }
-
-  @Test
   fun binary() {
     val actual =
       testAPI
@@ -357,36 +342,6 @@ class ModelTest {
         )
         .models()
     val expected = Model.OctetStream(description = null)
-    assertEquals(setOf(expected), actual)
-  }
-
-  @Test
-  fun boolean() {
-    val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas = mapOf("Primitive.Boolean" to value(Schema(type = Type.Basic.Boolean)))
-            )
-        )
-        .models()
-    val expected = Primitive.Boolean(default = null, description = null)
-    assertEquals(setOf(expected), actual)
-  }
-
-  @Test
-  fun double() {
-    val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas = mapOf("Primitive.Number" to value(Schema(type = Type.Basic.Number)))
-            )
-        )
-        .models()
-    val expected = Primitive.Double(default = null, description = null)
     assertEquals(setOf(expected), actual)
   }
 
