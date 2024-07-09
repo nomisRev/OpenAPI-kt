@@ -9,7 +9,7 @@ json="1.7.1"
 okio="3.9.0"
 kasechange="1.4.1"
 ktor="2.3.12"
-kotlinpoet="1.17.0"
+kotlinpoet="1.18.0"
 agp = "8.5.0"
 
 [libraries]
