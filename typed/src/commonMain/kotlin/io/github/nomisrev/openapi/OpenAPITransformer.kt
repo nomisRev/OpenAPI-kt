@@ -198,12 +198,21 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is Type.Basic ->
         when (type) {
           Type.Basic.Array -> collection(context)
-          Type.Basic.Boolean -> Primitive.Boolean(default?.toString()?.toBoolean(), description)
+          Type.Basic.Boolean ->
+            Primitive.Boolean(default?.toString()?.toBooleanStrictOrNull(), description)
           Type.Basic.Integer -> Primitive.Int(default?.toString()?.toIntOrNull(), description)
           Type.Basic.Number -> Primitive.Double(default?.toString()?.toDoubleOrNull(), description)
           Type.Basic.String ->
             if (format == "binary") Model.OctetStream(description)
-            else Primitive.String(default?.toString(), description)
+            else
+              Primitive.String(
+                when (val default = default) {
+                  is ExampleValue.Multiple -> default.values.joinToString()
+                  is ExampleValue.Single -> default.value
+                  null -> null
+                },
+                description
+              )
           Type.Basic.Object -> toObject(context)
           Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
         }
