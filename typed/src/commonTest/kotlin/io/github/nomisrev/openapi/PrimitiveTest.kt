@@ -18,26 +18,34 @@ class PrimitiveTest {
 
   @Test
   fun doubleIncorrectDefault() {
-    primitive(
-      Schema(
-        type = Type.Basic.Number,
-        default = ExampleValue("Nonsense Value"),
-        description = "My Desc"
-      ),
-      Primitive.Double(null, description = "My Desc")
-    )
+    val e =
+      assertThrows<IllegalStateException> {
+        primitive(
+          Schema(
+            type = Type.Basic.Number,
+            default = ExampleValue("Nonsense Value"),
+            description = "My Desc"
+          ),
+          Primitive.Double(null, description = "My Desc")
+        )
+      }
+    assertEquals("Default value Nonsense Value is not a Number.", e.message)
   }
 
   @Test
   fun doubleIncorrectDefaultMultiple() {
-    primitive(
-      Schema(
-        type = Type.Basic.Number,
-        default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
-        description = "My Desc"
-      ),
-      Primitive.Double(null, description = "My Desc")
-    )
+    val e =
+      assertThrows<IllegalStateException> {
+        primitive(
+          Schema(
+            type = Type.Basic.Number,
+            default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
+            description = "My Desc"
+          ),
+          Primitive.Double(null, description = "My Desc")
+        )
+      }
+    assertEquals("Multiple default values not supported for Number.", e.message)
   }
 
   @Test
@@ -50,26 +58,34 @@ class PrimitiveTest {
 
   @Test
   fun booleanIncorrectDefault() {
-    primitive(
-      Schema(
-        type = Type.Basic.Boolean,
-        default = ExampleValue("Nonsense Value"),
-        description = "My Desc"
-      ),
-      Primitive.Boolean(null, description = "My Desc")
-    )
+    val e =
+      assertThrows<IllegalStateException> {
+        primitive(
+          Schema(
+            type = Type.Basic.Boolean,
+            default = ExampleValue("Nonsense Value"),
+            description = "My Desc"
+          ),
+          Primitive.Boolean(null, description = "My Desc")
+        )
+      }
+    assertEquals("Default value Nonsense Value is not a Boolean.", e.message)
   }
 
   @Test
   fun booleanIncorrectDefaultMultiple() {
-    primitive(
-      Schema(
-        type = Type.Basic.Boolean,
-        default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
-        description = "My Desc"
-      ),
-      Primitive.Boolean(null, description = "My Desc")
-    )
+    val e =
+      assertThrows<IllegalStateException> {
+        primitive(
+          Schema(
+            type = Type.Basic.Boolean,
+            default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
+            description = "My Desc"
+          ),
+          Primitive.Boolean(null, description = "My Desc")
+        )
+      }
+    assertEquals("Multiple default values not supported for Boolean.", e.message)
   }
 
   @Test
@@ -82,26 +98,34 @@ class PrimitiveTest {
 
   @Test
   fun integerIncorrectDefault() {
-    primitive(
-      Schema(
-        type = Type.Basic.Integer,
-        default = ExampleValue("Nonsense Value"),
-        description = "My Desc"
-      ),
-      Primitive.Int(null, description = "My Desc")
-    )
+    val e =
+      assertThrows<IllegalStateException> {
+        primitive(
+          Schema(
+            type = Type.Basic.Integer,
+            default = ExampleValue("Nonsense Value"),
+            description = "My Desc"
+          ),
+          Primitive.Int(null, description = "My Desc")
+        )
+      }
+    assertEquals("Default value Nonsense Value is not a Integer.", e.message)
   }
 
   @Test
   fun integerIncorrectDefaultMultiple() {
-    primitive(
-      Schema(
-        type = Type.Basic.Integer,
-        default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
-        description = "My Desc"
-      ),
-      Primitive.Int(null, description = "My Desc")
-    )
+    val e =
+      assertThrows<IllegalStateException> {
+        primitive(
+          Schema(
+            type = Type.Basic.Integer,
+            default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
+            description = "My Desc"
+          ),
+          Primitive.Int(null, description = "My Desc")
+        )
+      }
+    assertEquals("Multiple default values not supported for Integer.", e.message)
   }
 
   @Test

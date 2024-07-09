@@ -11,6 +11,19 @@ import org.junit.jupiter.api.assertThrows
 
 class ModelTest {
   @Test
+  fun empty() {
+    val actual = testAPI.models()
+    assertEquals(emptySet(), actual)
+  }
+
+  @Test
+  fun emptySchema() {
+    assertThrows<NotImplementedError> {
+      testAPI.copy(components = Components(schemas = mapOf("Empty" to value(Schema())))).models()
+    }
+  }
+
+  @Test
   fun `object`() {
     val actual =
       testAPI
