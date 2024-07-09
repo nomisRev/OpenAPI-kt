@@ -25,10 +25,7 @@ jobs:
 
       - run: ./gradlew build koverXmlReport --full-stacktrace
 
-      - uses: mi-kas/kover-report@v1
+      - uses: codecov/codecov-action@v4
         with:
-          path: build/reports/kover/report.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          title: Code Coverage
-          update-comment: true
-          coverage-counter-type: LINE
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: build/reports/kover/report.xml
