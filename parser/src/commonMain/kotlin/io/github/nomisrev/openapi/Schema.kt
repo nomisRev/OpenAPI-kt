@@ -69,6 +69,7 @@ public data class Schema(
       "An empty list required: [] is not valid. If all properties are optional, do not specify the required keyword."
     }
   }
+
   @Serializable
   public data class Discriminator(
     val propertyName: String,

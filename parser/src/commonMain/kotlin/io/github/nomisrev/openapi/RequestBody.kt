@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.MediaType.Companion.Serializer as MediaTypeSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -20,7 +19,7 @@ public data class RequestBody(
    * describes it. For requests that match multiple keys, only the most specific key is applicable.
    * e.g. text/plain overrides text
    */
-  public val content: Map<String, @Serializable(with = MediaTypeSerializer::class) MediaType>,
+  public val content: Map<String, MediaType>,
   /** Determines if the request body is required in the request. Defaults to false. */
   public val required: Boolean = false,
   /**

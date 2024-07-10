@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.Encoding.Companion.Serializer as EncodingSerializer
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -9,7 +10,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /** Each Media Type Object provides schema and examples for the media type identified by its key. */
-@Serializable
+@Serializable(MediaType.Companion.Serializer::class)
+@OptIn(InternalSerializationApi::class)
+@KeepGeneratedSerializer
 public data class MediaType(
   /** The schema defining the content of the request, response, or parameter. */
   public val schema: ReferenceOr<Schema>? = null,
@@ -26,16 +29,13 @@ public data class MediaType(
    * if referencing a schema which contains an example, the examples value SHALL override the
    * example provided by the schema.
    */
-  public val examples:
-    Map<String, ReferenceOr<@Serializable(with = Example.Companion.Serializer::class) Example>> =
-    emptyMap(),
+  public val examples: Map<String, ReferenceOr<Example>> = emptyMap(),
   /**
    * A map between a property name and its encoding information. The key, being the property name,
    * MUST exist in the schema as a property. The encoding object SHALL only apply to requestBody
    * objects when the media type is multipart or application/x-www-form-urlencoded.
    */
-  public val encoding: Map<String, @Serializable(with = EncodingSerializer::class) Encoding> =
-    emptyMap(),
+  public val encoding: Map<String, Encoding> = emptyMap(),
   /**
    * Any additional external documentation for this OpenAPI document. The key is the name of the
    * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
@@ -46,7 +46,7 @@ public data class MediaType(
   public companion object {
     internal object Serializer :
       KSerializerWithExtensions<MediaType>(
-        serializer(),
+        generatedSerializer(),
         MediaType::extensions,
         { op, extensions -> op.copy(extensions = extensions) }
       )

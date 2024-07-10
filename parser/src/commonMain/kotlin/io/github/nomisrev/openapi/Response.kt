@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.MediaType.Companion.Serializer as MediaTypeSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -22,8 +21,7 @@ public data class Response(
    * type range and the value describes it. For responses that match multiple keys, only the most
    * specific key is applicable. i.e. text/plain overrides text
    */
-  public val content: Map<String, @Serializable(with = MediaTypeSerializer::class) MediaType> =
-    emptyMap(),
+  public val content: Map<String, MediaType> = emptyMap(),
   /**
    * A map of operations links that can be followed from the response. The key of the map is a short
    * name for the link, following the naming constraints of the names for Component Objects.
