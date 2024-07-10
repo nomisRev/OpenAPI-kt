@@ -201,7 +201,11 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           Type.Basic.Boolean ->
             Primitive.Boolean(default("Boolean", String::toBooleanStrictOrNull), description)
           Type.Basic.Integer ->
-            Primitive.Int(default("Integer", String::toIntOrNull), description, NumberConstraint(this))
+            Primitive.Int(
+              default("Integer", String::toIntOrNull),
+              description,
+              NumberConstraint(this)
+            )
           Type.Basic.Number ->
             Primitive.Double(
               default("Number", String::toDoubleOrNull),
@@ -682,7 +686,11 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             Pair(
               statusCode,
               Route.ReturnType(
-                Primitive.String(null, response.description, TextConstraint(Int.MAX_VALUE, 0, null)),
+                Primitive.String(
+                  null,
+                  response.description,
+                  TextConstraint(Int.MAX_VALUE, 0, null)
+                ),
                 response.extensions
               )
             )

@@ -3,7 +3,6 @@ package io.github.nomisrev.openapi
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 data class Route(

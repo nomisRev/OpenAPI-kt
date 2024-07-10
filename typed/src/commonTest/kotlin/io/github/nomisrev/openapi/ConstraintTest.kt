@@ -1,28 +1,30 @@
 package io.github.nomisrev.openapi
 
-import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import org.junit.jupiter.api.Test
 
 class ConstraintTest {
   @Test
   fun intRange() {
     assertEquals(
       Model.Primitive.int(
-        constraint = NumberConstraint(
+        constraint =
+          NumberConstraint(
+            minimum = 1.0,
+            maximum = 10.0,
+            exclusiveMinimum = false,
+            exclusiveMaximum = false,
+            multipleOf = null
+          )
+      ),
+      Schema(
+          type = Schema.Type.Basic.Integer,
           minimum = 1.0,
           maximum = 10.0,
           exclusiveMinimum = false,
-          exclusiveMaximum = false,
-          multipleOf = null
+          exclusiveMaximum = false
         )
-      ),
-      Schema(
-        type = Schema.Type.Basic.Integer,
-        minimum = 1.0,
-        maximum = 10.0,
-        exclusiveMinimum = false,
-        exclusiveMaximum = false
-      ).toModel("IntRange")
+        .toModel("IntRange")
     )
   }
 
@@ -30,21 +32,23 @@ class ConstraintTest {
   fun doubleRange() {
     assertEquals(
       Model.Primitive.double(
-        constraint = NumberConstraint(
+        constraint =
+          NumberConstraint(
+            minimum = 1.0,
+            maximum = 10.0,
+            exclusiveMinimum = false,
+            exclusiveMaximum = false,
+            multipleOf = null
+          )
+      ),
+      Schema(
+          type = Schema.Type.Basic.Number,
           minimum = 1.0,
           maximum = 10.0,
           exclusiveMinimum = false,
-          exclusiveMaximum = false,
-          multipleOf = null
+          exclusiveMaximum = false
         )
-      ),
-      Schema(
-        type = Schema.Type.Basic.Number,
-        minimum = 1.0,
-        maximum = 10.0,
-        exclusiveMinimum = false,
-        exclusiveMaximum = false
-      ).toModel("IntRange")
+        .toModel("IntRange")
     )
   }
 
@@ -52,18 +56,10 @@ class ConstraintTest {
   fun text() {
     assertEquals(
       Model.Primitive.string(
-        constraint = TextConstraint(
-          maxLength = 10,
-          minLength = 1,
-          pattern = null
-        )
+        constraint = TextConstraint(maxLength = 10, minLength = 1, pattern = null)
       ),
-      Schema(
-        type = Schema.Type.Basic.String,
-        maxLength = 10,
-        minLength = 1,
-        pattern = null
-      ).toModel("Text")
+      Schema(type = Schema.Type.Basic.String, maxLength = 10, minLength = 1, pattern = null)
+        .toModel("Text")
     )
   }
 
@@ -72,17 +68,15 @@ class ConstraintTest {
     assertEquals(
       Model.Collection.list(
         inner = Model.Primitive.string(),
-        constraint = CollectionConstraint(
-          minItems = 1,
-          maxItems = 10
-        )
+        constraint = CollectionConstraint(minItems = 1, maxItems = 10)
       ),
       Schema(
-        type = Schema.Type.Basic.Array,
-        items = ReferenceOr.value(Schema(type = Schema.Type.Basic.String)),
-        maxItems = 10,
-        minItems = 1
-      ).toModel("List")
+          type = Schema.Type.Basic.Array,
+          items = ReferenceOr.value(Schema(type = Schema.Type.Basic.String)),
+          maxItems = 10,
+          minItems = 1
+        )
+        .toModel("List")
     )
   }
 
@@ -91,18 +85,16 @@ class ConstraintTest {
     assertEquals(
       Model.Collection.set(
         inner = Model.Primitive.string(),
-        constraint = CollectionConstraint(
-          minItems = 1,
-          maxItems = 10
-        )
+        constraint = CollectionConstraint(minItems = 1, maxItems = 10)
       ),
       Schema(
-        type = Schema.Type.Basic.Array,
-        items = ReferenceOr.value(Schema(type = Schema.Type.Basic.String)),
-        maxItems = 10,
-        minItems = 1,
-        uniqueItems = true
-      ).toModel("List")
+          type = Schema.Type.Basic.Array,
+          items = ReferenceOr.value(Schema(type = Schema.Type.Basic.String)),
+          maxItems = 10,
+          minItems = 1,
+          uniqueItems = true
+        )
+        .toModel("List")
     )
   }
 
@@ -112,12 +104,16 @@ class ConstraintTest {
       Model.obj(
         context = NamingContext.Named("Obj"),
         properties = listOf(Model.Object.property("name", Model.Primitive.string())),
-        inline = listOf(Model.Primitive.string())
+        inline = listOf(Model.Primitive.string()),
+        constraint = ObjectConstraint(minProperties = 1, maxProperties = 1)
       ),
       Schema(
-        type = Schema.Type.Basic.Object,
-        properties = mapOf("name" to ReferenceOr.value(Schema(type = Schema.Type.Basic.String)))
-      ).toModel("Obj")
+          type = Schema.Type.Basic.Object,
+          properties = mapOf("name" to ReferenceOr.value(Schema(type = Schema.Type.Basic.String))),
+          minProperties = 1,
+          maxProperties = 1
+        )
+        .toModel("Obj")
     )
   }
 }

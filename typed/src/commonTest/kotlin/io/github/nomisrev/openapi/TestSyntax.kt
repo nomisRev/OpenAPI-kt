@@ -42,7 +42,12 @@ public fun Model.Collection.Companion.set(
   description: String? = null,
   constraint: CollectionConstraint = CollectionConstraint(0, Int.MAX_VALUE)
 ): Model.Collection.Set =
-  Model.Collection.Set(inner = inner, default = default, description = description, bounds = constraint)
+  Model.Collection.Set(
+    inner = inner,
+    default = default,
+    description = description,
+    bounds = constraint
+  )
 
 public fun Model.Object.Companion.property(
   baseName: String,
@@ -58,7 +63,6 @@ public fun Model.Object.Companion.property(
     isNullable = isNullable,
     description = description
   )
-
 
 public fun Model.Companion.obj(
   context: NamingContext,
@@ -82,9 +86,16 @@ public fun Model.Companion.union(
   default: String? = null,
   description: String? = null
 ): Model.Union =
-  Model.Union(context = context, cases = cases, default = default, inline = inline, description = description)
+  Model.Union(
+    context = context,
+    cases = cases,
+    default = default,
+    inline = inline,
+    description = description
+  )
 
 fun Schema.toModel(name: String): Model =
-  testAPI.copy(
-    components = Components(schemas = mapOf(name to ReferenceOr.value(this)))
-  ).models().first()
+  testAPI
+    .copy(components = Components(schemas = mapOf(name to ReferenceOr.value(this))))
+    .models()
+    .first()

@@ -7,7 +7,9 @@ data class NumberConstraint(
   val maximum: Double,
   val multipleOf: Double?
 ) {
-  constructor(schema: Schema) : this(
+  constructor(
+    schema: Schema
+  ) : this(
     schema.exclusiveMinimum ?: false,
     schema.minimum ?: Double.NEGATIVE_INFINITY,
     schema.exclusiveMaximum ?: false,
@@ -17,14 +19,18 @@ data class NumberConstraint(
 }
 
 data class TextConstraint(val maxLength: Int, val minLength: Int, val pattern: String?) {
-  constructor(schema: Schema) : this(schema.maxLength ?: Int.MAX_VALUE, schema.minLength ?: 0, schema.pattern)
+  constructor(
+    schema: Schema
+  ) : this(schema.maxLength ?: Int.MAX_VALUE, schema.minLength ?: 0, schema.pattern)
 }
 
 data class CollectionConstraint(
   val minItems: Int,
   val maxItems: Int,
 ) {
-  constructor(schema: Schema) : this(
+  constructor(
+    schema: Schema
+  ) : this(
     schema.minItems ?: 0,
     schema.maxItems ?: Int.MAX_VALUE,
   )
@@ -35,7 +41,9 @@ data class ObjectConstraint(
   val minProperties: Int,
   val maxProperties: Int,
 ) {
-  constructor(schema: Schema): this(
+  constructor(
+    schema: Schema
+  ) : this(
     schema.minProperties ?: 0,
     schema.maxProperties ?: Int.MAX_VALUE,
   )

@@ -8,21 +8,23 @@ import org.junit.jupiter.api.Test
 class DefaultArguments {
   @Test
   fun nullArgumentForNonNullList() {
-    val actual =                     Schema(
-      type = Type.Basic.Object,
-      properties =
-      mapOf(
-        "value" to
-          value(
-            Schema(
-              type = Type.Basic.Array,
-              items = value(Schema(type = Type.Basic.String)),
-              default = ExampleValue("null"),
-              nullable = false
+    val actual =
+      Schema(
+          type = Type.Basic.Object,
+          properties =
+            mapOf(
+              "value" to
+                value(
+                  Schema(
+                    type = Type.Basic.Array,
+                    items = value(Schema(type = Type.Basic.String)),
+                    default = ExampleValue("null"),
+                    nullable = false
+                  )
+                )
             )
-          )
-      )
-    ).toModel("Strings")
+        )
+        .toModel("Strings")
     val expected =
       Model.obj(
         context = NamingContext.Named("Strings"),
@@ -41,21 +43,23 @@ class DefaultArguments {
 
   @Test
   fun jsEmptyArrayArgumentForList() {
-    val actual =                       Schema(
-      type = Type.Basic.Object,
-      properties =
-      mapOf(
-        "value" to
-          value(
-            Schema(
-              type = Type.Basic.Array,
-              items = value(Schema(type = Type.Basic.String)),
-              default = ExampleValue("[]"),
-              nullable = false
+    val actual =
+      Schema(
+          type = Type.Basic.Object,
+          properties =
+            mapOf(
+              "value" to
+                value(
+                  Schema(
+                    type = Type.Basic.Array,
+                    items = value(Schema(type = Type.Basic.String)),
+                    default = ExampleValue("[]"),
+                    nullable = false
+                  )
+                )
             )
-          )
-      )
-    ).toModel("Strings")
+        )
+        .toModel("Strings")
     val expected =
       Model.obj(
         context = NamingContext.Named("Strings"),
