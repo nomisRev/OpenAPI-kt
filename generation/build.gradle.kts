@@ -16,6 +16,8 @@ dependencies {
   api(projects.typed)
   api(libs.kasechange)
   api(libs.kotlinpoet)
+  testImplementation(libs.test)
+  testImplementation(libs.test.compile)
 }
 
 tasks.withType<DokkaTaskPartial>().configureEach {

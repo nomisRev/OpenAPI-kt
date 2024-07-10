@@ -30,12 +30,12 @@ import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 
 context(OpenAPIContext)
-fun Iterable<Model>.toFileSpecs(): List<FileSpec> = mapNotNull { it.toFileSpec() }
+fun Iterable<Model>.toFileSpecs(): List<FileSpec> = mapNotNull { it.toFileSpecOrNull() }
 
 context(OpenAPIContext)
-fun Model.toFileSpec(): FileSpec? =
+fun Model.toFileSpecOrNull(): FileSpec? =
   when (val model = intercept(this)) {
-    is Collection -> model.inner.toFileSpec()
+    is Collection -> model.inner.toFileSpecOrNull()
     is Model.Enum.Closed ->
       FileSpec.builder(`package`, toClassName(model.context).simpleName)
         .addType(model.toTypeSpec())
