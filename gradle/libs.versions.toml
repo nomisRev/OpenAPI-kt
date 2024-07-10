@@ -11,6 +11,7 @@ kasechange="1.4.1"
 ktor="2.3.12"
 kotlinpoet="1.18.0"
 agp = "8.5.0"
+test-compile = "0.5.1"
 
 [libraries]
 gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
@@ -23,6 +24,7 @@ kasechange = { module = "net.pearx.kasechange:kasechange", version.ref = "kasech
 ktor-client = { module= "io.ktor:ktor-client-core", version.ref="ktor" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref="kotlinpoet" }
 android-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+test-compile = { module = "dev.zacsweers.kctfork:core", version.ref = "test-compile"}
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

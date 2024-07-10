@@ -16,12 +16,21 @@ data class NumberConstraint(
     schema.maximum ?: Double.POSITIVE_INFINITY,
     schema.multipleOf
   )
+
+  companion object {
+    val NONE =
+      NumberConstraint(false, Double.NEGATIVE_INFINITY, false, Double.POSITIVE_INFINITY, null)
+  }
 }
 
 data class TextConstraint(val maxLength: Int, val minLength: Int, val pattern: String?) {
   constructor(
     schema: Schema
   ) : this(schema.maxLength ?: Int.MAX_VALUE, schema.minLength ?: 0, schema.pattern)
+
+  companion object {
+    val NONE = TextConstraint(Int.MAX_VALUE, 0, null)
+  }
 }
 
 data class CollectionConstraint(
@@ -34,6 +43,10 @@ data class CollectionConstraint(
     schema.minItems ?: 0,
     schema.maxItems ?: Int.MAX_VALUE,
   )
+
+  companion object {
+    val NONE = CollectionConstraint(0, Int.MAX_VALUE)
+  }
 }
 
 // TODO `not` is not supported yet
@@ -51,4 +64,8 @@ data class ObjectConstraint(
     schema.minProperties ?: 0,
     schema.maxProperties ?: Int.MAX_VALUE,
   )
+
+  companion object {
+    val NONE = ObjectConstraint(0, Int.MAX_VALUE)
+  }
 }
