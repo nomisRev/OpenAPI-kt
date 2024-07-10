@@ -37,6 +37,10 @@ data class CollectionConstraint(
 }
 
 // TODO `not` is not supported yet
+/**
+ * minProperties and maxProperties let you restrict the number of properties allowed in an object.
+ * This can be useful when using additionalProperties, or free-form objects.
+ */
 data class ObjectConstraint(
   val minProperties: Int,
   val maxProperties: Int,
