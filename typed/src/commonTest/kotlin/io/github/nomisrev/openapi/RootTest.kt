@@ -14,80 +14,50 @@ class RootTest {
 
   @Test
   fun operation() {
-    val operation =
-      Operation(
-        operationId = "echo",
-        responses =
-          Responses(
-            200 to
-              value(
-                Response(
-                  content =
-                    mapOf(
-                      "application/json" to
-                        MediaType(schema = value(Schema(type = Schema.Type.Basic.String)))
-                    )
-                )
-              )
-          )
-      )
     val actual =
-      testAPI
-        .copy(
-          paths =
-            mapOf(
-              "/echo" to
-                PathItem(
-                  get =
-                    Operation(
-                      operationId = "echo",
-                      responses =
-                        Responses(
-                          200 to
-                            value(
-                              Response(
-                                content =
-                                  mapOf(
-                                    "application/json" to
-                                      MediaType(
-                                        schema = value(Schema(type = Schema.Type.Basic.String))
-                                      )
-                                  )
-                              )
-                            )
-                        )
-                    )
+      Operation(
+          operationId = "echo",
+          summary = "Echoes the input",
+          responses =
+            Responses(
+              200 to
+                value(
+                  Response(
+                    content =
+                      mapOf(
+                        "application/json" to
+                          MediaType(schema = value(Schema(type = Schema.Type.Basic.String)))
+                      )
+                  )
                 )
             )
         )
-        .root("OpenAPI")
+        .toAPI("/echo")
     val expected =
-      Root(
-        "OpenAPI",
-        emptyList(),
+      API(
+        "echo",
         listOf(
-          API(
-            "echo",
-            listOf(
-              Route(
-                operation = operation,
-                path = "/echo",
-                method = HttpMethod.Get,
-                body = Route.Bodies(required = false, emptyMap(), emptyMap()),
-                input = emptyList(),
-                returnType =
-                  Route.Returns(
-                    HttpStatusCode.OK to
-                      Route.ReturnType(Model.Primitive.string(null, null), emptyMap())
-                  ),
-                extensions = emptyMap(),
-                nested = listOf(Model.Primitive.string(null, null))
-              )
-            ),
-            nested = emptyList()
+          Route(
+            naming = RouteNaming.OperationId("echo"),
+            summary = "Echoes the input",
+            path = "/echo",
+            method = HttpMethod.Get,
+            body = Route.Bodies(required = false, emptyMap(), emptyMap()),
+            input = emptyList(),
+            returnType =
+              Route.Returns(
+                HttpStatusCode.OK to
+                  Route.ReturnType(Model.Primitive.string(null, null), emptyMap())
+              ),
+            extensions = emptyMap(),
+            nested = listOf(Model.Primitive.string(null, null))
           )
-        )
+        ),
+        nested = emptyList()
       )
     assertEquals(expected, actual)
   }
 }
+
+fun Operation.toAPI(path: String): API =
+  testAPI.copy(paths = mapOf(path to PathItem(get = this))).root("OpenAPI").endpoints.single()

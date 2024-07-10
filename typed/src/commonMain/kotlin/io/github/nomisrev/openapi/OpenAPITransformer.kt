@@ -100,7 +100,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           .let(::listOfNotNull)
 
       Route(
-        operation = operation,
+        naming = RouteNaming.OperationId(operation.operationId!!),
+        summary = operation.summary,
         path = path,
         method = method,
         body = toRequestBody(operation, operation.requestBody?.get(), ::context),

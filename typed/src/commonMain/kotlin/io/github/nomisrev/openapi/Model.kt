@@ -5,8 +5,19 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.JsonElement
 
+sealed interface RouteNaming {
+  val name: String
+
+  data class OperationId(override val name: String) : RouteNaming
+  //  data class Path(
+  //    val value: String,
+  //    val operation: HttpMethod
+  //  ): RouteNaming
+}
+
 data class Route(
-  val operation: Operation,
+  val naming: RouteNaming,
+  val summary: String?,
   val path: String,
   val method: HttpMethod,
   val body: Bodies,
