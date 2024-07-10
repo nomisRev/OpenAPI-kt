@@ -201,13 +201,13 @@ private fun API.toImplementation(context: NamingContext? = null): TypeSpec {
 context(OpenAPIContext, TypeSpecHolder.Builder<*>, MemberSpecHolder.Builder<*>)
 private fun Route.addFunction(implemented: Boolean) {
   val function =
-    FunSpec.builder(toParamName(Named(operation.operationId!!)))
+    FunSpec.builder(toFunName())
       .addModifiers(KModifier.SUSPEND, if (implemented) KModifier.OVERRIDE else KModifier.ABSTRACT)
       .addParameters(params(defaults = !implemented))
       .addParameters(requestBody(defaults = !implemented))
       .addParameter(configure(defaults = !implemented))
       .apply {
-        operation.summary?.let { addKdoc(it) }
+        summary?.let { addKdoc(it) }
         returnType()
         if (implemented) {
           addCode(
@@ -353,7 +353,7 @@ fun Route.returnType() {
       }
     returns(typeName)
   } else {
-    val response = ClassName(`package`, "${operation.operationId}Response")
+    val response = toResponseName()
     addType(
       TypeSpec.interfaceBuilder(response)
         .addModifiers(KModifier.SEALED)

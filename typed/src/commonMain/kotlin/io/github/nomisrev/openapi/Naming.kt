@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi
 
+import io.ktor.http.*
+
 /**
  * [NamingContext] is a critical part of how the models and routes are named. Following the context
  * is important to generate the correct class names for all schemas that are defined inline, rather

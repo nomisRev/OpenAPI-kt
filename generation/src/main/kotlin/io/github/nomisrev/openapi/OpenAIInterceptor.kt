@@ -84,7 +84,7 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
     ): TypeSpec.Builder {
       val functions =
         api.routes
-          .associateBy { it.operation.operationId!! }
+          .associateBy { it.operationId }
           .mapNotNull { (key, route) ->
             if (streamingOps.containsKey(key))
               route.toStreamingFun(implemented = implemented, streamingOps[key]!!)
@@ -99,7 +99,7 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
 
     context(OpenAPIContext)
     private fun Route.toStreamingFun(implemented: Boolean, returnType: ClassName): FunSpec =
-      FunSpec.builder(toParamName(Named(operation.operationId!! + "Stream")))
+      FunSpec.builder(toFunName() + "Stream")
         .addModifiers(
           KModifier.SUSPEND,
           if (implemented) KModifier.OVERRIDE else KModifier.ABSTRACT

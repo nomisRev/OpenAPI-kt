@@ -14,6 +14,12 @@ fun Naming(`package`: String): Naming = Nam(`package`)
 context(Naming)
 fun Model.Union.toCaseClassName(case: Model): ClassName = toCaseClassName(this, case)
 
+context(Naming)
+fun Route.toFunName(): String = toFunName(this)
+
+context(Naming)
+fun Route.toResponseName(): ClassName = toResponseName(this)
+
 interface Naming {
   fun toClassName(context: NamingContext): ClassName
 
@@ -24,6 +30,10 @@ interface Naming {
   fun toCaseClassName(union: Model.Union, case: Model): ClassName
 
   fun toParamName(named: NamingContext.Named): String
+
+  fun toFunName(route: Route): String
+
+  fun toResponseName(route: Route): ClassName
 }
 
 private class Nam(private val `package`: String) : Naming {
@@ -87,7 +97,16 @@ private class Nam(private val `package`: String) : Naming {
   private fun toParamName(className: ClassName): String =
     className.simpleName.replaceFirstChar { it.lowercase() }
 
-  override fun toParamName(named: NamingContext.Named): String = toParamName(toClassName(named))
+  override fun toParamName(named: NamingContext.Named): String = named.name.toCamelCase()
+
+  override fun toFunName(route: Route): String =
+    when (val operationId = route.operationId) {
+      null -> "${route.path.segments().last()}${route.method.name()}"
+      else -> operationId
+    }.toCamelCase()
+
+  override fun toResponseName(route: Route): ClassName =
+    ClassName(`package`, toFunName(route).replaceFirstChar { it.titlecase() })
 
   // Workaround for OpenAI
   private fun String.dropArraySyntax(): String = replace("[]", "")

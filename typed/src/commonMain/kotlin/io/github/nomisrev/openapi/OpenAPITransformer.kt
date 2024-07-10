@@ -39,7 +39,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
   fun routes(): List<Route> =
     operations().map { (path, method, operation) ->
-      val parts = path.replace(Regex("\\{.*?\\}"), "").split("/").filter { it.isNotEmpty() }
+      val parts = path.segments()
 
       fun context(context: NamingContext): NamingContext =
         when (parts.size) {
@@ -100,7 +100,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           .let(::listOfNotNull)
 
       Route(
-        operation = operation,
+        operationId = operation.operationId,
+        summary = operation.summary,
         path = path,
         method = method,
         body = toRequestBody(operation, operation.requestBody?.get(), ::context),

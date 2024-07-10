@@ -6,7 +6,8 @@ import io.ktor.http.HttpStatusCode
 import kotlinx.serialization.json.JsonElement
 
 data class Route(
-  val operation: Operation,
+  val operationId: String?,
+  val summary: String?,
   val path: String,
   val method: HttpMethod,
   val body: Bodies,
