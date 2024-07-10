@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi
 
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -8,7 +10,9 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 /** A single encoding definition applied to a single schema property. */
-@Serializable
+@Serializable(Encoding.Companion.Serializer::class)
+@OptIn(InternalSerializationApi::class)
+@KeepGeneratedSerializer
 public data class Encoding(
   /**
    * The Content-Type for encoding a specific property. Default value depends on the property type:
@@ -58,7 +62,7 @@ public data class Encoding(
   public companion object {
     internal object Serializer :
       KSerializerWithExtensions<Encoding>(
-        serializer(),
+        generatedSerializer(),
         Encoding::extensions,
         { op, extensions -> op.copy(extensions = extensions) }
       )

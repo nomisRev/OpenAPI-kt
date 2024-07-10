@@ -26,6 +26,7 @@ import kotlinx.serialization.json.JsonPrimitive
 public data class Schema(
   val title: String? = null,
   val description: String? = null,
+  /** required is an object-level attribute, not a property attribute. */
   val required: List<String>? = null,
   val nullable: Boolean? = null,
   val allOf: List<ReferenceOr<Schema>>? = null,
@@ -63,6 +64,12 @@ public data class Schema(
   @SerialName("\$id") val id: String? = null,
   @SerialName("\$anchor") val anchor: String? = null
 ) {
+  init {
+    require(required?.isEmpty() != true) {
+      "An empty list required: [] is not valid. If all properties are optional, do not specify the required keyword."
+    }
+  }
+
   @Serializable
   public data class Discriminator(
     val propertyName: String,

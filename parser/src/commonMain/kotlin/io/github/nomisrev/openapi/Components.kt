@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.Example.Companion.Serializer as ExampleSerializer
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -14,14 +15,14 @@ import kotlinx.serialization.json.JsonPrimitive
  * properties outside the components object.
  */
 // TODO, need `KeepGeneratedSerializer` or manually define instance...
-@Serializable
+@Serializable(Components.Companion.Serializer::class)
+@OptIn(InternalSerializationApi::class)
+@KeepGeneratedSerializer
 public data class Components(
   public val schemas: Map<String, ReferenceOr<Schema>> = emptyMap(),
   public val responses: Map<String, ReferenceOr<Response>> = emptyMap(),
   public val parameters: Map<String, ReferenceOr<Parameter>> = emptyMap(),
-  public val examples:
-    Map<String, ReferenceOr<@Serializable(with = ExampleSerializer::class) Example>> =
-    emptyMap(),
+  public val examples: Map<String, ReferenceOr<Example>> = emptyMap(),
   public val requestBodies: Map<String, ReferenceOr<RequestBody>> = emptyMap(),
   public val headers: Map<String, ReferenceOr<Header>> = emptyMap(),
   //    val securitySchemes: Definitions<SecurityScheme>,
@@ -38,7 +39,7 @@ public data class Components(
   public companion object {
     internal object Serializer :
       KSerializerWithExtensions<Components>(
-        serializer(),
+        generatedSerializer(),
         Components::extensions,
         { op, extensions -> op.copy(extensions = extensions) }
       )

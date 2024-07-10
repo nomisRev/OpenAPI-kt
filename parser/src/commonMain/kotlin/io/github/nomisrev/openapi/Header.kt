@@ -15,8 +15,6 @@ public data class Header(
   public val allowEmptyValue: Boolean? = null,
   public val explode: Boolean? = null,
   public val example: ExampleValue? = null,
-  public val examples:
-    Map<String, ReferenceOr<@Serializable(with = Example.Companion.Serializer::class) Example>>? =
-    null,
+  public val examples: Map<String, ReferenceOr<Example>>? = null,
   public val schema: ReferenceOr<Schema>? = null
 )

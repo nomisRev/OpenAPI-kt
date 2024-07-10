@@ -23,21 +23,21 @@ public data class PathItem(
    */
   public val description: String? = null,
   /** A definition of a GET operation on this path. */
-  public val get: @Serializable(with = Operation.Companion.Serializer::class) Operation? = null,
+  public val get: Operation? = null,
   /** A definition of a PUT operation on this path. */
-  public val put: @Serializable(with = Operation.Companion.Serializer::class) Operation? = null,
+  public val put: Operation? = null,
   /** A definition of a POST operation on this path. */
-  public val post: @Serializable(with = Operation.Companion.Serializer::class) Operation? = null,
+  public val post: Operation? = null,
   /** A definition of a DELETE operation on this path. */
-  public val delete: @Serializable(with = Operation.Companion.Serializer::class) Operation? = null,
+  public val delete: Operation? = null,
   /** A definition of a OPTIONS operation on this path. */
-  public val options: @Serializable(with = Operation.Companion.Serializer::class) Operation? = null,
+  public val options: Operation? = null,
   /** A definition of a HEAD operation on this path. */
-  public val head: @Serializable(with = Operation.Companion.Serializer::class) Operation? = null,
+  public val head: Operation? = null,
   /** A definition of a PATCH operation on this path. */
-  public val patch: @Serializable(with = Operation.Companion.Serializer::class) Operation? = null,
+  public val patch: Operation? = null,
   /** A definition of a TRACE operation on this path. */
-  public val trace: @Serializable(with = Operation.Companion.Serializer::class) Operation? = null,
+  public val trace: Operation? = null,
   /** An alternative server array to service all operations in this path. */
   public val servers: List<Server>? = null,
   /**

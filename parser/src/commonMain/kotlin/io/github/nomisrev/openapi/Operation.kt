@@ -1,13 +1,13 @@
 package io.github.nomisrev.openapi
 
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonNull
-import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 
-@Serializable
+@Serializable(Operation.Companion.Serializer::class)
+@OptIn(InternalSerializationApi::class)
+@KeepGeneratedSerializer
 public data class Operation(
   /**
    * A list of tags for API documentation control. Tags can be used for logical grouping of
@@ -81,7 +81,7 @@ public data class Operation(
   public companion object {
     internal object Serializer :
       KSerializerWithExtensions<Operation>(
-        serializer(),
+        generatedSerializer(),
         Operation::extensions,
         { op, extensions -> op.copy(extensions = extensions) }
       )

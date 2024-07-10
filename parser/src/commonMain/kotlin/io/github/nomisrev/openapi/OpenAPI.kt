@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.Components.Companion.Serializer as ComponentsSerializer
 import kotlin.jvm.JvmStatic
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
@@ -37,8 +36,7 @@ public data class OpenAPI(
    */
   public val webhooks: Map<String, ReferenceOr<PathItem>> = emptyMap(),
   /** An element to hold various schemas for the specification. */
-  public val components: @Serializable(with = ComponentsSerializer::class) Components =
-    Components(),
+  public val components: Components = Components(),
   /**
    * A declaration of which security mechanisms can be used across the API. The list of values
    * includes alternative security requirement objects that can be used. Only one of the security
