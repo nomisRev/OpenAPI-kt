@@ -3,23 +3,21 @@ package io.github.nomisrev.openapi
 public fun Model.Primitive.Companion.string(
   default: String? = null,
   description: String? = null,
-  constraint: TextConstraint = TextConstraint(Int.MAX_VALUE, 0, null)
+  constraint: TextConstraint = TextConstraint.NONE
 ): Model.Primitive.String =
   Model.Primitive.String(default = default, description = description, bounds = constraint)
 
 public fun Model.Primitive.Companion.int(
   default: Int? = null,
   description: String? = null,
-  constraint: NumberConstraint =
-    NumberConstraint(false, Double.NEGATIVE_INFINITY, false, Double.POSITIVE_INFINITY, null)
+  constraint: NumberConstraint = NumberConstraint.NONE
 ): Model.Primitive.Int =
   Model.Primitive.Int(default = default, description = description, bounds = constraint)
 
 public fun Model.Primitive.Companion.double(
   default: Double? = null,
   description: String? = null,
-  constraint: NumberConstraint =
-    NumberConstraint(false, Double.NEGATIVE_INFINITY, false, Double.POSITIVE_INFINITY, null)
+  constraint: NumberConstraint = NumberConstraint.NONE
 ): Model.Primitive.Double =
   Model.Primitive.Double(default = default, description = description, bounds = constraint)
 
@@ -27,7 +25,7 @@ public fun Model.Collection.Companion.list(
   inner: Model,
   default: List<String>? = null,
   description: String? = null,
-  constraint: CollectionConstraint = CollectionConstraint(0, Int.MAX_VALUE)
+  constraint: CollectionConstraint = CollectionConstraint.NONE
 ): Model.Collection.List =
   Model.Collection.List(
     inner = inner,
@@ -40,7 +38,7 @@ public fun Model.Collection.Companion.set(
   inner: Model,
   default: List<String>? = null,
   description: String? = null,
-  constraint: CollectionConstraint = CollectionConstraint(0, Int.MAX_VALUE)
+  constraint: CollectionConstraint = CollectionConstraint.NONE
 ): Model.Collection.Set =
   Model.Collection.Set(
     inner = inner,
@@ -68,7 +66,7 @@ public fun Model.Companion.obj(
   context: NamingContext,
   properties: List<Model.Object.Property>,
   inline: List<Model>,
-  constraint: ObjectConstraint = ObjectConstraint(0, Int.MAX_VALUE),
+  constraint: ObjectConstraint = ObjectConstraint.NONE,
   description: String? = null
 ): Model.Object =
   Model.Object(

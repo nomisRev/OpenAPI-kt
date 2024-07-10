@@ -43,6 +43,10 @@ data class CollectionConstraint(
     schema.minItems ?: 0,
     schema.maxItems ?: Int.MAX_VALUE,
   )
+
+  companion object {
+    val NONE = CollectionConstraint(0, Int.MAX_VALUE)
+  }
 }
 
 // TODO `not` is not supported yet
