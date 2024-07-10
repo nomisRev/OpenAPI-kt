@@ -43,10 +43,7 @@ public data class Schema(
   val deprecated: Boolean? = null,
   val maxProperties: Int? = null,
   val minProperties: Int? = null,
-  /**
-   * Unlike JSON Schema this value MUST conform to the defined type for this parameter. Note: is
-   * ignored for required parameters.
-   */
+  /** Unlike JSON Schema this value MUST conform to the defined type for this parameter. */
   val default: DefaultValue? = null,
   val type: Type? = null,
   val format: String? = null,

@@ -200,15 +200,21 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           Type.Basic.Array -> collection(context)
           Type.Basic.Boolean ->
             Primitive.Boolean(default("Boolean", String::toBooleanStrictOrNull), description)
-          Type.Basic.Integer -> Primitive.Int(default("Integer", String::toIntOrNull), description)
+          Type.Basic.Integer ->
+            Primitive.Int(default("Integer", String::toIntOrNull), description, NumberConstraint(this))
           Type.Basic.Number ->
-            Primitive.Double(default("Number", String::toDoubleOrNull), description)
+            Primitive.Double(
+              default("Number", String::toDoubleOrNull),
+              description,
+              NumberConstraint(this)
+            )
           Type.Basic.String ->
             if (format == "binary") Model.OctetStream(description)
             else
               Primitive.String(
                 default("String", String::toString) { it.joinToString() },
-                description
+                description,
+                TextConstraint(this)
               )
           Type.Basic.Object -> toObject(context)
           Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
@@ -398,7 +404,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             is Resolved.Value -> NamingContext.Nested(Named(name), context)
           }
         nestedModel(resolved, pContext)
-      }
+      },
+      ObjectConstraint(this)
     )
   }
 
@@ -429,8 +436,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         }
         null -> null
       }
-    return if (uniqueItems == true) Collection.Set(inner.value, default, description)
-    else Collection.List(inner.value, default, description)
+    return if (uniqueItems == true)
+      Collection.Set(inner.value, default, description, CollectionConstraint(this))
+    else Collection.List(inner.value, default, description, CollectionConstraint(this))
   }
 
   fun Schema.toEnum(context: NamingContext, enums: List<String>): Enum.Closed {
@@ -673,7 +681,10 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           response.isEmpty() ->
             Pair(
               statusCode,
-              Route.ReturnType(Primitive.String(null, response.description), response.extensions)
+              Route.ReturnType(
+                Primitive.String(null, response.description, TextConstraint(Int.MAX_VALUE, 0, null)),
+                response.extensions
+              )
             )
           else ->
             throw IllegalStateException("OpenAPI requires at least 1 valid response. $response")

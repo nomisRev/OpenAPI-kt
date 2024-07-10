@@ -78,10 +78,10 @@ class RootTest {
                 returnType =
                   Route.Returns(
                     HttpStatusCode.OK to
-                      Route.ReturnType(Model.Primitive.String(null, null), emptyMap())
+                      Route.ReturnType(Model.Primitive.string(null, null), emptyMap())
                   ),
                 extensions = emptyMap(),
-                nested = listOf(Model.Primitive.String(null, null))
+                nested = listOf(Model.Primitive.string(null, null))
               )
             ),
             nested = emptyList()
