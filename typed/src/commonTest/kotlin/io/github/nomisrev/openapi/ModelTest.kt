@@ -1,7 +1,6 @@
 package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.Model.Object
-import io.github.nomisrev.openapi.Model.Object.Property
 import io.github.nomisrev.openapi.Model.Primitive
 import io.github.nomisrev.openapi.ReferenceOr.Companion.value
 import io.github.nomisrev.openapi.Schema.Type
@@ -18,9 +17,7 @@ class ModelTest {
 
   @Test
   fun emptySchema() {
-    assertThrows<NotImplementedError> {
-      testAPI.copy(components = Components(schemas = mapOf("Empty" to value(Schema())))).models()
-    }
+    assertThrows<NotImplementedError> { Schema().toModel("Empty") }
   }
 
   @Test
@@ -34,40 +31,38 @@ class ModelTest {
         .models()
     val expected =
       setOf(
-        Object(
+        Model.obj(
           context = NamingContext.Named("Person"),
           properties =
             listOf(
-              Property(
+              Object.property(
                 "id",
                 id,
                 isRequired = true,
                 isNullable = false,
                 description = "An explicit ID type"
               ),
-              Property(
+              Object.property(
                 "name",
                 // TODO default, and description doesn't belong to `Model`,
                 //   but to Route.Param, or Property.
                 //   Same probably applies to validation, refactor then.
-                Primitive.String(default = "John Doe", description = "The name of the person"),
+                Primitive.string(default = "John Doe", description = "The name of the person"),
                 isRequired = true,
                 isNullable = false,
                 description = "The name of the person"
               ),
-              Property(
-                "age",
-                Primitive.Int(default = null, description = null),
-                isRequired = false,
+              Object.property(
+                baseName = "age",
+                model = Primitive.int(),
                 isNullable = true,
-                description = null
               )
             ),
           description = "A person",
           inline =
             listOf(
-              Primitive.String(default = "John Doe", description = "The name of the person"),
-              Primitive.Int(default = null, description = null)
+              Primitive.string(default = "John Doe", description = "The name of the person"),
+              Primitive.int()
             )
         ),
         id
@@ -77,76 +72,33 @@ class ModelTest {
 
   @Test
   fun freeForm() {
-    val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "FreeForm" to
-                    value(
-                      Schema(
-                        type = Type.Basic.Object,
-                        additionalProperties = AdditionalProperties.Allowed(true)
-                      )
-                    )
-                )
-            )
-        )
-        .models()
-    val expected = Model.FreeFormJson(description = null)
-    assertEquals(setOf(expected), actual)
+    assertEquals(
+      Model.FreeFormJson(description = null),
+      Schema(type = Type.Basic.Object, additionalProperties = AdditionalProperties.Allowed(true))
+        .toModel("FreeForm")
+    )
   }
 
   @Test
   fun freeFormNotAllowedIsIllegal() {
     assertThrows<IllegalStateException> {
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "FreeForm" to
-                    value(
-                      Schema(
-                        type = Type.Basic.Object,
-                        additionalProperties = AdditionalProperties.Allowed(false)
-                      )
-                    )
-                )
-            )
-        )
-        .models()
-        .let(::println)
+      Schema(type = Type.Basic.Object, additionalProperties = AdditionalProperties.Allowed(false))
+        .toModel("FreeForm")
     }
   }
 
   @Test
   fun topLevelOneOfWithInlinePrimitives() {
     val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "OneOf" to
-                    value(
-                      Schema(
-                        oneOf =
-                          listOf(
-                            value(Schema(type = Type.Basic.String)),
-                            value(Schema(type = Type.Basic.Integer))
-                          ),
-                        default = ExampleValue("example")
-                      )
-                    )
-                )
-            )
+      Schema(
+          oneOf =
+            listOf(
+              value(Schema(type = Type.Basic.String)),
+              value(Schema(type = Type.Basic.Integer))
+            ),
+          default = ExampleValue("example")
         )
-        .models()
+        .toModel("OneOf")
     val expected =
       Model.Union(
         context = NamingContext.Named("OneOf"),
@@ -156,51 +108,27 @@ class ModelTest {
           listOf(
             // Order is important for deserialization,
             // order swapped compared to originally
-            Model.Union.Case(
-              context = NamingContext.Named("OneOf"),
-              model = Primitive.Int(default = null, description = null)
-            ),
-            Model.Union.Case(
-              context = NamingContext.Named("OneOf"),
-              model = Primitive.String(default = null, description = null)
-            )
+            Model.Union.Case(context = NamingContext.Named("OneOf"), model = Primitive.int()),
+            Model.Union.Case(context = NamingContext.Named("OneOf"), model = Primitive.string())
           ),
-        inline =
-          listOf(
-            Primitive.String(default = null, description = null),
-            Primitive.Int(default = null, description = null)
-          )
+        inline = listOf(Primitive.string(), Primitive.int())
       )
-    assertEquals(setOf(expected), actual)
+    assertEquals(expected, actual)
   }
 
   @Test
   fun openEnum() {
     val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "OpenEnum" to
-                    value(
-                      Schema(
-                        description = "OpenEnum Desc",
-                        anyOf =
-                          listOf(
-                            value(enumSchema.copy(description = "Inner Enum Desc")),
-                            ReferenceOr.Value(
-                              Schema(type = Type.Basic.String, description = "OpenCase Desc")
-                            )
-                          ),
-                        default = ExampleValue("Custom-open-enum-value")
-                      )
-                    )
-                )
-            )
+      Schema(
+          description = "OpenEnum Desc",
+          anyOf =
+            listOf(
+              value(enumSchema.copy(description = "Inner Enum Desc")),
+              ReferenceOr.Value(Schema(type = Type.Basic.String, description = "OpenCase Desc"))
+            ),
+          default = ExampleValue("Custom-open-enum-value")
         )
-        .models()
+        .toModel("OpenEnum")
     val expected =
       Model.Enum.Open(
         context = NamingContext.Named("OpenEnum"),
@@ -208,35 +136,21 @@ class ModelTest {
         default = "Custom-open-enum-value",
         description = "OpenEnum Desc"
       )
-    assertEquals(setOf(expected), actual)
+    assertEquals(expected, actual)
   }
 
   @Test
   fun anyOf() {
     val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "AnyOf" to
-                    value(
-                      Schema(
-                        description = "AnyOf Desc",
-                        anyOf =
-                          listOf(
-                            value(enumSchema),
-                            ReferenceOr.Value(
-                              Schema(type = Type.Basic.Integer, description = "Int Case Desc")
-                            )
-                          )
-                      )
-                    )
-                )
+      Schema(
+          description = "AnyOf Desc",
+          anyOf =
+            listOf(
+              value(enumSchema),
+              ReferenceOr.Value(Schema(type = Type.Basic.Integer, description = "Int Case Desc"))
             )
         )
-        .models()
+        .toModel("AnyOf")
     val context =
       NamingContext.Nested(
         NamingContext.Named("AutoOrManual"),
@@ -251,186 +165,82 @@ class ModelTest {
             Model.Union.Case(context = context, model = enum.copy(context = context)),
             Model.Union.Case(
               context = NamingContext.Named("AnyOf"),
-              model = Primitive.Int(default = null, description = "Int Case Desc")
+              model = Primitive.int(description = "Int Case Desc")
             )
           ),
         default = "Auto",
-        inline =
-          listOf(
-            enum.copy(context = context),
-            Primitive.Int(default = null, description = "Int Case Desc")
-          )
+        inline = listOf(enum.copy(context = context), Primitive.int(description = "Int Case Desc"))
       )
-    assertEquals(setOf(expected), actual)
+    assertEquals(expected, actual)
   }
 
   @Test
   fun typeArray() {
     val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "TypeArray" to
-                    value(
-                      Schema(
-                        type = Type.Array(types = listOf(Type.Basic.Integer, Type.Basic.String))
-                      )
-                    )
-                )
-            )
-        )
-        .models()
+      Schema(type = Type.Array(types = listOf(Type.Basic.Integer, Type.Basic.String)))
+        .toModel("TypeArray")
+    val context = NamingContext.Named("TypeArray")
     val expected =
-      Model.Union(
-        context = NamingContext.Named("TypeArray"),
-        description = null,
+      Model.union(
+        context = context,
         cases =
           listOf(
-            Model.Union.Case(
-              context = NamingContext.Named("TypeArray"),
-              model = Primitive.Int(default = null, description = null)
-            ),
-            Model.Union.Case(
-              context = NamingContext.Named("TypeArray"),
-              model = Primitive.String(default = null, description = null)
-            )
+            Model.Union.Case(context = context, model = Primitive.int()),
+            Model.Union.Case(context = context, model = Primitive.string())
           ),
-        default = null,
-        inline =
-          listOf(
-            Primitive.Int(default = null, description = null),
-            Primitive.String(default = null, description = null)
-          )
+        inline = listOf(Primitive.int(), Primitive.string())
       )
-    assertEquals(setOf(expected), actual)
+    assertEquals(expected, actual)
   }
 
   @Test
-  fun typeArraySingleton() {
-    val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "TypeArray" to
-                    value(Schema(type = Type.Array(types = listOf(Type.Basic.Integer))))
-                )
-            )
-        )
-        .models()
-    val expected = Primitive.Int(default = null, description = null)
-    assertEquals(setOf(expected), actual)
+  fun typeArraySingletonIsFlattened() {
+    assertEquals(
+      Primitive.int(),
+      Schema(type = Type.Array(types = listOf(Type.Basic.Integer))).toModel("Int")
+    )
   }
 
   @Test
-  fun binary() {
-    val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "Primitive.Binary" to value(Schema(type = Type.Basic.String, format = "binary"))
-                )
-            )
-        )
-        .models()
-    val expected = Model.OctetStream(description = null)
-    assertEquals(setOf(expected), actual)
+  fun stringBinaryFormat() {
+    assertEquals(
+      Model.OctetStream(description = null),
+      Schema(type = Type.Basic.String, format = "binary").toModel("Binary")
+    )
   }
 
   @Test
   fun defaultArrayIsList() {
-    val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "Primitive.Array" to
-                    value(
-                      Schema(
-                        type = Type.Basic.Array,
-                        items = value(Schema(type = Type.Basic.Integer))
-                      )
-                    )
-                )
-            )
-        )
-        .models()
-    val expected =
-      Model.Collection.List(
-        inner = Primitive.Int(default = null, description = null),
-        description = null,
-        default = null
-      )
-    assertEquals(setOf(expected), actual)
+    assertEquals(
+      Model.Collection.list(Primitive.int()),
+      Schema(type = Type.Basic.Array, items = value(Schema(type = Type.Basic.Integer)))
+        .toModel("List")
+    )
   }
 
   @Test
   fun noUniqueItemsIsList() {
-    val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "Primitive.Array" to
-                    value(
-                      Schema(
-                        type = Type.Basic.Array,
-                        items = value(Schema(type = Type.Basic.Integer)),
-                        uniqueItems = false
-                      )
-                    )
-                )
-            )
+    assertEquals(
+      Model.Collection.list(inner = Primitive.int()),
+      Schema(
+          type = Type.Basic.Array,
+          items = value(Schema(type = Type.Basic.Integer)),
+          uniqueItems = false
         )
-        .models()
-    val expected =
-      Model.Collection.List(
-        inner = Primitive.Int(default = null, description = null),
-        description = null,
-        default = null
-      )
-    assertEquals(setOf(expected), actual)
+        .toModel("List")
+    )
   }
 
   @Test
   fun uniqueItemsIsSet() {
-    val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "Primitive.Set" to
-                    value(
-                      Schema(
-                        type = Type.Basic.Array,
-                        items = value(Schema(type = Type.Basic.Integer)),
-                        uniqueItems = true
-                      )
-                    )
-                )
-            )
+    assertEquals(
+      Model.Collection.set(inner = Primitive.int()),
+      Schema(
+          type = Type.Basic.Array,
+          items = value(Schema(type = Type.Basic.Integer)),
+          uniqueItems = true
         )
-        .models()
-    val expected =
-      Model.Collection.Set(
-        inner = Primitive.Int(default = null, description = null),
-        description = null,
-        default = null
-      )
-    assertEquals(setOf(expected), actual)
+        .toModel("Set")
+    )
   }
 }

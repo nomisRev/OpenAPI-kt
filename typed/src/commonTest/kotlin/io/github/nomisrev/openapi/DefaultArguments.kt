@@ -9,108 +9,74 @@ class DefaultArguments {
   @Test
   fun nullArgumentForNonNullList() {
     val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "Strings" to
-                    value(
-                      Schema(
-                        type = Type.Basic.Object,
-                        properties =
-                          mapOf(
-                            "value" to
-                              value(
-                                Schema(
-                                  type = Type.Basic.Array,
-                                  items = value(Schema(type = Type.Basic.String)),
-                                  default = ExampleValue("null"),
-                                  nullable = false
-                                )
-                              )
-                          )
-                      )
-                    )
+      Schema(
+          type = Type.Basic.Object,
+          properties =
+            mapOf(
+              "value" to
+                value(
+                  Schema(
+                    type = Type.Basic.Array,
+                    items = value(Schema(type = Type.Basic.String)),
+                    default = ExampleValue("null"),
+                    nullable = false
+                  )
                 )
             )
         )
-        .models()
+        .toModel("Strings")
     val expected =
-      Model.Object(
+      Model.obj(
         context = NamingContext.Named("Strings"),
         properties =
           listOf(
-            Model.Object.Property(
+            Model.Object.property(
               "value",
-              Model.Collection.List(
-                inner = Model.Primitive.String(default = null, description = null),
-                default = emptyList(),
-                description = null
-              ),
-              isRequired = false,
+              Model.Collection.list(inner = Model.Primitive.string(), default = emptyList()),
               isNullable = false,
-              description = null
             )
           ),
-        description = null,
-        inline = listOf(Model.Primitive.String(default = null, description = null))
+        inline = listOf(Model.Primitive.string()),
       )
-    assertEquals(setOf(expected), actual)
+    assertEquals(expected, actual)
   }
 
   @Test
   fun jsEmptyArrayArgumentForList() {
     val actual =
-      testAPI
-        .copy(
-          components =
-            Components(
-              schemas =
-                mapOf(
-                  "Strings" to
-                    value(
-                      Schema(
-                        type = Type.Basic.Object,
-                        properties =
-                          mapOf(
-                            "value" to
-                              value(
-                                Schema(
-                                  type = Type.Basic.Array,
-                                  items = value(Schema(type = Type.Basic.String)),
-                                  default = ExampleValue("[]"),
-                                  nullable = false
-                                )
-                              )
-                          )
-                      )
-                    )
+      Schema(
+          type = Type.Basic.Object,
+          properties =
+            mapOf(
+              "value" to
+                value(
+                  Schema(
+                    type = Type.Basic.Array,
+                    items = value(Schema(type = Type.Basic.String)),
+                    default = ExampleValue("[]"),
+                    nullable = false
+                  )
                 )
             )
         )
-        .models()
+        .toModel("Strings")
     val expected =
-      Model.Object(
+      Model.obj(
         context = NamingContext.Named("Strings"),
         properties =
           listOf(
-            Model.Object.Property(
+            Model.Object.property(
               "value",
-              Model.Collection.List(
-                inner = Model.Primitive.String(default = null, description = null),
+              Model.Collection.list(
+                inner = Model.Primitive.string(),
                 default = emptyList(),
                 description = null
               ),
-              isRequired = false,
               isNullable = false,
-              description = null
             )
           ),
-        description = null,
-        inline = listOf(Model.Primitive.String(default = null, description = null))
+        inline = listOf(Model.Primitive.string())
       )
-    assertEquals(setOf(expected), actual)
+    assertEquals(expected, actual)
   }
 }

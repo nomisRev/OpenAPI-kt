@@ -3,7 +3,6 @@ package io.github.nomisrev.openapi
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
 data class Route(
@@ -129,16 +128,26 @@ sealed interface Model {
   val description: String?
 
   sealed interface Primitive : Model {
-    data class Int(val default: kotlin.Int?, override val description: kotlin.String?) : Primitive
+    data class Int(
+      val default: kotlin.Int?,
+      override val description: kotlin.String?,
+      val bounds: NumberConstraint
+    ) : Primitive
 
-    data class Double(val default: kotlin.Double?, override val description: kotlin.String?) :
-      Primitive
+    data class Double(
+      val default: kotlin.Double?,
+      override val description: kotlin.String?,
+      val bounds: NumberConstraint
+    ) : Primitive
 
     data class Boolean(val default: kotlin.Boolean?, override val description: kotlin.String?) :
       Primitive
 
-    data class String(val default: kotlin.String?, override val description: kotlin.String?) :
-      Primitive
+    data class String(
+      val default: kotlin.String?,
+      override val description: kotlin.String?,
+      val bounds: TextConstraint
+    ) : Primitive
 
     data class Unit(override val description: kotlin.String?) : Primitive
 
@@ -150,6 +159,8 @@ sealed interface Model {
         is String -> default?.let { "\"$it\"" }
         is Unit -> null
       }
+
+    companion object
   }
 
   data class OctetStream(override val description: String?) : Model
@@ -158,32 +169,40 @@ sealed interface Model {
 
   sealed interface Collection : Model {
     val inner: Model
+    val bounds: CollectionConstraint
 
     data class List(
       override val inner: Model,
       val default: kotlin.collections.List<String>?,
-      override val description: String?
+      override val description: String?,
+      override val bounds: CollectionConstraint
     ) : Collection
 
     data class Set(
       override val inner: Model,
       val default: kotlin.collections.List<String>?,
-      override val description: String?
+      override val description: String?,
+      override val bounds: CollectionConstraint
     ) : Collection
 
-    data class Map(override val inner: Model, override val description: String?) : Collection {
-      val key = Primitive.String(null, null)
+    data class Map(
+      override val inner: Model,
+      override val description: String?,
+      override val bounds: CollectionConstraint
+    ) : Collection {
+      val key = Primitive.String(null, null, TextConstraint(Int.MAX_VALUE, 0, null))
     }
+
+    companion object
   }
 
-  @Serializable
   data class Object(
     val context: NamingContext,
     override val description: String?,
     val properties: List<Property>,
-    val inline: List<Model>
+    val inline: List<Model>,
+    val constraint: ObjectConstraint?
   ) : Model {
-    @Serializable
     data class Property(
       val baseName: String,
       val model: Model,
@@ -195,6 +214,8 @@ sealed interface Model {
       val isNullable: Boolean,
       val description: String?
     )
+
+    companion object
   }
 
   data class Union(
@@ -228,4 +249,6 @@ sealed interface Model {
       override val description: String?
     ) : Enum
   }
+
+  companion object
 }

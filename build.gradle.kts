@@ -17,8 +17,6 @@ plugins {
 val assertId = libs.plugins.assert.get().pluginId
 val spotlessId = libs.plugins.spotless.get().pluginId
 val publishId = libs.plugins.publish.get().pluginId
-val koverId = libs.plugins.kover.get().pluginId
-
 
 dependencies {
   kover(projects.parser)
@@ -27,8 +25,6 @@ dependencies {
 }
 
 subprojects {
-  apply(plugin = koverId)
-
   apply(plugin = assertId)
   @Suppress("OPT_IN_USAGE")
   configure<PowerAssertGradleExtension> {

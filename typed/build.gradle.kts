@@ -5,6 +5,7 @@ plugins {
   alias(libs.plugins.serialization)
   id(libs.plugins.publish.get().pluginId)
   alias(libs.plugins.dokka)
+  id(libs.plugins.kover.get().pluginId)
 }
 
 kotlin {

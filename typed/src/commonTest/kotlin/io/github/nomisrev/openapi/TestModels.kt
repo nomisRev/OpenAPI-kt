@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.Model.Object
 import io.github.nomisrev.openapi.Model.Object.Property
 import io.github.nomisrev.openapi.Model.Primitive
 import io.github.nomisrev.openapi.ReferenceOr.Companion.value
@@ -35,20 +34,20 @@ val personSchema =
   )
 
 val id =
-  Object(
+  Model.obj(
     context = NamingContext.Named("Id"),
     description = "An explicit ID type",
     properties =
       listOf(
         Property(
           "value",
-          Primitive.String(default = null, description = null),
+          Primitive.string(),
           isRequired = false,
           isNullable = true,
           description = null
         )
       ),
-    inline = listOf(Primitive.String(default = null, description = null))
+    inline = listOf(Primitive.string())
   )
 
 val testAPI = OpenAPI(info = Info("Test API", version = "1.0.0"))
@@ -60,7 +59,7 @@ val enum =
   Model.Enum.Closed(
     context =
       NamingContext.Nested(NamingContext.Named("AutoOrManual"), NamingContext.Named("OneOf")),
-    inner = Primitive.String(default = "Auto", description = null),
+    inner = Primitive.string(default = "Auto", description = null),
     values = listOf("Auto", "Manual"),
     default = "Auto",
     description = null
