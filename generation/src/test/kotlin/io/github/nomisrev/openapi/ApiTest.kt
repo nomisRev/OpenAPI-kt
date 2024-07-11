@@ -60,7 +60,7 @@ class ApiTest {
           )
         ),
       nested = emptyList()
-    )
+    ).compiles()
   }
 }
 
