@@ -16,9 +16,6 @@ import kotlinx.serialization.json.jsonPrimitive
 
 private const val RefKey = "\$ref"
 
-public fun Reference(prefix: String, ref: String): ReferenceOr.Reference =
-  ReferenceOr.Reference("$prefix$ref")
-
 /**
  * Defines Union [A] | [Reference]. A lot of types like Header, Schema, MediaType, etc. can be
  * either a direct value or a reference to a definition.
@@ -46,8 +43,6 @@ public sealed interface ReferenceOr<out A> {
     public fun schema(name: String): Reference = Reference("$schema$name")
 
     public fun <A> value(value: A): ReferenceOr<A> = Value(value)
-
-    public operator fun invoke(prefix: String, ref: String): Reference = Reference("$prefix$ref")
 
     internal class Serializer<T>(private val dataSerializer: KSerializer<T>) :
       KSerializer<ReferenceOr<T>> {

@@ -9,7 +9,7 @@ class ConstraintTest {
     assertEquals(
       Model.Primitive.int(
         constraint =
-          NumberConstraint(
+          Constraints.Number(
             minimum = 1.0,
             maximum = 10.0,
             exclusiveMinimum = false,
@@ -33,7 +33,7 @@ class ConstraintTest {
     assertEquals(
       Model.Primitive.double(
         constraint =
-          NumberConstraint(
+          Constraints.Number(
             minimum = 1.0,
             maximum = 10.0,
             exclusiveMinimum = false,
@@ -56,7 +56,7 @@ class ConstraintTest {
   fun text() {
     assertEquals(
       Model.Primitive.string(
-        constraint = TextConstraint(maxLength = 10, minLength = 1, pattern = null)
+        constraint = Constraints.Text(maxLength = 10, minLength = 1, pattern = null)
       ),
       Schema(type = Schema.Type.Basic.String, maxLength = 10, minLength = 1, pattern = null)
         .toModel("Text")
@@ -68,7 +68,7 @@ class ConstraintTest {
     assertEquals(
       Model.Collection.list(
         inner = Model.Primitive.string(),
-        constraint = CollectionConstraint(minItems = 1, maxItems = 10)
+        constraint = Constraints.Collection(minItems = 1, maxItems = 10)
       ),
       Schema(
           type = Schema.Type.Basic.Array,
@@ -85,7 +85,7 @@ class ConstraintTest {
     assertEquals(
       Model.Collection.set(
         inner = Model.Primitive.string(),
-        constraint = CollectionConstraint(minItems = 1, maxItems = 10)
+        constraint = Constraints.Collection(minItems = 1, maxItems = 10)
       ),
       Schema(
           type = Schema.Type.Basic.Array,
@@ -104,8 +104,7 @@ class ConstraintTest {
       Model.obj(
         context = NamingContext.Named("Obj"),
         properties = listOf(Model.Object.property("name", Model.Primitive.string())),
-        inline = listOf(Model.Primitive.string()),
-        constraint = ObjectConstraint(minProperties = 1, maxProperties = 1)
+        inline = listOf(Model.Primitive.string())
       ),
       Schema(
           type = Schema.Type.Basic.Object,

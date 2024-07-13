@@ -205,13 +205,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             Primitive.Int(
               default("Integer", String::toIntOrNull),
               description,
-              NumberConstraint(this)
+              Constraints.Number(this)
             )
           Type.Basic.Number ->
             Primitive.Double(
               default("Number", String::toDoubleOrNull),
               description,
-              NumberConstraint(this)
+              Constraints.Number(this)
             )
           Type.Basic.String ->
             if (format == "binary") Model.OctetStream(description)
@@ -219,7 +219,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               Primitive.String(
                 default("String", String::toString) { it.joinToString() },
                 description,
-                TextConstraint(this)
+                Constraints.Text(this)
               )
           Type.Basic.Object -> toObject(context)
           Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
@@ -320,15 +320,16 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       additionalProperties != null ->
         when (val props = additionalProperties!!) {
           // TODO: implement Schema validation
-          is AdditionalProperties.PSchema -> Model.FreeFormJson(description)
+          is AdditionalProperties.PSchema ->
+            Model.FreeFormJson(description, Constraints.Object(this))
           is Allowed ->
-            if (props.value) Model.FreeFormJson(description)
+            if (props.value) Model.FreeFormJson(description, Constraints.Object(this))
             else
               throw IllegalStateException(
                 "No additional properties allowed on object without properties. $this"
               )
         }
-      else -> Model.FreeFormJson(description)
+      else -> Model.FreeFormJson(description, Constraints.Object(this))
     }
 
   /**
@@ -369,7 +370,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           .toObject(context, properties)
       }
       (schema.additionalProperties as? Allowed)?.value == true ->
-        Model.FreeFormJson(schema.description)
+        Model.FreeFormJson(schema.description, Constraints.Object(schema))
       else -> schema.toUnion(context, schema.allOf!!)
     }
   }
@@ -409,8 +410,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             is Resolved.Value -> NamingContext.Nested(Named(name), context)
           }
         nestedModel(resolved, pContext)
-      },
-      ObjectConstraint(this)
+      }
     )
   }
 
@@ -442,8 +442,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         null -> null
       }
     return if (uniqueItems == true)
-      Collection.Set(inner.value, default, description, CollectionConstraint(this))
-    else Collection.List(inner.value, default, description, CollectionConstraint(this))
+      Collection.Set(inner.value, default, description, Constraints.Collection(this))
+    else Collection.List(inner.value, default, description, Constraints.Collection(this))
   }
 
   fun Schema.toEnum(context: NamingContext, enums: List<String>): Enum.Closed {
@@ -673,7 +673,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                 }
                 null ->
                   Route.ReturnType(
-                    if (Allowed(true).value) Model.FreeFormJson(response.description)
+                    if (Allowed(true).value) Model.FreeFormJson(response.description, null)
                     else
                       throw IllegalStateException(
                         "Illegal State: No additional properties allowed on empty object."
@@ -687,11 +687,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             Pair(
               statusCode,
               Route.ReturnType(
-                Primitive.String(
-                  null,
-                  response.description,
-                  TextConstraint(Int.MAX_VALUE, 0, null)
-                ),
+                Primitive.String(null, response.description, null),
                 response.extensions
               )
             )

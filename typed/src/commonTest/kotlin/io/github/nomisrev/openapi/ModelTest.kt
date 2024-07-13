@@ -73,7 +73,7 @@ class ModelTest {
   @Test
   fun freeForm() {
     assertEquals(
-      Model.FreeFormJson(description = null),
+      Model.FreeFormJson(description = null, null),
       Schema(type = Type.Basic.Object, additionalProperties = AdditionalProperties.Allowed(true))
         .toModel("FreeForm")
     )
