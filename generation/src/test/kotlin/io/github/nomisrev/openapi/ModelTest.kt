@@ -7,27 +7,30 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 
 class ModelTest {
   @Test
   fun dataClass() {
-    Model.Object(
-        NamingContext.Named("User"),
-        null,
-        listOf(
-          Model.Object.Property(
-            "id",
-            Model.Primitive.String(null, null, TextConstraint.NONE),
-            isRequired = true,
-            isNullable = false,
-            description = null
-          )
-        ),
-        listOf(Model.Primitive.String(null, null, TextConstraint.NONE)),
-        ObjectConstraint.NONE
-      )
-      .compiles()
+    val code =
+      Model.Object(
+          NamingContext.Named("User"),
+          null,
+          listOf(
+            Model.Object.Property(
+              "id",
+              Model.Primitive.String(null, null, null),
+              isRequired = true,
+              isNullable = false,
+              description = null
+            )
+          ),
+          listOf(Model.Primitive.String(null, null, null))
+        )
+        .compiles()
+    assertFalse(code.contains("requireAll"))
+    assertFalse(code.contains("require"))
   }
 
   @Test
@@ -37,19 +40,16 @@ class ModelTest {
         listOf(
           Model.Union.Case(
             NamingContext.Named("IntOrString"),
-            Model.Primitive.Int(null, null, NumberConstraint.NONE)
+            Model.Primitive.Int(null, null, null)
           ),
           Model.Union.Case(
             NamingContext.Named("IntOrString"),
-            Model.Primitive.String(null, null, TextConstraint.NONE)
+            Model.Primitive.String(null, null, null)
           )
         ),
         null,
         null,
-        listOf(
-          Model.Primitive.String(null, null, TextConstraint.NONE),
-          Model.Primitive.String(null, null, TextConstraint.NONE)
-        ),
+        listOf(Model.Primitive.String(null, null, null), Model.Primitive.String(null, null, null)),
       )
       .compiles()
   }
@@ -58,7 +58,7 @@ class ModelTest {
   fun enum() {
     Model.Enum.Closed(
         NamingContext.Named("AutoOrManual"),
-        Model.Primitive.String(null, null, TextConstraint.NONE),
+        Model.Primitive.String(null, null, null),
         listOf("auto", "manual"),
         "auto",
         null

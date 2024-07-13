@@ -28,7 +28,11 @@ subprojects {
   apply(plugin = assertId)
   @Suppress("OPT_IN_USAGE")
   configure<PowerAssertGradleExtension> {
-    functions = listOf("kotlin.test.assertEquals", "kotlin.test.assertTrue")
+    functions = listOf(
+      "kotlin.test.assertEquals",
+      "kotlin.test.assertTrue",
+      "kotlin.test.assertFalse"
+    )
   }
 
   apply(plugin = spotlessId)

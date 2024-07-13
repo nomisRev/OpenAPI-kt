@@ -11,6 +11,7 @@ import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
@@ -169,10 +170,55 @@ val bodyOrThrow: FunSpec =
     )
     .build()
 
+private val throwIfNeeded: FunSpec =
+  FunSpec.builder("throwIfNeeded")
+    .receiver(
+      Iterable::class.asTypeName().parameterizedBy(Result::class.asTypeName().parameterizedBy(STAR))
+    )
+    .addCode(
+      """
+      |val throwables =
+      |  mapNotNull(Result<*>::exceptionOrNull)
+      |
+      |if (throwables.isNotEmpty()) {
+      |  val errors = throwables
+      |    .mapNotNull { it.message }
+      |    .joinToString("\n") { "  - ${'$'}it" }
+      |
+      |  val cause = throwables.reduce { acc, other ->
+      |    acc.apply { other.let(::addSuppressed) }
+      |  }
+      |
+      |  throw IllegalArgumentException("Requirements not met:\n${'$'}errors", cause)
+      |}
+      """
+        .trimMargin()
+    )
+    .build()
+
+private val requireAll: FunSpec =
+  FunSpec.builder("requireAll")
+    .addParameter(
+      "requires",
+      LambdaTypeName.get(receiver = null, returnType = Unit::class.asTypeName()),
+      KModifier.VARARG
+    )
+    .addCode(
+      """
+      |requires.map { require ->
+      |  runCatching { require() }
+      |}.throwIfNeeded()
+      """
+        .trimMargin()
+    )
+    .build()
+
 context(OpenAPIContext)
 fun predef(): FileSpec =
   FileSpec.builder(`package`, "Predef")
     .addFunction(bodyOrThrow)
+    .addFunction(requireAll)
+    .addFunction(throwIfNeeded)
     .addType(
       TypeSpec.classBuilder("UnionSerializationException")
         .primaryConstructor(

@@ -50,7 +50,7 @@ data class Route(
         override val description: String?,
         override val extensions: Map<String, JsonElement>
       ) : Json {
-        override val type: Model = Model.FreeFormJson(description)
+        override val type: Model = Model.FreeFormJson(description, null)
       }
 
       data class Defined(
@@ -132,13 +132,13 @@ sealed interface Model {
     data class Int(
       val default: kotlin.Int?,
       override val description: kotlin.String?,
-      val bounds: NumberConstraint
+      val constraint: Constraints.Number?
     ) : Primitive
 
     data class Double(
       val default: kotlin.Double?,
       override val description: kotlin.String?,
-      val bounds: NumberConstraint
+      val constraint: Constraints.Number?
     ) : Primitive
 
     data class Boolean(val default: kotlin.Boolean?, override val description: kotlin.String?) :
@@ -147,7 +147,7 @@ sealed interface Model {
     data class String(
       val default: kotlin.String?,
       override val description: kotlin.String?,
-      val bounds: TextConstraint
+      val constraint: Constraints.Text?
     ) : Primitive
 
     data class Unit(override val description: kotlin.String?) : Primitive
@@ -166,32 +166,33 @@ sealed interface Model {
 
   data class OctetStream(override val description: String?) : Model
 
-  data class FreeFormJson(override val description: String?) : Model
+  data class FreeFormJson(override val description: String?, val constraint: Constraints.Object?) :
+    Model
 
   sealed interface Collection : Model {
     val inner: Model
-    val bounds: CollectionConstraint
+    val constraint: Constraints.Collection?
 
     data class List(
       override val inner: Model,
       val default: kotlin.collections.List<String>?,
       override val description: String?,
-      override val bounds: CollectionConstraint
+      override val constraint: Constraints.Collection?
     ) : Collection
 
     data class Set(
       override val inner: Model,
       val default: kotlin.collections.List<String>?,
       override val description: String?,
-      override val bounds: CollectionConstraint
+      override val constraint: Constraints.Collection?
     ) : Collection
 
     data class Map(
       override val inner: Model,
       override val description: String?,
-      override val bounds: CollectionConstraint
+      override val constraint: Constraints.Collection?
     ) : Collection {
-      val key = Primitive.String(null, null, TextConstraint(Int.MAX_VALUE, 0, null))
+      val key = Primitive.String(null, null, null)
     }
 
     companion object
@@ -201,8 +202,7 @@ sealed interface Model {
     val context: NamingContext,
     override val description: String?,
     val properties: List<Property>,
-    val inline: List<Model>,
-    val constraint: ObjectConstraint?
+    val inline: List<Model>
   ) : Model {
     data class Property(
       val baseName: String,

@@ -15,52 +15,52 @@ class ApiTest {
   @Test
   fun route() {
     API(
-      name = "TestApi",
-      routes =
-        listOf(
-          Route(
-            operationId = "get",
-            summary = "Get a user",
-            path = "/user/{id}",
-            method = Get,
-            body =
-              Route.Bodies(
-                false,
-                mapOf(
-                  io.ktor.http.ContentType.Application.Json to
-                    Route.Body.Json.FreeForm("A user", emptyMap())
+        name = "TestApi",
+        routes =
+          listOf(
+            Route(
+              operationId = "get",
+              summary = "Get a user",
+              path = "/user/{id}",
+              method = Get,
+              body =
+                Route.Bodies(
+                  false,
+                  mapOf(
+                    io.ktor.http.ContentType.Application.Json to
+                      Route.Body.Json.FreeForm("A user", emptyMap())
+                  ),
+                  emptyMap()
                 ),
-                emptyMap()
-              ),
-            input = emptyList(),
-            returnType =
-              Route.Returns(
-                HttpStatusCode.OK to
-                  Route.ReturnType(
-                    Model.Object(
-                      NamingContext.Named("User"),
-                      null,
-                      listOf(
-                        Model.Object.Property(
-                          "id",
-                          Model.Primitive.String(null, null, TextConstraint.NONE),
-                          isRequired = true,
-                          isNullable = false,
-                          description = null
-                        )
+              input = emptyList(),
+              returnType =
+                Route.Returns(
+                  HttpStatusCode.OK to
+                    Route.ReturnType(
+                      Model.Object(
+                        NamingContext.Named("User"),
+                        null,
+                        listOf(
+                          Model.Object.Property(
+                            "id",
+                            Model.Primitive.String(null, null, null),
+                            isRequired = true,
+                            isNullable = false,
+                            description = null
+                          )
+                        ),
+                        listOf(Model.Primitive.String(null, null, null))
                       ),
-                      listOf(Model.Primitive.String(null, null, TextConstraint.NONE)),
-                      ObjectConstraint.NONE
-                    ),
-                    emptyMap()
-                  )
-              ),
-            extensions = emptyMap(),
-            nested = emptyList()
-          )
-        ),
-      nested = emptyList()
-    )
+                      emptyMap()
+                    )
+                ),
+              extensions = emptyMap(),
+              nested = emptyList()
+            )
+          ),
+        nested = emptyList()
+      )
+      .compiles()
   }
 }
 
