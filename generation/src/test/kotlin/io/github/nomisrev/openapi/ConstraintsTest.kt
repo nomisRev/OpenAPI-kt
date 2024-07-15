@@ -146,12 +146,3 @@ class ConstraintsTest {
     assertTrue(code.containsSingle(heightRequirements))
   }
 }
-
-/** Check if every text in [texts] occurs only a single time in [this]. */
-private fun String.containsSingle(texts: List<String>): Boolean = texts.all(::containsSingle)
-
-/** Check if [text] occurs only a single time in [this]. */
-private fun String.containsSingle(text: String): Boolean {
-  val indexOf = indexOf(text)
-  return indexOf != -1 && lastIndexOf(text) == indexOf
-}

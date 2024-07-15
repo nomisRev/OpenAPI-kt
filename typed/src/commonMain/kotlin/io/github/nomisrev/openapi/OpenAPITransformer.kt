@@ -224,7 +224,15 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           Type.Basic.Object -> toObject(context)
           Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
         }
-      null -> TODO("Schema: $this not yet supported. Please report to issue tracker.")
+      null ->
+        when {
+          // If no type is defined, but we find properties, or additionalProperties, we assume it's
+          // an object.
+          properties != null || additionalProperties != null -> toObject(context)
+          // If 'items' is defined, we assume it's an array.
+          items != null -> collection(context)
+          else -> TODO("Schema: $this not yet supported. Please report to issue tracker.")
+        }
     }
 
   private fun <A> Schema.default(

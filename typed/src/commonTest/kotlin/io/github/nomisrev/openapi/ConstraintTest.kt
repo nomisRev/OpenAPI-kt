@@ -56,7 +56,7 @@ class ConstraintTest {
   fun text() {
     assertEquals(
       Model.Primitive.string(
-        constraint = Constraints.Text(maxLength = 10, minLength = 1, pattern = null)
+        constraint = Constraints.Text(minLength = 1, maxLength = 10, pattern = null)
       ),
       Schema(type = Schema.Type.Basic.String, maxLength = 10, minLength = 1, pattern = null)
         .toModel("Text")
