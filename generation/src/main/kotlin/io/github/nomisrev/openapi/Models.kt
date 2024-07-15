@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_VARIABLE")
+
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -247,45 +249,115 @@ private fun Model.Object.toTypeSpec(): TypeSpec =
     properties.requirement()
   }
 
-data class Requirement(val predicate: String, val message: String)
+data class Requirement(val prop: Model.Object.Property, val predicate: String, val message: String)
 
 context(OpenAPIContext)
 private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
-  mapNotNull { property ->
+  flatMap { property ->
     when (val model = property.model) {
       is Model.Enum,
       is Model.Primitive.Boolean,
       is Model.OctetStream,
       is Model.Primitive.Unit,
       is Model.Union,
-      is Model.Object -> null
+      is Model.Object -> emptyList()
       is Collection -> {
-        val constraint = model.constraint ?: return@mapNotNull null
+        val constraint = model.constraint ?: return@flatMap emptyList()
         val paramName = toParamName(Named(property.baseName))
-        val predicate = "$paramName.size in ${constraint.minItems}..${constraint.maxItems}"
-        val message =
-          "$paramName should have between ${constraint.minItems} and ${constraint.maxItems} elements"
-        Requirement(predicate, message)
+        when (constraint.minItems) {
+          0 ->
+            when (constraint.maxItems) {
+              Int.MAX_VALUE -> emptyList()
+              else ->
+                listOf(
+                  Requirement(
+                    property,
+                    "$paramName.size <= ${constraint.maxItems}",
+                    "$paramName should have at most ${constraint.maxItems} elements"
+                  )
+                )
+            }
+          else ->
+            when (constraint.maxItems) {
+              Int.MAX_VALUE ->
+                listOf(
+                  Requirement(
+                    property,
+                    "$paramName.size >= ${constraint.minItems}",
+                    "$paramName should have at least ${constraint.minItems} elements"
+                  )
+                )
+              else ->
+                listOf(
+                  Requirement(
+                    property,
+                    "$paramName.size in ${constraint.minItems}..${constraint.maxItems}",
+                    "$paramName should have between ${constraint.minItems} and ${constraint.maxItems} elements"
+                  )
+                )
+            }
+        }
       }
 
       // TODO Implement Object constraints
-      is Model.FreeFormJson -> null
-      is Model.Primitive.Double -> {
-        val constraint = model.constraint ?: return@mapNotNull null
-        property.numberRequirement(constraint) { it }
-      }
-      is Model.Primitive.Int -> {
-        val constraint = model.constraint ?: return@mapNotNull null
-        property.intRequirement(constraint)
-      }
-      is Model.Primitive.String -> {
-        val constraint = model.constraint ?: return@mapNotNull null
-        val paramName = toParamName(Named(property.baseName))
-        val predicate = "$paramName.length in ${constraint.minLength}..${constraint.maxLength}"
-        val message =
-          "$paramName should have a length between ${constraint.minLength} and ${constraint.maxLength}"
-        Requirement(predicate, message)
-      }
+      is Model.FreeFormJson -> emptyList()
+      is Model.Primitive.Double ->
+        when (val constraint = model.constraint) {
+          null -> emptyList()
+          else -> listOfNotNull(property.numberRequirement(constraint) { it })
+        }
+      is Model.Primitive.Int ->
+        when (val constraint = model.constraint) {
+          null -> emptyList()
+          else -> listOfNotNull(property.intRequirement(constraint))
+        }
+      is Model.Primitive.String ->
+        when (val constraint = model.constraint) {
+          null -> emptyList()
+          else -> {
+            val paramName = toParamName(Named(property.baseName))
+            val lengthReq =
+              when (constraint.minLength) {
+                0 ->
+                  when (constraint.maxLength) {
+                    Int.MAX_VALUE -> null
+                    else ->
+                      Requirement(
+                        property,
+                        "$paramName.${"length"} <= ${constraint.maxLength}",
+                        "$paramName should have a ${"length"} of at most ${constraint.maxLength}"
+                      )
+                  }
+                else ->
+                  when (constraint.maxLength) {
+                    Int.MAX_VALUE ->
+                      Requirement(
+                        property,
+                        "$paramName.${"length"} >= ${constraint.minLength}",
+                        "$paramName should have a ${"length"} of at least ${constraint.minLength}"
+                      )
+                    else ->
+                      Requirement(
+                        property,
+                        "$paramName.${"length"} in ${constraint.minLength}..${constraint.maxLength}",
+                        "$paramName should have a ${"length"} between ${constraint.minLength} and ${constraint.maxLength}"
+                      )
+                  }
+              }
+            val patternReq =
+              constraint.pattern?.let { pattern ->
+                val dollarEscaped = pattern.replace("$", "${'$'}")
+                // TODO Allow configuring ignoring incorrect regex
+                dollarEscaped.toRegex()
+                val tripleQ = "${'"'}${'"'}${'"'}"
+                val predicate = "$paramName.matches($tripleQ$dollarEscaped$tripleQ.toRegex())"
+                val message = "$paramName should match the pattern $dollarEscaped"
+                Requirement(property, predicate, message)
+              }
+
+            listOfNotNull(lengthReq, patternReq)
+          }
+        }
     }
   }
 
@@ -294,19 +366,25 @@ private fun Iterable<Model.Object.Property>.requirement() {
   val requirements = requirements()
   when (requirements.size) {
     0 -> Unit
-    1 -> {
-      val requirement = requirements.single()
+    1 ->
       addInitializerBlock(
-        CodeBlock.of("require(%L) { %S }", requirement.predicate, requirement.message)
+        buildCodeBlock {
+          val r = requirements.single()
+          val nullable =
+            if (r.prop.isNullable) "if (${toParamName(Named(r.prop.baseName))} != null) " else ""
+          addStatement("$nullable require(%L) { %S }", r.predicate, r.message)
+        }
       )
-    }
     else -> {
       addInitializerBlock(
         buildCodeBlock {
           addStatement("requireAll(")
           withIndent {
-            requirements.forEach { requirement ->
-              addStatement("{ require(%L) { %S } },", requirement.predicate, requirement.message)
+            requirements.forEach { r ->
+              val nullable =
+                if (r.prop.isNullable) "if (${toParamName(Named(r.prop.baseName))} != null) "
+                else ""
+              addStatement("{ $nullable require(%L) { %S } },", r.predicate, r.message)
             }
           }
           addStatement(")")
@@ -317,33 +395,50 @@ private fun Iterable<Model.Object.Property>.requirement() {
 }
 
 context(OpenAPIContext)
-private fun Model.Object.Property.intRequirement(constraint: Constraints.Number): Requirement =
-  if (!constraint.exclusiveMinimum) {
+private fun Model.Object.Property.intRequirement(constraint: Constraints.Number): Requirement? =
+  if (
+    constraint.maximum != Double.POSITIVE_INFINITY && constraint.minimum != Double.NEGATIVE_INFINITY
+  ) {
     val paramName = toParamName(Named(baseName))
     val rangeTo = if (constraint.exclusiveMaximum) "..<" else ".."
     val minimum = constraint.minimum.toInt()
     val maximum = constraint.maximum.toInt()
     val predicate = "$paramName in $minimum$rangeTo$maximum"
     val maxM = if (constraint.exclusiveMaximum) "smaller then" else "smaller or equal to"
-    val message = "$paramName should be larger or equal to $minimum and should be $maxM ${maximum}"
-    Requirement(predicate, message)
+    val message = "$paramName should be larger or equal to $minimum and should be $maxM $maximum"
+    Requirement(this, predicate, message)
   } else numberRequirement(constraint) { it.toInt() }
 
 context(OpenAPIContext)
 private fun Model.Object.Property.numberRequirement(
   constraint: Constraints.Number,
   transform: (Double) -> Number
-): Requirement {
+): Requirement? {
   val paramName = toParamName(Named(baseName))
-  val min = if (constraint.exclusiveMinimum) "<" else "<="
-  val max = if (constraint.exclusiveMaximum) "<" else "<="
   val minimum = transform(constraint.minimum)
   val maximum = transform(constraint.maximum)
-  val predicate = "$minimum $min $paramName && $paramName $max $maximum"
+  val min = if (constraint.exclusiveMinimum) "<" else "<="
+  val max = if (constraint.exclusiveMaximum) "<" else "<="
   val minM = if (constraint.exclusiveMinimum) "larger then" else "larger or equal to"
   val maxM = if (constraint.exclusiveMaximum) "smaller then" else "smaller or equal to"
-  val message = "$paramName should be $minM $minimum and should be $maxM ${maximum}"
-  return Requirement(predicate, message)
+  return when (constraint.minimum) {
+    Double.NEGATIVE_INFINITY ->
+      when (constraint.maximum) {
+        Double.POSITIVE_INFINITY -> null
+        else -> Requirement(this, "$paramName $max $maximum", "$paramName should be $maxM $maximum")
+      }
+    else ->
+      when (constraint.maximum) {
+        Double.POSITIVE_INFINITY ->
+          Requirement(this, "$minimum $min $paramName", "$paramName should be $minM $minimum")
+        else ->
+          Requirement(
+            this,
+            "$minimum $min $paramName && $paramName $max $maximum",
+            "$paramName should be $minM $minimum and should be $maxM ${maximum}"
+          )
+      }
+  }
 }
 
 context(OpenAPIContext)

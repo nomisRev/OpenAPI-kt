@@ -2,13 +2,9 @@
 
 package io.github.nomisrev.openapi
 
-import com.tschuchort.compiletesting.JvmCompilationResult
-import com.tschuchort.compiletesting.KotlinCompilation
-import com.tschuchort.compiletesting.SourceFile
 import io.ktor.http.*
 import io.ktor.http.HttpMethod.Companion.Get
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 
 class ApiTest {
@@ -62,25 +58,4 @@ class ApiTest {
       )
       .compiles()
   }
-}
-
-fun API.compiles(): JvmCompilationResult {
-  val ctx = OpenAPIContext(GenerationConfig("", "", "io.test", "TestApi", true))
-  val filesAsSources =
-    with(ctx) {
-      Root("TestApi", emptyList(), listOf(this@compiles)).toFileSpecs().map {
-        SourceFile.kotlin("${it.name}.kt", it.asCode())
-      }
-    }
-  val result =
-    KotlinCompilation()
-      .apply {
-        val predef = SourceFile.kotlin("Predef.kt", with(ctx) { predef() }.asCode())
-        sources = filesAsSources + predef
-        inheritClassPath = true
-        messageOutputStream = System.out
-      }
-      .compile()
-  assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK)
-  return result
 }

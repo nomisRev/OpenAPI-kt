@@ -22,11 +22,11 @@ sealed interface Constraints {
     }
   }
 
-  data class Text(val maxLength: Int, val minLength: Int, val pattern: String?) : Constraints {
+  data class Text(val minLength: Int, val maxLength: Int, val pattern: String?) : Constraints {
     companion object {
       operator fun invoke(schema: Schema): Text? =
         if (schema.maxLength != null || schema.minLength != null || schema.pattern != null)
-          Text(schema.maxLength ?: Int.MAX_VALUE, schema.minLength ?: 0, schema.pattern)
+          Text(schema.minLength ?: 0, schema.maxLength ?: Int.MAX_VALUE, schema.pattern)
         else null
     }
   }
