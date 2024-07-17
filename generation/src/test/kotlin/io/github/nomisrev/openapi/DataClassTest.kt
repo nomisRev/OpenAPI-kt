@@ -7,7 +7,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
-class DataClassConstraintsTest {
+class DataClassTest {
   private fun prop(name: String, type: Model, isNullable: Boolean = false) =
     Model.Object.Property(
       name,
@@ -50,6 +50,26 @@ class DataClassConstraintsTest {
       "age should be larger or equal to 0 and should be smaller or equal to 100"
     )
 
+  private val ageL =
+    ageL(
+      Number(
+        maximum = 100.0,
+        minimum = 0.0,
+        exclusiveMaximum = false,
+        exclusiveMinimum = false,
+        multipleOf = null
+      )
+    )
+
+  private fun ageL(constraints: Number) =
+    prop("ageL", Model.Primitive.Long(null, null, constraints))
+
+  private val ageLRequirements =
+    listOf(
+      "ageL in 0..100",
+      "ageL should be larger or equal to 0 and should be smaller or equal to 100"
+    )
+
   private fun height(constraints: Number) =
     prop("height", Model.Primitive.Double(null, "Height in cm", constraints))
 
@@ -68,6 +88,26 @@ class DataClassConstraintsTest {
     listOf(
       "30.0 <= height && height <= 300.0",
       "height should be larger or equal to 30.0 and should be smaller or equal to 300.0"
+    )
+
+  private fun heightF(constraints: Number) =
+    prop("heightF", Model.Primitive.Float(null, "Height in cm", constraints))
+
+  private val heightF =
+    heightF(
+      Number(
+        maximum = 300.0,
+        minimum = 30.0,
+        exclusiveMaximum = false,
+        exclusiveMinimum = false,
+        multipleOf = null
+      )
+    )
+
+  private val heightFRequirements =
+    listOf(
+      "30.0 <= heightF && heightF <= 300.0",
+      "heightF should be larger or equal to 30.0 and should be smaller or equal to 300.0"
     )
 
   private fun tags(constraints: Collection) =
@@ -214,6 +254,69 @@ class DataClassConstraintsTest {
     assertFalse(code.containsSingle("requireAll"))
     assertTrue(code.containsSingle("age < 100"))
     assertTrue(code.containsSingle("age should be smaller then 100"))
+  }
+
+  @Test
+  fun longOpenClosedMinMaxRange() {
+    val ageL = ageL(Number(false, 0.0, true, 100.0, null))
+    val code = Model.Object(Named("User"), null, listOf(ageL), listOf(ageL.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("ageL in 0..<100"))
+    assertTrue(
+      code.containsSingle("ageL should be larger or equal to 0 and should be smaller then 100")
+    )
+  }
+
+  @Test
+  fun longClosedMinMaxRange() {
+    val code = Model.Object(Named("User"), null, listOf(ageL), listOf(ageL.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle(ageLRequirements))
+  }
+
+  @Test
+  fun longMin() {
+    val ageL = ageL(Number(false, 0.0, false, Double.POSITIVE_INFINITY, null))
+    val code = Model.Object(Named("User"), null, listOf(ageL), listOf(ageL.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("0 <= ageL"))
+    assertTrue(code.containsSingle("ageL should be larger or equal to 0"))
+  }
+
+  @Test
+  fun longMax() {
+    val ageL = ageL(Number(false, Double.NEGATIVE_INFINITY, false, 100.0, null))
+    val code = Model.Object(Named("User"), null, listOf(ageL), listOf(ageL.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("ageL <= 100"))
+    assertTrue(code.containsSingle("ageL should be smaller or equal to 100"))
+  }
+
+  @Test
+  fun longOpenMinMax() {
+    val ageL = ageL(Number(true, Double.NEGATIVE_INFINITY, true, 100.0, null))
+    val code = Model.Object(Named("User"), null, listOf(ageL), listOf(ageL.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("ageL < 100"))
+    assertTrue(code.containsSingle("ageL should be smaller then 100"))
+  }
+
+  @Test
+  fun longOpenMinClosedMax() {
+    val ageL = ageL(Number(true, Double.NEGATIVE_INFINITY, false, 100.0, null))
+    val code = Model.Object(Named("User"), null, listOf(ageL), listOf(ageL.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("ageL <= 100"))
+    assertTrue(code.containsSingle("ageL should be smaller or equal to 100"))
+  }
+
+  @Test
+  fun longClosedMinOpenMax() {
+    val ageL = ageL(Number(false, Double.NEGATIVE_INFINITY, true, 100.0, null))
+    val code = Model.Object(Named("User"), null, listOf(ageL), listOf(ageL.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("ageL < 100"))
+    assertTrue(code.containsSingle("ageL should be smaller then 100"))
   }
 
   @Test
@@ -458,13 +561,201 @@ class DataClassConstraintsTest {
   }
 
   @Test
+  fun `float min lte max lte`() {
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle(heightFRequirements))
+  }
+
+  @Test
+  fun `float min lt max lte`() {
+    val heightF = heightF(Number(true, 0.0, false, 100.0, null))
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("0.0 < heightF && heightF <= 100.0"))
+    assertTrue(
+      code.containsSingle(
+        "heightF should be larger then 0.0 and should be smaller or equal to 100.0"
+      )
+    )
+  }
+
+  @Test
+  fun `float min lte max lt`() {
+    val heightF = heightF(Number(false, 0.0, true, 100.0, null))
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("0.0 <= heightF && heightF < 100.0"))
+    assertTrue(
+      code.containsSingle(
+        "heightF should be larger or equal to 0.0 and should be smaller then 100.0"
+      )
+    )
+  }
+
+  @Test
+  fun `float min lt max lt`() {
+    val heightF = heightF(Number(true, 0.0, true, 100.0, null))
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("0.0 < heightF && heightF < 100.0"))
+    assertTrue(
+      code.containsSingle("heightF should be larger then 0.0 and should be smaller then 100.0")
+    )
+  }
+
+  @Test
+  fun `float min lt (max open)`() {
+    val heightF =
+      heightF(
+        Number(
+          exclusiveMinimum = true,
+          minimum = 0.0,
+          exclusiveMaximum = false,
+          maximum = Double.POSITIVE_INFINITY,
+          multipleOf = null
+        )
+      )
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("0.0 < heightF"))
+    assertTrue(code.containsSingle("heightF should be larger then 0.0"))
+  }
+
+  @Test
+  fun `float min lte (max open)`() {
+    val heightF =
+      heightF(
+        Number(
+          exclusiveMinimum = false,
+          minimum = 0.0,
+          exclusiveMaximum = false,
+          maximum = Double.POSITIVE_INFINITY,
+          multipleOf = null
+        )
+      )
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("0.0 <= heightF"))
+    assertTrue(code.containsSingle("heightF should be larger or equal to 0.0"))
+  }
+
+  @Test
+  fun `float min lt (max closed)`() {
+    val heightF =
+      heightF(
+        Number(
+          exclusiveMinimum = true,
+          minimum = 0.0,
+          exclusiveMaximum = true,
+          maximum = Double.POSITIVE_INFINITY,
+          multipleOf = null
+        )
+      )
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("0.0 < heightF"))
+    assertTrue(code.containsSingle("heightF should be larger then 0.0"))
+  }
+
+  @Test
+  fun `float min lte (max closed)`() {
+    val heightF =
+      heightF(
+        Number(
+          exclusiveMinimum = false,
+          minimum = 0.0,
+          exclusiveMaximum = true,
+          maximum = Double.POSITIVE_INFINITY,
+          multipleOf = null
+        )
+      )
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("0.0 <= heightF"))
+    assertTrue(code.containsSingle("heightF should be larger or equal to 0.0"))
+  }
+
+  @Test
+  fun `float (min closed) max lt`() {
+    val heightF =
+      heightF(
+        Number(
+          exclusiveMinimum = true,
+          minimum = Double.NEGATIVE_INFINITY,
+          exclusiveMaximum = true,
+          maximum = 100.0,
+          multipleOf = null
+        )
+      )
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("heightF < 100.0"))
+    assertTrue(code.containsSingle("heightF should be smaller then 100.0"))
+  }
+
+  @Test
+  fun `float (min open) max lt`() {
+    val heightF =
+      heightF(
+        Number(
+          exclusiveMinimum = false,
+          minimum = Double.NEGATIVE_INFINITY,
+          exclusiveMaximum = true,
+          maximum = 100.0,
+          multipleOf = null
+        )
+      )
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("heightF < 100.0"))
+    assertTrue(code.containsSingle("heightF should be smaller then 100.0"))
+  }
+
+  @Test
+  fun `float (min open) max lte`() {
+    val heightF =
+      heightF(
+        Number(
+          exclusiveMinimum = false,
+          minimum = Double.NEGATIVE_INFINITY,
+          exclusiveMaximum = false,
+          maximum = 300.0,
+          multipleOf = null
+        )
+      )
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("heightF <= 300.0"))
+    assertTrue(code.containsSingle("heightF should be smaller or equal to 300.0"))
+  }
+
+  @Test
+  fun `float (min closed) max lte`() {
+    val heightF =
+      heightF(
+        Number(
+          exclusiveMinimum = true,
+          minimum = Double.NEGATIVE_INFINITY,
+          exclusiveMaximum = false,
+          maximum = 100.0,
+          multipleOf = null
+        )
+      )
+    val code = Model.Object(Named("User"), null, listOf(heightF), listOf(heightF.model)).compiles()
+    assertFalse(code.containsSingle("requireAll"))
+    assertTrue(code.containsSingle("heightF <= 100.0"))
+    assertTrue(code.containsSingle("heightF should be smaller or equal to 100.0"))
+  }
+
+  @Test
   fun allConstraints() {
     val nullable = prop("tags", tags.model, isNullable = true)
     val code =
       Model.Object(
           Named("User"),
           null,
-          listOf(id, age, height, nullable),
+          listOf(id, age, ageL, height, heightF, nullable),
           listOf(id.model, age.model, height.model, nullable.model)
         )
         .compiles()
@@ -474,5 +765,29 @@ class DataClassConstraintsTest {
     assertTrue(code.containsSingle(heightRequirements))
     assertTrue(code.containsSingle("if (tags != null)"))
     assertTrue(code.containsSingle(tagsRequirements))
+  }
+
+  @Test
+  fun properties() {
+    val nullable = prop("tags", tags.model, isNullable = true)
+    val complexName = prop("complex_name", Model.Primitive.String("hello", null, null))
+    val code =
+      Model.Object(
+          Named("User"),
+          null,
+          listOf(id, age, ageL, height, heightF, nullable, complexName),
+          listOf(id.model, age.model, height.model, nullable.model, complexName.model)
+        )
+        .compiles()
+    assertTrue(code.containsSingle("val id: String"))
+    assertTrue(code.containsSingle("val age: Int"))
+    assertTrue(code.containsSingle("val ageL: Long"))
+    assertTrue(code.containsSingle("val height: Double"))
+    assertTrue(code.containsSingle("val heightF: Float"))
+    assertTrue(code.containsSingle("val tags: List<String>?"))
+    assertTrue(code.containsSingle("@SerialName(\"complex_name\")"))
+    assertTrue(code.containsSingle("@Required"))
+    assertTrue(code.containsSingle("val complexName: String = \"hello\""))
+    println(code)
   }
 }

@@ -202,17 +202,31 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           Type.Basic.Boolean ->
             Primitive.Boolean(default("Boolean", String::toBooleanStrictOrNull), description)
           Type.Basic.Integer ->
-            Primitive.Int(
-              default("Integer", String::toIntOrNull),
-              description,
-              Constraints.Number(this)
-            )
+            if (format == "int64")
+              Primitive.Long(
+                default("Long", String::toLongOrNull),
+                description,
+                Constraints.Number(this)
+              )
+            else
+              Primitive.Int(
+                default("Integer", String::toIntOrNull),
+                description,
+                Constraints.Number(this)
+              )
           Type.Basic.Number ->
-            Primitive.Double(
-              default("Number", String::toDoubleOrNull),
-              description,
-              Constraints.Number(this)
-            )
+            if (format == "float")
+              Primitive.Float(
+                default("Float", String::toFloatOrNull),
+                description,
+                Constraints.Number(this)
+              )
+            else
+              Primitive.Double(
+                default("Number", String::toDoubleOrNull),
+                description,
+                Constraints.Number(this)
+              )
           Type.Basic.String ->
             if (format == "binary") Model.OctetStream(description)
             else

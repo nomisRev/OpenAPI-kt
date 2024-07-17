@@ -4,10 +4,12 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.DOUBLE
+import com.squareup.kotlinpoet.FLOAT
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.INT
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.LIST
+import com.squareup.kotlinpoet.LONG
 import com.squareup.kotlinpoet.MAP
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
@@ -26,7 +28,9 @@ context(OpenAPIContext)
 fun Model.toTypeName(): TypeName =
   when (this) {
     is Model.Primitive.Boolean -> BOOLEAN
+    is Model.Primitive.Float -> FLOAT
     is Model.Primitive.Double -> DOUBLE
+    is Model.Primitive.Long -> LONG
     is Model.Primitive.Int -> INT
     is Model.Primitive.String -> STRING
     is Model.Primitive.Unit -> UNIT

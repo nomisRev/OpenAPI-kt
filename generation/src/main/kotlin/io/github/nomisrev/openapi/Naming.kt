@@ -151,6 +151,8 @@ private class Nam(private val `package`: String) : Naming {
             is Model.Primitive.Int -> "Int"
             is Model.Primitive.String -> "String"
             is Model.Primitive.Unit -> "Unit"
+            is Model.Primitive.Float -> "Float"
+            is Model.Primitive.Long -> "Long"
           }
 
         val unionCaseName = "Case$typeName${s}$postfix"

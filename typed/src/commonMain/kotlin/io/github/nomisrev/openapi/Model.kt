@@ -135,6 +135,18 @@ sealed interface Model {
       val constraint: Constraints.Number?
     ) : Primitive
 
+    data class Long(
+      val default: kotlin.Long?,
+      override val description: kotlin.String?,
+      val constraint: Constraints.Number?
+    ) : Primitive
+
+    data class Float(
+      val default: kotlin.Float?,
+      override val description: kotlin.String?,
+      val constraint: Constraints.Number?
+    ) : Primitive
+
     data class Double(
       val default: kotlin.Double?,
       override val description: kotlin.String?,
@@ -157,6 +169,8 @@ sealed interface Model {
         is Int -> default?.toString()
         is Double -> default?.toString()
         is Boolean -> default?.toString()
+        is Long -> default?.toString()
+        is Float -> default?.toString()
         is String -> default?.let { "\"$it\"" }
         is Unit -> null
       }

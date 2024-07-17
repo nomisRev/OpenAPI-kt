@@ -301,15 +301,25 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
 
       // TODO Implement Object constraints
       is Model.FreeFormJson -> emptyList()
+      is Model.Primitive.Float ->
+        when (val constraint = model.constraint) {
+          null -> emptyList()
+          else -> listOfNotNull(property.numberRequirement(constraint) { it })
+        }
       is Model.Primitive.Double ->
         when (val constraint = model.constraint) {
           null -> emptyList()
           else -> listOfNotNull(property.numberRequirement(constraint) { it })
         }
+      is Model.Primitive.Long ->
+        when (val constraint = model.constraint) {
+          null -> emptyList()
+          else -> listOfNotNull(property.integerRequirement(constraint))
+        }
       is Model.Primitive.Int ->
         when (val constraint = model.constraint) {
           null -> emptyList()
-          else -> listOfNotNull(property.intRequirement(constraint))
+          else -> listOfNotNull(property.integerRequirement(constraint))
         }
       is Model.Primitive.String ->
         when (val constraint = model.constraint) {
@@ -395,19 +405,19 @@ private fun Iterable<Model.Object.Property>.requirement() {
 }
 
 context(OpenAPIContext)
-private fun Model.Object.Property.intRequirement(constraint: Constraints.Number): Requirement? =
+private fun Model.Object.Property.integerRequirement(constraint: Constraints.Number): Requirement? =
   if (
     constraint.maximum != Double.POSITIVE_INFINITY && constraint.minimum != Double.NEGATIVE_INFINITY
   ) {
     val paramName = toParamName(Named(baseName))
     val rangeTo = if (constraint.exclusiveMaximum) "..<" else ".."
-    val minimum = constraint.minimum.toInt()
-    val maximum = constraint.maximum.toInt()
+    val minimum = constraint.minimum.toLong()
+    val maximum = constraint.maximum.toLong()
     val predicate = "$paramName in $minimum$rangeTo$maximum"
     val maxM = if (constraint.exclusiveMaximum) "smaller then" else "smaller or equal to"
     val message = "$paramName should be larger or equal to $minimum and should be $maxM $maximum"
     Requirement(this, predicate, message)
-  } else numberRequirement(constraint) { it.toInt() }
+  } else numberRequirement(constraint) { it.toLong() }
 
 context(OpenAPIContext)
 private fun Model.Object.Property.numberRequirement(
