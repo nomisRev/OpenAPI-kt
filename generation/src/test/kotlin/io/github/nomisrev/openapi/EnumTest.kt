@@ -11,7 +11,7 @@ class EnumTest {
     val code =
       Model.Enum.Closed(
           Named("AutoOrManual"),
-          Model.Primitive.String(null, null, null),
+          Model.Primitive.String(null, null, null, false),
           listOf("Auto", "Manual"),
           "Auto",
           null
@@ -25,7 +25,7 @@ class EnumTest {
     val code =
       Model.Enum.Closed(
           Named("AutoOrManual"),
-          Model.Primitive.String(null, null, null),
+          Model.Primitive.String(null, null, null, false),
           listOf("auto", "manual"),
           "auto",
           null

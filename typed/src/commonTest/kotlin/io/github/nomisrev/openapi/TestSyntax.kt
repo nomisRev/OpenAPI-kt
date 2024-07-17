@@ -5,7 +5,12 @@ public fun Model.Primitive.Companion.string(
   description: String? = null,
   constraint: Constraints.Text? = null
 ): Model.Primitive.String =
-  Model.Primitive.String(default = default, description = description, constraint = constraint)
+  Model.Primitive.String(
+    default = default,
+    description = description,
+    constraint = constraint,
+    password = false
+  )
 
 public fun Model.Primitive.Companion.int(
   default: Int? = null,

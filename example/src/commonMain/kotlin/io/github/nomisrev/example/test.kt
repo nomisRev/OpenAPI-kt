@@ -11,20 +11,29 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlin.jvm.JvmInline
+
+@Serializable
+@JvmInline
+value class Password(val value: String)
 
 suspend fun main() {
-  val ai = OpenAI(configuredClient("MY_API_KEY"))
-  ai.chat.completions.createChatCompletion(
-    CreateChatCompletionRequest(
-      listOf(
-        CaseChatCompletionRequestUserMessage(
-          ChatCompletionRequestUserMessage(CaseString("Hello, how are you?"))
-        )
-      ),
-      CreateChatCompletionRequest.Model.Gpt35Turbo
-    )
-  )
+  println(Json.encodeToJsonElement(Password("secret")))
+  println(Json.decodeFromString(Password.serializer(), "\"secret\""))
+//  val ai = OpenAI(configuredClient("MY_API_KEY"))
+//  ai.chat.completions.createChatCompletion(
+//    CreateChatCompletionRequest(
+//      listOf(
+//        CaseChatCompletionRequestUserMessage(
+//          ChatCompletionRequestUserMessage(CaseString("Hello, how are you?"))
+//        )
+//      ),
+//      CreateChatCompletionRequest.Model.Gpt35Turbo
+//    )
+//  )
 }
 
 private fun configuredClient(

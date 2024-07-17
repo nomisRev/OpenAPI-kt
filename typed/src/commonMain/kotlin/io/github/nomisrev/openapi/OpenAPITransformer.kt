@@ -214,13 +214,17 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               Constraints.Number(this)
             )
           Type.Basic.String ->
-            if (format == "binary") Model.OctetStream(description)
-            else
-              Primitive.String(
-                default("String", String::toString) { it.joinToString() },
-                description,
-                Constraints.Text(this)
-              )
+            when (format?.lowercase()) {
+              "binary" -> Model.OctetStream(description)
+              //            "date", "datetime", "date-time",
+              else ->
+                Primitive.String(
+                  default("String", String::toString) { it.joinToString() },
+                  description,
+                  Constraints.Text(this),
+                  format == "password"
+                )
+            }
           Type.Basic.Object -> toObject(context)
           Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
         }
@@ -695,7 +699,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             Pair(
               statusCode,
               Route.ReturnType(
-                Primitive.String(null, response.description, null),
+                Primitive.String(null, response.description, null, false),
                 response.extensions
               )
             )

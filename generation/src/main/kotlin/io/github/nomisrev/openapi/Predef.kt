@@ -12,9 +12,11 @@ import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STAR
+import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 
@@ -330,4 +332,21 @@ fun predef(): FileSpec =
     )
     .addType(uploadTypeSpec())
     .addFunctions(listOf(appendAll, appendUploadedFile(), serialNameOrEnumValue))
+    .addType(passwordSpec)
+    .build()
+
+private val passwordSpec: TypeSpec =
+  TypeSpec.classBuilder("Password")
+    .addModifiers(KModifier.VALUE)
+    .addAnnotation(annotationSpec<JvmInline>())
+    .addAnnotation(annotationSpec<Serializable>())
+    .primaryConstructor(FunSpec.constructorBuilder().addParameter("value", String::class).build())
+    .addProperty(PropertySpec("value", STRING) { initializer("value") })
+    .addFunction(
+      FunSpec.builder("toString")
+        .addModifiers(KModifier.OVERRIDE)
+        .returns(String::class)
+        .addStatement("return %S", "*****")
+        .build()
+    )
     .build()

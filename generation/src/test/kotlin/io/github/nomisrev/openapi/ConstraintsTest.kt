@@ -14,7 +14,8 @@ class ConstraintsTest {
       Model.Primitive.String(
         null,
         null,
-        Constraints.Text(maxLength = 10, minLength = 1, pattern = null)
+        Constraints.Text(maxLength = 10, minLength = 1, pattern = null),
+        false
       )
     )
   private val idRequirements =
@@ -66,7 +67,7 @@ class ConstraintsTest {
     prop(
       "tags",
       Model.Collection.List(
-        Model.Primitive.String(null, null, null),
+        Model.Primitive.String(null, null, null, false),
         null,
         null,
         Constraints.Collection(minItems = 3, maxItems = 10)
@@ -79,7 +80,7 @@ class ConstraintsTest {
     prop(
       "categories",
       Model.Collection.Set(
-        Model.Primitive.String(null, null, null),
+        Model.Primitive.String(null, null, null, false),
         null,
         null,
         Constraints.Collection(minItems = 3, maxItems = 10)

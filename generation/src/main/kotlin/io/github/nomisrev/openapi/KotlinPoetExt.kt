@@ -28,7 +28,7 @@ fun Model.toTypeName(): TypeName =
     is Model.Primitive.Boolean -> BOOLEAN
     is Model.Primitive.Double -> DOUBLE
     is Model.Primitive.Int -> INT
-    is Model.Primitive.String -> STRING
+    is Model.Primitive.String -> if (password) ClassName(`package`, "Password") else STRING
     is Model.Primitive.Unit -> UNIT
     is Collection.List -> LIST.parameterizedBy(inner.toTypeName())
     is Collection.Set -> SET.parameterizedBy(inner.toTypeName())

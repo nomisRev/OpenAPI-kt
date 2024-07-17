@@ -147,7 +147,8 @@ sealed interface Model {
     data class String(
       val default: kotlin.String?,
       override val description: kotlin.String?,
-      val constraint: Constraints.Text?
+      val constraint: Constraints.Text?,
+      val password: kotlin.Boolean
     ) : Primitive
 
     data class Unit(override val description: kotlin.String?) : Primitive
@@ -192,7 +193,7 @@ sealed interface Model {
       override val description: String?,
       override val constraint: Constraints.Collection?
     ) : Collection {
-      val key = Primitive.String(null, null, null)
+      val key = Primitive.String(null, null, null, false)
     }
 
     companion object

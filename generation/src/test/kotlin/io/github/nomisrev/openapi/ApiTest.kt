@@ -39,13 +39,13 @@ class ApiTest {
                         listOf(
                           Model.Object.Property(
                             "id",
-                            Model.Primitive.String(null, null, null),
+                            Model.Primitive.String(null, null, null, false),
                             isRequired = true,
                             isNullable = false,
                             description = null
                           )
                         ),
-                        listOf(Model.Primitive.String(null, null, null))
+                        listOf(Model.Primitive.String(null, null, null, false))
                       ),
                       emptyMap()
                     )

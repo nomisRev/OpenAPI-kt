@@ -18,7 +18,7 @@ class DataClassConstraintsTest {
     )
 
   private fun id(constraint: Constraints.Text) =
-    prop("id", Model.Primitive.String(null, null, constraint))
+    prop("id", Model.Primitive.String(null, null, constraint, false))
 
   val id = id(Constraints.Text(1, 10, null))
 
@@ -73,7 +73,12 @@ class DataClassConstraintsTest {
   private fun tags(constraints: Collection) =
     prop(
       "tags",
-      Model.Collection.List(Model.Primitive.String(null, null, null), null, null, constraints)
+      Model.Collection.List(
+        Model.Primitive.String(null, null, null, false),
+        null,
+        null,
+        constraints
+      )
     )
 
   private val tags = tags(Collection(minItems = 3, maxItems = 10))
@@ -84,7 +89,7 @@ class DataClassConstraintsTest {
   private fun categories(constraints: Collection) =
     prop(
       "categories",
-      Model.Collection.Set(Model.Primitive.String(null, null, null), null, null, constraints)
+      Model.Collection.Set(Model.Primitive.String(null, null, null, false), null, null, constraints)
     )
 
   private val categories = categories(Collection(minItems = 3, maxItems = 10))
@@ -102,7 +107,10 @@ class DataClassConstraintsTest {
   @Test
   fun textMin() {
     val id =
-      prop("id", Model.Primitive.String(null, null, Constraints.Text(1, Int.MAX_VALUE, null)))
+      prop(
+        "id",
+        Model.Primitive.String(null, null, Constraints.Text(1, Int.MAX_VALUE, null), false)
+      )
     val code = Model.Object(Named("User"), null, listOf(id), listOf(id.model)).compiles()
     assertFalse(code.containsSingle("requireAll"))
     assertTrue(code.containsSingle("id.length >= 1"))
@@ -114,7 +122,7 @@ class DataClassConstraintsTest {
     val id =
       prop(
         "id",
-        Model.Primitive.String(null, null, Constraints.Text(1, Int.MAX_VALUE, null)),
+        Model.Primitive.String(null, null, Constraints.Text(1, Int.MAX_VALUE, null), false),
         isNullable = true
       )
     val code = Model.Object(Named("User"), null, listOf(id), listOf(id.model)).compiles()
@@ -126,7 +134,7 @@ class DataClassConstraintsTest {
 
   @Test
   fun textMax() {
-    val id = prop("id", Model.Primitive.String(null, null, Constraints.Text(0, 100, null)))
+    val id = prop("id", Model.Primitive.String(null, null, Constraints.Text(0, 100, null), false))
     val code = Model.Object(Named("User"), null, listOf(id), listOf(id.model)).compiles()
     assertFalse(code.containsSingle("requireAll"))
     assertTrue(code.containsSingle("id.length <= 100"))
@@ -138,7 +146,12 @@ class DataClassConstraintsTest {
     val id =
       prop(
         "id",
-        Model.Primitive.String(null, null, Constraints.Text(0, Int.MAX_VALUE, "[a-zA-Z0-9]+"))
+        Model.Primitive.String(
+          null,
+          null,
+          Constraints.Text(0, Int.MAX_VALUE, "[a-zA-Z0-9]+"),
+          false
+        )
       )
     val code = Model.Object(Named("User"), null, listOf(id), listOf(id.model)).compiles()
     assertFalse(code.containsSingle("requireAll"))
@@ -474,5 +487,12 @@ class DataClassConstraintsTest {
     assertTrue(code.containsSingle(heightRequirements))
     assertTrue(code.containsSingle("if (tags != null)"))
     assertTrue(code.containsSingle(tagsRequirements))
+  }
+
+  @Test
+  fun password() {
+    val prop = prop("password", Model.Primitive.String(null, null, null, true))
+    val code = Model.Object(Named("User"), null, listOf(prop), listOf(prop.model)).compiles()
+    assertTrue(code.containsSingle("val password: Password"))
   }
 }
