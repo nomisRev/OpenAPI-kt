@@ -1,5 +1,5 @@
 [versions]
-dokka = "1.9.20"
+dokka = "2.0.0"
 kotlin = "2.1.10"
 kover = "0.9.1"
 knit = "0.5.0"
