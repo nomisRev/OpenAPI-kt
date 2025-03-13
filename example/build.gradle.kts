@@ -1,7 +1,7 @@
 plugins {
   kotlin("multiplatform") version "2.1.10"
   kotlin("plugin.serialization") version "2.1.10"
-  id("io.github.nomisrev.openapi-kt-plugin") version "0.0.8"
+  id("io.github.nomisrev.openapi-kt-plugin") version "0.0.9"
 }
 
 openApiConfig { spec("OpenAI", file("openai.yaml")) {
@@ -22,10 +22,10 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        implementation("io.ktor:ktor-client-core:2.3.6")
-        implementation("io.ktor:ktor-client-content-negotiation:2.3.6")
-        implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.6")
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+        implementation("io.ktor:ktor-client-core:3.1.1")
+        implementation("io.ktor:ktor-client-content-negotiation:3.1.1")
+        implementation("io.ktor:ktor-serialization-kotlinx-json:3.1.1")
+        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.8.0")
       }
     }
     val jvmMain by getting {

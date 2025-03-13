@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SealedSerializationApi
 import kotlinx.serialization.Serializable

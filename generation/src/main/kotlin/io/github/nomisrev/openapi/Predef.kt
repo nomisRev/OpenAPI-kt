@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -31,7 +30,7 @@ private fun uploadTypeSpec(): TypeSpec =
       ParameterSpec.builder(
           "bodyBuilder",
           LambdaTypeName.get(
-            receiver = ClassName("io.ktor.utils.io.core", "BytePacketBuilder"),
+            receiver = ClassName("kotlinx.io", "Sink"),
             returnType = Unit::class.asTypeName()
           )
         )
@@ -74,7 +73,7 @@ private val appendAll: FunSpec =
       }
       """
         .trimIndent(),
-      ClassName("io.ktor.utils.io.core", "ByteReadPacket"),
+      ClassName("kotlinx.io", "Source"),
       ClassName("io.ktor.client.request.forms", "InputProvider"),
       ClassName("io.ktor.client.request.forms", "ChannelProvider"),
       ClassName("io.ktor.client.request.forms", "FormPart")
