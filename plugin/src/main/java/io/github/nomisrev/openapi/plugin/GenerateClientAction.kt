@@ -16,7 +16,7 @@ abstract class GenerateClientAction : WorkAction<GenerateClientAction.Parameters
         output = parameters.output.get().asFile.path,
         `package` = parameters.packageName.getOrElse("io.github.nomisrev.openapi"),
         name = parameters.name.get(),
-        isK2 = parameters.k2.get()
+        isK2 = parameters.k2.get(),
       )
     )
   }

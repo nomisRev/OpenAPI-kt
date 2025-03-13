@@ -26,7 +26,7 @@ class ApiTest {
                     io.ktor.http.ContentType.Application.Json to
                       Route.Body.Json.FreeForm("A user", emptyMap())
                   ),
-                  emptyMap()
+                  emptyMap(),
                 ),
               input = emptyList(),
               returnType =
@@ -42,19 +42,19 @@ class ApiTest {
                             Model.Primitive.String(null, null, null),
                             isRequired = true,
                             isNullable = false,
-                            description = null
+                            description = null,
                           )
                         ),
-                        listOf(Model.Primitive.String(null, null, null))
+                        listOf(Model.Primitive.String(null, null, null)),
                       ),
-                      emptyMap()
+                      emptyMap(),
                     )
                 ),
               extensions = emptyMap(),
-              nested = emptyList()
+              nested = emptyList(),
             )
           ),
-        nested = emptyList()
+        nested = emptyList(),
       )
       .compiles()
   }

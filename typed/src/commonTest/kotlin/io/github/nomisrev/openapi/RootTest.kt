@@ -30,7 +30,7 @@ class RootTest {
                       )
                   )
                 )
-            )
+            ),
         )
         .toAPI("/echo")
     val expected =
@@ -50,10 +50,10 @@ class RootTest {
                   Route.ReturnType(Model.Primitive.string(null, null), emptyMap())
               ),
             extensions = emptyMap(),
-            nested = listOf(Model.Primitive.string(null, null))
+            nested = listOf(Model.Primitive.string(null, null)),
           )
         ),
-        nested = emptyList()
+        nested = emptyList(),
       )
     assertEquals(expected, actual)
   }

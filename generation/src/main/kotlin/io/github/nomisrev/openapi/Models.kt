@@ -146,7 +146,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec {
                   "%M(%S, %T.SEALED) {\n",
                   MemberName("kotlinx.serialization.descriptors", "buildSerialDescriptor"),
                   toClassName(context).simpleNames.joinToString("."),
-                  PolymorphicKind::class
+                  PolymorphicKind::class,
                 )
                 .withIndent {
                   cases.forEach { case ->
@@ -154,7 +154,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec {
                     add(
                       "element(%S, $placeholder.descriptor)\n",
                       toCaseClassName(case.model).simpleNames.joinToString("."),
-                      *values
+                      *values,
                     )
                   }
                 }
@@ -177,7 +177,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec {
                     addStatement(
                       "is %T -> encoder.encodeSerializableValue($placeholder, value.value)",
                       toCaseClassName(case.model),
-                      *values
+                      *values,
                     )
                   }
                 }
@@ -195,12 +195,12 @@ private fun Model.Union.toTypeSpec(): TypeSpec {
               CodeBlock.builder()
                 .addStatement(
                   "val value = decoder.decodeSerializableValue(%T.serializer())",
-                  JsonElement::class.asTypeName()
+                  JsonElement::class.asTypeName(),
                 )
                 .addStatement(
                   "val json = requireNotNull(decoder as? %T) { %S }.json",
                   JsonDecoder::class.asTypeName(),
-                  "Currently only supporting Json"
+                  "Currently only supporting Json",
                 )
                 .addStatement("return attemptDeserialize(value,")
                 .withIndent {
@@ -211,7 +211,7 @@ private fun Model.Union.toTypeSpec(): TypeSpec {
                       "Pair(%T::class) { %T(json.decodeFromJsonElement($placeholder, value)) },\n",
                       caseClassName,
                       caseClassName,
-                      *values
+                      *values,
                     )
                   }
                 }
@@ -239,7 +239,7 @@ private fun Model.Object.toTypeSpec(): TypeSpec =
         if (prop.isRequired && hasDefault) addAnnotation(annotationSpec<Required>())
         else if (!prop.isRequired && !hasDefault && prop.isNullable) defaultValue("null")
       }
-    }
+    },
   ) {
     // Cannot serialize binary, these are used for multipart requests.
     // This occurs when request bodies are defined using top-level schemas.
@@ -273,7 +273,7 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
                   Requirement(
                     property,
                     "$paramName.size <= ${constraint.maxItems}",
-                    "$paramName should have at most ${constraint.maxItems} elements"
+                    "$paramName should have at most ${constraint.maxItems} elements",
                   )
                 )
             }
@@ -284,7 +284,7 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
                   Requirement(
                     property,
                     "$paramName.size >= ${constraint.minItems}",
-                    "$paramName should have at least ${constraint.minItems} elements"
+                    "$paramName should have at least ${constraint.minItems} elements",
                   )
                 )
               else ->
@@ -292,7 +292,7 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
                   Requirement(
                     property,
                     "$paramName.size in ${constraint.minItems}..${constraint.maxItems}",
-                    "$paramName should have between ${constraint.minItems} and ${constraint.maxItems} elements"
+                    "$paramName should have between ${constraint.minItems} and ${constraint.maxItems} elements",
                   )
                 )
             }
@@ -325,7 +325,7 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
                       Requirement(
                         property,
                         "$paramName.${"length"} <= ${constraint.maxLength}",
-                        "$paramName should have a ${"length"} of at most ${constraint.maxLength}"
+                        "$paramName should have a ${"length"} of at most ${constraint.maxLength}",
                       )
                   }
                 else ->
@@ -334,13 +334,13 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
                       Requirement(
                         property,
                         "$paramName.${"length"} >= ${constraint.minLength}",
-                        "$paramName should have a ${"length"} of at least ${constraint.minLength}"
+                        "$paramName should have a ${"length"} of at least ${constraint.minLength}",
                       )
                     else ->
                       Requirement(
                         property,
                         "$paramName.${"length"} in ${constraint.minLength}..${constraint.maxLength}",
-                        "$paramName should have a ${"length"} between ${constraint.minLength} and ${constraint.maxLength}"
+                        "$paramName should have a ${"length"} between ${constraint.minLength} and ${constraint.maxLength}",
                       )
                   }
               }
@@ -412,7 +412,7 @@ private fun Model.Object.Property.intRequirement(constraint: Constraints.Number)
 context(OpenAPIContext)
 private fun Model.Object.Property.numberRequirement(
   constraint: Constraints.Number,
-  transform: (Double) -> Number
+  transform: (Double) -> Number,
 ): Requirement? {
   val paramName = toParamName(Named(baseName))
   val minimum = transform(constraint.minimum)
@@ -435,7 +435,7 @@ private fun Model.Object.Property.numberRequirement(
           Requirement(
             this,
             "$minimum $min $paramName && $paramName $max $maximum",
-            "$paramName should be $minM $minimum and should be $maxM ${maximum}"
+            "$paramName should be $minM $minimum and should be $maxM ${maximum}",
           )
       }
   }
@@ -470,7 +470,7 @@ private fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
                   )
               }
               .addSuperclassConstructorParameter("\"$rawName\"")
-              .build()
+              .build(),
           )
         }
       }
@@ -554,7 +554,7 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
                         "%M(%S, %T.STRING)",
                         PrimitiveSerialDescriptor,
                         enumName,
-                        PrimitiveKind::class.asTypeName()
+                        PrimitiveKind::class.asTypeName(),
                       )
                       .build()
                   )
@@ -582,7 +582,7 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
                         val nested = NamingContext.Nested(Named(name), context)
                         addStatement(
                           "Pair(%T::class) { defined.find { it.value == value } },",
-                          toClassName(nested)
+                          toClassName(nested),
                         )
                       }
                     }

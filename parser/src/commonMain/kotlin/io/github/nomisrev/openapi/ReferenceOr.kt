@@ -66,7 +66,8 @@ public sealed interface ReferenceOr<out A> {
       override fun deserialize(decoder: Decoder): ReferenceOr<T> {
         decoder as JsonDecoder
         val json = decoder.decodeSerializableValue(JsonElement.serializer())
-        return if ((json as JsonObject).contains(RefKey))
+        val jsobObject = json as? JsonObject
+        return if (jsobObject != null && jsobObject.contains(RefKey))
           Reference(json[RefKey]!!.jsonPrimitive.content)
         else Value(decoder.json.decodeFromJsonElement(dataSerializer, json))
       }

@@ -9,7 +9,7 @@ data class GenerationConfig(
   val output: String,
   val `package`: String,
   val name: String,
-  val isK2: Boolean
+  val isK2: Boolean,
 )
 
 @JvmOverloads

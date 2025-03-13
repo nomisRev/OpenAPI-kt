@@ -22,7 +22,7 @@ public data class Server(
    * URL template.
    */
   public val variables: Map<String, Variable>? = null,
-  public val extensions: Map<String, JsonElement>? = emptyMap()
+  public val extensions: Map<String, JsonElement>? = emptyMap(),
 ) {
   /** An object representing a Server Variable for server URL template substitution. */
   @Serializable
@@ -44,6 +44,6 @@ public data class Server(
      * representation.
      */
     public val description: String? = null,
-    public val extensions: Map<String, JsonElement>? = emptyMap()
+    public val extensions: Map<String, JsonElement>? = emptyMap(),
   )
 }

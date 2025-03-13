@@ -23,8 +23,8 @@ fun configure(defaults: Boolean) =
     "configure",
     LambdaTypeName.get(
       receiver = ClassName("io.ktor.client.request", "HttpRequestBuilder"),
-      returnType = Unit::class.asTypeName()
-    )
+      returnType = Unit::class.asTypeName(),
+    ),
   ) {
     if (defaults) defaultValue("{}")
   }
@@ -190,7 +190,7 @@ private fun API.toImplementation(context: NamingContext? = null): TypeSpec {
             addModifiers(KModifier.OVERRIDE)
             initializer(
               "%T(client)",
-              toClassName(Nested(Named(it.name + "Ktor"), className.toContext()))
+              toClassName(Nested(Named(it.name + "Ktor"), className.toContext())),
             )
           }
         }
@@ -222,7 +222,7 @@ private fun Route.addFunction(implemented: Boolean) {
               .addStatement("}")
               .addStatement(
                 "return response.%M()",
-                MemberName(`package`, "bodyOrThrow", isExtension = true)
+                MemberName(`package`, "bodyOrThrow", isExtension = true),
               )
               .build()
           )
@@ -245,7 +245,7 @@ fun Route.addPathAndContent() {
   addStatement(
     "url { %M(%S$replace) }",
     MemberName("io.ktor.http", "path", isExtension = true),
-    path
+    path,
   )
   addContentType(body)
 }
@@ -305,7 +305,7 @@ fun Route.params(defaults: Boolean): List<ParameterSpec> =
   input.map { input ->
     ParameterSpec(
       toParamName(Named(input.name)),
-      input.type.toTypeName().copy(nullable = !input.isRequired)
+      input.type.toTypeName().copy(nullable = !input.isRequired),
     ) {
       input.description?.let { addKdoc(it) }
       if (defaults) {
@@ -335,7 +335,7 @@ fun Route.requestBody(defaults: Boolean): List<ParameterSpec> {
             toParamName(Named(parameter.name)),
             parameter.type,
             !body.required,
-            parameter.type.description
+            parameter.type.description,
           )
         }
       })

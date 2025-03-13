@@ -10,7 +10,11 @@ class PrimitiveTest {
   @Test
   fun double() {
     val actual =
-      Schema(type = Type.Basic.Number, default = ExampleValue("1"), description = "My Desc")
+      Schema(
+          type = Type.Basic.Number,
+          default = ExampleValue("1"),
+          description = ReferenceOr.value("My Desc"),
+        )
         .toModel("Double")
     val expected = Primitive.double(default = 1.0, description = "My Desc")
     assertEquals(expected, actual)
@@ -23,7 +27,7 @@ class PrimitiveTest {
         Schema(
             type = Type.Basic.Number,
             default = ExampleValue("Nonsense Value"),
-            description = "My Desc"
+            description = ReferenceOr.value("My Desc"),
           )
           .toModel("Primitive")
       }
@@ -37,7 +41,7 @@ class PrimitiveTest {
         Schema(
             type = Type.Basic.Number,
             default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
-            description = "My Desc"
+            description = ReferenceOr.value("My Desc"),
           )
           .toModel("Primitive")
       }
@@ -47,7 +51,11 @@ class PrimitiveTest {
   @Test
   fun boolean() {
     val actual =
-      Schema(type = Type.Basic.Boolean, default = ExampleValue("true"), description = "My Desc")
+      Schema(
+          type = Type.Basic.Boolean,
+          default = ExampleValue("true"),
+          description = ReferenceOr.value("My Desc"),
+        )
         .toModel("Primitive")
     assertEquals(Primitive.Boolean(true, description = "My Desc"), actual)
   }
@@ -59,7 +67,7 @@ class PrimitiveTest {
         Schema(
             type = Type.Basic.Boolean,
             default = ExampleValue("Nonsense Value"),
-            description = "My Desc"
+            description = ReferenceOr.value("My Desc"),
           )
           .toModel("Primitive")
       }
@@ -73,7 +81,7 @@ class PrimitiveTest {
         Schema(
             type = Type.Basic.Boolean,
             default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
-            description = "My Desc"
+            description = ReferenceOr.value("My Desc"),
           )
           .toModel("Primitive")
       }
@@ -83,7 +91,11 @@ class PrimitiveTest {
   @Test
   fun integer() {
     val actual =
-      Schema(type = Type.Basic.Integer, default = ExampleValue("2"), description = "My Desc")
+      Schema(
+          type = Type.Basic.Integer,
+          default = ExampleValue("2"),
+          description = ReferenceOr.value("My Desc"),
+        )
         .toModel("Primitive")
     assertEquals(Primitive.int(default = 2, description = "My Desc"), actual)
   }
@@ -95,7 +107,7 @@ class PrimitiveTest {
         Schema(
             type = Type.Basic.Integer,
             default = ExampleValue("Nonsense Value"),
-            description = "My Desc"
+            description = ReferenceOr.value("My Desc"),
           )
           .toModel("Primitive")
       }
@@ -109,7 +121,7 @@ class PrimitiveTest {
         Schema(
             type = Type.Basic.Integer,
             default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
-            description = "My Desc"
+            description = ReferenceOr.value("My Desc"),
           )
           .toModel("Primitive")
       }
@@ -119,7 +131,11 @@ class PrimitiveTest {
   @Test
   fun string() {
     val actual =
-      Schema(type = Type.Basic.String, default = ExampleValue("Some Text"), description = "My Desc")
+      Schema(
+          type = Type.Basic.String,
+          default = ExampleValue("Some Text"),
+          description = ReferenceOr.value("My Desc"),
+        )
         .toModel("Primitive")
     assertEquals(Primitive.string(default = "Some Text", description = "My Desc"), actual)
   }
@@ -127,7 +143,11 @@ class PrimitiveTest {
   @Test
   fun stringIntegerDefaultRemainsString() {
     val actual =
-      Schema(type = Type.Basic.String, default = ExampleValue("999"), description = "My Desc")
+      Schema(
+          type = Type.Basic.String,
+          default = ExampleValue("999"),
+          description = ReferenceOr.value("My Desc"),
+        )
         .toModel("Primitive")
     assertEquals(Primitive.string(default = "999", description = "My Desc"), actual)
   }
@@ -138,7 +158,7 @@ class PrimitiveTest {
       Schema(
           type = Type.Basic.String,
           default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
-          description = "My Desc"
+          description = ReferenceOr.value("My Desc"),
         )
         .toModel("Primitive")
     assertEquals(Primitive.string(default = "Nonsense, Value", description = "My Desc"), actual)
@@ -150,7 +170,7 @@ class PrimitiveTest {
       Schema(
           type = Type.Basic.Null,
           default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
-          description = "My Desc"
+          description = ReferenceOr.value("My Desc"),
         )
         .toModel("Primitive")
     }

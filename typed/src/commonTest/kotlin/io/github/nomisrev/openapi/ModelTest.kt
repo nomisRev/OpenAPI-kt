@@ -40,7 +40,7 @@ class ModelTest {
                 id,
                 isRequired = true,
                 isNullable = false,
-                description = "An explicit ID type"
+                description = "An explicit ID type",
               ),
               Object.property(
                 "name",
@@ -50,22 +50,18 @@ class ModelTest {
                 Primitive.string(default = "John Doe", description = "The name of the person"),
                 isRequired = true,
                 isNullable = false,
-                description = "The name of the person"
+                description = "The name of the person",
               ),
-              Object.property(
-                baseName = "age",
-                model = Primitive.int(),
-                isNullable = true,
-              )
+              Object.property(baseName = "age", model = Primitive.int(), isNullable = true),
             ),
           description = "A person",
           inline =
             listOf(
               Primitive.string(default = "John Doe", description = "The name of the person"),
-              Primitive.int()
-            )
+              Primitive.int(),
+            ),
         ),
-        id
+        id,
       )
     assertEquals(expected, actual)
   }
@@ -75,7 +71,7 @@ class ModelTest {
     assertEquals(
       Model.FreeFormJson(description = null, null),
       Schema(type = Type.Basic.Object, additionalProperties = AdditionalProperties.Allowed(true))
-        .toModel("FreeForm")
+        .toModel("FreeForm"),
     )
   }
 
@@ -94,9 +90,9 @@ class ModelTest {
           oneOf =
             listOf(
               value(Schema(type = Type.Basic.String)),
-              value(Schema(type = Type.Basic.Integer))
+              value(Schema(type = Type.Basic.Integer)),
             ),
-          default = ExampleValue("example")
+          default = ExampleValue("example"),
         )
         .toModel("OneOf")
     val expected =
@@ -109,9 +105,9 @@ class ModelTest {
             // Order is important for deserialization,
             // order swapped compared to originally
             Model.Union.Case(context = NamingContext.Named("OneOf"), model = Primitive.int()),
-            Model.Union.Case(context = NamingContext.Named("OneOf"), model = Primitive.string())
+            Model.Union.Case(context = NamingContext.Named("OneOf"), model = Primitive.string()),
           ),
-        inline = listOf(Primitive.string(), Primitive.int())
+        inline = listOf(Primitive.string(), Primitive.int()),
       )
     assertEquals(expected, actual)
   }
@@ -120,13 +116,15 @@ class ModelTest {
   fun openEnum() {
     val actual =
       Schema(
-          description = "OpenEnum Desc",
+          description = ReferenceOr.value("OpenEnum Desc"),
           anyOf =
             listOf(
-              value(enumSchema.copy(description = "Inner Enum Desc")),
-              ReferenceOr.Value(Schema(type = Type.Basic.String, description = "OpenCase Desc"))
+              value(enumSchema.copy(description = ReferenceOr.value("Inner Enum Desc"))),
+              ReferenceOr.Value(
+                Schema(type = Type.Basic.String, description = ReferenceOr.value("OpenCase Desc"))
+              ),
             ),
-          default = ExampleValue("Custom-open-enum-value")
+          default = ExampleValue("Custom-open-enum-value"),
         )
         .toModel("OpenEnum")
     val expected =
@@ -134,7 +132,7 @@ class ModelTest {
         context = NamingContext.Named("OpenEnum"),
         values = listOf("Auto", "Manual"),
         default = "Custom-open-enum-value",
-        description = "OpenEnum Desc"
+        description = "OpenEnum Desc",
       )
     assertEquals(expected, actual)
   }
@@ -143,19 +141,18 @@ class ModelTest {
   fun anyOf() {
     val actual =
       Schema(
-          description = "AnyOf Desc",
+          description = ReferenceOr.value("AnyOf Desc"),
           anyOf =
             listOf(
               value(enumSchema),
-              ReferenceOr.Value(Schema(type = Type.Basic.Integer, description = "Int Case Desc"))
-            )
+              ReferenceOr.Value(
+                Schema(type = Type.Basic.Integer, description = ReferenceOr.value("Int Case Desc"))
+              ),
+            ),
         )
         .toModel("AnyOf")
     val context =
-      NamingContext.Nested(
-        NamingContext.Named("AutoOrManual"),
-        NamingContext.Named("AnyOf"),
-      )
+      NamingContext.Nested(NamingContext.Named("AutoOrManual"), NamingContext.Named("AnyOf"))
     val expected =
       Model.Union(
         context = NamingContext.Named("AnyOf"),
@@ -165,11 +162,11 @@ class ModelTest {
             Model.Union.Case(context = context, model = enum.copy(context = context)),
             Model.Union.Case(
               context = NamingContext.Named("AnyOf"),
-              model = Primitive.int(description = "Int Case Desc")
-            )
+              model = Primitive.int(description = "Int Case Desc"),
+            ),
           ),
         default = "Auto",
-        inline = listOf(enum.copy(context = context), Primitive.int(description = "Int Case Desc"))
+        inline = listOf(enum.copy(context = context), Primitive.int(description = "Int Case Desc")),
       )
     assertEquals(expected, actual)
   }
@@ -186,9 +183,9 @@ class ModelTest {
         cases =
           listOf(
             Model.Union.Case(context = context, model = Primitive.int()),
-            Model.Union.Case(context = context, model = Primitive.string())
+            Model.Union.Case(context = context, model = Primitive.string()),
           ),
-        inline = listOf(Primitive.int(), Primitive.string())
+        inline = listOf(Primitive.int(), Primitive.string()),
       )
     assertEquals(expected, actual)
   }
@@ -197,7 +194,7 @@ class ModelTest {
   fun typeArraySingletonIsFlattened() {
     assertEquals(
       Primitive.int(),
-      Schema(type = Type.Array(types = listOf(Type.Basic.Integer))).toModel("Int")
+      Schema(type = Type.Array(types = listOf(Type.Basic.Integer))).toModel("Int"),
     )
   }
 
@@ -205,7 +202,7 @@ class ModelTest {
   fun stringBinaryFormat() {
     assertEquals(
       Model.OctetStream(description = null),
-      Schema(type = Type.Basic.String, format = "binary").toModel("Binary")
+      Schema(type = Type.Basic.String, format = "binary").toModel("Binary"),
     )
   }
 
@@ -214,7 +211,7 @@ class ModelTest {
     assertEquals(
       Model.Collection.list(Primitive.int()),
       Schema(type = Type.Basic.Array, items = value(Schema(type = Type.Basic.Integer)))
-        .toModel("List")
+        .toModel("List"),
     )
   }
 
@@ -225,9 +222,9 @@ class ModelTest {
       Schema(
           type = Type.Basic.Array,
           items = value(Schema(type = Type.Basic.Integer)),
-          uniqueItems = false
+          uniqueItems = false,
         )
-        .toModel("List")
+        .toModel("List"),
     )
   }
 
@@ -238,9 +235,9 @@ class ModelTest {
       Schema(
           type = Type.Basic.Array,
           items = value(Schema(type = Type.Basic.Integer)),
-          uniqueItems = true
+          uniqueItems = true,
         )
-        .toModel("Set")
+        .toModel("Set"),
     )
   }
 }

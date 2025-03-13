@@ -43,7 +43,7 @@ context(OpenAPIContext)
 private fun default(
   model: Collection,
   builder: String,
-  default: List<String>?
+  default: List<String>?,
 ): Pair<String, List<Any>>? =
   when {
     default == null -> null

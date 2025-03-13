@@ -36,7 +36,7 @@ public data class Info(
    * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
    * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
-  public val extensions: Map<String, JsonElement> = emptyMap()
+  public val extensions: Map<String, JsonElement> = emptyMap(),
 ) {
   /** Contact information for the exposed API. */
   @Serializable
@@ -55,7 +55,7 @@ public data class Info(
      * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
      * [JsonPrimitive], [JsonArray] or [JsonObject].
      */
-    public val extensions: Map<String, JsonElement> = emptyMap()
+    public val extensions: Map<String, JsonElement> = emptyMap(),
   )
 
   /** License information for the exposed API. */
@@ -71,6 +71,6 @@ public data class Info(
      * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
      * [JsonPrimitive], [JsonArray] or [JsonObject].
      */
-    public val extensions: Map<String, JsonElement> = emptyMap()
+    public val extensions: Map<String, JsonElement> = emptyMap(),
   )
 }

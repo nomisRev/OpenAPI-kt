@@ -11,5 +11,5 @@ public enum class Style {
   label,
   spaceDelimited,
   pipeDelimited,
-  deepObject
+  deepObject,
 }
