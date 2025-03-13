@@ -231,7 +231,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           properties != null || additionalProperties != null -> toObject(context)
           // If 'items' is defined, we assume it's an array.
           items != null -> collection(context)
-          else -> TODO("Schema: $this not yet supported. Please report to issue tracker.")
+          else -> TODO("Schema: context: ${context}: $this not yet supported. Please report to issue tracker.")
         }
     }
 
@@ -552,7 +552,14 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                 }
                 ?.singleOrNull()
                 ?.let(::Named)
-                ?: TODO("Name Generated for inline objects of unions not yet supported."),
+                // Generate a name based on the properties of the object if no type/event property is found
+                ?: Named(
+                  case.value.properties
+                    ?.keys
+                    ?.sorted()
+                    ?.joinToString(separator = "And") { it.replaceFirstChar(Char::uppercaseChar) }
+                    ?: "AnonymousObject"
+                ),
               context,
             )
           case.value.type == Type.Basic.Array ->
