@@ -16,10 +16,10 @@ class ModelTest {
               Model.Primitive.String(null, null, null),
               isRequired = true,
               isNullable = false,
-              description = null
+              description = null,
             )
           ),
-          listOf(Model.Primitive.String(null, null, null))
+          listOf(Model.Primitive.String(null, null, null)),
         )
         .compiles()
     assertFalse(code.contains("requireAll"))
@@ -33,12 +33,12 @@ class ModelTest {
         listOf(
           Model.Union.Case(
             NamingContext.Named("IntOrString"),
-            Model.Primitive.Int(null, null, null)
+            Model.Primitive.Int(null, null, null),
           ),
           Model.Union.Case(
             NamingContext.Named("IntOrString"),
-            Model.Primitive.String(null, null, null)
-          )
+            Model.Primitive.String(null, null, null),
+          ),
         ),
         null,
         null,

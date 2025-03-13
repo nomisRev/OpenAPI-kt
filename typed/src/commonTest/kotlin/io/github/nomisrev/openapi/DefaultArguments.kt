@@ -19,10 +19,10 @@ class DefaultArguments {
                     type = Type.Basic.Array,
                     items = value(Schema(type = Type.Basic.String)),
                     default = ExampleValue("null"),
-                    nullable = false
+                    nullable = false,
                   )
                 )
-            )
+            ),
         )
         .toModel("Strings")
     val expected =
@@ -54,10 +54,10 @@ class DefaultArguments {
                     type = Type.Basic.Array,
                     items = value(Schema(type = Type.Basic.String)),
                     default = ExampleValue("[]"),
-                    nullable = false
+                    nullable = false,
                   )
                 )
-            )
+            ),
         )
         .toModel("Strings")
     val expected =
@@ -70,12 +70,12 @@ class DefaultArguments {
               Model.Collection.list(
                 inner = Model.Primitive.string(),
                 default = emptyList(),
-                description = null
+                description = null,
               ),
               isNullable = false,
             )
           ),
-        inline = listOf(Model.Primitive.string())
+        inline = listOf(Model.Primitive.string()),
       )
     assertEquals(expected, actual)
   }

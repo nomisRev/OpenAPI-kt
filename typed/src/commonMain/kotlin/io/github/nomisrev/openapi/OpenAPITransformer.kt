@@ -50,7 +50,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               context,
               parts.drop(1).fold<String, NamingContext>(Named(parts[0])) { acc, part ->
                 NamingContext.Nested(Named(part), acc)
-              }
+              },
             )
         }
 
@@ -112,7 +112,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           },
         returnType = toResponses(operation, ::context),
         extensions = operation.extensions,
-        nested = nestedInput + nestedResponses + nestedBody
+        nested = nestedInput + nestedResponses + nestedBody,
       )
     }
 
@@ -191,7 +191,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               cases = resolved.map { Model.Union.Case(context, it.toModel(context).value) },
               default = null,
               description = description.get(),
-              inline = resolved.mapNotNull { nestedModel(it, context) }
+              inline = resolved.mapNotNull { nestedModel(it, context) },
             )
           }
           else -> copy(type = single).type(context)
@@ -205,13 +205,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             Primitive.Int(
               default("Integer", String::toIntOrNull),
               description.get(),
-              Constraints.Number(this)
+              Constraints.Number(this),
             )
           Type.Basic.Number ->
             Primitive.Double(
               default("Number", String::toDoubleOrNull),
               description.get(),
-              Constraints.Number(this)
+              Constraints.Number(this),
             )
           Type.Basic.String ->
             if (format == "binary") Model.OctetStream(description.get())
@@ -219,7 +219,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               Primitive.String(
                 default("String", String::toString) { it.joinToString() },
                 description.get(),
-                Constraints.Text(this)
+                Constraints.Text(this),
               )
           Type.Basic.Object -> toObject(context)
           Type.Basic.Null -> TODO("Schema.Type.Basic.Null")
@@ -238,7 +238,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   private fun <A> Schema.default(
     label: String,
     onSingle: (String) -> A?,
-    onMultiple: (List<String>) -> A?
+    onMultiple: (List<String>) -> A?,
   ): A? =
     when (val default = default) {
       is ExampleValue.Single ->
@@ -422,7 +422,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           model.value,
           required?.contains(name) == true,
           resolved.value.nullable ?: required?.contains(name)?.not() ?: true,
-          resolved.value.description.get()
+          resolved.value.description.get(),
         )
       },
       properties.mapNotNull { (name, ref) ->
@@ -433,7 +433,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             is Resolved.Value -> NamingContext.Nested(Named(name), context)
           }
         nestedModel(resolved, pContext)
-      }
+      },
     )
   }
 
@@ -505,7 +505,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
   private fun Schema.toUnion(
     context: NamingContext,
-    subtypes: List<ReferenceOr<Schema>>
+    subtypes: List<ReferenceOr<Schema>>,
   ): Model.Union {
     val caseToContext =
       subtypes.associate { ref ->
@@ -526,7 +526,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       singleDefaultOrNull()
         ?: subtypes.firstNotNullOfOrNull { it.resolve().value.singleDefaultOrNull() },
       description.get(),
-      inline
+      inline,
     )
   }
 
@@ -542,7 +542,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   it.replaceFirstChar(Char::uppercaseChar)
                 }
               ),
-              context
+              context,
             )
           case.value.type == Type.Basic.Object ->
             NamingContext.Nested(
@@ -553,7 +553,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                 ?.singleOrNull()
                 ?.let(::Named)
                 ?: TODO("Name Generated for inline objects of unions not yet supported."),
-              context
+              context,
             )
           case.value.type == Type.Basic.Array ->
             case.value.items
@@ -583,7 +583,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   fun toRequestBody(
     operation: Operation,
     body: RequestBody?,
-    create: (NamingContext) -> NamingContext
+    create: (NamingContext) -> NamingContext,
   ): Route.Bodies =
     Route.Bodies(
       body?.required ?: false,
@@ -608,7 +608,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   Route.Body.Json.Defined(
                     json.toModel(context).value,
                     body.description,
-                    mediaType.extensions
+                    mediaType.extensions,
                   )
                 } ?: Route.Body.Json.FreeForm(body.description, mediaType.extensions)
               Pair(ContentType.Application.Json, json)
@@ -637,7 +637,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                       model.name,
                       model.value,
                       body.description,
-                      mediaType.extensions
+                      mediaType.extensions,
                     )
                   }
                   is Resolved.Value ->
@@ -646,7 +646,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                         Route.Body.Multipart.FormData(name, ref.resolve().toModel(ctx(name)).value)
                       },
                       body.description,
-                      mediaType.extensions
+                      mediaType.extensions,
                     )
                 }
 
@@ -655,14 +655,14 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             ContentType.Application.OctetStream.match(contentType) ->
               Pair(
                 ContentType.Application.OctetStream,
-                Route.Body.OctetStream(body.description, mediaType.extensions)
+                Route.Body.OctetStream(body.description, mediaType.extensions),
               )
             else ->
               throw IllegalStateException("RequestBody content type: $this not yet supported.")
           }
         }
         .orEmpty(),
-      body?.extensions.orEmpty()
+      body?.extensions.orEmpty(),
     )
 
   private fun Response.isEmpty(): Boolean =
@@ -677,7 +677,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           response.content.contains("application/octet-stream") ->
             Pair(
               statusCode,
-              Route.ReturnType(Model.OctetStream(response.description), response.extensions)
+              Route.ReturnType(Model.OctetStream(response.description), response.extensions),
             )
           response.content.contains("application/json") -> {
             val mediaType = response.content.getValue("application/json")
@@ -701,7 +701,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                       throw IllegalStateException(
                         "Illegal State: No additional properties allowed on empty object."
                       ),
-                    response.extensions
+                    response.extensions,
                   )
               }
             Pair(statusCode, route)
@@ -711,14 +711,14 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               statusCode,
               Route.ReturnType(
                 Primitive.String(null, response.description, null),
-                response.extensions
-              )
+                response.extensions,
+              ),
             )
           else ->
             throw IllegalStateException("OpenAPI requires at least 1 valid response. $response")
         }
       },
-      operation.responses.extensions
+      operation.responses.extensions,
     )
 
   /**

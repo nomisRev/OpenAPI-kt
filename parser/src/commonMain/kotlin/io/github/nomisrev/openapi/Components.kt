@@ -34,14 +34,14 @@ public data class Components(
    * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
    * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
-  public val extensions: Map<String, JsonElement> = emptyMap()
+  public val extensions: Map<String, JsonElement> = emptyMap(),
 ) {
   public companion object {
     internal object Serializer :
       KSerializerWithExtensions<Components>(
         generatedSerializer(),
         Components::extensions,
-        { op, extensions -> op.copy(extensions = extensions) }
+        { op, extensions -> op.copy(extensions = extensions) },
       )
   }
 }

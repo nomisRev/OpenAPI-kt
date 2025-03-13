@@ -27,5 +27,5 @@ public data class RequestBody(
    * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
    * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
-  public val extensions: Map<String, JsonElement> = emptyMap()
+  public val extensions: Map<String, JsonElement> = emptyMap(),
 )

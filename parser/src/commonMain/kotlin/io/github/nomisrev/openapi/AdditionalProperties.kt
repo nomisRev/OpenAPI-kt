@@ -46,7 +46,7 @@ public sealed interface AdditionalProperties {
           is PSchema ->
             encoder.encodeSerializableValue(
               ReferenceOr.serializer(Schema.serializer()),
-              value.value
+              value.value,
             )
         }
       }

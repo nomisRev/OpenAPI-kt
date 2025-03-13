@@ -14,7 +14,7 @@ class EnumTest {
           Model.Primitive.String(null, null, null),
           listOf("Auto", "Manual"),
           "Auto",
-          null
+          null,
         )
         .compiles()
     assertFalse(code.contains("@SerialName(\"Auto\")"))
@@ -28,7 +28,7 @@ class EnumTest {
           Model.Primitive.String(null, null, null),
           listOf("auto", "manual"),
           "auto",
-          null
+          null,
         )
         .compiles()
     assertTrue(code.contains("@SerialName(\"auto\")"))

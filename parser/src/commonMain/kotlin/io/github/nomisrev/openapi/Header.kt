@@ -16,5 +16,5 @@ public data class Header(
   public val explode: Boolean? = null,
   public val example: ExampleValue? = null,
   public val examples: Map<String, ReferenceOr<Example>>? = null,
-  public val schema: ReferenceOr<Schema>? = null
+  public val schema: ReferenceOr<Schema>? = null,
 )

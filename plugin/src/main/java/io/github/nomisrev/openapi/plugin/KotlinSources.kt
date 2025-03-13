@@ -38,8 +38,8 @@ internal fun Project.sources(): List<Source> {
       sourceDirectorySet = sourceSets.getByName("main").kotlin,
       registerGeneratedDirectory = { outputDirectoryProvider ->
         sourceSets.getByName("main").kotlin.srcDirs(outputDirectoryProvider.get())
-      }
-    ),
+      },
+    )
   )
 }
 
@@ -52,8 +52,8 @@ private fun KotlinJsProjectExtension.sources(): List<Source> {
       sourceSets = listOf("main"),
       registerGeneratedDirectory = { outputDirectoryProvider ->
         sourceSets.getByName("main").kotlin.srcDirs(outputDirectoryProvider.get())
-      }
-    ),
+      },
+    )
   )
 }
 
@@ -69,7 +69,7 @@ private fun KotlinMultiplatformExtension.sources(): List<Source> =
       registerGeneratedDirectory = { outputDirectoryProvider ->
         sourceSets.getByName("commonMain").kotlin.srcDirs(outputDirectoryProvider.get())
       },
-    ),
+    )
   )
 
 private fun BaseExtension.sources(project: Project): List<Source> {

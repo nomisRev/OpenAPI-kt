@@ -25,7 +25,7 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
         "createThreadAndRun" to ServerSentEvent,
         "createRun" to ServerSentEvent,
         "submitToolOuputsToRun" to ServerSentEvent,
-        "createChatCompletion" to ClassName(`package`, "CreateChatCompletionStreamResponse")
+        "createChatCompletion" to ClassName(`package`, "CreateChatCompletionStreamResponse"),
       )
 
     val nonRequiredFields =
@@ -67,12 +67,12 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
 
     override fun OpenAPIContext.modifyInterface(
       api: API,
-      typeSpec: TypeSpec.Builder
+      typeSpec: TypeSpec.Builder,
     ): TypeSpec.Builder = modify(api, typeSpec, implemented = false)
 
     override fun OpenAPIContext.modifyImplementation(
       api: API,
-      typeSpec: TypeSpec.Builder
+      typeSpec: TypeSpec.Builder,
     ): TypeSpec.Builder = modify(api, typeSpec, implemented = true)
 
     public var createPredef = false
@@ -80,7 +80,7 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
     fun OpenAPIContext.modify(
       api: API,
       typeSpec: TypeSpec.Builder,
-      implemented: Boolean
+      implemented: Boolean,
     ): TypeSpec.Builder {
       val functions =
         api.routes
@@ -102,7 +102,7 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
       FunSpec.builder(toFunName() + "Stream")
         .addModifiers(
           KModifier.SUSPEND,
-          if (implemented) KModifier.OVERRIDE else KModifier.ABSTRACT
+          if (implemented) KModifier.OVERRIDE else KModifier.ABSTRACT,
         )
         .addParameters(params(defaults = !implemented))
         .addParameters(requestBody(defaults = !implemented))
@@ -114,23 +114,23 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
               CodeBlock.builder()
                 .addStatement(
                   "val response = client.%M {",
-                  MemberName("io.ktor.client.request", "prepareRequest", isExtension = true)
+                  MemberName("io.ktor.client.request", "prepareRequest", isExtension = true),
                 )
                 .withIndent {
                   addStatement(
                       "%M {",
-                      MemberName("io.ktor.client.plugins", "timeout", isExtension = true)
+                      MemberName("io.ktor.client.plugins", "timeout", isExtension = true),
                     )
                     .withIndent {
                       addStatement(
                         "requestTimeoutMillis = 60.%M.toLong(%T.MILLISECONDS)",
                         seconds,
-                        DurationUnit
+                        DurationUnit,
                       )
                       addStatement(
                         "socketTimeoutMillis = 60.%M.toLong(%T.MILLISECONDS)",
                         seconds,
-                        DurationUnit
+                        DurationUnit,
                       )
                     }
                   addStatement("}")
@@ -149,7 +149,7 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
                       }
                       .type
                       .toTypeName(),
-                    toParamName(Named("body"))
+                    toParamName(Named("body")),
                   )
                   addStatement(
                     "val jsObject = %T(element.%M + %T(%S, %T(true)))",
@@ -157,14 +157,14 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
                     MemberName("kotlinx.serialization.json", "jsonObject", isExtension = true),
                     ClassName("kotlin", "Pair"),
                     "stream",
-                    ClassName("kotlinx.serialization.json", "JsonPrimitive")
+                    ClassName("kotlinx.serialization.json", "JsonPrimitive"),
                   )
                   addStatement("setBody(jsObject)")
                 }
                 .addStatement("}")
                 .addStatement(
                   "return %M { response.execute { streamEvents(it) } }",
-                  MemberName("kotlinx.coroutines.flow", "flow")
+                  MemberName("kotlinx.coroutines.flow", "flow"),
                 )
                 .build()
             )
@@ -184,8 +184,8 @@ private fun streamingPredef(): FileSpec {
         },
         ParameterSpec("data", JsonElement::class.asTypeName().copy(nullable = true)) {
           defaultValue("null")
-        }
-      )
+        },
+      ),
     ) {
       addAnnotation(annotationSpec<Serializable>())
     }
@@ -205,13 +205,13 @@ private fun streamingPredef(): FileSpec {
           .addStatement(
             "val channel: %T = response.%M()",
             ByteReadChannel,
-            MemberName("io.ktor.client.statement", "bodyAsChannel")
+            MemberName("io.ktor.client.statement", "bodyAsChannel"),
           )
           .addStatement("var nextEvent: String? = null")
           .beginControlFlow("while (!channel.isClosedForRead)")
           .addStatement(
             "val line = channel.%M() ?: continue",
-            MemberName("io.ktor.utils.io", "readUTF8Line", isExtension = true)
+            MemberName("io.ktor.utils.io", "readUTF8Line", isExtension = true),
           )
           .beginControlFlow("if (line.startsWith(end))")
           .addStatement("break")
@@ -225,7 +225,7 @@ private fun streamingPredef(): FileSpec {
           .addStatement(
             "val value: A = %T.decodeFromString(%M(), data)",
             ClassName("kotlinx.serialization.json", "Json"),
-            MemberName("kotlinx.serialization", "serializer")
+            MemberName("kotlinx.serialization", "serializer"),
           )
           .addStatement("emit(value)")
           .endControlFlow()
@@ -235,11 +235,11 @@ private fun streamingPredef(): FileSpec {
           .addStatement(
             "val eventData = %T.decodeFromString(%T.serializer(), data)",
             Json::class.asTypeName(),
-            JsonObject::class.asTypeName()
+            JsonObject::class.asTypeName(),
           )
           .addStatement(
             "val value: A = %T(event = nextEvent, data = eventData) as A",
-            ClassName(`package`, "ServerSentEvent")
+            ClassName(`package`, "ServerSentEvent"),
           )
           .addStatement("emit(value)")
           .endControlFlow()

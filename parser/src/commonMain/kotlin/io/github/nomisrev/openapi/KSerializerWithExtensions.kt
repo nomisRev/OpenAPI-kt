@@ -13,7 +13,7 @@ import kotlinx.serialization.json.jsonObject
 internal abstract class KSerializerWithExtensions<T>(
   private val serializer: KSerializer<T>,
   private val extensions: (T) -> Map<String, JsonElement>,
-  private val withExtensions: (T, Map<String, JsonElement>) -> T
+  private val withExtensions: (T, Map<String, JsonElement>) -> T,
 ) : KSerializer<T> {
   override val descriptor: SerialDescriptor = serializer.descriptor
 
@@ -23,7 +23,7 @@ internal abstract class KSerializerWithExtensions<T>(
     val value =
       decoder.json.decodeFromJsonElement(
         serializer,
-        JsonObject(jsObject.jsonObject.filterNot { (key, _) -> key.startsWith("x-") })
+        JsonObject(jsObject.jsonObject.filterNot { (key, _) -> key.startsWith("x-") }),
       )
     val extensions = jsObject.jsonObject.filter { (key, _) -> key.startsWith("x-") }
     return withExtensions(value, extensions)
@@ -34,7 +34,7 @@ internal abstract class KSerializerWithExtensions<T>(
     val jsObject = encoder.json.encodeToJsonElement(serializer, value).jsonObject - "extensions"
     encoder.encodeSerializableValue(
       JsonElement.serializer(),
-      JsonObject(jsObject + extensions(value))
+      JsonObject(jsObject + extensions(value)),
     )
   }
 }

@@ -14,7 +14,7 @@ class DataClassConstraintsTest {
       type,
       isRequired = true,
       isNullable = isNullable,
-      description = null
+      description = null,
     )
 
   private fun id(constraint: Constraints.Text) =
@@ -28,7 +28,7 @@ class DataClassConstraintsTest {
   private val patternRequirements =
     listOf(
       "id.matches(\"\"\"[a-zA-Z0-9]+\"\"\".toRegex()))",
-      "id should match the pattern [a-zA-Z0-9]+"
+      "id should match the pattern [a-zA-Z0-9]+",
     )
 
   private val age =
@@ -38,7 +38,7 @@ class DataClassConstraintsTest {
         minimum = 0.0,
         exclusiveMaximum = false,
         exclusiveMinimum = false,
-        multipleOf = null
+        multipleOf = null,
       )
     )
 
@@ -47,7 +47,7 @@ class DataClassConstraintsTest {
   private val ageRequirements =
     listOf(
       "age in 0..100",
-      "age should be larger or equal to 0 and should be smaller or equal to 100"
+      "age should be larger or equal to 0 and should be smaller or equal to 100",
     )
 
   private fun height(constraints: Number) =
@@ -60,20 +60,20 @@ class DataClassConstraintsTest {
         minimum = 30.0,
         exclusiveMaximum = false,
         exclusiveMinimum = false,
-        multipleOf = null
+        multipleOf = null,
       )
     )
 
   private val heightRequirements =
     listOf(
       "30.0 <= height && height <= 300.0",
-      "height should be larger or equal to 30.0 and should be smaller or equal to 300.0"
+      "height should be larger or equal to 30.0 and should be smaller or equal to 300.0",
     )
 
   private fun tags(constraints: Collection) =
     prop(
       "tags",
-      Model.Collection.List(Model.Primitive.String(null, null, null), null, null, constraints)
+      Model.Collection.List(Model.Primitive.String(null, null, null), null, null, constraints),
     )
 
   private val tags = tags(Collection(minItems = 3, maxItems = 10))
@@ -84,7 +84,7 @@ class DataClassConstraintsTest {
   private fun categories(constraints: Collection) =
     prop(
       "categories",
-      Model.Collection.Set(Model.Primitive.String(null, null, null), null, null, constraints)
+      Model.Collection.Set(Model.Primitive.String(null, null, null), null, null, constraints),
     )
 
   private val categories = categories(Collection(minItems = 3, maxItems = 10))
@@ -115,7 +115,7 @@ class DataClassConstraintsTest {
       prop(
         "id",
         Model.Primitive.String(null, null, Constraints.Text(1, Int.MAX_VALUE, null)),
-        isNullable = true
+        isNullable = true,
       )
     val code = Model.Object(Named("User"), null, listOf(id), listOf(id.model)).compiles()
     assertFalse(code.containsSingle("requireAll"))
@@ -138,7 +138,7 @@ class DataClassConstraintsTest {
     val id =
       prop(
         "id",
-        Model.Primitive.String(null, null, Constraints.Text(0, Int.MAX_VALUE, "[a-zA-Z0-9]+"))
+        Model.Primitive.String(null, null, Constraints.Text(0, Int.MAX_VALUE, "[a-zA-Z0-9]+")),
       )
     val code = Model.Object(Named("User"), null, listOf(id), listOf(id.model)).compiles()
     assertFalse(code.containsSingle("requireAll"))
@@ -322,7 +322,7 @@ class DataClassConstraintsTest {
           minimum = 0.0,
           exclusiveMaximum = false,
           maximum = Double.POSITIVE_INFINITY,
-          multipleOf = null
+          multipleOf = null,
         )
       )
     val code = Model.Object(Named("User"), null, listOf(height), listOf(height.model)).compiles()
@@ -340,7 +340,7 @@ class DataClassConstraintsTest {
           minimum = 0.0,
           exclusiveMaximum = false,
           maximum = Double.POSITIVE_INFINITY,
-          multipleOf = null
+          multipleOf = null,
         )
       )
     val code = Model.Object(Named("User"), null, listOf(height), listOf(height.model)).compiles()
@@ -358,7 +358,7 @@ class DataClassConstraintsTest {
           minimum = 0.0,
           exclusiveMaximum = true,
           maximum = Double.POSITIVE_INFINITY,
-          multipleOf = null
+          multipleOf = null,
         )
       )
     val code = Model.Object(Named("User"), null, listOf(height), listOf(height.model)).compiles()
@@ -376,7 +376,7 @@ class DataClassConstraintsTest {
           minimum = 0.0,
           exclusiveMaximum = true,
           maximum = Double.POSITIVE_INFINITY,
-          multipleOf = null
+          multipleOf = null,
         )
       )
     val code = Model.Object(Named("User"), null, listOf(height), listOf(height.model)).compiles()
@@ -394,7 +394,7 @@ class DataClassConstraintsTest {
           minimum = Double.NEGATIVE_INFINITY,
           exclusiveMaximum = true,
           maximum = 100.0,
-          multipleOf = null
+          multipleOf = null,
         )
       )
     val code = Model.Object(Named("User"), null, listOf(height), listOf(height.model)).compiles()
@@ -412,7 +412,7 @@ class DataClassConstraintsTest {
           minimum = Double.NEGATIVE_INFINITY,
           exclusiveMaximum = true,
           maximum = 100.0,
-          multipleOf = null
+          multipleOf = null,
         )
       )
     val code = Model.Object(Named("User"), null, listOf(height), listOf(height.model)).compiles()
@@ -430,7 +430,7 @@ class DataClassConstraintsTest {
           minimum = Double.NEGATIVE_INFINITY,
           exclusiveMaximum = false,
           maximum = 300.0,
-          multipleOf = null
+          multipleOf = null,
         )
       )
     val code = Model.Object(Named("User"), null, listOf(height), listOf(height.model)).compiles()
@@ -448,7 +448,7 @@ class DataClassConstraintsTest {
           minimum = Double.NEGATIVE_INFINITY,
           exclusiveMaximum = false,
           maximum = 100.0,
-          multipleOf = null
+          multipleOf = null,
         )
       )
     val code = Model.Object(Named("User"), null, listOf(height), listOf(height.model)).compiles()
@@ -465,7 +465,7 @@ class DataClassConstraintsTest {
           Named("User"),
           null,
           listOf(id, age, height, nullable),
-          listOf(id.model, age.model, height.model, nullable.model)
+          listOf(id.model, age.model, height.model, nullable.model),
         )
         .compiles()
     assertTrue(code.containsSingle("requireAll"))

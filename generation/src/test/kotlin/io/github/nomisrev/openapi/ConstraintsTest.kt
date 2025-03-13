@@ -14,8 +14,8 @@ class ConstraintsTest {
       Model.Primitive.String(
         null,
         null,
-        Constraints.Text(maxLength = 10, minLength = 1, pattern = null)
-      )
+        Constraints.Text(maxLength = 10, minLength = 1, pattern = null),
+      ),
     )
   private val idRequirements =
     listOf("id.length in 1..10", "id should have a length between 1 and 10")
@@ -31,14 +31,14 @@ class ConstraintsTest {
           minimum = 0.0,
           exclusiveMaximum = false,
           exclusiveMinimum = false,
-          multipleOf = null
-        )
-      )
+          multipleOf = null,
+        ),
+      ),
     )
   private val ageRequirements =
     listOf(
       "age in 0..100",
-      "age should be larger or equal to 0 and should be smaller or equal to 100"
+      "age should be larger or equal to 0 and should be smaller or equal to 100",
     )
 
   private val height =
@@ -52,14 +52,14 @@ class ConstraintsTest {
           minimum = 30.0,
           exclusiveMaximum = false,
           exclusiveMinimum = false,
-          multipleOf = null
-        )
-      )
+          multipleOf = null,
+        ),
+      ),
     )
   private val heightRequirements =
     listOf(
       "30.0 <= height && height <= 300.0",
-      "height should be larger or equal to 30.0 and should be smaller or equal to 300.0"
+      "height should be larger or equal to 30.0 and should be smaller or equal to 300.0",
     )
 
   private val tags =
@@ -69,8 +69,8 @@ class ConstraintsTest {
         Model.Primitive.String(null, null, null),
         null,
         null,
-        Constraints.Collection(minItems = 3, maxItems = 10)
-      )
+        Constraints.Collection(minItems = 3, maxItems = 10),
+      ),
     )
   private val tagsRequirements =
     listOf("tags.size in 3..10", "tags should have between 3 and 10 elements")
@@ -82,8 +82,8 @@ class ConstraintsTest {
         Model.Primitive.String(null, null, null),
         null,
         null,
-        Constraints.Collection(minItems = 3, maxItems = 10)
-      )
+        Constraints.Collection(minItems = 3, maxItems = 10),
+      ),
     )
   private val categoriesRequirements =
     listOf("categories.size in 3..10", "categories should have between 3 and 10 elements")
@@ -137,7 +137,7 @@ class ConstraintsTest {
           NamingContext.Named("User"),
           null,
           listOf(id, age, height),
-          listOf(id.model, age.model, height.model)
+          listOf(id.model, age.model, height.model),
         )
         .compiles()
     assertTrue(code.containsSingle("requireAll"))
