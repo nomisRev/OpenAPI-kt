@@ -27,3 +27,9 @@ fun OpenAPIContext(
       files.updateAndGet { it + fileSpec }
     }
   }
+
+fun <A> OpenAPIContext(
+  config: GenerationConfig,
+  interceptor: APIInterceptor = APIInterceptor.openAIStreaming(config.`package`),
+  block: OpenAPIContext.() -> A
+): A = block(OpenAPIContext(config, interceptor))

@@ -20,44 +20,38 @@ fun String.containsSingle(text: String): Boolean {
 
 private fun FileSpec.asCode(): String = buildString { writeTo(this) }
 
-fun Model.compiles(): String {
-  val ctx = OpenAPIContext(GenerationConfig("", "", "io.test", "TestApi", true))
-  val file =
-    with(ctx) {
-      requireNotNull(toFileSpecOrNull()) { "No File was generated for ${this@compiles}" }
-    }
+fun Model.compiles(): String = OpenAPIContext(GenerationConfig("", "", "io.test", "TestApi", true)) {
+  val file = requireNotNull(toFileSpecOrNull()) { "No File was generated for ${this@compiles}" }
   val code = file.asCode()
   val source = SourceFile.kotlin("${file.name}.kt", file.asCode())
   val result =
     KotlinCompilation()
       .apply {
-        val predef = SourceFile.kotlin("Predef.kt", with(ctx) { predef() }.asCode())
+        val predef = SourceFile.kotlin("Predef.kt", predef().asCode())
         sources = listOf(source, predef)
         inheritClassPath = true
         messageOutputStream = System.out
       }
       .compile()
-  assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK, code)
-  return code
+  assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK, "${result.messages}\n$code")
+  code
 }
 
-fun API.compiles(): JvmCompilationResult {
-  val ctx = OpenAPIContext(GenerationConfig("", "", "io.test", "TestApi", true))
+fun API.compiles(): JvmCompilationResult =
+  OpenAPIContext(GenerationConfig("", "", "io.test", "TestApi", true)) {
   val filesAsSources =
-    with(ctx) {
       Root("TestApi", emptyList(), listOf(this@compiles)).toFileSpecs().map {
         SourceFile.kotlin("${it.name}.kt", it.asCode())
       }
-    }
   val result =
     KotlinCompilation()
       .apply {
-        val predef = SourceFile.kotlin("Predef.kt", with(ctx) { predef() }.asCode())
+        val predef = SourceFile.kotlin("Predef.kt", predef().asCode())
         sources = filesAsSources + predef
         inheritClassPath = true
         messageOutputStream = System.out
       }
       .compile()
-  assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK)
-  return result
+  assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK, result.messages)
+  result
 }

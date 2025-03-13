@@ -1,7 +1,7 @@
 plugins {
-  kotlin("multiplatform") version "2.0.0"
-  kotlin("plugin.serialization") version "2.0.0"
-  id("io.github.nomisrev.openapi-kt-plugin") version "0.0.7"
+  kotlin("multiplatform") version "2.1.10"
+  kotlin("plugin.serialization") version "2.1.10"
+  id("io.github.nomisrev.openapi-kt-plugin") version "0.0.8"
 }
 
 openApiConfig { spec("OpenAI", file("openai.yaml")) {
