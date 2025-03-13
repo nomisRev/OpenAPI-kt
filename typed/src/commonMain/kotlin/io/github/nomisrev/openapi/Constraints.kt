@@ -6,7 +6,7 @@ sealed interface Constraints {
     val minimum: Double,
     val exclusiveMaximum: Boolean,
     val maximum: Double,
-    val multipleOf: Double?
+    val multipleOf: Double?,
   ) : Constraints {
     companion object {
       operator fun invoke(schema: Schema): Number? =
@@ -16,7 +16,7 @@ sealed interface Constraints {
             schema.minimum ?: Double.NEGATIVE_INFINITY,
             schema.exclusiveMaximum ?: false,
             schema.maximum ?: Double.POSITIVE_INFINITY,
-            schema.multipleOf
+            schema.multipleOf,
           )
         else null
     }
@@ -31,10 +31,7 @@ sealed interface Constraints {
     }
   }
 
-  data class Collection(
-    val minItems: Int,
-    val maxItems: Int,
-  ) : Constraints {
+  data class Collection(val minItems: Int, val maxItems: Int) : Constraints {
     companion object {
       operator fun invoke(schema: Schema): Collection? =
         if (schema.minItems != null || schema.maxItems != null)
@@ -48,17 +45,11 @@ sealed interface Constraints {
    * minProperties and maxProperties let you restrict the number of properties allowed in an object.
    * This can be useful when using additionalProperties, or free-form objects.
    */
-  data class Object(
-    val minProperties: Int,
-    val maxProperties: Int,
-  ) : Constraints {
+  data class Object(val minProperties: Int, val maxProperties: Int) : Constraints {
     companion object {
       operator fun invoke(schema: Schema): Object? =
         if (schema.minProperties != null || schema.maxProperties != null)
-          Object(
-            schema.minProperties ?: 0,
-            schema.maxProperties ?: Int.MAX_VALUE,
-          )
+          Object(schema.minProperties ?: 0, schema.maxProperties ?: Int.MAX_VALUE)
         else null
     }
   }

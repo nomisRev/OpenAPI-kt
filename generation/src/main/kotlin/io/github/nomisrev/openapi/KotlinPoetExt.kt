@@ -57,7 +57,7 @@ fun ParameterSpec.Builder.description(kdoc: String?): ParameterSpec.Builder = ap
 fun TypeSpec.Companion.dataClass(
   className: ClassName,
   parameters: List<ParameterSpec>,
-  configure: TypeSpec.Builder.() -> Unit = {}
+  configure: TypeSpec.Builder.() -> Unit = {},
 ): TypeSpec {
   val sorted = parameters.sorted()
   return classBuilder(className)
@@ -76,14 +76,14 @@ fun PropertySpec(
   name: String,
   type: TypeName,
   vararg modifiers: KModifier,
-  configure: PropertySpec.Builder.() -> Unit = {}
+  configure: PropertySpec.Builder.() -> Unit = {},
 ): PropertySpec = PropertySpec.builder(name, type, *modifiers).apply(configure).build()
 
 fun ParameterSpec(
   name: String,
   type: TypeName,
   vararg modifiers: KModifier,
-  configure: ParameterSpec.Builder.() -> Unit = {}
+  configure: ParameterSpec.Builder.() -> Unit = {},
 ): ParameterSpec = ParameterSpec.builder(name, type, *modifiers).apply(configure).build()
 
 private fun List<ParameterSpec>.sorted(): List<ParameterSpec> {

@@ -11,5 +11,5 @@ public data class ExternalDocs(
    */
   public val description: String? = null,
   /** The URL for the target documentation. Value MUST be in the format of a URL. */
-  public val url: String
+  public val url: String,
 )

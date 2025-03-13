@@ -14,7 +14,7 @@ interface OpenAPIContext : Naming, APIInterceptor {
 
 fun OpenAPIContext(
   config: GenerationConfig,
-  interceptor: APIInterceptor = APIInterceptor.openAIStreaming(config.`package`)
+  interceptor: APIInterceptor = APIInterceptor.openAIStreaming(config.`package`),
 ): OpenAPIContext =
   object : OpenAPIContext, Naming by Naming(config.`package`), APIInterceptor by interceptor {
     override val `package`: String = config.`package`
@@ -31,5 +31,5 @@ fun OpenAPIContext(
 fun <A> OpenAPIContext(
   config: GenerationConfig,
   interceptor: APIInterceptor = APIInterceptor.openAIStreaming(config.`package`),
-  block: OpenAPIContext.() -> A
+  block: OpenAPIContext.() -> A,
 ): A = block(OpenAPIContext(config, interceptor))

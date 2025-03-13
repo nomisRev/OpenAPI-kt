@@ -42,7 +42,8 @@ subprojects {
       ktfmt().kotlinlangStyle().configure {
         it.setBlockIndent(2)
         it.setContinuationIndent(2)
-        it.setRemoveUnusedImport(true)
+        it.setRemoveUnusedImports(true)
+        it.setManageTrailingCommas(true)
       }
     }
   }

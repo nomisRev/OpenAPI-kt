@@ -32,7 +32,7 @@ public data class Response(
    * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
    * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
-  public val extensions: Map<String, JsonElement> = emptyMap()
+  public val extensions: Map<String, JsonElement> = emptyMap(),
 ) {
   public operator fun plus(other: Response): Response =
     Response(
@@ -40,6 +40,6 @@ public data class Response(
       headers + other.headers,
       content + other.content,
       links + other.links,
-      extensions + other.extensions
+      extensions + other.extensions,
     )
 }

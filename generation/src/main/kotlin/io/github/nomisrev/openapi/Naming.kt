@@ -44,7 +44,7 @@ private class Nam(private val `package`: String) : Naming {
       WordSplitterConfig(
         boundaries = setOf(' ', '-', '_', '.', '/'),
         handleCase = true,
-        treatDigitsAsUppercase = true
+        treatDigitsAsUppercase = true,
       )
     )
 
@@ -69,13 +69,13 @@ private class Nam(private val `package`: String) : Naming {
           `package`,
           // $OuterClass$MyOperation$Param, this allows for multiple custom objects in a single
           // operation
-          "${context.operationId.toPascalCase()}${context.name.toPascalCase()}".dropArraySyntax()
+          "${context.operationId.toPascalCase()}${context.name.toPascalCase()}".dropArraySyntax(),
         )
       }
       is NamingContext.RouteBody ->
         ClassName(
           `package`,
-          "${context.name.toPascalCase()}${context.postfix.toPascalCase()}".dropArraySyntax()
+          "${context.name.toPascalCase()}${context.postfix.toPascalCase()}".dropArraySyntax(),
         )
     }
 

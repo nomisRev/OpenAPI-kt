@@ -16,7 +16,7 @@ data class Root(
   /* `info.title`, or custom name */
   val name: String,
   val operations: List<Route>,
-  val endpoints: List<API>
+  val endpoints: List<API>,
 )
 
 data class API(val name: String, val routes: List<Route>, val nested: List<API>)
@@ -24,7 +24,7 @@ data class API(val name: String, val routes: List<Route>, val nested: List<API>)
 private data class RootBuilder(
   val name: String,
   val operations: MutableList<Route>,
-  val nested: MutableList<APIBuilder>
+  val nested: MutableList<APIBuilder>,
 ) {
   fun build(): Root = Root(name, operations, nested.map { it.build() })
 }
@@ -32,7 +32,7 @@ private data class RootBuilder(
 private data class APIBuilder(
   val name: String,
   val routes: MutableList<Route>,
-  val nested: MutableList<APIBuilder>
+  val nested: MutableList<APIBuilder>,
 ) {
   fun build(): API = API(name, routes, nested.map { it.build() })
 }

@@ -9,7 +9,7 @@ val idSchema =
   Schema(
     type = Type.Basic.Object,
     description = value("An explicit ID type"),
-    properties = mapOf("value" to value(Schema(type = Type.Basic.String)))
+    properties = mapOf("value" to value(Schema(type = Type.Basic.String))),
   )
 
 val personSchema =
@@ -24,13 +24,13 @@ val personSchema =
               type = Type.Basic.String,
               nullable = false,
               description = value("The name of the person"),
-              default = ExampleValue("John Doe")
+              default = ExampleValue("John Doe"),
             )
           ),
         "age" to value(Schema(type = Type.Basic.Integer)),
       ),
     description = value("A person"),
-    required = listOf("id", "name")
+    required = listOf("id", "name"),
   )
 
 val id =
@@ -44,10 +44,10 @@ val id =
           Primitive.string(),
           isRequired = false,
           isNullable = true,
-          description = null
+          description = null,
         )
       ),
-    inline = listOf(Primitive.string())
+    inline = listOf(Primitive.string()),
   )
 
 val testAPI = OpenAPI(info = Info("Test API", version = "1.0.0"))
@@ -62,5 +62,5 @@ val enum =
     inner = Primitive.string(default = "Auto", description = null),
     values = listOf("Auto", "Manual"),
     default = "Auto",
-    description = null
+    description = null,
   )

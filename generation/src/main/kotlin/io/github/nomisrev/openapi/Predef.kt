@@ -31,18 +31,18 @@ private fun uploadTypeSpec(): TypeSpec =
           "bodyBuilder",
           LambdaTypeName.get(
             receiver = ClassName("kotlinx.io", "Sink"),
-            returnType = Unit::class.asTypeName()
-          )
+            returnType = Unit::class.asTypeName(),
+          ),
         )
-        .build()
-    )
+        .build(),
+    ),
   )
 
 private val errors: ParameterizedTypeName =
   ClassName("kotlin.collections", "Map")
     .parameterizedBy(
       ClassName("kotlin.reflect", "KClass").parameterizedBy(TypeVariableName("*")),
-      ClassName("kotlinx.serialization", "SerializationException")
+      ClassName("kotlinx.serialization", "SerializationException"),
     )
 
 private val appendAll: FunSpec =
@@ -76,7 +76,7 @@ private val appendAll: FunSpec =
       ClassName("kotlinx.io", "Source"),
       ClassName("io.ktor.client.request.forms", "InputProvider"),
       ClassName("io.ktor.client.request.forms", "ChannelProvider"),
-      ClassName("io.ktor.client.request.forms", "FormPart")
+      ClassName("io.ktor.client.request.forms", "FormPart"),
     )
     .build()
 
@@ -99,7 +99,7 @@ private fun appendUploadedFile(): FunSpec =
       """
         .trimIndent(),
       MemberName("io.ktor.client.request.forms", "append", isExtension = true),
-      ContentType
+      ContentType,
     )
     .build()
 
@@ -114,7 +114,7 @@ private val serialNameOrEnumValue: FunSpec =
     .addParameter("enum", ClassName("kotlin", "Enum").parameterizedBy(TypeVariableName("T")))
     .addCode(
       "return enum::class.%M()?.descriptor?.getElementName(enum.ordinal) ?: enum.toString()",
-      MemberName("kotlinx.serialization", "serializerOrNull", isExtension = true)
+      MemberName("kotlinx.serialization", "serializerOrNull", isExtension = true),
     )
     .build()
 
@@ -161,7 +161,7 @@ val bodyOrThrow: FunSpec =
       MemberName("io.ktor.client.call", "body", isExtension = true),
       MemberName("io.ktor.client.statement", "request", isExtension = true),
       ClassName("io.ktor.http.content", "OutgoingContent"),
-      MemberName("io.ktor.client.statement", "bodyAsText", isExtension = true)
+      MemberName("io.ktor.client.statement", "bodyAsText", isExtension = true),
     )
     .build()
 
@@ -196,7 +196,7 @@ private val requireAll: FunSpec =
     .addParameter(
       "requires",
       LambdaTypeName.get(receiver = null, returnType = Unit::class.asTypeName()),
-      KModifier.VARARG
+      KModifier.VARARG,
     )
     .addCode(
       """
@@ -262,10 +262,10 @@ fun predef(): FileSpec =
                 parameters =
                   listOf(
                     ParameterSpec.unnamed(ClassName("kotlinx.serialization.json", "JsonElement"))
-                  )
-              )
+                  ),
+              ),
             ),
-          KModifier.VARARG
+          KModifier.VARARG,
         )
         .addCode(
           """
@@ -292,8 +292,8 @@ fun predef(): FileSpec =
           "open",
           LambdaTypeName.get(
             parameters = listOf(ParameterSpec.unnamed(String::class)),
-            returnType = TypeVariableName("A")
-          )
+            returnType = TypeVariableName("A"),
+          ),
         )
         .addParameter(
           "block",
@@ -302,10 +302,10 @@ fun predef(): FileSpec =
               ClassName("kotlin.reflect", "KClass").parameterizedBy(TypeVariableName("*")),
               LambdaTypeName.get(
                 parameters = listOf(ParameterSpec.unnamed(String::class)),
-                returnType = TypeVariableName("A").nullable()
-              )
+                returnType = TypeVariableName("A").nullable(),
+              ),
             ),
-          KModifier.VARARG
+          KModifier.VARARG,
         )
         .addCode(
           """

@@ -62,7 +62,7 @@ public data class Schema(
   val enum: List<String>? = null,
   val multipleOf: Double? = null,
   @SerialName("\$id") val id: String? = null,
-  @SerialName("\$anchor") val anchor: String? = null
+  @SerialName("\$anchor") val anchor: String? = null,
 ) {
   init {
     require(required?.isEmpty() != true) {
@@ -73,7 +73,7 @@ public data class Schema(
   @Serializable
   public data class Discriminator(
     val propertyName: String,
-    val mapping: Map<String, String>? = null
+    val mapping: Map<String, String>? = null,
   )
 
   @Serializable(with = Type.Serializer::class)
@@ -122,7 +122,7 @@ public data class Schema(
           is Array ->
             encoder.encodeSerializableValue(
               ListSerializer(String.serializer()),
-              value.types.map { it.value }
+              value.types.map { it.value },
             )
           is Basic -> encoder.encodeString(value.value)
         }

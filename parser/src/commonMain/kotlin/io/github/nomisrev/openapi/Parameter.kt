@@ -84,7 +84,7 @@ public data class Parameter(
    * of the _paramExample field. Furthermore, if referencing a schema that contains an example, the
    * examples value SHALL override the example provided by the schema.
    */
-  public val examples: Map<String, ReferenceOr<Example>>? = emptyMap()
+  public val examples: Map<String, ReferenceOr<Example>>? = emptyMap(),
 ) {
   init {
     if (input == Input.Path)
@@ -98,6 +98,6 @@ public data class Parameter(
     @SerialName("query") Query("query"),
     @SerialName("header") Header("header"),
     @SerialName("path") Path("path"),
-    @SerialName("cookie") Cookie("cookie")
+    @SerialName("cookie") Cookie("cookie"),
   }
 }

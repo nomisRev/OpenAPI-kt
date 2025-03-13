@@ -14,13 +14,13 @@ data class Route(
   val input: List<Input>,
   val returnType: Returns,
   val extensions: Map<String, JsonElement>,
-  val nested: List<Model>
+  val nested: List<Model>,
 ) {
   data class Bodies(
     /** Request bodies are optional by default! */
     val required: Boolean,
     val types: Map<ContentType, Body>,
-    val extensions: Map<String, JsonElement>
+    val extensions: Map<String, JsonElement>,
   ) : Map<ContentType, Body> by types {
     fun jsonOrNull(): Body.Json? =
       types.getOrElse(ContentType.Application.Json) { null } as? Body.Json
@@ -40,7 +40,7 @@ data class Route(
 
     data class OctetStream(
       override val description: String?,
-      override val extensions: Map<String, JsonElement>
+      override val extensions: Map<String, JsonElement>,
     ) : Body
 
     sealed interface Json : Body {
@@ -48,7 +48,7 @@ data class Route(
 
       data class FreeForm(
         override val description: String?,
-        override val extensions: Map<String, JsonElement>
+        override val extensions: Map<String, JsonElement>,
       ) : Json {
         override val type: Model = Model.FreeFormJson(description, null)
       }
@@ -56,14 +56,14 @@ data class Route(
       data class Defined(
         override val type: Model,
         override val description: String?,
-        override val extensions: Map<String, JsonElement>
+        override val extensions: Map<String, JsonElement>,
       ) : Json
     }
 
     data class Xml(
       val type: Model,
       override val description: String?,
-      override val extensions: Map<String, JsonElement>
+      override val extensions: Map<String, JsonElement>,
     ) : Body
 
     sealed interface Multipart : Body {
@@ -76,7 +76,7 @@ data class Route(
       data class Value(
         override val parameters: List<FormData>,
         override val description: String?,
-        override val extensions: Map<String, JsonElement>
+        override val extensions: Map<String, JsonElement>,
       ) : Multipart, List<FormData> by parameters
 
       // Top-level references get a top-level type.
@@ -84,7 +84,7 @@ data class Route(
         val name: String,
         val value: Model,
         override val description: String?,
-        override val extensions: Map<String, JsonElement>
+        override val extensions: Map<String, JsonElement>,
       ) : Multipart {
         override val parameters: List<FormData> = listOf(FormData(name, value))
       }
@@ -97,16 +97,16 @@ data class Route(
     val type: Model,
     val isRequired: Boolean,
     val input: Parameter.Input,
-    val description: String?
+    val description: String?,
   )
 
   data class Returns(
     val types: Map<HttpStatusCode, ReturnType>,
-    val extensions: Map<String, JsonElement>
+    val extensions: Map<String, JsonElement>,
   ) : Map<HttpStatusCode, ReturnType> by types {
     constructor(
       vararg types: Pair<HttpStatusCode, ReturnType>,
-      extensions: Map<String, JsonElement> = emptyMap()
+      extensions: Map<String, JsonElement> = emptyMap(),
     ) : this(types.toMap(), extensions)
   }
 
@@ -132,13 +132,13 @@ sealed interface Model {
     data class Int(
       val default: kotlin.Int?,
       override val description: kotlin.String?,
-      val constraint: Constraints.Number?
+      val constraint: Constraints.Number?,
     ) : Primitive
 
     data class Double(
       val default: kotlin.Double?,
       override val description: kotlin.String?,
-      val constraint: Constraints.Number?
+      val constraint: Constraints.Number?,
     ) : Primitive
 
     data class Boolean(val default: kotlin.Boolean?, override val description: kotlin.String?) :
@@ -147,7 +147,7 @@ sealed interface Model {
     data class String(
       val default: kotlin.String?,
       override val description: kotlin.String?,
-      val constraint: Constraints.Text?
+      val constraint: Constraints.Text?,
     ) : Primitive
 
     data class Unit(override val description: kotlin.String?) : Primitive
@@ -177,20 +177,20 @@ sealed interface Model {
       override val inner: Model,
       val default: kotlin.collections.List<String>?,
       override val description: String?,
-      override val constraint: Constraints.Collection?
+      override val constraint: Constraints.Collection?,
     ) : Collection
 
     data class Set(
       override val inner: Model,
       val default: kotlin.collections.List<String>?,
       override val description: String?,
-      override val constraint: Constraints.Collection?
+      override val constraint: Constraints.Collection?,
     ) : Collection
 
     data class Map(
       override val inner: Model,
       override val description: String?,
-      override val constraint: Constraints.Collection?
+      override val constraint: Constraints.Collection?,
     ) : Collection {
       val key = Primitive.String(null, null, null)
     }
@@ -202,7 +202,7 @@ sealed interface Model {
     val context: NamingContext,
     override val description: String?,
     val properties: List<Property>,
-    val inline: List<Model>
+    val inline: List<Model>,
   ) : Model {
     data class Property(
       val baseName: String,
@@ -213,7 +213,7 @@ sealed interface Model {
        */
       val isRequired: Boolean,
       val isNullable: Boolean,
-      val description: String?
+      val description: String?,
     )
 
     companion object
@@ -224,7 +224,7 @@ sealed interface Model {
     val cases: List<Case>,
     val default: String?,
     override val description: String?,
-    val inline: List<Model>
+    val inline: List<Model>,
   ) : Model {
     data class Case(val context: NamingContext, val model: Model)
   }
@@ -240,14 +240,14 @@ sealed interface Model {
       val inner: Model,
       override val values: List<String>,
       override val default: String?,
-      override val description: String?
+      override val description: String?,
     ) : Enum
 
     data class Open(
       override val context: NamingContext,
       override val values: List<String>,
       override val default: String?,
-      override val description: String?
+      override val description: String?,
     ) : Enum
   }
 

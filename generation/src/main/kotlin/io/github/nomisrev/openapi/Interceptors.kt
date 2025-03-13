@@ -28,12 +28,12 @@ interface APIInterceptor {
 
         override fun OpenAPIContext.modifyInterface(
           api: API,
-          typeSpec: TypeSpec.Builder
+          typeSpec: TypeSpec.Builder,
         ): TypeSpec.Builder = typeSpec
 
         override fun OpenAPIContext.modifyImplementation(
           api: API,
-          typeSpec: TypeSpec.Builder
+          typeSpec: TypeSpec.Builder,
         ): TypeSpec.Builder = typeSpec
       }
   }

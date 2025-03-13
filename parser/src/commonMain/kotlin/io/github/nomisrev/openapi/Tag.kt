@@ -16,5 +16,5 @@ public data class Tag(
    */
   public val description: String? = null,
   /** Additional external documentation for this tag. */
-  public val externalDocs: ExternalDocs? = null
+  public val externalDocs: ExternalDocs? = null,
 )
