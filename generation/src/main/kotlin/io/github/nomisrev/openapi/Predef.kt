@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
@@ -31,7 +30,7 @@ private fun uploadTypeSpec(): TypeSpec =
       ParameterSpec.builder(
           "bodyBuilder",
           LambdaTypeName.get(
-            receiver = ClassName("io.ktor.utils.io.core", "BytePacketBuilder"),
+            receiver = ClassName("kotlinx.io", "Sink"),
             returnType = Unit::class.asTypeName()
           )
         )
@@ -48,11 +47,6 @@ private val errors: ParameterizedTypeName =
 
 private val appendAll: FunSpec =
   FunSpec.builder("appendAll")
-    .addAnnotation(
-      AnnotationSpec.builder(ClassName("kotlin", "OptIn"))
-        .addMember("%L::class", "io.ktor.util.InternalAPI")
-        .build()
-    )
     .addTypeVariable(TypeVariableName("T", Any::class))
     .receiver(ClassName("io.ktor.client.request.forms", "FormBuilder"))
     .addParameter("key", String::class)
@@ -75,13 +69,14 @@ private val appendAll: FunSpec =
         is UploadFile -> appendUploadedFile(key, value)
         is Enum<*> -> append(key, serialNameOrEnumValue(value), headers)
         null -> Unit
-        else -> append(key, value, headers)
+        else -> append(%T(key, value, headers))
       }
       """
         .trimIndent(),
-      ClassName("io.ktor.utils.io.core", "ByteReadPacket"),
+      ClassName("kotlinx.io", "Source"),
       ClassName("io.ktor.client.request.forms", "InputProvider"),
-      ClassName("io.ktor.client.request.forms", "ChannelProvider")
+      ClassName("io.ktor.client.request.forms", "ChannelProvider"),
+      ClassName("io.ktor.client.request.forms", "FormPart")
     )
     .build()
 

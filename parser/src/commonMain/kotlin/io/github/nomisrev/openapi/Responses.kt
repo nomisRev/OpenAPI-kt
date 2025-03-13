@@ -1,7 +1,7 @@
 package io.github.nomisrev.openapi
 
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SealedSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
@@ -97,7 +97,7 @@ public data class Responses(
   }
 }
 
-@OptIn(ExperimentalSerializationApi::class)
+@OptIn(SealedSerializationApi::class)
 private object ResponsesDescriptor : SerialDescriptor {
   override val serialName: String = "arrow.endpoint.docs.openapi.Responses"
   override val kind: SerialKind = StructureKind.MAP
