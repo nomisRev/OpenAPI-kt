@@ -120,11 +120,13 @@ class ModelTest {
   fun openEnum() {
     val actual =
       Schema(
-          description = "OpenEnum Desc",
+          description = ReferenceOr.value("OpenEnum Desc"),
           anyOf =
             listOf(
-              value(enumSchema.copy(description = "Inner Enum Desc")),
-              ReferenceOr.Value(Schema(type = Type.Basic.String, description = "OpenCase Desc"))
+              value(enumSchema.copy(description = ReferenceOr.value("Inner Enum Desc"))),
+              ReferenceOr.Value(
+                Schema(type = Type.Basic.String, description = ReferenceOr.value("OpenCase Desc"))
+              )
             ),
           default = ExampleValue("Custom-open-enum-value")
         )
@@ -143,11 +145,13 @@ class ModelTest {
   fun anyOf() {
     val actual =
       Schema(
-          description = "AnyOf Desc",
+          description = ReferenceOr.value("AnyOf Desc"),
           anyOf =
             listOf(
               value(enumSchema),
-              ReferenceOr.Value(Schema(type = Type.Basic.Integer, description = "Int Case Desc"))
+              ReferenceOr.Value(
+                Schema(type = Type.Basic.Integer, description = ReferenceOr.value("Int Case Desc"))
+              )
             )
         )
         .toModel("AnyOf")
