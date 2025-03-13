@@ -190,7 +190,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               context = context,
               cases = resolved.map { Model.Union.Case(context, it.toModel(context).value) },
               default = null,
-              description = description,
+              description = description.get(),
               inline = resolved.mapNotNull { nestedModel(it, context) }
             )
           }
@@ -200,25 +200,25 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         when (type) {
           Type.Basic.Array -> collection(context)
           Type.Basic.Boolean ->
-            Primitive.Boolean(default("Boolean", String::toBooleanStrictOrNull), description)
+            Primitive.Boolean(default("Boolean", String::toBooleanStrictOrNull), description.get())
           Type.Basic.Integer ->
             Primitive.Int(
               default("Integer", String::toIntOrNull),
-              description,
+              description.get(),
               Constraints.Number(this)
             )
           Type.Basic.Number ->
             Primitive.Double(
               default("Number", String::toDoubleOrNull),
-              description,
+              description.get(),
               Constraints.Number(this)
             )
           Type.Basic.String ->
-            if (format == "binary") Model.OctetStream(description)
+            if (format == "binary") Model.OctetStream(description.get())
             else
               Primitive.String(
                 default("String", String::toString) { it.joinToString() },
-                description,
+                description.get(),
                 Constraints.Text(this)
               )
           Type.Basic.Object -> toObject(context)
@@ -322,6 +322,21 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       }
     }
 
+  tailrec fun ReferenceOr<String>?.get(): String? =
+    when (this) {
+      is ReferenceOr.Value -> value
+      null -> null
+      is ReferenceOr.Reference -> {
+        val name = ref.drop("#/components/schemas/".length).dropLast("/description".length)
+        val schema =
+          requireNotNull(openAPI.components.schemas[name]) {
+              "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+            }
+            .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
+        schema.description.get()
+      }
+    }
+
   private fun Schema.toObject(context: NamingContext): Model =
     when {
       properties != null -> toObject(context, properties!!)
@@ -329,15 +344,15 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         when (val props = additionalProperties!!) {
           // TODO: implement Schema validation
           is AdditionalProperties.PSchema ->
-            Model.FreeFormJson(description, Constraints.Object(this))
+            Model.FreeFormJson(description.get(), Constraints.Object(this))
           is Allowed ->
-            if (props.value) Model.FreeFormJson(description, Constraints.Object(this))
+            if (props.value) Model.FreeFormJson(description.get(), Constraints.Object(this))
             else
               throw IllegalStateException(
                 "No additional properties allowed on object without properties. $this"
               )
         }
-      else -> Model.FreeFormJson(description, Constraints.Object(this))
+      else -> Model.FreeFormJson(description.get(), Constraints.Object(this))
     }
 
   /**
@@ -378,7 +393,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           .toObject(context, properties)
       }
       (schema.additionalProperties as? Allowed)?.value == true ->
-        Model.FreeFormJson(schema.description, Constraints.Object(schema))
+        Model.FreeFormJson(schema.description.get(), Constraints.Object(schema))
       else -> schema.toUnion(context, schema.allOf!!)
     }
   }
@@ -389,7 +404,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     }
     return Model.Object(
       context,
-      description,
+      description.get(),
       properties.map { (name, ref) ->
         val resolved = ref.resolve()
         val pContext =
@@ -407,7 +422,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           model.value,
           required?.contains(name) == true,
           resolved.value.nullable ?: required?.contains(name)?.not() ?: true,
-          resolved.value.description
+          resolved.value.description.get()
         )
       },
       properties.mapNotNull { (name, ref) ->
@@ -427,7 +442,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   fun Schema.toOpenEnum(context: NamingContext, values: List<String>): Enum.Open {
     require(values.isNotEmpty()) { "OpenEnum requires at least 1 possible value" }
     val default = singleDefaultOrNull()
-    return Enum.Open(context, values, default, description)
+    return Enum.Open(context, values, default, description.get())
   }
 
   private fun Schema.collection(context: NamingContext): Collection {
@@ -450,8 +465,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         null -> null
       }
     return if (uniqueItems == true)
-      Collection.Set(inner.value, default, description, Constraints.Collection(this))
-    else Collection.List(inner.value, default, description, Constraints.Collection(this))
+      Collection.Set(inner.value, default, description.get(), Constraints.Collection(this))
+    else Collection.List(inner.value, default, description.get(), Constraints.Collection(this))
   }
 
   fun Schema.toEnum(context: NamingContext, enums: List<String>): Enum.Closed {
@@ -460,7 +475,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
      * Since the schema is still on the same level - we keep the topLevelName */
     val inner = Resolved.Value(copy(enum = null)).toModel(context)
     val default = singleDefaultOrNull()
-    return Enum.Closed(context, inner.value, enums, default, description)
+    return Enum.Closed(context, inner.value, enums, default, description.get())
   }
 
   /**
@@ -510,7 +525,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       cases,
       singleDefaultOrNull()
         ?: subtypes.firstNotNullOfOrNull { it.resolve().value.singleDefaultOrNull() },
-      description,
+      description.get(),
       inline
     )
   }

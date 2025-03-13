@@ -25,7 +25,7 @@ import kotlinx.serialization.json.JsonPrimitive
 @Serializable
 public data class Schema(
   val title: String? = null,
-  val description: String? = null,
+  val description: ReferenceOr<String>? = null,
   /** required is an object-level attribute, not a property attribute. */
   val required: List<String>? = null,
   val nullable: Boolean? = null,
