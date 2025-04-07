@@ -33,21 +33,21 @@ class UnionNameGenerationSpec {
   fun nestedInlineObjInUnionGeneratesNameOnTypeProperty() {
     val actual =
       Schema(
-          oneOf =
-            listOf(
-              value(
-                Schema(
-                  type = Type.Basic.Object,
-                  properties =
-                    mapOf(
-                      "type" to value(Schema(type = Type.Basic.String, enum = listOf("Function"))),
-                      "value" to value(Schema(type = Type.Basic.String)),
-                    ),
-                )
-              ),
-              value(Schema(type = Type.Basic.Integer)),
-            )
-        )
+        oneOf =
+          listOf(
+            value(
+              Schema(
+                type = Type.Basic.Object,
+                properties =
+                  mapOf(
+                    "type" to value(Schema(type = Type.Basic.String, enum = listOf("Function"))),
+                    "value" to value(Schema(type = Type.Basic.String)),
+                  ),
+              )
+            ),
+            value(Schema(type = Type.Basic.Integer)),
+          )
+      )
         .toModel("TypeOrEvent")
     val context = Nested(Named("Function"), Named("TypeOrEvent"))
     val propContext = Nested(Named("type"), context)
@@ -100,22 +100,22 @@ class UnionNameGenerationSpec {
   fun nestedInlineObjInUnionGeneratesNameOnEventProperty() {
     val actual =
       Schema(
-          oneOf =
-            listOf(
-              value(
-                Schema(
-                  type = Type.Basic.Object,
-                  properties =
-                    mapOf(
-                      "event" to
-                        value(Schema(type = Type.Basic.String, enum = listOf("RunThread"))),
-                      "value" to value(Schema(type = Type.Basic.String)),
-                    ),
-                )
-              ),
-              value(Schema(type = Type.Basic.Integer)),
-            )
-        )
+        oneOf =
+          listOf(
+            value(
+              Schema(
+                type = Type.Basic.Object,
+                properties =
+                  mapOf(
+                    "event" to
+                      value(Schema(type = Type.Basic.String, enum = listOf("RunThread"))),
+                    "value" to value(Schema(type = Type.Basic.String)),
+                  ),
+              )
+            ),
+            value(Schema(type = Type.Basic.Integer)),
+          )
+      )
         .toModel("TypeOrEvent")
     val obj =
       Model.obj(
@@ -196,9 +196,11 @@ class UnionNameGenerationSpec {
     assertEquals(expected, actual)
   }
 
-  @Test fun topLevelOneOfWithListAndInlineInner() = topLevelOneOfWithCollectionAndInlineInner(false)
+  @Test
+  fun topLevelOneOfWithListAndInlineInner() = topLevelOneOfWithCollectionAndInlineInner(false)
 
-  @Test fun topLevelOneOfWithSetAndInlineInner() = topLevelOneOfWithCollectionAndInlineInner(true)
+  @Test
+  fun topLevelOneOfWithSetAndInlineInner() = topLevelOneOfWithCollectionAndInlineInner(true)
 
   @Test
   fun topLevelOneOfWithCollectionAndInlineInner() = topLevelOneOfWithCollectionAndInlineInner(null)
@@ -206,14 +208,14 @@ class UnionNameGenerationSpec {
   private fun topLevelOneOfWithCollectionAndInlineInner(uniqueItems: Boolean?) {
     val actual =
       Schema(
-          oneOf =
-            listOf(
-              value(
-                Schema(type = Type.Basic.Array, items = value(idSchema), uniqueItems = uniqueItems)
-              ),
-              value(Schema(type = Type.Basic.String)),
-            )
-        )
+        oneOf =
+          listOf(
+            value(
+              Schema(type = Type.Basic.Array, items = value(idSchema), uniqueItems = uniqueItems)
+            ),
+            value(Schema(type = Type.Basic.String)),
+          )
+      )
         .toModel("OneOf")
     val name = if (uniqueItems == true) "Set" else "List"
     val context = Nested(Named(name), Named("OneOf"))
@@ -238,20 +240,35 @@ class UnionNameGenerationSpec {
 
   @Test
   fun nonSupportedCases() {
-    assertThrows<NotImplementedError> {
-      Schema(
-          oneOf =
-            listOf(
-              value(
-                Schema(
-                  type = Type.Basic.Object,
-                  properties = mapOf("value" to value(Schema(type = Type.Basic.String))),
-                )
-              ),
-              value(Schema(type = Type.Basic.Integer)),
+    val actual = Schema(
+      oneOf =
+        listOf(
+          value(
+            Schema(
+              type = Type.Basic.Object,
+              properties = mapOf("value" to value(Schema(type = Type.Basic.String))),
             )
+          ),
+          value(Schema(type = Type.Basic.Integer)),
         )
-        .toModel("TypeOrEvent")
-    }
+    )
+      .toModel("TypeOrEvent")
+    val nestedObj = Model.Object(
+      Nested(Named("Value"), Named("TypeOrEvent")),
+      null,
+      listOf(Property("value", Primitive.string(), isRequired = false, isNullable = true, description = null)),
+      emptyList()
+    )
+    val expected = Model.Union(
+      context = Named("TypeOrEvent"),
+      description = null,
+      default = null,
+      cases = listOf(
+        Model.Union.Case(Named("TypeOrEvent"), nestedObj),
+        Model.Union.Case(context = Named("TypeOrEvent"), model = Primitive.int()),
+      ),
+      inline = listOf(nestedObj, Primitive.int()),
+    )
+    assertEquals(expected, actual)
   }
 }

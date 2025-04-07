@@ -63,6 +63,7 @@ public data class Schema(
   val multipleOf: Double? = null,
   @SerialName("\$id") val id: String? = null,
   @SerialName("\$anchor") val anchor: String? = null,
+  @SerialName("\$recursiveAnchor") val recursiveAnchor: Boolean? = null,
 ) {
   init {
     require(required?.isEmpty() != true) {

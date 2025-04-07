@@ -15,6 +15,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 private const val RefKey = "\$ref"
+private const val RecursiveRefKey = "\$recursiveRef"
 
 /**
  * Defines Union [A] | [Reference]. A lot of types like Header, Schema, MediaType, etc. can be
@@ -67,9 +68,13 @@ public sealed interface ReferenceOr<out A> {
         decoder as JsonDecoder
         val json = decoder.decodeSerializableValue(JsonElement.serializer())
         val jsobObject = json as? JsonObject
-        return if (jsobObject != null && jsobObject.contains(RefKey))
-          Reference(json[RefKey]!!.jsonPrimitive.content)
-        else Value(decoder.json.decodeFromJsonElement(dataSerializer, json))
+        return when {
+          jsobObject != null && jsobObject.contains(RefKey) ->
+            Reference(json[RefKey]!!.jsonPrimitive.content)
+          jsobObject != null && jsobObject.contains("RecursiveRefKey") ->
+            Reference(json[RefKey]!!.jsonPrimitive.content)
+          else -> Value(decoder.json.decodeFromJsonElement(dataSerializer, json))
+        }
       }
     }
   }

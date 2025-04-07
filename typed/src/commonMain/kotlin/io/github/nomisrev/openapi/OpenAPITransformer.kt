@@ -141,8 +141,12 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       }
     }
 
+  private var recursiveSchema: Resolved<Schema>? = null
+  private var recursiveModel: Resolved<Model>? = null
+
   fun Resolved<Schema>.toModel(context: NamingContext): Resolved<Model> {
     val schema: Schema = value
+    if (schema.recursiveAnchor == true) recursiveSchema = this
     val model =
       when {
         schema.isOpenEnumeration() ->
@@ -176,8 +180,10 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     return when (this) {
       is Resolved.Ref -> Resolved.Ref(name, model)
       is Resolved.Value -> Resolved.Value(model)
-    }
+    }.also { if (schema.recursiveAnchor == true) recursiveModel = it }
   }
+
+  private val emptySchema = Schema()
 
   private tailrec fun Schema.type(context: NamingContext): Model =
     when (val type = type) {
@@ -231,7 +237,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           properties != null || additionalProperties != null -> toObject(context)
           // If 'items' is defined, we assume it's an array.
           items != null -> collection(context)
-          else -> TODO("Schema: context: ${context}: $this not yet supported. Please report to issue tracker.")
+          this == emptySchema -> recursiveModel?.value ?:TODO(
+            "Schema: context: ${context}: $this not yet supported. Please report to issue tracker."
+          )
+          else ->
+            TODO(
+              "Schema: context: ${context}: $this not yet supported. Please report to issue tracker."
+            )
         }
     }
 
@@ -263,15 +275,18 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   fun ReferenceOr<Schema>.resolve(): Resolved<Schema> =
     when (this) {
       is ReferenceOr.Value -> Resolved.Value(value)
-      is ReferenceOr.Reference -> {
-        val name = ref.drop("#/components/schemas/".length)
-        val schema =
-          requireNotNull(openAPI.components.schemas[name]) {
-              "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
-            }
-            .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
-        Resolved.Ref(name, schema)
-      }
+      is ReferenceOr.Reference ->
+        if (ref == "#") {
+          TODO("BOOP. Found a recursive anchor")
+        } else {
+          val name = ref.drop("#/components/schemas/".length)
+          val schema =
+            requireNotNull(openAPI.components.schemas[name]) {
+                "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+              }
+              .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
+          Resolved.Ref(name, schema)
+        }
     }
 
   tailrec fun ReferenceOr<Response>.get(): Response =
@@ -402,8 +417,14 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     require((additionalProperties as? Allowed)?.value != true) {
       "Additional properties, on a schema with properties, are not yet supported."
     }
+    // Special case for objects with a single property named "value"
+    val objectContext = if (properties.size == 1 && properties.containsKey("value")) {
+      NamingContext.Nested(Named("Value"), context)
+    } else {
+      context
+    }
     return Model.Object(
-      context,
+      objectContext,
       description.get(),
       properties.map { (name, ref) ->
         val resolved = ref.resolve()
@@ -425,14 +446,19 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           resolved.value.description.get(),
         )
       },
-      properties.mapNotNull { (name, ref) ->
-        val resolved = ref.resolve()
-        val pContext =
-          when (resolved) {
-            is Resolved.Ref -> Named(resolved.name)
-            is Resolved.Value -> NamingContext.Nested(Named(name), context)
-          }
-        nestedModel(resolved, pContext)
+      // Special case for objects with a single property named "value": empty inline list
+      if (properties.size == 1 && properties.containsKey("value")) {
+        emptyList()
+      } else {
+        properties.mapNotNull { (name, ref) ->
+          val resolved = ref.resolve()
+          val pContext =
+            when (resolved) {
+              is Resolved.Ref -> Named(resolved.name)
+              is Resolved.Value -> NamingContext.Nested(Named(name), context)
+            }
+          nestedModel(resolved, pContext)
+        }
       },
     )
   }
@@ -544,24 +570,29 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               ),
               context,
             )
-          case.value.type == Type.Basic.Object ->
-            NamingContext.Nested(
-              case.value.properties
-                ?.firstNotNullOfOrNull { (key, value) ->
-                  if (key == "event" || key == "type") value.resolve().value.enum else null
-                }
-                ?.singleOrNull()
-                ?.let(::Named)
-                // Generate a name based on the properties of the object if no type/event property is found
-                ?: Named(
-                  case.value.properties
-                    ?.keys
-                    ?.sorted()
-                    ?.joinToString(separator = "And") { it.replaceFirstChar(Char::uppercaseChar) }
-                    ?: "AnonymousObject"
-                ),
-              context,
-            )
+          case.value.type == Type.Basic.Object -> {
+            // Special case for objects with a single property named "value"
+            if (case.value.properties?.size == 1 && case.value.properties?.containsKey("value") == true) {
+              context
+            } else {
+              NamingContext.Nested(
+                case.value.properties
+                  ?.firstNotNullOfOrNull { (key, value) ->
+                    if (key == "event" || key == "type") value.resolve().value.enum else null
+                  }
+                  ?.singleOrNull()
+                  ?.let(::Named)
+                  // Generate a name based on the properties of the object if no type/event property
+                  // is found
+                  ?: Named(
+                    case.value.properties?.keys?.sorted()?.joinToString(separator = "And") {
+                      it.replaceFirstChar(Char::uppercaseChar)
+                    } ?: "AnonymousObject"
+                  ),
+                context,
+              )
+            }
+          }
           case.value.type == Type.Basic.Array ->
             case.value.items
               ?.resolve()
