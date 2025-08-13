@@ -1,10 +1,14 @@
 package io.github.nomisrev.openapi
 
+import com.charleskorn.kaml.AnchorsAndAliases
+import com.charleskorn.kaml.Yaml
+import com.charleskorn.kaml.YamlConfiguration
 import kotlin.jvm.JvmStatic
 import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.EncodeDefault.Mode.ALWAYS
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -14,7 +18,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.encodeToJsonElement
 import kotlinx.serialization.json.jsonObject
-import org.yaml.snakeyaml.Yaml
 
 /** This is the root document object for the API specification. */
 @OptIn(ExperimentalSerializationApi::class)
@@ -104,10 +107,7 @@ public data class OpenAPI(
   public companion object {
     public fun fromJson(json: String): OpenAPI = Json.decodeFromString(serializer(), json)
 
-    public fun fromYaml(yaml: String): OpenAPI {
-      val json = Yaml().load<Any?>(yaml).toJsonElement()
-      return Json.decodeFromJsonElement(serializer(), json)
-    }
+    public fun fromYaml(yaml: String): OpenAPI = Yaml.decodeFromString<OpenAPI>(yaml)
 
     @JvmStatic
     private val Json: Json = Json {
@@ -119,6 +119,19 @@ public data class OpenAPI(
       ignoreUnknownKeys = true
       isLenient = true
     }
+
+    @JvmStatic
+    private val Yaml: Yaml =
+      Yaml(
+        configuration =
+          YamlConfiguration(
+            encodeDefaults = false,
+            // ignoreUnknownKeys
+            strictMode = false,
+            decodeEnumCaseInsensitive = true,
+            anchorsAndAliases = AnchorsAndAliases.Permitted(),
+          )
+      )
   }
 }
 
@@ -128,6 +141,7 @@ private fun Any?.toJsonElement(): JsonElement =
     is Map<*, *> ->
       @Suppress("UNCHECKED_CAST")
       JsonObject((this as Map<String, Any?>).mapValues { (_, v) -> v.toJsonElement() })
+
     null -> JsonNull
     is Number -> JsonPrimitive(this)
     is Boolean -> JsonPrimitive(this)

@@ -1,6 +1,6 @@
 package io.github.nomisrev.openapi
 
-import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -11,7 +11,7 @@ import kotlinx.serialization.json.JsonPrimitive
 
 /** Each Media Type Object provides schema and examples for the media type identified by its key. */
 @Serializable(MediaType.Companion.Serializer::class)
-@OptIn(InternalSerializationApi::class)
+@OptIn(ExperimentalSerializationApi::class)
 @KeepGeneratedSerializer
 public data class MediaType(
   /** The schema defining the content of the request, response, or parameter. */

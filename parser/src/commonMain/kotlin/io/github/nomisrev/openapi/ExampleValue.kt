@@ -1,16 +1,24 @@
 package io.github.nomisrev.openapi
 
+import com.charleskorn.kaml.YamlInput
+import com.charleskorn.kaml.YamlList
+import com.charleskorn.kaml.YamlNode
+import com.charleskorn.kaml.YamlScalar
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -35,8 +43,12 @@ public sealed interface ExampleValue {
       private val multipleSerializer = ListSerializer(String.serializer())
 
       // TODO implement proper SerialDescriptor
+      @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
       override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor("arrow.endpoint.docs.openapi.ExampleValueSerializer")
+        buildSerialDescriptor(
+          "io.github.nomisrev.openapi.ExampleValueSerializer",
+          SerialKind.CONTEXTUAL,
+        )
 
       override fun serialize(encoder: Encoder, value: ExampleValue) {
         when (value) {
@@ -45,16 +57,30 @@ public sealed interface ExampleValue {
         }
       }
 
-      override fun deserialize(decoder: Decoder): ExampleValue {
-        return when (val json = decoder.decodeSerializableValue(JsonElement.serializer())) {
-          is JsonArray -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
-          is JsonPrimitive -> Single(json.content)
-          else ->
-            throw SerializationException(
-              "ExampleValue can only be a primitive or an array, found $json"
-            )
+      override fun deserialize(decoder: Decoder): ExampleValue =
+        when {
+          decoder is JsonDecoder ->
+            when (val json = decoder.decodeSerializableValue(JsonElement.serializer())) {
+              is JsonArray -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
+              is JsonPrimitive -> Single(json.content)
+              else ->
+                throw SerializationException(
+                  "ExampleValue can only be a primitive or an array, found $json"
+                )
+            }
+
+          decoder is YamlInput -> {
+            val node = decoder.decodeSerializableValue(YamlNode.serializer())
+            when {
+              node is YamlList -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
+              node is YamlScalar -> Single(node.content)
+              else ->
+                throw SerializationException("ExampleValue can only be a primitive or an array")
+            }
+          }
+
+          else -> error("This $decoder is not supported")
         }
-      }
     }
 
     public operator fun invoke(v: String): ExampleValue = Single(v)

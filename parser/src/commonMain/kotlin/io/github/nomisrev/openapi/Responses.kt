@@ -1,5 +1,11 @@
 package io.github.nomisrev.openapi
 
+import com.charleskorn.kaml.YamlInput
+import com.charleskorn.kaml.YamlMap
+import com.charleskorn.kaml.YamlNode
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SealedSerializationApi
 import kotlinx.serialization.Serializable
@@ -64,21 +70,52 @@ public data class Responses(
       private val responseSerializer = ReferenceOr.serializer(Response.serializer())
       private val responsesSerializer = MapSerializer(Int.serializer(), responseSerializer)
 
-      override fun deserialize(decoder: Decoder): Responses {
-        decoder as JsonDecoder
-        val json = decoder.decodeSerializableValue(JsonElement.serializer()).jsonObject
-        val default =
-          if (json.contains("default"))
-            decoder.json.decodeFromJsonElement(responseSerializer, json.getValue("default"))
-          else null
-        val responsesJs = json.filterNot { it.key.startsWith("x-") || it.key == "default" }
-        val responses =
-          if (responsesJs.isNotEmpty())
-            decoder.json.decodeFromJsonElement(responsesSerializer, JsonObject(responsesJs))
-          else emptyMap()
-        val extensions = json.filter { it.key.startsWith("x-") }
-        return Responses(default, responses, extensions)
-      }
+      override fun deserialize(decoder: Decoder): Responses =
+        when {
+          decoder is JsonDecoder -> {
+            val json = decoder.decodeSerializableValue(JsonElement.serializer()).jsonObject
+            val default =
+              if (json.contains("default"))
+                decoder.json.decodeFromJsonElement(responseSerializer, json.getValue("default"))
+              else null
+            val responsesJs = json.filterNot { it.key.startsWith("x-") || it.key == "default" }
+            val responses =
+              if (responsesJs.isNotEmpty())
+                decoder.json.decodeFromJsonElement(responsesSerializer, JsonObject(responsesJs))
+              else emptyMap()
+            val extensions = json.filter { it.key.startsWith("x-") }
+            Responses(default, responses, extensions)
+          }
+
+          decoder is YamlInput -> {
+            val node = decoder.decodeSerializableValue(YamlNode.serializer()) as YamlMap
+            val defaultOrNull =
+              node.getOrNull("default")?.let {
+                decoder.yaml.decodeFromYamlNode(responseSerializer, it)
+              }
+            val responsesJs =
+              node.entries.filterNot {
+                it.key.content.startsWith("x-") || it.key.content == "default"
+              }
+            val responses =
+              if (responsesJs.isNotEmpty())
+                decoder.yaml.decodeFromYamlNode(
+                  responsesSerializer,
+                  YamlMap(responsesJs, node.path),
+                )
+              else emptyMap()
+            val extensions = buildMap {
+              node.entries.forEach { (key, value) ->
+                if (key.content.startsWith("x-")) {
+                  put(key.content, decoder.yaml.decodeFromYamlNode(JsonElement.serializer(), value))
+                }
+              }
+            }
+            Responses(defaultOrNull, responses, extensions)
+          }
+
+          else -> error("Unsupported decoder $decoder")
+        }
 
       override fun serialize(encoder: Encoder, value: Responses) {
         encoder as JsonEncoder
@@ -97,7 +134,7 @@ public data class Responses(
   }
 }
 
-@OptIn(SealedSerializationApi::class)
+@OptIn(ExperimentalSerializationApi::class, SealedSerializationApi::class)
 private object ResponsesDescriptor : SerialDescriptor {
   override val serialName: String = "arrow.endpoint.docs.openapi.Responses"
   override val kind: SerialKind = StructureKind.MAP

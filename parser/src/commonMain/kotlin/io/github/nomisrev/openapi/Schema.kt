@@ -1,5 +1,11 @@
 package io.github.nomisrev.openapi
 
+import com.charleskorn.kaml.YamlInput
+import com.charleskorn.kaml.YamlList
+import com.charleskorn.kaml.YamlNode
+import com.charleskorn.kaml.YamlScalar
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -7,10 +13,12 @@ import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -46,7 +54,7 @@ public data class Schema(
   val minProperties: Int? = null,
   /** Unlike JSON Schema this value MUST conform to the defined type for this parameter. */
   val default: DefaultValue? = null,
-  val type: Type? = null,
+  val type: @Serializable(Type.Serializer::class) Type? = null,
   val format: String? = null,
   val items: ReferenceOr<Schema>? = null,
   val maximum: Double? = null,
@@ -63,6 +71,7 @@ public data class Schema(
   val multipleOf: Double? = null,
   @SerialName("\$id") val id: String? = null,
   @SerialName("\$anchor") val anchor: String? = null,
+  @SerialName("\$recursiveAnchor") val recursiveAnchor: Boolean? = null,
 ) {
   init {
     require(required?.isEmpty() != true) {
@@ -91,31 +100,57 @@ public data class Schema(
       @SerialName("string") String("string");
 
       public companion object {
-        public fun fromString(value: kotlin.String): Basic? =
+        public fun fromString(value: String): Basic? =
           entries.find { it.value.equals(value, ignoreCase = true) }
       }
     }
 
     public object Serializer : KSerializer<Type> {
       // TODO fix descriptor
+      @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
       override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor("io.github.nomisrev.openapi.Schema.Type")
+        buildSerialDescriptor("io.github.nomisrev.openapi.Schema.Type", SerialKind.CONTEXTUAL)
 
-      override fun deserialize(decoder: Decoder): Type {
-        val json = decoder.decodeSerializableValue(JsonElement.serializer())
-        return when {
-          json is JsonArray ->
-            Array(
-              decoder
-                .decodeSerializableValue(ListSerializer(String.serializer()))
-                .mapNotNull(Basic.Companion::fromString)
-            )
-          json is JsonPrimitive && json.isString ->
-            Basic.fromString(json.content)
-              ?: throw SerializationException("Invalid Basic.Type value: ${json.content}")
-          else -> throw SerializationException("Schema.Type can only be a string or an array")
+      override fun deserialize(decoder: Decoder): Type =
+        when {
+          decoder is JsonDecoder -> {
+            val json = decoder.decodeSerializableValue(JsonElement.serializer())
+            when {
+              json is JsonArray ->
+                Array(
+                  decoder
+                    .decodeSerializableValue(ListSerializer(String.serializer()))
+                    .mapNotNull(Basic.Companion::fromString)
+                )
+
+              json is JsonPrimitive && json.isString ->
+                Basic.fromString(json.content)
+                  ?: throw SerializationException("Invalid Basic.Type value: ${json.content}")
+
+              else -> throw SerializationException("Schema.Type can only be a string or an array")
+            }
+          }
+
+          decoder is YamlInput -> {
+            val node = decoder.decodeSerializableValue(YamlNode.serializer())
+            when {
+              node is YamlList ->
+                Array(
+                  decoder
+                    .decodeSerializableValue(ListSerializer(String.serializer()))
+                    .mapNotNull(Basic.Companion::fromString)
+                )
+
+              node is YamlScalar ->
+                Basic.fromString(node.content)
+                  ?: throw SerializationException("Invalid Basic.Type value: ${node.content}")
+
+              else -> throw SerializationException("Schema.Type can only be a string or an array")
+            }
+          }
+
+          else -> error("This $decoder is not supported")
         }
-      }
 
       override fun serialize(encoder: Encoder, value: Type) {
         when (value) {
@@ -124,6 +159,7 @@ public data class Schema(
               ListSerializer(String.serializer()),
               value.types.map { it.value },
             )
+
           is Basic -> encoder.encodeString(value.value)
         }
       }

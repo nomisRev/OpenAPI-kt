@@ -1,6 +1,6 @@
 package io.github.nomisrev.openapi
 
-import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable(Example.Companion.Serializer::class)
-@OptIn(InternalSerializationApi::class)
+@OptIn(ExperimentalSerializationApi::class)
 @KeepGeneratedSerializer
 public data class Example(
   /** Short description for the example. */
