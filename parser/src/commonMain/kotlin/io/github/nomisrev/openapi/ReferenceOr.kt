@@ -1,12 +1,18 @@
 package io.github.nomisrev.openapi
 
+import com.charleskorn.kaml.YamlInput
+import com.charleskorn.kaml.YamlMap
+import com.charleskorn.kaml.YamlNode
+import com.charleskorn.kaml.yamlScalar
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildClassSerialDescriptor
-import kotlinx.serialization.descriptors.element
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
@@ -15,6 +21,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 private const val RefKey = "\$ref"
+private const val RecursiveRefKey = "\$recursiveRef"
 
 /**
  * Defines Union [A] | [Reference]. A lot of types like Header, Schema, MediaType, etc. can be
@@ -46,15 +53,9 @@ public sealed interface ReferenceOr<out A> {
 
     internal class Serializer<T>(private val dataSerializer: KSerializer<T>) :
       KSerializer<ReferenceOr<T>> {
-
-      private val refDescriptor =
-        buildClassSerialDescriptor("Reference") { element<String>(RefKey) }
-
+      @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
       override val descriptor: SerialDescriptor =
-        buildClassSerialDescriptor("arrow.endpoint.docs.openapi.Referenced") {
-          element("Ref", refDescriptor)
-          element("description", dataSerializer.descriptor)
-        }
+        buildSerialDescriptor("io.github.nomisrev.openapi.ReferenceOr", SerialKind.CONTEXTUAL)
 
       override fun serialize(encoder: Encoder, value: ReferenceOr<T>) {
         when (value) {
@@ -63,14 +64,38 @@ public sealed interface ReferenceOr<out A> {
         }
       }
 
-      override fun deserialize(decoder: Decoder): ReferenceOr<T> {
-        decoder as JsonDecoder
-        val json = decoder.decodeSerializableValue(JsonElement.serializer())
-        val jsobObject = json as? JsonObject
-        return if (jsobObject != null && jsobObject.contains(RefKey))
-          Reference(json[RefKey]!!.jsonPrimitive.content)
-        else Value(decoder.json.decodeFromJsonElement(dataSerializer, json))
-      }
+      override fun deserialize(decoder: Decoder): ReferenceOr<T> =
+        when (decoder) {
+          is JsonDecoder -> {
+            val json = decoder.decodeSerializableValue(JsonElement.serializer())
+            val jsobObject = json as? JsonObject
+            when {
+              jsobObject != null && jsobObject.contains(RefKey) ->
+                Reference(json[RefKey]!!.jsonPrimitive.content)
+
+              jsobObject != null && jsobObject.contains("RecursiveRefKey") ->
+                Reference(json[RefKey]!!.jsonPrimitive.content)
+
+              else -> Value(decoder.json.decodeFromJsonElement(dataSerializer, json))
+            }
+          }
+
+          is YamlInput -> {
+            val node = decoder.decodeSerializableValue(YamlNode.serializer())
+            val map = node as? YamlMap
+
+            val refContentOrNull =
+              map?.getOrNull(RefKey)?.yamlScalar?.content
+                ?: map?.getOrNull(RecursiveRefKey)?.yamlScalar?.content
+
+            when {
+              refContentOrNull != null -> Reference(refContentOrNull)
+              else -> Value(decoder.yaml.decodeFromYamlNode(dataSerializer, node))
+            }
+          }
+
+          else -> error("Unknown decoder ($decoder) cannot deserialise ReferenceOr.")
+        }
     }
   }
 }

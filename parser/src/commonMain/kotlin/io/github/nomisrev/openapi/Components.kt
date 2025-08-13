@@ -1,3 +1,5 @@
+@file:Suppress("OPT_IN_USAGE")
+
 package io.github.nomisrev.openapi
 
 import kotlinx.serialization.InternalSerializationApi
