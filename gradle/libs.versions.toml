@@ -1,6 +1,6 @@
 [versions]
 dokka = "2.0.0"
-kotlin = "2.1.21"
+kotlin = "2.2.10"
 kover = "0.9.1"
 knit = "0.5.0"
 spotless="7.0.3"
