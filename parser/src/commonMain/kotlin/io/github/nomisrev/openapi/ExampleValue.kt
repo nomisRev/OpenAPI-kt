@@ -2,8 +2,11 @@ package io.github.nomisrev.openapi
 
 import com.charleskorn.kaml.YamlInput
 import com.charleskorn.kaml.YamlList
+import com.charleskorn.kaml.YamlMap
 import com.charleskorn.kaml.YamlNode
+import com.charleskorn.kaml.YamlNull
 import com.charleskorn.kaml.YamlScalar
+import com.charleskorn.kaml.YamlTaggedNode
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
@@ -17,9 +20,11 @@ import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 public typealias DefaultValue = ExampleValue
@@ -58,26 +63,25 @@ public sealed interface ExampleValue {
       }
 
       override fun deserialize(decoder: Decoder): ExampleValue =
-        when {
-          decoder is JsonDecoder ->
+        when (decoder) {
+          is JsonDecoder ->
             when (val json = decoder.decodeSerializableValue(JsonElement.serializer())) {
               is JsonArray -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
               is JsonPrimitive -> Single(json.content)
-              else ->
-                throw SerializationException(
-                  "ExampleValue can only be a primitive or an array, found $json"
-                )
+              is JsonObject -> Single(json.toString())
             }
 
-          decoder is YamlInput -> {
-            val node = decoder.decodeSerializableValue(YamlNode.serializer())
-            when {
-              node is YamlList -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
-              node is YamlScalar -> Single(node.content)
+          is YamlInput ->
+            when (val node = decoder.decodeSerializableValue(YamlNode.serializer())) {
+              is YamlList -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
+              is YamlScalar -> Single(node.content)
+              is YamlMap ->
+                Single(Json.encodeToString(JsonElement.serializer(), node.toJsonElement()))
               else ->
-                throw SerializationException("ExampleValue can only be a primitive or an array")
+                throw SerializationException(
+                  "ExampleValue can only be a primitive, object or an array. Actual is ${node::class}"
+                )
             }
-          }
 
           else -> error("This $decoder is not supported")
         }
@@ -86,3 +90,13 @@ public sealed interface ExampleValue {
     public operator fun invoke(v: String): ExampleValue = Single(v)
   }
 }
+
+private fun YamlNode.toJsonElement(): kotlinx.serialization.json.JsonElement =
+  when (this) {
+    is YamlScalar -> JsonPrimitive(this.content)
+    is YamlNull -> JsonPrimitive(null as String?)
+    is YamlList -> JsonArray(this.items.map { it.toJsonElement() })
+    is YamlMap ->
+      JsonObject(this.entries.mapKeys { it.key.content }.mapValues { it.value.toJsonElement() })
+    is YamlTaggedNode -> this.innerNode.toJsonElement()
+  }
