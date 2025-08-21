@@ -64,18 +64,24 @@ public sealed interface ExampleValue {
 
       override fun deserialize(decoder: Decoder): ExampleValue =
         when (decoder) {
-          is JsonDecoder -> when (val json = decoder.decodeSerializableValue(JsonElement.serializer())) {
-            is JsonArray -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
-            is JsonPrimitive -> Single(json.content)
-            is JsonObject -> Single(json.toString())
-          }
+          is JsonDecoder ->
+            when (val json = decoder.decodeSerializableValue(JsonElement.serializer())) {
+              is JsonArray -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
+              is JsonPrimitive -> Single(json.content)
+              is JsonObject -> Single(json.toString())
+            }
 
-          is YamlInput -> when (val node = decoder.decodeSerializableValue(YamlNode.serializer())) {
-            is YamlList -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
-            is YamlScalar -> Single(node.content)
-            is YamlMap -> Single(Json.encodeToString(JsonElement.serializer(), node.toJsonElement()))
-            else -> throw SerializationException("ExampleValue can only be a primitive, object or an array. Actual is ${node::class}")
-          }
+          is YamlInput ->
+            when (val node = decoder.decodeSerializableValue(YamlNode.serializer())) {
+              is YamlList -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
+              is YamlScalar -> Single(node.content)
+              is YamlMap ->
+                Single(Json.encodeToString(JsonElement.serializer(), node.toJsonElement()))
+              else ->
+                throw SerializationException(
+                  "ExampleValue can only be a primitive, object or an array. Actual is ${node::class}"
+                )
+            }
 
           else -> error("This $decoder is not supported")
         }
@@ -85,10 +91,12 @@ public sealed interface ExampleValue {
   }
 }
 
-private fun YamlNode.toJsonElement(): kotlinx.serialization.json.JsonElement = when (this) {
-  is YamlScalar -> JsonPrimitive(this.content)
-  is YamlNull -> JsonPrimitive(null as String?)
-  is YamlList -> JsonArray(this.items.map { it.toJsonElement() })
-  is YamlMap -> JsonObject(this.entries.mapKeys { it.key.content }.mapValues { it.value.toJsonElement() })
-  is YamlTaggedNode -> this.innerNode.toJsonElement()
-}
+private fun YamlNode.toJsonElement(): kotlinx.serialization.json.JsonElement =
+  when (this) {
+    is YamlScalar -> JsonPrimitive(this.content)
+    is YamlNull -> JsonPrimitive(null as String?)
+    is YamlList -> JsonArray(this.items.map { it.toJsonElement() })
+    is YamlMap ->
+      JsonObject(this.entries.mapKeys { it.key.content }.mapValues { it.value.toJsonElement() })
+    is YamlTaggedNode -> this.innerNode.toJsonElement()
+  }
