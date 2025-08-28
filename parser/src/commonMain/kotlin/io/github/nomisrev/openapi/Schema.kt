@@ -35,7 +35,7 @@ public data class Schema(
   val title: String? = null,
   val description: ReferenceOr<String>? = null,
   /** required is an object-level attribute, not a property attribute. */
-  val required: List<String>? = null,
+  val required: List<String> = emptyList(),
   val nullable: Boolean? = null,
   val allOf: List<ReferenceOr<Schema>>? = null,
   val oneOf: List<ReferenceOr<Schema>>? = null,
@@ -73,11 +73,6 @@ public data class Schema(
   @SerialName("\$anchor") val anchor: String? = null,
   @SerialName("\$recursiveAnchor") val recursiveAnchor: Boolean? = null,
 ) {
-  init {
-    require(required?.isEmpty() != true) {
-      "An empty list required: [] is not valid. If all properties are optional, do not specify the required keyword."
-    }
-  }
 
   @Serializable
   public data class Discriminator(
