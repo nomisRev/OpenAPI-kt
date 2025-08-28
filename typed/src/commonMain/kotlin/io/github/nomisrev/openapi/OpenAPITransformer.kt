@@ -54,7 +54,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             )
         }
 
-      val inputs = operation.input(::context)
+      val opName = operation.operationId ?: method.value.lowercase()
+      val inputs = operation.input(::context, opName)
       val nestedInput = inputs.mapNotNull { (it as? Resolved.Value)?.value }
       val nestedResponses =
         operation.responses.responses.mapNotNull { (_, refOrResponse) ->
@@ -67,13 +68,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   ?.schema
                   ?.resolve() ?: return@mapNotNull null
               val context =
-                resolved.namedOr {
-                  val operationId =
-                    requireNotNull(operation.operationId) {
-                      "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
-                    }
-                  context(NamingContext.RouteBody(operationId, "Response"))
-                }
+                resolved.namedOr { context(NamingContext.RouteBody(opName, "Response")) }
               (resolved.toModel(context) as? Resolved.Value)?.value
             }
           }
@@ -90,10 +85,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       val nestedBody =
         json
           ?.namedOr {
-            val name =
-              requireNotNull(operation.operationId?.let { Named("${it}Request") }) {
-                "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
-              }
+            val name = Named("${opName}Request")
             context(name)
           }
           ?.let { (json.toModel(it) as? Resolved.Value)?.value }
@@ -104,31 +96,28 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         summary = operation.summary,
         path = path,
         method = method,
-        body = toRequestBody(operation, operation.requestBody?.get(), ::context),
+        body = toRequestBody(operation, operation.requestBody?.get(), ::context, opName),
         input =
           inputs.zip(operation.parameters) { model, p ->
             val param = p.get()
             Route.Input(param.name, model.value, param.required, param.input, param.description)
           },
-        returnType = toResponses(operation, ::context),
+        returnType = toResponses(operation, ::context, opName),
         extensions = operation.extensions,
         nested = nestedInput + nestedResponses + nestedBody,
       )
     }
 
-  fun Operation.input(create: (NamingContext) -> NamingContext): List<Resolved<Model>> =
+  fun Operation.input(
+    create: (NamingContext) -> NamingContext,
+    opName: String,
+  ): List<Resolved<Model>> =
     parameters.map { p ->
       val param = p.get()
       val resolved =
         param.schema?.resolve() ?: throw IllegalStateException("No Schema for Parameter.")
       val context =
-        resolved.namedOr {
-          val operationId =
-            requireNotNull(operationId) {
-              "operationId currently required to generate inline schemas for operation parameters."
-            }
-          create(NamingContext.RouteParam(param.name, operationId, "Request"))
-        }
+        resolved.namedOr { create(NamingContext.RouteParam(param.name, opName, "Request")) }
       resolved.toModel(context)
     }
 
@@ -584,6 +573,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     operation: Operation,
     body: RequestBody?,
     create: (NamingContext) -> NamingContext,
+    opName: String,
   ): Route.Bodies =
     Route.Bodies(
       body?.required ?: false,
@@ -598,10 +588,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                 mediaType.schema?.resolve()?.let { json ->
                   val context =
                     json.namedOr {
-                      val name =
-                        requireNotNull(operation.operationId?.let { Named("${it}Request") }) {
-                          "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
-                        }
+                      val name = Named("${opName}Request")
                       create(name)
                     }
 
@@ -621,13 +608,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   )
 
               fun ctx(name: String): NamingContext =
-                resolved.namedOr {
-                  val operationId =
-                    requireNotNull(operation.operationId) {
-                      "operationId currently required to generate inline schemas for operation parameters."
-                    }
-                  create(NamingContext.RouteParam(name, operationId, "Request"))
-                }
+                resolved.namedOr { create(NamingContext.RouteParam(name, opName, "Request")) }
 
               val multipart =
                 when (resolved) {
@@ -668,7 +649,11 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   private fun Response.isEmpty(): Boolean =
     headers.isEmpty() && content.isEmpty() && links.isEmpty() && extensions.isEmpty()
 
-  fun toResponses(operation: Operation, create: (NamingContext) -> NamingContext): Route.Returns =
+  fun toResponses(
+    operation: Operation,
+    create: (NamingContext) -> NamingContext,
+    opName: String,
+  ): Route.Returns =
     Route.Returns(
       operation.responses.responses.entries.associate { (code, refOrResponse) ->
         val statusCode = HttpStatusCode.fromValue(code)
@@ -685,13 +670,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               when (val resolved = mediaType.schema?.resolve()) {
                 is Resolved -> {
                   val context =
-                    resolved.namedOr {
-                      val operationId =
-                        requireNotNull(operation.operationId) {
-                          "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
-                        }
-                      create(NamingContext.RouteBody(operationId, "Response"))
-                    }
+                    resolved.namedOr { create(NamingContext.RouteBody(opName, "Response")) }
                   Route.ReturnType(resolved.toModel(context).value, response.extensions)
                 }
                 null ->

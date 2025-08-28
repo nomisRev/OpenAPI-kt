@@ -1,0 +1,40 @@
+{
+  "openapi": "3.1.0",
+  "info": { "title": "YouTrack API (min)", "version": "1.0.0" },
+  "paths": {
+    "/admin/customFieldSettings/bundles/build": {
+      "description": "This resource provides operations with sets of builds.",
+      "get": {
+        "parameters": [
+          { "name": "fields", "in": "query", "schema": { "type": "string" } },
+          { "name": "$skip", "in": "query", "schema": { "type": "integer", "format": "int32" } },
+          { "name": "$top", "in": "query", "schema": { "type": "integer", "format": "int32" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "collection of BuildBundle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BuildBundle" }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BuildBundle": {
+        "type": "object",
+        "description": "Minimal placeholder based on YouTrack",
+        "properties": {
+          "id": { "type": "string" }
+        }
+      }
+    }
+  }
+}
