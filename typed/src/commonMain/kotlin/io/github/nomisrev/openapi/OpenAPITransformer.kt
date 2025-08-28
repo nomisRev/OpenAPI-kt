@@ -365,7 +365,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             properties = properties,
             additionalProperties = ref.value.additionalProperties ?: obj.value.additionalProperties,
             description = ref.value.description,
-            required = ref.value.required.orEmpty() + obj.value.required.orEmpty(),
+            required = ref.value.required + obj.value.required,
             nullable = ref.value.nullable ?: obj.value.nullable,
             discriminator = ref.value.discriminator ?: obj.value.discriminator,
             minProperties = ref.value.minProperties ?: obj.value.minProperties,
@@ -409,8 +409,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         Property(
           name,
           model.value,
-          required?.contains(name) == true,
-          resolved.value.nullable ?: required?.contains(name)?.not() ?: true,
+          required.contains(name),
+          resolved.value.nullable ?: !required.contains(name),
           resolved.value.description.get(),
         )
       },
@@ -497,9 +497,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     subtypes: List<ReferenceOr<Schema>>,
   ): Model.Union {
     val caseToContext =
-      subtypes.associate { ref ->
+      subtypes.withIndex().associate { (idx, ref) ->
         val resolved = ref.resolve()
-        Pair(resolved, toUnionCaseContext(context, resolved))
+        Pair(resolved, toUnionCaseContext(context, resolved, idx))
       }
     val cases =
       caseToContext
@@ -519,7 +519,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     )
   }
 
-  fun toUnionCaseContext(context: NamingContext, case: Resolved<Schema>): NamingContext =
+  fun toUnionCaseContext(context: NamingContext, case: Resolved<Schema>, index: Int): NamingContext =
     when (case) {
       is Resolved.Ref -> Named(case.name)
       is Resolved.Value ->
@@ -541,7 +541,10 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                 }
                 ?.singleOrNull()
                 ?.let(::Named)
-                ?: TODO("Name Generated for inline objects of unions not yet supported."),
+                ?: run {
+                  val baseName = if (context is Named) context.name else "Inline"
+                  Named("${baseName}Case${index + 1}")
+                },
               context,
             )
           case.value.type == Type.Basic.Array ->
