@@ -149,10 +149,14 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
          *   ]
          * }
          */
-        value.anyOf != null && value.anyOf?.size == 1 ->
-          value.anyOf!![0].resolve().toModel(context).value
-        value.oneOf != null && value.oneOf?.size == 1 ->
-          value.oneOf!![0].resolve().toModel(context).value
+        value.anyOf != null && value.anyOf?.size == 1 -> {
+          val inner = value.anyOf!![0].resolve().toModel(context).value
+          inner.withDescriptionIfNull(schema.description.get())
+        }
+        value.oneOf != null && value.oneOf?.size == 1 -> {
+          val inner = value.oneOf!![0].resolve().toModel(context).value
+          inner.withDescriptionIfNull(schema.description.get())
+        }
         schema.anyOf != null -> schema.toUnion(context, schema.anyOf!!)
         // oneOf + properties => oneOf requirements: 'propA OR propB is required'.
         schema.oneOf != null && schema.properties != null -> schema.toObject(context)
@@ -241,6 +245,26 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     default(label, onSingle) {
       throw IllegalStateException("Multiple default values not supported for $label.")
     }
+
+  private fun Model.withDescriptionIfNull(desc: String?): Model {
+    if (desc == null) return this
+    return when (this) {
+      is Model.Primitive.Int -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Primitive.Double -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Primitive.Boolean -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Primitive.String -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Primitive.Unit -> if (this.description != null) this else this.copy(description = desc)
+      is Model.OctetStream -> if (this.description != null) this else this.copy(description = desc)
+      is Model.FreeFormJson -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Collection.List -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Collection.Set -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Collection.Map -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Object -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Union -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Enum.Closed -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Enum.Open -> if (this.description != null) this else this.copy(description = desc)
+    }
+  }
 
   fun Schema.isOpenEnumeration(): Boolean {
     val anyOf = anyOf ?: return false
