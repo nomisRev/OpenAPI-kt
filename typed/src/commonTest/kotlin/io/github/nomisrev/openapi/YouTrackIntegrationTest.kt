@@ -14,19 +14,19 @@ class YouTrackIntegrationTest {
     // a resource.
     val candidates =
       listOf(
-        Path("youtrack.json"), // when working directory is the repository root
-        Path("../youtrack.json"), // when working directory is the module directory
+          Path("youtrack.json"), // when working directory is the repository root
+          Path("../youtrack.json"), // when working directory is the module directory
       )
     val path =
       candidates.firstOrNull { it.exists() }
         ?: fail(
-          "Could not find youtrack.json in repository root. Checked: ${candidates.joinToString()}"
+            "Could not find youtrack.json in repository root. Checked: ${candidates.joinToString()}"
         )
 
     val json = path.readText()
     val openApi = OpenAPI.fromJson(json)
 
     val routes = openApi.routes()
-    assertTrue(routes.isNotEmpty(), "Expected YouTrack spec to produce at least one route")
+      assertTrue(routes.isNotEmpty(), "Expected YouTrack spec to produce at least one route")
   }
 }
