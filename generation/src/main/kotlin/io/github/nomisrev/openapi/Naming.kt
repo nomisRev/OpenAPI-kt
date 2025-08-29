@@ -146,6 +146,7 @@ private class Nam(private val `package`: String) : Naming {
             is Model.Enum -> toClassName(case.context).simpleName
             is Model.Object -> toClassName(case.context).simpleName
             is Model.Union -> toClassName(case.context).simpleName
+            is Model.Reference -> toClassName(case.context).simpleName
             is Model.Primitive.Boolean -> "Boolean"
             is Model.Primitive.Double -> "Double"
             is Model.Primitive.Int -> "Int"

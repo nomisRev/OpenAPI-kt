@@ -126,51 +126,54 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     openAPI.components.schemas.map { (name, refOrSchema) ->
       when (val resolved = refOrSchema.resolve()) {
         is Resolved.Ref -> throw IllegalStateException("Remote schemas not supported yet.")
-        is Resolved.Value -> Resolved.Ref(name, resolved.value).toModel(Named(name)).value
+        is Resolved.Value -> resolved.toModel(Named(name)).value
       }
     }
 
-  fun Resolved<Schema>.toModel(context: NamingContext): Resolved<Model> {
-    val schema: Schema = value
-    val model =
-      when {
-        schema.isOpenEnumeration() ->
-          schema.toOpenEnum(context, schema.anyOf!!.firstNotNullOf { it.resolve().value.enum })
-
-        /*
-         * We're modifying the schema here...
-         * This is to flatten the following to just `String`
-         * "model": {
-         *   "description": "ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models/overview) for descriptions of them.\n",
-         *   "anyOf": [
-         *     {
-         *       "type": "string"
-         *     }
-         *   ]
-         * }
-         */
-        value.anyOf != null && value.anyOf?.size == 1 -> {
-          val inner = value.anyOf!![0].resolve().toModel(context).value
-          inner.withDescriptionIfNull(schema.description.get())
-        }
-        value.oneOf != null && value.oneOf?.size == 1 -> {
-          val inner = value.oneOf!![0].resolve().toModel(context).value
-          inner.withDescriptionIfNull(schema.description.get())
-        }
-        schema.anyOf != null -> schema.toUnion(context, schema.anyOf!!)
-        // oneOf + properties => oneOf requirements: 'propA OR propB is required'.
-        schema.oneOf != null && schema.properties != null -> schema.toObject(context)
-        schema.oneOf != null -> schema.toUnion(context, schema.oneOf!!)
-        schema.allOf != null -> allOf(schema, context)
-        schema.enum != null -> schema.toEnum(context, schema.enum.orEmpty())
-        else -> schema.type(context)
+  fun Resolved<Schema>.toModel(context: NamingContext): Resolved<Model> =
+    when (this) {
+      is Resolved.Ref -> {
+        val desc = value.description.get()
+        Resolved.Ref(name, Model.Reference(Named(name), desc))
       }
+      is Resolved.Value -> {
+        val schema: Schema = value
+        val model =
+          when {
+            schema.isOpenEnumeration() ->
+              schema.toOpenEnum(context, schema.anyOf!!.firstNotNullOf { it.resolve().value.enum })
 
-    return when (this) {
-      is Resolved.Ref -> Resolved.Ref(name, model)
-      is Resolved.Value -> Resolved.Value(model)
+            /*
+             * We're modifying the schema here...
+             * This is to flatten the following to just `String`
+             * "model": {
+             *   "description": "ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models/overview) for descriptions of them.\n",
+             *   "anyOf": [
+             *     {
+             *       "type": "string"
+             *     }
+             *   ]
+             * }
+             */
+            value.anyOf != null && value.anyOf?.size == 1 -> {
+              val inner = value.anyOf!![0].resolve().toModel(context).value
+              inner.withDescriptionIfNull(schema.description.get())
+            }
+            value.oneOf != null && value.oneOf?.size == 1 -> {
+              val inner = value.oneOf!![0].resolve().toModel(context).value
+              inner.withDescriptionIfNull(schema.description.get())
+            }
+            schema.anyOf != null -> schema.toUnion(context, schema.anyOf!!)
+            // oneOf + properties => oneOf requirements: 'propA OR propB is required'.
+            schema.oneOf != null && schema.properties != null -> schema.toObject(context)
+            schema.oneOf != null -> schema.toUnion(context, schema.oneOf!!)
+            schema.allOf != null -> allOf(schema, context)
+            schema.enum != null -> schema.toEnum(context, schema.enum.orEmpty())
+            else -> schema.type(context)
+          }
+        Resolved.Value(model)
+      }
     }
-  }
 
   private tailrec fun Schema.type(context: NamingContext): Model =
     when (val type = type) {
@@ -249,20 +252,21 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   private fun Model.withDescriptionIfNull(desc: String?): Model {
     if (desc == null) return this
     return when (this) {
-      is Model.Primitive.Int -> if (this.description != null) this else this.copy(description = desc)
-      is Model.Primitive.Double -> if (this.description != null) this else this.copy(description = desc)
-      is Model.Primitive.Boolean -> if (this.description != null) this else this.copy(description = desc)
-      is Model.Primitive.String -> if (this.description != null) this else this.copy(description = desc)
-      is Model.Primitive.Unit -> if (this.description != null) this else this.copy(description = desc)
+      is Primitive.Int -> if (this.description != null) this else this.copy(description = desc)
+      is Primitive.Double -> if (this.description != null) this else this.copy(description = desc)
+      is Primitive.Boolean -> if (this.description != null) this else this.copy(description = desc)
+      is Primitive.String -> if (this.description != null) this else this.copy(description = desc)
+      is Primitive.Unit -> if (this.description != null) this else this.copy(description = desc)
       is Model.OctetStream -> if (this.description != null) this else this.copy(description = desc)
       is Model.FreeFormJson -> if (this.description != null) this else this.copy(description = desc)
-      is Model.Collection.List -> if (this.description != null) this else this.copy(description = desc)
-      is Model.Collection.Set -> if (this.description != null) this else this.copy(description = desc)
-      is Model.Collection.Map -> if (this.description != null) this else this.copy(description = desc)
+      is Collection.List -> if (this.description != null) this else this.copy(description = desc)
+      is Collection.Set -> if (this.description != null) this else this.copy(description = desc)
+      is Collection.Map -> if (this.description != null) this else this.copy(description = desc)
       is Model.Object -> if (this.description != null) this else this.copy(description = desc)
       is Model.Union -> if (this.description != null) this else this.copy(description = desc)
-      is Model.Enum.Closed -> if (this.description != null) this else this.copy(description = desc)
-      is Model.Enum.Open -> if (this.description != null) this else this.copy(description = desc)
+      is Enum.Closed -> if (this.description != null) this else this.copy(description = desc)
+      is Enum.Open -> if (this.description != null) this else this.copy(description = desc)
+      is Model.Reference -> if (this.description != null) this else this.copy(description = desc)
     }
   }
 
@@ -521,7 +525,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     subtypes: List<ReferenceOr<Schema>>,
   ): Model.Union {
     val caseToContext =
-      subtypes.withIndex().associate { (idx, ref) ->
+      subtypes.withIndex().map { (idx, ref) ->
         val resolved = ref.resolve()
         Pair(resolved, toUnionCaseContext(context, resolved, idx))
       }
@@ -543,7 +547,11 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     )
   }
 
-  fun toUnionCaseContext(context: NamingContext, case: Resolved<Schema>, index: Int): NamingContext =
+  fun toUnionCaseContext(
+    context: NamingContext,
+    case: Resolved<Schema>,
+    index: Int,
+  ): NamingContext =
     when (case) {
       is Resolved.Ref -> Named(case.name)
       is Resolved.Value ->

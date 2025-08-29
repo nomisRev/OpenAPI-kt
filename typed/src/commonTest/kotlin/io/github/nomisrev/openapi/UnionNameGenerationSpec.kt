@@ -9,7 +9,6 @@ import io.github.nomisrev.openapi.ReferenceOr.Companion.value
 import io.github.nomisrev.openapi.Schema.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.junit.jupiter.api.assertThrows
 
 /**
  * With any kind of disjunction, we need to generate names for the cases since we need to convert to
@@ -33,21 +32,21 @@ class UnionNameGenerationSpec {
   fun nestedInlineObjInUnionGeneratesNameOnTypeProperty() {
     val actual =
       Schema(
-        oneOf =
-          listOf(
-            value(
-              Schema(
-                type = Type.Basic.Object,
-                properties =
-                  mapOf(
-                    "type" to value(Schema(type = Type.Basic.String, enum = listOf("Function"))),
-                    "value" to value(Schema(type = Type.Basic.String)),
-                  ),
-              )
-            ),
-            value(Schema(type = Type.Basic.Integer)),
-          )
-      )
+          oneOf =
+            listOf(
+              value(
+                Schema(
+                  type = Type.Basic.Object,
+                  properties =
+                    mapOf(
+                      "type" to value(Schema(type = Type.Basic.String, enum = listOf("Function"))),
+                      "value" to value(Schema(type = Type.Basic.String)),
+                    ),
+                )
+              ),
+              value(Schema(type = Type.Basic.Integer)),
+            )
+        )
         .toModel("TypeOrEvent")
     val context = Nested(Named("Function"), Named("TypeOrEvent"))
     val propContext = Nested(Named("type"), context)
@@ -100,22 +99,22 @@ class UnionNameGenerationSpec {
   fun nestedInlineObjInUnionGeneratesNameOnEventProperty() {
     val actual =
       Schema(
-        oneOf =
-          listOf(
-            value(
-              Schema(
-                type = Type.Basic.Object,
-                properties =
-                  mapOf(
-                    "event" to
-                      value(Schema(type = Type.Basic.String, enum = listOf("RunThread"))),
-                    "value" to value(Schema(type = Type.Basic.String)),
-                  ),
-              )
-            ),
-            value(Schema(type = Type.Basic.Integer)),
-          )
-      )
+          oneOf =
+            listOf(
+              value(
+                Schema(
+                  type = Type.Basic.Object,
+                  properties =
+                    mapOf(
+                      "event" to
+                        value(Schema(type = Type.Basic.String, enum = listOf("RunThread"))),
+                      "value" to value(Schema(type = Type.Basic.String)),
+                    ),
+                )
+              ),
+              value(Schema(type = Type.Basic.Integer)),
+            )
+        )
         .toModel("TypeOrEvent")
     val obj =
       Model.obj(
@@ -196,11 +195,9 @@ class UnionNameGenerationSpec {
     assertEquals(expected, actual)
   }
 
-  @Test
-  fun topLevelOneOfWithListAndInlineInner() = topLevelOneOfWithCollectionAndInlineInner(false)
+  @Test fun topLevelOneOfWithListAndInlineInner() = topLevelOneOfWithCollectionAndInlineInner(false)
 
-  @Test
-  fun topLevelOneOfWithSetAndInlineInner() = topLevelOneOfWithCollectionAndInlineInner(true)
+  @Test fun topLevelOneOfWithSetAndInlineInner() = topLevelOneOfWithCollectionAndInlineInner(true)
 
   @Test
   fun topLevelOneOfWithCollectionAndInlineInner() = topLevelOneOfWithCollectionAndInlineInner(null)
@@ -208,14 +205,14 @@ class UnionNameGenerationSpec {
   private fun topLevelOneOfWithCollectionAndInlineInner(uniqueItems: Boolean?) {
     val actual =
       Schema(
-        oneOf =
-          listOf(
-            value(
-              Schema(type = Type.Basic.Array, items = value(idSchema), uniqueItems = uniqueItems)
-            ),
-            value(Schema(type = Type.Basic.String)),
-          )
-      )
+          oneOf =
+            listOf(
+              value(
+                Schema(type = Type.Basic.Array, items = value(idSchema), uniqueItems = uniqueItems)
+              ),
+              value(Schema(type = Type.Basic.String)),
+            )
+        )
         .toModel("OneOf")
     val name = if (uniqueItems == true) "Set" else "List"
     val context = Nested(Named(name), Named("OneOf"))
@@ -240,66 +237,68 @@ class UnionNameGenerationSpec {
 
   @Test
   fun nonSupportedCases() {
-    val actual = Schema(
-      oneOf =
-        listOf(
-          value(
-            Schema(
-              type = Type.Basic.Object,
-              properties = mapOf("value" to value(Schema(type = Type.Basic.String))),
+    val actual =
+      Schema(
+          oneOf =
+            listOf(
+              value(
+                Schema(
+                  type = Type.Basic.Object,
+                  properties = mapOf("value" to value(Schema(type = Type.Basic.String))),
+                )
+              ),
+              value(Schema(type = Type.Basic.Integer)),
             )
-          ),
-          value(Schema(type = Type.Basic.Integer)),
         )
-    )
-      .toModel("TypeOrEvent")
+        .toModel("TypeOrEvent")
 
-    val expected = Model.Union(
-      context = Named("TypeOrEvent"),
-      description = null,
-      default = null,
-      cases = listOf(
-        Model.Union.Case(
-          context = Nested(Named("TypeOrEventCase1"), Named("TypeOrEvent")),
-          model = Model.obj(
-            context = Nested(Named("TypeOrEventCase1"), Named("TypeOrEvent")),
-            properties = listOf(
-              Property(
-                "value",
-                Primitive.string(),
-                isRequired = false,
-                isNullable = true,
-                description = null
-              )
+    val expected =
+      Model.Union(
+        context = Named("TypeOrEvent"),
+        description = null,
+        default = null,
+        cases =
+          listOf(
+            Model.Union.Case(
+              context = Nested(Named("TypeOrEventCase1"), Named("TypeOrEvent")),
+              model =
+                Model.obj(
+                  context = Nested(Named("TypeOrEventCase1"), Named("TypeOrEvent")),
+                  properties =
+                    listOf(
+                      Property(
+                        "value",
+                        Primitive.string(),
+                        isRequired = false,
+                        isNullable = true,
+                        description = null,
+                      )
+                    ),
+                  inline = listOf(Primitive.string()),
+                ),
             ),
-            inline = listOf(Primitive.string())
-          )
-        ),
-        Model.Union.Case(
-          context = Named("TypeOrEvent"),
-          model = Primitive.int()
-        )
-      ),
-      inline = listOf(
-        Model.obj(
-          context = Nested(Named("TypeOrEventCase1"), Named("TypeOrEvent")),
-          properties = listOf(
-            Property(
-              "value",
-              Primitive.string(),
-              isRequired = false,
-              isNullable = true,
-              description = null
-            )
+            Model.Union.Case(context = Named("TypeOrEvent"), model = Primitive.int()),
           ),
-          inline = listOf(Primitive.string())
-        ),
-        Primitive.int()
+        inline =
+          listOf(
+            Model.obj(
+              context = Nested(Named("TypeOrEventCase1"), Named("TypeOrEvent")),
+              properties =
+                listOf(
+                  Property(
+                    "value",
+                    Primitive.string(),
+                    isRequired = false,
+                    isNullable = true,
+                    description = null,
+                  )
+                ),
+              inline = listOf(Primitive.string()),
+            ),
+            Primitive.int(),
+          ),
       )
-    )
 
     assertEquals(expected, actual)
   }
 }
-
-
