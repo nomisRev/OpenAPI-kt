@@ -57,7 +57,8 @@ fun Model.toFileSpecOrNull(): FileSpec? =
         .build()
     is Model.OctetStream,
     is Model.Primitive,
-    is Model.FreeFormJson -> null
+    is Model.FreeFormJson,
+    is Model.Reference -> null
   }
 
 context(OpenAPIContext)
@@ -66,7 +67,8 @@ fun Model.toTypeSpecOrNull(): TypeSpec? {
     when (val model = intercept(m)) {
       is Model.OctetStream,
       is Model.FreeFormJson,
-      is Model.Primitive -> null
+      is Model.Primitive,
+      is Model.Reference -> null
       is Collection -> toTypeSpecOrNull(model.inner)
       is Model.Enum.Closed -> model.toTypeSpec()
       is Model.Enum.Open -> model.toTypeSpec()
@@ -260,7 +262,8 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
       is Model.OctetStream,
       is Model.Primitive.Unit,
       is Model.Union,
-      is Model.Object -> emptyList()
+      is Model.Object,
+      is Model.Reference -> emptyList()
       is Collection -> {
         val constraint = model.constraint ?: return@flatMap emptyList()
         val paramName = toParamName(Named(property.baseName))

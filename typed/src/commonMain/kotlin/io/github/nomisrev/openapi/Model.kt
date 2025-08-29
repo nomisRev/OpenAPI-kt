@@ -128,6 +128,13 @@ data class Route(
 sealed interface Model {
   val description: String?
 
+  /**
+   * Reference to a named component type. Used to preserve structure and avoid recursively expanding
+   * schemas during transformation while still allowing code generation to refer to the correct
+   * Kotlin type.
+   */
+  data class Reference(val context: NamingContext, override val description: String?) : Model
+
   sealed interface Primitive : Model {
     data class Int(
       val default: kotlin.Int?,

@@ -35,6 +35,7 @@ fun Model.toTypeName(): TypeName =
     is Collection.Map -> MAP.parameterizedBy(STRING, inner.toTypeName())
     is Model.OctetStream -> ClassName(`package`, "UploadFile")
     is Model.FreeFormJson -> JsonElement::class.asTypeName()
+    is Model.Reference -> toClassName(context)
     is Model.Enum -> toClassName(context)
     is Model.Object -> toClassName(context)
     is Model.Union -> toClassName(context)

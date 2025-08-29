@@ -35,6 +35,7 @@ private fun defaultValueImpl(model: Model): Pair<String, List<Any>>? =
       (model.default ?: model.values.singleOrNull())?.let {
         Pair("%T.%L", listOf(toClassName(model.context), toEnumValueName(it)))
       }
+    is Model.Reference -> null
     is Model.Primitive.Unit -> Pair("Unit", emptyList())
     is Model.Primitive -> model.default()?.let { Pair(it, emptyList()) }
   }

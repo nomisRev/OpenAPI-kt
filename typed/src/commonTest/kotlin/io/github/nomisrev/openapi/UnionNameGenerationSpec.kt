@@ -9,7 +9,6 @@ import io.github.nomisrev.openapi.ReferenceOr.Companion.value
 import io.github.nomisrev.openapi.Schema.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.junit.jupiter.api.assertThrows
 
 /**
  * With any kind of disjunction, we need to generate names for the cases since we need to convert to
@@ -238,7 +237,7 @@ class UnionNameGenerationSpec {
 
   @Test
   fun nonSupportedCases() {
-    assertThrows<NotImplementedError> {
+    val actual =
       Schema(
           oneOf =
             listOf(
@@ -252,6 +251,54 @@ class UnionNameGenerationSpec {
             )
         )
         .toModel("TypeOrEvent")
-    }
+
+    val expected =
+      Model.Union(
+        context = Named("TypeOrEvent"),
+        description = null,
+        default = null,
+        cases =
+          listOf(
+            Model.Union.Case(
+              context = Nested(Named("TypeOrEventCase1"), Named("TypeOrEvent")),
+              model =
+                Model.obj(
+                  context = Nested(Named("TypeOrEventCase1"), Named("TypeOrEvent")),
+                  properties =
+                    listOf(
+                      Property(
+                        "value",
+                        Primitive.string(),
+                        isRequired = false,
+                        isNullable = true,
+                        description = null,
+                      )
+                    ),
+                  inline = listOf(Primitive.string()),
+                ),
+            ),
+            Model.Union.Case(context = Named("TypeOrEvent"), model = Primitive.int()),
+          ),
+        inline =
+          listOf(
+            Model.obj(
+              context = Nested(Named("TypeOrEventCase1"), Named("TypeOrEvent")),
+              properties =
+                listOf(
+                  Property(
+                    "value",
+                    Primitive.string(),
+                    isRequired = false,
+                    isNullable = true,
+                    description = null,
+                  )
+                ),
+              inline = listOf(Primitive.string()),
+            ),
+            Primitive.int(),
+          ),
+      )
+
+    assertEquals(expected, actual)
   }
 }
