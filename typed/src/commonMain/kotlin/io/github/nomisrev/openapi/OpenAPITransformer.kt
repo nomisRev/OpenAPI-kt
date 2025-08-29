@@ -361,8 +361,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
    *
    * This is still a WIP. We need to implement a more fine-grained approach to combining schemas,
    * such that we can generate the most idiomatic Kotlin code in all cases. Different results are
-   * likely desired, depending on what kind of schemas need to be comibined. Simple products, or
-   * more complex combinations including oneOf, anyOf, etc.
+   * likely desired, depending on what kind of schemas need to be combined. Simple products, or more
+   * complex combinations including oneOf, anyOf, etc.
    */
   private fun allOf(schema: Schema, context: NamingContext): Model {
     val allOf = schema.allOf!!.map { it.resolve() }
