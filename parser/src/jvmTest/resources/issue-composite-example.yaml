@@ -1,0 +1,27 @@
+Composite examples are not handled:
+
+openapi: 3.0.1
+info:
+  title: Hello World API
+  description: A sample API to demonstrate authentication and connectivity
+  version: '1.0'
+paths:
+  /hello-world:
+    put:
+      operationId: hello-world
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+              example:
+                name: "Foo"
+      responses:
+        '200':
+          description: updated
+Output:
+
+  ExampleValue can only be a primitive or an array, found {"name":"Foo"}
