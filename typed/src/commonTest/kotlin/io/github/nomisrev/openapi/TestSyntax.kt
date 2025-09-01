@@ -68,6 +68,7 @@ public fun Model.Companion.union(
   inline: List<Model>,
   default: String? = null,
   description: String? = null,
+  discriminator: Model.Discriminator? = null,
 ): Model.Union =
   Model.Union(
     context = context,
@@ -75,6 +76,7 @@ public fun Model.Companion.union(
     default = default,
     inline = inline,
     description = description,
+    discriminator = discriminator,
   )
 
 fun Schema.toModel(name: String): Model =
