@@ -62,7 +62,11 @@ class M2TransformGoldenTest {
       ("""
       package com.example
 
-      data class Person(val name: String = "John Doe", val age: Int? = null, val active: Boolean?, val `object`: String)
+      import kotlinx.serialization.Required
+      import kotlinx.serialization.Serializable
+
+      @Serializable
+      data class Person(@Required val name: String = "John Doe", val age: Int? = null, val active: Boolean?, val `object`: String)
       """
         .trimIndent() + "\n")
 
@@ -130,7 +134,11 @@ class M2TransformGoldenTest {
       ("""
       package com.example
 
-      data class CollectionsHolder(val tags: List<String> = listOf("a", "b"), val labels: Set<String> = setOf(), val attributes: Map<String, String>? = null)
+      import kotlinx.serialization.Required
+      import kotlinx.serialization.Serializable
+
+      @Serializable
+      data class CollectionsHolder(@Required val tags: List<String> = listOf("a", "b"), @Required val labels: Set<String> = setOf(), val attributes: Map<String, String>? = null)
       """
         .trimIndent() + "\n")
 
@@ -172,8 +180,11 @@ class M2TransformGoldenTest {
       ("""
       package com.example
 
+      import kotlinx.serialization.Required
       import kotlinx.serialization.SerialName
+      import kotlinx.serialization.Serializable
 
+      @Serializable
       enum class OrderStatus {
           @SerialName("pending")
           Pending,
@@ -183,7 +194,8 @@ class M2TransformGoldenTest {
           Done
       }
 
-      data class Ticket(val status: OrderStatus = OrderStatus.InProgress)
+      @Serializable
+      data class Ticket(@Required val status: OrderStatus = OrderStatus.InProgress)
       """
         .trimIndent() + "\n")
 
@@ -210,7 +222,9 @@ class M2TransformGoldenTest {
       package com.example
 
       import kotlinx.serialization.SerialName
+      import kotlinx.serialization.Serializable
 
+      @Serializable
       enum class ErrorCode {
           @SerialName("1")
           _1,
@@ -258,8 +272,10 @@ class M2TransformGoldenTest {
       ("""
       package com.example
 
+      import kotlinx.serialization.Serializable
       import kotlinx.serialization.json.JsonElement
 
+      @Serializable
       data class Payloads(val json: JsonElement, val bytes: ByteArray)
       """
         .trimIndent() + "\n")

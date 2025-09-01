@@ -4,7 +4,7 @@ import io.github.nomisrev.openapi.ReferenceOr.Companion.value
 import io.github.nomisrev.openapi.Schema.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertFailsWith
 
 class SchemaEdgeCasesTest {
 
@@ -75,6 +75,6 @@ class SchemaEdgeCasesTest {
     val schema =
       Schema(type = Type.Basic.Integer, default = ExampleValue.Multiple(listOf("1", "2")))
 
-    assertThrows<IllegalStateException> { schema.toModel("BadDefault") }
+    assertFailsWith<IllegalStateException> { schema.toModel("BadDefault") }
   }
 }

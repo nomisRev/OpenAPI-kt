@@ -1,11 +1,12 @@
 package io.github.nomisrev.openapi
 
-import kotlin.io.path.Path
-import kotlin.io.path.exists
-import kotlin.io.path.readText
+import io.ktor.utils.io.readText
 import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.fail
+import kotlinx.io.buffered
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
 
 class YouTrackIntegrationTest {
   @Test
@@ -18,12 +19,12 @@ class YouTrackIntegrationTest {
         Path("../youtrack.json"), // when working directory is the module directory
       )
     val path =
-      candidates.firstOrNull { it.exists() }
+      candidates.firstOrNull { SystemFileSystem.exists(it) }
         ?: fail(
           "Could not find youtrack.json in repository root. Checked: ${candidates.joinToString()}"
         )
 
-    val json = path.readText()
+    val json = SystemFileSystem.source(path).buffered().use { it.readText() }
     val openApi = OpenAPI.fromJson(json)
 
     val routes = openApi.routes()

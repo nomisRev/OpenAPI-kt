@@ -32,7 +32,10 @@ class ObjectNoRequireGoldenTest {
     val expected =
       ("""
             package com.example
+            
+            import kotlinx.serialization.Serializable
 
+            @Serializable
             data class User(val id: String)
             """
         .trimIndent() + "\n")

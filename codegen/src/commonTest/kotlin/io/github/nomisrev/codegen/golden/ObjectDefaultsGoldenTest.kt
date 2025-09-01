@@ -46,8 +46,10 @@ class ObjectDefaultsGoldenTest {
       ("""
             package com.example
 
+            import kotlinx.serialization.Serializable
             import kotlinx.serialization.json.JsonElement
 
+            @Serializable
             data class Payload(val json: JsonElement? = null, val attributes: Map<String, Int>? = null)
             """
         .trimIndent() + "\n")

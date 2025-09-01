@@ -4,7 +4,7 @@ import io.github.nomisrev.openapi.Model.Primitive
 import io.github.nomisrev.openapi.Schema.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertFailsWith
 
 class PrimitiveTest {
   @Test
@@ -23,7 +23,7 @@ class PrimitiveTest {
   @Test
   fun doubleIncorrectDefault() {
     val e =
-      assertThrows<IllegalStateException> {
+      assertFailsWith<IllegalStateException> {
         Schema(
             type = Type.Basic.Number,
             default = ExampleValue("Nonsense Value"),
@@ -37,7 +37,7 @@ class PrimitiveTest {
   @Test
   fun doubleIncorrectDefaultMultiple() {
     val e =
-      assertThrows<IllegalStateException> {
+      assertFailsWith<IllegalStateException> {
         Schema(
             type = Type.Basic.Number,
             default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
@@ -63,7 +63,7 @@ class PrimitiveTest {
   @Test
   fun booleanIncorrectDefault() {
     val e =
-      assertThrows<IllegalStateException> {
+      assertFailsWith<IllegalStateException> {
         Schema(
             type = Type.Basic.Boolean,
             default = ExampleValue("Nonsense Value"),
@@ -77,7 +77,7 @@ class PrimitiveTest {
   @Test
   fun booleanIncorrectDefaultMultiple() {
     val e =
-      assertThrows<IllegalStateException> {
+      assertFailsWith<IllegalStateException> {
         Schema(
             type = Type.Basic.Boolean,
             default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
@@ -103,7 +103,7 @@ class PrimitiveTest {
   @Test
   fun integerIncorrectDefault() {
     val e =
-      assertThrows<IllegalStateException> {
+      assertFailsWith<IllegalStateException> {
         Schema(
             type = Type.Basic.Integer,
             default = ExampleValue("Nonsense Value"),
@@ -117,7 +117,7 @@ class PrimitiveTest {
   @Test
   fun integerIncorrectDefaultMultiple() {
     val e =
-      assertThrows<IllegalStateException> {
+      assertFailsWith<IllegalStateException> {
         Schema(
             type = Type.Basic.Integer,
             default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
@@ -166,7 +166,7 @@ class PrimitiveTest {
 
   @Test
   fun nullNotSupported() {
-    assertThrows<NotImplementedError> {
+    assertFailsWith<NotImplementedError> {
       Schema(
           type = Type.Basic.Null,
           default = ExampleValue.Multiple(listOf("Nonsense", "Value")),
