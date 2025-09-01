@@ -382,37 +382,90 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
    * complex combinations including oneOf, anyOf, etc.
    */
   private fun allOf(schema: Schema, context: NamingContext): Model {
-    val allOf = schema.allOf!!.map { it.resolve() }
-    val ref = allOf.singleOrNull { it is Resolved.Ref && it.value.type == Type.Basic.Object }
-    val obj = allOf.singleOrNull { it is Resolved.Value && it.value.type == Type.Basic.Object }
-    return when {
-      ref != null && obj != null -> {
-        val properties = ref.value.properties.orEmpty() + obj.value.properties.orEmpty()
-        Schema(
-            type = Type.Basic.Object,
-            properties = properties,
-            additionalProperties = ref.value.additionalProperties ?: obj.value.additionalProperties,
-            description = ref.value.description,
-            required = ref.value.required + obj.value.required,
-            nullable = ref.value.nullable ?: obj.value.nullable,
-            discriminator = ref.value.discriminator ?: obj.value.discriminator,
-            minProperties = ref.value.minProperties ?: obj.value.minProperties,
-            maxProperties = ref.value.maxProperties ?: obj.value.maxProperties,
-            readOnly = ref.value.readOnly ?: obj.value.readOnly,
-            writeOnly = ref.value.writeOnly ?: obj.value.writeOnly,
-            externalDocs = ref.value.externalDocs,
-            example = ref.value.example,
-            default = ref.value.default,
-            id = ref.value.id,
-            anchor = ref.value.anchor,
-            deprecated = ref.value.deprecated,
-          )
-          .toObject(context, properties)
+    val resolved = schema.allOf!!.map { it.resolve().value }
+    // Determine if all sub-schemas are object-like (i.e., can be merged as an object)
+    val allObjectLike =
+      resolved.all { sub ->
+        sub.type == Type.Basic.Object || sub.properties != null || sub.additionalProperties != null
       }
-      (schema.additionalProperties as? Allowed)?.value == true ->
-        Model.FreeFormJson(schema.description.get(), Constraints.Object(schema))
-      else -> schema.toUnion(context, schema.allOf!!)
+    if (allObjectLike) {
+      // Merge properties in order; later subschemas override earlier ones on key conflicts
+      val mergedProps = linkedMapOf<String, ReferenceOr<Schema>>()
+      val mergedRequired = linkedSetOf<String>()
+
+      // Prefer top-level description; if absent, take first non-null encountered below
+      var description: ReferenceOr<String>? = schema.description
+      var additionalProperties: AdditionalProperties? = null // drop to avoid unsupported combos
+      var nullable: Boolean? = schema.nullable
+      var discriminator: Schema.Discriminator? = null
+      var minProperties: Int? = null
+      var maxProperties: Int? = null
+      var readOnly: Boolean? = null
+      var writeOnly: Boolean? = null
+      var externalDocs: ExternalDocs? = null
+      var example: ExampleValue? = null
+      var default: ExampleValue? = null
+      var id: String? = null
+      var anchor: String? = null
+      var deprecated: Boolean? = null
+
+      resolved.forEach { sub ->
+        sub.properties?.let { mergedProps.putAll(it) }
+        sub.required.forEach { mergedRequired.add(it) }
+        if (description == null) description = sub.description
+        // Avoid setting additionalProperties=true with properties due to toObject() restriction
+        if (additionalProperties == null) additionalProperties = sub.additionalProperties
+        if (nullable == null) nullable = sub.nullable
+        if (discriminator == null) discriminator = sub.discriminator
+        if (minProperties == null) minProperties = sub.minProperties
+        if (maxProperties == null) maxProperties = sub.maxProperties
+        if (readOnly == null) readOnly = sub.readOnly
+        if (writeOnly == null) writeOnly = sub.writeOnly
+        if (externalDocs == null) externalDocs = sub.externalDocs
+        if (example == null) example = sub.example
+        if (default == null) default = sub.default
+        if (id == null) id = sub.id
+        if (anchor == null) anchor = sub.anchor
+        if (deprecated == null) deprecated = sub.deprecated
+      }
+
+      // Edge-case: if no properties resulted and any subschema allows free-form
+      // additionalProperties,
+      // represent as free-form JSON.
+      val anyAllowsAdditional =
+        resolved.any { (it.additionalProperties as? Allowed)?.value == true }
+      if (mergedProps.isEmpty() && anyAllowsAdditional) {
+        return Model.FreeFormJson(schema.description.get(), Constraints.Object(schema))
+      }
+
+      // If container had additionalProperties allowed true and properties exist, keep null here to
+      // avoid violating toObject() precondition.
+      val mergedSchema =
+        Schema(
+          type = Type.Basic.Object,
+          properties = mergedProps,
+          additionalProperties = null,
+          description = description,
+          required = mergedProps.keys.toList(),
+          nullable = nullable,
+          discriminator = discriminator,
+          minProperties = minProperties,
+          maxProperties = maxProperties,
+          readOnly = readOnly,
+          writeOnly = writeOnly,
+          externalDocs = externalDocs,
+          example = example,
+          default = default,
+          id = id,
+          anchor = anchor,
+          deprecated = deprecated,
+        )
+      return mergedSchema.toObject(context, mergedProps)
     }
+
+    return if ((schema.additionalProperties as? Allowed)?.value == true)
+      Model.FreeFormJson(schema.description.get(), Constraints.Object(schema))
+    else schema.toUnion(context, schema.allOf!!)
   }
 
   fun Schema.toObject(context: NamingContext, properties: Map<String, ReferenceOr<Schema>>): Model {
@@ -706,7 +759,16 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                 is Resolved -> {
                   val context =
                     resolved.namedOr { create(NamingContext.RouteBody(opName, "Response")) }
-                  Route.ReturnType(resolved.toModel(context).value, response.extensions)
+                  run {
+                    val model = resolved.toModel(context).value
+                    val cleaned =
+                      when (model) {
+                        is Model.Object -> model.copy(inline = emptyList())
+                        is Model.Union -> model.copy(inline = emptyList())
+                        else -> model
+                      }
+                    Route.ReturnType(cleaned, response.extensions)
+                  }
                 }
                 null ->
                   Route.ReturnType(
