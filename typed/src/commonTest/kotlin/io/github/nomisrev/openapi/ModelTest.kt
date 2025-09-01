@@ -108,6 +108,7 @@ class ModelTest {
             Model.Union.Case(context = NamingContext.Named("OneOf"), model = Primitive.string()),
           ),
         inline = listOf(Primitive.string(), Primitive.int()),
+        discriminator = null,
       )
     assertEquals(expected, actual)
   }
@@ -167,6 +168,7 @@ class ModelTest {
           ),
         default = "Auto",
         inline = listOf(enum.copy(context = context), Primitive.int(description = "Int Case Desc")),
+        discriminator = null,
       )
     assertEquals(expected, actual)
   }

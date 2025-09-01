@@ -188,6 +188,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               default = null,
               description = description.get(),
               inline = resolved.mapNotNull { nestedModel(it, context) },
+              discriminator = null,
             )
           }
           else -> copy(type = single).type(context)
@@ -577,10 +578,11 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     context: NamingContext,
     subtypes: List<ReferenceOr<Schema>>,
   ): Model.Union {
+    val discriminatorProperty = this.discriminator?.propertyName
     val caseToContext =
       subtypes.withIndex().map { (idx, ref) ->
         val resolved = ref.resolve()
-        Pair(resolved, toUnionCaseContext(context, resolved, idx))
+        Pair(resolved, toUnionCaseContext(context, resolved, idx, discriminatorProperty))
       }
     val cases =
       caseToContext
@@ -597,6 +599,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         ?: subtypes.firstNotNullOfOrNull { it.resolve().value.singleDefaultOrNull() },
       description.get(),
       inline,
+      this.discriminator?.let { Model.Discriminator(it.propertyName, it.mapping) },
     )
   }
 
@@ -604,6 +607,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     context: NamingContext,
     case: Resolved<Schema>,
     index: Int,
+    discriminatorProperty: String?,
   ): NamingContext =
     when (case) {
       is Resolved.Ref -> Named(case.name)
@@ -620,15 +624,29 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             )
           case.value.type == Type.Basic.Object ->
             NamingContext.Nested(
-              case.value.properties
-                ?.firstNotNullOfOrNull { (key, value) ->
-                  if (key == "event" || key == "type") value.resolve().value.enum else null
-                }
-                ?.singleOrNull()
-                ?.let(::Named)
+              run {
+                val props = case.value.properties
+                // Prefer discriminator property if provided and available as single-value enum
+                val discName = discriminatorProperty
+                if (discName != null && props != null) {
+                  val discEnum = props[discName]?.resolve()?.value?.enum?.singleOrNull()
+                  if (discEnum != null) Named(discEnum.replaceFirstChar(Char::uppercaseChar))
+                  else null
+                } else null
+              }
                 ?: run {
-                  val baseName = if (context is Named) context.name else "Inline"
-                  Named("${baseName}Case${index + 1}")
+                  // Fallback to special-cases for event/type
+                  val enumName =
+                    case.value.properties
+                      ?.firstNotNullOfOrNull { (key, value) ->
+                        if (key == "event" || key == "type") value.resolve().value.enum else null
+                      }
+                      ?.singleOrNull()
+                  if (enumName != null) Named(enumName)
+                  else {
+                    val baseName = if (context is Named) context.name else "Inline"
+                    Named("${baseName}Case${index + 1}")
+                  }
                 },
               context,
             )

@@ -90,6 +90,7 @@ class UnionNameGenerationSpec {
             Model.Union.Case(context = Named("TypeOrEvent"), model = Primitive.int()),
           ),
         inline = listOf(obj, Primitive.int()),
+        discriminator = null,
       )
 
     assertEquals(expected, actual)
@@ -168,6 +169,7 @@ class UnionNameGenerationSpec {
             Model.Union.Case(context = Named("TypeOrEvent"), model = Primitive.int()),
           ),
         inline = listOf(obj, Primitive.int()),
+        discriminator = null,
       )
 
     assertEquals(expected, actual)
@@ -191,6 +193,7 @@ class UnionNameGenerationSpec {
             Model.Union.Case(context = Named("OneOf"), model = Primitive.string()),
           ),
         inline = listOf(Primitive.string(), enum),
+        discriminator = null,
       )
     assertEquals(expected, actual)
   }
@@ -231,6 +234,7 @@ class UnionNameGenerationSpec {
             Model.Union.Case(context = Named("OneOf"), model = Primitive.string()),
           ),
         inline = listOf(id, Primitive.string()),
+        discriminator = null,
       )
     assertEquals(expected, actual)
   }
@@ -297,6 +301,7 @@ class UnionNameGenerationSpec {
             ),
             Primitive.int(),
           ),
+        discriminator = null,
       )
 
     assertEquals(expected, actual)

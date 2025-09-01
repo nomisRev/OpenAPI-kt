@@ -232,9 +232,15 @@ sealed interface Model {
     val default: String?,
     override val description: String?,
     val inline: List<Model>,
+    val discriminator: Discriminator?,
   ) : Model {
     data class Case(val context: NamingContext, val model: Model)
   }
+
+  data class Discriminator(
+    val propertyName: String,
+    val mapping: Map<String, String>?,
+  )
 
   sealed interface Enum : Model {
     val context: NamingContext
