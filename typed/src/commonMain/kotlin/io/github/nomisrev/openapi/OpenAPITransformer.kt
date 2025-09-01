@@ -260,7 +260,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is Model.OctetStream -> if (this.description != null) this else this.copy(description = desc)
       is Model.FreeFormJson -> if (this.description != null) this else this.copy(description = desc)
       is Collection.List -> if (this.description != null) this else this.copy(description = desc)
-      is Collection.Set -> if (this.description != null) this else this.copy(description = desc)
       is Collection.Map -> if (this.description != null) this else this.copy(description = desc)
       is Model.Object -> if (this.description != null) this else this.copy(description = desc)
       is Model.Union -> if (this.description != null) this else this.copy(description = desc)

@@ -78,7 +78,7 @@ class ConstraintsTest {
   private val categories =
     prop(
       "categories",
-      Model.Collection.Set(
+      Model.Collection.List(
         Model.Primitive.String(null, null, null),
         null,
         null,

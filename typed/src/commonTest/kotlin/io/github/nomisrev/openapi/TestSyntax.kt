@@ -34,19 +34,6 @@ public fun Model.Collection.Companion.list(
     constraint = constraint,
   )
 
-public fun Model.Collection.Companion.set(
-  inner: Model,
-  default: List<String>? = null,
-  description: String? = null,
-  constraint: Constraints.Collection? = null,
-): Model.Collection.Set =
-  Model.Collection.Set(
-    inner = inner,
-    default = default,
-    description = description,
-    constraint = constraint,
-  )
-
 public fun Model.Object.Companion.property(
   baseName: String,
   model: Model,

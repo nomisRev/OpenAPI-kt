@@ -187,13 +187,6 @@ sealed interface Model {
       override val constraint: Constraints.Collection?,
     ) : Collection
 
-    data class Set(
-      override val inner: Model,
-      val default: kotlin.collections.List<String>?,
-      override val description: String?,
-      override val constraint: Constraints.Collection?,
-    ) : Collection
-
     data class Map(
       override val inner: Model,
       override val description: String?,

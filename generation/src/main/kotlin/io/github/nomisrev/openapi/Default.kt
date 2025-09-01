@@ -17,7 +17,6 @@ private fun defaultValueImpl(model: Model): Pair<String, List<Any>>? =
     is Collection.Map -> null
     is Model.FreeFormJson -> null
     is Collection.List -> default(model, "listOf", model.default)
-    is Collection.Set -> default(model, "setOf", model.default)
     is Model.Union ->
       model.cases
         .find { it.model is Model.Primitive.String }

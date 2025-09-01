@@ -10,15 +10,16 @@ import kotlin.test.assertFailsWith
  * Array specification conformance tests based on
  * https://swagger.io/docs/specification/v3_0/data-models/arrays/
  *
- * Goal: Verify that arrays keep `items` required semantics, and that `uniqueItems: true`
- * is enforced by validation while preserving a List type (do not switch to Set).
+ * Goal: Verify that arrays keep `items` required semantics, and that `uniqueItems: true` is
+ * enforced by validation while preserving a List type (do not switch to Set).
  */
 class ArraySpec {
   @Test
   fun items_is_required_for_arrays() {
-    val ex = assertFailsWith<IllegalArgumentException> {
-      Schema(type = Type.Basic.Array).toModel("ArrayWithoutItems")
-    }
+    val ex =
+      assertFailsWith<IllegalArgumentException> {
+        Schema(type = Type.Basic.Array).toModel("ArrayWithoutItems")
+      }
     assertEquals("Array type requires items to be defined.", ex.message)
   }
 
@@ -36,9 +37,10 @@ class ArraySpec {
     assertEquals(
       Model.Collection.list(
         Model.Primitive.int(),
-        constraint = Constraints.Collection(minItems = 0, maxItems = Int.MAX_VALUE, uniqueItems = true)
+        constraint =
+          Constraints.Collection(minItems = 0, maxItems = Int.MAX_VALUE, uniqueItems = true),
       ),
-      model
+      model,
     )
   }
 
@@ -50,7 +52,11 @@ class ArraySpec {
           items =
             value(
               Schema(
-                oneOf = listOf(value(Schema(type = Type.Basic.String)), value(Schema(type = Type.Basic.Integer)))
+                oneOf =
+                  listOf(
+                    value(Schema(type = Type.Basic.String)),
+                    value(Schema(type = Type.Basic.Integer)),
+                  )
               )
             ),
           uniqueItems = true,
@@ -60,10 +66,14 @@ class ArraySpec {
     val inner =
       Model.union(
         context = NamingContext.Named("Mixed"),
-        cases = listOf(
-          Model.Union.Case(context = NamingContext.Named("Mixed"), model = Model.Primitive.string()),
-          Model.Union.Case(context = NamingContext.Named("Mixed"), model = Model.Primitive.int()),
-        ),
+        cases =
+          listOf(
+            Model.Union.Case(
+              context = NamingContext.Named("Mixed"),
+              model = Model.Primitive.string(),
+            ),
+            Model.Union.Case(context = NamingContext.Named("Mixed"), model = Model.Primitive.int()),
+          ),
         inline = listOf(Model.Primitive.string(), Model.Primitive.int()),
       )
 
@@ -71,9 +81,10 @@ class ArraySpec {
     assertEquals(
       Model.Collection.list(
         inner,
-        constraint = Constraints.Collection(minItems = 0, maxItems = Int.MAX_VALUE, uniqueItems = true)
+        constraint =
+          Constraints.Collection(minItems = 0, maxItems = Int.MAX_VALUE, uniqueItems = true),
       ),
-      model
+      model,
     )
   }
 }

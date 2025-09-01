@@ -233,7 +233,8 @@ class ModelTest {
     assertEquals(
       Model.Collection.list(
         inner = Primitive.int(),
-        constraint = Constraints.Collection(minItems = 0, maxItems = Int.MAX_VALUE, uniqueItems = true)
+        constraint =
+          Constraints.Collection(minItems = 0, maxItems = Int.MAX_VALUE, uniqueItems = true),
       ),
       Schema(
           type = Type.Basic.Array,

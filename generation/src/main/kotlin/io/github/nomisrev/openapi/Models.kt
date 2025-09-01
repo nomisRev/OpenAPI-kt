@@ -92,10 +92,6 @@ private fun Model.Union.toTypeSpec(): TypeSpec {
         buffer.add(MapSerializer)
         "%M(${key.placeholder(buffer)}, ${inner.placeholder(buffer)})"
       }
-      is Collection.Set -> {
-        buffer.add(SetSerializer)
-        "%M(${inner.placeholder(buffer)})"
-      }
       is Model.Primitive -> {
         buffer.add(toTypeName())
         buffer.add(MemberName("kotlinx.serialization.builtins", "serializer", isExtension = true))

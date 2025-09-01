@@ -13,7 +13,6 @@ import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.SET
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
@@ -31,7 +30,6 @@ fun Model.toTypeName(): TypeName =
     is Model.Primitive.String -> STRING
     is Model.Primitive.Unit -> UNIT
     is Collection.List -> LIST.parameterizedBy(inner.toTypeName())
-    is Collection.Set -> SET.parameterizedBy(inner.toTypeName())
     is Collection.Map -> MAP.parameterizedBy(STRING, inner.toTypeName())
     is Model.OctetStream -> ClassName(`package`, "UploadFile")
     is Model.FreeFormJson -> JsonElement::class.asTypeName()
