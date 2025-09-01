@@ -368,7 +368,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             } else {
               val innerCtx = innerResolved.namedOr { context }
               val innerModel = innerResolved.toModel(innerCtx).value
-              Model.Collection.Map(innerModel, description.get(), /* constraint = */ null)
+              Model.Collection.Map(innerModel, description.get(), /* constraint= */ null)
             }
           }
           is Allowed ->
@@ -438,10 +438,12 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         if (deprecated == null) deprecated = sub.deprecated
       }
 
-      // Optional improvement: if no properties resulted and any subschema defines additionalProperties as a schema,
+      // Optional improvement: if no properties resulted and any subschema defines
+      // additionalProperties as a schema,
       // represent as a Map (or FreeForm if the schema is the empty object {}).
       if (mergedProps.isEmpty()) {
-        val apSchema = resolved.firstNotNullOfOrNull { it.additionalProperties as? AdditionalProperties.PSchema }
+        val apSchema =
+          resolved.firstNotNullOfOrNull { it.additionalProperties as? AdditionalProperties.PSchema }
         if (apSchema != null) {
           val innerResolved = apSchema.value.resolve()
           val isEmpty = (innerResolved as? Resolved.Value)?.value == Schema()
@@ -450,12 +452,18 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           } else {
             val innerCtx = innerResolved.namedOr { context }
             val innerModel = innerResolved.toModel(innerCtx).value
-            return Model.Collection.Map(innerModel, schema.description.get(), /* constraint = */ null)
+            return Model.Collection.Map(
+              innerModel,
+              schema.description.get(),
+              /* constraint = */ null,
+            )
           }
         }
-        // Edge-case: if no properties resulted and any subschema allows free-form additionalProperties,
+        // Edge-case: if no properties resulted and any subschema allows free-form
+        // additionalProperties,
         // represent as free-form JSON.
-        val anyAllowsAdditional = resolved.any { (it.additionalProperties as? Allowed)?.value == true }
+        val anyAllowsAdditional =
+          resolved.any { (it.additionalProperties as? Allowed)?.value == true }
         if (anyAllowsAdditional) {
           return Model.FreeFormJson(schema.description.get(), Constraints.Object(schema))
         }
