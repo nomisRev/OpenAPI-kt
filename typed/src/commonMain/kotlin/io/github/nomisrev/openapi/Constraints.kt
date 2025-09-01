@@ -31,11 +31,16 @@ sealed interface Constraints {
     }
   }
 
-  data class Collection(val minItems: Int, val maxItems: Int) : Constraints {
+  data class Collection(val minItems: Int, val maxItems: Int, val uniqueItems: Boolean? = null) :
+    Constraints {
     companion object {
       operator fun invoke(schema: Schema): Collection? =
-        if (schema.minItems != null || schema.maxItems != null)
-          Collection(schema.minItems ?: 0, schema.maxItems ?: Int.MAX_VALUE)
+        if (schema.minItems != null || schema.maxItems != null || schema.uniqueItems == true)
+          Collection(
+            minItems = schema.minItems ?: 0,
+            maxItems = schema.maxItems ?: Int.MAX_VALUE,
+            uniqueItems = schema.uniqueItems,
+          )
         else null
     }
   }

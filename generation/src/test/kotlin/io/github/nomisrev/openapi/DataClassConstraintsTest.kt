@@ -84,7 +84,7 @@ class DataClassConstraintsTest {
   private fun categories(constraints: Collection) =
     prop(
       "categories",
-      Model.Collection.Set(Model.Primitive.String(null, null, null), null, null, constraints),
+      Model.Collection.List(Model.Primitive.String(null, null, null), null, null, constraints),
     )
 
   private val categories = categories(Collection(minItems = 3, maxItems = 10))

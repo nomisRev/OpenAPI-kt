@@ -118,13 +118,11 @@ private class Nam(private val `package`: String) : Naming {
     when (case) {
       is Collection.List -> toCaseClassName(union, case.inner, depth + listOf(case))
       is Collection.Map -> toCaseClassName(union, case.inner, depth + listOf(case))
-      is Collection.Set -> toCaseClassName(union, case.inner, depth + listOf(case))
       else -> {
         val head = depth.firstOrNull()
         val s =
           when (head) {
             is Collection.List -> "s"
-            is Collection.Set -> "s"
             is Collection.Map -> "Map"
             else -> ""
           }
@@ -133,7 +131,6 @@ private class Nam(private val `package`: String) : Naming {
             when (it) {
               is Collection.List -> "List"
               is Collection.Map -> "Map"
-              is Collection.Set -> "Set"
               else -> ""
             }
           }

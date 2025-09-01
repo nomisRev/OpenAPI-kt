@@ -214,12 +214,18 @@ class UnionNameGenerationSpec {
             )
         )
         .toModel("OneOf")
-    val name = if (uniqueItems == true) "Set" else "List"
+    val name = "List"
     val context = Nested(Named(name), Named("OneOf"))
     val id = id.copy(context = context)
     val model =
-      if (uniqueItems == true) Model.Collection.set(inner = id, default = null, description = null)
-      else Model.Collection.list(inner = id, default = null, description = null)
+      Model.Collection.list(
+        inner = id,
+        default = null,
+        description = null,
+        constraint =
+          if (uniqueItems == true) Constraints.Collection(0, Int.MAX_VALUE, uniqueItems = true)
+          else null,
+      )
     val expected =
       Model.Union(
         context = Named("OneOf"),

@@ -81,11 +81,11 @@ class ConstraintTest {
   }
 
   @Test
-  fun set() {
+  fun list_with_uniqueItems_constraint() {
     assertEquals(
-      Model.Collection.set(
+      Model.Collection.list(
         inner = Model.Primitive.string(),
-        constraint = Constraints.Collection(minItems = 1, maxItems = 10),
+        constraint = Constraints.Collection(minItems = 1, maxItems = 10, uniqueItems = true),
       ),
       Schema(
           type = Schema.Type.Basic.Array,
