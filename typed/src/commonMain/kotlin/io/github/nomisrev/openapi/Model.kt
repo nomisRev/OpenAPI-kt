@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import kotlin.js.JsName
 import kotlinx.serialization.json.JsonElement
 
 data class Route(
@@ -159,6 +160,7 @@ sealed interface Model {
 
     data class Unit(override val description: kotlin.String?) : Primitive
 
+    @JsName("defaultValueAsString")
     fun default(): kotlin.String? =
       when (this) {
         is Int -> default?.toString()
