@@ -51,7 +51,9 @@ class ArbitraryArrayJvmTest {
                   content =
                     mapOf(
                       "application/json" to
-                        MediaType(schema = value(Schema(type = Type.Basic.Array, items = value(Schema()))))
+                        MediaType(
+                          schema = value(Schema(type = Type.Basic.Array, items = value(Schema())))
+                        )
                     )
                 )
               )

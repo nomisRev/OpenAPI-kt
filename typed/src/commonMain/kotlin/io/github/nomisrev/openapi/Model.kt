@@ -230,10 +230,7 @@ sealed interface Model {
     data class Case(val context: NamingContext, val model: Model)
   }
 
-  data class Discriminator(
-    val propertyName: String,
-    val mapping: Map<String, String>?,
-  )
+  data class Discriminator(val propertyName: String, val mapping: Map<String, String>?)
 
   sealed interface Enum : Model {
     val context: NamingContext

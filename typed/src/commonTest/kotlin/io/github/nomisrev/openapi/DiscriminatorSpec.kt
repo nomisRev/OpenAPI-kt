@@ -21,7 +21,8 @@ class DiscriminatorSpec {
                 required = listOf("objectType"),
                 properties =
                   mapOf(
-                    "objectType" to value(Schema(type = Type.Basic.String, enum = listOf("Simple"))),
+                    "objectType" to
+                      value(Schema(type = Type.Basic.String, enum = listOf("Simple"))),
                     "value" to value(Schema(type = Type.Basic.String)),
                   ),
               )
@@ -55,7 +56,8 @@ class DiscriminatorSpec {
                 required = listOf("objectType"),
                 properties =
                   mapOf(
-                    "objectType" to value(Schema(type = Type.Basic.String, enum = listOf("Complex"))),
+                    "objectType" to
+                      value(Schema(type = Type.Basic.String, enum = listOf("Complex"))),
                     "another" to value(Schema(type = Type.Basic.Integer)),
                   ),
               )
