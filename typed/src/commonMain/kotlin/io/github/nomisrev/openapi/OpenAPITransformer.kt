@@ -227,7 +227,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           properties != null || additionalProperties != null -> toObject(context)
           // If 'items' is defined, we assume it's an array.
           items != null -> collection(context)
-          else -> TODO("Schema: $this not yet supported. Please report to issue tracker.")
+          else -> Model.FreeFormJson(description.get(), null)
         }
     }
 
