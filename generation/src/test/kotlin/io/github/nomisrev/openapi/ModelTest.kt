@@ -42,7 +42,11 @@ class ModelTest {
         ),
         null,
         null,
-        listOf(Model.Primitive.String(null, null, null), Model.Primitive.String(null, null, null)),
+        listOf(
+          Model.Primitive.String(null, null, null),
+          Model.Primitive.String(null, null, null)
+        ),
+        null,
       )
       .compiles()
   }
