@@ -9,10 +9,7 @@ class AnyValueSpec {
 
   @Test
   fun top_level_component_empty_schema_is_free_form_json() {
-    val api =
-      testAPI.copy(
-        components = Components(schemas = mapOf("AnyValue" to value(Schema())))
-      )
+    val api = testAPI.copy(components = Components(schemas = mapOf("AnyValue" to value(Schema()))))
 
     val models = api.models()
 
@@ -26,10 +23,7 @@ class AnyValueSpec {
       testAPI.copy(
         components =
           Components(
-            schemas =
-              mapOf(
-                "AnyValue" to value(Schema(description = value("Can be any value.")))
-              )
+            schemas = mapOf("AnyValue" to value(Schema(description = value("Can be any value."))))
           )
       )
 

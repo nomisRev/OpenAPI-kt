@@ -17,7 +17,10 @@ class ModelTest {
 
   @Test
   fun emptySchema() {
-    assertThrows<NotImplementedError> { Schema().toModel("Empty") }
+    assertEquals(
+      Model.FreeFormJson(description = null, constraint = null),
+      Schema().toModel("Empty"),
+    )
   }
 
   @Test
