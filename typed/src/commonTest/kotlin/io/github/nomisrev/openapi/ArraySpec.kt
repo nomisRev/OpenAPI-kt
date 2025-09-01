@@ -33,7 +33,13 @@ class ArraySpec {
         .toModel("Ints")
 
     // Desired behavior: Keep List + validate uniqueness at runtime/generation layer
-    assertEquals(Model.Collection.list(Model.Primitive.int()), model)
+    assertEquals(
+      Model.Collection.list(
+        Model.Primitive.int(),
+        constraint = Constraints.Collection(minItems = 0, maxItems = Int.MAX_VALUE, uniqueItems = true)
+      ),
+      model
+    )
   }
 
   @Test
@@ -62,6 +68,12 @@ class ArraySpec {
       )
 
     // Desired behavior: Keep List + validate uniqueness at runtime/generation layer
-    assertEquals(Model.Collection.list(inner), model)
+    assertEquals(
+      Model.Collection.list(
+        inner,
+        constraint = Constraints.Collection(minItems = 0, maxItems = Int.MAX_VALUE, uniqueItems = true)
+      ),
+      model
+    )
   }
 }

@@ -534,9 +534,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         }
         null -> null
       }
-    return if (uniqueItems == true)
-      Collection.Set(inner.value, default, description.get(), Constraints.Collection(this))
-    else Collection.List(inner.value, default, description.get(), Constraints.Collection(this))
+    return Collection.List(inner.value, default, description.get(), Constraints.Collection(this))
   }
 
   fun Schema.toEnum(context: NamingContext, enums: List<String>): Enum.Closed {
@@ -635,7 +633,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           case.value.type == Type.Basic.Array ->
             case.value.items
               ?.resolve()
-              ?.namedOr { if (case.value.uniqueItems == true) Named("Set") else Named("List") }
+              ?.namedOr { Named("List") }
               ?.let { NamingContext.Nested(it, context) } ?: context
           else -> context
         }
