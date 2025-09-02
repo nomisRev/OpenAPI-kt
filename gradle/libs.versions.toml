@@ -25,7 +25,7 @@ ktor-client = { module= "io.ktor:ktor-client-core", version.ref="ktor" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref="kotlinpoet" }
 android-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
 test-compile = { module = "dev.zacsweers.kctfork:core", version.ref = "test-compile"}
-kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.92.0" }
+kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.93.0" }
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
