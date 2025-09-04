@@ -110,7 +110,7 @@ class ApiGenerationGoldenTest {
               val response = client.request {
                   configure(this)
                   method = HttpMethod.Get
-                  url { path("/users/{id}".replace("{id}", id)) }
+                  url { path("users", id) }
               }
               return response.body()
           }
@@ -226,8 +226,8 @@ class ApiGenerationGoldenTest {
                   configure(this)
                   method = HttpMethod.Post
                   url { path("/users") }
-                  io.ktor.client.request.contentType(this, io.ktor.http.ContentType.Application.Json)
-                  io.ktor.client.request.setBody(this, body)
+                  contentType(ContentType.Application.Json)
+                  setBody(body)
               }
               return response.body()
           }

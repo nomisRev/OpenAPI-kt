@@ -46,16 +46,16 @@ object ApiToIr {
     declarations += buildApiImpl(api, parentNames, ctx)
 
     // Imports required for request DSL and deserialization
-    val imports =
-      listOf(
-        KtImport("io.ktor.client.request.request"),
-        KtImport("io.ktor.http.HttpMethod"),
-        KtImport("io.ktor.http.path"),
-        KtImport("io.ktor.client.call.body"),
-      )
+    // Base imports
+    val baseImports = mutableListOf(
+      KtImport("io.ktor.client.request.request"),
+      KtImport("io.ktor.http.HttpMethod"),
+      KtImport("io.ktor.http.path"),
+      KtImport("io.ktor.client.call.body"),
+    )
 
     // File for this API
-    all += KtFile(name = fileName, pkg = ctx.pkg, imports = imports, declarations = declarations)
+    all += KtFile(name = fileName, pkg = ctx.pkg, imports = baseImports, declarations = declarations)
 
     // Nested APIs -> own files (flattened names)
     if (api.nested.isNotEmpty()) {
@@ -228,45 +228,27 @@ object ApiToIr {
   private fun buildRouteBody(route: Route, returnType: KtType): KtBlock {
     val sb = StringBuilder()
 
-    // Build request invocation using fully qualified call to avoid import requirements
     sb.append("val response = client.request {\n")
-    // call configure with explicit receiver
     sb.append("    configure(this)\n")
-    // method
     sb.append("    method = ").append(route.method.code()).append("\n")
 
-    // URL path with replacements for path params
-    val replace =
-      route.input
-        .mapNotNull { inp ->
-          if (inp.input == io.github.nomisrev.openapi.Parameter.Input.Path) {
-            ".replace(\"{${inp.name}}\", ${toCamelCase(inp.name)})"
-          } else null
-        }
-        .joinToString("")
-    sb.append("    url { path(\"").append(route.path).append("\"").append(replace).append(") }\n")
+    // URL path using Ktor path DSL
+    sb.append(buildUrlPathLine(route))
 
     // Content-Type
     route.body.firstNotNullOfOrNull { (_, body) ->
       when (body) {
         is Route.Body.Json -> {
-          sb.append(
-            "    io.ktor.client.request.contentType(this, io.ktor.http.ContentType.Application.Json)\n"
-          )
+          sb.append("    contentType(io.ktor.http.ContentType.Application.Json)\n")
         }
-
         is Route.Body.Xml -> {
           // TODO: Not supported yet
         }
-
         is Route.Body.OctetStream -> {
           // TODO: Not supported yet
         }
-
         is Route.Body.Multipart -> {
-          sb.append(
-            "    io.ktor.client.request.contentType(this, io.ktor.http.ContentType.MultiPart.FormData)\n"
-          )
+          sb.append("    contentType(io.ktor.http.ContentType.MultiPart.FormData)\n")
         }
       }
     }
@@ -275,21 +257,18 @@ object ApiToIr {
     route.body.firstNotNullOfOrNull { (_, body) ->
       when (body) {
         is Route.Body.Json -> {
-          sb.append("    io.ktor.client.request.setBody(this, body)\n")
+          sb.append("    setBody(body)\n")
         }
-
         is Route.Body.Xml -> {
           // TODO
         }
-
         is Route.Body.OctetStream -> {
           // TODO
         }
-
         is Route.Body.Multipart -> {
           if (body is Route.Body.Multipart.Value) {
             sb.append(
-              "    io.ktor.client.request.setBody(this, io.ktor.client.request.forms.formData {\n"
+              "    setBody(io.ktor.client.request.forms.formData {\n"
             )
             for (p in body.parameters) {
               sb
@@ -306,7 +285,7 @@ object ApiToIr {
             if (obj != null) {
               val vName = toCamelCase(body.name)
               sb.append(
-                "    io.ktor.client.request.setBody(this, io.ktor.client.request.forms.formData {\n"
+                "    setBody(io.ktor.client.request.forms.formData {\n"
               )
               for (prop in obj.properties) {
                 val propName = toCamelCase(prop.baseName)
@@ -328,7 +307,6 @@ object ApiToIr {
 
     sb.append("}\n")
 
-    // Return
     val returnsHttpResponse =
       (returnType as? KtType.Simple)?.qualifiedName == "io.ktor.client.statement.HttpResponse"
     if (returnsHttpResponse) {
@@ -338,6 +316,23 @@ object ApiToIr {
     }
 
     return KtBlock(sb.toString())
+  }
+
+  private fun buildUrlPathLine(route: Route): String {
+    // If no parameters, keep the original path (including leading slash)
+    if (!route.path.contains("{")) {
+      return "    url { path(\"${route.path}\") }\n"
+    }
+    val parts = route.path.trim('/').split('/')
+    val args = parts.joinToString(", ") { part ->
+      if (part.startsWith("{") && part.endsWith("}")) {
+        val name = part.substring(1, part.length - 1)
+        toCamelCase(name)
+      } else {
+        "\"" + part + "\""
+      }
+    }
+    return "    url { path($args) }\n"
   }
 
   private fun generateRootFile(root: Root, ctx: Ctx): KtFile {
