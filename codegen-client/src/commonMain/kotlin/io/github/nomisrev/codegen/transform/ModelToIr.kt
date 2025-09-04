@@ -25,10 +25,10 @@ fun Model.toIrDeclarations(registry: ModelRegistry): List<KtDeclaration> =
 
     is Model.Enum.Closed -> listOf(toEnum())
     is Model.Enum.Open -> listOf(toEnum())
+    is Model.Collection -> listOf(toTypeAlias(this, registry))
     is Model.Primitive,
     is Model.FreeFormJson,
-    is Model.OctetStream,
-    is Model.Collection -> listOf(toTypeAlias(this, registry))
+    is Model.OctetStream -> emptyList()
 
     is Model.Reference -> emptyList() // references don't declare new types at top-level
     is Model.Union -> emptyList() // out of scope for M2
