@@ -32,16 +32,16 @@ class YouTrackCompilationTest {
     val result =
       KotlinCompilation()
         .apply {
-          this.sources = files(
-            GenerationConfig(
-              path.pathString,
-              "OUTPUT_NOT_USED",
-              "com.example.youtrack",
-              "YouTrack"
-            )
-          ).map { (name, content) ->
-            SourceFile.kotlin(name, content)
-          }
+          this.sources =
+            files(
+                GenerationConfig(
+                  path.pathString,
+                  "OUTPUT_NOT_USED",
+                  "com.example.youtrack",
+                  "YouTrack",
+                )
+              )
+              .map { (name, content) -> SourceFile.kotlin(name, content) }
           inheritClassPath = true
           messageOutputStream = System.out
         }

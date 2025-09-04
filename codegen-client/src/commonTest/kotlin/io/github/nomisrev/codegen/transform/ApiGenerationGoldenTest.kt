@@ -87,8 +87,12 @@ class ApiGenerationGoldenTest {
       import io.ktor.client.HttpClient
       import io.ktor.client.call.body
       import io.ktor.client.request.HttpRequestBuilder
+      import io.ktor.client.request.forms.formData
       import io.ktor.client.request.request
+      import io.ktor.client.request.setBody
+      import io.ktor.http.ContentType
       import io.ktor.http.HttpMethod
+      import io.ktor.http.contentType
       import io.ktor.http.path
 
       interface Users {
@@ -202,8 +206,12 @@ class ApiGenerationGoldenTest {
       import io.ktor.client.HttpClient
       import io.ktor.client.call.body
       import io.ktor.client.request.HttpRequestBuilder
+      import io.ktor.client.request.forms.formData
       import io.ktor.client.request.request
+      import io.ktor.client.request.setBody
+      import io.ktor.http.ContentType
       import io.ktor.http.HttpMethod
+      import io.ktor.http.contentType
       import io.ktor.http.path
 
       interface Users {

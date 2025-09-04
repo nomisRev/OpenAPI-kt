@@ -47,15 +47,20 @@ fun files(config: GenerationConfig): List<GeneratedFile> = buildList {
   // Emit Predef utilities required by generated Models/APIs
   add(
     GeneratedFile(
-      path = (if (config.`package`.isEmpty()) "" else config.`package`.replace('.', '/') + "/") + "Predef.kt",
-      content = predefContent(config.`package`)
+      path =
+        (if (config.`package`.isEmpty()) "" else config.`package`.replace('.', '/') + "/") +
+          "Predef.kt",
+      content = predefContent(config.`package`),
     )
   )
 
   // Build API IR and emit
   val registry = ModelRegistry.from(models)
   val apiIrFiles =
-    ApiToIr.generate(root, ApiToIr.Ctx(pkg = config.`package`, name = config.name, registry = registry))
+    ApiToIr.generate(
+      root,
+      ApiToIr.Ctx(pkg = config.`package`, name = config.name, registry = registry),
+    )
   for (file in apiIrFiles) {
     add(generate(file))
   }
@@ -77,7 +82,6 @@ private fun writeGenerated(files: List<GeneratedFile>, outputDir: String) {
     )
   }
 }
-
 
 fun predefContent(pkg: String): String =
   """package $pkg

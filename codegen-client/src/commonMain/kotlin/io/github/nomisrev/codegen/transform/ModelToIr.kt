@@ -432,7 +432,10 @@ private fun toUnionDeclarations(union: Model.Union, registry: ModelRegistry): Li
         ),
       modifiers = listOf(KtModifier.Override),
       annotations =
-        listOf(KtAnnotation(KtType.Simple("kotlinx.serialization.InternalSerializationApi"))),
+        listOf(
+          KtAnnotation(KtType.Simple("kotlinx.serialization.InternalSerializationApi")),
+          KtAnnotation(KtType.Simple("kotlinx.serialization.ExperimentalSerializationApi")),
+        ),
     )
 
   val serializeFunBody =
