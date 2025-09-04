@@ -44,6 +44,14 @@ fun files(config: GenerationConfig): List<GeneratedFile> = buildList {
   val modelIr = models.toIrFile(fileName = "Models.kt", pkg = config.`package`)
   add(generate(modelIr))
 
+  // Emit Predef utilities required by generated Models/APIs
+  add(
+    GeneratedFile(
+      path = (if (config.`package`.isEmpty()) "" else config.`package`.replace('.', '/') + "/") + "Predef.kt",
+      content = predefContent(config.`package`)
+    )
+  )
+
   // Build API IR and emit
   val registry = ModelRegistry.from(models)
   val apiIrFiles =
@@ -69,3 +77,102 @@ private fun writeGenerated(files: List<GeneratedFile>, outputDir: String) {
     )
   }
 }
+
+
+fun predefContent(pkg: String): String =
+  """package $pkg
+    
+import kotlinx.serialization.serializerOrNull
+import io.ktor.client.request.forms.ChannelProvider
+import io.ktor.client.request.forms.FormBuilder
+import io.ktor.client.request.forms.FormPart
+import io.ktor.client.request.forms.InputProvider
+import io.ktor.client.request.forms.append
+import io.ktor.http.ContentType
+import io.ktor.http.Headers
+import kotlinx.io.Sink
+import kotlinx.io.Source
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.JsonElement
+import kotlin.reflect.KClass
+
+public class UnionSerializationException(
+    public val payload: JsonElement,
+    public val errors: Map<KClass<*>, SerializationException>,
+) : SerializationException()
+
+public fun <A> attemptDeserialize(
+    json: JsonElement,
+    vararg block: Pair<KClass<*>, (JsonElement) -> A>,
+): A {
+    val errors = linkedMapOf<KClass<*>, SerializationException>()
+    block.forEach { (kclass, f) ->
+        try {
+            return f(json)
+        } catch (e: SerializationException) {
+            errors[kclass] = e
+        }
+    }
+    throw UnionSerializationException(json, errors)
+}
+
+public fun <A> deserializeOpenEnum(
+    value: String,
+    open: (String) -> A,
+    vararg block: Pair<KClass<*>, (String) -> A?>,
+): A {
+    val errors = linkedMapOf<KClass<*>, SerializationException>()
+    block.forEach { (kclass, f) ->
+        try {
+            f(value)?.let { res -> return res }
+        } catch (e: SerializationException) {
+            errors[kclass] = e
+        }
+    }
+    return open(value)
+}
+
+public data class UploadFile(
+    public val filename: String,
+    public val bodyBuilder: Sink.() -> Unit,
+    public val contentType: ContentType? = null,
+    public val size: Long? = null,
+)
+
+public fun <T : Any> FormBuilder.appendAll(
+    key: String,
+    value: T?,
+    headers: Headers = Headers.Empty,
+) {
+    when (value) {
+        is String -> append(key, value, headers)
+        is Number -> append(key, value, headers)
+        is Boolean -> append(key, value, headers)
+        is ByteArray -> append(key, value, headers)
+        is Source -> append(key, value, headers)
+        is InputProvider -> append(key, value, headers)
+        is ChannelProvider -> append(key, value, headers)
+        is UploadFile -> appendUploadedFile(key, value)
+        is Enum<*> -> append(key, serialNameOrEnumValue(value), headers)
+        null -> Unit
+        else -> append(FormPart(key, value, headers))
+    }
+}
+
+private fun FormBuilder.appendUploadedFile(key: String, file: UploadFile) {
+    append(
+        key = key,
+        filename = file.filename,
+        contentType = file.contentType ?: ContentType.Application.OctetStream,
+        size = file.size,
+        bodyBuilder = file.bodyBuilder,
+    )
+}
+
+@kotlin.OptIn(
+    kotlinx.serialization.ExperimentalSerializationApi::class,
+    kotlinx.serialization.InternalSerializationApi::class,
+)
+private fun <T : Enum<T>> serialNameOrEnumValue(enum: Enum<T>): String =
+    enum::class.serializerOrNull()?.descriptor?.getElementName(enum.ordinal) ?: enum.toString()
+"""

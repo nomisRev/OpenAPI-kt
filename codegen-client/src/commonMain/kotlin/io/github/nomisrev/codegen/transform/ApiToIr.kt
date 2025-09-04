@@ -53,6 +53,11 @@ object ApiToIr {
         KtImport("io.ktor.http.HttpMethod"),
         KtImport("io.ktor.http.path"),
         KtImport("io.ktor.client.call.body"),
+        // Needed for setting content-type and body in requests
+        KtImport("io.ktor.http.contentType"),
+        KtImport("io.ktor.http.ContentType"),
+        KtImport("io.ktor.client.request.setBody"),
+        KtImport("io.ktor.client.request.forms.formData"),
       )
 
     // File for this API
