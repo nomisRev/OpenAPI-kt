@@ -2,19 +2,14 @@
 
 package io.github.nomisrev.codegen
 
+import GenerationConfig
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import io.github.nomisrev.codegen.emit.emitFile
-import io.github.nomisrev.codegen.transform.toIrFile
-import io.github.nomisrev.openapi.GenerationConfig
-import io.github.nomisrev.openapi.OpenAPI
-import io.github.nomisrev.openapi.OpenAPIContext
-import io.github.nomisrev.openapi.models
-import io.github.nomisrev.openapi.predef
-import io.github.nomisrev.openapi.root
+import files
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.pathString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
@@ -34,33 +29,19 @@ class YouTrackCompilationTest {
           "Could not find youtrack.json in repository root. Checked: ${candidates.joinToString()} "
         )
 
-    val json = Files.readString(path)
-    val openApi = OpenAPI.fromJson(json)
-
-    // Prepare model and API IR
-    val models = openApi.models()
-    val root = openApi.root(openApi.info.title)
-    val pkg = "com.example.youtrack"
-
-    val modelIr = models.toIrFile(fileName = "Models.kt", pkg = pkg)
-    // Emit Kotlin sources for models only (integration scope)
-    val sources = mutableListOf<SourceFile>()
-    sources += SourceFile.kotlin(modelIr.name, emitFile(modelIr))
-
-    // Add Predef.kt required helpers from generation module
-    val predef =
-      OpenAPIContext(
-        GenerationConfig(path = "", output = "", `package` = pkg, name = root.name, isK2 = true)
-      ) {
-        predef()
-      }
-    sources += SourceFile.kotlin("Predef.kt", predef.asCode())
-
-    // Compile all sources
     val result =
       KotlinCompilation()
         .apply {
-          this.sources = sources
+          this.sources = files(
+            GenerationConfig(
+              path.pathString,
+              "OUTPUT_NOT_USED",
+              "com.example.youtrack",
+              "YouTrack"
+            )
+          ).map { (name, content) ->
+            SourceFile.kotlin(name, content)
+          }
           inheritClassPath = true
           messageOutputStream = System.out
         }

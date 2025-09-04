@@ -47,15 +47,17 @@ object ApiToIr {
 
     // Imports required for request DSL and deserialization
     // Base imports
-    val baseImports = mutableListOf(
-      KtImport("io.ktor.client.request.request"),
-      KtImport("io.ktor.http.HttpMethod"),
-      KtImport("io.ktor.http.path"),
-      KtImport("io.ktor.client.call.body"),
-    )
+    val baseImports =
+      mutableListOf(
+        KtImport("io.ktor.client.request.request"),
+        KtImport("io.ktor.http.HttpMethod"),
+        KtImport("io.ktor.http.path"),
+        KtImport("io.ktor.client.call.body"),
+      )
 
     // File for this API
-    all += KtFile(name = fileName, pkg = ctx.pkg, imports = baseImports, declarations = declarations)
+    all +=
+      KtFile(name = fileName, pkg = ctx.pkg, imports = baseImports, declarations = declarations)
 
     // Nested APIs -> own files (flattened names)
     if (api.nested.isNotEmpty()) {
@@ -239,7 +241,7 @@ object ApiToIr {
     route.body.firstNotNullOfOrNull { (_, body) ->
       when (body) {
         is Route.Body.Json -> {
-          sb.append("    contentType(io.ktor.http.ContentType.Application.Json)\n")
+          sb.append("    contentType(ContentType.Application.Json)\n")
         }
         is Route.Body.Xml -> {
           // TODO: Not supported yet
@@ -267,9 +269,7 @@ object ApiToIr {
         }
         is Route.Body.Multipart -> {
           if (body is Route.Body.Multipart.Value) {
-            sb.append(
-              "    setBody(io.ktor.client.request.forms.formData {\n"
-            )
+            sb.append("    setBody(io.ktor.client.request.forms.formData {\n")
             for (p in body.parameters) {
               sb
                 .append("        appendAll(\"")
@@ -284,9 +284,7 @@ object ApiToIr {
             val obj = body.value as? Model.Object
             if (obj != null) {
               val vName = toCamelCase(body.name)
-              sb.append(
-                "    setBody(io.ktor.client.request.forms.formData {\n"
-              )
+              sb.append("    setBody(io.ktor.client.request.forms.formData {\n")
               for (prop in obj.properties) {
                 val propName = toCamelCase(prop.baseName)
                 sb
@@ -324,14 +322,15 @@ object ApiToIr {
       return "    url { path(\"${route.path}\") }\n"
     }
     val parts = route.path.trim('/').split('/')
-    val args = parts.joinToString(", ") { part ->
-      if (part.startsWith("{") && part.endsWith("}")) {
-        val name = part.substring(1, part.length - 1)
-        toCamelCase(name)
-      } else {
-        "\"" + part + "\""
+    val args =
+      parts.joinToString(", ") { part ->
+        if (part.startsWith("{") && part.endsWith("}")) {
+          val name = part.substring(1, part.length - 1)
+          toCamelCase(name)
+        } else {
+          "\"" + part + "\""
+        }
       }
-    }
     return "    url { path($args) }\n"
   }
 

@@ -1,5 +1,7 @@
 import io.github.nomisrev.codegen.api.GeneratedFile
+import io.github.nomisrev.codegen.emit.generate
 import io.github.nomisrev.codegen.transform.ApiToIr
+import io.github.nomisrev.codegen.transform.ModelRegistry
 import io.github.nomisrev.codegen.transform.toIrFile
 import io.github.nomisrev.openapi.OpenAPI
 import io.github.nomisrev.openapi.models
@@ -20,12 +22,18 @@ data class GenerationConfig(
 )
 
 fun generate(config: GenerationConfig) {
+  val generatedFiles = files(config)
+  writeGenerated(generatedFiles, config.output)
+}
+
+fun files(config: GenerationConfig): List<GeneratedFile> = buildList {
   val rawSpec = SystemFileSystem.source(Path(config.path)).buffered().use { it.readText() }
   val openAPI =
     when (val extension = config.path.substringAfterLast(".")) {
       "json" -> OpenAPI.fromJson(rawSpec)
       "yaml",
       "yml" -> OpenAPI.fromYaml(rawSpec)
+
       else -> throw IllegalArgumentException("Unsupported file extension: $extension")
     }
 
@@ -34,21 +42,15 @@ fun generate(config: GenerationConfig) {
 
   // Build model IR and emit
   val modelIr = models.toIrFile(fileName = "Models.kt", pkg = config.`package`)
-  val generatedFiles = mutableListOf(io.github.nomisrev.codegen.emit.generate(modelIr))
+  add(generate(modelIr))
 
   // Build API IR and emit
-  val registry = io.github.nomisrev.codegen.transform.ModelRegistry.from(models)
+  val registry = ModelRegistry.from(models)
   val apiIrFiles =
-    ApiToIr.generate(
-      root,
-      ApiToIr.Ctx(pkg = config.`package`, name = config.name, registry = registry),
-    )
+    ApiToIr.generate(root, ApiToIr.Ctx(pkg = config.`package`, name = config.name, registry = registry))
   for (file in apiIrFiles) {
-    generatedFiles += io.github.nomisrev.codegen.emit.generate(file)
+    add(generate(file))
   }
-
-  // Write all generated files
-  writeGenerated(generatedFiles, config.output)
 }
 
 private fun writeGenerated(files: List<GeneratedFile>, outputDir: String) {
