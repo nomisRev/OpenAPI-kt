@@ -208,8 +208,7 @@ private val requireAll: FunSpec =
     )
     .build()
 
-context(OpenAPIContext)
-fun predef(): FileSpec =
+fun OpenAPIContext.predef(): FileSpec =
   FileSpec.builder(`package`, "Predef")
     .addFunction(bodyOrThrow)
     .addFunction(requireAll)

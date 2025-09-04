@@ -21,5 +21,12 @@ kotlin {
     }
     val jvmMain by getting { dependencies { api(libs.ktor.client) } }
     val commonTest by getting { dependencies { implementation(libs.test) } }
+    val jvmTest by getting {
+      dependencies {
+        implementation(libs.test)
+        implementation(libs.test.compile)
+        implementation(projects.generation)
+      }
+    }
   }
 }

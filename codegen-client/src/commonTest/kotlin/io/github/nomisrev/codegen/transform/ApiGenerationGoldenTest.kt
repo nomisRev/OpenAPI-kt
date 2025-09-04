@@ -80,7 +80,8 @@ class ApiGenerationGoldenTest {
     val usersFile = files.first { it.name == "Users.kt" }
     val actualUsers = emitFile(usersFile)
 
-    val expectedUsers = """
+    val expectedUsers =
+      """
       package com.example
 
       import io.ktor.client.HttpClient
@@ -108,14 +109,15 @@ class ApiGenerationGoldenTest {
           suspend override fun getUser(id: String, configure: (HttpRequestBuilder) -> Unit): User {
               val response = client.request {
                   configure(this)
-                  method = HttpMethod.GET
+                  method = HttpMethod.Get
                   url { path("/users/{id}".replace("{id}", id)) }
               }
               return response.body()
           }
       }
       
-      """.trimIndent()
+      """
+        .trimIndent()
 
     assertEquals(expectedUsers, actualUsers)
   }
@@ -193,7 +195,8 @@ class ApiGenerationGoldenTest {
     val usersFile = files.first { it.name == "Users.kt" }
     val actual = emitFile(usersFile)
 
-    val expected = """
+    val expected =
+      """
       package com.example
 
       import io.ktor.client.HttpClient
@@ -221,7 +224,7 @@ class ApiGenerationGoldenTest {
           suspend override fun createUser(body: CreateUserRequest, configure: (HttpRequestBuilder) -> Unit): User {
               val response = client.request {
                   configure(this)
-                  method = HttpMethod.POST
+                  method = HttpMethod.Post
                   url { path("/users") }
                   io.ktor.client.request.contentType(this, io.ktor.http.ContentType.Application.Json)
                   io.ktor.client.request.setBody(this, body)
@@ -230,7 +233,8 @@ class ApiGenerationGoldenTest {
           }
       }
       
-      """.trimIndent()
+      """
+        .trimIndent()
 
     assertEquals(expected, actual)
   }

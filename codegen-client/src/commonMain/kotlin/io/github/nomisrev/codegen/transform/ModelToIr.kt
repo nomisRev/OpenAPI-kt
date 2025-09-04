@@ -31,7 +31,7 @@ fun Model.toIrDeclarations(registry: ModelRegistry): List<KtDeclaration> =
     is Model.OctetStream -> emptyList()
 
     is Model.Reference -> emptyList() // references don't declare new types at top-level
-    is Model.Union -> emptyList() // out of scope for M2
+    is Model.Union -> toUnionDeclarations(this, registry)
   }
 
 private fun toTypeAlias(model: Model, registry: ModelRegistry): KtTypeAlias {
@@ -204,7 +204,13 @@ class ModelRegistry private constructor(private val byName: Map<String, Model>) 
 
   fun mapType(model: Model): KtType =
     when (model) {
-      is Model.Reference -> KtType.Simple(model.context.toFlatName())
+      is Model.Reference -> {
+        val target = lookup(model.context)
+        when (target) {
+          null -> KtType.Simple(model.context.toFlatName())
+          else -> mapType(target)
+        }
+      }
       is Model.Primitive.Int -> KtType.Simple("kotlin.Int")
       is Model.Primitive.Double -> KtType.Simple("kotlin.Double")
       is Model.Primitive.Boolean -> KtType.Simple("kotlin.Boolean")
@@ -233,7 +239,7 @@ class ModelRegistry private constructor(private val byName: Map<String, Model>) 
       is Model.Object -> KtType.Simple(model.context.toFlatName())
       is Model.Enum.Closed -> KtType.Simple(model.context.toFlatName())
       is Model.Enum.Open -> KtType.Simple(model.context.toFlatName())
-      is Model.Union -> error("Union out of scope for M2")
+      is Model.Union -> KtType.Simple(model.context.toFlatName())
     }
 
   companion object {
@@ -348,4 +354,222 @@ private fun quote(s: String): String = buildString {
  */
 private interface HasContextName {
   fun contextName(): String
+}
+
+// ---- Union generation (inspired by generation module: Models.kt + Naming.kt + Predef.kt) ----
+
+private fun toUnionDeclarations(union: Model.Union, registry: ModelRegistry): List<KtDeclaration> {
+  val decls = mutableListOf<KtDeclaration>()
+
+  // 1) Ensure inline types are emitted first
+  for (inl in union.inline) decls += inl.toIrDeclarations(registry)
+
+  val unionName = registry.nameOf(union)
+
+  // 2) Sealed interface representing the union
+  val unionAnno =
+    KtAnnotation(
+      name = KtType.Simple("kotlinx.serialization.Serializable"),
+      args = mapOf("with" to KtExpr("${unionName}Serializer::class")),
+    )
+  val unionIface =
+    KtClass(
+      name = unionName,
+      kind = KtClassKind.Interface,
+      modifiers = listOf(KtModifier.Sealed),
+      annotations = listOf(unionAnno),
+      kdoc = union.description?.let { KtKDoc(it.lines()) },
+    )
+  decls += unionIface
+
+  // 3) Case value classes (flattened, since IR doesn't support nested classes)
+  val caseClasses =
+    union.cases.map { c ->
+      val caseName = caseClassName(union, c.model, registry)
+      val caseType = registry.mapType(c.model)
+      KtClass(
+        name = caseName,
+        kind = KtClassKind.Class,
+        modifiers = listOf(KtModifier.Value),
+        primaryCtor =
+          KtPrimaryConstructor(
+            params = listOf(KtParam(name = "value", type = caseType, asProperty = true))
+          ),
+        superTypes = listOf(KtType.Simple(unionName)),
+        annotations = listOf(KtAnnotation(KtType.Simple("kotlin.jvm.JvmInline"))),
+        kdoc = c.model.description?.let { KtKDoc(it.lines()) },
+      )
+    }
+  decls += caseClasses
+
+  // 4) Serializer object: <UnionName>Serializer : KSerializer<UnionName>
+  val kserUnion =
+    KtType.Generic(
+      KtType.Simple("kotlinx.serialization.KSerializer"),
+      listOf(KtType.Simple(unionName)),
+    )
+  val descriptorProp =
+    KtProperty(
+      name = "descriptor",
+      type = KtType.Simple("kotlinx.serialization.descriptors.SerialDescriptor"),
+      initializer =
+        KtExpr(
+          buildString {
+            append("kotlinx.serialization.descriptors.buildSerialDescriptor(\"")
+            append(unionName)
+            append("\", kotlinx.serialization.descriptors.PolymorphicKind.SEALED) {\n")
+            for (c in union.cases) {
+              val caseName = caseClassName(union, c.model, registry)
+              val innerType = typeCode(c.model, registry)
+              append("    element(\"")
+              append(caseName)
+              append("\", kotlinx.serialization.serializer<")
+              append(innerType)
+              append(">().descriptor)\n")
+            }
+            append("}")
+          }
+        ),
+      modifiers = listOf(KtModifier.Override),
+      annotations =
+        listOf(KtAnnotation(KtType.Simple("kotlinx.serialization.InternalSerializationApi"))),
+    )
+
+  val serializeFunBody =
+    KtBlock(
+      buildString {
+        append("when (value) {\n")
+        for (c in union.cases) {
+          val caseName = caseClassName(union, c.model, registry)
+          val innerType = typeCode(c.model, registry)
+          append("    is ")
+          append(caseName)
+          append(" -> encoder.encodeSerializableValue(kotlinx.serialization.serializer<")
+          append(innerType)
+          append(">(), value.value)\n")
+        }
+        append("}\n")
+      }
+    )
+
+  val serializeFun =
+    KtFunction(
+      name = "serialize",
+      params =
+        listOf(
+          KtParam("encoder", KtType.Simple("kotlinx.serialization.encoding.Encoder")),
+          KtParam("value", KtType.Simple(unionName)),
+        ),
+      returnType = null,
+      modifiers = listOf(KtModifier.Override),
+      body = serializeFunBody,
+    )
+
+  val deserializeFunBody =
+    KtBlock(
+      buildString {
+        append(
+          "val value = decoder.decodeSerializableValue(kotlinx.serialization.json.JsonElement.serializer())\n"
+        )
+        append(
+          "val json = requireNotNull(decoder as? kotlinx.serialization.json.JsonDecoder) { \"Currently only supporting Json\" }.json\n"
+        )
+        append("return attemptDeserialize(value,\n")
+        for (c in union.cases) {
+          val caseName = caseClassName(union, c.model, registry)
+          val innerType = typeCode(c.model, registry)
+          append("    kotlin.Pair(")
+          append(caseName)
+          append("::class) { ")
+          append(caseName)
+          append("(json.decodeFromJsonElement(kotlinx.serialization.serializer<")
+          append(innerType)
+          append(">(), value)) },\n")
+        }
+        append(")\n")
+      }
+    )
+
+  val deserializeFun =
+    KtFunction(
+      name = "deserialize",
+      params = listOf(KtParam("decoder", KtType.Simple("kotlinx.serialization.encoding.Decoder"))),
+      returnType = KtType.Simple(unionName),
+      modifiers = listOf(KtModifier.Override),
+      body = deserializeFunBody,
+    )
+
+  val serializerObj =
+    KtClass(
+      name = unionName + "Serializer",
+      kind = KtClassKind.Object,
+      superTypes = listOf(kserUnion),
+      properties = listOf(descriptorProp),
+      functions = listOf(serializeFun, deserializeFun),
+    )
+  decls += serializerObj
+
+  return decls
+}
+
+private fun typeCode(model: Model, registry: ModelRegistry): String =
+  when (model) {
+    is Model.Reference -> {
+      val target = registry.lookup(model.context)
+      if (target != null) typeCode(target, registry) else model.context.toFlatName()
+    }
+    is Model.Primitive.Int -> "Int"
+    is Model.Primitive.Double -> "Double"
+    is Model.Primitive.Boolean -> "Boolean"
+    is Model.Primitive.String -> "String"
+    is Model.Primitive.Unit -> "Unit"
+    is Model.OctetStream -> "ByteArray"
+    is Model.FreeFormJson -> "kotlinx.serialization.json.JsonElement"
+    is Model.Collection.List -> "List<${typeCode(model.inner, registry)}>"
+    is Model.Collection.Set -> "Set<${typeCode(model.inner, registry)}>"
+    is Model.Collection.Map -> "Map<String, ${typeCode(model.inner, registry)}>"
+    is Model.Object -> registry.nameOf(model)
+    is Model.Enum.Closed -> registry.nameOf(model)
+    is Model.Enum.Open -> registry.nameOf(model)
+    is Model.Union -> registry.nameOf(model)
+  }
+
+private fun caseClassName(union: Model.Union, case: Model, registry: ModelRegistry): String {
+  // Mirror generation/Naming logic but flatten to a top-level name using the union name as prefix
+  data class Depth(val kind: String) // "List" | "Set" | "Map"
+
+  fun baseAndDepth(m: Model, acc: MutableList<Depth>): String =
+    when (m) {
+      is Model.Collection.List -> baseAndDepth(m.inner, acc.apply { add(Depth("List")) })
+      is Model.Collection.Set -> baseAndDepth(m.inner, acc.apply { add(Depth("Set")) })
+      is Model.Collection.Map -> baseAndDepth(m.inner, acc.apply { add(Depth("Map")) })
+      is Model.OctetStream -> "Binary"
+      is Model.FreeFormJson -> "JsonElement"
+      is Model.Enum.Closed -> registry.nameOf(m)
+      is Model.Enum.Open -> registry.nameOf(m)
+      is Model.Object -> registry.nameOf(m)
+      is Model.Union -> registry.nameOf(m)
+      is Model.Reference -> registry.nameOf(m)
+      is Model.Primitive.Boolean -> "Boolean"
+      is Model.Primitive.Double -> "Double"
+      is Model.Primitive.Int -> "Int"
+      is Model.Primitive.String -> "String"
+      is Model.Primitive.Unit -> "Unit"
+    }
+
+  val depth = mutableListOf<Depth>()
+  val base = baseAndDepth(case, depth)
+  val head = depth.firstOrNull()?.kind
+  val s =
+    when (head) {
+      "List",
+      "Set" -> "s"
+      "Map" -> "Map"
+      else -> ""
+    }
+  val postfix = depth.drop(1).joinToString(separator = "") { it.kind }
+
+  val unionName = registry.nameOf(union)
+  val typeName = base + s + postfix
+  return unionName + "Case" + typeName
 }

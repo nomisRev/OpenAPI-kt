@@ -5,6 +5,7 @@ import io.github.nomisrev.openapi.API
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Root
 import io.github.nomisrev.openapi.Route
+import io.ktor.http.HttpMethod
 
 /**
  * API generation (interfaces, factories, and Ktor implementations) using the IR model. This ports
@@ -212,6 +213,18 @@ object ApiToIr {
     return KtType.Simple("io.ktor.client.statement.HttpResponse")
   }
 
+  fun HttpMethod.code(): String =
+    when (this) {
+      HttpMethod.Get -> "HttpMethod.Get"
+      HttpMethod.Post -> "HttpMethod.Post"
+      HttpMethod.Put -> "HttpMethod.Put"
+      HttpMethod.Delete -> "HttpMethod.Delete"
+      HttpMethod.Head -> "HttpMethod.Head"
+      HttpMethod.Options -> "HttpMethod.Options"
+      HttpMethod.Patch -> "HttpMethod.Patch"
+      else -> "HttpMethod($this)"
+    }
+
   private fun buildRouteBody(route: Route, returnType: KtType): KtBlock {
     val sb = StringBuilder()
 
@@ -220,7 +233,7 @@ object ApiToIr {
     // call configure with explicit receiver
     sb.append("    configure(this)\n")
     // method
-    sb.append("    method = HttpMethod.").append(route.method.value).append("\n")
+    sb.append("    method = ").append(route.method.code()).append("\n")
 
     // URL path with replacements for path params
     val replace =
@@ -241,12 +254,15 @@ object ApiToIr {
             "    io.ktor.client.request.contentType(this, io.ktor.http.ContentType.Application.Json)\n"
           )
         }
+
         is Route.Body.Xml -> {
           // TODO: Not supported yet
         }
+
         is Route.Body.OctetStream -> {
           // TODO: Not supported yet
         }
+
         is Route.Body.Multipart -> {
           sb.append(
             "    io.ktor.client.request.contentType(this, io.ktor.http.ContentType.MultiPart.FormData)\n"
@@ -261,12 +277,15 @@ object ApiToIr {
         is Route.Body.Json -> {
           sb.append("    io.ktor.client.request.setBody(this, body)\n")
         }
+
         is Route.Body.Xml -> {
           // TODO
         }
+
         is Route.Body.OctetStream -> {
           // TODO
         }
+
         is Route.Body.Multipart -> {
           if (body is Route.Body.Multipart.Value) {
             sb.append(
