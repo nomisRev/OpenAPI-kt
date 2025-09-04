@@ -1,7 +1,6 @@
-package io.github.nomisrev.codegen
+package io.github.nomisrev.codegen.transform
 
 import io.github.nomisrev.codegen.emit.emitFile
-import io.github.nomisrev.codegen.transform.ModelToIr
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import kotlin.test.Test
@@ -19,10 +18,7 @@ class SerializationAnnotationsTest {
         default = "Auto",
         description = null,
       )
-    val file =
-      with(ModelToIr) {
-        listOf<Model>(enumModel).toIrFile(fileName = "Models.kt", pkg = "com.example")
-      }
+    val file = listOf<Model>(enumModel).toIrFile(fileName = "Models.kt", pkg = "com.example")
 
     val expected =
       ("""
@@ -52,10 +48,7 @@ class SerializationAnnotationsTest {
         default = "auto",
         description = null,
       )
-    val file =
-      with(ModelToIr) {
-        listOf<Model>(lowerEnum).toIrFile(fileName = "Models.kt", pkg = "com.example")
-      }
+    val file = listOf<Model>(lowerEnum).toIrFile(fileName = "Models.kt", pkg = "com.example")
 
     val expected =
       ("""
@@ -112,8 +105,7 @@ class SerializationAnnotationsTest {
         properties = listOf(withDefault, withoutDefault, requiredNullable),
         inline = emptyList(),
       )
-    val file =
-      with(ModelToIr) { listOf<Model>(obj).toIrFile(fileName = "Models.kt", pkg = "com.example") }
+    val file = listOf<Model>(obj).toIrFile(fileName = "Models.kt", pkg = "com.example")
 
     val expected =
       ("""
@@ -147,8 +139,7 @@ class SerializationAnnotationsTest {
         properties = listOf(jsonProp),
         inline = emptyList(),
       )
-    val file =
-      with(ModelToIr) { listOf<Model>(obj).toIrFile(fileName = "Models.kt", pkg = "com.example") }
+    val file = listOf<Model>(obj).toIrFile(fileName = "Models.kt", pkg = "com.example")
 
     val expected =
       ("""
@@ -203,8 +194,7 @@ class SerializationAnnotationsTest {
         properties = listOf(listProp, setProp),
         inline = emptyList(),
       )
-    val file =
-      with(ModelToIr) { listOf<Model>(obj).toIrFile(fileName = "Models.kt", pkg = "com.example") }
+    val file = listOf<Model>(obj).toIrFile(fileName = "Models.kt", pkg = "com.example")
 
     val expected =
       ("""
@@ -238,8 +228,7 @@ class SerializationAnnotationsTest {
         properties = listOf(prop),
         inline = emptyList(),
       )
-    val file =
-      with(ModelToIr) { listOf<Model>(obj).toIrFile(fileName = "Models.kt", pkg = "com.example") }
+    val file = listOf<Model>(obj).toIrFile(fileName = "Models.kt", pkg = "com.example")
 
     val expected =
       ("""

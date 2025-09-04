@@ -1,7 +1,6 @@
-package io.github.nomisrev.codegen.golden
+package io.github.nomisrev.codegen.transform
 
 import io.github.nomisrev.codegen.emit.emitFile
-import io.github.nomisrev.codegen.transform.ModelToIr.toIrFile
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import kotlin.test.Test

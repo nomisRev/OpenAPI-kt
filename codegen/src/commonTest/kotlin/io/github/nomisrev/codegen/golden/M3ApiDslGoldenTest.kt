@@ -1,7 +1,7 @@
 package io.github.nomisrev.codegen.golden
 
+import io.github.nomisrev.codegen.api.KFile
 import io.github.nomisrev.codegen.api.generic
-import io.github.nomisrev.codegen.api.ktFile
 import io.github.nomisrev.codegen.api.simple
 import io.github.nomisrev.codegen.emit.emitFile
 import kotlin.test.Test
@@ -11,7 +11,7 @@ class M3ApiDslGoldenTest {
   @Test
   fun pets_api_interface_with_suspend_functions() {
     val file =
-      ktFile(name = "PetsApi.kt", pkg = "com.example.api") {
+      KFile(name = "PetsApi.kt", pkg = "com.example.api") {
         apiInterface("PetsApi") {
           suspendFun("listPets") {
             param("limit", simple("kotlin.Int", nullable = true), default = "null")

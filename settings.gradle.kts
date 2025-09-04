@@ -18,3 +18,5 @@ include("plugin")
 include("codegen")
 
 include("codegen")
+
+include("codegen-client")
