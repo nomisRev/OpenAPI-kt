@@ -50,6 +50,3 @@ class YouTrackCompilationTest {
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
   }
 }
-
-// Helper to turn KotlinPoet FileSpec into source String
-private fun com.squareup.kotlinpoet.FileSpec.asCode(): String = buildString { writeTo(this) }

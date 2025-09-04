@@ -99,6 +99,10 @@ import kotlinx.io.Source
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonElement
 import kotlin.reflect.KClass
+import kotlinx.serialization.Serializable
+
+@Serializable
+public data object EmptyObject
 
 public class UnionSerializationException(
     public val payload: JsonElement,

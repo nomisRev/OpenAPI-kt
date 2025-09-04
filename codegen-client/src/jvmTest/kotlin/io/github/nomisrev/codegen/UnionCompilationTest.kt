@@ -57,7 +57,7 @@ class UnionCompilationTest {
     // Additionally, ensure no ExperimentalSerializationApi warnings slipped through
     // (compile-testing includes messages even on success)
     check(!result.messages.contains("ExperimentalSerializationApi")) {
-      $"Unexpected ExperimentalSerializationApi warning in messages: ${result.messages}"
+      "Unexpected ExperimentalSerializationApi warning in messages: ${result.messages}"
     }
   }
 }

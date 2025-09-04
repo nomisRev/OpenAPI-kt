@@ -25,7 +25,6 @@ kotlin {
       dependencies {
         implementation(libs.test)
         implementation(libs.test.compile)
-        implementation(projects.generation)
       }
     }
   }

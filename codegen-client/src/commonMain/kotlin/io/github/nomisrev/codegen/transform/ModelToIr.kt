@@ -215,7 +215,7 @@ class ModelRegistry private constructor(private val byName: Map<String, Model>) 
       is Model.Primitive.Double -> KtType.Simple("kotlin.Double")
       is Model.Primitive.Boolean -> KtType.Simple("kotlin.Boolean")
       is Model.Primitive.String -> KtType.Simple("kotlin.String")
-      is Model.Primitive.Unit -> KtType.Simple("kotlin.Unit")
+      is Model.Primitive.Unit -> KtType.Simple("EmptyObject")
       is Model.OctetStream -> KtType.Simple("kotlin.ByteArray")
       is Model.FreeFormJson -> KtType.Simple("kotlinx.serialization.json.JsonElement")
       is Model.Collection.List ->
@@ -525,7 +525,7 @@ private fun typeCode(model: Model, registry: ModelRegistry): String =
     is Model.Primitive.Double -> "Double"
     is Model.Primitive.Boolean -> "Boolean"
     is Model.Primitive.String -> "String"
-    is Model.Primitive.Unit -> "Unit"
+    is Model.Primitive.Unit -> "EmptyObject"
     is Model.OctetStream -> "ByteArray"
     is Model.FreeFormJson -> "kotlinx.serialization.json.JsonElement"
     is Model.Collection.List -> "List<${typeCode(model.inner, registry)}>"

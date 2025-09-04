@@ -373,10 +373,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           }
           is Allowed ->
             if (props.value) Model.FreeFormJson(description.get(), Constraints.Object(this))
-            else
-              throw IllegalStateException(
-                "No additional properties allowed on object without properties. $this"
-              )
+            else Model.Primitive.Unit(description.get())
         }
       else -> Model.FreeFormJson(description.get(), Constraints.Object(this))
     }
