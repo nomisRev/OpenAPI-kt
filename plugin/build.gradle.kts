@@ -8,6 +8,7 @@ plugins {
 }
 
 dependencies {
+  implementation(projects.codegenClient)
   implementation(projects.generation)
   implementation(libs.stdlib)
   compileOnly(libs.gradle)

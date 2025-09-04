@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi.plugin
 
+import GenerationConfig as NewGenerationConfig
+import generate as newGenerate
 import io.github.nomisrev.openapi.GenerationConfig
 import io.github.nomisrev.openapi.generate
 import org.gradle.api.file.DirectoryProperty
@@ -10,15 +12,25 @@ import org.gradle.workers.WorkParameters
 
 abstract class GenerateClientAction : WorkAction<GenerateClientAction.Parameters> {
   override fun execute() {
-    generate(
-      GenerationConfig(
-        path = parameters.file.get().asFile.path,
-        output = parameters.output.get().asFile.path,
-        `package` = parameters.packageName.getOrElse("io.github.nomisrev.openapi"),
-        name = parameters.name.get(),
-        isK2 = parameters.k2.get(),
+    if (!parameters.newCodegen.get())
+      generate(
+        GenerationConfig(
+          path = parameters.file.get().asFile.path,
+          output = parameters.output.get().asFile.path,
+          `package` = parameters.packageName.getOrElse("io.github.nomisrev.openapi"),
+          name = parameters.name.get(),
+          isK2 = true,
+        )
       )
-    )
+    else
+      newGenerate(
+        NewGenerationConfig(
+          path = parameters.file.get().asFile.path,
+          output = parameters.output.get().asFile.path,
+          `package` = parameters.packageName.getOrElse("io.github.nomisrev.openapi"),
+          name = parameters.name.get(),
+        )
+      )
   }
 
   interface Parameters : WorkParameters {
@@ -26,7 +38,7 @@ abstract class GenerateClientAction : WorkAction<GenerateClientAction.Parameters
     val file: RegularFileProperty
     val packageName: Property<String>
     val output: DirectoryProperty
-    // isK2 results in runtime Gradle error..
-    val k2: Property<Boolean>
+
+    @Deprecated("Will be removed soon with removal of KotlinPoet") val newCodegen: Property<Boolean>
   }
 }
