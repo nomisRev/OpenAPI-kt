@@ -44,8 +44,17 @@ object ApiToIr {
     // Implementation class
     declarations += buildApiImpl(api, parentNames, ctx)
 
+    // Imports required for request DSL and deserialization
+    val imports =
+      listOf(
+        KtImport("io.ktor.client.request.request"),
+        KtImport("io.ktor.http.HttpMethod"),
+        KtImport("io.ktor.http.path"),
+        KtImport("io.ktor.client.call.body"),
+      )
+
     // File for this API
-    all += KtFile(name = fileName, pkg = ctx.pkg, declarations = declarations)
+    all += KtFile(name = fileName, pkg = ctx.pkg, imports = imports, declarations = declarations)
 
     // Nested APIs -> own files (flattened names)
     if (api.nested.isNotEmpty()) {
@@ -102,7 +111,7 @@ object ApiToIr {
         KtProperty(
           name = toCamelCase(nested.name),
           type = KtType.Simple("${ctx.pkg}.$nestedName"),
-          initializer = KtExpr("${nestedName}Ktor(client)"),
+          initializer = KtExpr("${nestedName}(client)"),
           modifiers = listOf(KtModifier.Override),
         )
       }
@@ -143,7 +152,7 @@ object ApiToIr {
     val body = if (implemented) buildRouteBody(route, returnType) else null
 
     return KtFunction(
-      name = toFunName(route),
+      name = toFunName(route, ctx),
       params = allParams,
       returnType = returnType,
       modifiers = modifiers,
@@ -207,11 +216,11 @@ object ApiToIr {
     val sb = StringBuilder()
 
     // Build request invocation using fully qualified call to avoid import requirements
-    sb.append("val response = io.ktor.client.request.request(client) {\n")
+    sb.append("val response = client.request {\n")
     // call configure with explicit receiver
     sb.append("    configure(this)\n")
     // method
-    sb.append("    method = io.ktor.http.HttpMethod.").append(route.method.value).append("\n")
+    sb.append("    method = HttpMethod.").append(route.method.value).append("\n")
 
     // URL path with replacements for path params
     val replace =
@@ -222,12 +231,7 @@ object ApiToIr {
           } else null
         }
         .joinToString("")
-    sb
-      .append("    url { io.ktor.http.path(this, \"")
-      .append(route.path)
-      .append("\"")
-      .append(replace)
-      .append(") }\n")
+    sb.append("    url { path(\"").append(route.path).append("\"").append(replace).append(") }\n")
 
     // Content-Type
     route.body.firstNotNullOfOrNull { (_, body) ->
@@ -311,7 +315,7 @@ object ApiToIr {
     if (returnsHttpResponse) {
       sb.append("return response")
     } else {
-      sb.append("return response.bodyOrThrow()")
+      sb.append("return response.body()")
     }
 
     return KtBlock(sb.toString())
@@ -346,7 +350,7 @@ object ApiToIr {
         KtProperty(
           name = toCamelCase(api.name),
           type = KtType.Simple("${ctx.pkg}.$typeName"),
-          initializer = KtExpr("${typeName}Ktor(client)"),
+          initializer = KtExpr("${typeName}(client)"),
           modifiers = listOf(KtModifier.Override),
         )
       }
@@ -411,13 +415,26 @@ object ApiToIr {
       is KtType.Function -> this.copy(nullable = nullable)
     }
 
-  private fun toFunName(route: Route): String {
+  private fun toFunName(route: Route, ctx: Ctx): String {
     val base =
       route.operationId
         ?: run {
           val lastSeg = route.path.split('/').filter { it.isNotEmpty() }.lastOrNull() ?: "op"
-          lastSeg + route.method.value
+          val method = route.method.value.lowercase().replaceFirstChar { it.uppercase() }
+          lastSeg + method
         }
-    return toCamelCase(base)
+    return toCamelCaseIdentifierPreserving(base)
+  }
+
+  private fun toCamelCaseIdentifierPreserving(s: String): String {
+    if (s.isEmpty()) return "_"
+    return if (s.any { !it.isLetterOrDigit() }) {
+      val pascal = toPascalCaseIdentifier(s)
+      val camel = pascal.replaceFirstChar { it.lowercase() }
+      if (camel.first().isDigit()) "_" + camel else camel
+    } else {
+      val camel = s.replaceFirstChar { it.lowercase() }
+      if (camel.first().isDigit()) "_" + camel else camel
+    }
   }
 }
