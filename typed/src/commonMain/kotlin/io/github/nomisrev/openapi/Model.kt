@@ -20,24 +20,30 @@ data class Route(
   data class Bodies(
     /** Request bodies are optional by default! */
     val required: Boolean,
-    val types: Map<ContentType, Body>,
+    val types: Map<String, Body>,
     val extensions: Map<String, JsonElement>,
-  ) : Map<ContentType, Body> by types {
+  ) : Map<String, Body> by types {
     fun jsonOrNull(): Body.Json? =
-      types.getOrElse(ContentType.Application.Json) { null } as? Body.Json
+      types.firstNotNullOfOrNull { it.takeIf { ContentType.Application.Json.match(it.key) } } as? Body.Json
 
     fun octetStreamOrNull(): Body.OctetStream? =
-      types.getOrElse(ContentType.Application.OctetStream) { null } as? Body.OctetStream
+      types.firstNotNullOfOrNull { it.takeIf { ContentType.Application.OctetStream.match(it.key) } } as? Body.OctetStream
 
-    fun xmlOrNull(): Body.Xml? = types.getOrElse(ContentType.Application.Xml) { null } as? Body.Xml
+    fun xmlOrNull(): Body.Xml? =
+      types.firstNotNullOfOrNull { it.takeIf { ContentType.Application.Xml.match(it.key) } } as? Body.Xml
 
     fun multipartOrNull(): Body.Multipart? =
-      types.getOrElse(ContentType.MultiPart.FormData) { null } as? Body.Multipart
+      types.firstNotNullOfOrNull { it.takeIf { ContentType.MultiPart.FormData.match(it.key) } } as? Body.Multipart
   }
 
   sealed interface Body {
     val description: String?
     val extensions: Map<String, JsonElement>
+
+    data class BString(
+      override val description: String?,
+      override val extensions: Map<String, JsonElement>,
+    ) : Body
 
     data class OctetStream(
       override val description: String?,

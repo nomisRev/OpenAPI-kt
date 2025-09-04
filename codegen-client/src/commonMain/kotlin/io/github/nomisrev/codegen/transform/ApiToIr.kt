@@ -243,38 +243,21 @@ object ApiToIr {
     sb.append(buildUrlPathLine(route))
 
     // Content-Type
-    route.body.firstNotNullOfOrNull { (_, body) ->
-      when (body) {
-        is Route.Body.Json -> {
-          sb.append("    contentType(ContentType.Application.Json)\n")
-        }
-        is Route.Body.Xml -> {
-          // TODO: Not supported yet
-        }
-        is Route.Body.OctetStream -> {
-          // TODO: Not supported yet
-        }
-        is Route.Body.Multipart -> {
-          sb.append("    contentType(io.ktor.http.ContentType.MultiPart.FormData)\n")
-        }
-      }
+    route.body.firstNotNullOfOrNull { (contentType, body) ->
+      sb.append("""    contentType(ContentType.parse("$contentType"))\n""")
     }
 
     // Body
     route.body.firstNotNullOfOrNull { (_, body) ->
       when (body) {
-        is Route.Body.Json -> {
-          sb.append("    setBody(body)\n")
-        }
-        is Route.Body.Xml -> {
-          // TODO
-        }
-        is Route.Body.OctetStream -> {
-          // TODO
-        }
+        is Route.Body.BString,
+        is Route.Body.Xml,
+        is Route.Body.Json -> sb.append("    setBody(body)\n")
+
+        is Route.Body.OctetStream -> TODO()
         is Route.Body.Multipart -> {
           if (body is Route.Body.Multipart.Value) {
-            sb.append("    setBody(io.ktor.client.request.forms.formData {\n")
+            sb.append("    setBody(formData {\n")
             for (p in body.parameters) {
               sb
                 .append("        appendAll(\"")
@@ -289,7 +272,7 @@ object ApiToIr {
             val obj = body.value as? Model.Object
             if (obj != null) {
               val vName = toCamelCase(body.name)
-              sb.append("    setBody(io.ktor.client.request.forms.formData {\n")
+              sb.append("    setBody(formData {\n")
               for (prop in obj.properties) {
                 val propName = toCamelCase(prop.baseName)
                 sb

@@ -172,7 +172,7 @@ class ApiGenerationGoldenTest {
             required = true,
             types =
               mapOf(
-                ContentType.Application.Json to
+                "application/json" to
                   Body.Json.Defined(type = createReq, description = null, extensions = emptyMap())
               ),
             extensions = emptyMap(),
