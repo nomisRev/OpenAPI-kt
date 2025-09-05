@@ -12,9 +12,7 @@ plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 rootProject.name = "openapi-kt"
 
 include("parser")
-
 include("typed")
-
 include("generation")
-
-include("plugin") // include("generic")
+include("plugin")
+include("codegen")
