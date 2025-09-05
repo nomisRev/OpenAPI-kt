@@ -68,11 +68,11 @@ class ArraySpec {
         context = NamingContext.Named("Mixed"),
         cases =
           listOf(
+            Model.Union.Case(context = NamingContext.Named("Mixed"), model = Model.Primitive.int()),
             Model.Union.Case(
               context = NamingContext.Named("Mixed"),
               model = Model.Primitive.string(),
             ),
-            Model.Union.Case(context = NamingContext.Named("Mixed"), model = Model.Primitive.int()),
           ),
         inline = listOf(Model.Primitive.string(), Model.Primitive.int()),
       )

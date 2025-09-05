@@ -22,6 +22,7 @@ dependencies {
   kover(projects.parser)
   kover(projects.typed)
   kover(projects.generation)
+  kover(projects.codegen)
 }
 
 subprojects {
