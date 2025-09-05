@@ -88,7 +88,13 @@ class AllOfInlineObjectsResponseTest {
           ),
         inline = emptyList(),
       ),
-      openApi.routes().single().returnType.types[HttpStatusCode.OK]?.type,
+      openApi
+        .routes()
+        .single()
+        .returnType
+        .entries[HttpStatusCode.OK]
+        ?.types
+        ?.get("application/json"),
     )
   }
 }

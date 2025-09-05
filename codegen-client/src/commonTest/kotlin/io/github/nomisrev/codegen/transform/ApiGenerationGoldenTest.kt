@@ -58,7 +58,10 @@ class ApiGenerationGoldenTest {
           ),
         returnType =
           Returns(
-            mapOf(HttpStatusCode.OK to ReturnType(user, extensions = emptyMap())),
+            mapOf(
+              HttpStatusCode.OK to
+                ReturnType(types = mapOf("application/json" to user), extensions = emptyMap())
+            ),
             extensions = emptyMap(),
           ),
         extensions = emptyMap(),
@@ -182,7 +185,10 @@ class ApiGenerationGoldenTest {
         input = emptyList(),
         returnType =
           Returns(
-            mapOf(HttpStatusCode.Created to ReturnType(user, extensions = emptyMap())),
+            mapOf(
+              HttpStatusCode.Created to
+                ReturnType(types = mapOf("application/json" to user), extensions = emptyMap())
+            ),
             extensions = emptyMap(),
           ),
         extensions = emptyMap(),

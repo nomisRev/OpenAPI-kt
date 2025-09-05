@@ -307,8 +307,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val name = ref.drop("#/components/schemas/".length)
         val schema =
           requireNotNull(openAPI.components.schemas[name]) {
-              "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
-            }
+            "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+          }
             .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
         Resolved.Ref(name, schema)
       }
@@ -320,8 +320,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/responses/".length)
         requireNotNull(openAPI.components.responses[typeName]) {
-            "Response $typeName could not be found in ${openAPI.components.responses}. Is it missing?"
-          }
+          "Response $typeName could not be found in ${openAPI.components.responses}. Is it missing?"
+        }
           .get()
       }
     }
@@ -332,8 +332,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/parameters/".length)
         requireNotNull(openAPI.components.parameters[typeName]) {
-            "Parameter $typeName could not be found in ${openAPI.components.parameters}. Is it missing?"
-          }
+          "Parameter $typeName could not be found in ${openAPI.components.parameters}. Is it missing?"
+        }
           .get()
       }
     }
@@ -344,8 +344,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/requestBodies/".length)
         requireNotNull(openAPI.components.requestBodies[typeName]) {
-            "RequestBody $typeName could not be found in ${openAPI.components.requestBodies}. Is it missing?"
-          }
+          "RequestBody $typeName could not be found in ${openAPI.components.requestBodies}. Is it missing?"
+        }
           .get()
       }
     }
@@ -356,8 +356,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/pathItems/".length)
         requireNotNull(openAPI.components.pathItems[typeName]) {
-            "PathItem $typeName could not be found in ${openAPI.components.pathItems}. Is it missing?"
-          }
+          "PathItem $typeName could not be found in ${openAPI.components.pathItems}. Is it missing?"
+        }
           .get()
       }
     }
@@ -370,8 +370,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val name = ref.drop("#/components/schemas/".length).dropLast("/description".length)
         val schema =
           requireNotNull(openAPI.components.schemas[name]) {
-              "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
-            }
+            "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+          }
             .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
         schema.description.get()
       }
@@ -859,75 +859,48 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     operation: Operation,
     create: (NamingContext) -> NamingContext,
     opName: String,
-  ): Route.Returns =
-    Route.Returns(
+  ): Route.Returns {
+    fun Response.allContentModels(): Map<String, Model> =
+      content.entries.associate { (contentType, mediaType) ->
+        val resolved = mediaType.schema?.resolve()
+        val context =
+          resolved?.namedOr { create(NamingContext.RouteBody(opName, "Response")) }
+        val model =
+          when (resolved) {
+            is Resolved -> resolved.toModel(context!!).value
+            null -> Model.FreeFormJson(description, null)
+          }
+        val cleaned =
+          when (model) {
+            is Model.Object -> model.copy(inline = emptyList())
+            is Model.Union -> model.copy(inline = emptyList())
+            else -> model
+          }
+        contentType to cleaned
+      }
+
+    fun Response.toReturnType(): Route.ReturnType =
+      Route.ReturnType(types = this.allContentModels(), extensions = extensions)
+
+    val entries: Map<HttpStatusCode, Route.ReturnType> =
       operation.responses.responses.entries.associate { (code, refOrResponse) ->
         val statusCode = HttpStatusCode.fromValue(code)
         val response = refOrResponse.get()
-        when {
-          response.content.entries.any { ContentType.Application.OctetStream.match(it.key) } ->
-            Pair(
-              statusCode,
-              Route.ReturnType(Model.OctetStream(response.description), response.extensions),
-            )
+        statusCode to response.toReturnType()
+      }
 
-          response.content.entries.any { ContentType.Application.Json.match(it.key) } -> {
-            val mediaType =
-              response.content.entries.first { ContentType.Application.Json.match(it.key) }.value
-            val route =
-              when (val resolved = mediaType.schema?.resolve()) {
-                is Resolved -> {
-                  val context =
-                    resolved.namedOr { create(NamingContext.RouteBody(opName, "Response")) }
-                  run {
-                    val model = resolved.toModel(context).value
-                    val cleaned =
-                      when (model) {
-                        is Model.Object -> model.copy(inline = emptyList())
-                        is Model.Union -> model.copy(inline = emptyList())
-                        else -> model
-                      }
-                    Route.ReturnType(cleaned, response.extensions)
-                  }
-                }
+    val success: Route.ReturnType? =
+      entries.entries.filter { it.key.isSuccess() }.minByOrNull { it.key.value }?.value
 
-                null ->
-                  Route.ReturnType(
-                    if (Allowed(true).value) Model.FreeFormJson(response.description, null)
-                    else
-                      throw IllegalStateException(
-                        "Illegal State: No additional properties allowed on empty object."
-                      ),
-                    response.extensions,
-                  )
-              }
-            Pair(statusCode, route)
-          }
+    val default: Route.ReturnType? = operation.responses.default?.get()?.toReturnType()
 
-          response.isEmpty() ->
-            Pair(
-              statusCode,
-              Route.ReturnType(
-                Primitive.String(null, response.description, null),
-                response.extensions,
-              ),
-            )
-
-          response.content.contains("text/plain") || response.content.contains("text/html") ->
-            Pair(
-              statusCode,
-              Route.ReturnType(
-                Primitive.String(null, response.description, null),
-                response.extensions,
-              ),
-            )
-
-          else ->
-            throw IllegalStateException("OpenAPI requires at least 1 valid response. $response")
-        }
-      },
-      operation.responses.extensions,
+    return Route.Returns(
+      success = success,
+      default = default,
+      entries = entries,
+      extensions = operation.responses.extensions,
     )
+  }
 
   /**
    * Allows tracking whether data was referenced by name, or defined inline. This is important to be
@@ -942,7 +915,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
     data class Ref<A>(val name: String, override val value: A) : Resolved<A>
 
-    @JvmInline value class Value<A>(override val value: A) : Resolved<A>
+    @JvmInline
+    value class Value<A>(override val value: A) : Resolved<A>
 
     fun namedOr(orElse: () -> NamingContext): NamingContext =
       when (this) {

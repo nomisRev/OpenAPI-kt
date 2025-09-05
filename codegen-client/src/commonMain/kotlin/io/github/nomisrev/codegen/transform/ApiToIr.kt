@@ -221,15 +221,31 @@ object ApiToIr {
   }
 
   private fun computeReturnType(route: Route, ctx: Ctx): KtType {
-    val entries = route.returnType.types
+    val entries = route.returnType.entries
     if (entries.size == 1) {
-      val (status, rt) = entries.entries.first()
-      return when (rt.type) {
-        is Model.OctetStream -> KtType.Simple("io.ktor.client.statement.HttpResponse")
-        else -> ctx.registry.mapType(rt.type)
+      val (_, rt) = entries.entries.first()
+      val media = rt.types
+      // Priority: octet-stream -> HttpResponse, json -> model, text/plain|text/html -> model, else
+      // first available
+      if (media.keys.any { it.equals("application/octet-stream", ignoreCase = true) }) {
+        return KtType.Simple("io.ktor.client.statement.HttpResponse")
+      }
+      media.entries
+        .firstOrNull { it.key.startsWith("application", ignoreCase = true) }
+        ?.let {
+          return ctx.registry.mapType(it.value)
+        }
+      media.entries
+        .firstOrNull { it.key.startsWith("text", ignoreCase = true) }
+        ?.let {
+          return ctx.registry.mapType(it.value)
+        }
+      // Fallback to first mapped type if present
+      media.entries.firstOrNull()?.let {
+        return ctx.registry.mapType(it.value)
       }
     }
-    // Fallback for multiple status codes: return response
+    // Fallback for multiple status codes or no recognized media types: return response
     return KtType.Simple("io.ktor.client.statement.HttpResponse")
   }
 

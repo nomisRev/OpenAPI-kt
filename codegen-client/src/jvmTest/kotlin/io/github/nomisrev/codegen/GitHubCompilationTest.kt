@@ -10,14 +10,12 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.pathString
-import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.fail
 
 class GitHubCompilationTest {
   @Test
-  @Ignore
   fun github_json_generates_code_that_compiles() {
     // Locate youtrack.json without duplicating it as a resource
     val candidates =
