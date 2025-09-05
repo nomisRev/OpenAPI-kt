@@ -2,8 +2,8 @@ package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.ReferenceOr.Companion.value
 import io.ktor.http.*
+import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.junit.jupiter.api.Test
 
 class RootTest {
   @Test
@@ -47,7 +47,10 @@ class RootTest {
             returnType =
               Route.Returns(
                 HttpStatusCode.OK to
-                  Route.ReturnType(Model.Primitive.string(null, null), emptyMap())
+                  Route.ReturnType(
+                    types = mapOf("application/json" to Model.Primitive.string(null, null)),
+                    extensions = emptyMap(),
+                  )
               ),
             extensions = emptyMap(),
             nested = listOf(Model.Primitive.string(null, null)),

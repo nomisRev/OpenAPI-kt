@@ -3,8 +3,10 @@ package io.github.nomisrev.openapi
 import io.github.nomisrev.openapi.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.ReferenceOr.Companion.value
 import io.github.nomisrev.openapi.Schema.Type
+import kotlin.test.DefaultAsserter.assertTrue
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class MapsTest {
 
@@ -53,7 +55,7 @@ class MapsTest {
   }
 
   @Test
-  fun `dictionary with $ref value`() {
+  fun `dictionary with ref value`() {
     val messageSchema =
       Schema(
         type = Type.Basic.Object,
@@ -116,9 +118,10 @@ class MapsTest {
         constraint = null,
       )
 
-    assert(models.contains(expectedMessage)) { "Expected Message object model to be generated." }
-    assert(models.contains(expectedMessages)) {
-      "Expected Messages dictionary model (Map<String, Message>) to be generated."
-    }
+    assertTrue("Expected Message object model to be generated.", models.contains(expectedMessage))
+    assertTrue(
+      "Expected Messages dictionary model (Map<String, Message>) to be generated.",
+      models.contains(expectedMessages),
+    )
   }
 }

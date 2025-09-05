@@ -2,8 +2,8 @@ package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.ReferenceOr.Companion.value
 import io.github.nomisrev.openapi.Schema.Type
+import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.junit.jupiter.api.Test
 
 class DefaultArguments {
   @Test

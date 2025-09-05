@@ -12,15 +12,19 @@ abstract class OpenAPIPlugin : Plugin<Project> {
       val generateOpenApiClient =
         register("generateOpenApiClient", GenerateClientTask::class.java) {
           it.spec.set(extension.specs)
-          it.output.set(project.output)
+          it.output.set(
+            project.layout.buildDirectory.dir("generated/openapi/src/commonMain/kotlin")
+          )
         }
 
       maybeCreate("prepareKotlinIdeaImport").dependsOn(generateOpenApiClient)
       project.sources().forEach { source ->
         val outputDirectoryProvider: Provider<File> =
-          generateOpenApiClient.map { _ -> project.output }
+          project.layout.buildDirectory.dir("generated/openapi/src/commonMain/kotlin").map {
+            it.asFile
+          }
         // Add the source dependency on the generated code.
-        // Use a Provider generated from the task to carry task dependencies
+        // Use the task itself to carry task dependencies for compilation
         // See https://github.com/cashapp/sqldelight/issues/2119
         source.sourceDirectorySet.srcDir(generateOpenApiClient)
         source.registerGeneratedDirectory(outputDirectoryProvider)
@@ -28,7 +32,3 @@ abstract class OpenAPIPlugin : Plugin<Project> {
     }
   }
 }
-
-@Suppress("DEPRECATION")
-internal val Project.output
-  get() = File(buildDir, "generated/openapi/src/commonMain/kotlin").also { it.mkdirs() }

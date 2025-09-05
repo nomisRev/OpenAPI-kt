@@ -66,14 +66,24 @@ public sealed interface ExampleValue {
         when (decoder) {
           is JsonDecoder ->
             when (val json = decoder.decodeSerializableValue(JsonElement.serializer())) {
-              is JsonArray -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
+              is JsonArray ->
+                if (json.all { it is JsonPrimitive }) {
+                  Multiple(json.map { (it as JsonPrimitive).content })
+                } else {
+                  Single(Json.encodeToString(JsonElement.serializer(), json))
+                }
               is JsonPrimitive -> Single(json.content)
               is JsonObject -> Single(json.toString())
             }
 
           is YamlInput ->
             when (val node = decoder.decodeSerializableValue(YamlNode.serializer())) {
-              is YamlList -> Multiple(decoder.decodeSerializableValue(multipleSerializer))
+              is YamlList ->
+                if (node.items.all { it is YamlScalar }) {
+                  Multiple(node.items.map { (it as YamlScalar).content })
+                } else {
+                  Single(Json.encodeToString(JsonElement.serializer(), node.toJsonElement()))
+                }
               is YamlScalar -> Single(node.content)
               is YamlMap ->
                 Single(Json.encodeToString(JsonElement.serializer(), node.toJsonElement()))

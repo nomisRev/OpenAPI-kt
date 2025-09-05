@@ -13,6 +13,9 @@ rootProject.name = "openapi-kt"
 
 include("parser")
 include("typed")
-include("generation")
 include("plugin")
 include("codegen")
+
+include("codegen")
+
+include("codegen-client")

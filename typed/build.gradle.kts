@@ -10,8 +10,11 @@ plugins {
 
 kotlin {
   jvm()
-  //  macosArm64()
-  //  linuxX64()
+  macosArm64()
+  js {
+    browser()
+    nodejs()
+  }
 
   sourceSets {
     commonMain {

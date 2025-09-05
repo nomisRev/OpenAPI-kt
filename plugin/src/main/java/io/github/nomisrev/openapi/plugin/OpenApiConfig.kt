@@ -7,7 +7,7 @@ import org.gradle.api.Project
 import org.gradle.api.provider.ListProperty
 
 @Suppress("UnnecessaryAbstractClass")
-abstract class OpenApiConfig @Inject constructor(private val project: Project) {
+abstract class OpenApiConfig @Inject constructor(project: Project) {
   internal val specs: ListProperty<SpecDefinition> =
     project.objects.listProperty(SpecDefinition::class.java).empty()
 
