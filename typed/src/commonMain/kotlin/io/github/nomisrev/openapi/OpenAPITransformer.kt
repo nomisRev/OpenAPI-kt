@@ -833,7 +833,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               )
             }
 
-            contentType.startsWith("text") || contentType.startsWith("application") -> {
+            // default to `setBody(any: Any?)` + contentType
+            else -> {
               val model =
                 mediaType.schema?.resolve()?.let { resolved ->
                   val context =
@@ -845,11 +846,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                 } ?: Model.FreeFormJson(body.description, null)
               Pair(contentType, Route.Body.SetBody(model, body.description, mediaType.extensions))
             }
-
-            else ->
-              throw IllegalStateException(
-                "RequestBody content type: $contentType not yet supported."
-              )
           }
         }
         .orEmpty(),
