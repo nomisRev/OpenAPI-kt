@@ -203,7 +203,7 @@ class SerializationAnnotationsTest {
             import kotlinx.serialization.Serializable
 
             @Serializable
-            data class Collections(val names: List<String>? = emptyList(), val tags: Set<String>? = setOf())
+            data class Collections(val names: List<String>? = emptyList(), val tags: List<String>? = emptyList())
             """
         .trimIndent() + "\n")
 

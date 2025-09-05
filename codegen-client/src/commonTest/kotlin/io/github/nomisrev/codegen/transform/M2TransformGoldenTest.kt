@@ -137,7 +137,7 @@ class M2TransformGoldenTest {
       import kotlinx.serialization.Serializable
 
       @Serializable
-      data class CollectionsHolder(@Required val tags: List<String> = listOf("a", "b"), @Required val labels: Set<String> = setOf(), val attributes: Map<String, String>? = null)
+      data class CollectionsHolder(@Required val tags: List<String> = listOf("a", "b"), @Required val labels: List<String> = emptyList(), val attributes: Map<String, String>? = null)
       """
         .trimIndent() + "\n")
 

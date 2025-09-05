@@ -11,7 +11,6 @@ import io.github.nomisrev.openapi.Route.Bodies
 import io.github.nomisrev.openapi.Route.Body
 import io.github.nomisrev.openapi.Route.ReturnType
 import io.github.nomisrev.openapi.Route.Returns
-import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import kotlin.test.Test

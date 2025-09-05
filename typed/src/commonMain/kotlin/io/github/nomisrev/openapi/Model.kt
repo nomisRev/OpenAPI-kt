@@ -24,16 +24,20 @@ data class Route(
     val extensions: Map<String, JsonElement>,
   ) : Map<String, Body> by types {
     fun jsonOrNull(): Body.Json? =
-      types.firstNotNullOfOrNull { it.takeIf { ContentType.Application.Json.match(it.key) } } as? Body.Json
+      types.firstNotNullOfOrNull { it.takeIf { ContentType.Application.Json.match(it.key) } }
+        as? Body.Json
 
     fun octetStreamOrNull(): Body.OctetStream? =
-      types.firstNotNullOfOrNull { it.takeIf { ContentType.Application.OctetStream.match(it.key) } } as? Body.OctetStream
+      types.firstNotNullOfOrNull { it.takeIf { ContentType.Application.OctetStream.match(it.key) } }
+        as? Body.OctetStream
 
     fun xmlOrNull(): Body.Xml? =
-      types.firstNotNullOfOrNull { it.takeIf { ContentType.Application.Xml.match(it.key) } } as? Body.Xml
+      types.firstNotNullOfOrNull { it.takeIf { ContentType.Application.Xml.match(it.key) } }
+        as? Body.Xml
 
     fun multipartOrNull(): Body.Multipart? =
-      types.firstNotNullOfOrNull { it.takeIf { ContentType.MultiPart.FormData.match(it.key) } } as? Body.Multipart
+      types.firstNotNullOfOrNull { it.takeIf { ContentType.MultiPart.FormData.match(it.key) } }
+        as? Body.Multipart
   }
 
   sealed interface Body {

@@ -8,8 +8,8 @@ import io.github.nomisrev.openapi.Model.Primitive
 import io.github.nomisrev.openapi.NamingContext.Named
 import io.github.nomisrev.openapi.Schema.Type
 import io.ktor.http.*
-import kotlinx.serialization.json.Json
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.json.Json
 
 fun OpenAPI.routes(): List<Route> = OpenAPITransformer(this).routes()
 
@@ -143,7 +143,10 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val model =
           when {
             schema.isOpenEnumeration() ->
-              schema.toOpenEnum(context, schema.anyOf!!.firstNotNullOf { it.resolve().value.enum }.filterNotNull())
+              schema.toOpenEnum(
+                context,
+                schema.anyOf!!.firstNotNullOf { it.resolve().value.enum }.filterNotNull(),
+              )
 
             /*
              * We're modifying the schema here...
@@ -176,7 +179,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               val enums = schema.enum!!
               val hasNull = enums.any { it == null }
               val filtered = enums.filterNotNull()
-              val effectiveSchema = if (hasNull && schema.nullable != true) schema.copy(nullable = true) else schema
+              val effectiveSchema =
+                if (hasNull && schema.nullable != true) schema.copy(nullable = true) else schema
               effectiveSchema.toEnum(context, filtered)
             }
 
@@ -303,8 +307,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val name = ref.drop("#/components/schemas/".length)
         val schema =
           requireNotNull(openAPI.components.schemas[name]) {
-            "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
-          }
+              "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+            }
             .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
         Resolved.Ref(name, schema)
       }
@@ -316,8 +320,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/responses/".length)
         requireNotNull(openAPI.components.responses[typeName]) {
-          "Response $typeName could not be found in ${openAPI.components.responses}. Is it missing?"
-        }
+            "Response $typeName could not be found in ${openAPI.components.responses}. Is it missing?"
+          }
           .get()
       }
     }
@@ -328,8 +332,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/parameters/".length)
         requireNotNull(openAPI.components.parameters[typeName]) {
-          "Parameter $typeName could not be found in ${openAPI.components.parameters}. Is it missing?"
-        }
+            "Parameter $typeName could not be found in ${openAPI.components.parameters}. Is it missing?"
+          }
           .get()
       }
     }
@@ -340,8 +344,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/requestBodies/".length)
         requireNotNull(openAPI.components.requestBodies[typeName]) {
-          "RequestBody $typeName could not be found in ${openAPI.components.requestBodies}. Is it missing?"
-        }
+            "RequestBody $typeName could not be found in ${openAPI.components.requestBodies}. Is it missing?"
+          }
           .get()
       }
     }
@@ -352,8 +356,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/pathItems/".length)
         requireNotNull(openAPI.components.pathItems[typeName]) {
-          "PathItem $typeName could not be found in ${openAPI.components.pathItems}. Is it missing?"
-        }
+            "PathItem $typeName could not be found in ${openAPI.components.pathItems}. Is it missing?"
+          }
           .get()
       }
     }
@@ -366,8 +370,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val name = ref.drop("#/components/schemas/".length).dropLast("/description".length)
         val schema =
           requireNotNull(openAPI.components.schemas[name]) {
-            "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
-          }
+              "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+            }
             .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
         schema.description.get()
       }
@@ -665,7 +669,10 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           context is Named && case.value.type == Type.Basic.String && case.value.enum != null ->
             NamingContext.Nested(
               Named(
-                case.value.enum.orEmpty().filterNotNull().joinToString(prefix = "", separator = "Or") {
+                case.value.enum.orEmpty().filterNotNull().joinToString(
+                  prefix = "",
+                  separator = "Or",
+                ) {
                   it.replaceFirstChar(Char::uppercaseChar)
                 }
               ),
@@ -816,7 +823,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               Pair(contentType, Route.Body.BString(null, emptyMap()))
 
             else ->
-              throw IllegalStateException("RequestBody content type: $contentType not yet supported.")
+              throw IllegalStateException(
+                "RequestBody content type: $contentType not yet supported."
+              )
           }
         }
         .orEmpty(),
@@ -843,7 +852,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             )
 
           response.content.entries.any { ContentType.Application.Json.match(it.key) } -> {
-            val mediaType = response.content.entries.first { ContentType.Application.Json.match(it.key) }.value
+            val mediaType =
+              response.content.entries.first { ContentType.Application.Json.match(it.key) }.value
             val route =
               when (val resolved = mediaType.schema?.resolve()) {
                 is Resolved -> {
@@ -912,8 +922,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
     data class Ref<A>(val name: String, override val value: A) : Resolved<A>
 
-    @JvmInline
-    value class Value<A>(override val value: A) : Resolved<A>
+    @JvmInline value class Value<A>(override val value: A) : Resolved<A>
 
     fun namedOr(orElse: () -> NamingContext): NamingContext =
       when (this) {

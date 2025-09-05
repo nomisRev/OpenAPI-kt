@@ -261,6 +261,8 @@ fun addContentType(bodies: Route.Bodies) {
       is Route.Body.Multipart.Ref,
       is Route.Body.Multipart.Value ->
         addStatement("%M(%T.%L)", contentType, ContentType.nested("MultiPart"), "FormData")
+
+      is Route.Body.BString -> TODO()
     }
   }
 }
@@ -296,6 +298,8 @@ fun Route.addBody() {
         }
         addStatement(")")
       }
+
+      is Route.Body.BString -> TODO()
     }
   }
 }

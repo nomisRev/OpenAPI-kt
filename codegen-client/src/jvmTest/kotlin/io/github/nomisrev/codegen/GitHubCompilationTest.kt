@@ -34,12 +34,7 @@ class GitHubCompilationTest {
         .apply {
           this.sources =
             files(
-                GenerationConfig(
-                  path.pathString,
-                  "OUTPUT_NOT_USED",
-                  "com.example.github",
-                  "GitHub",
-                )
+                GenerationConfig(path.pathString, "OUTPUT_NOT_USED", "com.example.github", "GitHub")
               )
               .map { (name, content) -> SourceFile.kotlin(name, content) }
           inheritClassPath = true
