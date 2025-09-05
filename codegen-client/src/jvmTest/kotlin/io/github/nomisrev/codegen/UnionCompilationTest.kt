@@ -30,6 +30,7 @@ class UnionCompilationTest {
         default = null,
         description = null,
         inline = emptyList(),
+        discriminator = null,
       )
 
     val pkg = "com.example.union"

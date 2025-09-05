@@ -98,9 +98,9 @@ class ModelRegistryNameOfTest {
       ),
     )
     assertEquals(
-      "PetSet",
+      "PetList",
       reg.nameOf(
-        Model.Collection.Set(inner = refPet, default = null, description = null, constraint = null)
+        Model.Collection.List(inner = refPet, default = null, description = null, constraint = null)
       ),
     )
     assertEquals(
@@ -127,6 +127,7 @@ class ModelRegistryNameOfTest {
         default = null,
         description = null,
         inline = emptyList(),
+        discriminator = null,
       )
     val reg = registry()
     assertEquals("U", reg.nameOf(u))
@@ -142,6 +143,7 @@ class ModelRegistryNameOfTest {
         default = null,
         description = null,
         inline = emptyList(),
+        discriminator = null,
       )
     val reg = registry()
     assertEquals("OuterInner", reg.nameOf(u))

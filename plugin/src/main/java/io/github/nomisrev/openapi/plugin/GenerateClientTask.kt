@@ -37,7 +37,6 @@ abstract class GenerateClientTask : DefaultTask() {
         parameters.packageName.set(spec.packageName)
         parameters.file.set(spec.file)
         parameters.output.set(output)
-        parameters.newCodegen.set(spec.newCodegen)
       }
     }
   }

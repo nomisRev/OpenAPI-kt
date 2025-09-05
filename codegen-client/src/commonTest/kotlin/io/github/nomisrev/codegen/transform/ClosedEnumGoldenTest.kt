@@ -24,8 +24,8 @@ class ClosedEnumGoldenTest {
       ("""
             package com.example
 
-            import kotlinx.serialization.SerialName
             import kotlinx.serialization.Serializable
+            import kotlinx.serialization.SerialName
 
             @Serializable
             enum class AutoOrManual {

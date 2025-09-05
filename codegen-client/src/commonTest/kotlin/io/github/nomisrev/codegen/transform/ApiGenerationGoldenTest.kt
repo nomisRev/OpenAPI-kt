@@ -83,16 +83,19 @@ class ApiGenerationGoldenTest {
       """
       package com.example
 
-      import io.ktor.client.HttpClient
-      import io.ktor.client.call.body
-      import io.ktor.client.request.HttpRequestBuilder
-      import io.ktor.client.request.forms.formData
-      import io.ktor.client.request.request
-      import io.ktor.client.request.setBody
-      import io.ktor.http.ContentType
-      import io.ktor.http.HttpMethod
-      import io.ktor.http.contentType
       import io.ktor.http.path
+      import io.ktor.http.contentType
+      import io.ktor.http.Parameters
+      import io.ktor.http.HttpMethod
+      import io.ktor.http.ContentType
+      import io.ktor.client.request.setBody
+      import io.ktor.client.request.request
+      import io.ktor.client.request.forms.formData
+      import io.ktor.client.request.forms.MultiPartFormDataContent
+      import io.ktor.client.request.forms.FormDataContent
+      import io.ktor.client.request.HttpRequestBuilder
+      import io.ktor.client.call.body
+      import io.ktor.client.HttpClient
 
       interface Users {
           /**
@@ -172,7 +175,7 @@ class ApiGenerationGoldenTest {
             types =
               mapOf(
                 "application/json" to
-                  Body.Json.Defined(type = createReq, description = null, extensions = emptyMap())
+                  Body.SetBody(type = createReq, description = null, extensions = emptyMap())
               ),
             extensions = emptyMap(),
           ),
@@ -202,16 +205,19 @@ class ApiGenerationGoldenTest {
       """
       package com.example
 
-      import io.ktor.client.HttpClient
-      import io.ktor.client.call.body
-      import io.ktor.client.request.HttpRequestBuilder
-      import io.ktor.client.request.forms.formData
-      import io.ktor.client.request.request
-      import io.ktor.client.request.setBody
-      import io.ktor.http.ContentType
-      import io.ktor.http.HttpMethod
-      import io.ktor.http.contentType
       import io.ktor.http.path
+      import io.ktor.http.contentType
+      import io.ktor.http.Parameters
+      import io.ktor.http.HttpMethod
+      import io.ktor.http.ContentType
+      import io.ktor.client.request.setBody
+      import io.ktor.client.request.request
+      import io.ktor.client.request.forms.formData
+      import io.ktor.client.request.forms.MultiPartFormDataContent
+      import io.ktor.client.request.forms.FormDataContent
+      import io.ktor.client.request.HttpRequestBuilder
+      import io.ktor.client.call.body
+      import io.ktor.client.HttpClient
 
       interface Users {
           /**

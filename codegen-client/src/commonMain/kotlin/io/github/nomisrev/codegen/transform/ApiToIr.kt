@@ -58,6 +58,9 @@ object ApiToIr {
         KtImport("io.ktor.http.ContentType"),
         KtImport("io.ktor.client.request.setBody"),
         KtImport("io.ktor.client.request.forms.formData"),
+        KtImport("io.ktor.client.request.forms.MultiPartFormDataContent"),
+        KtImport("io.ktor.client.request.forms.FormDataContent"),
+        KtImport("io.ktor.http.Parameters"),
       )
 
     // File for this API
@@ -182,9 +185,9 @@ object ApiToIr {
 
   private fun buildBodyParams(route: Route, ctx: Ctx, defaults: Boolean): List<KtParam> {
     val bodies = route.body
-    bodies.jsonOrNull()?.let { json ->
+    bodies.setBodyOrNull()?.let { sb ->
       val nullable = !bodies.required
-      val t = ctx.registry.mapType(json.type)
+      val t = ctx.registry.mapType(sb.type)
       return listOf(
         KtParam(
           name = "body",
@@ -192,6 +195,16 @@ object ApiToIr {
           default = if (defaults && nullable) KtExpr("null") else null,
         )
       )
+    }
+    bodies.formUrlEncodedOrNull()?.let { form ->
+      return form.parameters.map { p ->
+        val t = ctx.registry.mapType(p.type)
+        KtParam(
+          name = toCamelCase(p.name),
+          type = if (!bodies.required) t.copyNullable(true) else t,
+          default = if (defaults && !bodies.required) KtExpr("null") else null,
+        )
+      }
     }
     bodies.multipartOrNull()?.let { multipart ->
       // Expand multipart parameters inline
@@ -244,25 +257,22 @@ object ApiToIr {
 
     // Content-Type
     route.body.firstNotNullOfOrNull { (contentType, body) ->
-      val ctExpr = if (contentType.equals("application/json", ignoreCase = true)) {
-        "ContentType.Application.Json"
-      } else {
-        "ContentType.parse(\"$contentType\")"
-      }
+      val ctExpr =
+        if (contentType.equals("application/json", ignoreCase = true)) {
+          "ContentType.Application.Json"
+        } else {
+          "ContentType.parse(\"$contentType\")"
+        }
       sb.append("    contentType($ctExpr)\n")
     }
 
     // Body
     route.body.firstNotNullOfOrNull { (_, body) ->
       when (body) {
-        is Route.Body.BString,
-        is Route.Body.Xml,
-        is Route.Body.Json -> sb.append("    setBody(body)\n")
-
-        is Route.Body.OctetStream -> TODO()
+        is Route.Body.SetBody -> sb.append("    setBody(body)\n")
         is Route.Body.Multipart -> {
           if (body is Route.Body.Multipart.Value) {
-            sb.append("    setBody(formData {\n")
+            sb.append("    setBody(MultiPartFormDataContent(formData {\n")
             for (p in body.parameters) {
               sb
                 .append("        appendAll(\"")
@@ -271,13 +281,13 @@ object ApiToIr {
                 .append(toCamelCase(p.name))
                 .append(")\n")
             }
-            sb.append("    })\n")
+            sb.append("    }))\n")
           } else if (body is Route.Body.Multipart.Ref) {
             // Only support object ref with properties appended
             val obj = body.value as? Model.Object
             if (obj != null) {
               val vName = toCamelCase(body.name)
-              sb.append("    setBody(formData {\n")
+              sb.append("    setBody(MultiPartFormDataContent(formData {\n")
               for (prop in obj.properties) {
                 val propName = toCamelCase(prop.baseName)
                 sb
@@ -289,9 +299,21 @@ object ApiToIr {
                   .append(propName)
                   .append(")\n")
               }
-              sb.append("    })\n")
+              sb.append("    }))\n")
             }
           }
+        }
+        is Route.Body.FormUrlEncoded -> {
+          sb.append("    setBody(FormDataContent(Parameters.build {\n")
+          for (p in body.parameters) {
+            sb
+              .append("        appendAll(\"")
+              .append(p.name)
+              .append("\", ")
+              .append(toCamelCase(p.name))
+              .append(")\n")
+          }
+          sb.append("    }))\n")
         }
       }
     }

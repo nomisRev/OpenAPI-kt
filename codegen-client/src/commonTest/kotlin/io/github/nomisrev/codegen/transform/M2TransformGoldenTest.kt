@@ -61,8 +61,8 @@ class M2TransformGoldenTest {
       ("""
       package com.example
 
-      import kotlinx.serialization.Required
       import kotlinx.serialization.Serializable
+      import kotlinx.serialization.Required
 
       @Serializable
       data class Person(@Required val name: String = "John Doe", val age: Int? = null, val active: Boolean?, val `object`: String)
@@ -98,7 +98,7 @@ class M2TransformGoldenTest {
             Model.Object.Property(
               baseName = "labels",
               model =
-                Model.Collection.Set(
+                Model.Collection.List(
                   inner =
                     Model.Primitive.String(default = null, description = null, constraint = null),
                   default = emptyList(),
@@ -133,8 +133,8 @@ class M2TransformGoldenTest {
       ("""
       package com.example
 
-      import kotlinx.serialization.Required
       import kotlinx.serialization.Serializable
+      import kotlinx.serialization.Required
 
       @Serializable
       data class CollectionsHolder(@Required val tags: List<String> = listOf("a", "b"), @Required val labels: List<String> = emptyList(), val attributes: Map<String, String>? = null)
@@ -179,9 +179,9 @@ class M2TransformGoldenTest {
       ("""
       package com.example
 
-      import kotlinx.serialization.Required
-      import kotlinx.serialization.SerialName
       import kotlinx.serialization.Serializable
+      import kotlinx.serialization.SerialName
+      import kotlinx.serialization.Required
 
       @Serializable
       enum class OrderStatus {
@@ -220,8 +220,8 @@ class M2TransformGoldenTest {
       ("""
       package com.example
 
-      import kotlinx.serialization.SerialName
       import kotlinx.serialization.Serializable
+      import kotlinx.serialization.SerialName
 
       @Serializable
       enum class ErrorCode {
@@ -271,8 +271,8 @@ class M2TransformGoldenTest {
       ("""
       package com.example
 
-      import kotlinx.serialization.Serializable
       import kotlinx.serialization.json.JsonElement
+      import kotlinx.serialization.Serializable
 
       @Serializable
       data class Payloads(val json: JsonElement, val bytes: ByteArray)

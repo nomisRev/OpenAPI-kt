@@ -126,12 +126,6 @@ private fun defaultForProperty(
         else KtExpr("listOf(" + vals.joinToString(", ") { quote(it) } + ")")
       }
 
-    is Model.Collection.Set ->
-      m.default?.let { vals ->
-        if (vals.isEmpty()) KtExpr("setOf()")
-        else KtExpr("setOf(" + vals.joinToString(", ") { quote(it) } + ")")
-      }
-
     is Model.Enum.Closed -> m.default?.let { enumDefaultExpr(m.context, it) }
     is Model.Enum.Open -> m.default?.let { enumDefaultExpr(m.context, it) }
     is Model.Reference -> {
@@ -159,7 +153,6 @@ private fun hasSchemaDefault(p: Model.Object.Property, registry: ModelRegistry):
     is Model.Primitive.Boolean -> m.default != null
     is Model.Primitive.String -> m.default != null
     is Model.Collection.List -> m.default != null
-    is Model.Collection.Set -> m.default != null
     is Model.Enum.Closed -> m.default != null
     is Model.Enum.Open -> m.default != null
     is Model.Reference -> {
@@ -195,7 +188,6 @@ class ModelRegistry private constructor(private val byName: Map<String, Model>) 
       is Model.FreeFormJson -> "JsonElement"
       is Model.OctetStream -> "Binary"
       is Model.Collection.List -> nameOf(model.inner) + "List"
-      is Model.Collection.Set -> nameOf(model.inner) + "Set"
       is Model.Collection.Map -> nameOf(model.inner) + "Map"
       is Model.Union -> model.context.toFlatName()
     }
@@ -221,12 +213,6 @@ class ModelRegistry private constructor(private val byName: Map<String, Model>) 
       is Model.Collection.List ->
         KtType.Generic(
           raw = KtType.Simple("kotlin.collections.List"),
-          args = listOf(mapType(model.inner)),
-        )
-
-      is Model.Collection.Set ->
-        KtType.Generic(
-          raw = KtType.Simple("kotlin.collections.Set"),
           args = listOf(mapType(model.inner)),
         )
 
@@ -529,7 +515,6 @@ private fun typeCode(model: Model, registry: ModelRegistry): String =
     is Model.OctetStream -> "ByteArray"
     is Model.FreeFormJson -> "kotlinx.serialization.json.JsonElement"
     is Model.Collection.List -> "List<${typeCode(model.inner, registry)}>"
-    is Model.Collection.Set -> "Set<${typeCode(model.inner, registry)}>"
     is Model.Collection.Map -> "Map<String, ${typeCode(model.inner, registry)}>"
     is Model.Object -> registry.nameOf(model)
     is Model.Enum.Closed -> registry.nameOf(model)
@@ -544,7 +529,6 @@ private fun caseClassName(union: Model.Union, case: Model, registry: ModelRegist
   fun baseAndDepth(m: Model, acc: MutableList<Depth>): String =
     when (m) {
       is Model.Collection.List -> baseAndDepth(m.inner, acc.apply { add(Depth("List")) })
-      is Model.Collection.Set -> baseAndDepth(m.inner, acc.apply { add(Depth("Set")) })
       is Model.Collection.Map -> baseAndDepth(m.inner, acc.apply { add(Depth("Map")) })
       is Model.OctetStream -> "Binary"
       is Model.FreeFormJson -> "JsonElement"

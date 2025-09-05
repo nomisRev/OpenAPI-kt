@@ -21,7 +21,6 @@ val publishId = libs.plugins.publish.get().pluginId
 dependencies {
   kover(projects.parser)
   kover(projects.typed)
-  kover(projects.generation)
   kover(projects.codegen)
 }
 

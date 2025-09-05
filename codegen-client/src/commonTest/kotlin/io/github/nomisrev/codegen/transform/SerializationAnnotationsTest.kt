@@ -54,8 +54,8 @@ class SerializationAnnotationsTest {
       ("""
             package com.example
 
-            import kotlinx.serialization.SerialName
             import kotlinx.serialization.Serializable
+            import kotlinx.serialization.SerialName
 
             @Serializable
             enum class Lower {
@@ -145,8 +145,8 @@ class SerializationAnnotationsTest {
       ("""
             package com.example
 
-            import kotlinx.serialization.Serializable
             import kotlinx.serialization.json.JsonElement
+            import kotlinx.serialization.Serializable
 
             @Serializable
             data class Payload(val json: JsonElement? = null)
@@ -177,7 +177,7 @@ class SerializationAnnotationsTest {
       Model.Object.Property(
         baseName = "tags",
         model =
-          Model.Collection.Set(
+          Model.Collection.List(
             inner = Model.Primitive.String(null, null, null),
             default = emptyList(),
             description = null,
@@ -234,8 +234,8 @@ class SerializationAnnotationsTest {
       ("""
             package com.example
 
-            import kotlinx.serialization.Required
             import kotlinx.serialization.Serializable
+            import kotlinx.serialization.Required
 
             @Serializable
             data class User(@Required val age: Int = 42)

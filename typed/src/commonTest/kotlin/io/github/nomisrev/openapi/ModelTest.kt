@@ -6,7 +6,6 @@ import io.github.nomisrev.openapi.ReferenceOr.Companion.value
 import io.github.nomisrev.openapi.Schema.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import org.junit.jupiter.api.assertThrows
 
 class ModelTest {
   @Test
@@ -80,10 +79,11 @@ class ModelTest {
 
   @Test
   fun freeFormNotAllowedIsIllegal() {
-    assertThrows<IllegalStateException> {
+    assertEquals(
+      Model.Primitive.Unit(null),
       Schema(type = Type.Basic.Object, additionalProperties = AdditionalProperties.Allowed(false))
-        .toModel("FreeForm")
-    }
+        .toModel("FreeForm"),
+    )
   }
 
   @Test

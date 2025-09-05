@@ -13,18 +13,14 @@ abstract class OpenApiConfig @Inject constructor(project: Project) {
 
   fun spec(name: String, file: File, configure: OpenApiBuilder.() -> Unit = {}) {
     val builder = OpenApiBuilder().apply(configure)
-    specs.add(SpecDefinition(name, file, builder.packageName, builder.newCodegen))
+    specs.add(SpecDefinition(name, file, builder.packageName))
   }
 }
 
-data class OpenApiBuilder(var packageName: String? = null, var newCodegen: Boolean = false)
+data class OpenApiBuilder(var packageName: String? = null)
 
-data class SpecDefinition(
-  val name: String,
-  val file: File,
-  val packageName: String?,
-  val newCodegen: Boolean,
-) : Serializable {
+data class SpecDefinition(val name: String, val file: File, val packageName: String?) :
+  Serializable {
   companion object {
     @JvmStatic val serialVersionUID = 1L
   }
