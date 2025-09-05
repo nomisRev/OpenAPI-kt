@@ -244,7 +244,12 @@ object ApiToIr {
 
     // Content-Type
     route.body.firstNotNullOfOrNull { (contentType, body) ->
-      sb.append("""    contentType(ContentType.parse("$contentType"))\n""")
+      val ctExpr = if (contentType.equals("application/json", ignoreCase = true)) {
+        "ContentType.Application.Json"
+      } else {
+        "ContentType.parse(\"$contentType\")"
+      }
+      sb.append("    contentType($ctExpr)\n")
     }
 
     // Body
