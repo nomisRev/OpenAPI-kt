@@ -1,12 +1,12 @@
+package io.github.nomisrev.codegen.transform
+
 import io.github.nomisrev.codegen.api.GeneratedFile
 import io.github.nomisrev.codegen.emit.generate
-import io.github.nomisrev.codegen.transform.ApiToIr
-import io.github.nomisrev.codegen.transform.ModelRegistry
-import io.github.nomisrev.codegen.transform.toIrFile
 import io.github.nomisrev.openapi.OpenAPI
 import io.github.nomisrev.openapi.models
 import io.github.nomisrev.openapi.root
 import io.ktor.utils.io.readText
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
@@ -76,7 +76,7 @@ private fun writeGenerated(files: List<GeneratedFile>, outputDir: String) {
     Files.writeString(
       out,
       f.content,
-      java.nio.charset.StandardCharsets.UTF_8,
+      StandardCharsets.UTF_8,
       StandardOpenOption.CREATE,
       StandardOpenOption.WRITE,
     )

@@ -1,6 +1,7 @@
 plugins {
   id(libs.plugins.multiplatform.get().pluginId)
   id(libs.plugins.publish.get().pluginId)
+  id(libs.plugins.kover.get().pluginId)
 }
 
 kotlin {
