@@ -16,3 +16,5 @@ include("typed")
 include("generation")
 include("plugin")
 include("codegen")
+
+include("codegen")
