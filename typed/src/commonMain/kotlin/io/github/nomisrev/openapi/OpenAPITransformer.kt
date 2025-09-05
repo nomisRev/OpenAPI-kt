@@ -9,7 +9,6 @@ import io.github.nomisrev.openapi.NamingContext.Named
 import io.github.nomisrev.openapi.Schema.Type
 import io.ktor.http.*
 import kotlin.jvm.JvmInline
-import kotlinx.serialization.json.Json
 
 fun OpenAPI.routes(): List<Route> = OpenAPITransformer(this).routes()
 
@@ -307,8 +306,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val name = ref.drop("#/components/schemas/".length)
         val schema =
           requireNotNull(openAPI.components.schemas[name]) {
-            "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
-          }
+              "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+            }
             .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
         Resolved.Ref(name, schema)
       }
@@ -320,8 +319,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/responses/".length)
         requireNotNull(openAPI.components.responses[typeName]) {
-          "Response $typeName could not be found in ${openAPI.components.responses}. Is it missing?"
-        }
+            "Response $typeName could not be found in ${openAPI.components.responses}. Is it missing?"
+          }
           .get()
       }
     }
@@ -332,8 +331,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/parameters/".length)
         requireNotNull(openAPI.components.parameters[typeName]) {
-          "Parameter $typeName could not be found in ${openAPI.components.parameters}. Is it missing?"
-        }
+            "Parameter $typeName could not be found in ${openAPI.components.parameters}. Is it missing?"
+          }
           .get()
       }
     }
@@ -344,8 +343,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/requestBodies/".length)
         requireNotNull(openAPI.components.requestBodies[typeName]) {
-          "RequestBody $typeName could not be found in ${openAPI.components.requestBodies}. Is it missing?"
-        }
+            "RequestBody $typeName could not be found in ${openAPI.components.requestBodies}. Is it missing?"
+          }
           .get()
       }
     }
@@ -356,8 +355,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       is ReferenceOr.Reference -> {
         val typeName = ref.drop("#/components/pathItems/".length)
         requireNotNull(openAPI.components.pathItems[typeName]) {
-          "PathItem $typeName could not be found in ${openAPI.components.pathItems}. Is it missing?"
-        }
+            "PathItem $typeName could not be found in ${openAPI.components.pathItems}. Is it missing?"
+          }
           .get()
       }
     }
@@ -370,8 +369,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val name = ref.drop("#/components/schemas/".length).dropLast("/description".length)
         val schema =
           requireNotNull(openAPI.components.schemas[name]) {
-            "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
-          }
+              "Schema $name could not be found in ${openAPI.components.schemas}. Is it missing?"
+            }
             .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
         schema.description.get()
       }
@@ -379,7 +378,16 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
   private fun Schema.toObject(context: NamingContext): Model =
     when {
-      properties != null -> toObject(context, properties!!)
+      properties != null -> {
+        val props = properties!!
+        val apAllowed = (additionalProperties as? Allowed)?.value == true
+        if (props.isEmpty() && apAllowed) {
+          // Empty object with additionalProperties=true is free-form
+          Model.FreeFormJson(description.get(), Constraints.Object(this))
+        } else {
+          toObject(context, props)
+        }
+      }
       additionalProperties != null ->
         when (val props = additionalProperties!!) {
           is AdditionalProperties.PSchema -> {
@@ -522,10 +530,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   }
 
   fun Schema.toObject(context: NamingContext, properties: Map<String, ReferenceOr<Schema>>): Model {
-    require((additionalProperties as? Allowed)?.value != true) {
-      val schema = Json.encodeToString(Schema.serializer(), this)
-      "Additional properties, on a schema with properties, are not yet supported. schema: $schema"
-    }
+    // Note: When additionalProperties=true is present alongside properties, we currently ignore
+    // the additionalProperties flag and generate a regular object. This avoids crashes and aligns
+    // with how `allOf` merging already drops additionalProperties in such combinations.
     return Model.Object(
       context,
       description.get(),
@@ -863,8 +870,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     fun Response.allContentModels(): Map<String, Model> =
       content.entries.associate { (contentType, mediaType) ->
         val resolved = mediaType.schema?.resolve()
-        val context =
-          resolved?.namedOr { create(NamingContext.RouteBody(opName, "Response")) }
+        val context = resolved?.namedOr { create(NamingContext.RouteBody(opName, "Response")) }
         val model =
           when (resolved) {
             is Resolved -> resolved.toModel(context!!).value
@@ -915,8 +921,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
     data class Ref<A>(val name: String, override val value: A) : Resolved<A>
 
-    @JvmInline
-    value class Value<A>(override val value: A) : Resolved<A>
+    @JvmInline value class Value<A>(override val value: A) : Resolved<A>
 
     fun namedOr(orElse: () -> NamingContext): NamingContext =
       when (this) {
