@@ -141,7 +141,10 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val model =
           when {
             schema.isOpenEnumeration() ->
-              schema.toOpenEnum(context, schema.anyOf!!.firstNotNullOf { it.resolve().value.enum }.filterNotNull())
+              schema.toOpenEnum(
+                context,
+                schema.anyOf!!.firstNotNullOf { it.resolve().value.enum }.filterNotNull(),
+              )
 
             /*
              * We're modifying the schema here...
@@ -651,7 +654,10 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           context is Named && case.value.type == Type.Basic.String && case.value.enum != null ->
             NamingContext.Nested(
               Named(
-                case.value.enum.orEmpty().filterNotNull().joinToString(prefix = "", separator = "Or") {
+                case.value.enum.orEmpty().filterNotNull().joinToString(
+                  prefix = "",
+                  separator = "Or",
+                ) {
                   it.replaceFirstChar(Char::uppercaseChar)
                 }
               ),
