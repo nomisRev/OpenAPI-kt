@@ -4,15 +4,18 @@ import java.io.File
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
+import org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension
 
 abstract class OpenAPIPlugin : Plugin<Project> {
   override fun apply(project: Project) {
     val extension = project.extensions.create("openApiConfig", OpenApiConfig::class.java, project)
+    val kotlinExt = project.extensions.getByName("kotlin") as KotlinProjectExtension
     with(project.tasks) {
       val generateOpenApiClient =
         register("generateOpenApiClient", GenerateClientTask::class.java) {
           it.spec.set(extension.specs)
           it.output.set(project.output)
+          it.k2.set(kotlinExt.coreLibrariesVersion.startsWith("2"))
         }
 
       maybeCreate("prepareKotlinIdeaImport").dependsOn(generateOpenApiClient)

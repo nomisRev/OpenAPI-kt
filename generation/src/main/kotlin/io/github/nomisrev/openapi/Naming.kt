@@ -97,7 +97,8 @@ private class Nam(private val `package`: String) : Naming {
   private fun toParamName(className: ClassName): String =
     className.simpleName.replaceFirstChar { it.lowercase() }
 
-  override fun toParamName(named: NamingContext.Named): String = named.name.toCamelCase()
+  override fun toParamName(named: NamingContext.Named): String =
+    named.name.toCamelCase().dropArraySyntax()
 
   override fun toFunName(route: Route): String =
     when (val operationId = route.operationId) {
@@ -108,8 +109,8 @@ private class Nam(private val `package`: String) : Naming {
   override fun toResponseName(route: Route): ClassName =
     ClassName(`package`, toFunName(route).replaceFirstChar { it.titlecase() })
 
-  // Workaround for OpenAI
-  private fun String.dropArraySyntax(): String = replace("[]", "")
+  private val arrayPattern = """\[(?:\d*|])?]""".toRegex()
+  private fun String.dropArraySyntax(): String = replace(arrayPattern, "")
 
   override fun toCaseClassName(union: Model.Union, case: Model): ClassName =
     toCaseClassName(union, case, emptyList())

@@ -304,7 +304,7 @@ fun Route.addBody() {
           withIndent {
             when (body) {
               is Route.Body.Multipart.Value ->
-                body.parameters.map { addStatement("appendAll(%S, %L)", it.name, it.name) }
+                body.parameters.map { addStatement("appendAll(%S, %L)", it.name, toParamName(Named(it.name))) }
 
               is Route.Body.Multipart.Ref -> {
                 val obj =
