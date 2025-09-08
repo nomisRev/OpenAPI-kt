@@ -431,7 +431,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
       // Prefer top-level description; if absent, take first non-null encountered below
       var description: ReferenceOr<String>? = schema.description
-      var additionalProperties: AdditionalProperties? = null // drop to avoid unsupported combos
+      var additionalProperties: AdditionalProperties? = null // collect and preserve when true
       var nullable: Boolean? = schema.nullable
       var discriminator: Schema.Discriminator? = null
       var minProperties: Int? = null
@@ -498,11 +498,21 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
       // If container had additionalProperties allowed true and properties exist, keep null here to
       // avoid violating toObject() precondition.
+      val allowAnyAp: Boolean =
+        resolved.any { (it.additionalProperties as? Allowed)?.value == true } ||
+          resolved.any {
+            val ap = it.additionalProperties as? AdditionalProperties.PSchema
+            if (ap != null) {
+              val inner = ap.value.resolve()
+              (inner as? Resolved.Value)?.value == Schema()
+            } else false
+          }
+
       val mergedSchema =
         Schema(
           type = Type.Basic.Object,
           properties = mergedProps,
-          additionalProperties = null,
+          additionalProperties = if (allowAnyAp) Allowed(true) else null,
           description = description,
           required = mergedProps.keys.toList(),
           nullable = nullable,
@@ -527,10 +537,14 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   }
 
   fun Schema.toObject(context: NamingContext, properties: Map<String, ReferenceOr<Schema>>): Model {
-    require((additionalProperties as? Allowed)?.value != true) {
-      """
-      Additional properties, on a schema with properties, are not yet supported. schema: $this
-      """.trimIndent()
+    // Allow additionalProperties=true with properties; capture as marker on Model.Object
+    val hasAnyAdditional: Boolean = when (val ap = additionalProperties) {
+      is AdditionalProperties.Allowed -> ap.value
+      is AdditionalProperties.PSchema -> {
+        val inner = ap.value.resolve()
+        (inner as? Resolved.Value)?.value == Schema()
+      }
+      else -> false
     }
     return Model.Object(
       context,
@@ -564,6 +578,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           }
         nestedModel(resolved, pContext)
       },
+      additionalProperties = hasAnyAdditional,
     )
   }
 
