@@ -33,19 +33,22 @@ class ApiTest {
                 Route.Returns(
                   HttpStatusCode.OK to
                     Route.ReturnType(
-                      Model.Object(
-                        NamingContext.Named("User"),
-                        null,
-                        listOf(
-                          Model.Object.Property(
-                            "id",
-                            Model.Primitive.String(null, null, null),
-                            isRequired = true,
-                            isNullable = false,
-                            description = null,
+                      mapOf(
+                        "application/json" to
+                          Model.Object(
+                            NamingContext.Named("User"),
+                            null,
+                            listOf(
+                              Model.Object.Property(
+                                "id",
+                                Model.Primitive.String(null, null, null),
+                                isRequired = true,
+                                isNullable = false,
+                                description = null,
+                              )
+                            ),
+                            listOf(Model.Primitive.String(null, null, null)),
                           )
-                        ),
-                        listOf(Model.Primitive.String(null, null, null)),
                       ),
                       emptyMap(),
                     )

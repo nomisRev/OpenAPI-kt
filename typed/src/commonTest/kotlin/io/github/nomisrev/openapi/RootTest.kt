@@ -47,7 +47,7 @@ class RootTest {
             returnType =
               Route.Returns(
                 HttpStatusCode.OK to
-                  Route.ReturnType(Model.Primitive.string(null, null), emptyMap())
+                  Route.ReturnType(mapOf("application/json" to Model.Primitive.string(null, null)), emptyMap())
               ),
             extensions = emptyMap(),
             nested = listOf(Model.Primitive.string(null, null)),

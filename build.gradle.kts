@@ -1,4 +1,3 @@
-import com.diffplug.gradle.spotless.SpotlessExtension
 import kotlinx.kover.gradle.plugin.dsl.KoverProjectExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -9,7 +8,7 @@ plugins {
   alias(libs.plugins.multiplatform) apply false
   alias(libs.plugins.publish) apply false
   alias(libs.plugins.assert)
-  alias(libs.plugins.spotless)
+//  alias(libs.plugins.spotless)
   alias(libs.plugins.dokka)
   alias(libs.plugins.kover)
 }
@@ -36,18 +35,18 @@ subprojects {
     )
   }
 
-  apply(plugin = spotlessId)
-  configure<SpotlessExtension> {
-    kotlin {
-      target("**/*.kt", "**/*.kts")
-      ktfmt().kotlinlangStyle().configure {
-        it.setBlockIndent(2)
-        it.setContinuationIndent(2)
-        it.setRemoveUnusedImports(true)
-        it.setManageTrailingCommas(true)
-      }
-    }
-  }
+//  apply(plugin = spotlessId)
+//  configure<SpotlessExtension> {
+//    kotlin {
+//      target("**/*.kt", "**/*.kts")
+//      ktfmt().kotlinlangStyle().configure {
+//        it.setBlockIndent(2)
+//        it.setContinuationIndent(2)
+//        it.setRemoveUnusedImports(true)
+//        it.setManageTrailingCommas(true)
+//      }
+//    }
+//  }
   apply(plugin = publishId)
   configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
     val shouldSign =

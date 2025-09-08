@@ -66,12 +66,15 @@ class ArbitraryArrayJvmTest {
     // Expect the 200 OK response type to be List<FreeFormJson>
     val expectedReturnType =
       Route.ReturnType(
-        type =
-          Model.Collection.List(
-            inner = Model.FreeFormJson(description = null, constraint = null),
-            default = null,
-            description = null,
-            constraint = null,
+        types =
+          mapOf(
+            "application/json" to
+              Model.Collection.List(
+                inner = Model.FreeFormJson(description = null, constraint = null),
+                default = null,
+                description = null,
+                constraint = null,
+              )
           ),
         extensions = emptyMap(),
       )
@@ -81,7 +84,7 @@ class ArbitraryArrayJvmTest {
     assertEquals("getAnyArray", route.operationId)
 
     val ok = HttpStatusCode.OK
-    val actualReturnType = route.returnType.types.getValue(ok)
+    val actualReturnType = route.returnType.entries.getValue(ok)
     assertEquals(expectedReturnType, actualReturnType)
   }
 }
