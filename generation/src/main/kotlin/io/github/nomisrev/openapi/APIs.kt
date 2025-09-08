@@ -127,10 +127,10 @@ private fun Root.root() =
 
 private fun TypeSpec.Builder.apiConstructor(): TypeSpec.Builder =
   primaryConstructor(
-      FunSpec.constructorBuilder()
-        .addParameter(ParameterSpec("client", ClassName("io.ktor.client", "HttpClient")))
-        .build()
-    )
+    FunSpec.constructorBuilder()
+      .addParameter(ParameterSpec("client", ClassName("io.ktor.client", "HttpClient")))
+      .build()
+  )
     .addProperty(
       PropertySpec("client", ClassName("io.ktor.client", "HttpClient")) { initializer("client") }
     )
@@ -256,6 +256,7 @@ fun addContentType(bodies: Route.Bodies) {
     when (body) {
       is Route.Body.Json ->
         addStatement("%M(%T.%L)", contentType, ContentType.nested("Application"), "Json")
+
       is Route.Body.Xml -> TODO("Xml input body not supported yet.")
       is Route.Body.OctetStream -> TODO("OctetStream  input body not supported yet.")
       is Route.Body.Multipart.Ref,
@@ -280,6 +281,7 @@ fun Route.addBody() {
             when (body) {
               is Route.Body.Multipart.Value ->
                 body.parameters.map { addStatement("appendAll(%S, %L)", it.name, it.name) }
+
               is Route.Body.Multipart.Ref -> {
                 val obj =
                   requireNotNull(body.value as? Model.Object) {
@@ -327,44 +329,48 @@ fun Route.requestBody(defaults: Boolean): List<ParameterSpec> {
     }
 
   return (body.jsonOrNull()?.let { json ->
-      listOf(parameter("body", json.type, !body.required, json.description))
-    }
-      ?: body.multipartOrNull()?.let { multipart ->
-        multipart.parameters.map { parameter ->
-          parameter(
-            toParamName(Named(parameter.name)),
-            parameter.type,
-            !body.required,
-            parameter.type.description,
-          )
-        }
-      })
+    listOf(parameter("body", json.type, !body.required, json.description))
+  }
+    ?: body.multipartOrNull()?.let { multipart ->
+      multipart.parameters.map { parameter ->
+        parameter(
+          toParamName(Named(parameter.name)),
+          parameter.type,
+          !body.required,
+          parameter.type.description,
+        )
+      }
+    })
     .orEmpty()
 }
 
 context(OpenAPIContext, FunSpec.Builder, TypeSpecHolder.Builder<*>)
 fun Route.returnType() {
-  if (returnType.types.size == 1) {
-    val single = returnType.types.entries.single()
-    val typeName =
-      when (single.value.type) {
+  when (val success = returnType.success) {
+    null -> HttpResponse
+    else if success.types.entries.size == 1 ->
+      when (val model = success.types.entries.first().value) {
         is Model.OctetStream -> HttpResponse
-        else -> single.value.type.toTypeName()
+        else -> returns(model.toTypeName())
       }
-    returns(typeName)
-  } else {
-    val response = toResponseName()
-    addType(
-      TypeSpec.interfaceBuilder(response)
-        .addModifiers(KModifier.SEALED)
-        .addTypes(
-          returnType.types.map { (status: HttpStatusCode, type) ->
-            val case = ClassName(`package`, status.description.split(" ").joinToString(""))
-            TypeSpec.dataClass(case, listOf(ParameterSpec("value", type.type.toTypeName())))
-          }
-        )
-        .build()
-    )
-    returns(response)
+
+    else if success.types.entries.size > 1 -> {
+      val response = toResponseName()
+      addType(
+        TypeSpec.interfaceBuilder(response)
+          .addModifiers(KModifier.SEALED)
+          .addTypes(
+            returnType.entries.map { (status: HttpStatusCode, type) ->
+              val model = type.types.entries.first().value
+              val case = ClassName(`package`, status.description.split(" ").joinToString(""))
+              TypeSpec.dataClass(case, listOf(ParameterSpec("value", model.toTypeName())))
+            }
+          )
+          .build()
+      )
+      returns(response)
+    }
+
+    else -> HttpResponse
   }
 }
