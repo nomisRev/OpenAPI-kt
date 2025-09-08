@@ -47,9 +47,9 @@ fun ParameterSpec.Builder.defaultValue(model: Model): ParameterSpec.Builder = ap
       else if model.inner is Model.Enum -> {
         val enum = model.inner as Model.Enum
         val enumClassName = toClassName(enum.context)
-        val content = default.joinToString<String> { "%T.%L" }
+        val content = default.joinToString { "%T.%L" }
         val args = default.flatMap { listOf(enumClassName, toEnumValueName(it)) }
-        defaultValue("listOf($content)", args)
+        defaultValue("listOf($content)", *args.toTypedArray())
       }
 
       else -> defaultValue("listOf(${default.joinToString()})")
