@@ -380,12 +380,12 @@ fun Route.requestBody(defaults: Boolean): List<ParameterSpec> {
 
 context(OpenAPIContext, FunSpec.Builder, TypeSpecHolder.Builder<*>)
 fun Route.returnType() {
-  when (val success = returnType.success) {
+  val returnType = when (val success = returnType.success) {
     null -> HttpResponse
     else if success.types.entries.size == 1 ->
       when (val model = success.types.entries.first().value) {
         is Model.OctetStream -> HttpResponse
-        else -> returns(model.toTypeName())
+        else -> model.toTypeName()
       }
 
     else if success.types.entries.size > 1 -> {
@@ -398,13 +398,19 @@ fun Route.returnType() {
               val model = type.types.entries.first().value
               val case = ClassName(`package`, status.description.split(" ").joinToString(""))
               TypeSpec.dataClass(case, listOf(ParameterSpec("value", model.toTypeName())))
+            returnType.entries.mapNotNull { (status, type) ->
+              type.types.entries.firstOrNull()?.value?.let { model ->
+                val case = ClassName(`package`, status.description.split(" ").joinToString(""))
+                TypeSpec.dataClass(case, listOf(ParameterSpec("value", model.toTypeName())))
+              }
             }
           )
           .build()
       )
-      returns(response)
+      response
     }
 
     else -> HttpResponse
   }
+  returns(returnType)
 }
