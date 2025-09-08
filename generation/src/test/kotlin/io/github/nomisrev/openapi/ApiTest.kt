@@ -23,8 +23,8 @@ class ApiTest {
                 Route.Bodies(
                   false,
                   mapOf(
-                    io.ktor.http.ContentType.Application.Json to
-                      Route.Body.Json.FreeForm("A user", emptyMap())
+                    "application/json" to
+                      Route.Body.SetBody(Model.FreeFormJson("A user", null), "A user", emptyMap())
                   ),
                   emptyMap(),
                 ),
