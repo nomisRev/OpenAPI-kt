@@ -339,7 +339,7 @@ fun Route.params(defaults: Boolean): List<ParameterSpec> =
       toParamName(Named(input.name)),
       input.type.toTypeName().copy(nullable = !input.isRequired),
     ) {
-      input.description?.let { addKdoc(it) }
+      input.description?.let { addKdoc("%S", it) }
       if (defaults) {
         defaultValue(input.type)
         if (!input.isRequired && !input.type.hasDefault()) {
