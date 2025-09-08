@@ -54,7 +54,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             )
         }
 
-      val opName = operation.operationId ?: method.value.lowercase()
+      val opName = operation.operationId ?: fallbackOperationId(path, method)
       val inputs = operation.input(::context, opName)
       val nestedInput = inputs.mapNotNull { (it as? Resolved.Value)?.value }
       val nestedResponses =

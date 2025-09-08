@@ -102,7 +102,7 @@ private class Nam(private val `package`: String) : Naming {
 
   override fun toFunName(route: Route): String =
     when (val operationId = route.operationId) {
-      null -> "${route.path.segments().last()}${route.method.name()}"
+      null -> fallbackOperationId(route.path, route.method)
       else -> operationId
     }.toCamelCase()
 
