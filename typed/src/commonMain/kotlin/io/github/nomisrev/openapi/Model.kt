@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.isSuccess
 import kotlinx.serialization.json.JsonElement
 
 data class Route(
@@ -101,17 +102,47 @@ data class Route(
   )
 
   data class Returns(
-    val types: Map<HttpStatusCode, ReturnType>,
+    val success: ReturnType?,
+    val default: ReturnType?,
+    val entries: Map<HttpStatusCode, ReturnType>,
     val extensions: Map<String, JsonElement>,
-  ) : Map<HttpStatusCode, ReturnType> by types {
+  ) {
     constructor(
       vararg types: Pair<HttpStatusCode, ReturnType>,
       extensions: Map<String, JsonElement> = emptyMap(),
-    ) : this(types.toMap(), extensions)
+    ) : this(
+      success =
+        types
+          .asSequence()
+          .map { it.first }
+          .filter { it.isSuccess() }
+          .sortedBy { it.value }
+          .firstOrNull()
+          ?.let { code -> types.toMap()[code] },
+      default = null,
+      entries = types.toMap(),
+      extensions = extensions,
+    )
+
+    constructor(
+      types: Map<HttpStatusCode, ReturnType>,
+      extensions: Map<String, JsonElement>,
+    ) : this(
+      success =
+        types.keys
+          .asSequence()
+          .filter { it.value in 200..299 }
+          .sortedBy { it.value }
+          .firstOrNull()
+          ?.let { types[it] },
+      default = null,
+      entries = types,
+      extensions = extensions,
+    )
   }
 
   // Required, isNullable ???
-  data class ReturnType(val type: Model, val extensions: Map<String, JsonElement>)
+  data class ReturnType(val types: Map<String, Model>, val extensions: Map<String, JsonElement>)
 }
 
 /**
