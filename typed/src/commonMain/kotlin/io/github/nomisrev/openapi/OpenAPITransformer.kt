@@ -526,6 +526,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   fun Schema.toObject(context: NamingContext, properties: Map<String, ReferenceOr<Schema>>): Model {
     require((additionalProperties as? Allowed)?.value != true) {
       "Additional properties, on a schema with properties, are not yet supported."
+      """
+      """.trimIndent()
     }
     return Model.Object(
       context,
@@ -723,12 +725,26 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     when (val model = resolved.toModel(caseContext)) {
       is Resolved.Ref -> null
       is Resolved.Value ->
-        when (model.value) {
+        when (val value = model.value) {
           is Collection ->
-            when (val inner = resolved.value.items?.resolve()) {
-              is Resolved.Value -> nestedModel(Resolved.Value(inner.value), caseContext)
-              is Resolved.Ref -> null
-              null -> throw RuntimeException("Impossible: List without inner type")
+            when (value) {
+              is Collection.List ->
+                when (val inner = resolved.value.items?.resolve()) {
+                  is Resolved.Value -> nestedModel(Resolved.Value(inner.value), caseContext)
+                  is Resolved.Ref -> null
+                  null -> null
+                }
+
+              is Collection.Map ->
+                when (val ap = resolved.value.additionalProperties) {
+                  is AdditionalProperties.PSchema ->
+                    when (val inner = ap.value.resolve()) {
+                      is Resolved.Value -> nestedModel(Resolved.Value(inner.value), caseContext)
+                      is Resolved.Ref -> null
+                    }
+
+                  else -> null
+                }
             }
 
           else -> model.value
