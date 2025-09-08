@@ -234,18 +234,24 @@ private fun Route.addFunction(implemented: Boolean) {
 
 context(OpenAPIContext, CodeBlock.Builder)
 fun Route.addPathAndContent() {
-  val replace =
-    input
-      .mapNotNull {
-        if (it.input == Parameter.Input.Path)
-          ".replace(\"{${it.name}}\", ${toParamName(Named(it.name))})"
-        else null
+  val parts =
+    path.split("/")
+      .filter { it.isNotEmpty() }
+      .mapIndexed { index, part ->
+        if (part.startsWith("{") && part.endsWith("}")) {
+          val paramName = part.removeSurrounding("{", "}")
+          when (val param = input.find { it.name == paramName }) {
+            null -> part
+            else if param.type !is Model.Primitive.String -> $$"\"$$${toParamName(Named(param.name))}\""
+            else -> toParamName(Named(param.name))
+          }
+        } else "\"$part\""
       }
-      .joinToString(separator = "")
+
   addStatement(
-    "url { %M(%S$replace) }",
+    "url { %M(\n%L\n) }",
     MemberName("io.ktor.http", "path", isExtension = true),
-    path,
+    parts.joinToString()
   )
   addContentType(body)
 }
@@ -394,10 +400,6 @@ fun Route.returnType() {
         TypeSpec.interfaceBuilder(response)
           .addModifiers(KModifier.SEALED)
           .addTypes(
-            returnType.entries.map { (status: HttpStatusCode, type) ->
-              val model = type.types.entries.first().value
-              val case = ClassName(`package`, status.description.split(" ").joinToString(""))
-              TypeSpec.dataClass(case, listOf(ParameterSpec("value", model.toTypeName())))
             returnType.entries.mapNotNull { (status, type) ->
               type.types.entries.firstOrNull()?.value?.let { model ->
                 val case = ClassName(`package`, status.description.split(" ").joinToString(""))
