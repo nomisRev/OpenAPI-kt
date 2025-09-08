@@ -20,52 +20,51 @@ data class Route(
   data class Bodies(
     /** Request bodies are optional by default! */
     val required: Boolean,
-    val types: Map<ContentType, Body>,
+    val types: Map<String, Body>,
     val extensions: Map<String, JsonElement>,
-  ) : Map<ContentType, Body> by types {
-    fun jsonOrNull(): Body.Json? =
-      types.getOrElse(ContentType.Application.Json) { null } as? Body.Json
+  ) : Map<String, Body> by types {
+    fun setBodyOrNull(): Body.SetBody? =
+      types.entries.firstNotNullOfOrNull { (key, value) ->
+        val isDefault =
+          ContentType.Application.Json.match(key) ||
+            ContentType.Application.Xml.match(key) ||
+            ContentType.Application.OctetStream.match(key) ||
+            ContentType.Text.Plain.match(key)
+        if (isDefault) value as? Body.SetBody else null
+      }
 
-    fun octetStreamOrNull(): Body.OctetStream? =
-      types.getOrElse(ContentType.Application.OctetStream) { null } as? Body.OctetStream
-
-    fun xmlOrNull(): Body.Xml? = types.getOrElse(ContentType.Application.Xml) { null } as? Body.Xml
+    fun formUrlEncodedOrNull(): Body.FormUrlEncoded? =
+      types.entries.firstNotNullOfOrNull { (key, value) ->
+        if (ContentType.Application.FormUrlEncoded.match(key)) value as? Body.FormUrlEncoded
+        else null
+      }
 
     fun multipartOrNull(): Body.Multipart? =
-      types.getOrElse(ContentType.MultiPart.FormData) { null } as? Body.Multipart
+      types.entries.firstNotNullOfOrNull { (key, value) ->
+        if (ContentType.MultiPart.FormData.match(key)) value as? Body.Multipart else null
+      }
   }
 
   sealed interface Body {
     val description: String?
     val extensions: Map<String, JsonElement>
 
-    data class OctetStream(
-      override val description: String?,
-      override val extensions: Map<String, JsonElement>,
-    ) : Body
-
-    sealed interface Json : Body {
-      val type: Model
-
-      data class FreeForm(
-        override val description: String?,
-        override val extensions: Map<String, JsonElement>,
-      ) : Json {
-        override val type: Model = Model.FreeFormJson(description, null)
-      }
-
-      data class Defined(
-        override val type: Model,
-        override val description: String?,
-        override val extensions: Map<String, JsonElement>,
-      ) : Json
-    }
-
-    data class Xml(
+    /**
+     * Generic body sent using setBody(...). Includes JSON, XML, octet-stream and other encodings
+     * that are directly supported by Ktor serialization/plugins.
+     */
+    data class SetBody(
       val type: Model,
       override val description: String?,
       override val extensions: Map<String, JsonElement>,
     ) : Body
+
+    /** application/x-www-form-urlencoded body. Represented as key/value pairs. */
+    data class FormUrlEncoded(
+      val parameters: List<Multipart.FormData>,
+      override val description: String?,
+      override val extensions: Map<String, JsonElement>,
+    ) : Body, List<Multipart.FormData> by parameters
 
     sealed interface Multipart : Body {
       val parameters: List<FormData>

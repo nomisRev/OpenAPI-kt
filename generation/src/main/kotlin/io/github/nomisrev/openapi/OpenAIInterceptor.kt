@@ -144,7 +144,7 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
                     "val element = %T.encodeToJsonElement(%T.serializer(), %L)",
                     ClassName("kotlinx.serialization.json", "Json"),
                     // TODO turn into warning!?
-                    requireNotNull(body.jsonOrNull()) {
+                    requireNotNull(body.setBodyOrNull()) {
                         "Only OpenAI JSON Streaming supported right now."
                       }
                       .type

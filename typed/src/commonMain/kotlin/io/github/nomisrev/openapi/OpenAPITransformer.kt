@@ -749,25 +749,6 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         ?.entries
         ?.associate { (contentType, mediaType) ->
           when {
-            ContentType.Application.Xml.match(contentType) -> TODO("Add support for XML.")
-            ContentType.Application.Json.match(contentType) -> {
-              val json =
-                mediaType.schema?.resolve()?.let { json ->
-                  val context =
-                    json.namedOr {
-                      val name = Named("${opName}Request")
-                      create(name)
-                    }
-
-                  Route.Body.Json.Defined(
-                    json.toModel(context).value,
-                    body.description,
-                    mediaType.extensions,
-                  )
-                } ?: Route.Body.Json.FreeForm(body.description, mediaType.extensions)
-              Pair(ContentType.Application.Json, json)
-            }
-
             ContentType.MultiPart.FormData.match(contentType) -> {
               val resolved =
                 mediaType.schema?.resolve()
@@ -800,17 +781,58 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                     )
                 }
 
-              Pair(ContentType.MultiPart.FormData, multipart)
+              Pair(contentType, multipart)
             }
 
-            ContentType.Application.OctetStream.match(contentType) ->
-              Pair(
-                ContentType.Application.OctetStream,
-                Route.Body.OctetStream(body.description, mediaType.extensions),
-              )
+            ContentType.Application.FormUrlEncoded.match(contentType) -> {
+              val resolved =
+                mediaType.schema?.resolve()
+                  ?: throw IllegalStateException(
+                    "$mediaType without a schema. Generation doesn't know what to do, please open a ticket!"
+                  )
 
-            else ->
-              throw IllegalStateException("RequestBody content type: $this not yet supported.")
+              fun ctx(name: String): NamingContext =
+                resolved.namedOr { create(NamingContext.RouteParam(name, opName, "Request")) }
+
+              val params: List<Route.Body.Multipart.FormData> =
+                when (resolved) {
+                  is Resolved.Ref -> {
+                    val model = resolved.toModel(Named(resolved.name)) as Resolved.Ref
+                    val obj =
+                      model.value as? Model.Object
+                        ?: throw IllegalStateException(
+                          "FormUrlEncoded only supports object schemas"
+                        )
+                    obj.properties.map { p -> Route.Body.Multipart.FormData(p.baseName, p.model) }
+                  }
+
+                  is Resolved.Value -> {
+                    val obj = resolved.value
+                    val props = obj.properties ?: emptyMap()
+                    props.map { (name, ref) ->
+                      Route.Body.Multipart.FormData(name, ref.resolve().toModel(ctx(name)).value)
+                    }
+                  }
+                }
+              Pair(
+                contentType,
+                Route.Body.FormUrlEncoded(params, body.description, mediaType.extensions),
+              )
+            }
+
+            // default to `setBody(any: Any?)` + contentType
+            else -> {
+              val model =
+                mediaType.schema?.resolve()?.let { resolved ->
+                  val context =
+                    resolved.namedOr {
+                      val name = Named("${opName}Request")
+                      create(name)
+                    }
+                  resolved.toModel(context).value
+                } ?: Model.FreeFormJson(body.description, null)
+              Pair(contentType, Route.Body.SetBody(model, body.description, mediaType.extensions))
+            }
           }
         }
         .orEmpty(),

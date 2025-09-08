@@ -80,6 +80,20 @@ private val appendAll: FunSpec =
     )
     .build()
 
+private val appendAllParameters: FunSpec =
+  FunSpec.builder("appendAll")
+    .addTypeVariable(TypeVariableName("T", Any::class))
+    .receiver(ClassName("io.ktor.http", "ParametersBuilder"))
+    .addParameter("key", String::class)
+    .addParameter("value", TypeVariableName("T").nullable())
+    .addCode(
+      """
+      if (value != null) append(key, value.toString())
+      """
+        .trimIndent()
+    )
+    .build()
+
 context(OpenAPIContext)
 private fun appendUploadedFile(): FunSpec =
   FunSpec.builder("appendUploadedFile")
@@ -324,5 +338,7 @@ fun predef(): FileSpec =
         .build()
     )
     .addType(uploadTypeSpec())
-    .addFunctions(listOf(appendAll, appendUploadedFile(), serialNameOrEnumValue))
+    .addFunctions(
+      listOf(appendAll, appendAllParameters, appendUploadedFile(), serialNameOrEnumValue)
+    )
     .build()

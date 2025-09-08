@@ -252,16 +252,25 @@ fun Route.addPathAndContent() {
 
 context(OpenAPIContext, CodeBlock.Builder)
 fun addContentType(bodies: Route.Bodies) {
-  bodies.firstNotNullOfOrNull { (_, body) ->
+  bodies.firstNotNullOfOrNull { (key, body) ->
     when (body) {
-      is Route.Body.Json ->
-        addStatement("%M(%T.%L)", contentType, ContentType.nested("Application"), "Json")
-
-      is Route.Body.Xml -> TODO("Xml input body not supported yet.")
-      is Route.Body.OctetStream -> TODO("OctetStream  input body not supported yet.")
-      is Route.Body.Multipart.Ref,
-      is Route.Body.Multipart.Value ->
+      is Route.Body.Multipart ->
         addStatement("%M(%T.%L)", contentType, ContentType.nested("MultiPart"), "FormData")
+      is Route.Body.FormUrlEncoded ->
+        addStatement("%M(%T.%L)", contentType, ContentType.nested("Application"), "FormUrlEncoded")
+      is Route.Body.SetBody -> {
+        when {
+          io.ktor.http.ContentType.Application.Json.match(key) ->
+            addStatement("%M(%T.%L)", contentType, ContentType.nested("Application"), "Json")
+          io.ktor.http.ContentType.Application.Xml.match(key) ->
+            addStatement("%M(%T.%L)", contentType, ContentType.nested("Application"), "Xml")
+          io.ktor.http.ContentType.Application.OctetStream.match(key) ->
+            addStatement("%M(%T.%L)", contentType, ContentType.nested("Application"), "OctetStream")
+          io.ktor.http.ContentType.Text.Plain.match(key) ->
+            addStatement("%M(%T.%L)", contentType, ContentType.nested("Text"), "Plain")
+          else -> addStatement("%M(%T.parse(%S))", contentType, ContentType, key)
+        }
+      }
     }
   }
 }
@@ -270,9 +279,24 @@ context(OpenAPIContext, CodeBlock.Builder)
 fun Route.addBody() {
   body.firstNotNullOfOrNull { (_, body) ->
     when (body) {
-      is Route.Body.Json -> addStatement("%M(%L)", setBody, "body")
-      is Route.Body.Xml -> TODO("Xml input body not supported yet.")
-      is Route.Body.OctetStream -> TODO("OctetStream  input body not supported yet.")
+      is Route.Body.SetBody -> addStatement("%M(%L)", setBody, "body")
+      is Route.Body.FormUrlEncoded -> {
+        addStatement("%M(", setBody)
+        withIndent {
+          addStatement(
+            "%T(%T.build {",
+            ClassName("io.ktor.client.request.forms", "FormDataContent"),
+            ClassName("io.ktor.http", "Parameters"),
+          )
+          withIndent {
+            body.parameters.map {
+              addStatement("appendAll(%S, %L)", it.name, toParamName(Named(it.name)))
+            }
+          }
+          addStatement("})")
+        }
+        addStatement(")")
+      }
       is Route.Body.Multipart -> {
         addStatement("%M(", setBody)
         withIndent {
@@ -328,19 +352,29 @@ fun Route.requestBody(defaults: Boolean): List<ParameterSpec> {
       if (defaults && nullable) defaultValue("null")
     }
 
-  return (body.jsonOrNull()?.let { json ->
-    listOf(parameter("body", json.type, !body.required, json.description))
-  }
-    ?: body.multipartOrNull()?.let { multipart ->
-      multipart.parameters.map { parameter ->
-        parameter(
-          toParamName(Named(parameter.name)),
-          parameter.type,
-          !body.required,
-          parameter.type.description,
-        )
+  return (body.setBodyOrNull()?.let { setBody ->
+    listOf(parameter("body", setBody.type, !body.required, setBody.description))
+    }
+      ?: body.formUrlEncodedOrNull()?.let { form ->
+        form.parameters.map { parameter ->
+          parameter(
+            toParamName(Named(parameter.name)),
+            parameter.type,
+            !body.required,
+            parameter.type.description,
+          )
+        }
       }
-    })
+      ?: body.multipartOrNull()?.let { multipart ->
+        multipart.parameters.map { parameter ->
+          parameter(
+            toParamName(Named(parameter.name)),
+            parameter.type,
+            !body.required,
+            parameter.type.description,
+          )
+        }
+      })
     .orEmpty()
 }
 
