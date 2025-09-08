@@ -378,6 +378,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
   private fun Schema.toObject(context: NamingContext): Model =
     when {
+      properties?.isEmpty() == true && (additionalProperties as? Allowed)?.value == true ->
+        Model.FreeFormJson(description.get(), Constraints.Object(this))
+
       properties != null -> toObject(context, properties!!)
       additionalProperties != null ->
         when (val props = additionalProperties!!) {
@@ -525,8 +528,8 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
   fun Schema.toObject(context: NamingContext, properties: Map<String, ReferenceOr<Schema>>): Model {
     require((additionalProperties as? Allowed)?.value != true) {
-      "Additional properties, on a schema with properties, are not yet supported."
       """
+      Additional properties, on a schema with properties, are not yet supported. schema: $this
       """.trimIndent()
     }
     return Model.Object(
