@@ -49,6 +49,7 @@ subprojects {
 //  }
   apply(plugin = publishId)
   configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
+    publishToMavenCentral()
     val shouldSign =
       project.gradle.startParameter.taskNames.none {
         it.contains("publishToMavenLocal", ignoreCase = true)
