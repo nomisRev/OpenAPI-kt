@@ -652,11 +652,11 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     context: NamingContext,
     subtypes: List<ReferenceOr<Schema>>,
   ): Model.Union {
-    val discriminatorProperty = this.discriminator?.propertyName
+    val discriminator = this.discriminator
     val caseToContext =
       subtypes.withIndex().map { (idx, ref) ->
         val resolved = ref.resolve()
-        Pair(resolved, toUnionCaseContext(context, resolved, idx, discriminatorProperty))
+        Pair(resolved, toUnionCaseContext(context, resolved, idx, discriminator))
       }
     val cases =
       caseToContext
@@ -681,10 +681,18 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     context: NamingContext,
     case: Resolved<Schema>,
     index: Int,
-    discriminatorProperty: String?,
+    discriminator: Schema.Discriminator?,
   ): NamingContext =
     when (case) {
-      is Resolved.Ref -> Named(case.name)
+      is Resolved.Ref -> {
+        val mappedName = discriminator?.mapping?.entries
+          ?.firstOrNull { (_, ref) ->
+            ref.endsWith("/${case.name}") || ref == case.name
+          }
+          ?.key
+          ?.replaceFirstChar(Char::uppercaseChar)
+        if (mappedName != null) Named(mappedName) else Named(case.name)
+      }
       is Resolved.Value ->
         when {
           context is Named && case.value.type == Type.Basic.String && case.value.enum != null ->
@@ -700,32 +708,21 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
               context,
             )
 
-          case.value.type == Type.Basic.Object ->
+          case.value.type == Type.Basic.Object || case.value.properties != null || case.value.allOf != null ->
             NamingContext.Nested(
               run {
-                val props = case.value.properties
-                // Prefer discriminator property if provided and available as single-value enum
-                val discName = discriminatorProperty
-                if (discName != null && props != null) {
-                  val discEnum = props[discName]?.resolve()?.value?.enum?.singleOrNull()
-                  if (discEnum != null) Named(discEnum.replaceFirstChar(Char::uppercaseChar))
-                  else null
-                } else null
-              }
-                ?: run {
-                  // Fallback to special-cases for event/type
-                  val enumName =
-                    case.value.properties
-                      ?.firstNotNullOfOrNull { (key, value) ->
-                        if (key == "event" || key == "type") value.resolve().value.enum else null
-                      }
-                      ?.singleOrNull()
-                  if (enumName != null) Named(enumName)
-                  else {
-                    val baseName = if (context is Named) context.name else "Inline"
-                    Named("${baseName}Case${index + 1}")
-                  }
-                },
+                // Prefer discriminator property if provided and available as single-value enum (search across allOf)
+                val fromDisc = discriminator?.propertyName?.let { prop ->
+                  case.value.findSingleEnumValue(prop)
+                }
+                val fromSpecial = case.value.findFirstEnumSingle("event", "type")
+                val chosen = fromDisc ?: fromSpecial
+                if (chosen != null) Named(chosen.replaceFirstChar(Char::uppercaseChar))
+                else {
+                  val baseName = if (context is Named) context.name else ""
+                  Named("${baseName}Case${index + 1}")
+                }
+              },
               context,
             )
 
@@ -738,6 +735,27 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           else -> context
         }
     }
+
+  private fun Schema.findSingleEnumValue(propName: String): String? {
+    // direct properties first
+    val direct = this.properties?.get(propName)?.resolve()?.value?.enum?.singleOrNull()
+    if (direct != null) return direct
+    // search in allOf sub-schemas
+    val subs = this.allOf ?: return null
+    for (sub in subs) {
+      val v = sub.resolve().value.findSingleEnumValue(propName)
+      if (v != null) return v
+    }
+    return null
+  }
+
+  private fun Schema.findFirstEnumSingle(vararg propNames: String): String? {
+    for (p in propNames) {
+      val v = findSingleEnumValue(p)
+      if (v != null) return v
+    }
+    return null
+  }
 
   private fun nestedModel(resolved: Resolved<Schema>, caseContext: NamingContext): Model? =
     when (val model = resolved.toModel(caseContext)) {

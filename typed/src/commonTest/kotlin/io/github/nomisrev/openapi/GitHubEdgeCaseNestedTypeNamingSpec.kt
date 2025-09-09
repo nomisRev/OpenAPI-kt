@@ -10,7 +10,7 @@ import io.github.nomisrev.openapi.NamingContext.Nested
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
-class NestedTypeNamingSpec {
+class GitHubEdgeCaseNestedTypeNamingSpec {
   val spec = $$"""
     {
       "openapi": "3.0.3",
@@ -173,9 +173,15 @@ class NestedTypeNamingSpec {
       context = Named(name = "repository-rule-detailed"),
       cases = listOf(
         Case(
-          context = Named(name = "repository-rule-detailed"),
+          context = Nested(
+            inner = Named(name = "Update"),
+            outer = Named(name = "repository-rule-detailed")
+          ),
           model = Object(
-            context = Named(name = "repository-rule-detailed"),
+            context = Nested(
+              inner = Named(name = "Update"),
+              outer = Named(name = "repository-rule-detailed")
+            ),
             description = "Only allow users with bypass permission to update matching refs.",
             properties = listOf(
               Property(
@@ -183,7 +189,10 @@ class NestedTypeNamingSpec {
                 model = Closed(
                   context = Nested(
                     inner = Named(name = "type"),
-                    outer = Named(name = "repository-rule-detailed")
+                    outer = Nested(
+                      inner = Named(name = "Update"),
+                      outer = Named(name = "repository-rule-detailed")
+                    )
                   ),
                   inner = Model.Primitive.String(default = null, description = null, constraint = null),
                   values = listOf("update"),
@@ -199,7 +208,10 @@ class NestedTypeNamingSpec {
                 model = Object(
                   context = Nested(
                     inner = Named(name = "parameters"),
-                    outer = Named(name = "repository-rule-detailed")
+                    outer = Nested(
+                      inner = Named(name = "Update"),
+                      outer = Named(name = "repository-rule-detailed")
+                    )
                   ),
                   description = null,
                   properties = listOf(
@@ -228,7 +240,10 @@ class NestedTypeNamingSpec {
                 model = Closed(
                   context = Nested(
                     inner = Named(name = "ruleset_source_type"),
-                    outer = Named(name = "repository-rule-detailed")
+                    outer = Nested(
+                      inner = Named(name = "Update"),
+                      outer = Named(name = "repository-rule-detailed")
+                    )
                   ),
                   inner = Model.Primitive.String(
                     default = null,
@@ -270,7 +285,10 @@ class NestedTypeNamingSpec {
               Closed(
                 context = Nested(
                   inner = Named(name = "type"),
-                  outer = Named(name = "repository-rule-detailed")
+                  outer = Nested(
+                    inner = Named(name = "Update"),
+                    outer = Named(name = "repository-rule-detailed")
+                  )
                 ),
                 inner = Model.Primitive.String(default = null, description = null, constraint = null),
                 values = listOf("update"),
@@ -279,7 +297,10 @@ class NestedTypeNamingSpec {
               ), Object(
                 context = Nested(
                   inner = Named(name = "parameters"),
-                  outer = Named(name = "repository-rule-detailed")
+                  outer = Nested(
+                      inner = Named(name = "Update"),
+                      outer = Named(name = "repository-rule-detailed")
+                    )
                 ),
                 description = null,
                 properties = listOf(
@@ -304,7 +325,10 @@ class NestedTypeNamingSpec {
               ), Closed(
                 context = Nested(
                   inner = Named(name = "ruleset_source_type"),
-                  outer = Named(name = "repository-rule-detailed")
+                  outer = Nested(
+                      inner = Named(name = "Update"),
+                      outer = Named(name = "repository-rule-detailed")
+                    )
                 ),
                 inner = Model.Primitive.String(
                   default = null,
@@ -328,9 +352,15 @@ class NestedTypeNamingSpec {
           )
         ),
         Case(
-          context = Named(name = "repository-rule-detailed"),
+          context = Nested(
+            inner = Named(name = "Creation"),
+            outer = Named(name = "repository-rule-detailed")
+          ),
           model = Object(
-            context = Named(name = "repository-rule-detailed"),
+            context =Nested(
+              inner = Named(name = "Creation"),
+              outer = Named(name = "repository-rule-detailed")
+            ),
             description = "Only allow users with bypass permission to create matching refs.",
             properties = listOf(
               Property(
@@ -338,7 +368,10 @@ class NestedTypeNamingSpec {
                 model = Closed(
                   context = Nested(
                     inner = Named(name = "type"),
-                    outer = Named(name = "repository-rule-detailed")
+                    outer = Nested(
+                      inner = Named(name = "Creation"),
+                      outer = Named(name = "repository-rule-detailed")
+                    )
                   ),
                   inner = Model.Primitive.String(default = null, description = null, constraint = null),
                   values = listOf("creation"),
@@ -353,7 +386,10 @@ class NestedTypeNamingSpec {
                 model = Closed(
                   context = Nested(
                     inner = Named(name = "ruleset_source_type"),
-                    outer = Named(name = "repository-rule-detailed")
+                    outer = Nested(
+                      inner = Named(name = "Creation"),
+                      outer = Named(name = "repository-rule-detailed")
+                    )
                   ),
                   inner = Model.Primitive.String(
                     default = null,
@@ -393,7 +429,10 @@ class NestedTypeNamingSpec {
               Closed(
                 context = Nested(
                   inner = Named(name = "type"),
-                  outer = Named(name = "repository-rule-detailed")
+                  outer = Nested(
+                    inner = Named(name = "Creation"),
+                    outer = Named(name = "repository-rule-detailed")
+                  )
                 ),
                 inner = Model.Primitive.String(default = null, description = null, constraint = null),
                 values = listOf("creation"),
@@ -403,7 +442,10 @@ class NestedTypeNamingSpec {
               Closed(
                 context = Nested(
                   inner = Named(name = "ruleset_source_type"),
-                  outer = Named(name = "repository-rule-detailed")
+                  outer = Nested(
+                    inner = Named(name = "Creation"),
+                    outer = Named(name = "repository-rule-detailed")
+                  )
                 ),
                 inner = Model.Primitive.String(
                   default = null,
@@ -433,7 +475,10 @@ class NestedTypeNamingSpec {
       description = "A repository rule with ruleset details.",
       inline = listOf(
         Object(
-          context = Named(name = "repository-rule-detailed"),
+          context = Nested(
+            inner = Named(name = "Creation"),
+            outer = Named(name = "repository-rule-detailed")
+          ),
           description = "Only allow users with bypass permission to create matching refs.",
           properties = listOf(
             Property(
@@ -441,7 +486,10 @@ class NestedTypeNamingSpec {
               model = Closed(
                 context = Nested(
                   inner = Named(name = "type"),
-                  outer = Named(name = "repository-rule-detailed")
+                  outer = Nested(
+                    inner = Named(name = "Creation"),
+                    outer = Named(name = "repository-rule-detailed")
+                  )
                 ),
                 inner = Model.Primitive.String(default = null, description = null, constraint = null),
                 values = listOf("creation"),
@@ -456,7 +504,10 @@ class NestedTypeNamingSpec {
               model = Closed(
                 context = Nested(
                   inner = Named(name = "ruleset_source_type"),
-                  outer = Named(name = "repository-rule-detailed")
+                  outer = Nested(
+                    inner = Named(name = "Creation"),
+                    outer = Named(name = "repository-rule-detailed")
+                  )
                 ),
                 inner = Model.Primitive.String(
                   default = null,
@@ -496,7 +547,10 @@ class NestedTypeNamingSpec {
             Closed(
               context = Nested(
                 inner = Named(name = "type"),
-                outer = Named(name = "repository-rule-detailed")
+                outer = Nested(
+                  inner = Named(name = "Creation"),
+                  outer = Named(name = "repository-rule-detailed")
+                )
               ),
               inner = Model.Primitive.String(default = null, description = null, constraint = null),
               values = listOf("creation"),
@@ -506,7 +560,10 @@ class NestedTypeNamingSpec {
             Closed(
               context = Nested(
                 inner = Named(name = "ruleset_source_type"),
-                outer = Named(name = "repository-rule-detailed")
+                outer = Nested(
+                  inner = Named(name = "Creation"),
+                  outer = Named(name = "repository-rule-detailed")
+                )
               ),
               inner = Model.Primitive.String(
                 default = null,
@@ -531,7 +588,10 @@ class NestedTypeNamingSpec {
           additionalProperties = false
         ),
         Object(
-          context = Named(name = "repository-rule-detailed"),
+          context = Nested(
+            inner = Named(name = "Update"),
+            outer = Named(name = "repository-rule-detailed")
+          ),
           description = "Only allow users with bypass permission to update matching refs.",
           properties = listOf(
             Property(
@@ -539,7 +599,10 @@ class NestedTypeNamingSpec {
               model = Closed(
                 context = Nested(
                   inner = Named(name = "type"),
-                  outer = Named(name = "repository-rule-detailed")
+                  outer = Nested(
+                    inner = Named(name = "Update"),
+                    outer = Named(name = "repository-rule-detailed")
+                  )
                 ),
                 inner = Model.Primitive.String(default = null, description = null, constraint = null),
                 values = listOf("update"),
@@ -554,7 +617,10 @@ class NestedTypeNamingSpec {
               model = Object(
                 context = Nested(
                   inner = Named(name = "parameters"),
-                  outer = Named(name = "repository-rule-detailed")
+                  outer = Nested(
+                    inner = Named(name = "Update"),
+                    outer = Named(name = "repository-rule-detailed")
+                  )
                 ),
                 description = null,
                 properties = listOf(
@@ -585,7 +651,10 @@ class NestedTypeNamingSpec {
               model = Closed(
                 context = Nested(
                   inner = Named(name = "ruleset_source_type"),
-                  outer = Named(name = "repository-rule-detailed")
+                  outer = Nested(
+                    inner = Named(name = "Update"),
+                    outer = Named(name = "repository-rule-detailed")
+                  )
                 ),
                 inner = Model.Primitive.String(
                   default = null,
@@ -625,7 +694,10 @@ class NestedTypeNamingSpec {
             Closed(
               context = Nested(
                 inner = Named(name = "type"),
-                outer = Named(name = "repository-rule-detailed")
+                outer = Nested(
+                  inner = Named(name = "Update"),
+                  outer = Named(name = "repository-rule-detailed")
+                )
               ),
               inner = Model.Primitive.String(default = null, description = null, constraint = null),
               values = listOf("update"),
@@ -635,7 +707,10 @@ class NestedTypeNamingSpec {
             Object(
               context = Nested(
                 inner = Named(name = "parameters"),
-                outer = Named(name = "repository-rule-detailed")
+                outer = Nested(
+                  inner = Named(name = "Update"),
+                  outer = Named(name = "repository-rule-detailed")
+                )
               ),
               description = null,
               properties = listOf(
@@ -661,7 +736,10 @@ class NestedTypeNamingSpec {
             Closed(
               context = Nested(
                 inner = Named(name = "ruleset_source_type"),
-                outer = Named(name = "repository-rule-detailed")
+                outer = Nested(
+                  inner = Named(name = "Update"),
+                  outer = Named(name = "repository-rule-detailed")
+                )
               ),
               inner = Model.Primitive.String(
                 default = null,
