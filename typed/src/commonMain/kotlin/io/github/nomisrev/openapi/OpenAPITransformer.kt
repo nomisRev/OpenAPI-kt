@@ -54,8 +54,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             )
         }
 
-      val opName = operation.operationId ?: fallbackOperationId(path, method)
-      val inputs = operation.input(::context, opName)
+      val inputs = operation.input(::context)
       val nestedInput = inputs.mapNotNull { (it as? Resolved.Value)?.value }
       val nestedResponses =
         operation.responses.responses.mapNotNull { (_, refOrResponse) ->
@@ -68,7 +67,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   ?.schema
                   ?.resolve() ?: return@mapNotNull null
               val context =
-                resolved.namedOr { context(NamingContext.RouteBody(opName, "Response")) }
+                resolved.namedOr {
+                  val operationId =
+                    requireNotNull(operation.operationId) {
+                      "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
+                    }
+                  context(NamingContext.RouteBody(operationId, "Response"))
+                }
               (resolved.toModel(context) as? Resolved.Value)?.value
             }
           }
@@ -85,7 +90,10 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       val nestedBody =
         json
           ?.namedOr {
-            val name = Named("${opName}Request")
+            val name =
+              requireNotNull(operation.operationId?.let { Named("${it}Request") }) {
+                "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
+              }
             context(name)
           }
           ?.let { (json.toModel(it) as? Resolved.Value)?.value }
@@ -96,28 +104,39 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         summary = operation.summary,
         path = path,
         method = method,
-        body = toRequestBody(operation, operation.requestBody?.get(), ::context, opName),
+        body = toRequestBody(operation, operation.requestBody?.get(), ::context),
         input =
           inputs.zip(operation.parameters) { model, p ->
             val param = p.get()
             Route.Input(param.name, model.value, param.required, param.input, param.description)
           },
-        returnType = toResponses(operation, ::context, opName),
+        returnType = toResponses(operation, ::context),
         extensions = operation.extensions,
         nested = nestedInput + nestedResponses + nestedBody,
       )
     }
 
   fun Operation.input(
-    create: (NamingContext) -> NamingContext,
-    opName: String,
+    create: (NamingContext) -> NamingContext
   ): List<Resolved<Model>> =
     parameters.map { p ->
       val param = p.get()
       val resolved =
         param.schema?.resolve() ?: throw IllegalStateException("No Schema for Parameter.")
       val context =
-        resolved.namedOr { create(NamingContext.RouteParam(param.name, opName, "Request")) }
+        resolved.namedOr {
+          val operationId =
+            requireNotNull(operationId) {
+              "OperationId is required for request body inline schemas. Otherwise we cannot generate OperationIdRequest class name"
+            }
+          create(
+            NamingContext.RouteParam(
+              param.name,
+              operationId,
+              "Request"
+            )
+          )
+        }
       resolved.toModel(context)
     }
 
@@ -544,6 +563,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         val inner = ap.value.resolve()
         (inner as? Resolved.Value)?.value == Schema()
       }
+
       else -> false
     }
     return Model.Object(
@@ -693,6 +713,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
           ?.replaceFirstChar(Char::uppercaseChar)
         if (mappedName != null) Named(mappedName) else Named(case.name)
       }
+
       is Resolved.Value ->
         when {
           context is Named && case.value.type == Type.Basic.String && case.value.enum != null ->
@@ -791,8 +812,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   fun toRequestBody(
     operation: Operation,
     body: RequestBody?,
-    create: (NamingContext) -> NamingContext,
-    opName: String,
+    create: (NamingContext) -> NamingContext
   ): Route.Bodies =
     Route.Bodies(
       body?.required ?: false,
@@ -809,7 +829,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   )
 
               fun ctx(name: String): NamingContext =
-                resolved.namedOr { create(NamingContext.RouteParam(name, opName, "Request")) }
+                resolved.namedOr {
+                  val operationId =
+                    requireNotNull(operation.operationId) {
+                      "operationId currently required to generate inline schemas for operation parameters."
+                    }
+                  create(NamingContext.RouteParam(name, operationId, "Request"))
+                }
 
               val multipart =
                 when (resolved) {
@@ -844,7 +870,13 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   )
 
               fun ctx(name: String): NamingContext =
-                resolved.namedOr { create(NamingContext.RouteParam(name, opName, "Request")) }
+                resolved.namedOr {
+                  val operationId =
+                    requireNotNull(operation.operationId) {
+                      "operationId currently required to generate inline schemas for operation parameters."
+                    }
+                  create(NamingContext.RouteParam(name, operationId, "Request"))
+                }
 
               val params: List<Route.Body.Multipart.FormData> =
                 when (resolved) {
@@ -876,11 +908,14 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
             else -> {
               val model =
                 mediaType.schema?.resolve()?.let { resolved ->
-                  val context =
-                    resolved.namedOr {
-                      val name = Named("${opName}Request")
-                      create(name)
+                  val operationId =
+                    requireNotNull(operation.operationId) {
+                      "operationId currently required to generate inline schemas for operation parameters."
                     }
+                  val context = resolved.namedOr {
+                    create(NamingContext.RouteParam("body", operationId, "Request"))
+                  }
+
                   resolved.toModel(context).value
                 } ?: Model.FreeFormJson(body.description, null)
               Pair(contentType, Route.Body.SetBody(model, body.description, mediaType.extensions))
@@ -896,13 +931,15 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
   fun toResponses(
     operation: Operation,
-    create: (NamingContext) -> NamingContext,
-    opName: String,
+    create: (NamingContext) -> NamingContext
   ): Route.Returns {
     fun Response.allContentModels(): Map<String, Model> =
       content.entries.associate { (contentType, mediaType) ->
         val resolved = mediaType.schema?.resolve()
-        val context = resolved?.namedOr { create(NamingContext.RouteBody(opName, "Response")) }
+        val context = resolved?.namedOr {
+          val operationId = requireNotNull(operation.operationId) { "Operation must have an operationId" }
+          create(NamingContext.RouteBody(operationId, "Response"))
+        }
         val model =
           when (resolved) {
             is Resolved -> resolved.toModel(context!!).value
