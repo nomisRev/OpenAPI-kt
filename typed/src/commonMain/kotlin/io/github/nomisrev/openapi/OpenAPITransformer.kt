@@ -323,8 +323,8 @@ private class OpenAPITransformer(
     when (val type = type) {
       is Type.Array ->
         when (val single = type.types.singleOrNull()) {
+          null if type.types.isEmpty() -> collection(context)
           null -> {
-            require(type.types.isNotEmpty()) { "Array type requires types to be defined. $this" }
             val resolved = type.types.sorted().map { t -> Resolved.Value(Schema(type = t)) }
             Model.Union(
               context = context,
@@ -730,8 +730,10 @@ private class OpenAPITransformer(
   }
 
   private fun Schema.collection(context: NamingContext): Collection {
-    val items = requireNotNull(items?.resolve()) { "Array type requires items to be defined. $this" }
-    val inner = items.toModel(items.namedOr { context })
+    val inner = when (val items = items?.resolve()) {
+      null -> Model.FreeFormJson(description.get(), null)
+      else -> items.toModel(items.namedOr { context }).value
+    }
     val default =
       when (val example = default) {
         is ExampleValue.Multiple -> example.values
@@ -750,7 +752,7 @@ private class OpenAPITransformer(
 
         null -> null
       }
-    return Collection.List(inner.value, default, description.get(), Constraints.Collection(this))
+    return Collection.List(inner, default, description.get(), Constraints.Collection(this))
   }
 
   fun Schema.toEnum(context: NamingContext, enums: List<String>): Enum.Closed {
