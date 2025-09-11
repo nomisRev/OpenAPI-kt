@@ -292,6 +292,16 @@ private class OpenAPITransformer(
                 context,
                 schema.anyOf!!.firstNotNullOf { it.resolve().value.enum }.filterNotNull(),
               )
+
+              value.anyOf != null && value.anyOf?.size == 2
+                && value.anyOf!!.any { it.resolve().value.type == Type.Basic.Null } -> {
+                value.anyOf!!.single { it.resolve().value.type != Type.Basic.Null }
+                  .resolve()
+                  .copy { it.copy(nullable = true) }
+                  .toModel(context)
+                  .value
+              }
+
               value.anyOf != null && value.anyOf?.size == 1 -> {
                 val inner = value.anyOf!![0].resolve().toModel(context).value
                 inner.withDescriptionIfNull(schema.description.get())
@@ -961,3 +971,9 @@ private class OpenAPITransformer(
       }
   }
 }
+
+private fun OpenAPITransformer.Resolved<Schema>.copy(block: (Schema) -> Schema): OpenAPITransformer.Resolved<Schema> =
+  when (this) {
+    is OpenAPITransformer.Resolved.Ref -> OpenAPITransformer.Resolved.Ref(name, block(value))
+    is OpenAPITransformer.Resolved.Value -> OpenAPITransformer.Resolved.Value(block(value))
+  }
