@@ -23,6 +23,9 @@ fun OpenAPI.models(): Set<Model> = with(OpenAPITransformer(this)) { schemas() }.
  */
 private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
+  // Tracks the current $recursiveAnchor during traversal. The pair is (schemaName, schemaNode).
+  private val recursiveAnchorStack: MutableList<Pair<String, Schema>> = mutableListOf()
+
   fun operations(): List<Triple<String, HttpMethod, Operation>> =
     openAPI.paths.entries.flatMap { (path, p) ->
       listOfNotNull(
@@ -255,7 +258,18 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     openAPI.components.schemas.map { (name, refOrSchema) ->
       when (val resolved = refOrSchema.resolve()) {
         is Resolved.Ref -> throw IllegalStateException("Remote schemas not supported yet.")
-        is Resolved.Value -> resolved.toModel(Named(name)).value
+        is Resolved.Value -> {
+          val anchorPushed =
+            if (resolved.value.recursiveAnchor == true) {
+              recursiveAnchorStack.add(name to resolved.value)
+              true
+            } else false
+          try {
+            resolved.toModel(Named(name)).value
+          } finally {
+            if (anchorPushed) recursiveAnchorStack.removeAt(recursiveAnchorStack.lastIndex)
+          }
+        }
       }
     }
 
@@ -268,52 +282,67 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
       is Resolved.Value -> {
         val schema: Schema = value
-        val model =
-          when {
-            schema.isOpenEnumeration() -> schema.toOpenEnum(
-              context,
-              schema.anyOf!!.firstNotNullOf { it.resolve().value.enum }.filterNotNull(),
-            )
 
-            /*
-             * We're modifying the schema here...
-             * This is to flatten the following to just `String`
-             * "model": {
-             *   "description": "ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models/overview) for descriptions of them.\n",
-             *   "anyOf": [
-             *     {
-             *       "type": "string"
-             *     }
-             *   ]
-             * }
-             */
-            value.anyOf != null && value.anyOf?.size == 1 -> {
-              val inner = value.anyOf!![0].resolve().toModel(context).value
-              inner.withDescriptionIfNull(schema.description.get())
+        // Manage $recursiveAnchor lifecycle for this schema
+        val anchorPushed: Boolean =
+          if (schema.recursiveAnchor == true) {
+            val anchorName = (context as? Named)?.name
+            if (anchorName != null) {
+              recursiveAnchorStack.add(anchorName to schema)
+              true
+            } else false
+          } else false
+
+        try {
+          val model =
+            when {
+              schema.isOpenEnumeration() -> schema.toOpenEnum(
+                context,
+                schema.anyOf!!.firstNotNullOf { it.resolve().value.enum }.filterNotNull(),
+              )
+
+              /*
+               * We're modifying the schema here...
+               * This is to flatten the following to just `String`
+               * "model": {
+               *   "description": "ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models/overview) for descriptions of them.\n",
+               *   "anyOf": [
+               *     {
+               *       "type": "string"
+               *     }
+               *   ]
+               * }
+               */
+              value.anyOf != null && value.anyOf?.size == 1 -> {
+                val inner = value.anyOf!![0].resolve().toModel(context).value
+                inner.withDescriptionIfNull(schema.description.get())
+              }
+
+              value.oneOf != null && value.oneOf?.size == 1 -> {
+                val inner = value.oneOf!![0].resolve().toModel(context).value
+                inner.withDescriptionIfNull(schema.description.get())
+              }
+
+              schema.anyOf != null -> schema.toUnion(context, schema.anyOf!!)
+              // oneOf + properties => oneOf requirements: 'propA OR propB is required'.
+              schema.oneOf != null && schema.properties != null -> schema.toObject(context)
+              schema.oneOf != null -> schema.toUnion(context, schema.oneOf!!)
+              schema.allOf != null -> allOf(schema, context)
+              schema.enum != null -> {
+                val enums = schema.enum!!
+                val hasNull = enums.any { it == null }
+                val filtered = enums.filterNotNull()
+                val effectiveSchema =
+                  if (hasNull && schema.nullable != true) schema.copy(nullable = true) else schema
+                effectiveSchema.toEnum(context, filtered)
+              }
+
+              else -> schema.type(context)
             }
-
-            value.oneOf != null && value.oneOf?.size == 1 -> {
-              val inner = value.oneOf!![0].resolve().toModel(context).value
-              inner.withDescriptionIfNull(schema.description.get())
-            }
-
-            schema.anyOf != null -> schema.toUnion(context, schema.anyOf!!)
-            // oneOf + properties => oneOf requirements: 'propA OR propB is required'.
-            schema.oneOf != null && schema.properties != null -> schema.toObject(context)
-            schema.oneOf != null -> schema.toUnion(context, schema.oneOf!!)
-            schema.allOf != null -> allOf(schema, context)
-            schema.enum != null -> {
-              val enums = schema.enum!!
-              val hasNull = enums.any { it == null }
-              val filtered = enums.filterNotNull()
-              val effectiveSchema =
-                if (hasNull && schema.nullable != true) schema.copy(nullable = true) else schema
-              effectiveSchema.toEnum(context, filtered)
-            }
-
-            else -> schema.type(context)
-          }
-        Resolved.Value(model)
+          Resolved.Value(model)
+        } finally {
+          if (anchorPushed) recursiveAnchorStack.removeAt(recursiveAnchorStack.lastIndex)
+        }
       }
     }
 
@@ -431,12 +460,21 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
     when (this) {
       is ReferenceOr.Value -> Resolved.Value(value)
       is ReferenceOr.Reference -> {
-        val name = ref.drop("#/components/schemas/".length)
-        val schema =
-          requireNotNull(openAPI.components.schemas[name]) {
-            "Schema $this could not be found in. Is it missing?"
-          }.valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
-        Resolved.Ref(name, schema)
+        // Handle JSON Schema $recursiveRef: "#" by resolving to the current anchor
+        if (ref == "#") {
+          val (anchorName, anchorSchema) =
+            requireNotNull(recursiveAnchorStack.lastOrNull()) {
+              "Recursive reference '#' encountered but no active \$recursiveAnchor was found."
+            }
+          Resolved.Ref(anchorName, anchorSchema)
+        } else {
+          val name = ref.drop("#/components/schemas/".length)
+          val schema =
+            requireNotNull(openAPI.components.schemas[name]) {
+              "Schema $this could not be found in. Is it missing?"
+            }.valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
+          Resolved.Ref(name, schema)
+        }
       }
     }
 
@@ -719,7 +757,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
   }
 
   private fun Schema.collection(context: NamingContext): Collection {
-    val items = requireNotNull(items?.resolve()) { "Array type requires items to be defined." }
+    val items = requireNotNull(items?.resolve()) { "Array type requires items to be defined. $this" }
     val inner = items.toModel(items.namedOr { context })
     val default =
       when (val example = default) {

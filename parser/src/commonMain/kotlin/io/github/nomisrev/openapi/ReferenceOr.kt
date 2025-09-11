@@ -15,6 +15,7 @@ import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -73,8 +74,8 @@ public sealed interface ReferenceOr<out A> {
               jsobObject != null && jsobObject.contains(RefKey) ->
                 Reference(json[RefKey]!!.jsonPrimitive.content)
 
-              jsobObject != null && jsobObject.contains("RecursiveRefKey") ->
-                Reference(json[RefKey]!!.jsonPrimitive.content)
+              jsobObject != null && jsobObject.contains(RecursiveRefKey) ->
+                Reference(json[RecursiveRefKey]!!.jsonPrimitive.content)
 
               else -> Value(decoder.json.decodeFromJsonElement(dataSerializer, json))
             }
