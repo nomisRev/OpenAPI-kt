@@ -3,7 +3,9 @@ package io.github.nomisrev.openapi
 import io.ktor.http.HttpMethod
 
 fun String.segments(): List<String> =
-  replace(Regex("\\{.*?\\}"), "").split("/").filter { it.isNotEmpty() }
+  replace(Regex("\\{.*?\\}"), "")
+    .split("/")
+    .filter { it.isNotEmpty() }
 
 private fun HttpMethod.simpleName(): String =
   when (value.uppercase()) {
