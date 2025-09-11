@@ -21,10 +21,10 @@ fun OpenAPI.models(): Set<Model> = with(OpenAPITransformer(this)) { schemas() }.
  * It does the heavy lifting of figuring out what a `Schema` is, a `String`, `enum=[alive, dead]`,
  * object, etc.
  */
-private class OpenAPITransformer(private val openAPI: OpenAPI) {
-
-  // Tracks the current $recursiveAnchor during traversal. The pair is (schemaName, schemaNode).
-  private val recursiveAnchorStack: MutableList<Pair<String, Schema>> = mutableListOf()
+private class OpenAPITransformer(
+  private val openAPI: OpenAPI,
+  private val currentAnchor: Pair<String, Schema>? = null
+) {
 
   fun operations(): List<Triple<String, HttpMethod, Operation>> =
     openAPI.paths.entries.flatMap { (path, p) ->
@@ -259,15 +259,12 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
       when (val resolved = refOrSchema.resolve()) {
         is Resolved.Ref -> throw IllegalStateException("Remote schemas not supported yet.")
         is Resolved.Value -> {
-          val anchorPushed =
-            if (resolved.value.recursiveAnchor == true) {
-              recursiveAnchorStack.add(name to resolved.value)
-              true
-            } else false
-          try {
+          if (resolved.value.recursiveAnchor == true) {
+            with(OpenAPITransformer(openAPI, name to resolved.value)) {
+              resolved.toModel(Named(name)).value
+            }
+          } else {
             resolved.toModel(Named(name)).value
-          } finally {
-            if (anchorPushed) recursiveAnchorStack.removeAt(recursiveAnchorStack.lastIndex)
           }
         }
       }
@@ -282,49 +279,28 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
 
       is Resolved.Value -> {
         val schema: Schema = value
-
-        // Manage $recursiveAnchor lifecycle for this schema
-        val anchorPushed: Boolean =
+        val nextTransformer =
           if (schema.recursiveAnchor == true) {
             val anchorName = (context as? Named)?.name
-            if (anchorName != null) {
-              recursiveAnchorStack.add(anchorName to schema)
-              true
-            } else false
-          } else false
-
-        try {
+            if (anchorName != null) OpenAPITransformer(openAPI, anchorName to schema)
+            else this@OpenAPITransformer
+          } else this@OpenAPITransformer
+        with(nextTransformer) {
           val model =
             when {
               schema.isOpenEnumeration() -> schema.toOpenEnum(
                 context,
                 schema.anyOf!!.firstNotNullOf { it.resolve().value.enum }.filterNotNull(),
               )
-
-              /*
-               * We're modifying the schema here...
-               * This is to flatten the following to just `String`
-               * "model": {
-               *   "description": "ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models/overview) for descriptions of them.\n",
-               *   "anyOf": [
-               *     {
-               *       "type": "string"
-               *     }
-               *   ]
-               * }
-               */
               value.anyOf != null && value.anyOf?.size == 1 -> {
                 val inner = value.anyOf!![0].resolve().toModel(context).value
                 inner.withDescriptionIfNull(schema.description.get())
               }
-
               value.oneOf != null && value.oneOf?.size == 1 -> {
                 val inner = value.oneOf!![0].resolve().toModel(context).value
                 inner.withDescriptionIfNull(schema.description.get())
               }
-
               schema.anyOf != null -> schema.toUnion(context, schema.anyOf!!)
-              // oneOf + properties => oneOf requirements: 'propA OR propB is required'.
               schema.oneOf != null && schema.properties != null -> schema.toObject(context)
               schema.oneOf != null -> schema.toUnion(context, schema.oneOf!!)
               schema.allOf != null -> allOf(schema, context)
@@ -336,12 +312,9 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
                   if (hasNull && schema.nullable != true) schema.copy(nullable = true) else schema
                 effectiveSchema.toEnum(context, filtered)
               }
-
               else -> schema.type(context)
             }
           Resolved.Value(model)
-        } finally {
-          if (anchorPushed) recursiveAnchorStack.removeAt(recursiveAnchorStack.lastIndex)
         }
       }
     }
@@ -463,7 +436,7 @@ private class OpenAPITransformer(private val openAPI: OpenAPI) {
         // Handle JSON Schema $recursiveRef: "#" by resolving to the current anchor
         if (ref == "#") {
           val (anchorName, anchorSchema) =
-            requireNotNull(recursiveAnchorStack.lastOrNull()) {
+            requireNotNull(currentAnchor) {
               "Recursive reference '#' encountered but no active \$recursiveAnchor was found."
             }
           Resolved.Ref(anchorName, anchorSchema)
