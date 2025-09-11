@@ -29,12 +29,18 @@ fun Model.toTypeName(): TypeName =
     is Model.Primitive.Int -> INT
     is Model.Primitive.String -> STRING
     is Model.Primitive.Unit -> UNIT
+    is Collection.List if inner is Model.FreeFormJson -> ClassName("kotlinx.serialization.json", "JsonArray")
     is Collection.List -> LIST.parameterizedBy(inner.toTypeName())
     is Collection.Map -> MAP.parameterizedBy(STRING, inner.toTypeName())
     is Model.OctetStream -> ClassName(`package`, "UploadFile")
     is Model.FreeFormJson -> JsonElement::class.asTypeName()
     is Model.Reference -> toClassName(context)
     is Model.Enum -> toClassName(context)
+    is Model.Object if properties.isEmpty() && additionalProperties -> ClassName(
+      "org.jetbrains.kotlinx.serialization.json",
+      "JsonObject"
+    )
+
     is Model.Object -> toClassName(context)
     is Model.Union -> toClassName(context)
   }

@@ -17,11 +17,16 @@ import kotlin.test.assertFailsWith
 class ArraySpec {
   @Test
   fun items_is_required_for_arrays() {
-    val ex =
-      assertFailsWith<IllegalArgumentException> {
-        Schema(type = Type.Basic.Array).toModel("ArrayWithoutItems")
-      }
-    assertContains(ex.message ?: "", "Array type requires items to be defined.")
+    val actual = Schema(type = Type.Basic.Array).toModel("ArrayWithoutItems")
+    assertEquals(
+      Model.Collection.List(
+        inner = Model.FreeFormJson(null, null),
+        default = null,
+        description = null,
+        null
+      ),
+      actual
+    )
   }
 
   @Test
