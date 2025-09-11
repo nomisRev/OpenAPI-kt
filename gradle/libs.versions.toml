@@ -19,7 +19,6 @@ test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "json" }
 okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
 okio-fakefilesystem = { module = "com.squareup.okio:okio-fakefilesystem", version.ref = "okio" }
-kasechange = { module = "net.pearx.kasechange:kasechange", version.ref = "kasechange" }
 ktor-client = { module= "io.ktor:ktor-client-core", version.ref="ktor" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref="kotlinpoet" }
 android-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }

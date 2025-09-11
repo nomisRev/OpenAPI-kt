@@ -14,7 +14,6 @@ dependencies {
   api(libs.okio)
   api(libs.ktor.client)
   api(projects.typed)
-  api(libs.kasechange)
   api(libs.kotlinpoet)
   testImplementation(libs.test)
   testImplementation(libs.test.compile)
