@@ -40,7 +40,7 @@ class ModelTest {
             listOf(
               Object.property(
                 "id",
-                Model.Reference(NamingContext.Named("Id"), "An explicit ID type"),
+                id,
                 isRequired = true,
                 isNullable = false,
                 description = "An explicit ID type",

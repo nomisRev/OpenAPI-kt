@@ -23,7 +23,8 @@ fun OpenAPI.models(): Set<Model> = with(OpenAPITransformer(this)) { schemas() }.
  */
 private class OpenAPITransformer(
   private val openAPI: OpenAPI,
-  private val currentAnchor: Pair<String, Schema>? = null
+  private val currentAnchor: Pair<String, Schema>? = null,
+  private val expanding: List<String> = emptyList()
 ) {
 
   fun operations(): List<Triple<String, HttpMethod, Operation>> =
@@ -73,25 +74,42 @@ private class OpenAPITransformer(
                   val multipart =
                     when (resolved) {
                       is Resolved.Ref -> {
-                        val model = resolved.toModel(Named(resolved.name)) as Resolved.Ref
-                        Route.Body.Multipart.Ref(
-                          model.name,
-                          model.value,
-                          body.description,
-                          mediaType.extensions,
-                        )
+                        val modelResolved = resolved.toModel(Named(resolved.name))
+                        when (val m = modelResolved.value) {
+                          is Model.Object -> {
+                            val params = m.properties.map { p ->
+                              Route.Body.Multipart.FormData(p.baseName, p.model)
+                            }
+                            Route.Body.Multipart.Value(params, body.description, mediaType.extensions)
+                          }
+                          else -> Route.Body.Multipart.Ref(
+                            resolved.name,
+                            m,
+                            body.description,
+                            mediaType.extensions,
+                          )
+                        }
                       }
 
-                      is Resolved.Value ->
-                        Route.Body.Multipart.Value(
-                          resolved.value.properties!!.map { (name, ref) ->
-                            val context =
-                              resolved.namedOr { context(NamingContext.RouteParam(name, operationId, "Request")) }
-                            Route.Body.Multipart.FormData(name, ref.resolve().toModel(context).value)
-                          },
-                          body.description,
-                          mediaType.extensions,
+                      is Resolved.Value -> {
+                        val modelResolved = resolved.toModel(
+                          resolved.namedOr { context(NamingContext.RouteParam("body", operationId, "Request")) }
                         )
+                        when (val m = modelResolved.value) {
+                          is Model.Object -> {
+                            val params = m.properties.map { p ->
+                              Route.Body.Multipart.FormData(p.baseName, p.model)
+                            }
+                            Route.Body.Multipart.Value(params, body.description, mediaType.extensions)
+                          }
+                          else -> Route.Body.Multipart.Ref(
+                            (resolved as Resolved.Value).value.title ?: "body",
+                            m,
+                            body.description,
+                            mediaType.extensions,
+                          )
+                        }
+                      }
                     }
 
                   Pair(contentType, multipart)
@@ -260,7 +278,7 @@ private class OpenAPITransformer(
         is Resolved.Ref -> throw IllegalStateException("Remote schemas not supported yet.")
         is Resolved.Value -> {
           if (resolved.value.recursiveAnchor == true) {
-            with(OpenAPITransformer(openAPI, name to resolved.value)) {
+            with(OpenAPITransformer(openAPI, name to resolved.value, expanding)) {
               resolved.toModel(Named(name)).value
             }
           } else {
@@ -273,8 +291,21 @@ private class OpenAPITransformer(
   fun Resolved<Schema>.toModel(context: NamingContext): Resolved<Model> =
     when (this) {
       is Resolved.Ref -> {
-        val desc = value.description.get()
-        Resolved.Ref(name, Model.Reference(Named(name), desc))
+        // Only yield a Model.Reference when we detect an actual recursive loop back to the current anchor.
+        val isRecursiveRef = currentAnchor?.let { (anchorName, anchorSchema) ->
+          // Consider it recursive if the referenced schema object is the same anchor schema and names match.
+          anchorName == name && anchorSchema == value
+        } ?: false
+        if (isRecursiveRef || expanding.contains(name)) {
+          val desc = value.description.get()
+          Resolved.Ref(name, Model.Reference(Named(name), desc))
+        } else {
+          // Inline non-recursive refs by transforming the target schema as a value.
+          // Use a new transformer that tracks this name as currently expanding to avoid cycles.
+          val next = OpenAPITransformer(openAPI, currentAnchor, expanding + name)
+          val targetContext = Named(name)
+          Resolved.Value(with(next) { Resolved.Value(value).toModel(targetContext).value })
+        }
       }
 
       is Resolved.Value -> {
@@ -282,7 +313,7 @@ private class OpenAPITransformer(
         val nextTransformer =
           if (schema.recursiveAnchor == true) {
             val anchorName = (context as? Named)?.name
-            if (anchorName != null) OpenAPITransformer(openAPI, anchorName to schema)
+            if (anchorName != null) OpenAPITransformer(openAPI, anchorName to schema, expanding)
             else this@OpenAPITransformer
           } else this@OpenAPITransformer
         with(nextTransformer) {
@@ -595,7 +626,7 @@ private class OpenAPITransformer(
 
       resolved.forEach { sub ->
         sub.properties?.let { mergedProps.putAll(it) }
-        sub.required.forEach { mergedRequired.add(it) }
+        sub.required?.forEach { mergedRequired.add(it) }
         if (description == null) description = sub.description
         // Avoid setting additionalProperties=true with properties due to toObject() restriction
         if (additionalProperties == null) additionalProperties = sub.additionalProperties
@@ -713,8 +744,8 @@ private class OpenAPITransformer(
         Property(
           name,
           model.value,
-          required.contains(name),
-          resolved.value.nullable ?: !required.contains(name),
+          required?.contains(name) == true,
+          resolved.value.nullable ?: required?.contains(name)?.not() ?: true,
           resolved.value.description.get(),
         )
       },
@@ -910,32 +941,36 @@ private class OpenAPITransformer(
   }
 
   private fun nestedModel(resolved: Resolved<Schema>, caseContext: NamingContext): Model? =
-    when (val model = resolved.toModel(caseContext)) {
-      is Resolved.Ref -> null
+    when (resolved) {
+      is Resolved.Ref -> null // Do not inline referenced component schemas as nested models
       is Resolved.Value ->
-        when (val value = model.value) {
-          is Collection ->
-            when (value) {
-              is Collection.List ->
-                when (val inner = resolved.value.items?.resolve()) {
-                  is Resolved.Value -> nestedModel(Resolved.Value(inner.value), caseContext)
-                  is Resolved.Ref -> null
-                  null -> null
-                }
-
-              is Collection.Map ->
-                when (val ap = resolved.value.additionalProperties) {
-                  is AdditionalProperties.PSchema ->
-                    when (val inner = ap.value.resolve()) {
+        when (val model = resolved.toModel(caseContext)) {
+          is Resolved.Ref -> null // redundant, kept for safety
+          is Resolved.Value ->
+            when (val value = model.value) {
+              is Collection ->
+                when (value) {
+                  is Collection.List ->
+                    when (val inner = resolved.value.items?.resolve()) {
                       is Resolved.Value -> nestedModel(Resolved.Value(inner.value), caseContext)
                       is Resolved.Ref -> null
+                      null -> null
                     }
 
-                  else -> null
-                }
-            }
+                  is Collection.Map ->
+                    when (val ap = resolved.value.additionalProperties) {
+                      is AdditionalProperties.PSchema ->
+                        when (val inner = ap.value.resolve()) {
+                          is Resolved.Value -> nestedModel(Resolved.Value(inner.value), caseContext)
+                          is Resolved.Ref -> null
+                        }
 
-          else -> model.value
+                      else -> null
+                    }
+                }
+
+              else -> model.value
+            }
         }
     }
 

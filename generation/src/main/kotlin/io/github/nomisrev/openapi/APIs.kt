@@ -313,13 +313,17 @@ fun Route.addBody() {
                 body.parameters.map { addStatement("appendAll(%S, %L)", it.name, toParamName(Named(it.name))) }
 
               is Route.Body.Multipart.Ref -> {
-                val obj =
-                  requireNotNull(body.value as? Model.Object) {
-                    "Only supports objects for FreeForm Multipart"
-                  }
                 val name = toParamName(Named(body.name))
-                obj.properties.forEach { prop ->
-                  addStatement("appendAll(%S, $name.%L)", toPropName(prop), toPropName(prop))
+                when (val v = body.value) {
+                  is Model.Object -> {
+                    v.properties.forEach { prop ->
+                      addStatement("appendAll(%S, $name.%L)", toPropName(prop), toPropName(prop))
+                    }
+                  }
+                  else -> {
+                    // Single field multipart (non-object). Append the single parameter directly.
+                    addStatement("appendAll(%S, %L)", body.name, name)
+                  }
                 }
               }
             }

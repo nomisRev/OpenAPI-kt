@@ -14,6 +14,7 @@ import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
+import com.squareup.kotlinpoet.TypeAliasSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.buildCodeBlock
@@ -48,6 +49,16 @@ fun Model.toFileSpecOrNull(): FileSpec? =
       FileSpec.builder(`package`, toClassName(model.context).simpleName)
         .addType(model.toTypeSpec())
         .build()
+
+    
+    is Model.Object if model.properties.isEmpty() && model.additionalProperties ->
+      FileSpec.builder(`package`, toClassName(model.context).simpleName)
+        .addTypeAlias(
+          TypeAliasSpec.builder(
+            toClassName(model.context).simpleName,
+            ClassName("kotlinx.serialization.json", "JsonObject")
+          ).build()
+        ).build()
 
     is Model.Object ->
       FileSpec.builder(`package`, toClassName(model.context).simpleName)
@@ -425,8 +436,7 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
       is Model.OctetStream,
       is Model.Primitive.Unit,
       is Model.Union,
-      is Model.Object,
-      is Model.Reference -> emptyList()
+      is Model.Object -> emptyList()
 
       is Collection -> {
         val constraint = model.constraint ?: return@flatMap emptyList()
@@ -469,7 +479,9 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
       }
 
       // TODO Implement Object constraints
-      is Model.FreeFormJson -> emptyList()
+      is Model.FreeFormJson,
+      is Model.Reference -> emptyList()
+
       is Model.Primitive.Double ->
         when (val constraint = model.constraint) {
           null -> emptyList()
