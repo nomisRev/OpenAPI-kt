@@ -1,4 +1,4 @@
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.generation
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -11,11 +11,15 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.withIndent
+import io.github.nomisrev.openapi.API
+import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext.Named
+import io.github.nomisrev.openapi.Route
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlin.collections.get
 
 fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor =
   object : APIInterceptor {
@@ -66,21 +70,21 @@ fun APIInterceptor.Companion.openAIStreaming(`package`: String): APIInterceptor 
     }
 
     override fun OpenAPIContext.modifyInterface(
-      api: API,
-      typeSpec: TypeSpec.Builder,
+        api: API,
+        typeSpec: TypeSpec.Builder,
     ): TypeSpec.Builder = modify(api, typeSpec, implemented = false)
 
     override fun OpenAPIContext.modifyImplementation(
-      api: API,
-      typeSpec: TypeSpec.Builder,
+        api: API,
+        typeSpec: TypeSpec.Builder,
     ): TypeSpec.Builder = modify(api, typeSpec, implemented = true)
 
     public var createPredef = false
 
     fun OpenAPIContext.modify(
-      api: API,
-      typeSpec: TypeSpec.Builder,
-      implemented: Boolean,
+        api: API,
+        typeSpec: TypeSpec.Builder,
+        implemented: Boolean,
     ): TypeSpec.Builder {
       val functions =
         api.routes

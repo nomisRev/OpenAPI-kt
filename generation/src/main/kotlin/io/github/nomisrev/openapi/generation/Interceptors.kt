@@ -1,6 +1,8 @@
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.generation
 
 import com.squareup.kotlinpoet.TypeSpec
+import io.github.nomisrev.openapi.API
+import io.github.nomisrev.openapi.Model
 import io.ktor.http.*
 import io.ktor.http.HttpMethod.Companion.Delete
 import io.ktor.http.HttpMethod.Companion.Get
@@ -27,13 +29,13 @@ interface APIInterceptor {
         override fun OpenAPIContext.intercept(api: API): API = api
 
         override fun OpenAPIContext.modifyInterface(
-          api: API,
-          typeSpec: TypeSpec.Builder,
+            api: API,
+            typeSpec: TypeSpec.Builder,
         ): TypeSpec.Builder = typeSpec
 
         override fun OpenAPIContext.modifyImplementation(
-          api: API,
-          typeSpec: TypeSpec.Builder,
+            api: API,
+            typeSpec: TypeSpec.Builder,
         ): TypeSpec.Builder = typeSpec
       }
   }

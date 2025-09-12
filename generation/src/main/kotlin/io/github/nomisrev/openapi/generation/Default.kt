@@ -1,6 +1,7 @@
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.generation
 
 import com.squareup.kotlinpoet.ParameterSpec
+import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Collection
 
 context(OpenAPIContext)

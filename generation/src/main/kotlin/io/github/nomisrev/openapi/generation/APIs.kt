@@ -1,4 +1,4 @@
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.generation
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
@@ -13,10 +13,13 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeSpecHolder
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.withIndent
+import io.github.nomisrev.openapi.API
+import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.Named
 import io.github.nomisrev.openapi.NamingContext.Nested
-import io.ktor.http.*
-import io.ktor.utils.io.core.*
+import io.github.nomisrev.openapi.Root
+import io.github.nomisrev.openapi.Route
 
 fun configure(defaults: Boolean) =
   ParameterSpec(
