@@ -1,7 +1,7 @@
 package io.github.nomisrev.openapi.plugin
 
-import io.github.nomisrev.openapi.GenerationConfig
-import io.github.nomisrev.openapi.generate
+import io.github.nomisrev.openapi.generation.GenerationConfig
+import io.github.nomisrev.openapi.generation.generate
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
