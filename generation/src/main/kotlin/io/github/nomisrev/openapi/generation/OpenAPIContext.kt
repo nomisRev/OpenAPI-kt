@@ -1,4 +1,4 @@
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.generation
 
 import com.squareup.kotlinpoet.FileSpec
 import java.util.concurrent.atomic.AtomicReference

@@ -1,7 +1,12 @@
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.generation
 
 import com.squareup.kotlinpoet.ClassName
+import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Collection
+import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.Route
+import io.github.nomisrev.openapi.pathSegments
+
 fun Naming(`package`: String): Naming = Nam(`package`)
 
 context(Naming)

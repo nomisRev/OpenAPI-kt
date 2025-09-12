@@ -1,6 +1,6 @@
 @file:Suppress("UNUSED_VARIABLE")
 
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.generation
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
@@ -19,7 +19,10 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.buildCodeBlock
 import com.squareup.kotlinpoet.withIndent
+import io.github.nomisrev.openapi.Constraints
+import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Collection
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.Named
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -597,8 +600,8 @@ private fun Model.Object.Property.intRequirement(constraint: Constraints.Number)
 
 context(OpenAPIContext)
 private fun Model.Object.Property.numberRequirement(
-  constraint: Constraints.Number,
-  transform: (Double) -> Number,
+    constraint: Constraints.Number,
+    transform: (Double) -> Number,
 ): Requirement? {
   val paramName = toParamName(Named(baseName))
   val minimum = transform(constraint.minimum)

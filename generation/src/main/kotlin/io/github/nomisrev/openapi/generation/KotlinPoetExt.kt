@@ -1,4 +1,4 @@
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.generation
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.BOOLEAN
@@ -18,6 +18,7 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.asTypeName
+import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Collection
 import kotlinx.serialization.json.JsonElement
 

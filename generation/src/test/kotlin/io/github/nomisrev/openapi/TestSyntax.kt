@@ -6,6 +6,11 @@ import com.squareup.kotlinpoet.FileSpec
 import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
+import io.github.nomisrev.openapi.generation.GenerationConfig
+import io.github.nomisrev.openapi.generation.OpenAPIContext
+import io.github.nomisrev.openapi.generation.predef
+import io.github.nomisrev.openapi.generation.toFileSpecOrNull
+import io.github.nomisrev.openapi.generation.toFileSpecs
 import kotlin.test.assertEquals
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 
@@ -21,38 +26,38 @@ fun String.containsSingle(text: String): Boolean {
 private fun FileSpec.asCode(): String = buildString { writeTo(this) }
 
 fun Model.compiles(): String =
-  OpenAPIContext(GenerationConfig("", "", "io.test", "TestApi", true)) {
-    val file = requireNotNull(toFileSpecOrNull()) { "No File was generated for ${this@compiles}" }
-    val code = file.asCode()
-    val source = SourceFile.kotlin("${file.name}.kt", file.asCode())
-    val result =
-      KotlinCompilation()
-        .apply {
-          val predef = SourceFile.kotlin("Predef.kt", predef().asCode())
-          sources = listOf(source, predef)
-          inheritClassPath = true
-          messageOutputStream = System.out
-        }
-        .compile()
-    assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK, "${result.messages}\n$code")
-    code
-  }
+    OpenAPIContext(GenerationConfig("", "", "io.test", "TestApi", true)) {
+        val file = requireNotNull(toFileSpecOrNull()) { "No File was generated for ${this@compiles}" }
+        val code = file.asCode()
+        val source = SourceFile.kotlin("${file.name}.kt", file.asCode())
+        val result =
+            KotlinCompilation()
+                .apply {
+                    val predef = SourceFile.kotlin("Predef.kt", predef().asCode())
+                    sources = listOf(source, predef)
+                    inheritClassPath = true
+                    messageOutputStream = System.out
+                }
+                .compile()
+        assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK, "${result.messages}\n$code")
+        code
+    }
 
 fun API.compiles(): JvmCompilationResult =
-  OpenAPIContext(GenerationConfig("", "", "io.test", "TestApi", true)) {
-    val filesAsSources =
-      Root("TestApi", emptyList(), listOf(this@compiles)).toFileSpecs().map {
-        SourceFile.kotlin("${it.name}.kt", it.asCode())
-      }
-    val result =
-      KotlinCompilation()
-        .apply {
-          val predef = SourceFile.kotlin("Predef.kt", predef().asCode())
-          sources = filesAsSources + predef
-          inheritClassPath = true
-          messageOutputStream = System.out
-        }
-        .compile()
-    assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK, result.messages)
-    result
-  }
+    OpenAPIContext(GenerationConfig("", "", "io.test", "TestApi", true)) {
+        val filesAsSources =
+            Root("TestApi", emptyList(), listOf(this@compiles)).toFileSpecs().map {
+                SourceFile.kotlin("${it.name}.kt", it.asCode())
+            }
+        val result =
+            KotlinCompilation()
+                .apply {
+                    val predef = SourceFile.kotlin("Predef.kt", predef().asCode())
+                    sources = filesAsSources + predef
+                    inheritClassPath = true
+                    messageOutputStream = System.out
+                }
+                .compile()
+        assertEquals(result.exitCode, KotlinCompilation.ExitCode.OK, result.messages)
+        result
+    }
