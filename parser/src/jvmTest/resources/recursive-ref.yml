@@ -1,0 +1,83 @@
+openapi: 3.0.0
+info:
+  title: OpenAI API
+  description: The OpenAI REST API. Please see
+    https://platform.openai.com/docs/api-reference for more details.
+  version: 2.3.0
+  termsOfService: https://openai.com/policies/terms-of-use
+  contact:
+    name: OpenAI Support
+    url: https://help.openai.com/
+  license:
+    name: MIT
+    url: https://github.com/openai/openai-openapi/blob/master/LICENSE
+servers:
+  - url: https://api.openai.com/v1
+components:
+  schemas:
+    CompoundFilter:
+      $recursiveAnchor: true
+      type: object
+      additionalProperties: false
+      title: Compound Filter
+      description: Combine multiple filters using `and` or `or`.
+      properties:
+        type:
+          type: string
+          description: 'Type of operation: `and` or `or`.'
+          enum:
+            - and
+            - or
+        filters:
+          type: array
+          description: Array of filters to combine. Items can be `ComparisonFilter` or `CompoundFilter`.
+          items:
+            anyOf:
+              - $ref: '#/components/schemas/ComparisonFilter'
+              - $recursiveRef: '#'
+      required:
+        - type
+        - filters
+      x-oaiMeta:
+        name: CompoundFilter
+    ComparisonFilter:
+      type: object
+      additionalProperties: false
+      title: Comparison Filter
+      description: >
+        A filter used to compare a specified attribute key to a given value using a defined comparison
+        operation.
+      properties:
+        type:
+          type: string
+          default: eq
+          enum:
+            - eq
+            - ne
+            - gt
+            - gte
+            - lt
+            - lte
+          description: |
+            Specifies the comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, `lte`.
+            - `eq`: equals
+            - `ne`: not equal
+            - `gt`: greater than
+            - `gte`: greater than or equal
+            - `lt`: less than
+            - `lte`: less than or equal
+        key:
+          type: string
+          description: The key to compare against the value.
+        value:
+          description: The value to compare against the attribute key; supports string, number, or boolean types.
+          anyOf:
+            - type: string
+            - type: number
+            - type: boolean
+      required:
+        - type
+        - key
+        - value
+      x-oaiMeta:
+        name: ComparisonFilter

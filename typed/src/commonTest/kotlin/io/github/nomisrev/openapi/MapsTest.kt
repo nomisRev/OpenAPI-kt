@@ -111,14 +111,14 @@ class MapsTest {
 
     val expectedMessages =
       Model.Collection.Map(
-        inner = Model.Reference(NamingContext.Named("Message"), description = null),
+        inner = expectedMessage,
         description = null,
         constraint = null,
       )
 
     assert(models.contains(expectedMessage)) { "Expected Message object model to be generated." }
     assert(models.contains(expectedMessages)) {
-      "Expected Messages dictionary model (Map<String, Message>) to be generated."
+      "Expected $models to contain $expectedMessages"
     }
   }
 }

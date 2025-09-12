@@ -233,6 +233,8 @@ sealed interface Model {
     override val description: String?,
     val properties: List<Property>,
     val inline: List<Model>,
+    /** When true, indicates additionalProperties: true (Any JSON) is allowed and should be handled. */
+    val additionalProperties: Boolean = false,
   ) : Model {
     data class Property(
       val baseName: String,

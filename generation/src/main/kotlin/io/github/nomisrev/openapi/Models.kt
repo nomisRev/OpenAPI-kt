@@ -14,6 +14,7 @@ import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
+import com.squareup.kotlinpoet.TypeAliasSpec
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.buildCodeBlock
@@ -43,18 +44,32 @@ fun Model.toFileSpecOrNull(): FileSpec? =
       FileSpec.builder(`package`, toClassName(model.context).simpleName)
         .addType(model.toTypeSpec())
         .build()
+
     is Model.Enum.Open ->
       FileSpec.builder(`package`, toClassName(model.context).simpleName)
         .addType(model.toTypeSpec())
         .build()
+
+    
+    is Model.Object if model.properties.isEmpty() && model.additionalProperties ->
+      FileSpec.builder(`package`, toClassName(model.context).simpleName)
+        .addTypeAlias(
+          TypeAliasSpec.builder(
+            toClassName(model.context).simpleName,
+            ClassName("kotlinx.serialization.json", "JsonObject")
+          ).build()
+        ).build()
+
     is Model.Object ->
       FileSpec.builder(`package`, toClassName(model.context).simpleName)
         .addType(model.toTypeSpec())
         .build()
+
     is Model.Union ->
       FileSpec.builder(`package`, toClassName(model.context).simpleName)
         .addType(model.toTypeSpec())
         .build()
+
     is Model.OctetStream,
     is Model.Primitive,
     is Model.FreeFormJson,
@@ -69,6 +84,7 @@ fun Model.toTypeSpecOrNull(): TypeSpec? {
       is Model.FreeFormJson,
       is Model.Primitive,
       is Model.Reference -> null
+
       is Collection -> toTypeSpecOrNull(model.inner)
       is Model.Enum.Closed -> model.toTypeSpec()
       is Model.Enum.Open -> model.toTypeSpec()
@@ -88,15 +104,18 @@ private fun Model.Union.toTypeSpec(): TypeSpec {
         buffer.add(ListSerializer)
         "%M(${inner.placeholder(buffer)})"
       }
+
       is Collection.Map -> {
         buffer.add(MapSerializer)
         "%M(${key.placeholder(buffer)}, ${inner.placeholder(buffer)})"
       }
+
       is Model.Primitive -> {
         buffer.add(toTypeName())
         buffer.add(MemberName("kotlinx.serialization.builtins", "serializer", isExtension = true))
         "%T.%M()"
       }
+
       else -> {
         buffer.add(toTypeName())
         "%T.serializer()"
@@ -224,28 +243,187 @@ private fun Model.Union.toTypeSpec(): TypeSpec {
 }
 
 context(OpenAPIContext)
-private fun Model.Object.toTypeSpec(): TypeSpec =
-  TypeSpec.dataClass(
-    toClassName(context),
-    properties.map { prop ->
-      ParameterSpec(toPropName(prop), prop.model.toTypeName().copy(nullable = prop.isNullable)) {
-        if (toPropName(prop) != prop.baseName)
-          addAnnotation(annotationSpec<SerialName> { addMember("%S", prop.baseName) })
-        description(prop.description)
-        defaultValue(prop.model)
-        val hasDefault = prop.model.hasDefault()
-        if (prop.isRequired && hasDefault) addAnnotation(annotationSpec<Required>())
-        else if (!prop.isRequired && !hasDefault && prop.isNullable) defaultValue("null")
+private fun Model.Object.toTypeSpec(): TypeSpec = run {
+  fun Model.placeholder(buffer: MutableList<Any>): String =
+    when (this) {
+      is Collection.List -> {
+        buffer.add(ListSerializer)
+        "%M(${inner.placeholder(buffer)})"
       }
-    },
+
+      is Collection.Map -> {
+        buffer.add(MapSerializer)
+        "%M(${key.placeholder(buffer)}, ${inner.placeholder(buffer)})"
+      }
+
+      is Model.Primitive -> {
+        buffer.add(toTypeName())
+        buffer.add(MemberName("kotlinx.serialization.builtins", "serializer", isExtension = true))
+        "%T.%M()"
+      }
+
+      else -> {
+        buffer.add(toTypeName())
+        "%T.serializer()"
+      }
+    }
+
+  fun Model.serializer(): Pair<String, Array<Any>> {
+    val buffer = mutableListOf<Any>()
+    val placeholder = placeholder(buffer)
+    return Pair(placeholder, buffer.toTypedArray())
+  }
+
+  val params = mutableListOf<ParameterSpec>()
+  params += properties.map { prop ->
+    ParameterSpec(toPropName(prop), prop.model.toTypeName().copy(nullable = prop.isNullable)) {
+      if (toPropName(prop) != prop.baseName)
+        addAnnotation(annotationSpec<SerialName> { addMember("%S", prop.baseName) })
+      description(prop.description)
+      defaultValue(prop.model)
+      val hasDefault = prop.model.hasDefault()
+      if (prop.isRequired && hasDefault) addAnnotation(annotationSpec<Required>())
+      else if (!prop.isRequired && !hasDefault && prop.isNullable) defaultValue("null")
+    }
+  }
+  if (additionalProperties) {
+    params += ParameterSpec(
+      name = "additionalProperties",
+      type = ClassName("kotlinx.serialization.json", "JsonObject").copy(nullable = true)
+    ) { defaultValue("null") }
+  }
+
+  if (params.isEmpty()) TypeSpec.objectBuilder(toClassName(context))
+    .addAnnotation(annotationSpec<Serializable>())
+    .addModifiers(KModifier.DATA)
+    .build()
+  else TypeSpec.dataClass(
+    toClassName(context),
+    params,
   ) {
     // Cannot serialize binary, these are used for multipart requests.
     // This occurs when request bodies are defined using top-level schemas.
-    if (properties.none { it.model is Model.OctetStream })
-      addAnnotation(annotationSpec<Serializable>())
+    if (properties.none { it.model is Model.OctetStream }) {
+      if (additionalProperties) {
+        addAnnotation(
+          annotationSpec<Serializable> {
+            addMember("with = %T::class", toClassName(context).nested("Serializer"))
+          }
+        )
+      } else addAnnotation(annotationSpec<Serializable>())
+    }
     addTypes(inline.mapNotNull { it.toTypeSpecOrNull() })
+    if (additionalProperties) {
+      addType(
+        TypeSpec.objectBuilder("Serializer")
+          .addSuperinterface(KSerializer::class.asTypeName().parameterizedBy(toClassName(context)))
+          .addAnnotation(SerializationOptIn)
+          .addProperty(
+            PropertySpec("descriptor", SerialDescriptor) {
+              addModifiers(KModifier.OVERRIDE)
+              initializer(
+                buildCodeBlock {
+                  add(
+                    "%M(%S, %T.STRING)",
+                    PrimitiveSerialDescriptor,
+                    toClassName(context).simpleName,
+                    PrimitiveKind::class.asTypeName()
+                  )
+                }
+              )
+            }
+          )
+          .addFunction(
+            FunSpec.builder("serialize")
+              .addModifiers(KModifier.OVERRIDE)
+              .addParameter("encoder", Encoder::class.asTypeName())
+              .addParameter("value", toClassName(context))
+              .addCode(
+                buildCodeBlock {
+                  addStatement(
+                    "val jsonEncoder = encoder as %T",
+                    ClassName("kotlinx.serialization.json", "JsonEncoder")
+                  )
+                  addStatement("val json = jsonEncoder.json")
+                  addStatement("val known = mutableMapOf<String, %T>()", JsonElement::class.asTypeName())
+                  // encode known properties
+                  properties.forEach { prop ->
+                    val (ph, args) = prop.model.serializer()
+                    add("known[%S] = json.encodeToJsonElement(", prop.baseName)
+                    add(ph, *args)
+                    add(", value.%L)\n", toPropName(prop))
+                  }
+                  addStatement("val extras = value.additionalProperties")
+                  beginControlFlow("if (extras != null)")
+                  addStatement("for ((k, v) in extras) if (!known.containsKey(k)) known[k] = v")
+                  endControlFlow()
+                  addStatement(
+                    "jsonEncoder.encodeSerializableValue(%T.serializer(), %T(known))",
+                    JsonElement::class.asTypeName(),
+                    ClassName("kotlinx.serialization.json", "JsonObject"),
+                  )
+                }
+              )
+              .build()
+          )
+          .addFunction(
+            FunSpec.builder("deserialize")
+              .addModifiers(KModifier.OVERRIDE)
+              .addParameter("decoder", Decoder::class.asTypeName())
+              .returns(toClassName(context))
+              .addCode(
+                buildCodeBlock {
+                  addStatement(
+                    "val jsonDecoder = decoder as %T",
+                    ClassName("kotlinx.serialization.json", "JsonDecoder")
+                  )
+                  addStatement(
+                    "val element = jsonDecoder.decodeSerializableValue(%T.serializer())",
+                    JsonElement::class.asTypeName()
+                  )
+                  addStatement("val obj = element.jsonObject")
+                  // decode known properties if present, else throw if required/non-null; else null
+                  properties.forEach { prop ->
+                    addStatement("val %LPresent = obj.containsKey(%S)", toPropName(prop), prop.baseName)
+                    val (ph, args) = prop.model.serializer()
+                    beginControlFlow("val %L = if (%LPresent)", toParamName(Named(prop.baseName)), toPropName(prop))
+                    add("jsonDecoder.json.decodeFromJsonElement(")
+                    add(ph, *args)
+                    add(", obj[%S]!!)\n", prop.baseName)
+                    nextControlFlow("else")
+                    if (prop.isRequired || !prop.isNullable) {
+                      addStatement(
+                        "throw %T(%S)",
+                        IllegalStateException::class.asTypeName(),
+                        "Missing required property: ${prop.baseName}"
+                      )
+                    } else {
+                      addStatement("null")
+                    }
+                    endControlFlow()
+                  }
+                  // collect additional props
+                  addStatement("val knownKeys = setOf(%L)", properties.joinToString { "\"${it.baseName}\"" })
+                  addStatement(
+                    "val extras = %T(obj.filterKeys { it !in knownKeys })",
+                    ClassName("kotlinx.serialization.json", "JsonObject")
+                  )
+                  // build instance
+                  add("return %T(", toClassName(context))
+                  add(properties.joinToString { toParamName(Named(it.baseName)) })
+                  add(
+                    ", additionalProperties = extras)"
+                  )
+                }
+              )
+              .build()
+          )
+          .build()
+      )
+    }
     properties.requirement()
   }
+}
 
 data class Requirement(val prop: Model.Object.Property, val predicate: String, val message: String)
 
@@ -258,8 +436,8 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
       is Model.OctetStream,
       is Model.Primitive.Unit,
       is Model.Union,
-      is Model.Object,
-      is Model.Reference -> emptyList()
+      is Model.Object -> emptyList()
+
       is Collection -> {
         val constraint = model.constraint ?: return@flatMap emptyList()
         val paramName = toParamName(Named(property.baseName))
@@ -276,6 +454,7 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
                   )
                 )
             }
+
           else ->
             when (constraint.maxItems) {
               Int.MAX_VALUE ->
@@ -286,6 +465,7 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
                     "$paramName should have at least ${constraint.minItems} elements",
                   )
                 )
+
               else ->
                 listOf(
                   Requirement(
@@ -299,17 +479,21 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
       }
 
       // TODO Implement Object constraints
-      is Model.FreeFormJson -> emptyList()
+      is Model.FreeFormJson,
+      is Model.Reference -> emptyList()
+
       is Model.Primitive.Double ->
         when (val constraint = model.constraint) {
           null -> emptyList()
           else -> listOfNotNull(property.numberRequirement(constraint) { it })
         }
+
       is Model.Primitive.Int ->
         when (val constraint = model.constraint) {
           null -> emptyList()
           else -> listOfNotNull(property.intRequirement(constraint))
         }
+
       is Model.Primitive.String ->
         when (val constraint = model.constraint) {
           null -> emptyList()
@@ -327,6 +511,7 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
                         "$paramName should have a ${"length"} of at most ${constraint.maxLength}",
                       )
                   }
+
                 else ->
                   when (constraint.maxLength) {
                     Int.MAX_VALUE ->
@@ -335,6 +520,7 @@ private fun Iterable<Model.Object.Property>.requirements(): List<Requirement> =
                         "$paramName.${"length"} >= ${constraint.minLength}",
                         "$paramName should have a ${"length"} of at least ${constraint.minLength}",
                       )
+
                     else ->
                       Requirement(
                         property,
@@ -374,6 +560,7 @@ private fun Iterable<Model.Object.Property>.requirement() {
           addStatement("$nullable require(%L) { %S }", r.predicate, r.message)
         }
       )
+
     else -> {
       addInitializerBlock(
         buildCodeBlock {
@@ -426,10 +613,12 @@ private fun Model.Object.Property.numberRequirement(
         Double.POSITIVE_INFINITY -> null
         else -> Requirement(this, "$paramName $max $maximum", "$paramName should be $maxM $maximum")
       }
+
     else ->
       when (constraint.maximum) {
         Double.POSITIVE_INFINITY ->
           Requirement(this, "$minimum $min $paramName", "$paramName should be $minM $minimum")
+
         else ->
           Requirement(
             this,
@@ -542,11 +731,11 @@ private fun Model.Enum.Open.toTypeSpec(): TypeSpec {
               PropertySpec("descriptor", SerialDescriptor) {
                 addModifiers(KModifier.OVERRIDE)
                 addAnnotation(
-                    AnnotationSpec.builder(
-                        ClassName("kotlinx.serialization", "InternalSerializationApi")
-                      )
-                      .build()
+                  AnnotationSpec.builder(
+                    ClassName("kotlinx.serialization", "InternalSerializationApi")
                   )
+                    .build()
+                )
                   .initializer(
                     CodeBlock.builder()
                       .addStatement(

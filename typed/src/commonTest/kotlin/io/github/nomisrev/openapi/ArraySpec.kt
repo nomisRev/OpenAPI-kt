@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi
 import io.github.nomisrev.openapi.ReferenceOr.Companion.value
 import io.github.nomisrev.openapi.Schema.Type
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
@@ -16,11 +17,16 @@ import kotlin.test.assertFailsWith
 class ArraySpec {
   @Test
   fun items_is_required_for_arrays() {
-    val ex =
-      assertFailsWith<IllegalArgumentException> {
-        Schema(type = Type.Basic.Array).toModel("ArrayWithoutItems")
-      }
-    assertEquals("Array type requires items to be defined.", ex.message)
+    val actual = Schema(type = Type.Basic.Array).toModel("ArrayWithoutItems")
+    assertEquals(
+      Model.Collection.List(
+        inner = Model.FreeFormJson(null, null),
+        default = null,
+        description = null,
+        null
+      ),
+      actual
+    )
   }
 
   @Test

@@ -234,18 +234,24 @@ private fun Route.addFunction(implemented: Boolean) {
 
 context(OpenAPIContext, CodeBlock.Builder)
 fun Route.addPathAndContent() {
-  val replace =
-    input
-      .mapNotNull {
-        if (it.input == Parameter.Input.Path)
-          ".replace(\"{${it.name}}\", ${toParamName(Named(it.name))})"
-        else null
+  val parts =
+    path.split("/")
+      .filter { it.isNotEmpty() }
+      .mapIndexed { index, part ->
+        if (part.startsWith("{") && part.endsWith("}")) {
+          val paramName = part.removeSurrounding("{", "}")
+          when (val param = input.find { it.name == paramName }) {
+            null -> part
+            else if param.type !is Model.Primitive.String -> $$"\"$$${toParamName(Named(param.name))}\""
+            else -> toParamName(Named(param.name))
+          }
+        } else "\"$part\""
       }
-      .joinToString(separator = "")
+
   addStatement(
-    "url { %M(%S$replace) }",
+    "url { %M(\n%L\n) }",
     MemberName("io.ktor.http", "path", isExtension = true),
-    path,
+    parts.joinToString()
   )
   addContentType(body)
 }
@@ -304,16 +310,20 @@ fun Route.addBody() {
           withIndent {
             when (body) {
               is Route.Body.Multipart.Value ->
-                body.parameters.map { addStatement("appendAll(%S, %L)", it.name, it.name) }
+                body.parameters.map { addStatement("appendAll(%S, %L)", it.name, toParamName(Named(it.name))) }
 
               is Route.Body.Multipart.Ref -> {
-                val obj =
-                  requireNotNull(body.value as? Model.Object) {
-                    "Only supports objects for FreeForm Multipart"
-                  }
                 val name = toParamName(Named(body.name))
-                obj.properties.forEach { prop ->
-                  addStatement("appendAll(%S, $name.%L)", toPropName(prop), toPropName(prop))
+                when (val v = body.value) {
+                  is Model.Object -> {
+                    v.properties.forEach { prop ->
+                      addStatement("appendAll(%S, $name.%L)", toPropName(prop), toPropName(prop))
+                    }
+                  }
+                  else -> {
+                    // Single field multipart (non-object). Append the single parameter directly.
+                    addStatement("appendAll(%S, %L)", body.name, name)
+                  }
                 }
               }
             }
@@ -333,7 +343,7 @@ fun Route.params(defaults: Boolean): List<ParameterSpec> =
       toParamName(Named(input.name)),
       input.type.toTypeName().copy(nullable = !input.isRequired),
     ) {
-      input.description?.let { addKdoc(it) }
+      input.description?.let { addKdoc("%S", it) }
       if (defaults) {
         defaultValue(input.type)
         if (!input.isRequired && !input.type.hasDefault()) {
@@ -380,12 +390,12 @@ fun Route.requestBody(defaults: Boolean): List<ParameterSpec> {
 
 context(OpenAPIContext, FunSpec.Builder, TypeSpecHolder.Builder<*>)
 fun Route.returnType() {
-  when (val success = returnType.success) {
+  val returnType = when (val success = returnType.success) {
     null -> HttpResponse
     else if success.types.entries.size == 1 ->
       when (val model = success.types.entries.first().value) {
         is Model.OctetStream -> HttpResponse
-        else -> returns(model.toTypeName())
+        else -> model.toTypeName()
       }
 
     else if success.types.entries.size > 1 -> {
@@ -394,17 +404,19 @@ fun Route.returnType() {
         TypeSpec.interfaceBuilder(response)
           .addModifiers(KModifier.SEALED)
           .addTypes(
-            returnType.entries.map { (status: HttpStatusCode, type) ->
-              val model = type.types.entries.first().value
-              val case = ClassName(`package`, status.description.split(" ").joinToString(""))
-              TypeSpec.dataClass(case, listOf(ParameterSpec("value", model.toTypeName())))
+            returnType.entries.mapNotNull { (status, type) ->
+              type.types.entries.firstOrNull()?.value?.let { model ->
+                val case = ClassName(`package`, status.description.split(" ").joinToString(""))
+                TypeSpec.dataClass(case, listOf(ParameterSpec("value", model.toTypeName())))
+              }
             }
           )
           .build()
       )
-      returns(response)
+      response
     }
 
     else -> HttpResponse
   }
+  returns(returnType)
 }
