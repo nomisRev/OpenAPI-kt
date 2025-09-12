@@ -90,6 +90,7 @@ private class Nam(private val `package`: String) : Naming {
     }
 
   override fun toEnumValueName(rawToName: String): String {
+    if (rawToName == "*") return "STAR"
     val pascalCase = rawToName.toPascalCase()
     return if (pascalCase.isValidClassname()) pascalCase
     else {
@@ -97,6 +98,7 @@ private class Nam(private val `package`: String) : Naming {
         pascalCase
           .run { if (startsWith("[")) drop(1) else this }
           .run { if (endsWith("]")) dropLast(1) else this }
+
       if (sanitise.isValidClassname()) sanitise else "`$sanitise`"
     }
   }
