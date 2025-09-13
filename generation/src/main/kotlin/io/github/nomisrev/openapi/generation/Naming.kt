@@ -77,20 +77,20 @@ private class Nam(private val `package`: String) : Naming {
         val inner = toClassName(context.inner)
         ClassName(`package`, outer.simpleNames + inner.simpleNames)
       }
-      is NamingContext.Named -> ClassName(`package`, context.name.toPascalCase().dropArraySyntax())
+      is NamingContext.Named -> ClassName(`package`, context.name.toPascalCase().dropArraySyntaxOrDollar())
       is NamingContext.RouteParam -> {
         requireNotNull(context.operationId) { "Need operationId to generate enum name" }
         ClassName(
           `package`,
           // $OuterClass$MyOperation$Param, this allows for multiple custom objects in a single
           // operation
-          "${context.operationId.toPascalCase()}${context.name.toPascalCase()}".dropArraySyntax(),
+          "${context.operationId.toPascalCase()}${context.name.toPascalCase()}".dropArraySyntaxOrDollar(),
         )
       }
       is NamingContext.RouteBody ->
         ClassName(
           `package`,
-          "${context.name.toPascalCase()}${context.postfix.toPascalCase()}".dropArraySyntax(),
+          "${context.name.toPascalCase()}${context.postfix.toPascalCase()}".dropArraySyntaxOrDollar(),
         )
     }
 
@@ -109,13 +109,13 @@ private class Nam(private val `package`: String) : Naming {
   }
 
   override fun toPropName(param: Model.Object.Property): String =
-    param.baseName.sanitize().dropArraySyntax().toCamelCase()
+    param.baseName.sanitize().dropArraySyntaxOrDollar().toCamelCase()
 
   private fun toParamName(className: ClassName): String =
     className.simpleName.replaceFirstChar { it.lowercase() }
 
   override fun toParamName(named: NamingContext.Named): String =
-    named.name.toCamelCase().dropArraySyntax()
+    named.name.toCamelCase().dropArraySyntaxOrDollar()
 
   override fun toFunName(route: Route): String =
     when (val operationId = route.operationId) {
@@ -126,8 +126,14 @@ private class Nam(private val `package`: String) : Naming {
   override fun toResponseName(route: Route): ClassName =
     ClassName(`package`, toFunName(route).replaceFirstChar { it.titlecase() })
 
-  private val arrayPattern = """\[(?:\d*|])?]""".toRegex()
-  private fun String.dropArraySyntax(): String = replace(arrayPattern, "")
+  /**
+   * These are fixes for common issues related to:
+   *  - `[]`, `[]` and `[x]` for issues like `files[0]` in YouTrack, some OpenAPI names end with `[]`
+   *  - `$` for things like `$type` discriminator.
+   */
+  private val arrayPattern = """\[(?:\d*|])?]|\$""".toRegex()
+  private fun String.dropArraySyntaxOrDollar(): String =
+    replace(arrayPattern, "")
 
   override fun toCaseClassName(union: Model.Union, case: Model): ClassName =
     toCaseClassName(union, case, emptyList())
