@@ -2,13 +2,6 @@ package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.ClassName
 import io.github.nomisrev.openapi.Model.Collection
-import java.util.*
-import net.pearx.kasechange.splitToWords
-import net.pearx.kasechange.splitter.WordSplitterConfig
-import net.pearx.kasechange.splitter.WordSplitterConfigurable
-import net.pearx.kasechange.toCamelCase
-import net.pearx.kasechange.toPascalCase
-
 fun Naming(`package`: String): Naming = Nam(`package`)
 
 context(Naming)
@@ -37,19 +30,36 @@ interface Naming {
 }
 
 private class Nam(private val `package`: String) : Naming {
+  private fun splitToWords(string: String): List<String> {
+    val boundaries = setOf(' ', '-', '_', '.', '/', '[', '*', ']')
+    val list = mutableListOf<String>()
+    val word = StringBuilder()
+    for (index in string.indices) {
+      val ch = string[index]
+      if (ch in boundaries) {
+        list.add(word.toString().also { word.clear() })
+      } else {
+        if (ch.isDigitOrUpperCase()) {
+          val hasPrev = index > 0
+          val hasNext = index < string.length - 1
+          val prevLowerCase = hasPrev && string[index - 1].isLowerCase()
+          val prevDigitUpperCase = hasPrev && string[index - 1].isDigitOrUpperCase()
+          val nextLowerCase = hasNext && string[index + 1].isLowerCase()
+          if (prevLowerCase || (prevDigitUpperCase && nextLowerCase)) {
+            list.add(word.toString().also { word.clear() })
+          }
+        }
+        word.append(ch)
+      }
+    }
+    list.add(word.toString().also { word.clear() })
+    return list
+  }
 
-  // OpenAI adds '/', so this WordSplitter takes that into account
-  private val wordSplitter =
-    WordSplitterConfigurable(
-      WordSplitterConfig(
-        boundaries = setOf(' ', '-', '_', '.', '/'),
-        handleCase = true,
-        treatDigitsAsUppercase = true,
-      )
-    )
+  private fun Char.isDigitOrUpperCase(): Boolean = isDigit() || isUpperCase()
 
   private fun String.toPascalCase(): String =
-    splitToWords(wordSplitter).joinToString("") { word ->
+    splitToWords(this).joinToString("") { word ->
       word.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
     }
 
@@ -80,6 +90,7 @@ private class Nam(private val `package`: String) : Naming {
     }
 
   override fun toEnumValueName(rawToName: String): String {
+    if (rawToName == "*") return "STAR"
     val pascalCase = rawToName.toPascalCase()
     return if (pascalCase.isValidClassname()) pascalCase
     else {
@@ -87,6 +98,7 @@ private class Nam(private val `package`: String) : Naming {
         pascalCase
           .run { if (startsWith("[")) drop(1) else this }
           .run { if (endsWith("]")) dropLast(1) else this }
+
       if (sanitise.isValidClassname()) sanitise else "`$sanitise`"
     }
   }
@@ -97,7 +109,8 @@ private class Nam(private val `package`: String) : Naming {
   private fun toParamName(className: ClassName): String =
     className.simpleName.replaceFirstChar { it.lowercase() }
 
-  override fun toParamName(named: NamingContext.Named): String = named.name.toCamelCase()
+  override fun toParamName(named: NamingContext.Named): String =
+    named.name.toCamelCase().dropArraySyntax()
 
   override fun toFunName(route: Route): String =
     when (val operationId = route.operationId) {
@@ -108,8 +121,8 @@ private class Nam(private val `package`: String) : Naming {
   override fun toResponseName(route: Route): ClassName =
     ClassName(`package`, toFunName(route).replaceFirstChar { it.titlecase() })
 
-  // Workaround for OpenAI
-  private fun String.dropArraySyntax(): String = replace("[]", "")
+  private val arrayPattern = """\[(?:\d*|])?]""".toRegex()
+  private fun String.dropArraySyntax(): String = replace(arrayPattern, "")
 
   override fun toCaseClassName(union: Model.Union, case: Model): ClassName =
     toCaseClassName(union, case, emptyList())
