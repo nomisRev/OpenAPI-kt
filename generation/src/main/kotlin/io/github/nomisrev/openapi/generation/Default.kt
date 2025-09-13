@@ -31,8 +31,6 @@ private fun hasDefault(model: Collection, default: List<String>?): Boolean = whe
   else -> true
 }
 
-private val TQUOTE = "\"\"\""
-
 context(OpenAPIContext)
 fun ParameterSpec.Builder.defaultValue(model: Model): ParameterSpec.Builder = apply {
   when (model) {
@@ -77,8 +75,11 @@ fun ParameterSpec.Builder.defaultValue(model: Model): ParameterSpec.Builder = ap
 
     is Model.Primitive.Unit -> defaultValue("Unit")
     is Model.Primitive.String if model.default != null ->
-      defaultValue($$$"""$$$$$TQUOTE$$${model.default}$$$TQUOTE""")
+      defaultValue(stringCodeBlock(model.default!!))
 
     is Model.Primitive -> model.default()?.let { defaultValue(it) }
   }
 }
+
+
+

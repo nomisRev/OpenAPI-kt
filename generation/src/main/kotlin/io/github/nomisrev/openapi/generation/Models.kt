@@ -281,7 +281,7 @@ private fun Model.Object.toTypeSpec(): TypeSpec = run {
   params += properties.map { prop ->
     ParameterSpec(toPropName(prop), prop.model.toTypeName().copy(nullable = prop.isNullable)) {
       if (toPropName(prop) != prop.baseName)
-        addAnnotation(annotationSpec<SerialName> { addMember("%S", prop.baseName) })
+        addAnnotation(annotationSpec<SerialName> { addMember(stringCodeBlock(prop.baseName)) })
       description(prop.description)
       defaultValue(prop.model)
       val hasDefault = prop.model.hasDefault()
@@ -650,7 +650,7 @@ private fun Model.Enum.Closed.toTypeSpec(): TypeSpec {
           addEnumConstant(
             valueName,
             TypeSpec.anonymousClassBuilder()
-              .addAnnotation(annotationSpec<SerialName> { addMember("\"$rawName\"") })
+              .addAnnotation(annotationSpec<SerialName> { addMember(stringCodeBlock(rawName)) })
               .apply {
                 // If we're `9...` we need to drop backticks, and prefix with `_`
                 if (Regex("`[0-9]").matchesAt(valueName, 0))

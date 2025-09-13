@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi.generation
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.BOOLEAN
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.DOUBLE
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.INT
@@ -21,6 +22,12 @@ import com.squareup.kotlinpoet.asTypeName
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Collection
 import kotlinx.serialization.json.JsonElement
+
+private val TQUOTE = "\"\"\""
+
+fun stringCodeBlock(value: String): CodeBlock =
+  if (value.contains("$")) CodeBlock.of($$$"""$$$$$TQUOTE$$$value$$$TQUOTE""")
+  else CodeBlock.of("%S", value)
 
 context(OpenAPIContext)
 fun Model.toTypeName(): TypeName =

@@ -12,22 +12,22 @@ internal fun Resolved<Schema>.toModel(context: NamingContext): Resolved<Model> =
   when (this) {
     is Resolved.Ref -> {
       // Only yield a Model.Reference when we detect an actual recursive loop back to the current anchor.
-      val isRecursiveRef = ctx.currentAnchor?.let { (anchorName, anchorSchema) ->
-        // Consider it recursive if the referenced schema object is the same anchor schema and names match.
-        anchorName == name && anchorSchema == value
-      } ?: false
-      if (isRecursiveRef || ctx.expanding.contains(name)) {
-        val desc = value.description.get()
-        Resolved.Ref(name, Model.Reference(Named(name), desc))
-      } else {
-        // Inline non-recursive refs by transforming the target schema as a value.
-        // Use a new transformer that tracks this name as currently expanding to avoid cycles.
-        val next = TypedApiContext(ctx.openAPI, ctx.currentAnchor, ctx.expanding + name)
-        val model = with(next) {
-          Resolved.Value(value).toModel(Named(name)).value
-        }
-        Resolved.Value(model)
-      }
+//      val isRecursiveRef = ctx.currentAnchor?.let { (anchorName, anchorSchema) ->
+//         Consider it recursive if the referenced schema object is the same anchor schema and names match.
+//        anchorName == name && anchorSchema == value
+//      } ?: false
+//      if (isRecursiveRef || ctx.expanding.contains(name)) {
+      val desc = value.description.get()
+      Resolved.Ref(name, Model.Reference(Named(name), desc))
+//      } else {
+//         Inline non-recursive refs by transforming the target schema as a value.
+//         Use a new transformer that tracks this name as currently expanding to avoid cycles.
+//        val next = TypedApiContext(ctx.openAPI, ctx.currentAnchor, ctx.expanding + name)
+//        val model = with(next) {
+//          Resolved.Value(value).toModel(Named(name)).value
+//        }
+//        Resolved.Value(model)
+//      }
     }
 
     is Resolved.Value -> {
