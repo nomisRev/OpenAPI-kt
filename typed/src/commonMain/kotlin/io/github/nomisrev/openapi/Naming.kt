@@ -30,8 +30,11 @@ sealed interface NamingContext {
 
   data class Named(val name: String) : NamingContext
 
-  data class RouteParam(val name: String, val operationId: String, val postfix: String) :
-    NamingContext
+  data class RouteParam(
+    val name: String,
+    val operationId: String,
+    val postfix: String
+  ) : NamingContext
 
   data class RouteBody(val name: String, val postfix: String) : NamingContext
 }
