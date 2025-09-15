@@ -8,82 +8,73 @@ import io.github.nomisrev.openapi.Schema.Type
 
 //<editor-fold desc="toModel">
 context(ctx: TypedApiContext)
-internal fun Resolved<Schema>.toModel(context: NamingContext): Resolved<Model> =
-  when (this) {
-    is Resolved.Ref -> {
-      // Only yield a Model.Reference when we detect an actual recursive loop back to the current anchor.
-//      val isRecursiveRef = ctx.currentAnchor?.let { (anchorName, anchorSchema) ->
-//         Consider it recursive if the referenced schema object is the same anchor schema and names match.
-//        anchorName == name && anchorSchema == value
-//      } ?: false
-//      if (isRecursiveRef || ctx.expanding.contains(name)) {
-      val desc = value.description.get()
-      Resolved.Ref(name, Model.Reference(Named(name), desc))
-//      } else {
-//         Inline non-recursive refs by transforming the target schema as a value.
-//         Use a new transformer that tracks this name as currently expanding to avoid cycles.
-//        val next = TypedApiContext(ctx.openAPI, ctx.currentAnchor, ctx.expanding + name)
-//        val model = with(next) {
-//          Resolved.Value(value).toModel(Named(name)).value
-//        }
-//        Resolved.Value(model)
-//      }
-    }
-
-    is Resolved.Value -> {
-      val schema: Schema = value
-      val nextContext =
-        if (schema.recursiveAnchor == true) {
-          val anchorName = (context as? Named)?.name
-          if (anchorName != null) TypedApiContext(ctx.openAPI, anchorName to schema, ctx.expanding)
-          else ctx
-        } else ctx
-      with(nextContext) {
-        val model =
-          when {
-            schema.isOpenEnumeration() -> schema.toOpenEnum(
-              context,
-              schema.anyOf!!.firstNotNullOf { it.resolve().value.enum }.filterNotNull(),
-            )
-
-            value.anyOf != null && value.anyOf?.size == 2
-              && value.anyOf!!.any { it.resolve().value.type == Type.Basic.Null } -> {
-              value.anyOf!!.single { it.resolve().value.type != Type.Basic.Null }
-                .resolve()
-                .copy { it.copy(nullable = true) }
-                .toModel(context)
-                .value
-            }
-
-            value.anyOf != null && value.anyOf?.size == 1 -> {
-              val inner = value.anyOf!![0].resolve().toModel(context).value
-              inner.withDescriptionIfNull(schema.description.get())
-            }
-
-            value.oneOf != null && value.oneOf?.size == 1 -> {
-              val inner = value.oneOf!![0].resolve().toModel(context).value
-              inner.withDescriptionIfNull(schema.description.get())
-            }
-
-            schema.anyOf != null -> schema.toUnion(context, schema.anyOf!!)
-            schema.oneOf != null && schema.properties != null -> schema.toObject(context)
-            schema.oneOf != null -> schema.toUnion(context, schema.oneOf!!)
-            schema.allOf != null -> allOf(schema, context)
-            schema.enum != null -> {
-              val enums = schema.enum!!
-              val hasNull = enums.any { it == null }
-              val filtered = enums.filterNotNull()
-              val effectiveSchema =
-                if (hasNull && schema.nullable != true) schema.copy(nullable = true) else schema
-              effectiveSchema.toEnum(context, filtered)
-            }
-
-            else -> schema.type(context)
-          }
-        Resolved.Value(model)
-      }
-    }
+internal fun Resolved<Schema>.toModel(
+  context: NamingContext
+): Resolved<Model> = when (this) {
+  is Resolved.Value -> Resolved.Value(value.toModel(context))
+  is Resolved.Ref -> {
+    val desc = value.description.get()
+    Resolved.Ref(name, Model.Reference(Named(name), desc))
   }
+}
+
+context(ctx: TypedApiContext)
+fun Schema.context(context: NamingContext): TypedApiContext {
+  val anchorName = (context as? Named)?.name
+  return when {
+    recursiveAnchor == true && anchorName != null ->
+      TypedApiContext(ctx.openAPI, anchorName to this, ctx.expanding)
+
+    else -> ctx
+  }
+}
+
+context(ctx: TypedApiContext)
+internal fun Schema.toModel(context: NamingContext): Model = with(context(context)) {
+  when {
+    isOpenEnumeration() -> toOpenEnum(
+      context,
+      anyOf!!.firstNotNullOf {
+        it.resolve().value.enum
+
+      }.filterNotNull(),
+    )
+
+    anyOf != null && anyOf?.size == 2
+      && anyOf!!.any { it.resolve().value.type == Type.Basic.Null } -> {
+      anyOf!!.single { it.resolve().value.type != Type.Basic.Null }
+        .resolve()
+        .copy { it.copy(nullable = true) }
+        .toModel(context)
+        .value
+    }
+
+    anyOf != null && anyOf?.size == 1 -> {
+      val inner = anyOf!![0].resolve().toModel(context).value
+      inner.withDescriptionIfNull(description.get())
+    }
+
+    oneOf != null && oneOf?.size == 1 -> {
+      val inner = oneOf!![0].resolve().toModel(context).value
+      inner.withDescriptionIfNull(description.get())
+    }
+
+    anyOf != null -> toUnion(context, anyOf!!)
+    oneOf != null && properties != null -> toObject(context)
+    oneOf != null -> toUnion(context, oneOf!!)
+    allOf != null -> allOf(this@toModel, context)
+    enum != null -> {
+      val enums = enum!!
+      val hasNull = enums.any { it == null }
+      val filtered = enums.filterNotNull()
+      val effectiveSchema =
+        if (hasNull && nullable != true) copy(nullable = true) else this@toModel
+      effectiveSchema.toEnum(context, filtered)
+    }
+
+    else -> type(context)
+  }
+}
 
 context(ctx: TypedApiContext)
 private fun Schema.type(context: NamingContext): Model =
@@ -635,3 +626,42 @@ private fun Model.withDescriptionIfNull(desc: String?): Model {
 }
 
 private fun Schema.singleDefaultOrNull(): String? = (default as? ExampleValue.Single)?.value
+
+context(ctx: TypedApiContext)
+private fun ReferenceOr<Schema>.resolve(): Resolved<Schema> =
+  when (this) {
+    is ReferenceOr.Value -> Resolved.Value(value)
+    is ReferenceOr.Reference -> {
+      // Handle JSON Schema $recursiveRef: "#" by resolving to the current anchor
+      if (ref == "#") {
+        val (anchorName, anchorSchema) =
+          requireNotNull(ctx.currentAnchor) {
+            "Recursive reference '#' encountered but no active \$recursiveAnchor was found."
+          }
+        Resolved.Ref(anchorName, anchorSchema)
+      } else {
+        val name = ref.drop("#/components/schemas/".length)
+        val schema =
+          requireNotNull(ctx.openAPI.components.schemas[name]) {
+            "Schema $this could not be found in. Is it missing?"
+          }.valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
+        Resolved.Ref(name, schema)
+      }
+    }
+  }
+
+context(ctx: TypedApiContext)
+private tailrec fun ReferenceOr<String>?.get(): String? =
+  when (this) {
+    is ReferenceOr.Value -> value
+    null -> null
+    is ReferenceOr.Reference -> {
+      val name = ref.drop("#/components/schemas/".length).dropLast("/description".length)
+      val schema =
+        requireNotNull(ctx.openAPI.components.schemas[name]) {
+          "Schema $name could not be found in ${ctx.openAPI.components.schemas}. Is it missing?"
+        }
+          .valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
+      schema.description.get()
+    }
+  }

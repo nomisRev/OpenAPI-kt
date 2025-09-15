@@ -1,7 +1,9 @@
 package io.github.nomisrev.openapi.generation
 
 import io.github.nomisrev.openapi.OpenAPI
+import io.github.nomisrev.openapi.TypedApiContext
 import io.github.nomisrev.openapi.models
+import io.github.nomisrev.openapi.registry.ComponentRegistry
 import io.github.nomisrev.openapi.root
 import kotlin.io.path.Path
 import okio.FileSystem
@@ -23,11 +25,14 @@ fun generate(config: GenerationConfig, fileSystem: FileSystem = FileSystem.SYSTE
       "json" -> OpenAPI.Companion.fromJson(rawSpec)
       "yaml",
       "yml" -> OpenAPI.Companion.fromYaml(rawSpec)
+
       else -> throw IllegalArgumentException("Unsupported file extension: $extension")
     }
+  val ctx = TypedApiContext(openAPI)
+  val root = ctx.root(config.name)
+  val models = ctx.models()
+
   with(OpenAPIContext(config)) {
-    val root = openAPI.root(config.name)
-    val models = openAPI.models()
     val modelFileSpecs = models.toFileSpecs()
     val rootFileSpecs = root.toFileSpecs()
     val files = rootFileSpecs + modelFileSpecs + predef() + additionalFiles()

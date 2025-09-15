@@ -766,6 +766,8 @@ class GitHubEdgeCaseNestedTypeNamingSpec {
       ), discriminator = null
     )
 
-    assertEquals(expected, openAPI.models().first())
+    val actual = openAPI.models().find { (it as? Union)?.context == Named("repository-rule-detailed") }
+
+    assertEquals(expected, actual)
   }
 }
