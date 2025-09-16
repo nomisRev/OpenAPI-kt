@@ -2,8 +2,6 @@ package io.github.nomisrev.openapi.generation
 
 import io.github.nomisrev.openapi.OpenAPI
 import io.github.nomisrev.openapi.TypedApiContext
-import io.github.nomisrev.openapi.models
-import io.github.nomisrev.openapi.registry.ComponentRegistry
 import io.github.nomisrev.openapi.root
 import kotlin.io.path.Path
 import okio.FileSystem

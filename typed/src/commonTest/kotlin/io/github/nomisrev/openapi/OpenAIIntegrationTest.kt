@@ -4,7 +4,6 @@ import kotlin.io.path.Path
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.test.Test
-import kotlin.test.assertTrue
 import kotlin.test.fail
 
 class OpenAIIntegrationTest {
@@ -25,6 +24,7 @@ class OpenAIIntegrationTest {
 
     val json = path.readText()
     val openApi = OpenAPI.fromYaml(json)
-    openApi.models()
+    val context = TypedApiContext(openApi)
+    println(context.models())
   }
 }

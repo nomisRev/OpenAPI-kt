@@ -1,7 +1,5 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.registry.ComponentRegistry
-
 /**
  * The context that is used to resolve references and schemas.
  *
@@ -12,23 +10,30 @@ import io.github.nomisrev.openapi.registry.ComponentRegistry
  */
 class TypedApiContext(
   val openAPI: OpenAPI,
-  val currentAnchor: Pair<String, Schema>? = null,
-  val expanding: List<String> = emptyList()
+  val currentAnchor: Pair<String, Schema>? = null
 ) {
-  val registry: ComponentRegistry
-
-  constructor(openAPI: OpenAPI) : this(openAPI, null, emptyList())
-
-  init {
-    val cache = mutableMapOf<String, Model>()
-    openAPI.components.schemas.forEach { (name, reference) ->
+  private val models: Map<String, Model> by lazy {
+    openAPI.components.schemas.mapValues { (name, reference) ->
       val schema = when (reference) {
         is ReferenceOr.Reference -> TODO("Support remote references")
         is ReferenceOr.Value<Schema> -> reference.value
       }
-      cache[name] = schema.toModel(NamingContext.Named(name))
+      // Use ForComponents strategy during registry initialization to create Model.Reference entries
+      schema.toModel(ModelResolutionContext(NamingContext.Named(name), SchemaResolutionStrategy.ForComponents))
     }
-    registry = ComponentRegistry(cache)
   }
+
+  fun get(referenceOr: ReferenceOr.Reference): Model? =
+    models[referenceOr.ref.drop("#/components/schemas/".length)]
+
+  fun schema(referenceOr: ReferenceOr.Reference): Schema =
+    requireNotNull(openAPI.components.schemas[referenceOr.schemaName]) {
+      "Schema $this could not be found in. Is it missing?"
+    }.valueOrNull() ?: throw IllegalStateException("Remote schemas are not yet supported.")
+
+  fun get(name: String): Model? = models[name]
+  fun models(): Set<Model> = models.values.toSet()
 }
 
+internal val ReferenceOr.Reference.schemaName: String
+  get() = ref.drop("#/components/schemas/".length)

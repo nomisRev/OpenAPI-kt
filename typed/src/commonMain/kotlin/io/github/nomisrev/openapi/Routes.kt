@@ -41,14 +41,31 @@ fun TypedApiContext.routes(): List<Route> =
           ?.mapValues { (contentType, mediaType) ->
             val model = when (val schema = mediaType.schema) {
               null -> null
-              is Reference -> registry.get(schema)
+              is Reference -> {
+                val resolved = schema.resolve(SchemaResolutionStrategy.ForInline)
+                resolved.toModel(ModelResolutionContext(
+                  resolved.namedOr { 
+                    context(
+                      RouteParam(
+                        "body",
+                        operationId,
+                        "Request"
+                      )
+                    )
+                  }, 
+                  SchemaResolutionStrategy.ForInline
+                )).value.also { nested += it }
+              }
               is Value<Schema> -> schema.value.toModel(
-                context(
-                  RouteParam(
-                    "body",
-                    operationId,
-                    "Request"
-                  )
+                ModelResolutionContext(
+                  context(
+                    RouteParam(
+                      "body",
+                      operationId,
+                      "Request"
+                    )
+                  ),
+                  SchemaResolutionStrategy.ForInline
                 )
               ).also { nested += it }
             }
@@ -104,9 +121,19 @@ fun TypedApiContext.routes(): List<Route> =
       fun Response.allContentModels(): Map<String, Model> =
         content.mapValues { (_, mediaType) ->
           when (val schema = mediaType.schema) {
-            is Reference -> registry.get(schema)
-            is Value<Schema> -> schema.value.toModel(context(RouteBody(operationId, "Response")))
-              .also { nested += it }
+            is Reference -> {
+              val resolved = schema.resolve(SchemaResolutionStrategy.ForInline)
+              resolved.toModel(ModelResolutionContext(
+                resolved.namedOr { context(RouteBody(operationId, "Response")) }, 
+                SchemaResolutionStrategy.ForInline
+              )).value.also { nested += it }
+            }
+            is Value<Schema> -> schema.value.toModel(
+              ModelResolutionContext(
+                context(RouteBody(operationId, "Response")),
+                SchemaResolutionStrategy.ForInline
+              )
+            ).also { nested += it }
 
             null -> Model.FreeFormJson(description, null)
           }
@@ -138,9 +165,19 @@ fun TypedApiContext.routes(): List<Route> =
     val inputs = operation.parameters.map { p ->
       val param = p.get()
       when (val schema = param.schema) {
-        is Reference -> registry.get(schema)
-        is Value<Schema> -> schema.value.toModel(context(RouteParam(param.name, operationId, "Request")))
-          .also { nested += it }
+        is Reference -> {
+          val resolved = schema.resolve(SchemaResolutionStrategy.ForInline)
+          resolved.toModel(ModelResolutionContext(
+            resolved.namedOr { context(RouteParam(param.name, operationId, "Request")) }, 
+            SchemaResolutionStrategy.ForInline
+          )).value.also { nested += it }
+        }
+        is Value<Schema> -> schema.value.toModel(
+          ModelResolutionContext(
+            context(RouteParam(param.name, operationId, "Request")),
+            SchemaResolutionStrategy.ForInline
+          )
+        ).also { nested += it }
 
         null -> throw IllegalStateException("Parameter without a schema. Generation doesn't know what to do, please open a ticket!")
       }
