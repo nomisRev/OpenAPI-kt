@@ -12,11 +12,6 @@ import kotlin.text.toDoubleOrNull
 //<editor-fold desc="toModel">
 context(ctx: TypedApiContext)
 internal fun Resolved<Schema>.toModel(
-  context: NamingContext
-): Resolved<Model> = toModel(ModelResolutionContext(context, SchemaResolutionStrategy.ForComponents))
-
-context(ctx: TypedApiContext)
-internal fun Resolved<Schema>.toModel(
   resolutionContext: ModelResolutionContext
 ): Resolved<Model> = when (this) {
   is Resolved.Value -> Resolved.Value(value.toModel(resolutionContext))
@@ -53,30 +48,30 @@ internal fun Schema.toModel(
 ): Model {
   val resolutionContext = context(resolutionContext)
   return when {
-    isOpenEnumeration(resolutionContext.strategy) -> toOpenEnum(
+    isOpenEnumeration(resolutionContext.strategy, resolutionContext.currentAnchor) -> toOpenEnum(
       resolutionContext,
       anyOf!!.firstNotNullOf {
-        it.resolve(resolutionContext.strategy).value.enum
+        it.resolve(resolutionContext.strategy, resolutionContext.currentAnchor).value.enum
 
       }.filterNotNull(),
     )
 
     anyOf != null && anyOf?.size == 2
-      && anyOf!!.any { it.resolve(resolutionContext.strategy).value.type == Type.Basic.Null } -> {
-      anyOf!!.single { it.resolve(resolutionContext.strategy).value.type != Type.Basic.Null }
-        .resolve(resolutionContext.strategy)
+      && anyOf!!.any { it.resolve(resolutionContext.strategy, resolutionContext.currentAnchor).value.type == Type.Basic.Null } -> {
+      anyOf!!.single { it.resolve(resolutionContext.strategy, resolutionContext.currentAnchor).value.type != Type.Basic.Null }
+        .resolve(resolutionContext.strategy, resolutionContext.currentAnchor)
         .copy { it.copy(nullable = true) }
         .toModel(resolutionContext)
         .value
     }
 
     anyOf != null && anyOf?.size == 1 -> {
-      val inner = anyOf!![0].resolve(resolutionContext.strategy).toModel(resolutionContext).value
+      val inner = anyOf!![0].resolve(resolutionContext.strategy, resolutionContext.currentAnchor).toModel(resolutionContext).value
       inner.withDescriptionIfNull(description.get())
     }
 
     oneOf != null && oneOf?.size == 1 -> {
-      val inner = oneOf!![0].resolve(resolutionContext.strategy).toModel(resolutionContext).value
+      val inner = oneOf!![0].resolve(resolutionContext.strategy, resolutionContext.currentAnchor).toModel(resolutionContext).value
       inner.withDescriptionIfNull(description.get())
     }
 
@@ -164,12 +159,13 @@ private fun Schema.type(resolutionContext: ModelResolutionContext): Model =
 
 context(ctx: TypedApiContext)
 private fun Schema.collection(resolutionContext: ModelResolutionContext): Model.Collection {
-  val inner = when (val items = items?.resolve(resolutionContext.strategy)) {
+  val inner = when (val items = items?.resolve(resolutionContext.strategy, resolutionContext.currentAnchor)) {
     null -> Model.FreeFormJson(description.get(), null)
     else -> items.toModel(
       ModelResolutionContext(
         items.namedOr { resolutionContext.naming },
-        resolutionContext.strategy
+        resolutionContext.strategy,
+        resolutionContext.currentAnchor
       )
     ).value
   }
@@ -206,7 +202,7 @@ private fun nestedModel(resolved: Resolved<Schema>, resolutionContext: ModelReso
             is Model.Collection ->
               when (value) {
                 is Model.Collection.List ->
-                  when (val inner = resolved.value.items?.resolve(resolutionContext.strategy)) {
+                  when (val inner = resolved.value.items?.resolve(resolutionContext.strategy, resolutionContext.currentAnchor)) {
                     is Resolved.Value -> nestedModel(Resolved.Value(inner.value), resolutionContext)
                     is Resolved.Ref -> null
                     null -> null
@@ -215,7 +211,7 @@ private fun nestedModel(resolved: Resolved<Schema>, resolutionContext: ModelReso
                 is Model.Collection.Map ->
                   when (val ap = resolved.value.additionalProperties) {
                     is AdditionalProperties.PSchema ->
-                      when (val inner = ap.value.resolve(resolutionContext.strategy)) {
+                      when (val inner = ap.value.resolve(resolutionContext.strategy, resolutionContext.currentAnchor)) {
                         is Resolved.Value -> nestedModel(Resolved.Value(inner.value), resolutionContext)
                         is Resolved.Ref -> null
                       }
@@ -249,11 +245,14 @@ private fun <A> Schema.default(label: String, onSingle: (String) -> A?): A? =
   }
 
 context(ctx: TypedApiContext)
-private fun Schema.isOpenEnumeration(strategy: SchemaResolutionStrategy): Boolean {
+private fun Schema.isOpenEnumeration(
+  strategy: SchemaResolutionStrategy,
+  currentAnchor: Pair<String, Schema>? = null
+): Boolean {
   val anyOf = anyOf ?: return false
   return anyOf.size == 2 &&
-    anyOf.count { it.resolve(strategy).value.enum != null } == 1 &&
-    anyOf.count { it.resolve(strategy).value.type == Type.Basic.String } == 2
+    anyOf.count { it.resolve(strategy, currentAnchor).value.enum != null } == 1 &&
+    anyOf.count { it.resolve(strategy, currentAnchor).value.type == Type.Basic.String } == 2
 }
 //</editor-fold>
 
@@ -268,14 +267,14 @@ private fun Schema.toObject(resolutionContext: ModelResolutionContext): Model =
     additionalProperties != null ->
       when (val props = additionalProperties!!) {
         is AdditionalProperties.PSchema -> {
-          val innerResolved = props.value.resolve(resolutionContext.strategy)
+          val innerResolved = props.value.resolve(resolutionContext.strategy, resolutionContext.currentAnchor)
           val isEmpty = (innerResolved as? Resolved.Value)?.value == Schema()
           if (isEmpty) {
             // {} is equivalent to additionalProperties: true -> free-form
             Model.FreeFormJson(description.get(), Constraints.Object(this))
           } else {
             val innerCtx = innerResolved.namedOr { resolutionContext.naming }
-            val innerModel = innerResolved.toModel(ModelResolutionContext(innerCtx, resolutionContext.strategy)).value
+            val innerModel = innerResolved.toModel(ModelResolutionContext(innerCtx, resolutionContext.strategy, resolutionContext.currentAnchor)).value
             Model.Collection.Map(innerModel, description.get(), /* constraint= */ null)
           }
         }
@@ -300,7 +299,7 @@ private fun Schema.toObject(
   val hasAnyAdditional: Boolean = when (val ap = additionalProperties) {
     is Allowed -> ap.value
     is AdditionalProperties.PSchema -> {
-      val inner = ap.value.resolve(resolutionContext.strategy)
+      val inner = ap.value.resolve(resolutionContext.strategy, resolutionContext.currentAnchor)
       (inner as? Resolved.Value)?.value == Schema()
     }
 
@@ -310,13 +309,13 @@ private fun Schema.toObject(
     resolutionContext.naming,
     description.get(),
     properties.map { (name, ref) ->
-      val resolved = ref.resolve(resolutionContext.strategy)
+      val resolved = ref.resolve(resolutionContext.strategy, resolutionContext.currentAnchor)
       val pContext =
         when (resolved) {
           is Resolved.Ref -> Named(resolved.name)
           is Resolved.Value -> NamingContext.Nested(Named(name), resolutionContext.naming)
         }
-      val model = resolved.toModel(ModelResolutionContext(pContext, resolutionContext.strategy))
+      val model = resolved.toModel(ModelResolutionContext(pContext, resolutionContext.strategy, resolutionContext.currentAnchor))
       // TODO implement oneOf required properties properly
       //   This cannot be done with @Required, but needs to be part of validation
       //        val oneOfRequired = oneOf?.any {
@@ -336,7 +335,7 @@ private fun Schema.toObject(
           is Resolved.Ref -> Named(resolved.name)
           is Resolved.Value -> NamingContext.Nested(Named(name), resolutionContext.naming)
         }
-      nestedModel(resolved, ModelResolutionContext(pContext, resolutionContext.strategy))
+      nestedModel(resolved, ModelResolutionContext(pContext, resolutionContext.strategy, resolutionContext.currentAnchor))
     },
     additionalProperties = hasAnyAdditional,
   )
@@ -364,24 +363,29 @@ private fun Schema.toEnum(resolutionContext: ModelResolutionContext, enums: List
 context(ctx: TypedApiContext)
 private fun Schema.findSingleEnumValue(
   propName: String,
-  strategy: SchemaResolutionStrategy = SchemaResolutionStrategy.ForComponents
+  strategy: SchemaResolutionStrategy,
+  currentAnchor: Pair<String, Schema>? = null
 ): String? {
   // direct properties first
-  val direct = this.properties?.get(propName)?.resolve(strategy)?.value?.enum?.singleOrNull()
+  val direct = this.properties?.get(propName)?.resolve(strategy, currentAnchor)?.value?.enum?.singleOrNull()
   if (direct != null) return direct
   // search in allOf sub-schemas
   val subs = this.allOf ?: return null
   for (sub in subs) {
-    val v = sub.resolve(strategy).value.findSingleEnumValue(propName, strategy)
+    val v = sub.resolve(strategy, currentAnchor).value.findSingleEnumValue(propName, strategy, currentAnchor)
     if (v != null) return v
   }
   return null
 }
 
 context(ctx: TypedApiContext)
-private fun Schema.findFirstEnumSingle(strategy: SchemaResolutionStrategy, vararg propNames: String): String? {
+private fun Schema.findFirstEnumSingle(
+  strategy: SchemaResolutionStrategy,
+  currentAnchor: Pair<String, Schema>? = null,
+  vararg propNames: String
+): String? {
   for (p in propNames) {
-    val v = findSingleEnumValue(p, strategy)
+    val v = findSingleEnumValue(p, strategy, currentAnchor)
     if (v != null) return v
   }
   return null
@@ -422,10 +426,10 @@ private fun Schema.toUnion(
   val discriminator = this.discriminator
   val caseToContext =
     subtypes.withIndex().map { (idx, ref) ->
-      val resolved = ref.resolve(resolutionContext.strategy)
+      val resolved = ref.resolve(resolutionContext.strategy, resolutionContext.currentAnchor)
       Pair(
         resolved,
-        toUnionCaseContext(resolutionContext.naming, resolved, idx, discriminator, resolutionContext.strategy)
+        toUnionCaseContext(resolutionContext.naming, resolved, idx, discriminator, resolutionContext.strategy, resolutionContext.currentAnchor)
       )
     }
   val cases =
@@ -433,7 +437,7 @@ private fun Schema.toUnion(
       .map { (resolved, caseContext) ->
         Model.Union.Case(
           caseContext,
-          resolved.toModel(ModelResolutionContext(caseContext, resolutionContext.strategy)).value
+          resolved.toModel(ModelResolutionContext(caseContext, resolutionContext.strategy, resolutionContext.currentAnchor)).value
         )
       }
       .sortedWith(unionSchemaComparator)
@@ -441,14 +445,14 @@ private fun Schema.toUnion(
     caseToContext.mapNotNull { (resolved, caseContext) ->
       nestedModel(
         resolved,
-        ModelResolutionContext(caseContext, resolutionContext.strategy)
+        ModelResolutionContext(caseContext, resolutionContext.strategy, resolutionContext.currentAnchor)
       )
     }
   return Model.Union(
     resolutionContext.naming,
     cases,
     singleDefaultOrNull()
-      ?: subtypes.firstNotNullOfOrNull { it.resolve(resolutionContext.strategy).value.singleDefaultOrNull() },
+      ?: subtypes.firstNotNullOfOrNull { it.resolve(resolutionContext.strategy, resolutionContext.currentAnchor).value.singleDefaultOrNull() },
     description.get(),
     inline,
     this.discriminator?.let { Model.Discriminator(it.propertyName, it.mapping) },
@@ -462,6 +466,7 @@ private fun toUnionCaseContext(
   index: Int,
   discriminator: Schema.Discriminator?,
   strategy: SchemaResolutionStrategy,
+  currentAnchor: Pair<String, Schema>? = null
 ): NamingContext =
   when (case) {
     is Resolved.Ref -> {
@@ -494,9 +499,9 @@ private fun toUnionCaseContext(
             run {
               // Prefer discriminator property if provided and available as single-value enum (search across allOf)
               val fromDisc = discriminator?.propertyName?.let { prop ->
-                case.value.findSingleEnumValue(prop, strategy)
+                case.value.findSingleEnumValue(prop, strategy, currentAnchor)
               }
-              val fromSpecial = case.value.findFirstEnumSingle(strategy, "event", "type")
+              val fromSpecial = case.value.findFirstEnumSingle(strategy, currentAnchor, "event", "type", $$"$type")
               val chosen = fromDisc ?: fromSpecial
               if (chosen != null) Named(chosen.replaceFirstChar(Char::uppercaseChar))
               else {
@@ -529,7 +534,7 @@ private fun toUnionCaseContext(
  */
 context(ctx: TypedApiContext)
 private fun allOf(schema: Schema, resolutionContext: ModelResolutionContext): Model {
-  val resolved = schema.allOf!!.map { it.resolve(resolutionContext.strategy).value }
+  val resolved = schema.allOf!!.map { it.resolve(resolutionContext.strategy, resolutionContext.currentAnchor).value }
   // Determine if all sub-schemas are object-like (i.e., can be merged as an object)
   val allObjectLike =
     resolved.all { sub ->
@@ -589,7 +594,7 @@ private fun allOf(schema: Schema, resolutionContext: ModelResolutionContext): Mo
           return Model.FreeFormJson(schema.description.get(), Constraints.Object(schema))
         } else {
           val innerCtx = innerResolved.namedOr { resolutionContext.naming }
-          val innerModel = innerResolved.toModel(ModelResolutionContext(innerCtx, resolutionContext.strategy)).value
+          val innerModel = innerResolved.toModel(ModelResolutionContext(innerCtx, resolutionContext.strategy, resolutionContext.currentAnchor)).value
           return Model.Collection.Map(
             innerModel,
             schema.description.get(),
@@ -671,20 +676,21 @@ private fun Model.withDescriptionIfNull(desc: String?): Model {
 private fun Schema.singleDefaultOrNull(): String? = (default as? ExampleValue.Single)?.value
 
 context(ctx: TypedApiContext)
-internal fun ReferenceOr<Schema>.resolve(strategy: SchemaResolutionStrategy): Resolved<Schema> =
+internal fun ReferenceOr<Schema>.resolve(
+  strategy: SchemaResolutionStrategy,
+  currentAnchor: Pair<String, Schema>? = null
+): Resolved<Schema> =
   when (this) {
     is ReferenceOr.Value -> Resolved.Value(value)
     is ReferenceOr.Reference -> {
-      when (strategy) {
-        // Handle JSON Schema $recursiveRef: "#" by resolving to the current anchor
-        else if ref == "#" -> {
-          val (anchorName, anchorSchema) =
-            requireNotNull(ctx.currentAnchor) {
-              "Recursive reference '#' encountered but no active \$recursiveAnchor was found."
-            }
-          Resolved.Ref(anchorName, anchorSchema)
-        }
-
+      // Handle JSON Schema $recursiveRef: "#" by resolving to the current anchor
+      if (ref == "#") {
+        val (anchorName, anchorSchema) =
+          requireNotNull(currentAnchor) {
+            "Recursive reference '#' encountered but no active \$recursiveAnchor was found."
+          }
+        Resolved.Ref(anchorName, anchorSchema)
+      } else when (strategy) {
         SchemaResolutionStrategy.ForComponents -> Resolved.Ref(schemaName, ctx.schema(this))
         is SchemaResolutionStrategy.ForInline -> Resolved.Ref(schemaName, ctx.schema(this))
       }

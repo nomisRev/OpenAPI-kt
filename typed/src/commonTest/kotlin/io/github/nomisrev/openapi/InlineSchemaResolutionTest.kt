@@ -52,7 +52,7 @@ class InlineSchemaResolutionTest {
 
     with(context) {
       val reference = ReferenceOr.schema("User")
-      val resolved = reference.resolve(SchemaResolutionStrategy.ForInline)
+      val resolved = reference.resolve(SchemaResolutionStrategy.ForInline, null)
 
       when (resolved) {
         is Resolved.Ref -> assertEquals(resolved, Resolved.Ref("User", userSchema))
@@ -78,7 +78,7 @@ class InlineSchemaResolutionTest {
 
     with(context) {
       val reference = ReferenceOr.schema("User")
-      val resolved = reference.resolve(SchemaResolutionStrategy.ForComponents)
+      val resolved = reference.resolve(SchemaResolutionStrategy.ForComponents, null)
 
       when (resolved) {
         is Resolved.Ref -> assertEquals(resolved, Resolved.Ref("User", userSchema))

@@ -42,7 +42,7 @@ fun TypedApiContext.routes(): List<Route> =
             val model = when (val schema = mediaType.schema) {
               null -> null
               is Reference -> {
-                val resolved = schema.resolve(SchemaResolutionStrategy.ForInline)
+                val resolved = schema.resolve(SchemaResolutionStrategy.ForInline, null)
                 resolved.toModel(ModelResolutionContext(
                   resolved.namedOr { 
                     context(
@@ -122,7 +122,9 @@ fun TypedApiContext.routes(): List<Route> =
         content.mapValues { (_, mediaType) ->
           when (val schema = mediaType.schema) {
             is Reference -> {
-              val resolved = schema.resolve(SchemaResolutionStrategy.ForInline)
+              val resolved = schema.resolve(
+                SchemaResolutionStrategy.ForInline, null
+              )
               resolved.toModel(ModelResolutionContext(
                 resolved.namedOr { context(RouteBody(operationId, "Response")) }, 
                 SchemaResolutionStrategy.ForInline
@@ -166,7 +168,7 @@ fun TypedApiContext.routes(): List<Route> =
       val param = p.get()
       when (val schema = param.schema) {
         is Reference -> {
-          val resolved = schema.resolve(SchemaResolutionStrategy.ForInline)
+          val resolved = schema.resolve(SchemaResolutionStrategy.ForInline, null)
           resolved.toModel(ModelResolutionContext(
             resolved.namedOr { context(RouteParam(param.name, operationId, "Request")) }, 
             SchemaResolutionStrategy.ForInline
