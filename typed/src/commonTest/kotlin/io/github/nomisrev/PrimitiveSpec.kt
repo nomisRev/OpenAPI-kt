@@ -2,6 +2,9 @@ package io.github.nomisrev
 
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.ResolvedSchema
+import io.github.nomisrev.openapi.ResolvedSchema.Value
 import io.github.nomisrev.openapi.ctx
 import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.Schema
@@ -18,8 +21,23 @@ val PrimitiveSpec by testSuite {
 
     Model.Primitive.all().forEach { (schema, expected) ->
         test(schema.toString()) {
-            val actual = ctx(api) { schema.primitive() }
+            val actual = ctx(api) { Value(schema).primitive() }
             assertEquals(expected, actual)
+        }
+    }
+
+    Model.Primitive.all().forEach { (schema, inner) ->
+        val context = NamingContext.Reference(schema.toString(), null)
+        val resolvedSchema = ResolvedSchema.Reference(context, schema)
+        val expected = Model.Object(
+            context = context,
+            description = inner.description,
+            properties = listOf(Model.Object.Property("value", inner, true, null)),
+            inline = emptySet(),
+            isNullable = inner.isNullable
+        )
+        test("wrapped - $schema") {
+            assertEquals(expected, ctx(api) { resolvedSchema.primitive() })
         }
     }
 
@@ -39,14 +57,16 @@ val PrimitiveSpec by testSuite {
 
     test("Schema.Type.Basic.Integer multiple default values throws IllegalArgumentException") {
         val e = assertFailsWith<IllegalArgumentException> {
-            ctx(api) { Schema.integer.copy(default = ExampleValue.Multiple(listOf("1", "2"))).primitive() }
+            ctx(api) {
+                Value(Schema.integer.copy(default = ExampleValue.Multiple(listOf("1", "2")))).primitive()
+            }
         }
         assertEquals("Multiple default values not supported for Integer.", e.message)
     }
 
     test("Schema.Type.Basic.Integer single default incorrect value throws IllegalArgumentException") {
         val e = assertFailsWith<IllegalArgumentException> {
-            ctx(api) { Schema.integer.copy(default = ExampleValue.Single("no-int")).primitive() }
+            ctx(api) { Value(Schema.integer.copy(default = ExampleValue.Single("no-int"))).primitive() }
         }
         assertEquals("Default value no-int is not a Integer.", e.message)
     }
@@ -54,7 +74,7 @@ val PrimitiveSpec by testSuite {
     test("Schema.Type.Basic.Boolean multiple default values throws IllegalArgumentException") {
         val e = assertFailsWith<IllegalArgumentException> {
             ctx(api) {
-                Schema.boolean.copy(default = ExampleValue.Multiple(listOf("true", "false"))).primitive()
+                Value(Schema.boolean.copy(default = ExampleValue.Multiple(listOf("true", "false")))).primitive()
             }
         }
         assertEquals("Multiple default values not supported for Boolean.", e.message)
@@ -63,7 +83,7 @@ val PrimitiveSpec by testSuite {
     test("Schema.Type.Basic.Boolean single default incorrect value throws IllegalArgumentException") {
         val e = assertFailsWith<IllegalArgumentException> {
             ctx(api) {
-                Schema.boolean.copy(default = ExampleValue.Single("no-bool")).primitive()
+                Value(Schema.boolean.copy(default = ExampleValue.Single("no-bool"))).primitive()
             }
         }
         assertEquals("Default value no-bool is not a Boolean.", e.message)

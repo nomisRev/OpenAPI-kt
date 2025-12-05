@@ -238,3 +238,23 @@ fun Model.Primitive.Float.Companion.all() = listOf(
 
 fun Model.Primitive.Companion.all() =
     Model.Primitive.String.all() + Model.ByteArray.all() + Model.Uuid.all() + Model.Date.all() + Model.DateTime.all() + Model.Primitive.Boolean.all() + Model.Primitive.Int.all() + Model.Primitive.Long.all() + Model.Primitive.Double.all() + Model.Primitive.Float.all()
+
+data class ObjectConstraint(val min: Int?, val max: Int?)
+
+fun Constraints.Object.Companion.all(): List<Expect<ObjectConstraint, out Constraints.Object?>> = listOf(
+    ObjectConstraint(null, null) expect null,
+    ObjectConstraint(10, null) expect Constraints.Object(10, Int.MAX_VALUE),
+    ObjectConstraint(null, 100) expect Constraints.Object(0, 100),
+    ObjectConstraint(10, 100) expect Constraints.Object(10, 100),
+)
+
+fun Model.FreeFormJson.Companion.all() = listOf(
+    Schema() expect Model.FreeFormJson(null, null, false),
+    Schema(nullable = true) expect Model.FreeFormJson(null, null, true),
+).product(description, Constraints.Object.all()) { schema, description, constraints ->
+    schema.actual.copy(
+        description = description.actual,
+        minItems = constraints.actual.min,
+        maxItems = constraints.actual.max
+    ) expect schema.expected.copy(description = description.expected, constraint = constraints.expected)
+}

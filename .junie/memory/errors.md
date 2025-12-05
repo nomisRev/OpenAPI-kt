@@ -8,3 +8,13 @@
     "NEW INSTRUCTION": "WHEN Gradle tests fail THEN extract failing tests from reports or logs and summarize"
 }
 
+[2025-12-05 11:42] - Updated by Junie - Error analysis
+{
+    "TYPE": "invalid args",
+    "TOOL": "run_test",
+    "ERROR": "No tests found in specified file path",
+    "ROOT CAUSE": "run_test could not discover tests in the file; this project uses a Gradle-based test framework.",
+    "PROJECT NOTE": "Execute tests via Gradle task :typed:jvmTest since tests use testBalloon DSL.",
+    "NEW INSTRUCTION": "WHEN run_test reports no tests found THEN run Gradle :typed:jvmTest and read reports"
+}
+

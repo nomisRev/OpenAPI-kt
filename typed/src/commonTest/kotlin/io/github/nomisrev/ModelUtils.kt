@@ -23,6 +23,9 @@ val api = OpenAPI(
     )
 )
 
+fun OpenAPI.withReference(name: String, schema: Schema) =
+    copy(components = components.copy(schemas = components.schemas + (name to ReferenceOr.value(schema))))
+
 val description = listOf(
     ReferenceOr.value("My Description") expect "My Description",
     ReferenceOr.schema("MyDescription") expect "My Description",

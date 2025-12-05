@@ -5,7 +5,14 @@ import io.github.nomisrev.openapi.Endpoint
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.RouteParam
 import io.github.nomisrev.openapi.NamingContext.Path
+import io.github.nomisrev.openapi.endpoints
 import io.github.nomisrev.openapi.parser.Operation
+import io.github.nomisrev.openapi.parser.OpenAPI
+import io.github.nomisrev.openapi.parser.PathItem
+import io.github.nomisrev.openapi.parser.Info
+import io.github.nomisrev.openapi.parser.Parameter
+import io.github.nomisrev.openapi.parser.Parameter.Input
+import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Response
 import io.github.nomisrev.openapi.parser.Responses
 import io.ktor.http.HttpMethod

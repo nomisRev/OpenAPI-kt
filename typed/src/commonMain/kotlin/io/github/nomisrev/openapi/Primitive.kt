@@ -4,6 +4,21 @@ import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.Schema
 
 context(ctx: ApiCtx)
+suspend fun ResolvedSchema.primitive(): Model = when (this) {
+    is ResolvedSchema.Value -> schema.primitive()
+    is ResolvedSchema.Reference -> {
+        val inner = schema.primitive()
+        Model.Object(
+            name,
+            description(),
+            listOf(Model.Object.Property("value", inner, true, null)),
+            emptySet(),
+            isNullable = inner.isNullable
+        )
+    }
+}
+
+context(ctx: ApiCtx)
 suspend fun Schema.primitive(): Model =
     when (type) {
         is Schema.Type.Array,

@@ -82,6 +82,8 @@ public data class Schema(
         public val boolean: Schema = Schema(type = Type.Basic.Boolean)
         public val number: Schema = Schema(type = Type.Basic.Number)
 
+        public fun list(schema: Schema): Schema = Schema(type = Type.Basic.Array, items = ReferenceOr.value(schema))
+        public fun list(schema: ReferenceOr<Schema>): Schema = Schema(type = Type.Basic.Array, items = schema)
 
         public fun fromJson(json: String): Schema =
             OpenAPI.Json.decodeFromString(serializer(), json)

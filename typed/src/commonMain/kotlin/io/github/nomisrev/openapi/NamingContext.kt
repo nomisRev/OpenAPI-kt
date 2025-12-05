@@ -39,7 +39,7 @@ sealed interface NamingContext {
   data object NestedModel : NamingContext
 
   @Serializable
-  data class Reference(val name: String) : NamingContext
+  data class Reference(val name: String, val context: SchemaContext?) : NamingContext
 
   sealed interface GenerateName2 : NamingContext
 
