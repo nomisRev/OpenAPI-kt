@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="parser-jvm">
+    <output-path>$PROJECT_DIR$/parser/build/libs</output-path>
+    <root id="archive" name="parser-jvm.jar">
+      <element id="module-output" name="openapi-kt.parser.jvmMain" />
+    </root>
+  </artifact>
+</component>

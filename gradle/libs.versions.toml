@@ -1,0 +1,34 @@
+[versions]
+dokka = "2.0.0"
+kotlin = "2.3.0-Beta2"
+kover = "0.9.1"
+knit = "0.5.0"
+publish="0.34.0"
+json="1.9.0"
+okio="3.16.0"
+kotlinpoet="2.2.0"
+agp = "8.13.0"
+test-compile = "0.8.0"
+
+[libraries]
+gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
+json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "json" }
+okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+okio-fakefilesystem = { module = "com.squareup.okio:okio-fakefilesystem", version.ref = "okio" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref="kotlinpoet" }
+android-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
+test-compile = { module = "dev.zacsweers.kctfork:core", version.ref = "test-compile"}
+kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.94.0" }
+
+[plugins]
+dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
+multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+assert = { id = "org.jetbrains.kotlin.plugin.power-assert",  version.ref = "kotlin" }
+serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
+knit = { id = "org.jetbrains.kotlinx.knit", version.ref = "knit" }
+spotless = { id = "com.diffplug.spotless", version = "7.2.1" }
+publish = { id = "com.vanniktech.maven.publish", version.ref="publish" }
