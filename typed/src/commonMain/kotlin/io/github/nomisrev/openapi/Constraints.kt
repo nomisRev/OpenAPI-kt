@@ -28,13 +28,19 @@ sealed interface Constraints {
   }
 
   @Serializable
-  data class Text(val minLength: Int, val maxLength: Int?, val pattern: String?) : Constraints {
+  data class Text(val minLength: Int?, val maxLength: Int?, val pattern: String?) : Constraints {
     companion object {
       operator fun invoke(schema: Schema): Text? =
         if (schema.maxLength != null || schema.minLength != null || schema.pattern != null)
           Text(schema.minLength ?: 0, schema.maxLength, schema.pattern)
         else null
     }
+
+      override fun toString(): String = buildString {
+          minLength?.let { min -> append("minLength: $min, ") }
+          maxLength?.let { max -> append("maxLength: $max, ") }
+          pattern?.let { pattern -> append("pattern: $pattern, ") }
+      }
   }
 
   @Serializable

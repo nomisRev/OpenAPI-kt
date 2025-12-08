@@ -24,7 +24,7 @@ public data class Example(
    * represent examples of media types that cannot naturally represented in JSON or YAML, use a
    * string value to contain the example, escaping where necessary.
    */
-  public val value: io.github.nomisrev.openapi.parser.ExampleValue? = null,
+  public val value: ExampleValue? = null,
     /**
    * A URL that points to the literal example. This provides the capability to reference examples
    * that cannot easily be included in JSON or YAML documents. The value field and externalValue
@@ -40,7 +40,7 @@ public data class Example(
 ) {
   public companion object {
     internal object Serializer :
-      io.github.nomisrev.openapi.parser.KSerializerWithExtensions<Example>(
+      KSerializerWithExtensions<Example>(
         generatedSerializer(),
         Example::extensions,
         { op, extensions -> op.copy(extensions = extensions) },

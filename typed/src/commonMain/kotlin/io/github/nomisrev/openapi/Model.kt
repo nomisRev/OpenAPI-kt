@@ -1,11 +1,38 @@
 package io.github.nomisrev.openapi
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 sealed interface Model {
     val description: String?
     val isNullable: Boolean
+
+    fun with(
+        description: String? = this.description,
+        isNullable: Boolean = this.isNullable,
+    ) = when (this) {
+        is ByteArray -> copy(description = description, isNullable = isNullable)
+        is Collection.List -> copy(description = description, isNullable = isNullable)
+        is Collection.Map -> copy(description = description, isNullable = isNullable)
+        is Date -> copy(description = description, isNullable = isNullable)
+        is DateTime -> copy(description = description, isNullable = isNullable)
+        is DiscriminatedObject -> copy(description = description, isNullable = isNullable)
+        is Enum.Closed -> copy(description = description, isNullable = isNullable)
+        is Enum.Open -> copy(description = description, isNullable = isNullable)
+        is FreeFormJson -> copy(description = description, isNullable = isNullable)
+        is Object -> copy(description = description, isNullable = isNullable)
+        is Primitive.Boolean -> copy(description = description, isNullable = isNullable)
+        is Primitive.Double -> copy(description = description, isNullable = isNullable)
+        is Primitive.Float -> copy(description = description, isNullable = isNullable)
+        is Primitive.Int -> copy(description = description, isNullable = isNullable)
+        is Primitive.Long -> copy(description = description, isNullable = isNullable)
+        is Primitive.String -> copy(description = description, isNullable = isNullable)
+        is Primitive.Unit -> copy(description = description, isNullable = isNullable)
+        is Reference -> copy(description = description, isNullable = isNullable)
+        is Union -> copy(description = description, isNullable = isNullable)
+        is Uuid -> copy(description = description, isNullable = isNullable)
+    }
 
     /**
      * Reference to a named component type. Used to preserve structure and avoid recursively expanding
@@ -19,7 +46,10 @@ sealed interface Model {
         override val isNullable: Boolean
     ) : Model
 
+    @Serializable
     sealed interface Default<out A : Any> {
+        @Serializable
+        @SerialName("Value")
         data class Value<A : Any>(val value: A) : Default<A>
 
         /**
@@ -28,6 +58,8 @@ sealed interface Model {
          * Alternative is to complicate `isNullable` to include defaults, and/or split nullable and non-null hierarchy.
          * Both would complicate the codebase and have been decided against.
          */
+        @Serializable
+        @SerialName("Null")
         data object Null : Default<Nothing> {
             override fun toString(): String = "null"
         }
@@ -37,6 +69,7 @@ sealed interface Model {
 
     @Serializable
     sealed interface Primitive : Model {
+        @SerialName("Int")
         @Serializable
         data class Int(
             val default: Default<kotlin.Int>?,
@@ -45,6 +78,7 @@ sealed interface Model {
             override val isNullable: kotlin.Boolean
         ) : Primitive
 
+        @SerialName("Long")
         @Serializable
         data class Long(
             val default: Default<kotlin.Long>?,
@@ -53,6 +87,7 @@ sealed interface Model {
             override val isNullable: kotlin.Boolean
         ) : Primitive
 
+        @SerialName("Float")
         @Serializable
         data class Float(
             val default: Default<kotlin.Float>?,
@@ -61,6 +96,7 @@ sealed interface Model {
             override val isNullable: kotlin.Boolean
         ) : Primitive
 
+        @SerialName("Double")
         @Serializable
         data class Double(
             val default: Default<kotlin.Double>?,
@@ -69,6 +105,7 @@ sealed interface Model {
             override val isNullable: kotlin.Boolean
         ) : Primitive
 
+        @SerialName("Boolean")
         @Serializable
         data class Boolean(
             val default: Default<kotlin.Boolean>?,
@@ -76,6 +113,7 @@ sealed interface Model {
             override val isNullable: kotlin.Boolean
         ) : Primitive
 
+        @SerialName("String")
         @Serializable
         data class String(
             val default: Default<kotlin.String>?,
@@ -84,6 +122,7 @@ sealed interface Model {
             override val isNullable: kotlin.Boolean
         ) : Primitive
 
+        @SerialName("Unit")
         @Serializable
         data class Unit(
             override val description: kotlin.String?,
@@ -121,23 +160,34 @@ sealed interface Model {
     data class FreeFormJson(
         override val description: String?,
         val constraint: Constraints.Object?,
-        override val isNullable: Boolean
-    ) : Model
+        override val isNullable: Boolean,
+        //  val default: Default<String>?
+    ) : Model {
+        // TODO support default values
+        //     val value: JsonElement?
+        //         get() = when (default) {
+        //             Default.Null -> JsonNull
+        //             is Default.Value<String> -> Json.parseToJsonElement(default.value)
+        //             null -> null
+        //         }
+    }
 
     @Serializable
     sealed interface Collection : Model {
         val inner: Model
         val constraint: Constraints.Collection?
 
+        @SerialName("List")
         @Serializable
         data class List(
             override val inner: Model,
-            val default: kotlin.collections.List<String>?,
+            val default: Default<kotlin.collections.List<String>>?,
             override val description: String?,
             override val constraint: Constraints.Collection?,
             override val isNullable: Boolean
         ) : Collection
 
+        @SerialName("Map")
         @Serializable
         data class Map(
             override val inner: Model,
@@ -151,6 +201,7 @@ sealed interface Model {
         companion object
     }
 
+    @SerialName("Object")
     @Serializable
     data class Object(
         val context: NamingContext,
@@ -161,6 +212,7 @@ sealed interface Model {
         val additionalProperties: Boolean = false,
         override val isNullable: Boolean
     ) : Model {
+        @SerialName("Property")
         @Serializable
         data class Property(
             val baseName: String,
@@ -169,18 +221,36 @@ sealed interface Model {
             val description: String?,
         )
 
-        companion object
+        companion object {
+            // TODO write proper tests for this
+            fun value(context: NamingContext.Reference, property: Model, inline: Set<Model> = emptySet()) = Object(
+                context,
+                property.description,
+                listOf(
+                    Property(
+                        "value",
+                        property.with(description = null, isNullable = false),
+                        true,
+                        null
+                    )
+                ),
+                inline,
+                additionalProperties = false,
+                property.isNullable
+            )
+        }
     }
 
+    @SerialName("Union")
     @Serializable
     data class Union(
         val context: NamingContext,
         val cases: List<Model>,
-        val default: String?,
+        val default: Default<String>?,
         override val description: String?,
         val inline: Set<Model>,
         val discriminator: Discriminator?,
-        override val isNullable: kotlin.Boolean
+        override val isNullable: Boolean
     ) : Model
 
     /**
@@ -192,6 +262,7 @@ sealed interface Model {
      * This is distinct from Union (oneOf/anyOf) as it represents true inheritance with
      * shared base properties rather than a choice between unrelated alternatives.
      */
+    @SerialName("DiscriminatedObject")
     @Serializable
     data class DiscriminatedObject(
         val context: NamingContext,
@@ -207,35 +278,37 @@ sealed interface Model {
         data class Subtype(val context: NamingContext, val model: Model, val discriminatorValue: String)
     }
 
+    @SerialName("Discriminator")
     @Serializable
     data class Discriminator(val propertyName: String, val mapping: Map<String, String>?)
 
     @Serializable
     sealed interface Enum : Model {
         val context: NamingContext
-        val values: List<String>
-        val default: String?
+        val values: List<String?>
+        val default: Default<String>?
         override val description: String?
 
+        @SerialName("ClosedEnum")
         @Serializable
         data class Closed(
             override val context: NamingContext,
             val inner: Model,
-            override val values: List<String>,
-            override val default: String?,
+            override val values: List<String?>,
+            override val default: Model.Default<String>?,
             override val description: String?,
             override val isNullable: Boolean
         ) : Enum
 
+        @SerialName("EnumOpen")
         @Serializable
         data class Open(
             override val context: NamingContext,
             override val values: List<String>,
-            override val default: kotlin.String?,
-            override val description: kotlin.String?,
-            override val isNullable: kotlin.Boolean
+            override val default: Default<String>?,
+            override val description: String?,
+            override val isNullable: Boolean
         ) : Enum
     }
-
     companion object
 }

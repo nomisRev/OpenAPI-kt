@@ -1,6 +1,6 @@
 package io.github.nomisrev
 
-data class Expect<A, B>(val actual: A, val expected: B)
+data class Expect<out A, out B>(val actual: A, val expected: B)
 
 infix fun <A, B> A.expect(b: B): Expect<A, B> = Expect(this, b)
 

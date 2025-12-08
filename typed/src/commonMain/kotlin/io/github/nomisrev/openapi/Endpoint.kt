@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.NamingContext.Path
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.ktor.http.HttpMethod
@@ -15,14 +16,7 @@ class Endpoint(val path: String, val method: HttpMethod, val operation: Operatio
     fun context(context: NamingContext): NamingContext =
         when (pathSegments.size) {
             0 -> context
-            1 -> NamingContext.Nested(context, NamingContext.Path(pathSegments[0]))
-            else ->
-                NamingContext.Nested(
-                    context,
-                    pathSegments.drop(1).fold<String, NamingContext>(NamingContext.Path(pathSegments[0])) { acc, part ->
-                        NamingContext.Nested(NamingContext.Path(part), acc)
-                    },
-                )
+            else -> Path(pathSegments).nest(context)
         }
 
     private fun generateSyntheticOperationId(path: String, method: HttpMethod): String {

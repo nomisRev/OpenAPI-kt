@@ -27,7 +27,7 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-public typealias DefaultValue = io.github.nomisrev.openapi.parser.ExampleValue
+public typealias DefaultValue = ExampleValue
 
 @Serializable(with = ExampleValue.Companion.Serializer::class)
 public sealed interface ExampleValue {
@@ -101,7 +101,7 @@ public sealed interface ExampleValue {
   }
 }
 
-private fun YamlNode.toJsonElement(): kotlinx.serialization.json.JsonElement =
+private fun YamlNode.toJsonElement(): JsonElement =
   when (this) {
     is YamlScalar -> JsonPrimitive(this.content)
     is YamlNull -> JsonPrimitive(null as String?)

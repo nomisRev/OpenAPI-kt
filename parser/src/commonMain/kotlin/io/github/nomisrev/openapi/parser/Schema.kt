@@ -103,7 +103,7 @@ public data class Schema(
 
         public data class Array(val types: List<Basic>) : Type
 
-        public enum class Basic(public val value: kotlin.String) : Type {
+        public enum class Basic(public val value: String) : Type {
             @SerialName("array")
             Array("array"),
             @SerialName("object")

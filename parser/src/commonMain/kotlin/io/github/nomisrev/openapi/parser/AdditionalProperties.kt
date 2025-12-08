@@ -26,7 +26,7 @@ public sealed interface AdditionalProperties {
   @JvmInline public value class Allowed(public val value: Boolean) : AdditionalProperties
 
   @JvmInline
-  public value class PSchema(public val value: io.github.nomisrev.openapi.parser.ReferenceOr<io.github.nomisrev.openapi.parser.Schema>) : AdditionalProperties
+  public value class PSchema(public val value: ReferenceOr<Schema>) : AdditionalProperties
 
   public companion object {
     internal object Serializer : KSerializer<AdditionalProperties> {
@@ -46,7 +46,7 @@ public sealed interface AdditionalProperties {
               json is JsonObject ->
                 PSchema(
                   decoder.json.decodeFromJsonElement(
-                    _root_ide_package_.io.github.nomisrev.openapi.parser.ReferenceOr.serializer(_root_ide_package_.io.github.nomisrev.openapi.parser.Schema.serializer()),
+                    ReferenceOr.serializer(Schema.serializer()),
                     json,
                   )
                 )
@@ -62,7 +62,7 @@ public sealed interface AdditionalProperties {
             when {
               node is YamlScalar -> Allowed(node.content.toBooleanStrict())
               node is YamlMap ->
-                PSchema(_root_ide_package_.io.github.nomisrev.openapi.parser.ReferenceOr.serializer(_root_ide_package_.io.github.nomisrev.openapi.parser.Schema.serializer()).deserialize(decoder))
+                PSchema(ReferenceOr.serializer(Schema.serializer()).deserialize(decoder))
 
               else ->
                 throw SerializationException(
@@ -78,7 +78,7 @@ public sealed interface AdditionalProperties {
           is Allowed -> encoder.encodeBoolean(value.value)
           is PSchema ->
             encoder.encodeSerializableValue(
-              _root_ide_package_.io.github.nomisrev.openapi.parser.ReferenceOr.serializer(_root_ide_package_.io.github.nomisrev.openapi.parser.Schema.serializer()),
+              ReferenceOr.serializer(Schema.serializer()),
               value.value,
             )
         }

@@ -13,8 +13,8 @@ data class Route(
   val path: String,
   val method: HttpMethod,
   val body: Bodies,
-  val input: List<Input>,
-  val returnType: Returns,
+  val parameters: List<Input>,
+  val returns: Returns,
   val extensions: Map<String, JsonElement>,
   val nested: Set<Model>,
 ) {

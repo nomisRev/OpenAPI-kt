@@ -3,9 +3,6 @@ package io.github.nomisrev
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.parser.ExampleValue
-import io.github.nomisrev.openapi.parser.Format.date
-import io.github.nomisrev.openapi.parser.Format.double
-import io.github.nomisrev.openapi.parser.Format.float
 import io.github.nomisrev.openapi.parser.Schema
 
 fun Model.Default.Companion.string() = listOf(
@@ -236,25 +233,25 @@ fun Model.Primitive.Float.Companion.all() = listOf(
     Model.Primitive.Float(Model.Default.Null, null, null, true),
 )
 
-fun Model.Primitive.Companion.all() =
+fun Model.Primitive.Companion.all(): List<Expect<Schema, Model>> =
     Model.Primitive.String.all() + Model.ByteArray.all() + Model.Uuid.all() + Model.Date.all() + Model.DateTime.all() + Model.Primitive.Boolean.all() + Model.Primitive.Int.all() + Model.Primitive.Long.all() + Model.Primitive.Double.all() + Model.Primitive.Float.all()
 
-data class ObjectConstraint(val min: Int?, val max: Int?)
+data class ObjectConstraint(val minProperties: Int?, val maxProperties: Int?)
 
-fun Constraints.Object.Companion.all(): List<Expect<ObjectConstraint, out Constraints.Object?>> = listOf(
+fun Constraints.Object.Companion.all() = listOf(
     ObjectConstraint(null, null) expect null,
     ObjectConstraint(10, null) expect Constraints.Object(10, Int.MAX_VALUE),
     ObjectConstraint(null, 100) expect Constraints.Object(0, 100),
     ObjectConstraint(10, 100) expect Constraints.Object(10, 100),
 )
 
-fun Model.FreeFormJson.Companion.all() = listOf(
+fun Model.FreeFormJson.Companion.all(): List<Expect<Schema, Model.FreeFormJson>> = listOf(
     Schema() expect Model.FreeFormJson(null, null, false),
     Schema(nullable = true) expect Model.FreeFormJson(null, null, true),
 ).product(description, Constraints.Object.all()) { schema, description, constraints ->
     schema.actual.copy(
         description = description.actual,
-        minItems = constraints.actual.min,
-        maxItems = constraints.actual.max
+        minProperties = constraints.actual.minProperties,
+        maxProperties = constraints.actual.maxProperties
     ) expect schema.expected.copy(description = description.expected, constraint = constraints.expected)
 }

@@ -29,7 +29,7 @@ public data class Encoding(
    * Content-Disposition. Content-Type is described separately and SHALL be ignored in this section.
    * This property SHALL be ignored if the request body media type is not a multipart
    */
-  public val headers: Map<String, io.github.nomisrev.openapi.parser.ReferenceOr<io.github.nomisrev.openapi.parser.Header>> = emptyMap(),
+  public val headers: Map<String, ReferenceOr<Header>> = emptyMap(),
     /**
    * Describes how a specific property value will be serialized depending on its type. See [io.github.nomisrev.openapi.parser.Style]
    * for details on the style property. The behavior follows the same values as query parameters,
@@ -44,7 +44,7 @@ public data class Encoding(
    * the default value is false. This property SHALL be ignored if the request body media type is
    * not application/x-www-form-urlencoded.
    */
-  public val explode: Boolean = style?.let { it == _root_ide_package_.io.github.nomisrev.openapi.parser.Style.form.name } ?: false,
+  public val explode: Boolean = style?.let { it == Style.form.name } ?: false,
     /**
    * Determines whether the parameter value SHOULD allow reserved characters, as defined by RFC3986
    * :/?#[]@!$&'()*+,;= to be included without percent-encoding. The default value is false. This
@@ -61,7 +61,7 @@ public data class Encoding(
 ) {
   public companion object {
     internal object Serializer :
-      io.github.nomisrev.openapi.parser.KSerializerWithExtensions<Encoding>(
+      KSerializerWithExtensions<Encoding>(
         generatedSerializer(),
         Encoding::extensions,
         { op, extensions -> op.copy(extensions = extensions) },

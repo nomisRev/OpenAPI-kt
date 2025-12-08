@@ -21,16 +21,16 @@ import kotlinx.serialization.json.JsonPrimitive
 @OptIn(InternalSerializationApi::class)
 @KeepGeneratedSerializer
 public data class Components(
-    public val schemas: Map<String, io.github.nomisrev.openapi.parser.ReferenceOr<io.github.nomisrev.openapi.parser.Schema>> = emptyMap(),
-    public val responses: Map<String, io.github.nomisrev.openapi.parser.ReferenceOr<io.github.nomisrev.openapi.parser.Response>> = emptyMap(),
-    public val parameters: Map<String, io.github.nomisrev.openapi.parser.ReferenceOr<io.github.nomisrev.openapi.parser.Parameter>> = emptyMap(),
-    public val examples: Map<String, io.github.nomisrev.openapi.parser.ReferenceOr<io.github.nomisrev.openapi.parser.Example>> = emptyMap(),
-    public val requestBodies: Map<String, io.github.nomisrev.openapi.parser.ReferenceOr<io.github.nomisrev.openapi.parser.RequestBody>> = emptyMap(),
-    public val headers: Map<String, io.github.nomisrev.openapi.parser.ReferenceOr<io.github.nomisrev.openapi.parser.Header>> = emptyMap(),
+    public val schemas: Map<String, ReferenceOr<Schema>> = emptyMap(),
+    public val responses: Map<String, ReferenceOr<Response>> = emptyMap(),
+    public val parameters: Map<String, ReferenceOr<Parameter>> = emptyMap(),
+    public val examples: Map<String, ReferenceOr<Example>> = emptyMap(),
+    public val requestBodies: Map<String, ReferenceOr<RequestBody>> = emptyMap(),
+    public val headers: Map<String, ReferenceOr<Header>> = emptyMap(),
   //    val securitySchemes: Definitions<SecurityScheme>,
-    public val links: Map<String, io.github.nomisrev.openapi.parser.Link> = emptyMap(),
-    public val callbacks: Map<String, io.github.nomisrev.openapi.parser.Callback> = emptyMap(),
-    public val pathItems: Map<String, io.github.nomisrev.openapi.parser.ReferenceOr<io.github.nomisrev.openapi.parser.PathItem>> = emptyMap(),
+    public val links: Map<String, Link> = emptyMap(),
+    public val callbacks: Map<String, Callback> = emptyMap(),
+    public val pathItems: Map<String, ReferenceOr<PathItem>> = emptyMap(),
     /**
    * Any additional external documentation for this OpenAPI document. The key is the name of the
    * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
@@ -40,7 +40,7 @@ public data class Components(
 ) {
   public companion object {
     internal object Serializer :
-      io.github.nomisrev.openapi.parser.KSerializerWithExtensions<Components>(
+      KSerializerWithExtensions<Components>(
         generatedSerializer(),
         Components::extensions,
         { op, extensions -> op.copy(extensions = extensions) },

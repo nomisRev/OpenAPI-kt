@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.NamingContext.RouteParam
 import io.github.nomisrev.openapi.ResolvedSchema.Value
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.ReferenceOr
@@ -9,32 +10,26 @@ enum class SchemaContext {
     Input, Output;
 }
 
-context(ctx: ApiCtx)
+context(ctx: Registry)
 suspend fun Endpoint.parameters(): List<Route.Input> {
     val parameters = withMissingPathParameters()
     // TODO: configure as part of Leniency mode
     requireUnique(parameters.map { it.name() }, "Expected all parameters to have unique names. $parameters")
-    return parameters.map { it.toRouteInput() }
-}
-
-context(ctx: ApiCtx, endpoint: Endpoint)
-private suspend fun ResolvedParameter.toRouteInput(): Route.Input {
-    val schema =
-        requireNotNull(resolvedSchema()) { "Parameter ${name()} without schema for ${endpoint.path} ${endpoint.method}" }
-
-    when(schema) {
-        is ResolvedSchema.Reference -> TODO()
-        is Value -> TODO()
+    return parameters.map { parameter ->
+        parameter.toRouteInput(context(RouteParam(parameter.name(), operationId)))
     }
 }
 
-context(ctx: ApiCtx)
-private suspend fun ResolvedParameter.resolvedSchema(): ResolvedSchema? = when(this) {
-    is ResolvedParameter.Reference -> value.schema?.resolve(SchemaContext.Input)
-    is ResolvedParameter.Value -> value.schema?.resolve(SchemaContext.Input)
+context(ctx: Registry, endpoint: Endpoint)
+private suspend fun ResolvedParameter.toRouteInput(name: NamingContext): Route.Input {
+    val schema = requireNotNull(
+        value.schema?.resolve(name, SchemaContext.Input)
+    ) { "Parameter ${name()} without schema for ${endpoint.path} ${endpoint.method}" }
+    val type = schema.toModel(SchemaContext.Input)
+    return Route.Input(name(), type, value.required, value.input, value.description)
 }
 
-private fun ResolvedParameter.name(): String = when(this) {
+private fun ResolvedParameter.name(): String = when (this) {
     is ResolvedParameter.Reference -> value.name
     is ResolvedParameter.Value -> value.name
 }
@@ -45,7 +40,7 @@ private fun ResolvedParameter.name(): String = when(this) {
  *
  * TODO: configure as part of Leniency mode
  */
-context(ctx: ApiCtx)
+context(ctx: Registry)
 private fun Endpoint.withMissingPathParameters(): List<ResolvedParameter> {
     val parameters = operation.parameters.map { it.resolve() }
     val parameterNames = parameters.map { it.name() }
@@ -65,11 +60,14 @@ private fun Endpoint.withMissingPathParameters(): List<ResolvedParameter> {
 }
 
 private sealed interface ResolvedParameter {
-    data class Value(val value: Parameter) : ResolvedParameter
-    data class Reference(val ref: String, val value: Parameter) : ResolvedParameter
+    val value: Parameter
+
+    data class Value(override val value: Parameter) : ResolvedParameter
+    data class Reference(val ref: String, override val value: Parameter) : ResolvedParameter
 }
 
-context(ctx: ApiCtx)
+// TODO Move to Registry and support top-level schemas.
+context(ctx: Registry)
 private fun ReferenceOr<Parameter>.resolve(): ResolvedParameter = when (this) {
     is ReferenceOr.Value -> ResolvedParameter.Value(value)
     is ReferenceOr.Reference -> {

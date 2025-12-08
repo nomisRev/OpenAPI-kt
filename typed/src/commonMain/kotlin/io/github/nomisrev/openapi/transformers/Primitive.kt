@@ -1,24 +1,30 @@
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.transformers
 
+import io.github.nomisrev.openapi.Constraints
+import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.Registry
+import io.github.nomisrev.openapi.ResolvedSchema
+import io.github.nomisrev.openapi.get
 import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.Schema
 
-context(ctx: ApiCtx)
+context(ctx: Registry)
 suspend fun ResolvedSchema.primitive(): Model = when (this) {
     is ResolvedSchema.Value -> schema.primitive()
     is ResolvedSchema.Reference -> {
         val inner = schema.primitive()
         Model.Object(
             name,
-            description(),
-            listOf(Model.Object.Property("value", inner, true, null)),
+            inner.description,
+            listOf(Model.Object.Property("value", inner.with(description = null, isNullable = false), true, null)),
             emptySet(),
-            isNullable = inner.isNullable
+            false,
+            inner.isNullable
         )
     }
 }
 
-context(ctx: ApiCtx)
+context(ctx: Registry)
 suspend fun Schema.primitive(): Model =
     when (type) {
         is Schema.Type.Array,
