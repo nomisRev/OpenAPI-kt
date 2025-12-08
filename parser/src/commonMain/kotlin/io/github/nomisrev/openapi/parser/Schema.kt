@@ -81,6 +81,7 @@ public data class Schema(
         public val integer: Schema = Schema(type = Type.Basic.Integer)
         public val boolean: Schema = Schema(type = Type.Basic.Boolean)
         public val number: Schema = Schema(type = Type.Basic.Number)
+        public val NULL: Schema = Schema(type = Type.Basic.Null)
 
         public fun list(schema: Schema): Schema = Schema(type = Type.Basic.Array, items = ReferenceOr.value(schema))
         public fun list(schema: ReferenceOr<Schema>): Schema = Schema(type = Type.Basic.Array, items = schema)

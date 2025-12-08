@@ -11,9 +11,10 @@ import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.toModel
+import kotlin.text.equals
 
 context(ctx: Registry)
-suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<String?>): Model.Enum.Closed {
+suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<String?>): Model.Enum {
     require(enum.isNotEmpty()) { "Enum requires at least 1 possible value. $schema" }
     val nestedNull = enum.any { it.equals("null", ignoreCase = true) || it == null }
     val isNullable = nestedNull || schema.nullable == true
@@ -25,7 +26,7 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<Strin
     require(!(enumDefault == Model.Default.Null && !isNullable)) {
         "The default value $enumDefault is not present in the enum values: ${schema.enum} & schema is not nullable."
     }
-    return Model.Enum.Closed(name, inner, schema.enum!!, enumDefault, description(), schema.nullable ?: false)
+    return Model.Enum(name, inner, schema.enum!!, enumDefault, false, description(), schema.nullable ?: false)
 }
 
 context(ctx: Registry)
@@ -35,15 +36,23 @@ suspend fun ResolvedSchema.toOpenEnum(context: SchemaContext, anyOf: List<Refere
     return when (val enumSchema = schemas.single { it.schema.enum != null }) {
         is ResolvedSchema.Reference -> TODO("Union")
         is ResolvedSchema.Value -> {
-            require(enumSchema.schema.enum!!.isNotEmpty()) { "OpenEnum requires at least 1 possible value" }
-            Model.Enum.Closed(
+            require(enumSchema.schema.enum!!.isNotEmpty()) { "OpenEnum requires at least 1 possible value. $schema" }
+            val nestedNull = enumSchema.schema.enum!!.any { it.equals("null", ignoreCase = true) || it == null }
+            val isNullable = nestedNull || enumSchema.schema.nullable == true
+            val inner = ResolvedSchema.Value(
                 name,
-                ResolvedSchema.Value(
-                    enumSchema.name,
-                    enumSchema.schema.copy(description = null, default = null, enum = null, nullable = false)
-                ).toModel(context),
+                enumSchema.schema.copy(description = null, default = null, enum = null, nullable = false)
+            ).toModel(context)
+            val enumDefault = default()
+            require(!(enumDefault == Model.Default.Null && !isNullable)) {
+                "The default value $enumDefault is not present in the enum values: ${enumSchema.schema.enum} & schema is not nullable."
+            }
+            Model.Enum(
+                name,
+                inner,
                 enumSchema.schema.enum!!,
-                enumSchema.default(),
+                enumDefault,
+                true,
                 description(),
                 schema.nullable ?: false
             )

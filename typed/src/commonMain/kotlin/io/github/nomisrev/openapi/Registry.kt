@@ -97,9 +97,11 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
 
     suspend fun ResolvedSchema.isOpenEnumeration(): Boolean {
         val anyOf = schema.anyOf ?: return false
-        return anyOf.size == 2 &&
-                anyOf.count { it.getUnresolved().enum != null } == 1 &&
-                anyOf.count { it.getUnresolved().type == Schema.Type.Basic.String } == 2
+        if (anyOf.size != 2) return false
+        val enum = anyOf.singleOrNull { it.getUnresolved().enum != null } ?: return false
+        val other = (anyOf - enum).singleOrNull() ?: return false
+        // TODO: what about other open enums? Should we detect type of enum at parse time?
+        return other.getUnresolved().type == Schema.Type.Basic.String
     }
 
     suspend fun Reference.isObjectWithDiscriminator(): Boolean =

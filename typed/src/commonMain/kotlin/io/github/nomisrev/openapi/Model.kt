@@ -18,8 +18,7 @@ sealed interface Model {
         is Date -> copy(description = description, isNullable = isNullable)
         is DateTime -> copy(description = description, isNullable = isNullable)
         is DiscriminatedObject -> copy(description = description, isNullable = isNullable)
-        is Enum.Closed -> copy(description = description, isNullable = isNullable)
-        is Enum.Open -> copy(description = description, isNullable = isNullable)
+        is Enum -> copy(description = description, isNullable = isNullable)
         is FreeFormJson -> copy(description = description, isNullable = isNullable)
         is Object -> copy(description = description, isNullable = isNullable)
         is Primitive.Boolean -> copy(description = description, isNullable = isNullable)
@@ -60,11 +59,7 @@ sealed interface Model {
          */
         @Serializable
         @SerialName("Null")
-        data object Null : Default<Nothing> {
-            override fun toString(): String = "null"
-        }
-
-        companion object
+        data object Null : Default<Nothing>
     }
 
     @Serializable
@@ -197,8 +192,6 @@ sealed interface Model {
         ) : Collection {
             val key = Primitive.String(null, null, null, false)
         }
-
-        companion object
     }
 
     @SerialName("Object")
@@ -282,33 +275,15 @@ sealed interface Model {
     @Serializable
     data class Discriminator(val propertyName: String, val mapping: Map<String, String>?)
 
+    @SerialName("Enum")
     @Serializable
-    sealed interface Enum : Model {
-        val context: NamingContext
-        val values: List<String?>
-        val default: Default<String>?
-        override val description: String?
-
-        @SerialName("ClosedEnum")
-        @Serializable
-        data class Closed(
-            override val context: NamingContext,
-            val inner: Model,
-            override val values: List<String?>,
-            override val default: Model.Default<String>?,
-            override val description: String?,
-            override val isNullable: Boolean
-        ) : Enum
-
-        @SerialName("EnumOpen")
-        @Serializable
-        data class Open(
-            override val context: NamingContext,
-            override val values: List<String>,
-            override val default: Default<String>?,
-            override val description: String?,
-            override val isNullable: Boolean
-        ) : Enum
-    }
-    companion object
+    data class Enum(
+        val context: NamingContext,
+        val inner: Model,
+        val values: List<String?>,
+        val default: Default<String>?,
+        val isOpen: Boolean,
+        override val description: String?,
+        override val isNullable: Boolean,
+    ) : Model
 }

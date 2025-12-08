@@ -51,7 +51,15 @@ fun TestSuite.checkAll(
     test(name) {
         val res = buildString {
             for ((schema, model) in values) {
-                val actual = registry(api) { actual(schema) }
+                val actual = try {
+                   registry(api) { actual(schema) }
+                } catch (e: Throwable) {
+                    println("""
+                    O: $schema
+                    E: ${ModelJson.encodeToString(Model.serializer(), model)}
+                """.trimIndent())
+                    throw e
+                }
                 if (actual != model) {
                     appendLine(
                         """

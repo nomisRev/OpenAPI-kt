@@ -59,13 +59,11 @@ private tailrec fun Model.isNested(): Boolean = when (this) {
     is Model.Primitive -> false
 
     is Model.DiscriminatedObject if context is NamingContext.Reference -> false
-    is Model.Enum.Closed if context is NamingContext.Reference -> false
-    is Model.Enum.Open if context is NamingContext.Reference -> false
+    is Model.Enum if context is NamingContext.Reference -> false
     is Model.Object if context is NamingContext.Reference -> false
     is Model.Union if context is NamingContext.Reference -> false
     is Model.DiscriminatedObject,
-    is Model.Enum.Closed,
-    is Model.Enum.Open,
+    is Model.Enum,
     is Model.Object,
     is Model.Union -> true
 }

@@ -6,7 +6,6 @@ import io.github.nomisrev.all
 import io.github.nomisrev.api
 import io.github.nomisrev.checkAll
 import io.github.nomisrev.expect
-import io.github.nomisrev.map
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.ResolvedSchema
@@ -24,12 +23,21 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 val collectionSpec by testSuite {
-
-    checkAll("Collection with primitive", (Model.Primitive.all() + Model.FreeFormJson.all()).map { (schema, model) ->
+    val name = NamingContext.ObjectProperty("values")
+    val primitives = (Model.Primitive.all() + Model.FreeFormJson.all()).map { (schema, model) ->
         val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.Value(schema))
         val expected = Model.Collection.List(model, null, null, null, false)
         schema expect expected
-    }) { schema -> Value(NestedModel, schema).collection(SchemaContext.Input) }
+    }
+
+    checkAll("Collection with primitive", primitives) { schema ->
+        Value(name, schema).collection(SchemaContext.Input)
+    }
+
+    checkAll(
+        "Collection (primitive) without type: Array",
+        primitives.map { (schema, expected) -> schema.copy(type = null) expect expected }
+    ) { schema -> Value(name, schema).collection(SchemaContext.Input) }
 
     checkAll(
         "Collection with referenced primitive",
@@ -39,15 +47,41 @@ val collectionSpec by testSuite {
         val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.schema("CollectionItem"))
         val wrapped = Model.Object.value(NamingContext.Reference("CollectionItem", null), model)
         val expected = Model.Collection.List(wrapped, null, null, null, false)
-        val actual = registry(api) { Value(NestedModel, schema).collection(SchemaContext.Input) }
+        val actual = registry(api) { Value(name, schema).collection(SchemaContext.Input) }
         Eq(expected, actual)
     }
 
     checkAll(
-        "Referenced Collection with primitive:",
+        "Collection with referenced primitive without type: Array",
+        Model.Primitive.all() + Model.FreeFormJson.all()
+    ) { innerSchema, model ->
+        val api = api.reference("CollectionItem", innerSchema)
+        val schema = Schema(items = ReferenceOr.schema("CollectionItem"))
+        val wrapped = Model.Object.value(NamingContext.Reference("CollectionItem", null), model)
+        val expected = Model.Collection.List(wrapped, null, null, null, false)
+        val actual = registry(api) { Value(name, schema).collection(SchemaContext.Input) }
+        Eq(expected, actual)
+    }
+
+    checkAll(
+        "Referenced Collection with primitive",
         Model.Primitive.all() + Model.FreeFormJson.all()
     ) { schema, model ->
         val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.Value(schema))
+        val api = api.reference("Collection", Schema(type = Type.Basic.Array, items = ReferenceOr.Value(schema)))
+        val expected = Model.Collection.List(model, null, null, null, false)
+        val actual = registry(api) {
+            ResolvedSchema.Reference(NamingContext.Reference("Collection", null), schema)
+                .collection(SchemaContext.Input)
+        }
+        Eq(expected, actual)
+    }
+
+    checkAll(
+        "Referenced Collection with primitive without type: Array",
+        Model.Primitive.all() + Model.FreeFormJson.all()
+    ) { schema, model ->
+        val schema = Schema(items = ReferenceOr.Value(schema))
         val api = api.reference("Collection", Schema(type = Type.Basic.Array, items = ReferenceOr.Value(schema)))
         val expected = Model.Collection.List(model, null, null, null, false)
         val actual = registry(api) {
@@ -66,7 +100,7 @@ val collectionSpec by testSuite {
             null,
             false
         )
-        val actual = registry(api) { Value(NestedModel, schema).collection(SchemaContext.Input) }
+        val actual = registry(api) { Value(name, schema).collection(SchemaContext.Input) }
         assertEquals(expected, actual)
     }
 
@@ -74,7 +108,7 @@ val collectionSpec by testSuite {
         val schema = Schema(type = Type.Basic.Array, default = ExampleValue.Single("null"), nullable = true)
         val expected =
             Model.Collection.List(Model.FreeFormJson(null, null, false), Model.Default.Null, null, null, true)
-        val actual = registry(api) { Value(NestedModel, schema).collection(SchemaContext.Input) }
+        val actual = registry(api) { Value(name, schema).collection(SchemaContext.Input) }
         assertEquals(expected, actual)
     }
 
@@ -83,7 +117,7 @@ val collectionSpec by testSuite {
         val e =
             assertFailsWith<IllegalArgumentException> {
                 registry(api) {
-                    Value(NestedModel, schema).collection(
+                    Value(name, schema).collection(
                         SchemaContext.Input
                     )
                 }
@@ -106,7 +140,7 @@ val collectionSpec by testSuite {
                 null,
                 false
             )
-        val actual = registry(api) { Value(NestedModel, schema).collection(SchemaContext.Input) }
+        val actual = registry(api) { Value(name, schema).collection(SchemaContext.Input) }
         assertEquals(expected, actual)
     }
 
@@ -125,7 +159,7 @@ val collectionSpec by testSuite {
                 null,
                 false
             )
-        val actual = registry(api) { Value(NestedModel, schema).collection(SchemaContext.Input) }
+        val actual = registry(api) { Value(name, schema).collection(SchemaContext.Input) }
         assertEquals(expected, actual)
     }
 }

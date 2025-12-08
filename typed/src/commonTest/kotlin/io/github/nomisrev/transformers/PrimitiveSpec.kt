@@ -12,6 +12,7 @@ import io.github.nomisrev.openapi.ResolvedSchema.Value
 import io.github.nomisrev.openapi.SchemaContext
 import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.parser.Schema.Type.Basic
 import io.github.nomisrev.openapi.transformers.primitive
 import io.github.nomisrev.openapi.registry
 import io.github.nomisrev.openapi.requireUnique
@@ -82,5 +83,14 @@ val PrimitiveSpec by testSuite {
             }
         }
         assertEquals("Default value no-bool is not a Boolean.", e.message)
+    }
+
+    test("Null") {
+        val e = assertFailsWith<IllegalStateException> {
+            registry(api) {
+                Value(name, Schema(type = Basic.Null)).toModel(SchemaContext.Input)
+            }
+        }
+        assertEquals("Null  should always be resolved to result in nullable types. Please report this bug. {\"type\":\"null\"}", e.message)
     }
 }

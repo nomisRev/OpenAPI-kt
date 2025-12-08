@@ -7,19 +7,24 @@ import io.github.nomisrev.all
 import io.github.nomisrev.api
 import io.github.nomisrev.checkAll
 import io.github.nomisrev.default
+import io.github.nomisrev.description
 import io.github.nomisrev.expect
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.Registry
 import io.github.nomisrev.openapi.ResolvedSchema.Value
 import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.get
 import io.github.nomisrev.openapi.parser.AdditionalProperties
+import io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed
+import io.github.nomisrev.openapi.parser.AdditionalProperties.PSchema
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry
 import io.github.nomisrev.openapi.toModel
+import io.github.nomisrev.product
 import io.github.nomisrev.reference
 import io.github.nomisrev.zip
 import kotlin.math.exp
@@ -54,6 +59,45 @@ fun <A> Sequence<A>.forever(): Sequence<A> = sequence {
 }
 
 val objectSpec by testSuite {
+    val aProps = Model.Primitive.all().map { (schema, model) ->
+        Schema(
+            type = Type.Basic.Object,
+            additionalProperties = PSchema(ReferenceOr.value(schema)),
+        ) expect model
+    } + description.product(listOf(true, false, null)) { description, isNullable ->
+        Schema(
+            type = Type.Basic.Object,
+            additionalProperties = Allowed(true),
+            description = description.actual,
+            nullable = isNullable
+        ) expect Model.FreeFormJson(description.expected, null, isNullable ?: false)
+    } + description.product(listOf(true, false, null)) { description, isNullable ->
+        Schema(
+            type = Type.Basic.Object,
+            additionalProperties = Allowed(false),
+            description = description.actual,
+            nullable = isNullable
+        ) expect Model.Primitive.Unit(description.expected, isNullable ?: false)
+    } + description.product(listOf(true, false, null)) { description, isNullable ->
+        Schema(
+            type = Type.Basic.Object,
+            description = description.actual,
+            nullable = isNullable
+        ) expect Model.FreeFormJson(description.expected, null, isNullable ?: false)
+    }
+
+    checkAll("Additional Properties", aProps) { schema ->
+        Value(NamingContext.RouteParam("Nested", "getBy"), schema).toModel(SchemaContext.Input)
+    }
+
+    fun List<Expect<Schema, Model>>.removeType() = map { (schema, model) ->
+        schema.copy(type = null) expect model
+    }
+
+    checkAll("Additional Properties without type: Object", aProps.removeType()) {
+        Value(NamingContext.RouteParam("Nested", "getBy"), it).toModel(SchemaContext.Input)
+    }
+
     val primitive: Sequence<Expect<Schema, Model>> = sequence {
         val values = Model.Primitive.all() + Model.FreeFormJson.all()
         while (true) {
@@ -69,8 +113,8 @@ val objectSpec by testSuite {
     ).randomChunked(minSize = 2, maxSize = 10)
 
     val additionalProperties = sequenceOf(
-        AdditionalProperties.Allowed(true) expect true,
-        AdditionalProperties.Allowed(false) expect false,
+        Allowed(true) expect true,
+        Allowed(false) expect false,
         null expect false
     )
 
@@ -92,7 +136,7 @@ val objectSpec by testSuite {
             context = name,
             description = null,
             properties = props.map { (name, schema, isRequired) ->
-                Model.Object.Property(name, schema.expected, isRequired, null)
+                Model.Object.Property(name, schema.expected, isRequired, schema.expected.description)
             },
             inline = emptySet(),
             additionalProperties = additionalProperties.expected,
@@ -106,7 +150,10 @@ val objectSpec by testSuite {
             .toModel(SchemaContext.Input)
     }
 
-
+    checkAll("Object without type: Object", obj.take(5000).toList().removeType()) { schema ->
+        Value(NamingContext.RouteParam("value", "getBy"), schema)
+            .toModel(SchemaContext.Input)
+    }
 
     test("Referenced Nested Object") {
         val topInt = NamingContext.Reference("TopInt", null)
@@ -137,7 +184,7 @@ val objectSpec by testSuite {
         assertEquals(listOf(topInt), registry.names())
     }
 
-    val enum = Model.Enum.Closed.strings(NamingContext.ObjectProperty("enum"))
+    val enum = Model.Enum.strings(NamingContext.ObjectProperty("enum"))
         .flatMap {
             listOf(
                 it.actual expect it.expected,
@@ -155,7 +202,7 @@ val objectSpec by testSuite {
             val model = Model.Object(
                 context = NamingContext.RouteParam("Nested", "getBy"),
                 description = null,
-                properties = listOf(Model.Object.Property("enum", it.expected, false, null)),
+                properties = listOf(Model.Object.Property("enum", it.expected, false, it.expected.description)),
                 inline = setOf(it.expected),
                 additionalProperties = false,
                 isNullable = false
@@ -165,19 +212,5 @@ val objectSpec by testSuite {
 
     checkAll("Enum Value (and nesting)", enum) { schema ->
         Value(NamingContext.RouteParam("Nested", "getBy"), schema).toModel(SchemaContext.Input)
-    }
-}
-
-typealias Test = suspend TestRegistry.() -> Expect<Schema, Model>
-
-class TestRegistry(private var openAPI: OpenAPI) {
-    fun reference(name: String, schema: Schema): Unit {
-        openAPI = openAPI.reference(name, schema)
-    }
-
-    fun <A> registry(block: context(Registry) () -> A): A = registry(openAPI, block)
-
-    companion object {
-        operator fun <A> invoke(openAPI: OpenAPI, block: TestRegistry.() -> A): A = block(TestRegistry(openAPI))
     }
 }
