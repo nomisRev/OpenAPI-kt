@@ -72,15 +72,15 @@ fun Model.Enum.Closed.Companion.floats(name: NamingContext): List<Expect<Schema,
 @OptIn(ExperimentalAtomicApi::class)
 val closedEnumSpec by testSuite {
     checkAll("ClosedEnum(Int)", Model.Enum.Closed.ints(NamingContext.ObjectProperty("value"))) { schema ->
-        Value(NamingContext.RouteParam("value", "getBy"), schema).toModel(Input)
+        Value(NamingContext.ObjectProperty("value"), schema).toModel(Input)
     }
 
     checkAll("ClosedEnum(String)", Model.Enum.Closed.strings(NamingContext.ObjectProperty("value"))) { schema ->
-        Value(NamingContext.RouteParam("value", "getBy"), schema).toModel(Input)
+        Value(NamingContext.ObjectProperty("value"), schema).toModel(Input)
     }
 
     checkAll("ClosedEnum(Float)", Model.Enum.Closed.floats(NamingContext.ObjectProperty("value"))) { schema ->
-        Value(NamingContext.RouteParam("value", "getBy"), schema).toModel(Input)
+        Value(NamingContext.ObjectProperty("value"), schema).toModel(Input)
     }
 
     test("Empty enum throws IllegalArgumentException") {
@@ -88,7 +88,7 @@ val closedEnumSpec by testSuite {
         val e = assertFailsWith<IllegalArgumentException> {
             registry(api) {
                 Value(
-                    NamingContext.RouteParam("value", "getBy"),
+                    NamingContext.ObjectProperty("value"),
                     schema
                 ).toModel(Input)
             }
@@ -100,7 +100,7 @@ val closedEnumSpec by testSuite {
         val e = assertFailsWith<IllegalArgumentException> {
             registry(api) {
                 Value(
-                    NamingContext.RouteParam("value", "getBy"),
+                    NamingContext.ObjectProperty("value"),
                     Schema(
                         default = ExampleValue.Multiple(listOf("1", "2")),
                         enum = listOf("1", "2"),
@@ -116,7 +116,7 @@ val closedEnumSpec by testSuite {
         val e = assertFailsWith<IllegalArgumentException> {
             registry(api) {
                 Value(
-                    NamingContext.RouteParam("value", "getBy"),
+                    NamingContext.ObjectProperty("value"),
                     Schema(
                         default = ExampleValue.Single("null"),
                         enum = listOf("1", "2"),
