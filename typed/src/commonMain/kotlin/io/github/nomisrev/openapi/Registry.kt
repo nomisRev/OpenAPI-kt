@@ -132,7 +132,11 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
     }
 }
 
-// ApiCtx syntax
+/**
+ * Resolve a `ReferenceOr<Schema>` **this will register** the `Schema` according to the `context` as a consumed schema.
+ * Only use this method if you're going to _consume_ the resolved schema.
+ * Otherwise, use the predicates available on `ReferenceOr<Schema>` below first to determine if you need this schema.
+ */
 context(ctx: Registry)
 suspend fun ReferenceOr<Schema>.resolve(name: NamingContext, context: SchemaContext): ResolvedSchema =
     with(ctx) { resolve(name, context) }

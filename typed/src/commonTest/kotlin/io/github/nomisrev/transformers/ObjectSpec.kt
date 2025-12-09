@@ -223,4 +223,115 @@ val objectSpec by testSuite {
     checkAll("Enum Value nesting", enumNesting) { schema ->
         Value(NamingContext.RouteParam("Nested", "getBy"), schema).toModel(SchemaContext.Input)
     }
+
+    val writeOnly = listOf(true, false, null)
+    val readOnly = listOf(true, false, null)
+    fun Sequence<List<Prop>>.randomRead(): Sequence<Expect<Pair<Map<String, ReferenceOr<Schema>>, List<String>>, List<Model.Object.Property>>> =
+        map { props ->
+            val props = props.map {
+                Triple(
+                    readOnly[RANDOM.nextInt(0, 2)],
+                    writeOnly[RANDOM.nextInt(0, 2)],
+                    it
+                )
+            }
+            val actual = Pair(props.associate { (readOnly, writeOnly, prop) ->
+                Pair(prop.name, ReferenceOr.value(prop.schema.actual.copy(readOnly = readOnly, writeOnly = writeOnly)))
+            }, props.filter { (_, _, prop) -> prop.isRequired }.map { (_, _, prop) -> prop.name })
+
+            val expected = props.filter { (readOnly, _, _) -> readOnly != true }.map { (_, _, prop) ->
+                Model.Object.Property(
+                    prop.name,
+                    prop.schema.expected,
+                    prop.isRequired,
+                    prop.schema.expected.description
+                )
+            }
+            actual expect expected
+        }
+
+    val objWithReadOnly = objNames.zip(
+        properties.randomRead(),
+        sequenceOf(true, false).forever(),
+        additionalProperties
+    ) { name, props, isNullable, additionalProperties ->
+
+        val schema = Schema(
+            type = Type.Basic.Object,
+            properties = props.actual.first,
+            description = null,
+            required = props.actual.second,
+            additionalProperties = additionalProperties.actual,
+            nullable = isNullable
+        )
+        val obj = Model.Object(
+            context = name,
+            description = null,
+            properties = props.expected,
+            inline = emptySet(),
+            additionalProperties = additionalProperties.expected,
+            isNullable = isNullable
+        )
+        schema expect obj
+    }
+
+    checkAll(
+        "Object with readOnly properties",
+        objWithReadOnly.take(10_000).toList()
+    ) { schema ->
+        Value(NamingContext.RouteParam("value", "getBy"), schema).toModel(SchemaContext.Input)
+    }
+
+
+    fun Sequence<List<Prop>>.randomWrite(): Sequence<Expect<Pair<Map<String, ReferenceOr<Schema>>, List<String>>, List<Model.Object.Property>>> =
+        map { props ->
+            val props = props.map {
+                Triple(readOnly[RANDOM.nextInt(0, 2)], writeOnly[RANDOM.nextInt(0, 2)], it)
+            }
+            val actual = Pair(props.associate { (readOnly, writeOnly, prop) ->
+                Pair(prop.name, ReferenceOr.value(prop.schema.actual.copy(readOnly = readOnly, writeOnly = writeOnly)))
+            }, props.filter { (_, _, prop) -> prop.isRequired }.map { (_, _, prop) -> prop.name })
+
+            val expected = props.filter { (_, writeOnly, _) -> writeOnly != true }.map { (_, _, prop) ->
+                Model.Object.Property(
+                    prop.name,
+                    prop.schema.expected,
+                    prop.isRequired,
+                    prop.schema.expected.description
+                )
+            }
+            actual expect expected
+        }
+
+    val objWithWriteOnly = objNames.zip(
+        properties.randomWrite(),
+        sequenceOf(true, false).forever(),
+        additionalProperties
+    ) { name, props, isNullable, additionalProperties ->
+
+        val schema = Schema(
+            type = Type.Basic.Object,
+            properties = props.actual.first,
+            description = null,
+            required = props.actual.second,
+            additionalProperties = additionalProperties.actual,
+            nullable = isNullable
+        )
+        val obj = Model.Object(
+            context = name,
+            description = null,
+            properties = props.expected,
+            inline = emptySet(),
+            additionalProperties = additionalProperties.expected,
+            isNullable = isNullable
+        )
+        schema expect obj
+    }
+
+    checkAll(
+        "Object with writeOnly properties",
+        objWithWriteOnly.take(10_000).toList()
+    ) { schema ->
+        Value(NamingContext.RouteParam("value", "getBy"), schema).toModel(SchemaContext.Output)
+    }
 }
