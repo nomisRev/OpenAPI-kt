@@ -13,7 +13,7 @@ import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.toModel
 import kotlin.text.equals
 
-context(ctx: Registry)
+context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<String?>): Model.Enum {
     require(enum.isNotEmpty()) { "Enum requires at least 1 possible value. $schema" }
     val nestedNull = enum.any { it.equals("null", ignoreCase = true) || it == null }
@@ -29,7 +29,7 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<Strin
     return Model.Enum(name, inner, schema.enum!!, enumDefault, false, description(), schema.nullable ?: false)
 }
 
-context(ctx: Registry)
+context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toOpenEnum(context: SchemaContext, anyOf: List<ReferenceOr<Schema>>): Model {
     // using name for the nested resolve is safe because there are guaranteed only two schemas, and one is String.
     val schemas = anyOf.map { it.resolve(name, context) }

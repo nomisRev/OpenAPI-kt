@@ -9,7 +9,9 @@ import io.github.nomisrev.openapi.transformers.toClosedEnum
 import io.github.nomisrev.openapi.transformers.toObject
 import io.github.nomisrev.openapi.transformers.toOpenEnum
 
-context(ctx: Registry)
+
+
+context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
     this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> TODO()
     isOpenEnumeration() -> toOpenEnum(context, schema.anyOf!!)
@@ -44,7 +46,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
     else -> fallback()
 }
 
-context(ctx: Registry)
+context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContext): Model = when (val ap = schema.additionalProperties) {
     null -> fallback()
     is AdditionalProperties.PSchema -> ap.value.resolve(name, context).toModel(context)
@@ -52,7 +54,7 @@ private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContex
         if (ap.value) fallback() else Model.Primitive.Unit(description(), schema.nullable ?: false)
 }
 
-context(ctx: Registry)
+context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.fallback(): Model = when (this) {
     is ResolvedSchema.Value -> Model.FreeFormJson(description(), Constraints.Object(schema), schema.nullable ?: false)
     is ResolvedSchema.Reference -> Model.Object.value(
@@ -70,7 +72,7 @@ private suspend fun ResolvedSchema.fallback(): Model = when (this) {
  *   nullable: true
  * }
  */
-context(ctx: Registry)
+context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.flattenNull(context: SchemaContext, schemas: List<ReferenceOr<Schema>>): Model {
     val schema = schemas.map { it.resolve(name, context) }.single { it.schema.type != Schema.Type.Basic.Null }
     return schema.toModel(context).with(isNullable = true)

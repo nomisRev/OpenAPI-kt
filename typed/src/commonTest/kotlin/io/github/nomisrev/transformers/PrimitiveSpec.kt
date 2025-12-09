@@ -4,20 +4,22 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.Eq
 import io.github.nomisrev.all
 import io.github.nomisrev.api
-import io.github.nomisrev.checkAll
+import io.github.nomisrev.expect
+import io.github.nomisrev.verifyAll
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.Registry
 import io.github.nomisrev.openapi.ResolvedSchema
 import io.github.nomisrev.openapi.ResolvedSchema.Value
 import io.github.nomisrev.openapi.SchemaContext
 import io.github.nomisrev.openapi.parser.ExampleValue
+import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type.Basic
 import io.github.nomisrev.openapi.transformers.primitive
-import io.github.nomisrev.openapi.registry
-import io.github.nomisrev.openapi.requireUnique
 import io.github.nomisrev.openapi.toModel
 import io.github.nomisrev.reference
+import io.github.nomisrev.verifyFails
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -26,71 +28,59 @@ import kotlin.test.assertFailsWith
 val PrimitiveSpec by testSuite {
     val name = NamingContext.RouteParam("value", "getBy")
 
-    checkAll("Primitive types", Model.Primitive.String.all()) { schema ->
-        Value(name, schema).primitive()
-    }
+    verifyAll("Primitive types", Model.Primitive.String.all())
 
-    checkAll("Referenced primitives", Model.Primitive.all()) { schema, inner ->
+    verifyAll("Referenced primitives", Model.Primitive.all()) { schema, inner ->
         val context = NamingContext.Reference(schema.toString(), null)
-        val actual = ResolvedSchema.Reference(context, schema).toModel(SchemaContext.Input)
+        val actual = with(Registry(api.reference(schema.toString(), schema))) {
+            ReferenceOr.schema(schema.toString()).toModel(context, SchemaContext.Input)
+        }
         val expected = Model.Object.value(context, inner)
         Eq(expected, actual)
     }
 
-    test("Schema.Type.Basic.Number multiple default values throws IllegalArgumentException") {
-        val e = assertFailsWith<IllegalArgumentException> {
-            registry(api) { Schema.number.copy(default = ExampleValue.Multiple(listOf("1.3", "2.5"))).primitive() }
-        }
-        assertEquals("Multiple default values not supported for Number.", e.message)
-    }
+    context(scope: Registry.Scope)
+    suspend fun Schema.primitive(): Model = Value(name, this).toModel(SchemaContext.Input)
 
-    test("Schema.Type.Basic.Number multiple default values throws IllegalArgumentException") {
-        val e = assertFailsWith<IllegalArgumentException> {
-            registry(api) { Schema.number.copy(default = ExampleValue.Single("no-number")).primitive() }
-        }
-        assertEquals("Default value no-number is not a Number.", e.message)
-    }
+    verifyFails<IllegalArgumentException>(
+        "Schema.Type.Basic.Number multiple default values throws IllegalArgumentException",
+        Schema.number.copy(default = ExampleValue.Multiple(listOf("1.3", "2.5"))),
+        "Multiple default values not supported for Number."
+    )
 
-    test("Schema.Type.Basic.Integer multiple default values throws IllegalArgumentException") {
-        val e = assertFailsWith<IllegalArgumentException> {
-            registry(api) {
-                Value(name, Schema.integer.copy(default = ExampleValue.Multiple(listOf("1", "2")))).primitive()
-            }
-        }
-        assertEquals("Multiple default values not supported for Integer.", e.message)
-    }
+    verifyFails<IllegalArgumentException>(
+        "Schema.Type.Basic.Number single default incorrect value throws IllegalArgumentException",
+        Schema.number.copy(default = ExampleValue.Single("no-number")),
+        "Default value no-number is not a Number."
+    )
 
-    test("Schema.Type.Basic.Integer single default incorrect value throws IllegalArgumentException") {
-        val e = assertFailsWith<IllegalArgumentException> {
-            registry(api) { Value(name, Schema.integer.copy(default = ExampleValue.Single("no-int"))).primitive() }
-        }
-        assertEquals("Default value no-int is not a Integer.", e.message)
-    }
+    verifyFails<IllegalArgumentException>(
+        "Schema.Type.Basic.Integer multiple default values throws IllegalArgumentException",
+        Schema.integer.copy(default = ExampleValue.Multiple(listOf("1", "2"))),
+        "Multiple default values not supported for Integer."
+    )
 
-    test("Schema.Type.Basic.Boolean multiple default values throws IllegalArgumentException") {
-        val e = assertFailsWith<IllegalArgumentException> {
-            registry(api) {
-                Value(name, Schema.boolean.copy(default = ExampleValue.Multiple(listOf("true", "false")))).primitive()
-            }
-        }
-        assertEquals("Multiple default values not supported for Boolean.", e.message)
-    }
+    verifyFails<IllegalArgumentException>(
+        "Schema.Type.Basic.Integer single default incorrect value throws IllegalArgumentException",
+        Schema.integer.copy(default = ExampleValue.Single("no-int")),
+        "Default value no-int is not a Integer."
+    )
 
-    test("Schema.Type.Basic.Boolean single default incorrect value throws IllegalArgumentException") {
-        val e = assertFailsWith<IllegalArgumentException> {
-            registry(api) {
-                Value(name, Schema.boolean.copy(default = ExampleValue.Single("no-bool"))).primitive()
-            }
-        }
-        assertEquals("Default value no-bool is not a Boolean.", e.message)
-    }
+    verifyFails<IllegalArgumentException>(
+        "Schema.Type.Basic.Boolean multiple default values throws IllegalArgumentException",
+        Schema.boolean.copy(default = ExampleValue.Multiple(listOf("true", "false"))),
+        "Multiple default values not supported for Boolean."
+    )
 
-    test("Null") {
-        val e = assertFailsWith<IllegalStateException> {
-            registry(api) {
-                Value(name, Schema(type = Basic.Null)).toModel(SchemaContext.Input)
-            }
-        }
-        assertEquals("Null  should always be resolved to result in nullable types. Please report this bug. {\"type\":\"null\"}", e.message)
-    }
+    verifyFails<IllegalArgumentException>(
+        "Schema.Type.Basic.Boolean single default incorrect value throws IllegalArgumentException",
+        Schema.boolean.copy(default = ExampleValue.Single("no-bool")),
+        "Default value no-bool is not a Boolean."
+    )
+
+    verifyFails<IllegalStateException>(
+        "Null",
+        Schema(type = Basic.Null),
+        "Null  should always be resolved to result in nullable types. Please report this bug. {\"type\":\"null\"}"
+    )
 }

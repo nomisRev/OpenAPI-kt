@@ -22,10 +22,10 @@ suspend fun Endpoint.parameters(): List<Route.Input> {
 
 context(ctx: Registry, endpoint: Endpoint)
 private suspend fun ResolvedParameter.toRouteInput(name: NamingContext): Route.Input {
-    val schema = requireNotNull(
-        value.schema?.resolve(name, SchemaContext.Input)
-    ) { "Parameter ${name()} without schema for ${endpoint.path} ${endpoint.method}" }
-    val type = schema.toModel(SchemaContext.Input)
+    val refOrSchema = requireNotNull(value.schema) {
+        "Parameter ${name()} without schema for ${endpoint.path} ${endpoint.method}"
+    }
+    val type = refOrSchema.toModel(name, SchemaContext.Input)
     return Route.Input(name(), type, value.required, value.input, value.description)
 }
 

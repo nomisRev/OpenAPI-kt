@@ -14,7 +14,7 @@ import io.github.nomisrev.openapi.resolve
 import io.github.nomisrev.openapi.toModel
 import io.github.nomisrev.openapi.writeOnly
 
-context(ctx: Registry)
+context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toObject(
     context: SchemaContext,
     properties: Map<String, ReferenceOr<Schema>>
@@ -49,7 +49,7 @@ suspend fun ResolvedSchema.toObject(
     )
 }
 
-context(ctx: Registry)
+context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.additionalProperties(context: SchemaContext) =
     when (val ap = schema.additionalProperties) {
         is AdditionalProperties.Allowed -> Model.Object.AdditionalProperties.Allowed(ap.value)

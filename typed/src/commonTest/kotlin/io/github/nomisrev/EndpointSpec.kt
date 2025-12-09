@@ -2,21 +2,12 @@ package io.github.nomisrev
 
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Endpoint
-import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.RouteParam
 import io.github.nomisrev.openapi.NamingContext.Path
-import io.github.nomisrev.openapi.endpoints
 import io.github.nomisrev.openapi.parser.Operation
-import io.github.nomisrev.openapi.parser.OpenAPI
-import io.github.nomisrev.openapi.parser.PathItem
-import io.github.nomisrev.openapi.parser.Info
-import io.github.nomisrev.openapi.parser.Parameter
-import io.github.nomisrev.openapi.parser.Parameter.Input
-import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Response
 import io.github.nomisrev.openapi.parser.Responses
 import io.ktor.http.HttpMethod
-import kotlin.test.assertEquals
 
 val endpointSpec by testSuite {
     fun endpoint(path: String, operationId: String? = null) = Endpoint(
@@ -35,7 +26,7 @@ val endpointSpec by testSuite {
         endpoint("/test/{user_id}") to "getByUser_id",
         endpoint("/test/{userId}") to "getByUserId",
         endpoint("/test/{user_id}", "customOperationId") to "customOperationId",
-    ).checkAll("Endpoint.getOrCreateOperationId()") { (endpoint, expected) ->
+    ).verifyAll("Endpoint.getOrCreateOperationId()") { (endpoint, expected) ->
         Eq(expected, endpoint.operationId)
     }
 
@@ -46,7 +37,7 @@ val endpointSpec by testSuite {
         endpoint("/test/{userId}/test2") to listOf("test", "test2"),
         endpoint("/test/{userId}/test2/{param2}") to listOf("test", "test2"),
         endpoint("/test/v1/{userId}/test2/{param2}") to listOf("test", "v1", "test2"),
-    ).checkAll("Endpoint.pathSegments()") { (endpoint, expected) ->
+    ).verifyAll("Endpoint.pathSegments()") { (endpoint, expected) ->
         Eq(expected, endpoint.pathSegments)
     }
 
@@ -59,7 +50,7 @@ val endpointSpec by testSuite {
         endpoint("/test/v1/{userId}/test2/{param2}") to listOf("userId", "param2"),
         // We allow duplicate path parameters but they'll get filtered out for now
         endpoint("/test/{userId}/test2/{userId}/test3") to listOf("userId", "userId"),
-    ).checkAll("Endpoint.pathParams()") { (endpoint, expected) ->
+    ).verifyAll("Endpoint.pathParams()") { (endpoint, expected) ->
         Eq(expected, endpoint.pathParameters)
     }
 
@@ -71,7 +62,7 @@ val endpointSpec by testSuite {
             .nest(RouteParam(name = "param", operationId = "get")),
         endpoint("/test/{userId}/test2/{param2}") to Path(listOf("test", "test2"))
             .nest(RouteParam(name = "param", operationId = "getByParam2")),
-    ).checkAll("Endpoint.context(..)") { (endpoint, expected) ->
+    ).verifyAll("Endpoint.context(..)") { (endpoint, expected) ->
         Eq(expected, endpoint.context(RouteParam("param", endpoint.operationId)))
     }
 }

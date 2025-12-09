@@ -6,7 +6,7 @@ import io.github.nomisrev.ExpectedApi
 import io.github.nomisrev.assertEq
 import io.github.nomisrev.all
 import io.github.nomisrev.api
-import io.github.nomisrev.checkAll
+import io.github.nomisrev.verifyAll
 import io.github.nomisrev.description
 import io.github.nomisrev.expect
 import io.github.nomisrev.forever
@@ -92,19 +92,15 @@ val objectSpec by testSuite {
         ) expect Model.FreeFormJson(description.expected, null, isNullable ?: false)
     }
 
-    checkAll("Additional Properties", aProps) { schema ->
-        Value(NamingContext.RouteParam("Nested", "getBy"), schema).toModel(SchemaContext.Input)
-    }
+    verifyAll("Additional Properties", aProps)
 
     fun List<Expect<Schema, Model>>.removeType() = map { (schema, model) ->
         schema.copy(type = null) expect model
     }
 
-    checkAll("Additional Properties without type: Object", aProps.removeType()) {
-        Value(NamingContext.RouteParam("Nested", "getBy"), it).toModel(SchemaContext.Input)
-    }
+    verifyAll("Additional Properties without type: Object", aProps.removeType())
 
-    checkAll(
+    verifyAll(
         "AdditionalProperties.Schema (null properties) is flattened",
         Model.Primitive.all().map { (schema, model) ->
             val topName = NamingContext.Reference("Top", null)
@@ -114,11 +110,9 @@ val objectSpec by testSuite {
             actualSchema expect expectedModel
             ExpectedApi(actualSchema, expectedModel, api, listOf(topName))
         }
-    ) { schema ->
-        Value(NamingContext.Reference("Top", null), schema).toModel(SchemaContext.Input)
-    }
+    ) { schema -> Value(NamingContext.Reference("Top", null), schema) }
 
-    val objNames = sequenceOf(NamingContext.RouteParam("value", "getBy")).forever()
+    val objNames = sequenceOf(NamingContext.ObjectProperty("test")).forever()
 
     val obj = objNames.zip(
         properties,
@@ -146,15 +140,8 @@ val objectSpec by testSuite {
         schema expect obj
     }
 
-    checkAll("Object", obj.take(10_000).toList()) { schema ->
-        Value(NamingContext.RouteParam("value", "getBy"), schema)
-            .toModel(SchemaContext.Input)
-    }
-
-    checkAll("Object without type: Object", obj.take(10_000).toList().removeType()) { schema ->
-        Value(NamingContext.RouteParam("value", "getBy"), schema)
-            .toModel(SchemaContext.Input)
-    }
+    verifyAll("Object", obj.take(10_000).toList())
+    verifyAll("Object without type: Object", obj.take(10_000).toList().removeType())
 
     test("Referenced Nested Object") {
         val topInt = NamingContext.Reference("TopInt", null)
@@ -173,13 +160,12 @@ val objectSpec by testSuite {
         )
         val registry = Registry(api)
         val actual = with(registry) {
-            Value(
-                NamingContext.RouteParam("get", "getBy"),
+            ReferenceOr.value(
                 Schema(
                     type = Type.Basic.Object,
                     properties = mapOf("prop" to schema("TopInt"))
                 )
-            ).toModel(SchemaContext.Input)
+            ).toModel(NamingContext.RouteParam("get", "getBy"), SchemaContext.Input)
         }
         assertEq(expected, actual)
         assertEquals(setOf(topInt), registry.names())
@@ -189,7 +175,7 @@ val objectSpec by testSuite {
         val schema =
             Schema(type = Type.Basic.Object, properties = mapOf("enum" to ReferenceOr.value(it.actual)))
         val model = Model.Object(
-            context = NamingContext.RouteParam("Nested", "getBy"),
+            context = NamingContext.ObjectProperty("test"),
             description = null,
             properties = listOf(Model.Object.Property("enum", it.expected, false, it.expected.description)),
             inline = setOf(it.expected),
@@ -199,9 +185,7 @@ val objectSpec by testSuite {
         schema expect model
     }
 
-    checkAll("Enum Value", enum) { schema ->
-        Value(NamingContext.RouteParam("Nested", "getBy"), schema).toModel(SchemaContext.Input)
-    }
+    verifyAll("Enum Value", enum)
 
     val enumNesting = Model.Enum.strings(NamingContext.ObjectProperty("enum"))
         .map { (innerSchema, innerModel) ->
@@ -210,7 +194,7 @@ val objectSpec by testSuite {
             val objSchema =
                 Schema(type = Type.Basic.Object, properties = mapOf("enum" to ReferenceOr.value(listSchema)))
             val model = Model.Object(
-                context = NamingContext.RouteParam("Nested", "getBy"),
+                context = NamingContext.ObjectProperty("test"),
                 description = null,
                 properties = listOf(Model.Object.Property("enum", listModel, false, listModel.description)),
                 inline = setOf(innerModel),
@@ -220,9 +204,7 @@ val objectSpec by testSuite {
             objSchema expect model
         }
 
-    checkAll("Enum Value nesting", enumNesting) { schema ->
-        Value(NamingContext.RouteParam("Nested", "getBy"), schema).toModel(SchemaContext.Input)
-    }
+    verifyAll("Enum Value nesting", enumNesting)
 
     val writeOnly = listOf(true, false, null)
     val readOnly = listOf(true, false, null)
@@ -275,13 +257,10 @@ val objectSpec by testSuite {
         schema expect obj
     }
 
-    checkAll(
+    verifyAll(
         "Object with readOnly properties",
         objWithReadOnly.take(10_000).toList()
-    ) { schema ->
-        Value(NamingContext.RouteParam("value", "getBy"), schema).toModel(SchemaContext.Input)
-    }
-
+    )
 
     fun Sequence<List<Prop>>.randomWrite(): Sequence<Expect<Pair<Map<String, ReferenceOr<Schema>>, List<String>>, List<Model.Object.Property>>> =
         map { props ->
@@ -328,10 +307,9 @@ val objectSpec by testSuite {
         schema expect obj
     }
 
-    checkAll(
+    verifyAll(
         "Object with writeOnly properties",
-        objWithWriteOnly.take(10_000).toList()
-    ) { schema ->
-        Value(NamingContext.RouteParam("value", "getBy"), schema).toModel(SchemaContext.Output)
-    }
+        objWithWriteOnly.take(10_000).toList(),
+        SchemaContext.Output
+    )
 }
