@@ -104,7 +104,6 @@ fun Model.Primitive.Boolean.Companion.all() = listOf(
     Model.Primitive.Boolean(Model.Default.Null, null, true),
 )
 
-
 data class SchemaNumberConstraints(
     val exclusiveMinimum: Boolean?,
     val minimum: Double?,

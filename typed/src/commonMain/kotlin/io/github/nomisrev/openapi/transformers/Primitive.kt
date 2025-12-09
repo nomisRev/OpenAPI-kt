@@ -2,22 +2,22 @@ package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
-import io.github.nomisrev.openapi.Registry
-import io.github.nomisrev.openapi.ResolvedSchema
-import io.github.nomisrev.openapi.description
-import io.github.nomisrev.openapi.get
+import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.ResolvedSchema
+import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.Schema
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.primitive(): Model = when (this) {
+    is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable)
     is ResolvedSchema.Value -> toPrimitive()
     is ResolvedSchema.Reference -> {
         val inner = toPrimitive()
         Model.Object(
             name,
             inner.description,
-            listOf(Model.Object.Property("value", inner.with(description = null, isNullable = false), true, null)),
+            listOf(Model.Object.Property("value", inner.with(description = null, isNullable = false), true)),
             emptySet(),
             false,
             inner.isNullable

@@ -3,36 +3,83 @@ package io.github.nomisrev
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.Registry
-import io.github.nomisrev.openapi.ResolvedSchema
-import io.github.nomisrev.openapi.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
-import io.github.nomisrev.openapi.registry
-import io.github.nomisrev.openapi.resolve
-import io.github.nomisrev.openapi.toModel
-
+import io.github.nomisrev.openapi.registry.ResolvedSchema
 
 val recursiveSpec by testSuite {
-    val recursiveAnchor = Schema(
-        recursiveAnchor = true,
-        type = Schema.Type.Basic.Object,
-        properties = mapOf(
-            "filters" to ReferenceOr.value(
-                Schema(anyOf = listOf(
-                    ReferenceOr.value(Schema(type = Schema.Type.Basic.Array, items = ReferenceOr.Reference("#"))),
-                    ReferenceOr.value(Schema(type = Schema.Type.Basic.Null))
-                ))
+    fun recursiveAnchors(name: NamingContext) =
+        listOf(true, false, null).product(description) { isNullable, description ->
+            val recursiveAnchor = Schema(
+                recursiveAnchor = true,
+                type = Schema.Type.Basic.Object,
+                properties = mapOf("self" to ReferenceOr.Reference("#")),
+                description = description.actual,
+                nullable = isNullable
             )
-        ),
-        required = listOf("filters")
-    )
-
-    test("recursive anchor") {
-        val actual = with(Registry(api.reference("Root", recursiveAnchor))) {
-            ReferenceOr.schema("Root")
-                .toModel(NamingContext.Reference("Root", null), SchemaContext.Input)
+            val expected = Model.Object(
+                name,
+                description.expected,
+                listOf(
+                    Model.Object.Property(
+                        "self",
+                        Model.Reference(name, description.expected, isNullable ?: false),
+                        isRequired = false
+                    )
+                ),
+                inline = emptySet(),
+                additionalProperties = false,
+                isNullable = isNullable ?: false
+            )
+            recursiveAnchor expect expected
         }
-        println(actual)
-    }
+
+    verifyAll("Recursive anchors", recursiveAnchors(NamingContext.ObjectProperty("test")))
+
+    val root = NamingContext.Reference("Root", null)
+    verifyAll(
+        "Recursive anchors reference",
+        recursiveAnchors(root).map { (schema, model) ->
+            ExpectedApi(
+                schema,
+                model,
+                api.reference("Root", schema),
+                listOf(root)
+            )
+        }
+    ) { schema -> ResolvedSchema.Reference(root, schema) }
+
+
+    val recursiveReferences =
+        listOf(true, false, null).product(description) { isNullable, description ->
+            val recursiveAnchor = Schema(
+                recursiveAnchor = true,
+                type = Schema.Type.Basic.Object,
+                properties = mapOf("self" to ReferenceOr.schema("Root")),
+                description = description.actual,
+                nullable = isNullable
+            )
+            val expected = Model.Object(
+                root,
+                description.expected,
+                listOf(
+                    Model.Object.Property(
+                        "self",
+                        Model.Reference(root, description.expected, isNullable ?: false),
+                        isRequired = false
+                    )
+                ),
+                inline = emptySet(),
+                additionalProperties = false,
+                isNullable = isNullable ?: false
+            )
+            ExpectedApi(
+                recursiveAnchor,
+                expected,
+                api.reference("Root", recursiveAnchor),
+                listOf(root)
+            )
+        }
+
+    verifyAll("Recursive references", recursiveReferences) { schema -> ResolvedSchema.Reference(root, schema) }
 }

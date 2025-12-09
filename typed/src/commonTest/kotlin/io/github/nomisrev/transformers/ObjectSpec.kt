@@ -12,8 +12,8 @@ import io.github.nomisrev.expect
 import io.github.nomisrev.forever
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.Registry
-import io.github.nomisrev.openapi.ResolvedSchema.Value
+import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
 import io.github.nomisrev.openapi.SchemaContext
 import io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.parser.AdditionalProperties.PSchema
@@ -21,7 +21,6 @@ import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
-import io.github.nomisrev.openapi.toModel
 import io.github.nomisrev.product
 import io.github.nomisrev.randomChunked
 import io.github.nomisrev.reference
@@ -38,7 +37,7 @@ private val propNames = sequence {
 private val SEED = Random.nextLong().also { println("#### SEED: $it") }
 private val RANDOM = Random(SEED)
 
-private val primitive: Sequence<Expect<Schema, Model>> = sequence {
+val primitives: Sequence<Expect<Schema, Model>> = sequence {
     val values = Model.Primitive.all() + Model.FreeFormJson.all()
     while (true) {
         val index = RANDOM.nextInt(values.size)
@@ -49,12 +48,12 @@ private val primitive: Sequence<Expect<Schema, Model>> = sequence {
 data class Prop(val name: String, val schema: Expect<Schema, Model>, val isRequired: Boolean)
 
 private val properties = propNames.zip(
-    primitive,
+    primitives,
     sequenceOf(true, false).forever(),
     ::Prop
 ).randomChunked(minSize = 2, maxSize = 10)
 
-private val additionalProperties = primitive.flatMap { (actual, expected) ->
+private val additionalProperties = primitives.flatMap { (actual, expected) ->
     listOf(
         Allowed(true) expect Model.Object.AdditionalProperties.Allowed(true),
         Allowed(false) expect Model.Object.AdditionalProperties.Allowed(false),
@@ -131,7 +130,7 @@ val objectSpec by testSuite {
             context = name,
             description = null,
             properties = props.map { (name, schema, isRequired) ->
-                Model.Object.Property(name, schema.expected, isRequired, schema.expected.description)
+                Model.Object.Property(name, schema.expected, isRequired)
             },
             inline = emptySet(),
             additionalProperties = additionalProperties.expected,
@@ -152,7 +151,7 @@ val objectSpec by testSuite {
             NamingContext.RouteParam("get", "getBy"),
             null,
             listOf(
-                Model.Object.Property("prop", intObj, false, null)
+                Model.Object.Property("prop", intObj, false)
             ),
             emptySet(),
             false,
@@ -177,7 +176,7 @@ val objectSpec by testSuite {
         val model = Model.Object(
             context = NamingContext.ObjectProperty("test"),
             description = null,
-            properties = listOf(Model.Object.Property("enum", it.expected, false, it.expected.description)),
+            properties = listOf(Model.Object.Property("enum", it.expected, false)),
             inline = setOf(it.expected),
             additionalProperties = false,
             isNullable = false
@@ -196,7 +195,7 @@ val objectSpec by testSuite {
             val model = Model.Object(
                 context = NamingContext.ObjectProperty("test"),
                 description = null,
-                properties = listOf(Model.Object.Property("enum", listModel, false, listModel.description)),
+                properties = listOf(Model.Object.Property("enum", listModel, false)),
                 inline = setOf(innerModel),
                 additionalProperties = false,
                 isNullable = false
@@ -225,8 +224,7 @@ val objectSpec by testSuite {
                 Model.Object.Property(
                     prop.name,
                     prop.schema.expected,
-                    prop.isRequired,
-                    prop.schema.expected.description
+                    prop.isRequired
                 )
             }
             actual expect expected
@@ -275,8 +273,7 @@ val objectSpec by testSuite {
                 Model.Object.Property(
                     prop.name,
                     prop.schema.expected,
-                    prop.isRequired,
-                    prop.schema.expected.description
+                    prop.isRequired
                 )
             }
             actual expect expected

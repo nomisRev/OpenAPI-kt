@@ -1,10 +1,11 @@
 package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.NamingContext.RouteParam
-import io.github.nomisrev.openapi.ResolvedSchema.Value
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.toModel
 
 enum class SchemaContext {
     Input, Output;

@@ -3,18 +3,16 @@ package io.github.nomisrev.openapi.transformers
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Default
-import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.Registry
-import io.github.nomisrev.openapi.ResolvedSchema
+import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.SchemaContext
-import io.github.nomisrev.openapi.description
 import io.github.nomisrev.openapi.parser.ExampleValue
-import io.github.nomisrev.openapi.resolve
-import io.github.nomisrev.openapi.toModel
+import io.github.nomisrev.openapi.registry.ResolvedSchema
+import io.github.nomisrev.openapi.registry.description
+import io.github.nomisrev.openapi.registry.toModel
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.collection(context: SchemaContext): Model {
-    val inner = schema.items?.resolve(name, context)?.toModel(context)
+    val inner = schema.items?.toModel(name, context)
         ?: Model.FreeFormJson(description = null, constraint = null, isNullable = false)
     return Model.Collection.List(inner, default(), description(), Constraints.Collection(schema), isNullable)
 }

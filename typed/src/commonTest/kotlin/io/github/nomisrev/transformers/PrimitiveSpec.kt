@@ -4,25 +4,20 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.Eq
 import io.github.nomisrev.all
 import io.github.nomisrev.api
-import io.github.nomisrev.expect
 import io.github.nomisrev.verifyAll
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.Registry
-import io.github.nomisrev.openapi.ResolvedSchema
-import io.github.nomisrev.openapi.ResolvedSchema.Value
+import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
 import io.github.nomisrev.openapi.SchemaContext
 import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type.Basic
-import io.github.nomisrev.openapi.transformers.primitive
 import io.github.nomisrev.openapi.toModel
 import io.github.nomisrev.reference
 import io.github.nomisrev.verifyFails
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 @OptIn(ExperimentalAtomicApi::class)
 val PrimitiveSpec by testSuite {

@@ -4,14 +4,13 @@ import de.infix.testBalloon.framework.core.TestSuite
 import de.infix.testBalloon.framework.shared.TestRegistering
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.Registry
-import io.github.nomisrev.openapi.ResolvedSchema
+import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.SchemaContext
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
-import io.github.nomisrev.openapi.toModel
 import kotlinx.serialization.json.Json
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.jvm.JvmName
@@ -34,19 +33,17 @@ fun <A, B> List<A>.verifyAll(
     check: suspend (A) -> Eq<B>,
 ) {
     suite.test(name) {
-        val res = fold(StringBuilder()) { acc, value ->
+        forEach { value ->
             val eq = check(value)
             if (eq.expected != eq.actual) {
-                acc.appendLine(
+                fail(
                     """
                     A: ${eq.actual}
                     E: ${eq.expected}
                 """.trimIndent()
                 )
-                acc.appendLine("\n---\n")
-            } else acc
+            }
         }
-        if (res.isNotEmpty()) fail(res.toString())
     }
 }
 
@@ -67,42 +64,40 @@ fun TestSuite.verifyAll(
     actual: suspend (Schema) -> ResolvedSchema
 ) {
     test(name) {
-        val res = buildString {
-            for (expected in values) {
-                val registry = Registry(expected.api)
-                val actual = try {
-                    val resolved = actual(expected.schema)
-                    with(registry) {
-                        when (resolved) {
-                            is ResolvedSchema.Reference -> ReferenceOr.schema(resolved.name.name)
-                            is ResolvedSchema.Value -> ReferenceOr.value(resolved.schema)
-                        }.toModel(resolved.name, context)
-                    }
-                } catch (e: Throwable) {
-                    println(
-                        """
+        for (expected in values) {
+            val registry = Registry(expected.api)
+            val actual = try {
+                val resolved = actual(expected.schema)
+                with(registry) {
+                    when (resolved) {
+                        is ResolvedSchema.Reference -> ReferenceOr.schema(resolved.name.name)
+                        is ResolvedSchema.Value -> ReferenceOr.value(resolved.schema)
+                        is ResolvedSchema.Recursive -> ReferenceOr.schema((resolved.name as NamingContext.Reference).name)
+                    }.toModel(resolved.name, context)
+                }
+            } catch (e: Throwable) {
+                println(
+                    """
                         O: ${expected.schema}
                         E: ${ModelJson.encodeToString(Model.serializer(), expected.model)}""".trimIndent()
-                    )
-                    throw e
-                }
-                if (actual != expected.model) {
-                    appendLine(
-                        """
+                )
+                throw e
+            }
+            if (actual != expected.model) {
+                fail(
+                    """
                     O: ${expected.schema}
                     A: ${ModelJson.encodeToString(Model.serializer(), actual)}
                     E: ${ModelJson.encodeToString(Model.serializer(), expected.model)}
+                    
                 """.trimIndent()
-                    )
-                    appendLine("\n---\n")
-                }
-                if (!registry.names().containsAll(expected.names)) {
-                    val missing = expected.names - registry.names()
-                    throw AssertionError("{$missing} are missing from registry. ${registry.names()}")
-                }
+                )
+            }
+            if (!registry.names().containsAll(expected.names)) {
+                val missing = expected.names - registry.names()
+                throw AssertionError("{$missing} are missing from registry. ${registry.names()}")
             }
         }
-        if (res.isNotEmpty()) fail(res)
     }
 }
 
@@ -140,38 +135,35 @@ fun TestSuite.verifyAll(
 ) {
     test(name) {
         val registry = Registry(api)
-        val res = buildString {
-            for ((schema, model) in values) {
-                val actual = try {
-                    with(registry) {
-                        val resolved = actual(schema)
-                        when (resolved) {
-                            is ResolvedSchema.Reference -> ReferenceOr.schema("#/components/schema/${resolved.name}")
-                            is ResolvedSchema.Value -> ReferenceOr.value(resolved.schema)
-                        }.toModel(resolved.name, context)
-                    }
-                } catch (e: Throwable) {
-                    println(
-                        """
+        for ((schema, model) in values) {
+            val actual = try {
+                with(registry) {
+                    val resolved = actual(schema)
+                    when (resolved) {
+                        is ResolvedSchema.Reference -> ReferenceOr.schema("#/components/schema/${resolved.name.name}")
+                        is ResolvedSchema.Value -> ReferenceOr.value(resolved.schema)
+                        is ResolvedSchema.Recursive -> ReferenceOr.schema("#/components/schema/${(resolved.name as NamingContext.Reference).name}")
+                    }.toModel(resolved.name, context)
+                }
+            } catch (e: Throwable) {
+                println(
+                    """
                     O: $schema
                     E: ${ModelJson.encodeToString(Model.serializer(), model)}
                 """.trimIndent()
-                    )
-                    throw e
-                }
-                if (actual != model) {
-                    appendLine(
-                        """
+                )
+                throw e
+            }
+            if (actual != model) {
+                fail(
+                    """
                     O: $schema
                     A: ${ModelJson.encodeToString(Model.serializer(), actual)}
                     E: ${ModelJson.encodeToString(Model.serializer(), model)}
                 """.trimIndent()
-                    )
-                    appendLine("\n---\n")
-                }
+                )
             }
         }
-        if (res.isNotEmpty()) fail(res)
     }
 }
 
@@ -184,22 +176,19 @@ fun TestSuite.verifyAll(
 ) {
     test(name) {
         val registry = Registry(api)
-        val res = buildString {
-            for ((schema, model) in values) {
-                val eq = with(registry) { actual(schema, model) }
-                if (eq.actual != eq.expected) {
-                    appendLine(
-                        """
+        for ((schema, model) in values) {
+            val eq = with(registry) { actual(schema, model) }
+            if (eq.actual != eq.expected) {
+                fail(
+                    """
                     Original: $schema
                     Actual: ${ModelJson.encodeToString(Model.serializer(), eq.actual)}
                     Expected: ${ModelJson.encodeToString(Model.serializer(), eq.expected)}
+                    
                 """.trimIndent()
-                    )
-                    appendLine("\n---\n")
-                }
+                )
             }
         }
-        if (res.isNotEmpty()) fail(res)
     }
 }
 

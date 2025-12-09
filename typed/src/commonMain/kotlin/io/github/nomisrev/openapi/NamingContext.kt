@@ -43,17 +43,21 @@ sealed interface NamingContext {
 
     @Serializable
     @SerialName("ObjectProperty")
-    data class ObjectProperty(val name: String) : GenerateName2
+    data class ObjectProperty(val name: String) : GenerateName
 
     @Serializable
     @SerialName("Reference")
     data class Reference(val name: String, val context: SchemaContext?) : NamingContext
 
-    sealed interface GenerateName2 : NamingContext
+    sealed interface GenerateName : NamingContext
 
     @Serializable
-    @SerialName("GenerateUnionName")
-    data class GenerateUnionName(val name: String) : GenerateName2
+    @SerialName("AdditionalProperties")
+    data object AdditionalProperties : GenerateName
+
+    @Serializable
+    @SerialName("UnionCase")
+    data object UnionCase : GenerateName
 
     /**
      * An input param of a route. The param name is used to generate type names for inline schemas.
@@ -64,7 +68,7 @@ sealed interface NamingContext {
     data class RouteParam(
         val name: String,
         val operationId: String
-    ) : GenerateName2
+    ) : GenerateName
 
     // TODO: reuse RouteParam with name == "body" or name == "request"
     @Serializable
@@ -72,10 +76,10 @@ sealed interface NamingContext {
     data class RouteBody(
         val name: String,
         val operationId: String
-    ) : GenerateName2
+    ) : GenerateName
 
     // TODO: Could be RouteParam with name == "response"
     @Serializable
     @SerialName("Response")
-    data class Response(val operationId: String) : GenerateName2
+    data class Response(val operationId: String) : GenerateName
 }

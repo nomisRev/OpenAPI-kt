@@ -1,7 +1,6 @@
 package io.github.nomisrev.transformers
 
 import de.infix.testBalloon.framework.core.testSuite
-import io.github.nomisrev.Eq
 import io.github.nomisrev.ExpectedApi
 import io.github.nomisrev.all
 import io.github.nomisrev.api
@@ -10,23 +9,15 @@ import io.github.nomisrev.verifyAll
 import io.github.nomisrev.expect
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.Registry
-import io.github.nomisrev.openapi.ResolvedSchema
-import io.github.nomisrev.openapi.ResolvedSchema.Value
-import io.github.nomisrev.openapi.SchemaContext
-import io.github.nomisrev.openapi.transformers.collection
+import io.github.nomisrev.openapi.registry.ResolvedSchema
+import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
 import io.github.nomisrev.openapi.parser.ExampleValue
-import io.github.nomisrev.openapi.registry
 import io.github.nomisrev.openapi.parser.ReferenceOr
-import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
-import io.github.nomisrev.openapi.toModel
 import io.github.nomisrev.reference
 import io.github.nomisrev.verifyFails
 import kotlin.collections.emptyList
-import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 
 val collectionSpec by testSuite {
     val name = NamingContext.ObjectProperty("values")

@@ -228,7 +228,7 @@ sealed interface Model {
 
         @SerialName("Property")
         @Serializable
-        data class Property(val baseName: String, val model: Model, val isRequired: Boolean, val description: String?)
+        data class Property(val baseName: String, val model: Model, val isRequired: Boolean)
 
         companion object {
             // TODO write proper tests for this
@@ -239,8 +239,7 @@ sealed interface Model {
                     Property(
                         "value",
                         property.with(description = null, isNullable = false),
-                        true,
-                        null
+                        true
                     )
                 ),
                 inline,
