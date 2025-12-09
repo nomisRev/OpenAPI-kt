@@ -17,7 +17,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
     private val client: HttpClient = HttpClient()
     private val cache: MutableList<NamingContext.Reference> = mutableListOf()
 
-    fun names(): List<NamingContext.Reference> = cache.toList()
+    fun names(): Set<NamingContext.Reference> = cache.toSet()
 
     /** This is meant for `Schema.description` which can sometimes reference other schemas descriptions. */
     tailrec suspend fun ReferenceOr<String>?.get(): String? = when (this) {
@@ -33,7 +33,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
             when (val nested = openAPI.components.schemas[name]) {
                 is ReferenceOr.Reference -> remoteSchema(nested.ref)
                 is ReferenceOr.Value<Schema> -> nested.value
-                null -> throw IllegalStateException("Schema $name could not be found in ${openAPI.components.schemas}.")
+                null -> throw IllegalStateException("Schema $name could not be found in ${openAPI.components.schemas.keys}.")
             }
         }
     }

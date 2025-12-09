@@ -36,49 +36,26 @@ suspend fun ResolvedSchema.toObject(
         }
     }
 
-    val nested = properties.filter { prop -> prop.model.isNested() }
+    val additionalProperties = additionalProperties(context)
+    val nested = properties.mapNotNullTo(mutableSetOf()) { prop -> prop.model.nestedOrNull() } +
+            listOfNotNull((additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.nestedOrNull())
     return Model.Object(
         context = name,
         description = description(),
         properties = properties,
-        inline = nested.map { it.model }.toSet(),
-        additionalProperties = additionalProperties(),
+        inline = nested,
+        additionalProperties = additionalProperties,
         isNullable = schema.nullable ?: false
     )
 }
 
-private tailrec fun Model.isNested(): Boolean = when (this) {
-    is Model.Collection.List -> inner.isNested()
-    is Model.Collection.Map -> inner.isNested()
-    is Model.ByteArray,
-    is Model.Date,
-    is Model.FreeFormJson,
-    is Model.DateTime,
-    is Model.Reference,
-    is Model.Uuid,
-    is Model.Primitive -> false
-
-    is Model.DiscriminatedObject if context is NamingContext.Reference -> false
-    is Model.Enum if context is NamingContext.Reference -> false
-    is Model.Object if context is NamingContext.Reference -> false
-    is Model.Union if context is NamingContext.Reference -> false
-    is Model.DiscriminatedObject,
-    is Model.Enum,
-    is Model.Object,
-    is Model.Union -> true
-}
-
-private fun ResolvedSchema.additionalProperties() = when (val ap = schema.additionalProperties) {
-    is AdditionalProperties.Allowed -> ap.value
-    null -> false
-    is AdditionalProperties.PSchema -> TODO()
-//        when (val refOrSchema = ap.value) {
-//            is ReferenceOr.Value<Schema> -> refOrSchema.value == Schema()
-//            is ReferenceOr.Reference -> {
-//                val name = refOrSchema.ref.schemaName()
-//                val schema =
-//                    requireNotNull(openAPI.components.schemas[name]?.valueOrNull()) { "Null or remote schema for $name" }
-//                schema == Schema()
-//            }
-//        }
-}
+context(ctx: Registry)
+private suspend fun ResolvedSchema.additionalProperties(context: SchemaContext) =
+    when (val ap = schema.additionalProperties) {
+        is AdditionalProperties.Allowed -> Model.Object.AdditionalProperties.Allowed(ap.value)
+        null -> Model.Object.AdditionalProperties.Allowed(false)
+        is AdditionalProperties.PSchema -> Model.Object.AdditionalProperties.Schema(
+            ap.value.resolve(name.nest(NamingContext.GenerateUnionName("Additional")), context)
+                .toModel(SchemaContext.Output)
+        )
+    }

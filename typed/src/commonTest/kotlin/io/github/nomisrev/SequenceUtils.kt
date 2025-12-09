@@ -1,6 +1,23 @@
 package io.github.nomisrev
 
-import io.github.nomisrev.transformers.forever
+import kotlin.random.Random
+
+fun <A> Sequence<A>.randomChunked(minSize: Int, maxSize: Int): Sequence<List<A>> = sequence {
+    val buffer = mutableListOf<A>()
+    var maxLength = Random.nextInt(minSize, maxSize)
+    forEach {
+        buffer.add(it)
+        if (buffer.size == maxLength) {
+            yield(buffer.toList())
+            buffer.clear()
+            maxLength = Random.nextInt(minSize, maxSize)
+        }
+    }
+}
+
+fun <A> Sequence<A>.forever(): Sequence<A> = sequence {
+    while (true) yieldAll(this@forever)
+}
 
 fun <T, T2, T3, V> Sequence<T>.zip(
     other: Sequence<T2>,

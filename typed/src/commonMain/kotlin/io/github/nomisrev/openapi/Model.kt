@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.jvm.JvmInline
 
 @Serializable
 sealed interface Model {
@@ -201,18 +202,33 @@ sealed interface Model {
         override val description: String?,
         val properties: List<Property>,
         val inline: Set<Model>,
-        /** When true, indicates additionalProperties: true (Any JSON) is allowed and should be handled. */
-        val additionalProperties: Boolean = false,
+        val additionalProperties: AdditionalProperties,
         override val isNullable: Boolean
     ) : Model {
+        constructor(
+            context: NamingContext,
+            description: String?,
+            properties: List<Property>,
+            inline: Set<Model>,
+            additionalProperties: Boolean,
+            isNullable: Boolean
+        ) : this(context, description, properties, inline, AdditionalProperties.Allowed(additionalProperties), isNullable)
+
+        @Serializable
+        sealed interface AdditionalProperties {
+            @Serializable
+            @SerialName("Allowed")
+            @JvmInline
+            value class Allowed(val value: Boolean) : AdditionalProperties
+            @Serializable
+            @SerialName("Schema")
+            @JvmInline
+            value class Schema(val value: Model) : AdditionalProperties
+        }
+
         @SerialName("Property")
         @Serializable
-        data class Property(
-            val baseName: String,
-            val model: Model,
-            val isRequired: Boolean,
-            val description: String?,
-        )
+        data class Property(val baseName: String, val model: Model, val isRequired: Boolean, val description: String?)
 
         companion object {
             // TODO write proper tests for this
@@ -228,7 +244,7 @@ sealed interface Model {
                     )
                 ),
                 inline,
-                additionalProperties = false,
+                additionalProperties = AdditionalProperties.Allowed(false),
                 property.isNullable
             )
         }
