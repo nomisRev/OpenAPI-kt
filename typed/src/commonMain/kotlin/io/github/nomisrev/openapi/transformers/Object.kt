@@ -19,7 +19,7 @@ context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toObject(
     context: SchemaContext,
     properties: Map<String, ReferenceOr<Schema>>
-): Model {
+): Model.Object {
     val properties = properties.mapNotNull { (name, refOrSchema) ->
         when (context) {
             SchemaContext.Input if refOrSchema.readOnly() == true -> null

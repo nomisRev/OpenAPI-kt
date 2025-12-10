@@ -269,16 +269,12 @@ sealed interface Model {
     data class DiscriminatedObject(
         val context: NamingContext,
         val baseObject: Object,
-        val subtypes: List<Subtype>,
-        val default: String?,
+        val subtypes: List<Object>,
         override val description: String?,
         val discriminator: String?,
         val selfReference: Boolean,
         override val isNullable: Boolean
-    ) : Model {
-        @Serializable
-        data class Subtype(val context: NamingContext, val model: Model, val discriminator: String?)
-    }
+    ) : Model
 
     @SerialName("Enum")
     @Serializable

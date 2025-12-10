@@ -18,6 +18,7 @@ import io.github.nomisrev.openapi.transformers.allOf
 import io.github.nomisrev.openapi.transformers.collection
 import io.github.nomisrev.openapi.transformers.primitive
 import io.github.nomisrev.openapi.transformers.toClosedEnum
+import io.github.nomisrev.openapi.transformers.toDiscriminatedObject
 import io.github.nomisrev.openapi.transformers.toObject
 import io.github.nomisrev.openapi.transformers.toOpenEnum
 import io.github.nomisrev.openapi.transformers.union
@@ -25,7 +26,7 @@ import io.github.nomisrev.openapi.transformers.union
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
     this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable)
-    this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> TODO()
+    this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> toDiscriminatedObject(context)
     isOpenEnumeration() -> toOpenEnum(context, schema.anyOf!!)
     schema.enum != null -> toClosedEnum(context, schema.enum!!)
     schema.allOf != null -> allOf(context, schema.allOf!!)

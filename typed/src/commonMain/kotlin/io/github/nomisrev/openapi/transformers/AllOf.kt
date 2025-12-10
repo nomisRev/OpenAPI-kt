@@ -9,11 +9,16 @@ import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
+import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.toModel
+import io.github.nomisrev.openapi.toModel
 
 context(scope: Registry.Scope)
 suspend fun ResolvedSchema.allOf(context: SchemaContext, allOf: List<ReferenceOr<Schema>>): Model =
-    allOf.map { it.toModel(name, context) }.reduce { acc, or -> acc.merge(or, name) }
+    allOf.map {
+        // Skip 'resolve' since we're inlining schemas even top-level ones
+        ResolvedSchema.Value(name, it.peek()).toModel(context)
+    }.reduce { acc, or -> acc.merge(or, name) }
 
 private fun Model.merge(other: Model, name: NamingContext): Model = when (this) {
     is Model.Reference if (other is Model.Reference && this.context == other.context) -> this

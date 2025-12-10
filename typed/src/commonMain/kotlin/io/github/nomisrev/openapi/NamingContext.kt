@@ -59,6 +59,10 @@ sealed interface NamingContext {
     @SerialName("UnionCase")
     data object UnionCase : GenerateName
 
+    @Serializable
+    @SerialName("DiscriminatedObjectCase")
+    data class DiscriminatedObjectCase(val discriminator: String) : GenerateName
+
     /**
      * An input param of a route. The param name is used to generate type names for inline schemas.
      * $OuterClass$MyOperationId$ParamName
