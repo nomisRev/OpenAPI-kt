@@ -44,14 +44,14 @@ sealed interface Constraints {
   }
 
   @Serializable
-  data class Collection(val minItems: Int, val maxItems: Int, val uniqueItems: Boolean? = null) :
+  data class Collection(val minItems: Int?, val maxItems: Int?, val uniqueItems: Boolean?) :
     Constraints {
     companion object {
       operator fun invoke(schema: Schema): Collection? =
         if (schema.minItems != null || schema.maxItems != null || schema.uniqueItems == true)
           Collection(
-            minItems = schema.minItems ?: 0,
-            maxItems = schema.maxItems ?: Int.MAX_VALUE,
+            minItems = schema.minItems,
+            maxItems = schema.maxItems,
             uniqueItems = schema.uniqueItems,
           )
         else null
@@ -67,11 +67,11 @@ sealed interface Constraints {
    * This can be useful when using additionalProperties, or free-form objects.
    */
   @Serializable
-  data class Object(val minProperties: Int, val maxProperties: Int) : Constraints {
+  data class Object(val minProperties: Int?, val maxProperties: Int?) : Constraints {
     companion object {
       operator fun invoke(schema: Schema): Object? =
         if (schema.minProperties != null || schema.maxProperties != null)
-          Object(schema.minProperties ?: 0, schema.maxProperties ?: Int.MAX_VALUE)
+          Object(schema.minProperties, schema.maxProperties)
         else null
     }
   }

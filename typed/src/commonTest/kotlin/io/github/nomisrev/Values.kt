@@ -239,8 +239,8 @@ data class ObjectConstraint(val minProperties: Int?, val maxProperties: Int?)
 
 fun Constraints.Object.Companion.all() = listOf(
     ObjectConstraint(null, null) expect null,
-    ObjectConstraint(10, null) expect Constraints.Object(10, Int.MAX_VALUE),
-    ObjectConstraint(null, 100) expect Constraints.Object(0, 100),
+    ObjectConstraint(10, null) expect Constraints.Object(10, null),
+    ObjectConstraint(null, 100) expect Constraints.Object(null, 100),
     ObjectConstraint(10, 100) expect Constraints.Object(10, 100),
 )
 

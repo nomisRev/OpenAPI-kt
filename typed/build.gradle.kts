@@ -10,7 +10,11 @@ plugins {
 }
 
 kotlin {
-    compilerOptions.freeCompilerArgs.addAll("-Xcontext-sensitive-resolution", "-Xcontext-parameters")
+    compilerOptions.freeCompilerArgs.addAll(
+        "-Xcontext-sensitive-resolution",
+        "-Xcontext-parameters",
+        "-Xreturn-value-checker=full"
+    )
 
     jvm()
     macosArm64()

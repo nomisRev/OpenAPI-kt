@@ -9,26 +9,6 @@ import io.github.nomisrev.openapi.registry.ResolvedSchema.Reference
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
 import io.github.nomisrev.openapi.toModel
 
-/**
- * Resolve a `ReferenceOr<Schema>` **this will register** the `Schema` according to the `context` as a consumed schema.
- * Only use this method if you're going to _consume_ the resolved schema.
- * Otherwise, use the predicates available on `ReferenceOr<Schema>` below first to determine if you need this schema.
- */
-context(ctx: Registry.Scope)
-suspend fun <A> ReferenceOr<Schema>.resolve(
-    name: NamingContext,
-    context: SchemaContext,
-    block: suspend context(Registry.Scope) (ResolvedSchema) -> A
-): A = with(ctx) { resolve(name, context, block) }
-
-context(ctx: Registry.Scope)
-suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
-    resolve(name, context) { it.toModel(context) }
-
-context(ctx: Registry)
-suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
-    with(ctx) { toModel(name, context) }
-
 context(ctx: Registry.Scope)
 suspend fun ReferenceOr<Schema>.readOnly(): Boolean? = with(ctx) { peek().readOnly }
 

@@ -183,6 +183,7 @@ sealed interface Model {
             override val isNullable: Boolean
         ) : Collection
 
+        // TODO remove
         @SerialName("Map")
         @Serializable
         data class Map(

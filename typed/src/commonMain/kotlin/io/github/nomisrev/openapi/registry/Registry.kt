@@ -50,7 +50,8 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
     // Layer of indirection to keep `Registry.Scope` construction private
     private inner class ScopeImpl(
         private val currentAnchor: Pair<NamingContext, Schema>?,
-        private val expanding: Set<Schema>
+        // TODO: this probably isn't right... ? What about duplicate inline Value Schema's?
+        private val expanding: Set<NamingContext>
     ) : Scope {
         override suspend fun ReferenceOr<Schema>.peek(): Schema = when (this) {
             is ReferenceOr.Value<Schema> -> value
@@ -140,16 +141,39 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
             val contextSpecific = schema.readOrWriteOnly()
             val context = if (contextSpecific) context else null
             val reference = NamingContext.Reference(name, context)
-            val resolved = if (expanding.contains(schema)) ResolvedSchema.Recursive(reference, schema)
+            val resolved = if (expanding.contains(reference)) ResolvedSchema.Recursive(reference, schema)
             else ResolvedSchema.Reference(reference, schema)
             cache.add(reference)
             val currentAnchor = if (schema.recursiveAnchor == true) Pair(
                 NamingContext.Reference(name, context),
                 schema
             ) else null
-            block.invoke(ScopeImpl(currentAnchor, expanding + schema), resolved)
+            block.invoke(ScopeImpl(currentAnchor, expanding + reference), resolved)
         }
     }
 }
 
 fun String.schemaName() = drop("#/components/schemas/".length)
+
+/**
+ * Resolve a `ReferenceOr<Schema>` **this will register** the `Schema` according to the `context` as a consumed schema.
+ * Only use this method if you're going to _consume_ the resolved schema.
+ * Otherwise, use the predicates available on `ReferenceOr<Schema>` below first to determine if you need this schema.
+ */
+context(ctx: Registry.Scope)
+suspend fun <A> ReferenceOr<Schema>.resolve(
+    name: NamingContext,
+    context: SchemaContext,
+    block: suspend context(Registry.Scope) (ResolvedSchema) -> A
+): A = with(ctx) { resolve(name, context, block) }
+
+context(ctx: Registry.Scope)
+suspend fun ReferenceOr<Schema>.peek(): Schema = with(ctx) { peek() }
+
+context(ctx: Registry.Scope)
+suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
+    resolve(name, context) { it.toModel(context) }
+
+context(ctx: Registry)
+suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
+    with(ctx) { toModel(name, context) }

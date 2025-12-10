@@ -14,6 +14,7 @@ import io.github.nomisrev.openapi.registry.isOneOfNullableType
 import io.github.nomisrev.openapi.registry.isOpenEnumeration
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.toModel
+import io.github.nomisrev.openapi.transformers.allOf
 import io.github.nomisrev.openapi.transformers.collection
 import io.github.nomisrev.openapi.transformers.primitive
 import io.github.nomisrev.openapi.transformers.toClosedEnum
@@ -27,7 +28,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
     this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> TODO()
     isOpenEnumeration() -> toOpenEnum(context, schema.anyOf!!)
     schema.enum != null -> toClosedEnum(context, schema.enum!!)
-    schema.allOf != null -> TODO()
+    schema.allOf != null -> allOf(context, schema.allOf!!)
 
     isOneOfNullableType() -> flattenNull(context, schema.oneOf!!)
     schema.oneOf?.size == 1 -> schema.oneOf!!.single().toModel(name, context)
