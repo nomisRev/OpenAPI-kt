@@ -16,7 +16,6 @@ import kotlinx.serialization.json.JsonPrimitive
  * components object will have no effect on the API unless they are explicitly referenced from
  * properties outside the components object.
  */
-// TODO, need `KeepGeneratedSerializer` or manually define instance...
 @Serializable(Components.Companion.Serializer::class)
 @OptIn(InternalSerializationApi::class)
 @KeepGeneratedSerializer

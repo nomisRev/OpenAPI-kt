@@ -54,21 +54,4 @@ public data class PathItem(
    * [JsonPrimitive], [JsonArray] or [JsonObject].
    */
   public val extensions: Map<String, JsonElement> = emptyMap(),
-) {
-
-  public operator fun plus(other: PathItem): PathItem =
-    PathItem(
-      null,
-      null,
-      get = get ?: other.get,
-      put = put ?: other.put,
-      post = post ?: other.post,
-      delete = delete ?: other.delete,
-      options = options ?: other.options,
-      head = head ?: other.head,
-      patch = patch ?: other.patch,
-      trace = trace ?: other.trace,
-      servers = emptyList(),
-      parameters = emptyList(),
-    )
-}
+)

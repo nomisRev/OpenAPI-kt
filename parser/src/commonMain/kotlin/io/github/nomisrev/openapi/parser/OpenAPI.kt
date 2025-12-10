@@ -64,42 +64,6 @@ public data class OpenAPI(
    */
   public val extensions: Map<String, JsonElement> = emptyMap(),
 ) {
-
-  public fun operationsByTag(): Map<String, List<Operation>> = TODO()
-
-  //    tags.associateBy(Tag::name) { tag ->
-  //      operations().filter { it.tags.contains(tag.name) }
-  //    }
-
-  public fun withComponents(components: Components): OpenAPI = copy(components = components)
-
-  public fun withPathItem(path: String, pathItem: PathItem): OpenAPI {
-    val newPathItem =
-      when (val existing = paths[path]) {
-        null -> pathItem
-        else -> existing + pathItem
-      }
-
-    return copy(paths = paths + Pair(path, newPathItem))
-  }
-
-  public fun withServers(servers: List<Server>): OpenAPI = copy(servers = this.servers + servers)
-
-  public fun withServers(vararg servers: Server): OpenAPI =
-    copy(servers = this.servers + servers.toList())
-
-  public fun withServer(server: Server): OpenAPI = copy(servers = this.servers + listOf(server))
-
-  public fun withTags(tags: Set<Tag>): OpenAPI = copy(tags = this.tags + tags)
-
-  public fun withTag(tag: Tag): OpenAPI = copy(tags = this.tags + setOf(tag))
-
-  public fun withExternalDocs(externalDocs: ExternalDocs): OpenAPI =
-    copy(externalDocs = externalDocs)
-
-  public fun withExtensions(extensions: Map<String, JsonElement>): OpenAPI =
-    copy(extensions = this.extensions + extensions)
-
   public fun toJson(): String = Json.encodeToString(this)
 
   public fun toJsObject(): JsonObject = Json.encodeToJsonElement(this).jsonObject
@@ -113,9 +77,6 @@ public data class OpenAPI(
     internal val Json: Json = Json {
       encodeDefaults = false
       prettyPrint = true
-      // TODO: Should this somehow be configurable?
-      //   This allows incorrect OpenAPI to be parsed,
-      //   such as OpenAPI Generator skips validation.
       ignoreUnknownKeys = true
       isLenient = true
     }
@@ -126,7 +87,6 @@ public data class OpenAPI(
         configuration =
           YamlConfiguration(
             encodeDefaults = false,
-            // ignoreUnknownKeys
             strictMode = false,
             decodeEnumCaseInsensitive = true,
             anchorsAndAliases = AnchorsAndAliases.Permitted(),

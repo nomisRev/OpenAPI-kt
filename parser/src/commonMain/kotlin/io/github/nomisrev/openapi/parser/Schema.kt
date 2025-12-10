@@ -127,7 +127,6 @@ public data class Schema(
         }
 
         public object Serializer : KSerializer<Type> {
-            // TODO fix descriptor
             @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
             override val descriptor: SerialDescriptor =
                 buildSerialDescriptor("io.github.nomisrev.openapi.Schema.Type", SerialKind.CONTEXTUAL)

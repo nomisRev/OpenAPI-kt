@@ -47,7 +47,6 @@ public sealed interface ExampleValue {
     internal class Serializer : KSerializer<ExampleValue> {
       private val multipleSerializer = ListSerializer(String.serializer())
 
-      // TODO implement proper SerialDescriptor
       @OptIn(ExperimentalSerializationApi::class, InternalSerializationApi::class)
       override val descriptor: SerialDescriptor =
         buildSerialDescriptor(
