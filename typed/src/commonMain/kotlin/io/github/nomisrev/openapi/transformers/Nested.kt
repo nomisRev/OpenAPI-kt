@@ -4,8 +4,7 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 
 internal tailrec fun Model.nestedOrNull(): Model? = when (this) {
-    is Model.Collection.List -> inner.nestedOrNull()
-    is Model.Collection.Map -> inner.nestedOrNull()
+    is Model.Collection -> inner.nestedOrNull()
     is Model.ByteArray,
     is Model.Date,
     is Model.FreeFormJson,

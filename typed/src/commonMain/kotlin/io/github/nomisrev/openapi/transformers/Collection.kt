@@ -14,7 +14,7 @@ context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.collection(context: SchemaContext): Model {
     val inner = schema.items?.toModel(name, context)
         ?: Model.FreeFormJson(description = null, constraint = null, isNullable = false)
-    return Model.Collection.List(inner, collectionDefault(), description(), Constraints.Collection(schema), isNullable)
+    return Model.Collection(inner, collectionDefault(), description(), Constraints.Collection(schema), isNullable)
 }
 
 private fun ResolvedSchema.collectionDefault() = when (val example = schema.default) {

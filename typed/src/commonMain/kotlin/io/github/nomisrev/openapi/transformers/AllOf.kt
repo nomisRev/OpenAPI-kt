@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi.transformers
 
+import com.charleskorn.kaml.Yaml.Companion.default
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
@@ -18,16 +19,9 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
     is Model.Reference if (other is Model.Reference && this.context == other.context) -> this
     is Model.Primitive if other is Model.Primitive -> merge(other)
     is Model.Object if other is Model.Object -> merge(name, other)
-    is Model.Collection.List if other is Model.Collection.List -> Model.Collection.List(
+    is Model.Collection if other is Model.Collection -> Model.Collection(
         inner = inner.merge(other.inner, name),
         default = default ?: other.default,
-        description = description ?: other.description,
-        isNullable = isNullable || other.isNullable,
-        constraint = constraint.merge(other.constraint)
-    )
-
-    is Model.Collection.Map if other is Model.Collection.Map -> Model.Collection.Map(
-        inner = inner.merge(other.inner, name),
         description = description ?: other.description,
         isNullable = isNullable || other.isNullable,
         constraint = constraint.merge(other.constraint)

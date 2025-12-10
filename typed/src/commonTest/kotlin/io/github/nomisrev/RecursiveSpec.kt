@@ -103,7 +103,7 @@ val recursiveSpec by testSuite {
                 listOf(
                     Model.Object.Property(
                         "self",
-                        Model.Collection.List(
+                        Model.Collection(
                             Model.Reference(root, description.expected, isNullable ?: false),
                             null,
                             null,

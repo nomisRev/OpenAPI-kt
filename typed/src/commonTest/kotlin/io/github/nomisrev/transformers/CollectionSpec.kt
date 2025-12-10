@@ -23,7 +23,7 @@ val collectionSpec by testSuite {
     val name = NamingContext.ObjectProperty("values")
     val primitives = (Model.Primitive.all() + Model.FreeFormJson.all()).map { (schema, model) ->
         val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.Value(schema))
-        val expected = Model.Collection.List(model, null, null, null, false)
+        val expected = Model.Collection(model, null, null, null, false)
         schema expect expected
     }
 
@@ -38,7 +38,7 @@ val collectionSpec by testSuite {
         "Collection with referenced primitive",
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.schema("CollectionItem"))
-            val expected = Model.Collection.List(
+            val expected = Model.Collection(
                 Model.Object.value(NamingContext.Reference("CollectionItem", null), model),
                 null,
                 null,
@@ -59,7 +59,7 @@ val collectionSpec by testSuite {
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(items = ReferenceOr.schema("CollectionItem"))
             val wrapped = Model.Object.value(NamingContext.Reference("CollectionItem", null), model)
-            val expected = Model.Collection.List(wrapped, null, null, null, false)
+            val expected = Model.Collection(wrapped, null, null, null, false)
             ExpectedApi(
                 schema,
                 expected,
@@ -73,7 +73,7 @@ val collectionSpec by testSuite {
         "Referenced Collection with primitive",
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.Value(innerSchema))
-            val expected = Model.Collection.List(model, null, null, null, false)
+            val expected = Model.Collection(model, null, null, null, false)
             ExpectedApi(
                 schema,
                 expected,
@@ -87,7 +87,7 @@ val collectionSpec by testSuite {
         "Referenced Collection with primitive without type: array",
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(items = ReferenceOr.Value(innerSchema))
-            val expected = Model.Collection.List(model, null, null, null, false)
+            val expected = Model.Collection(model, null, null, null, false)
             ExpectedApi(
                 schema,
                 expected,
@@ -100,7 +100,7 @@ val collectionSpec by testSuite {
     verify(
         "Default - empty JS array",
         Schema(type = Type.Basic.Array, default = ExampleValue.Single("[]")),
-        Model.Collection.List(
+        Model.Collection(
             Model.FreeFormJson(null, null, false),
             Model.Default.Value(emptyList()),
             null,
@@ -112,7 +112,7 @@ val collectionSpec by testSuite {
     verify(
         "Default - null on nullable array",
         Schema(type = Type.Basic.Array, default = ExampleValue.Single("null"), nullable = true),
-        Model.Collection.List(Model.FreeFormJson(null, null, false), Model.Default.Null, null, null, true)
+        Model.Collection(Model.FreeFormJson(null, null, false), Model.Default.Null, null, null, true)
     )
 
     verifyFails<IllegalArgumentException>(
@@ -129,7 +129,7 @@ val collectionSpec by testSuite {
             default = ExampleValue.Single("A"),
             nullable = false
         ),
-        Model.Collection.List(
+        Model.Collection(
             Model.Primitive.String(null, null, null, false),
             Model.Default.Value(listOf("A")),
             null,
@@ -146,7 +146,7 @@ val collectionSpec by testSuite {
             default = ExampleValue.Multiple(listOf("A", "B")),
             nullable = false
         ),
-        Model.Collection.List(
+        Model.Collection(
             Model.Primitive.String(null, null, null, false),
             Model.Default.Value(listOf("A", "B")),
             null,

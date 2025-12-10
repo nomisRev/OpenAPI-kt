@@ -14,8 +14,7 @@ sealed interface Model {
         isNullable: Boolean = this.isNullable,
     ) = when (this) {
         is ByteArray -> copy(description = description, isNullable = isNullable)
-        is Collection.List -> copy(description = description, isNullable = isNullable)
-        is Collection.Map -> copy(description = description, isNullable = isNullable)
+        is Collection -> copy(description = description, isNullable = isNullable)
         is Date -> copy(description = description, isNullable = isNullable)
         is DateTime -> copy(description = description, isNullable = isNullable)
         is DiscriminatedObject -> copy(description = description, isNullable = isNullable)
@@ -168,33 +167,16 @@ sealed interface Model {
         //         }
     }
 
+
+    @SerialName("List")
     @Serializable
-    sealed interface Collection : Model {
-        val inner: Model
-        val constraint: Constraints.Collection?
-
-        @SerialName("List")
-        @Serializable
-        data class List(
-            override val inner: Model,
-            val default: Default<kotlin.collections.List<String>>?,
-            override val description: String?,
-            override val constraint: Constraints.Collection?,
-            override val isNullable: Boolean
-        ) : Collection
-
-        // TODO remove
-        @SerialName("Map")
-        @Serializable
-        data class Map(
-            override val inner: Model,
-            override val description: String?,
-            override val constraint: Constraints.Collection?,
-            override val isNullable: Boolean
-        ) : Collection {
-            val key = Primitive.String(null, null, null, false)
-        }
-    }
+    data class Collection(
+        val inner: Model,
+        val default: Default<List<String>>?,
+        override val description: String?,
+        val constraint: Constraints.Collection?,
+        override val isNullable: Boolean
+    ): Model
 
     @SerialName("Object")
     @Serializable

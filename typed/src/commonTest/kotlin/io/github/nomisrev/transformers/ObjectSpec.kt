@@ -161,7 +161,7 @@ val objectSpec by testSuite {
     val enumNesting = Model.Enum.strings(NamingContext.ObjectProperty("enum"))
         .map { (innerSchema, innerModel) ->
             val listSchema = Schema(type = Type.Basic.Array, items = ReferenceOr.value(innerSchema))
-            val listModel = Model.Collection.List(innerModel, null, null, null, false)
+            val listModel = Model.Collection(innerModel, null, null, null, false)
             val objSchema =
                 Schema(type = Type.Basic.Object, properties = mapOf("enum" to ReferenceOr.value(listSchema)))
             val model = Model.Object(
