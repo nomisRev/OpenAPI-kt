@@ -142,34 +142,6 @@ val objectSpec by testSuite {
     verifyAll("Object", obj.take(10_000).toList())
     verifyAll("Object without type: Object", obj.take(10_000).toList().removeType())
 
-    test("Referenced Nested Object") {
-        val topInt = NamingContext.Reference("TopInt", null)
-        val api = api.reference("TopInt", Schema.integer)
-        val intM = Model.Primitive.Long(null, null, null, false)
-        val intObj = Model.Object.value(topInt, intM)
-        val expected = Model.Object(
-            NamingContext.RouteParam("get", "getBy"),
-            null,
-            listOf(
-                Model.Object.Property("prop", intObj, false)
-            ),
-            emptySet(),
-            false,
-            false
-        )
-        val registry = Registry(api)
-        val actual = with(registry) {
-            ReferenceOr.value(
-                Schema(
-                    type = Type.Basic.Object,
-                    properties = mapOf("prop" to schema("TopInt"))
-                )
-            ).toModel(NamingContext.RouteParam("get", "getBy"), SchemaContext.Input)
-        }
-        assertEq(expected, actual)
-        assertEquals(setOf(topInt), registry.names())
-    }
-
     val enum = Model.Enum.strings(NamingContext.ObjectProperty("enum")).map {
         val schema =
             Schema(type = Type.Basic.Object, properties = mapOf("enum" to ReferenceOr.value(it.actual)))

@@ -247,8 +247,8 @@ fun TestSuite.verifyAll(
 fun assertEq(expected: Model, actual: Model) =
     if (expected != actual) fail(
         """
-    Actual: ${ModelJson.encodeToString(Model.serializer(), actual)}
-    Expected: ${ModelJson.encodeToString(Model.serializer(), expected)}
+    A: ${ModelJson.encodeToString(Model.serializer(), actual)}
+    E: ${ModelJson.encodeToString(Model.serializer(), expected)}
     """.trimIndent()
     ) else Model.Primitive.Unit
 

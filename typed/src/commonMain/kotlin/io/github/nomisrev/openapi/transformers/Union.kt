@@ -6,12 +6,10 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.SchemaContext
-import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.resolve
-import io.github.nomisrev.openapi.registry.toModel
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.union(
