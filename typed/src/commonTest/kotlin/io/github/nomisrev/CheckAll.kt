@@ -3,13 +3,13 @@ package io.github.nomisrev
 import de.infix.testBalloon.framework.core.TestSuite
 import de.infix.testBalloon.framework.shared.TestRegistering
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.SchemaContext
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
-import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import kotlinx.serialization.json.Json
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -53,6 +53,57 @@ data class ExpectedApi(
     val api: OpenAPI,
     val names: List<NamingContext>
 )
+
+@OptIn(ExperimentalAtomicApi::class)
+@TestRegistering
+@JvmName("checkAllExpectedApi")
+fun TestSuite.verifyAll(
+    name: String,
+    values: List<Expect<Schema, Model>>,
+    vararg names: NamingContext.Reference
+) = verifyAll(name, values, Input, names.toList())
+
+@OptIn(ExperimentalAtomicApi::class)
+@TestRegistering
+@JvmName("checkAllExpectedApi")
+fun TestSuite.verifyAll(
+    name: String,
+    values: List<Expect<Schema, Model>>,
+    context: SchemaContext,
+    names: List<NamingContext.Reference>
+) {
+    test(name) {
+        val refName = names.first()
+        for (expected in values) {
+            val registry = Registry(api.reference(refName.name, expected.actual))
+            val actual = try {
+                // TODO report bug about super obscure error. bug?
+                context(registry) { ReferenceOr.schema(refName.name).toModel(refName, context) }
+            } catch (e: Throwable) {
+                println(
+                    """
+                        O: ${expected.actual}
+                        E: ${ModelJson.encodeToString(Model.serializer(), expected.expected)}""".trimIndent()
+                )
+                throw e
+            }
+            if (actual != expected.expected) {
+                fail(
+                    """
+                    O: ${expected.actual}
+                    A: ${ModelJson.encodeToString(Model.serializer(), actual)}
+                    E: ${ModelJson.encodeToString(Model.serializer(), expected.expected)}
+                    
+                """.trimIndent()
+                )
+            }
+            if (!registry.names().containsAll(names)) {
+                val missing = names - registry.names()
+                throw AssertionError("{$missing} are missing from registry. ${registry.names()}")
+            }
+        }
+    }
+}
 
 @OptIn(ExperimentalAtomicApi::class)
 @TestRegistering

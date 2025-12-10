@@ -73,13 +73,8 @@ val recursiveSpec by testSuite {
                 additionalProperties = false,
                 isNullable = isNullable ?: false
             )
-            ExpectedApi(
-                recursiveAnchor,
-                expected,
-                api.reference("Root", recursiveAnchor),
-                listOf(root)
-            )
+            recursiveAnchor expect expected
         }
 
-    verifyAll("Recursive references", recursiveReferences) { schema -> ResolvedSchema.Reference(root, schema) }
+    verifyAll("Recursive references", recursiveReferences, root)
 }

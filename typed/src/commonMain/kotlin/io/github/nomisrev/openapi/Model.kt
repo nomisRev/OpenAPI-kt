@@ -212,7 +212,14 @@ sealed interface Model {
             inline: Set<Model>,
             additionalProperties: Boolean,
             isNullable: Boolean
-        ) : this(context, description, properties, inline, AdditionalProperties.Allowed(additionalProperties), isNullable)
+        ) : this(
+            context,
+            description,
+            properties,
+            inline,
+            AdditionalProperties.Allowed(additionalProperties),
+            isNullable
+        )
 
         @Serializable
         sealed interface AdditionalProperties {
@@ -220,6 +227,7 @@ sealed interface Model {
             @SerialName("Allowed")
             @JvmInline
             value class Allowed(val value: Boolean) : AdditionalProperties
+
             @Serializable
             @SerialName("Schema")
             @JvmInline
@@ -253,13 +261,16 @@ sealed interface Model {
     @Serializable
     data class Union(
         val context: NamingContext,
-        val cases: List<Model>,
+        val cases: List<Case>,
         val default: Default<String>?,
         override val description: String?,
         val inline: Set<Model>,
-        val discriminator: Discriminator?,
+        val discriminator: String?,
         override val isNullable: Boolean
-    ) : Model
+    ) : Model {
+        @Serializable
+        data class Case(val model: Model, val discriminator: String?)
+    }
 
     /**
      * Represents a discriminated object pattern - an inheritance-based type system where:
@@ -278,17 +289,13 @@ sealed interface Model {
         val subtypes: List<Subtype>,
         val default: String?,
         override val description: String?,
-        val discriminator: Discriminator,
+        val discriminator: String?,
         val selfReference: Boolean,
         override val isNullable: Boolean
     ) : Model {
         @Serializable
-        data class Subtype(val context: NamingContext, val model: Model, val discriminatorValue: String)
+        data class Subtype(val context: NamingContext, val model: Model, val discriminator: String?)
     }
-
-    @SerialName("Discriminator")
-    @Serializable
-    data class Discriminator(val propertyName: String, val mapping: Map<String, String>?)
 
     @SerialName("Enum")
     @Serializable

@@ -1,13 +1,16 @@
 package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.toModel
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.toModel
 
 context(ctx: Registry.Scope)
@@ -15,14 +18,28 @@ suspend fun ResolvedSchema.union(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
 ): Model {
-    val cases = subtypes.map { subtype -> subtype.toModel(NamingContext.UnionCase, context) }
+
+    val cases = subtypes.map { subtype ->
+        subtype.resolve(NamingContext.UnionCase, context) {
+            val discriminatorValue = schema.discriminator?.mapping?.let { discriminator ->
+                when (it) {
+                    is ResolvedSchema.Recursive if it.name is NamingContext.Reference -> discriminator[it.name.name]
+                    is ResolvedSchema.Reference -> discriminator[it.name.name]
+                    is ResolvedSchema.Recursive,
+                    is ResolvedSchema.Value -> null
+                }
+            }
+            Model.Union.Case(it.toModel(context), discriminatorValue)
+        }
+    }
+
     return Model.Union(
         name,
         cases,
-        null,
+        default(),
         description(),
-        cases.mapNotNullTo(mutableSetOf()) { it.nestedOrNull() },
-        schema.discriminator?.let { Model.Discriminator(it.propertyName, it.mapping) },
+        cases.mapNotNullTo(mutableSetOf()) { it.model.nestedOrNull() },
+        schema.discriminator?.propertyName,
         isNullable
     )
 }

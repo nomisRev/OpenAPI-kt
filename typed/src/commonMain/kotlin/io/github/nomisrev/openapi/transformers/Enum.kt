@@ -67,7 +67,7 @@ suspend fun ResolvedSchema.toOpenEnum(context: SchemaContext, anyOf: List<Refere
     }
 }
 
-private fun ResolvedSchema.default(): Model.Default<String>? = when (val _default = schema.default) {
+fun ResolvedSchema.default(): Model.Default<String>? = when (val _default = schema.default) {
     is Single if _default.value.equals("null", ignoreCase = true) -> Model.Default.Null
     is Single -> Model.Default.Value(_default.value)
     is Multiple -> throw IllegalArgumentException("Multiple default values not supported for enums.")

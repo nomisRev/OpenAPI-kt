@@ -6,6 +6,7 @@ import io.github.nomisrev.description
 import io.github.nomisrev.expect
 import io.github.nomisrev.zip
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.Model.Union
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
@@ -24,7 +25,12 @@ val unionSpec by testSuite {
                 ReferenceOr.value(l.actual),
                 ReferenceOr.value(d.actual),
                 ReferenceOr.value(b.actual),
-            ) expect listOf(s.expected, l.expected, d.expected, b.expected)
+            ) expect listOf(
+                Union.Case(s.expected, null),
+                Union.Case(l.expected, null),
+                Union.Case(d.expected, null),
+                Union.Case(b.expected, null),
+            )
         }
 
     verifyAll(

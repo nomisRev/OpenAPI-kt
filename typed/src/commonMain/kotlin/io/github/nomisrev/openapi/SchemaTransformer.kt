@@ -35,7 +35,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
 
     isAnyOfNullableType() -> flattenNull(context, schema.anyOf!!)
     schema.anyOf?.size == 1 -> schema.anyOf!!.single().toModel(name, context)
-    schema.anyOf != null -> TODO()
+    schema.anyOf != null -> union(context, schema.anyOf!!)
 
     schema.type != null -> when (val type = schema.type!!) {
         is Schema.Type.Array -> { // Flatten Null
