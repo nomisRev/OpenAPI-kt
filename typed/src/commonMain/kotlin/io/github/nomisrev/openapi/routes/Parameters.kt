@@ -8,7 +8,7 @@ import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.toModel
 
 enum class SchemaContext {
-    Write, Read;
+    Write, Read, Null;
 }
 
 context(ctx: Registry)

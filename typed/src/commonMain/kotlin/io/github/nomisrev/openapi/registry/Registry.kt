@@ -23,6 +23,9 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
 
     override fun close() = client.close()
 
+    suspend fun NamingContext.Reference.toModel(): Model =
+        ReferenceOr.schema(name).toModel(this, SchemaContext.Null)
+
     suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
         with(ScopeImpl(null, emptySet())) { resolve(name, context) { it.toModel(context) } }
 
