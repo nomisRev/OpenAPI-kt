@@ -23,6 +23,15 @@ val anyOfSpec by testSuite {
         ) expect model.with(isNullable = true)
     })
 
+    verifyAll("anyOf[{ nullable: true }, { type: primitive }", Model.Primitive.all().map { (schema, model) ->
+        Schema(
+            anyOf = listOf(
+                ReferenceOr.value(Schema(nullable = true)),
+                ReferenceOr.value(schema)
+            )
+        ) expect model.with(isNullable = true)
+    })
+
     verifyAll("anyOf[{ type: primitive }]", Model.Primitive.all().map { (schema, model) ->
         Schema(anyOf = listOf(ReferenceOr.value(schema))) expect model
     })

@@ -21,4 +21,13 @@ val oneOfSpec by testSuite {
             )
         ) expect model.with(isNullable = true)
     })
+
+    verifyAll("oneOf[{ nullable: true }, { type: primitive }", Model.Primitive.all().map { (schema, model) ->
+        Schema(
+            oneOf = listOf(
+                ReferenceOr.value(Schema(nullable = true)),
+                ReferenceOr.value(schema)
+            )
+        ) expect model.with(isNullable = true)
+    })
 }
