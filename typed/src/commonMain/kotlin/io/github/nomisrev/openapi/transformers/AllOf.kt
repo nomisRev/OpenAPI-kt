@@ -18,6 +18,7 @@ suspend fun ResolvedSchema.allOf(context: SchemaContext, allOf: List<ReferenceOr
     }.reduce { acc, or -> acc.merge(or, name) }
 
 private fun Model.merge(other: Model, name: NamingContext): Model = when (this) {
+    else if this == other -> this
     is Model.Reference if (other is Model.Reference && this.context == other.context) -> this
     is Model.Primitive if other is Model.Primitive -> merge(other)
     is Model.Object if other is Model.Object -> merge(name, other)
@@ -38,6 +39,7 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
         additionalProperties =
             other.additionalProperties.merge(Model.Object.AdditionalProperties.Allowed(true), name)
     )
+
     is Model.FreeFormJson if other is Model.FreeFormJson -> copy(
         description = description ?: other.description,
         constraint = constraint.merge(other.constraint),
@@ -46,7 +48,10 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
 
     is Model.FreeFormJson if other is Model.Union -> TODO()
     is Model.Union if other is Model.Union -> TODO("Implement Model.Union merge in allOf")
-    is Model.Enum if other is Model.Enum -> TODO("allOf Enum")
+    is Model.Enum if other is Model.Enum -> {
+        TODO("allOf Enum")
+    }
+
     is Model.Collection,
     is Model.Enum,
     is Model.DiscriminatedObject,
