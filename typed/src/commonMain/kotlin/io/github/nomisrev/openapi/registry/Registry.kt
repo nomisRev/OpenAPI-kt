@@ -2,14 +2,12 @@ package io.github.nomisrev.openapi.registry
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
-import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
-import io.github.nomisrev.openapi.toModel
+import io.github.nomisrev.openapi.transformers.toModel
 import io.ktor.client.HttpClient
-import kotlin.collections.fold
 
 inline fun <A> registry(openAPI: OpenAPI, block: context(Registry) () -> A): A =
     Registry(openAPI).use { block(it) }
@@ -30,8 +28,8 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
 
     interface Scope {
         /**
-         * Resolves a `ReferenceOr<Schema>` taking into account [context] whether it appears as [SchemaContext.Input],
-         * or [SchemaContext.Output].
+         * Resolves a `ReferenceOr<Schema>` taking into account [context] whether it appears as [SchemaContext.Write],
+         * or [SchemaContext.Read].
          */
         suspend fun <A> ReferenceOr<Schema>.resolve(
             name: NamingContext,
@@ -73,8 +71,8 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
         }
 
         /**
-         * Resolves a `ReferenceOr<Schema>` taking into account [context] whether it appears as [SchemaContext.Input],
-         * or [SchemaContext.Output].
+         * Resolves a `ReferenceOr<Schema>` taking into account [context] whether it appears as [SchemaContext.Write],
+         * or [SchemaContext.Read].
          */
         override suspend fun <A> ReferenceOr<Schema>.resolve(
             name: NamingContext,

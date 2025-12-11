@@ -3,7 +3,7 @@ package io.github.nomisrev
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.ResolvedSchema
@@ -175,11 +175,11 @@ val recursiveSpec by testSuite {
         registry(api) {
             assertEq(
                 expectedA,
-                ReferenceOr.schema("A").toModel(NamingContext.Reference("A", null), SchemaContext.Input)
+                ReferenceOr.schema("A").toModel(NamingContext.Reference("A", null), SchemaContext.Write)
             )
             assertEq(
                 expectedB,
-                ReferenceOr.schema("B").toModel(NamingContext.Reference("B", null), SchemaContext.Input)
+                ReferenceOr.schema("B").toModel(NamingContext.Reference("B", null), SchemaContext.Write)
             )
         }
     }

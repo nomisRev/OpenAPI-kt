@@ -5,7 +5,7 @@ import io.github.nomisrev.api
 import io.github.nomisrev.assertEq
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
@@ -37,7 +37,7 @@ val nestedSpec by testSuite {
                     type = Type.Basic.Object,
                     properties = mapOf("prop" to schema("TopInt"))
                 )
-            ).toModel(NamingContext.RouteParam("get", "getBy"), SchemaContext.Input)
+            ).toModel(NamingContext.RouteParam("get", "getBy"), SchemaContext.Write)
         }
         assertEq(expected, actual)
         assertEquals(setOf(topInt), registry.names())

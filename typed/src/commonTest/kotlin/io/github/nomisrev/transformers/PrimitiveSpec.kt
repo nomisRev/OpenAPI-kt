@@ -9,12 +9,12 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
-import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type.Basic
-import io.github.nomisrev.openapi.toModel
+import io.github.nomisrev.openapi.transformers.toModel
 import io.github.nomisrev.reference
 import io.github.nomisrev.verifyFails
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -28,14 +28,14 @@ val PrimitiveSpec by testSuite {
     verifyAll("Referenced primitives", Model.Primitive.all()) { schema, inner ->
         val context = NamingContext.Reference(schema.toString(), null)
         val actual = with(Registry(api.reference(schema.toString(), schema))) {
-            ReferenceOr.schema(schema.toString()).toModel(context, SchemaContext.Input)
+            ReferenceOr.schema(schema.toString()).toModel(context, SchemaContext.Write)
         }
         val expected = Model.Object.value(context, inner)
         Eq(expected, actual)
     }
 
     context(scope: Registry.Scope)
-    suspend fun Schema.primitive(): Model = Value(name, this).toModel(SchemaContext.Input)
+    suspend fun Schema.primitive(): Model = Value(name, this).toModel(SchemaContext.Write)
 
     verifyFails<IllegalArgumentException>(
         "Schema.Type.Basic.Number multiple default values throws IllegalArgumentException",

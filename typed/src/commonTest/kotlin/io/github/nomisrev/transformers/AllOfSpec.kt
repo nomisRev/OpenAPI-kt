@@ -5,7 +5,7 @@ import io.github.nomisrev.api
 import io.github.nomisrev.assertEq
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
@@ -31,7 +31,7 @@ val allOfSpec by testSuite {
     test("AB") {
         val registry = Registry(api.reference("A", a).reference("B", b).reference("AB", ab))
         val actual = with(registry) {
-            ReferenceOr.schema("AB").toModel(NamingContext.Reference("AB", null), SchemaContext.Input)
+            ReferenceOr.schema("AB").toModel(NamingContext.Reference("AB", null), SchemaContext.Write)
         }
         assertEq(expected, actual)
     }

@@ -3,7 +3,6 @@ package io.github.nomisrev.transformers
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.Expect
 import io.github.nomisrev.ExpectedApi
-import io.github.nomisrev.assertEq
 import io.github.nomisrev.all
 import io.github.nomisrev.api
 import io.github.nomisrev.verifyAll
@@ -12,9 +11,8 @@ import io.github.nomisrev.expect
 import io.github.nomisrev.forever
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
-import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.parser.AdditionalProperties.PSchema
 import io.github.nomisrev.openapi.parser.ReferenceOr
@@ -26,7 +24,6 @@ import io.github.nomisrev.randomChunked
 import io.github.nomisrev.reference
 import io.github.nomisrev.zip
 import kotlin.random.Random
-import kotlin.test.assertEquals
 
 private val propNames = sequence {
     var i = 0
@@ -279,6 +276,6 @@ val objectSpec by testSuite {
     verifyAll(
         "Object with writeOnly properties",
         objWithWriteOnly.take(10_000).toList(),
-        SchemaContext.Output
+        SchemaContext.Read
     )
 }

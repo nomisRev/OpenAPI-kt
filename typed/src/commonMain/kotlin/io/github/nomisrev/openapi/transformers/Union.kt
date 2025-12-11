@@ -1,11 +1,10 @@
 package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
-import io.github.nomisrev.openapi.toModel
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
-import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema

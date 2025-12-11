@@ -1,7 +1,7 @@
 package io.github.nomisrev
 
 import de.infix.testBalloon.framework.core.testSuite
-import io.github.nomisrev.openapi.Endpoint
+import io.github.nomisrev.openapi.routes.Endpoint
 import io.github.nomisrev.openapi.NamingContext.RouteParam
 import io.github.nomisrev.openapi.NamingContext.Path
 import io.github.nomisrev.openapi.parser.Operation

@@ -4,7 +4,7 @@ import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Default
 import io.github.nomisrev.openapi.registry.Registry
-import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description

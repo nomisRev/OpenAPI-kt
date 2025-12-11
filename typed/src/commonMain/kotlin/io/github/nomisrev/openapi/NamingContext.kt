@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.routes.SchemaContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline

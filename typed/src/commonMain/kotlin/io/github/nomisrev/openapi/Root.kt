@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.routes.Route
+
 /**
  * ADT that models how to generate the API. Our OpenAPI document dictates the structure of the API,
  * so all operations are available as their path, with operationId. i.e. for `OpenAI`

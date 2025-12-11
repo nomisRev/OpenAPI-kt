@@ -7,7 +7,7 @@ import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
-import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
@@ -61,7 +61,7 @@ fun TestSuite.verifyAll(
     name: String,
     values: List<Expect<Schema, Model>>,
     vararg names: NamingContext.Reference
-) = verifyAll(name, values, Input, names.toList())
+) = verifyAll(name, values, Write, names.toList())
 
 @OptIn(ExperimentalAtomicApi::class)
 @TestRegistering
@@ -111,7 +111,7 @@ fun TestSuite.verifyAll(
 fun TestSuite.verifyAll(
     name: String,
     values: List<ExpectedApi>,
-    context: SchemaContext = Input,
+    context: SchemaContext = Write,
     actual: suspend (Schema) -> ResolvedSchema
 ) {
     test(name) {
@@ -161,7 +161,7 @@ inline fun <reified T : Throwable> TestSuite.verifyFails(
 ) = test(name) {
     val e = assertFailsWith<T> {
         with(Registry(api)) {
-            ReferenceOr.value(schema).toModel(NamingContext.ObjectProperty("test"), Input)
+            ReferenceOr.value(schema).toModel(NamingContext.ObjectProperty("test"), Write)
         }
     }
     assertEquals(message, e.message)
@@ -180,7 +180,7 @@ fun TestSuite.verify(
 fun TestSuite.verifyAll(
     name: String,
     values: List<Expect<Schema, Model>>,
-    context: SchemaContext = Input,
+    context: SchemaContext = Write,
     actual: suspend (Schema) -> ResolvedSchema =
         { schema -> ResolvedSchema.Value(NamingContext.ObjectProperty("test"), schema) }
 ) {

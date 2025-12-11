@@ -1,17 +1,14 @@
 package io.github.nomisrev.openapi.transformers
 
-import com.charleskorn.kaml.Yaml.Companion.default
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.peek
-import io.github.nomisrev.openapi.registry.toModel
-import io.github.nomisrev.openapi.toModel
 
 context(scope: Registry.Scope)
 suspend fun ResolvedSchema.allOf(context: SchemaContext, allOf: List<ReferenceOr<Schema>>): Model =

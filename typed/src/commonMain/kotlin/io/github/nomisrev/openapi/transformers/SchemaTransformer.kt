@@ -1,9 +1,10 @@
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.transformers
 
+import io.github.nomisrev.openapi.Constraints
+import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.FreeFormJson
 import io.github.nomisrev.openapi.Model.Object
 import io.github.nomisrev.openapi.parser.ReferenceOr
-import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
@@ -14,14 +15,7 @@ import io.github.nomisrev.openapi.registry.isOneOfNullableType
 import io.github.nomisrev.openapi.registry.isOpenEnumeration
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.toModel
-import io.github.nomisrev.openapi.transformers.allOf
-import io.github.nomisrev.openapi.transformers.collection
-import io.github.nomisrev.openapi.transformers.primitive
-import io.github.nomisrev.openapi.transformers.toClosedEnum
-import io.github.nomisrev.openapi.transformers.toDiscriminatedObject
-import io.github.nomisrev.openapi.transformers.toObject
-import io.github.nomisrev.openapi.transformers.toOpenEnum
-import io.github.nomisrev.openapi.transformers.union
+import io.github.nomisrev.openapi.routes.SchemaContext
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {

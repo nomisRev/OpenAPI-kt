@@ -1,5 +1,7 @@
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.routes
 
+import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.Parameter
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
@@ -17,13 +19,14 @@ data class Route(
   val returns: Returns,
   val extensions: Map<String, JsonElement>,
   val nested: Set<Model>,
+  val deprecated: Boolean,
 ) {
   data class Bodies(
     /** Request bodies are optional by default! */
     val required: Boolean,
-    val types: Map<String, Body>,
+    val types: Map<ContentType, Body>,
     val extensions: Map<String, JsonElement>,
-  ) : Map<String, Body> by types {
+  ) {
     fun defaultOrNull(): Body? =
       setBodyOrNull() ?: formUrlEncodedOrNull() ?: multipartOrNull()
 
@@ -71,27 +74,22 @@ data class Route(
     ) : Body, List<Multipart.FormData> by parameters
 
     sealed interface Multipart : Body {
-      val parameters: List<FormData>
-
       data class FormData(val name: String, val type: Model)
 
       // Inline schemas for multipart bodies do not generate a type,
       // they should be defined as functions parameters.
       data class Value(
-        override val parameters: List<FormData>,
+        val parameters: List<FormData>,
         override val description: String?,
         override val extensions: Map<String, JsonElement>,
       ) : Multipart
 
       // Top-level references get a top-level type.
       data class Ref(
-        val name: String,
         val value: Model,
         override val description: String?,
         override val extensions: Map<String, JsonElement>,
-      ) : Multipart {
-        override val parameters: List<FormData> = listOf(FormData(name, value))
-      }
+      ) : Multipart
     }
   }
 
@@ -131,12 +129,11 @@ data class Route(
       extensions: Map<String, JsonElement>,
     ) : this(
       success =
-        types.keys
-          .asSequence()
-          .filter { it.value in 200..299 }
-          .sortedBy { it.value }
-          .firstOrNull()
-          ?.let { types[it] },
+          types.keys
+              .asSequence()
+              .filter { it.value in 200..299 }
+              .minByOrNull { it.value }
+              ?.let { types[it] },
       default = null,
       entries = types,
       extensions = extensions,

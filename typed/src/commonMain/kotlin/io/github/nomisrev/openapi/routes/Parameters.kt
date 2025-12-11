@@ -1,4 +1,4 @@
-package io.github.nomisrev.openapi
+package io.github.nomisrev.openapi.routes
 
 import io.github.nomisrev.openapi.NamingContext.RouteParam
 import io.github.nomisrev.openapi.parser.Parameter
@@ -8,25 +8,28 @@ import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.toModel
 
 enum class SchemaContext {
-    Input, Output;
+    Write, Read;
 }
 
 context(ctx: Registry)
 suspend fun Endpoint.parameters(): List<Route.Input> {
     val parameters = withMissingPathParameters()
     // TODO: configure as part of Leniency mode
-    requireUnique(parameters.map { it.name() }, "Expected all parameters to have unique names. $parameters")
+    requireUnique(
+        parameters.map { it.name() },
+        "Expected all parameters to have unique names. $parameters"
+    )
     return parameters.map { parameter ->
         parameter.toRouteInput(context(RouteParam(parameter.name(), operationId)))
     }
 }
 
 context(ctx: Registry, endpoint: Endpoint)
-private suspend fun ResolvedParameter.toRouteInput(name: NamingContext): Route.Input {
+private suspend fun ResolvedParameter.toRouteInput(name: io.github.nomisrev.openapi.NamingContext): Route.Input {
     val refOrSchema = requireNotNull(value.schema) {
         "Parameter ${name()} without schema for ${endpoint.path} ${endpoint.method}"
     }
-    val type = refOrSchema.toModel(name, SchemaContext.Input)
+    val type = refOrSchema.toModel(name, SchemaContext.Write)
     return Route.Input(name(), type, value.required, value.input, value.description)
 }
 
@@ -41,7 +44,7 @@ private fun ResolvedParameter.name(): String = when (this) {
  *
  * TODO: configure as part of Leniency mode
  */
-context(ctx: Registry)
+context(ctx: Registry) // TODO horrible function
 private fun Endpoint.withMissingPathParameters(): List<ResolvedParameter> {
     val parameters = operation.parameters.map { it.resolve() }
     val parameterNames = parameters.map { it.name() }

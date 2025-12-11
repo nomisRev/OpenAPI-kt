@@ -3,7 +3,7 @@ package io.github.nomisrev.openapi.transformers
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.Registry
-import io.github.nomisrev.openapi.SchemaContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
@@ -13,7 +13,6 @@ import io.github.nomisrev.openapi.registry.readOnly
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.registry.writeOnly
-import io.github.nomisrev.openapi.toModel
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toObject(
@@ -22,8 +21,8 @@ suspend fun ResolvedSchema.toObject(
 ): Model.Object {
     val properties = properties.mapNotNull { (name, refOrSchema) ->
         when (context) {
-            SchemaContext.Input if refOrSchema.readOnly() == true -> null
-            SchemaContext.Output if refOrSchema.writeOnly() == true -> null
+            SchemaContext.Write if refOrSchema.readOnly() == true -> null
+            SchemaContext.Read if refOrSchema.writeOnly() == true -> null
             else -> {
                 refOrSchema.resolve(NamingContext.ObjectProperty(name), context) { propSchema ->
                     val model = propSchema.toModel(context)

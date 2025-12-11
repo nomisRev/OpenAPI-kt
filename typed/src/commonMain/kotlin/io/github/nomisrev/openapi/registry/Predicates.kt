@@ -1,13 +1,10 @@
 package io.github.nomisrev.openapi.registry
 
-import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Reference
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
-import io.github.nomisrev.openapi.toModel
 
 context(ctx: Registry.Scope)
 suspend fun ReferenceOr<Schema>.readOnly(): Boolean? = with(ctx) { peek().readOnly }
