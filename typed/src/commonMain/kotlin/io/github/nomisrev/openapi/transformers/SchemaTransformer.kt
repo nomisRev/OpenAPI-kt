@@ -9,6 +9,7 @@ import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
+import io.github.nomisrev.openapi.registry.isAllOfNullableType
 import io.github.nomisrev.openapi.registry.isAnyOfNullableType
 import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.isOneOfNullableType
@@ -21,8 +22,11 @@ context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
     this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable)
     this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> toDiscriminatedObject(context)
+
     isOpenEnumeration() -> toOpenEnum(context, schema.anyOf!!)
     schema.enum != null -> toClosedEnum(context, schema.enum!!)
+
+    isAllOfNullableType() -> flattenNull(context, schema.allOf!!)
     schema.allOf != null -> allOf(context, schema.allOf!!)
 
     isOneOfNullableType() -> flattenNull(context, schema.oneOf!!)

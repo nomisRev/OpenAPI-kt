@@ -29,8 +29,24 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
         constraint = constraint.merge(other.constraint)
     )
 
+    is Model.Object if other is Model.FreeFormJson -> copy(
+        additionalProperties =
+            additionalProperties.merge(Model.Object.AdditionalProperties.Allowed(true), context)
+    )
+
+    is Model.FreeFormJson if other is Model.Object -> other.copy(
+        additionalProperties =
+            other.additionalProperties.merge(Model.Object.AdditionalProperties.Allowed(true), name)
+    )
+    is Model.FreeFormJson if other is Model.FreeFormJson -> copy(
+        description = description ?: other.description,
+        constraint = constraint.merge(other.constraint),
+        isNullable = isNullable || other.isNullable
+    )
+
+    is Model.FreeFormJson if other is Model.Union -> TODO()
     is Model.Union if other is Model.Union -> TODO("Implement Model.Union merge in allOf")
-    is Model.Enum if other is Model.Enum -> TODO("Union of values")
+    is Model.Enum if other is Model.Enum -> TODO("allOf Enum")
     is Model.Collection,
     is Model.Enum,
     is Model.DiscriminatedObject,
@@ -42,7 +58,7 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
     is Model.Date,
     is Model.Primitive,
     is Model.DateTime,
-    is Model.Uuid -> throw IllegalStateException("Cannot merge allOf $this with $other")
+    is Model.Uuid -> throw IllegalStateException("Cannot merge allOf $this \n\n $other")
 }
 
 private fun Model.Primitive.merge(other: Model.Primitive): Model.Primitive = when (this) {

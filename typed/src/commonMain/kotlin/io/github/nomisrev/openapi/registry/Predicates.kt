@@ -25,13 +25,24 @@ suspend fun ResolvedSchema.isOpenEnumeration(): Boolean = with(ctx) {
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.isAnyOfNullableType(): Boolean = with(ctx) {
     val anyOf = schema.anyOf ?: return false
-    return anyOf.size == 2 && anyOf.singleOrNull { it.peek().type == Schema.Type.Basic.Null } != null
+    return anyOf.size == 2 && anyOf.singleOrNull { it.peek().isNull() } != null
 }
+
+private val nullableSchema = Schema(nullable = true)
+
+fun Schema.isNull(): Boolean =
+    type == Schema.Type.Basic.Null || this == nullableSchema
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.isOneOfNullableType(): Boolean = with(ctx) {
     val oneOf = schema.oneOf ?: return false
-    oneOf.size == 2 && oneOf.singleOrNull { it.peek().type == Schema.Type.Basic.Null } != null
+    oneOf.size == 2 && oneOf.singleOrNull { it.peek().isNull() } != null
+}
+
+context(ctx: Registry.Scope)
+suspend fun ResolvedSchema.isAllOfNullableType(): Boolean = with(ctx) {
+    val allOf = schema.allOf ?: return false
+    allOf.size == 2 && allOf.singleOrNull { it.peek().isNull() } != null
 }
 
 context(ctx: Registry.Scope)
@@ -43,7 +54,7 @@ suspend fun ResolvedSchema.Reference.isObjectWithDiscriminator(): Boolean = with
                 if (name == NamingContext.Reference(mappingName, null)) {
                     true
                 } else {
-                    val s = peek(mappingName)
+                    val s = peek(ref)
                     s.allOf != null && s.type == null
                 }
             } ?: false
@@ -54,7 +65,8 @@ suspend fun ResolvedSchema.description(): String? = with(ctx) {
     tailrec suspend fun ReferenceOr<String>?.get(): String? = when (this) {
         is ReferenceOr.Value -> value
         null -> null
-        is ReferenceOr.Reference -> peek().description.get()
+        is ReferenceOr.Reference ->
+            copy(ref = ref.dropLast("/description".length)).peek().description.get()
     }
 
     when (this@description) {
