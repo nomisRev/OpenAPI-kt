@@ -28,7 +28,7 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<Strin
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toOpenEnum(context: SchemaContext, anyOf: List<ReferenceOr<Schema>>): Model {
     suspend fun toModel(enumSchema: ResolvedSchema) = when (enumSchema) {
-        is Reference -> TODO("Union")
+        is Reference -> union(context, anyOf)
         is Recursive -> Model.Reference(name, description(), isNullable)
         is Value -> {
             require(enumSchema.schema.enum!!.isNotEmpty()) { "OpenEnum requires at least 1 possible value. $schema" }
