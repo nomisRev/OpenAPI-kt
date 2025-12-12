@@ -26,6 +26,23 @@ class ApiModel(
     val models: List<Model>
 ) {
     fun root(name: String): Root = routes.sort(name)
+    override fun toString(): String =
+        routes.joinToString { it.operationId } + "\n" + models.joinToString {
+            when (it) {
+                is Model.Reference -> it.context.toString()
+                is Model.DiscriminatedObject -> it.context.toString()
+                is Model.Enum -> it.context.toString()
+                is Model.Object -> it.context.toString()
+                is Model.Union -> it.context.toString()
+                is Model.ByteArray,
+                is Model.Collection,
+                is Model.Date,
+                is Model.DateTime,
+                is Model.FreeFormJson,
+                is Model.Uuid,
+                is Model.Primitive -> ""
+            }
+        }
 }
 
 suspend fun OpenAPI.toApiModel(): ApiModel {
@@ -50,7 +67,7 @@ suspend fun Endpoint.toRoute(): Route = Route(
 )
 
 data class Route(
-    val operationId: String?,
+    val operationId: String,
     val summary: String?,
     val path: String,
     val method: HttpMethod,

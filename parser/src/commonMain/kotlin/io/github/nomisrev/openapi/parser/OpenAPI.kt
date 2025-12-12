@@ -65,6 +65,7 @@ public data class OpenAPI(
   public val extensions: Map<String, JsonElement> = emptyMap(),
 ) {
   public fun toJson(): String = Json.encodeToString(this)
+  public fun toYaml(): String = Yaml.encodeToString(this)
 
   public fun toJsObject(): JsonObject = Json.encodeToJsonElement(this).jsonObject
 
@@ -94,17 +95,3 @@ public data class OpenAPI(
       )
   }
 }
-
-private fun Any?.toJsonElement(): JsonElement =
-  when (this) {
-    is List<*> -> JsonArray(map { it.toJsonElement() })
-    is Map<*, *> ->
-      @Suppress("UNCHECKED_CAST")
-      JsonObject((this as Map<String, Any?>).mapValues { (_, v) -> v.toJsonElement() })
-
-    null -> JsonNull
-    is Number -> JsonPrimitive(this)
-    is Boolean -> JsonPrimitive(this)
-    is String -> JsonPrimitive(this)
-    else -> throw IllegalArgumentException("Unsupported type: ${this::class.simpleName}")
-  }

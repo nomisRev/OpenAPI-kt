@@ -48,7 +48,7 @@ sealed interface NamingContext {
 
     @Serializable
     @SerialName("Reference")
-    data class Reference(val name: String, val context: SchemaContext?) : NamingContext
+    data class Reference(val name: String, val context: SchemaContext) : NamingContext
 
     sealed interface GenerateName : NamingContext
 
