@@ -11,6 +11,7 @@ import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.isAllOfNullableType
 import io.github.nomisrev.openapi.registry.isAnyOfNullableType
+import io.github.nomisrev.openapi.registry.isNull
 import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.isOneOfNullableType
 import io.github.nomisrev.openapi.registry.isOpenEnumeration
@@ -42,6 +43,8 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
             val resolved = if (type.types.contains(Schema.Type.Basic.Null) && schema.nullable != true) {
                 val newSchema = schema.copy(nullable = true)
                 when (this) {
+                    // TODO Kotlin 2.3.0 DFA checking, ResolvedSchema.Recursive is not needed.
+                    is ResolvedSchema.Recursive -> copy(schema = newSchema)
                     is ResolvedSchema.Reference -> copy(name = name, schema = newSchema)
                     is ResolvedSchema.Value -> copy(name = name, schema = newSchema)
                 }
@@ -96,6 +99,6 @@ context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.flattenNull(context: SchemaContext, schemas: List<ReferenceOr<Schema>>): Model =
     schemas.firstNotNullOf {
         it.resolve(name, context) {
-            if (it.schema.type == Schema.Type.Basic.Null) null else it.toModel(context)
+            if (it.schema.isNull()) null else it.toModel(context)
         }
     }.with(isNullable = true)

@@ -1,6 +1,7 @@
 package io.github.nomisrev
 
 import io.github.nomisrev.openapi.parser.OpenAPI
+import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 
 context(openAPI: OpenAPI)
@@ -10,17 +11,15 @@ suspend fun Schema.printAllProperties() {
     fun collectAllOfProperties(schema: Schema) {
         schema.allOf?.forEach { refOrSchema ->
             when (refOrSchema) {
-                is io.github.nomisrev.openapi.parser.ReferenceOr.Value -> {
+                is ReferenceOr.Value -> {
                     refOrSchema.value.properties?.forEach { (key, propRefOrSchema) ->
                         when (propRefOrSchema) {
-                            is io.github.nomisrev.openapi.parser.ReferenceOr.Value ->
-                                properties[key] = propRefOrSchema.value
-                            is io.github.nomisrev.openapi.parser.ReferenceOr.Reference -> {
+                            is ReferenceOr.Value -> properties[key] = propRefOrSchema.value
+                            is ReferenceOr.Reference -> {
                                 val refName = propRefOrSchema.ref.substringAfterLast("/")
                                 openAPI.components.schemas[refName]?.let { schemaRef ->
                                     when (schemaRef) {
-                                        is io.github.nomisrev.openapi.parser.ReferenceOr.Value ->
-                                            properties[key] = schemaRef.value
+                                        is ReferenceOr.Value -> properties[key] = schemaRef.value
                                         else -> {}
                                     }
                                 }
@@ -29,12 +28,12 @@ suspend fun Schema.printAllProperties() {
                     }
                     collectAllOfProperties(refOrSchema.value)
                 }
-                is io.github.nomisrev.openapi.parser.ReferenceOr.Reference -> {
+
+                is ReferenceOr.Reference -> {
                     val refName = refOrSchema.ref.substringAfterLast("/")
                     openAPI.components.schemas[refName]?.let { schemaRef ->
                         when (schemaRef) {
-                            is io.github.nomisrev.openapi.parser.ReferenceOr.Value ->
-                                collectAllOfProperties(schemaRef.value)
+                            is ReferenceOr.Value -> collectAllOfProperties(schemaRef.value)
                             else -> {}
                         }
                     }

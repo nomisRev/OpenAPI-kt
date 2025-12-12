@@ -4,8 +4,13 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.routes.SchemaContext
 
+context(imports: Imports)
+operator fun ClassName.not() = imports.import(this)
+
 data class ClassName(val packageName: String, val classNames: List<String>) {
     constructor(packageName: String, className: String) : this(packageName, listOf(className))
+
+    fun render(): String = classNames.joinToString(".")
 }
 
 fun Model.className(): ClassName = when(this) {

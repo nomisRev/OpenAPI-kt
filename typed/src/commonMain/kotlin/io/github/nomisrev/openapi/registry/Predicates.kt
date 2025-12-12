@@ -5,6 +5,7 @@ import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Reference
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
+import io.github.nomisrev.openapi.routes.SchemaContext
 
 context(ctx: Registry.Scope)
 suspend fun ReferenceOr<Schema>.readOnly(): Boolean? = with(ctx) { peek().readOnly }
@@ -51,7 +52,7 @@ suspend fun ResolvedSchema.Reference.isObjectWithDiscriminator(): Boolean = with
             schema.discriminator?.mapping?.isNotEmpty() == true &&
             schema.discriminator?.mapping?.all { (_, ref) ->
                 val mappingName = ref.schemaName()
-                if (name == NamingContext.Reference(mappingName, null)) {
+                if (name == NamingContext.Reference(mappingName, SchemaContext.Null)) {
                     true
                 } else {
                     val s = peek(ref)
@@ -66,7 +67,9 @@ suspend fun ResolvedSchema.description(): String? = with(ctx) {
         is ReferenceOr.Value -> value
         null -> null
         is ReferenceOr.Reference ->
-            copy(ref = ref.dropLast("/description".length)).peek().description.get()
+            copy(ref =
+                if (ref.endsWith("/description")) ref.dropLast("/description".length) else ref
+            ).peek().description.get()
     }
 
     when (this@description) {

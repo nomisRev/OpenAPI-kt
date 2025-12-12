@@ -39,7 +39,7 @@ val recursiveSpec by testSuite {
 
     verifyAll("Recursive anchors", recursiveAnchors(NamingContext.ObjectProperty("test")))
 
-    val root = NamingContext.Reference("Root", null)
+    val root = NamingContext.Reference("Root", SchemaContext.Null)
     verifyAll(
         "Recursive anchors reference",
         recursiveAnchors(root).map { (schema, model) ->
@@ -128,15 +128,15 @@ val recursiveSpec by testSuite {
     )
     // {":{"type":"Object","context":{"type":"Reference","name":"B"},"properties":[{"baseName":"a","model":{"type":"io.github.nomisrev.openapi.Model.Reference","context":{"type":"Reference","name":"A"},"isNullable":false},"isRequired":false}],"inline":[],"additionalProperties":false,"isNullable":false},"isRequired":false}],"inline":["type":"Allowed"],"additionalProperties":false,"isNullable":false}
     val expectedA = Model.Object(
-        NamingContext.Reference("A", null), null, listOf(
+        NamingContext.Reference("A", SchemaContext.Null), null, listOf(
             Model.Object.Property(
                 "b",
                 Model.Object(
-                    NamingContext.Reference("B", null), null,
+                    NamingContext.Reference("B", SchemaContext.Null), null,
                     listOf(
                         Model.Object.Property(
                             "a",
-                            Model.Reference(NamingContext.Reference("A", null), null, false),
+                            Model.Reference(NamingContext.Reference("A", SchemaContext.Null), null, false),
                             false
                         )
                     ), emptySet(), false, false
@@ -152,15 +152,15 @@ val recursiveSpec by testSuite {
     )
 
     val expectedB = Model.Object(
-        NamingContext.Reference("B", null), null, listOf(
+        NamingContext.Reference("B", SchemaContext.Null), null, listOf(
             Model.Object.Property(
                 "a",
                 Model.Object(
-                    NamingContext.Reference("A", null), null,
+                    NamingContext.Reference("A", SchemaContext.Null), null,
                     listOf(
                         Model.Object.Property(
                             "b",
-                            Model.Reference(NamingContext.Reference("B", null), null, false),
+                            Model.Reference(NamingContext.Reference("B", SchemaContext.Null), null, false),
                             false
                         )
                     ), emptySet(), false, false
@@ -175,11 +175,11 @@ val recursiveSpec by testSuite {
         registry(api) {
             assertEq(
                 expectedA,
-                ReferenceOr.schema("A").toModel(NamingContext.Reference("A", null), SchemaContext.Write)
+                ReferenceOr.schema("A").toModel(NamingContext.Reference("A", SchemaContext.Null), SchemaContext.Write)
             )
             assertEq(
                 expectedB,
-                ReferenceOr.schema("B").toModel(NamingContext.Reference("B", null), SchemaContext.Write)
+                ReferenceOr.schema("B").toModel(NamingContext.Reference("B", SchemaContext.Null), SchemaContext.Write)
             )
         }
     }

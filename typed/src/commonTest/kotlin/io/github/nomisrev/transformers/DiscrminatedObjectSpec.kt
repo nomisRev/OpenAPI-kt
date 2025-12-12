@@ -162,9 +162,5 @@ val discriminatedObjectSpec by testSuite {
 
     test("check") {
 
-        registry(api) {
-            val x = ReferenceOr.schema("SavedQuery").toModel(NamingContext.ObjectProperty("test"), SchemaContext.Write)
-            val y = ReferenceOr.schema("SavedQuery").toModel(NamingContext.ObjectProperty("test"), SchemaContext.Read)
-        }
     }
 }

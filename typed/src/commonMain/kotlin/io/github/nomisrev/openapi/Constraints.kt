@@ -37,9 +37,9 @@ sealed interface Constraints {
     }
 
       override fun toString(): String = buildString {
-          minLength?.let { min -> append("minLength: $min, ") }
-          maxLength?.let { max -> append("maxLength: $max, ") }
-          pattern?.let { pattern -> append("pattern: $pattern, ") }
+          minLength?.also { min -> append("minLength: $min, ") }
+          maxLength?.also { max -> append("maxLength: $max, ") }
+          pattern?.also { pattern -> append("pattern: $pattern, ") }
       }
   }
 

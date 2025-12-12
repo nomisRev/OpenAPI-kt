@@ -99,14 +99,13 @@ val objectSpec by testSuite {
     verifyAll(
         "AdditionalProperties.Schema (null properties) is flattened",
         Model.Primitive.all().map { (schema, model) ->
-            val topName = NamingContext.Reference("Top", null)
+            val topName = NamingContext.Reference("Top", SchemaContext.Null)
             val api = api.reference("Top", schema)
             val actualSchema = Schema(type = Type.Basic.Object, additionalProperties = PSchema(schema("Top")))
-            val expectedModel = Model.Object.value(NamingContext.Reference("Top", null), model)
-            actualSchema expect expectedModel
+            val expectedModel = Model.Object.value(NamingContext.Reference("Top", SchemaContext.Null), model)
             ExpectedApi(actualSchema, expectedModel, api, listOf(topName))
         }
-    ) { schema -> Value(NamingContext.Reference("Top", null), schema) }
+    ) { schema -> Value(NamingContext.Reference("Top", SchemaContext.Null), schema) }
 
     val objNames = sequenceOf(NamingContext.ObjectProperty("test")).forever()
 

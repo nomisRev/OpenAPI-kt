@@ -26,7 +26,7 @@ val PrimitiveSpec by testSuite {
     verifyAll("Primitive types", Model.Primitive.String.all())
 
     verifyAll("Referenced primitives", Model.Primitive.all()) { schema, inner ->
-        val context = NamingContext.Reference(schema.toString(), null)
+        val context = NamingContext.Reference(schema.toString(), SchemaContext.Null)
         val actual = with(Registry(api.reference(schema.toString(), schema))) {
             ReferenceOr.schema(schema.toString()).toModel(context, SchemaContext.Write)
         }

@@ -140,7 +140,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
                 null -> throw IllegalStateException("Schema $name could not be found in ${openAPI.components.schemas.keys}.")
             }
             val contextSpecific = schema.readOrWriteOnly()
-            val context = if (contextSpecific) context else null
+            val context = if (contextSpecific) context else SchemaContext.Null
             val reference = NamingContext.Reference(name, context)
             val resolved = if (expanding.contains(reference)) ResolvedSchema.Recursive(reference, schema)
             else ResolvedSchema.Reference(reference, schema)

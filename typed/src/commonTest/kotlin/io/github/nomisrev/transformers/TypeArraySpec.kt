@@ -6,6 +6,7 @@ import io.github.nomisrev.description
 import io.github.nomisrev.expect
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.product
@@ -15,7 +16,7 @@ val typeArraySpec by testSuite {
     verifyAll("TypeArray", values())
     verifyAll("TypeArray with explicit Null type", values(nullable = true))
 
-    val root = NamingContext.Reference("Root", null)
+    val root = NamingContext.Reference("Root", SchemaContext.Null)
     verifyAll(
         "TypeArray Referenced",
         values(root),

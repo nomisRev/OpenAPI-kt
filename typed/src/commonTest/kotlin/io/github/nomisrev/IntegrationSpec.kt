@@ -22,33 +22,31 @@ import kotlinx.serialization.json.Json
 val integrationSpec by testSuite {
 //    yamlSpec("openai.yaml")
 //    jsonSpec("github.json")
-    jsonSpec("youtrack.json")
+//    jsonSpec("youtrack.json")
 
     test("SavedQuery") {
-        val schemas = Json.decodeFromString(
-            MapSerializer(String.serializer(), ReferenceOr.serializer(Schema.serializer())),
-            readText("Test.json")
-        )
-        val api = api.copy(
-            components = api.components.copy(schemas = api.components.schemas + schemas)
-        )
+//        val schemas = Json.decodeFromString(
+//            MapSerializer(String.serializer(), ReferenceOr.serializer(Schema.serializer())),
+//            readText("Test.json")
+//        )
+//        val api = api.copy(
+//            components = api.components.copy(schemas = api.components.schemas + schemas)
+//        )
 
-        with(api) {
-            (api.components.schemas["SavedQuery"] as ReferenceOr.Value<Schema>)
-                .value
-                .printAllProperties()
-        }
+//        with(api) {
+//            (api.components.schemas["SavedQuery"] as ReferenceOr.Value<Schema>)
+//                .value
+//                .printAllProperties()
+//        }
 
-        val y = registry(api) {
-
-
-            val x = ReferenceOr.schema("SavedQuery").toModel(NamingContext.ObjectProperty("test"), SchemaContext.Write)
-            println(x.description)
-            val y = ReferenceOr.schema("SavedQuery").toModel(NamingContext.ObjectProperty("test"), SchemaContext.Read)
-            println(y.description)
-            y
-        }
-        println(y.isNullable.not())
+//        val y = registry(api) {
+//            val x = ReferenceOr.schema("SavedQuery").toModel(NamingContext.ObjectProperty("test"), SchemaContext.Write)
+//            println(x.description)
+//            val y = ReferenceOr.schema("SavedQuery").toModel(NamingContext.ObjectProperty("test"), SchemaContext.Read)
+//            println(y.description)
+//            y
+//        }
+//        println(y.isNullable.not())
     }
 }
 

@@ -11,6 +11,7 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
@@ -39,7 +40,7 @@ val collectionSpec by testSuite {
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.schema("CollectionItem"))
             val expected = Model.Collection(
-                Model.Object.value(NamingContext.Reference("CollectionItem", null), model),
+                Model.Object.value(NamingContext.Reference("CollectionItem", SchemaContext.Null), model),
                 null,
                 null,
                 null,
@@ -49,25 +50,25 @@ val collectionSpec by testSuite {
                 schema,
                 expected,
                 api.reference("CollectionItem", innerSchema),
-                listOf(NamingContext.Reference("CollectionItem", null))
+                listOf(NamingContext.Reference("CollectionItem", SchemaContext.Null))
             )
         }
-    ) { schema -> Value(NamingContext.Reference("Boop", null), schema) }
+    ) { schema -> Value(NamingContext.Reference("Boop", SchemaContext.Null), schema) }
 
     verifyAll(
         "Collection with referenced primitive without type: Array",
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(items = ReferenceOr.schema("CollectionItem"))
-            val wrapped = Model.Object.value(NamingContext.Reference("CollectionItem", null), model)
+            val wrapped = Model.Object.value(NamingContext.Reference("CollectionItem", SchemaContext.Null), model)
             val expected = Model.Collection(wrapped, null, null, null, false)
             ExpectedApi(
                 schema,
                 expected,
                 api.reference("CollectionItem", innerSchema),
-                listOf(NamingContext.Reference("CollectionItem", null))
+                listOf(NamingContext.Reference("CollectionItem", SchemaContext.Null))
             )
         }
-    ) { schema -> Value(NamingContext.Reference("Boop", null), schema) }
+    ) { schema -> Value(NamingContext.Reference("Boop", SchemaContext.Null), schema) }
 
     verifyAll(
         "Referenced Collection with primitive",
@@ -78,10 +79,10 @@ val collectionSpec by testSuite {
                 schema,
                 expected,
                 api.reference("Collection",schema),
-                listOf(NamingContext.Reference("Collection", null))
+                listOf(NamingContext.Reference("Collection", SchemaContext.Null))
             )
         }
-    ) { schema -> ResolvedSchema.Reference(NamingContext.Reference("Collection", null), schema) }
+    ) { schema -> ResolvedSchema.Reference(NamingContext.Reference("Collection", SchemaContext.Null), schema) }
 
     verifyAll(
         "Referenced Collection with primitive without type: array",
@@ -92,10 +93,10 @@ val collectionSpec by testSuite {
                 schema,
                 expected,
                 api.reference("Collection", schema),
-                listOf(NamingContext.Reference("Collection", null))
+                listOf(NamingContext.Reference("Collection", SchemaContext.Null))
             )
         }
-    ) { schema -> ResolvedSchema.Reference(NamingContext.Reference("Collection", null), schema) }
+    ) { schema -> ResolvedSchema.Reference(NamingContext.Reference("Collection", SchemaContext.Null), schema) }
 
     verify(
         "Default - empty JS array",
