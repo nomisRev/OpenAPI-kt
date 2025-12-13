@@ -10,7 +10,6 @@ import io.github.nomisrev.openapi.render.renderer
 import io.github.nomisrev.openapi.render.render
 import io.github.nomisrev.openapi.routes.SchemaContext
 import kotlin.test.assertEquals
-import kotlin.test.fail
 
 @TestRegistering
 fun TestSuite.verify(
@@ -19,15 +18,16 @@ fun TestSuite.verify(
     expectedImports: Set<ClassName> = emptySet()
 ) {
     fun eq(expected: String, actual: String) =
-        if (expected != actual) fail(
+        if (expected != actual) throw AssertionError(
             """
-            |###### Expected:
-            |
-            |$expected
-            |
-            |###### Actual:
-            |
+            |###################
+            |###### Actual #####
             |$actual
+            |###################
+            |###### Expected ###
+            |###################
+            |$expected
+            |###################
         """.trimMargin()
         )
         else Unit
@@ -43,9 +43,13 @@ fun TestSuite.verify(
 
 val renderObjectSpec by testSuite {
     verify(
-        "data object Foo",
+        """
+        |@Serializable
+        |data object Foo
+        """.trimMargin(),
         Model.Object(
             NamingContext.Reference("Foo", SchemaContext.Null),
+            null,
             null,
             emptyList(),
             emptySet(),
@@ -76,6 +80,8 @@ val renderObjectSpec by testSuite {
 
     val singline = Model.Object(
         context = NamingContext.Reference("Foo", SchemaContext.Null),
+        description = null,
+        title = null,
         properties = listOf(
             Model.Object.Property("name", Model.Primitive.String(null, null, null, false), false),
             Model.Object.Property("email", Model.Primitive.Long(null, null, null, true), false),
@@ -87,8 +93,7 @@ val renderObjectSpec by testSuite {
         ),
         inline = emptySet(),
         additionalProperties = false,
-        isNullable = false,
-        description = null
+        isNullable = false
     )
 
     verify(
@@ -112,19 +117,19 @@ val renderObjectSpec by testSuite {
         null,
         false,
         null,
+        null,
         false
     )
     val nestedEnum = Model.Object.value(
         NamingContext.Reference("Foo", SchemaContext.Null),
         enum,
-        setOf(enum)
+        inline = setOf(enum)
     )
 
     verify(
         """|@Serializable
            |@JvmInline
            |value class Foo(@Required val value: Sort) {
-           |
            |    @Serializable
            |    enum class Sort {
            |        ASC, DESC;

@@ -9,6 +9,7 @@ import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.registry
 import io.github.nomisrev.openapi.registry.toModel
+import kotlin.collections.emptySet
 
 val recursiveSpec by testSuite {
     fun recursiveAnchors(name: NamingContext) =
@@ -23,6 +24,7 @@ val recursiveSpec by testSuite {
             val expected = Model.Object(
                 name,
                 description.expected,
+                null,
                 listOf(
                     Model.Object.Property(
                         "self",
@@ -65,6 +67,7 @@ val recursiveSpec by testSuite {
             val expected = Model.Object(
                 root,
                 description.expected,
+                null,
                 listOf(
                     Model.Object.Property(
                         "self",
@@ -100,6 +103,7 @@ val recursiveSpec by testSuite {
             val expected = Model.Object(
                 root,
                 description.expected,
+                null,
                 listOf(
                     Model.Object.Property(
                         "self",
@@ -126,24 +130,34 @@ val recursiveSpec by testSuite {
         type = Schema.Type.Basic.Object,
         properties = mapOf("b" to ReferenceOr.schema("B"))
     )
-    // {":{"type":"Object","context":{"type":"Reference","name":"B"},"properties":[{"baseName":"a","model":{"type":"io.github.nomisrev.openapi.Model.Reference","context":{"type":"Reference","name":"A"},"isNullable":false},"isRequired":false}],"inline":[],"additionalProperties":false,"isNullable":false},"isRequired":false}],"inline":["type":"Allowed"],"additionalProperties":false,"isNullable":false}
     val expectedA = Model.Object(
-        NamingContext.Reference("A", SchemaContext.Null), null, listOf(
+        context = NamingContext.Reference("A", SchemaContext.Null),
+        description = null,
+        title = null,
+        properties = listOf(
             Model.Object.Property(
-                "b",
-                Model.Object(
-                    NamingContext.Reference("B", SchemaContext.Null), null,
-                    listOf(
+                baseName = "b",
+                model = Model.Object(
+                    NamingContext.Reference("B", SchemaContext.Null),
+                    description = null,
+                    title = null,
+                    properties = listOf(
                         Model.Object.Property(
-                            "a",
-                            Model.Reference(NamingContext.Reference("A", SchemaContext.Null), null, false),
-                            false
+                            baseName = "a",
+                            model = Model.Reference(NamingContext.Reference("A", SchemaContext.Null), null, false),
+                            isRequired = false
                         )
-                    ), emptySet(), false, false
+                    ),
+                    inline = emptySet(),
+                    additionalProperties = false,
+                    isNullable = false
                 ),
-                false
+                isRequired = false
             )
-        ), emptySet(), false, false
+        ),
+        inline = emptySet(),
+        additionalProperties = false,
+        isNullable = false
     )
 
     val B = Schema(
@@ -152,22 +166,33 @@ val recursiveSpec by testSuite {
     )
 
     val expectedB = Model.Object(
-        NamingContext.Reference("B", SchemaContext.Null), null, listOf(
+        context = NamingContext.Reference("B", SchemaContext.Null),
+        description = null,
+        title = null,
+        properties = listOf(
             Model.Object.Property(
-                "a",
-                Model.Object(
-                    NamingContext.Reference("A", SchemaContext.Null), null,
-                    listOf(
+                baseName = "a",
+                model = Model.Object(
+                    context = NamingContext.Reference("A", SchemaContext.Null),
+                    description = null,
+                    title = null,
+                    properties = listOf(
                         Model.Object.Property(
                             "b",
                             Model.Reference(NamingContext.Reference("B", SchemaContext.Null), null, false),
                             false
                         )
-                    ), emptySet(), false, false
+                    ),
+                    inline = emptySet(),
+                    additionalProperties = false,
+                    isNullable = false
                 ),
-                false
+                isRequired = false
             )
-        ), emptySet(), false, false
+        ),
+        inline = emptySet(),
+        additionalProperties = false,
+        isNullable = false
     )
 
     test("Indirect recursion") {

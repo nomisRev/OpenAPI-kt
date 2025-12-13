@@ -13,7 +13,7 @@ data class ClassName(val packageName: String, val classNames: List<String>) {
     fun render(): String = classNames.joinToString(".")
 }
 
-fun Model.className(): ClassName = when(this) {
+fun Model.className(): ClassName = when (this) {
     is Model.ByteArray -> ClassName("kotlin", "ByteArray")
     is Model.Date -> ClassName("kotlinx.datetime", "LocalDate")
     is Model.DateTime -> ClassName("kotlinx.datetime", "LocalDateTime")
@@ -29,9 +29,21 @@ fun Model.className(): ClassName = when(this) {
     is Model.Object if context is NamingContext.Reference -> ClassName("io.github.nomisrev.model", context.name)
     is Model.Union if context is NamingContext.Reference -> ClassName("io.github.nomisrev.model", context.name)
     is Model.Enum if context is NamingContext.Reference -> ClassName("io.github.nomisrev.model", context.name)
-    
+
     is Model.Union -> TODO()
-    is Model.Object -> TODO()
+    is Model.Object -> when (context) {
+        NamingContext.AdditionalProperties -> ClassName("ignored-always-nested", "Additional")
+        is NamingContext.DiscriminatedObjectCase -> ClassName("ignored-always-nested", context.discriminator)
+        is NamingContext.ObjectProperty -> ClassName("ignored-always-nested", context.name)
+        is NamingContext.Response -> ClassName("ignored-always-nested", "${context.operationId}Response")
+        is NamingContext.RouteBody -> ClassName("ignored-always-nested", "${context.operationId}Body")
+        is NamingContext.RouteParam -> ClassName("ignored-always-nested", context.name)
+        NamingContext.UnionCase -> TODO()
+        is NamingContext.Nested -> TODO()
+        is NamingContext.Path -> throw IllegalStateException("Model.Object cannot be rendered as a path part")
+        is NamingContext.Reference -> ClassName("io.github.nomisrev.model", context.name)
+    }
+
     is Model.Collection -> TODO()
     is Model.Enum -> TODO()
     is Model.DiscriminatedObject -> TODO()
@@ -45,7 +57,7 @@ fun NamingContext.className(model: Model): ClassName = when (this) {
     is NamingContext.Response -> ClassName("ignored-always-nested", "${operationId}Response")
     is NamingContext.RouteBody -> ClassName("ignored-always-nested", "${operationId}Body")
     is NamingContext.RouteParam -> ClassName("ignored-always-nested", name)
-    NamingContext.UnionCase -> when(model) {
+    NamingContext.UnionCase -> when (model) {
         is Model.Collection -> TODO()
         is Model.Reference -> TODO()
         is Model.DiscriminatedObject -> TODO()
@@ -65,6 +77,7 @@ fun NamingContext.className(model: Model): ClassName = when (this) {
         is Model.Primitive.Unit -> ClassName("ignored-always-nested", "Empty")
         is Model.Uuid -> ClassName("ignored-always-nested", "CaseUuid")
     }
+
     is NamingContext.Nested -> {
         val inner = inner.className(model)
         val outer = outer.className(model)

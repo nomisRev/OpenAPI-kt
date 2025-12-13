@@ -46,6 +46,7 @@ val unionSpec by testSuite {
                 oneOf.expected,
                 null,
                 description.expected,
+                null,
                 emptySet(),
                 null,
                 isNullable ?: false

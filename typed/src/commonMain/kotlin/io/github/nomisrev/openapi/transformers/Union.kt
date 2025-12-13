@@ -35,6 +35,7 @@ suspend fun ResolvedSchema.union(
         cases,
         default(),
         description(),
+        schema.title,
         cases.mapNotNullTo(mutableSetOf()) { it.model.nestedOrNull() },
         schema.discriminator?.propertyName,
         isNullable

@@ -32,11 +32,11 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
 
     isOneOfNullableType() -> flattenNull(context, schema.oneOf!!)
     schema.oneOf?.size == 1 -> schema.oneOf!!.single().toModel(name, context)
-    schema.oneOf != null -> union(context, schema.oneOf!!)
+    schema.oneOf?.isNotEmpty() == true -> union(context, schema.oneOf!!)
 
     isAnyOfNullableType() -> flattenNull(context, schema.anyOf!!)
     schema.anyOf?.size == 1 -> schema.anyOf!!.single().toModel(name, context)
-    schema.anyOf != null -> union(context, schema.anyOf!!)
+    schema.anyOf?.isNotEmpty() == true -> union(context, schema.anyOf!!)
 
     schema.type != null -> when (val type = schema.type!!) {
         is Schema.Type.Array -> { // Flatten Null
@@ -82,7 +82,11 @@ private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContex
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.fallback(): Model = when (this) {
     is Value -> FreeFormJson(description(), Constraints.Object(schema), isNullable)
-    is Reference -> Object.value(name, FreeFormJson(description(), Constraints.Object(schema), isNullable))
+    is Reference -> Object.value(
+        name,
+        FreeFormJson(description(), Constraints.Object(schema), isNullable),
+        title = schema.title
+    )
     is Recursive -> Model.Reference(name, description(), isNullable)
 }
 

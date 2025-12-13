@@ -23,6 +23,7 @@ val nestedSpec by testSuite {
         val expected = Model.Object(
             NamingContext.RouteParam("get", "getBy"),
             null,
+            null,
             listOf(
                 Model.Object.Property("prop", intObj, false)
             ),

@@ -68,6 +68,7 @@ val anyOfSpec by testSuite {
                 anyOf.expected,
                 null,
                 description.expected,
+                null,
                 emptySet(),
                 null,
                 isNullable ?: false

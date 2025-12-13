@@ -176,13 +176,14 @@ sealed interface Model {
         override val description: String?,
         val constraint: Constraints.Collection?,
         override val isNullable: Boolean
-    ): Model
+    ) : Model
 
     @SerialName("Object")
     @Serializable
     data class Object(
         val context: NamingContext,
         override val description: String?,
+        val title: String?,
         val properties: List<Property>,
         val inline: Set<Model>,
         val additionalProperties: AdditionalProperties,
@@ -191,6 +192,7 @@ sealed interface Model {
         constructor(
             context: NamingContext,
             description: String?,
+            title: String?,
             properties: List<Property>,
             inline: Set<Model>,
             additionalProperties: Boolean,
@@ -198,6 +200,7 @@ sealed interface Model {
         ) : this(
             context,
             description,
+            title,
             properties,
             inline,
             AdditionalProperties.Allowed(additionalProperties),
@@ -215,6 +218,10 @@ sealed interface Model {
             @SerialName("Schema")
             @JvmInline
             value class Schema(val value: Model) : AdditionalProperties
+
+            companion object {
+                val False = Allowed(false)
+            }
         }
 
         @SerialName("Property")
@@ -223,9 +230,15 @@ sealed interface Model {
 
         companion object {
             // TODO write proper tests for this
-            fun value(context: NamingContext.Reference, property: Model, inline: Set<Model> = emptySet()) = Object(
+            fun value(
+                context: NamingContext.Reference,
+                property: Model,
+                inline: Set<Model> = emptySet(),
+                title: String? = null
+            ) = Object(
                 context,
                 property.description,
+                title,
                 listOf(
                     Property(
                         "value",
@@ -247,6 +260,7 @@ sealed interface Model {
         val cases: List<Case>,
         val default: Default<String>?,
         override val description: String?,
+        val title: String?,
         val inline: Set<Model>,
         val discriminator: String?,
         override val isNullable: Boolean
@@ -271,6 +285,7 @@ sealed interface Model {
         val baseObject: Object,
         val subtypes: List<Object>,
         override val description: String?,
+        val title: String?,
         val discriminator: String?,
         val selfReference: Boolean,
         override val isNullable: Boolean
@@ -285,6 +300,7 @@ sealed interface Model {
         val default: Default<String>?,
         val isOpen: Boolean,
         override val description: String?,
+        val title: String?,
         override val isNullable: Boolean,
     ) : Model
 }

@@ -56,6 +56,7 @@ val classNameSpec by testSuite {
         val obj = Model.Object(
             context = ref,
             description = null,
+            title = null,
             properties = emptyList(),
             inline = emptySet(),
             additionalProperties = false,
@@ -68,6 +69,7 @@ val classNameSpec by testSuite {
             cases = emptyList(),
             default = null,
             description = null,
+            title = null,
             inline = emptySet(),
             discriminator = null,
             isNullable = false
@@ -81,6 +83,7 @@ val classNameSpec by testSuite {
             default = null,
             isOpen = false,
             description = null,
+            title = null,
             isNullable = false
         )
         assertEquals(ClassName("io.github.nomisrev.model", "Pet"), enm.className())

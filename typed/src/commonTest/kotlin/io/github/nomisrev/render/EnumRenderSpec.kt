@@ -3,7 +3,6 @@ package io.github.nomisrev.render
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.render.className
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 val enumRenderSpec by testSuite {
@@ -18,6 +17,7 @@ val enumRenderSpec by testSuite {
             listOf("ASC", "DESC"),
             null,
             false,
+            null,
             null,
             false
         )
@@ -43,6 +43,7 @@ val enumRenderSpec by testSuite {
             (1..5).map { "very_long_enum_value_$it" },
             null,
             false,
+            null,
             null,
             false
         )

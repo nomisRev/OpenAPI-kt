@@ -37,9 +37,10 @@ private fun List<Expect<Schema, Model>>.enum(
         inner = schema.expected.with(description = null, isNullable = false).default(null),
         values = values.toList(),
         default = default.expected,
+        isOpen = false,
         description = description.expected,
-        isNullable = schema.expected.isNullable,
-        isOpen = false
+        title = null,
+        isNullable = schema.expected.isNullable
     )
 } + product(description, nullDefault(values), nulls) { schema, description, default, NULL ->
     schema.actual.copy(
@@ -51,9 +52,10 @@ private fun List<Expect<Schema, Model>>.enum(
         inner = schema.expected.with(description = null, isNullable = false).default(null),
         values = (values + NULL).toList(),
         default = default.expected,
+        isOpen = false,
         description = description.expected,
-        isNullable = schema.expected.isNullable,
-        isOpen = false
+        title = null,
+        isNullable = schema.expected.isNullable
     )
 }
 
@@ -118,12 +120,13 @@ val closedEnumSpec by testSuite {
 
         anyOf expect Model.Enum(
             context = name,
-            values = values.toList(),
             inner = schema.expected.copy(default = null, description = null, isNullable = false),
+            values = values.toList(),
             default = default.expected,
+            isOpen = true,
             description = description.expected,
-            isNullable = isNullable ?: false,
-            isOpen = true
+            title = null,
+            isNullable = isNullable ?: false
         )
     }
 

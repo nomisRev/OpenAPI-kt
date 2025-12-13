@@ -161,6 +161,7 @@ private fun Model.Object.merge(context: NamingContext, model: Model.Object): Mod
     return Model.Object(
         context,
         description ?: model.description,
+        title ?: model.title,
         properties,
         inline + model.inline,
         additionalProperties.merge(model.additionalProperties, context),

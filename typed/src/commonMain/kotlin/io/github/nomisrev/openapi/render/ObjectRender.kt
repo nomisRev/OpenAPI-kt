@@ -3,52 +3,48 @@ package io.github.nomisrev.openapi.render
 import io.github.nomisrev.openapi.Model
 
 context(ctx: Renderer)
-fun Model.Object.render(): String = when (properties.size) {
-    0 -> "data object ${className().render()}"
-    1 -> valueClass()
-    else -> {
-        val line = singleLine()
-        if (line.length <= ctx.maxLineLength) line else multiline()
+fun Model.Object.render(className: ClassName = className()): String = buildString {
+    +"@Serializable"
+    when (properties.size) {
+        0 -> append("data object ${className.render()}")
+        1 -> valueClass(className)
+        else -> dataClass(className)
     }
-} + body()
+    body()
+}
 
-context(ctx: Renderer)
-private fun Model.Object.valueClass(): String {
-    val annotations = if (ctx.jvm) {
-        """|@Serializable
-           |@JvmInline""".trimMargin()
-    } else {
-        "@Serializable"
+context(ctx: Renderer, builder: StringBuilder)
+private fun Model.Object.valueClass(className: ClassName) {
+    if (ctx.jvm) +"@JvmInline"
+    append("value class ${className.render()}(${properties.single().render()})")
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+fun Model.Object.dataClass(className: ClassName) {
+    val line = "data class ${!className}(${properties.joinToString { it.render() }})"
+    if (line.length <= ctx.maxLineLength) append(line)
+    else {
+        +"data class ${className().render()}("
+        properties.joinTo(separator = ",\n", postfix = "\n") { "${ctx.indent}${it.render()}" }
+        append(")")
     }
-    return """|$annotations
-              |value class ${className().render()}(${properties.single().render()})""".trimMargin()
 }
 
 context(ctx: Renderer)
-private fun Model.Object.singleLine(): String = "data class ${!className()}(${properties.joinToString { it.render() }})"
-
-context(ctx: Renderer)
-private fun Model.Object.multiline(): String =
-    """|@Serializable
-       |data class ${className().render()}(
-       |${properties.joinToString(separator = ",\n    ", prefix = ctx.indent) { it.render() }}
-       |)""".trimMargin()
-
-context(ctx: Renderer)
-private fun Model.Object.Property.render(): String {
+private fun Model.Object.Property.render(): String = buildString {
     val paramName = baseName.sanitize().dropArraySyntax().toCamelCase()
-    val serialName = if (paramName != baseName) "@SerialName(\"$baseName\") " else ""
-    val required = if (isRequired) "@Required " else ""
-    val default = if (model.isNullable && !isRequired) " = null" else ""
-    val nullable = if (model.isNullable) "?" else ""
-    return "$serialName${required}val $paramName: ${!model.className()}$nullable$default"
+    if (paramName != baseName) append("@SerialName(\"$baseName\") ")
+    if (isRequired) append("@Required ")
+    append("val $paramName: ${!model.className()}")
+    if (model.isNullable) append("?")
+    if (model.isNullable && !isRequired) append(" = null")
 }
 
-context(ctx: Renderer)
-private fun Model.Object.body(): String =
+context(ctx: Renderer, builder: StringBuilder)
+private fun Model.Object.body() {
     if (inline.isNotEmpty()) {
-        """| {
-           |
-           |${inline.joinToString(separator = "\n\n") { it.render() }.prependIndent(ctx.indent)}
-           |}""".trimMargin()
-    } else ""
+        +" {"
+        inline.joinTo(separator = "\n\n", postfix = "\n") { it.render().prependIndent(ctx.indent) }
+        append("}")
+    }
+}

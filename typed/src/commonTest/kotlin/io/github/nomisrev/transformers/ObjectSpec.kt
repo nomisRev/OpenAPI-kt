@@ -125,6 +125,7 @@ val objectSpec by testSuite {
         val obj = Model.Object(
             context = name,
             description = null,
+            title = null,
             properties = props.map { (name, schema, isRequired) ->
                 Model.Object.Property(name, schema.expected, isRequired)
             },
@@ -144,6 +145,7 @@ val objectSpec by testSuite {
         val model = Model.Object(
             context = NamingContext.ObjectProperty("test"),
             description = null,
+            title = null,
             properties = listOf(Model.Object.Property("enum", it.expected, false)),
             inline = setOf(it.expected),
             additionalProperties = false,
@@ -163,6 +165,7 @@ val objectSpec by testSuite {
             val model = Model.Object(
                 context = NamingContext.ObjectProperty("test"),
                 description = null,
+                title = null,
                 properties = listOf(Model.Object.Property("enum", listModel, false)),
                 inline = setOf(innerModel),
                 additionalProperties = false,
@@ -215,6 +218,7 @@ val objectSpec by testSuite {
         val obj = Model.Object(
             context = name,
             description = null,
+            title = null,
             properties = props.expected,
             inline = emptySet(),
             additionalProperties = additionalProperties.expected,
@@ -264,6 +268,7 @@ val objectSpec by testSuite {
         val obj = Model.Object(
             context = name,
             description = null,
+            title = null,
             properties = props.expected,
             inline = emptySet(),
             additionalProperties = additionalProperties.expected,

@@ -15,6 +15,6 @@ fun Model.render(): String = when (this) {
 
     is Model.Enum -> render()
     is Model.Object -> render()
-    is Model.Union -> TODO()
+    is Model.Union -> render()
     is Model.DiscriminatedObject -> TODO()
 }

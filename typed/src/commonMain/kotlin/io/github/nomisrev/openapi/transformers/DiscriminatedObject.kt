@@ -35,6 +35,7 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
         baseObject,
         subtypes,
         description(),
+        schema.title,
         discriminator.propertyName,
         hasSelfReference,
         isNullable

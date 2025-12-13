@@ -15,7 +15,6 @@ import io.github.nomisrev.openapi.registry.readOnly
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.registry.writeOnly
-import io.github.nomisrev.openapi.transformers.additionalProperties
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toObject(
@@ -45,6 +44,7 @@ suspend fun ResolvedSchema.toObject(
     return Model.Object(
         context = name,
         description = description(),
+        title = schema.title,
         properties = properties,
         inline = nested,
         additionalProperties = additionalProperties,

@@ -22,7 +22,7 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<Strin
     require(!(enumDefault == Model.Default.Null && !nestedNull)) {
         "The default value $enumDefault is not present in the enum values: ${schema.enum} & schema is not nullable."
     }
-    return Model.Enum(name, inner, schema.enum!!, enumDefault, false, description(), isNullable)
+    return Model.Enum(name, inner, schema.enum!!, enumDefault, false, description(), schema.title, isNullable)
 }
 
 context(ctx: Registry.Scope)
@@ -53,6 +53,7 @@ suspend fun ResolvedSchema.toOpenEnum(context: SchemaContext, anyOf: List<Refere
                 enumDefault,
                 true,
                 description(),
+                schema.title,
                 isNullable
             )
         }
