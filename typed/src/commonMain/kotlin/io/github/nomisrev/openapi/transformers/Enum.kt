@@ -3,11 +3,8 @@ package io.github.nomisrev.openapi.transformers
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.SchemaContext
-import io.github.nomisrev.openapi.parser.ReferenceOr
-import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
-import io.github.nomisrev.openapi.registry.resolve
 import kotlin.text.equals
 
 context(ctx: Registry.Scope)
@@ -22,7 +19,7 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<Strin
     require(!(enumDefault == Model.Default.Null && !nestedNull)) {
         "The default value $enumDefault is not present in the enum values: ${schema.enum} & schema is not nullable."
     }
-    return Model.Enum(name, inner, schema.enum!!, enumDefault, false, description(), schema.title, isNullable)
+    return Model.Enum(name, inner, schema.enum!!, enumDefault, description(), schema.title, isNullable)
 }
 
 fun ResolvedSchema.default(): Model.Default<String>? = when (val _default = schema.default) {

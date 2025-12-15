@@ -302,7 +302,6 @@ sealed interface Model {
         val inner: Model,
         val values: List<String?>,
         val default: Default<String>?,
-        val isOpen: Boolean,
         override val description: String?,
         val title: String?,
         override val isNullable: Boolean,

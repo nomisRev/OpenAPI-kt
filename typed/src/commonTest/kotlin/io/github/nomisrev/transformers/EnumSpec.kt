@@ -37,7 +37,6 @@ private fun List<Expect<Schema, Model>>.enum(
         inner = schema.expected.with(description = null, isNullable = false).default(null),
         values = values.toList(),
         default = default.expected,
-        isOpen = false,
         description = description.expected,
         title = null,
         isNullable = schema.expected.isNullable
@@ -52,7 +51,6 @@ private fun List<Expect<Schema, Model>>.enum(
         inner = schema.expected.with(description = null, isNullable = false).default(null),
         values = (values + NULL).toList(),
         default = default.expected,
-        isOpen = false,
         description = description.expected,
         title = null,
         isNullable = schema.expected.isNullable
@@ -123,7 +121,6 @@ val closedEnumSpec by testSuite {
             Model.Primitive.String(null, null, null, false),
             values.toList(),
             null,
-            false,
             null,
             null,
             false

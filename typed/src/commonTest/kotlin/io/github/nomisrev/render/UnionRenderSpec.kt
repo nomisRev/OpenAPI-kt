@@ -1,15 +1,11 @@
 package io.github.nomisrev.render
 
 import de.infix.testBalloon.framework.core.testSuite
-import io.github.nomisrev.api
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
-import io.github.nomisrev.openapi.registry.registry
-import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.routes.SchemaContext
-import io.github.nomisrev.reference
 
 val unionRenderSpec by testSuite {
     val union = NamingContext.reference("Union", SchemaContext.Null)
@@ -126,7 +122,6 @@ val unionRenderSpec by testSuite {
         inner = Model.Primitive.String(null, null, null, false),
         values = listOf("asc", "desc"),
         default = null,
-        isOpen = false,
         description = null,
         title = null,
         isNullable = false

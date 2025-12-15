@@ -16,7 +16,6 @@ val enumRenderSpec by testSuite {
             Model.Primitive.String(null, null, null, false),
             listOf("ASC", "DESC"),
             null,
-            false,
             null,
             null,
             false
@@ -42,7 +41,6 @@ val enumRenderSpec by testSuite {
             Model.Primitive.String(null, null, null, false),
             (1..5).map { "very_long_enum_value_$it" },
             null,
-            false,
             null,
             null,
             false

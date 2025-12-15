@@ -156,7 +156,6 @@ val renderObjectSpec by testSuite {
         Model.Primitive.String(null, null, null, false),
         listOf("ASC", "DESC"),
         null,
-        false,
         null,
         null,
         false
