@@ -1,12 +1,14 @@
 package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Model
-import kotlinx.serialization.SerialName
+
+fun TypeName.Class?.renderSuperclass(): String =
+    this?.simpleName?.let { " : $it" } ?: ""
 
 context(ctx: Renderer)
 fun Model.Enum.render(parentClass: TypeName.Class? = null): String = """
     |@Serializable
-    |enum class ${name().simpleName}${parentClass?.simpleName?.let { " : $it" } ?: ""} {
+    |enum class ${name().simpleName}${parentClass.renderSuperclass()} {
     |${values()}
     |}
     """.trimMargin()

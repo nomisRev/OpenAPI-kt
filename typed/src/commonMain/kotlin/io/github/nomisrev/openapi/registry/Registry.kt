@@ -130,6 +130,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
             context: SchemaContext,
             block: suspend context(Scope) (ResolvedSchema) -> A
         ): A = if (ref == "#") {
+            @Suppress("RETURN_VALUE_NOT_USED")
             requireNotNull(currentAnchor) { "Cannot resolve top-level schema without anchor." }
             block(this@ScopeImpl, ResolvedSchema.Recursive(currentAnchor.first, currentAnchor.second))
         } else {

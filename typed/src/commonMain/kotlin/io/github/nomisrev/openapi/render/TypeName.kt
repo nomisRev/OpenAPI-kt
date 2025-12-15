@@ -18,7 +18,7 @@ sealed interface TypeName {
     }
 
     fun type(): String = when (this) {
-        is Class -> names.joinToString(separator = ".")
+        is Class -> names.last()
         is Collection -> "List<${type.type()}>"
     }
 

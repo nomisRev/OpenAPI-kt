@@ -43,7 +43,6 @@ fun Model.Union.render(): String = buildString {
     +"@Serializable"
     +"sealed interface ${name().simpleName} {"
     +body().prependIndent(ctx.indent)
-    +inlineOrNull()?.prependIndent(ctx.indent)
     append("}")
 }
 
@@ -66,22 +65,16 @@ context(ctx: Renderer)
 private fun Model.Union.body(): String {
     return cases.joinToString("\n\n") { case ->
         val serialName = if (case.discriminator != null) "@SerialName(\"${case.discriminator}\")\n" else ""
-        val ctxOrNull = case.model.contextOrNull()
-        val renderedCase: String = case.render(ctxOrNull, Index(), 0)
-
+        val renderedCase: String = case.render()
         "$serialName$renderedCase"
     }
 }
 
 context(ctx: Renderer, union: Model.Union)
-private fun Model.Union.Case.render(
-    ctxOrNull: NamingContext?,
-    index: Index,
-    depth: Int
-): String {
+private fun Model.Union.Case.render(): String {
     return when (model) {
+        is Model.ContextHolder if model.context.head is NamingContext.Reference && model.context.nested.isEmpty() -> valueClass()
         is Model.Reference -> valueClass()
-        else if (ctxOrNull != null && ctxOrNull is NamingContext.Reference) -> valueClass()
         is Model.Primitive,
         is Model.DateTime,
         is Model.ByteArray,
@@ -89,29 +82,17 @@ private fun Model.Union.Case.render(
         is Model.Uuid,
         is Model.Date -> valueClass()
 
-        is Model.Object -> model.render() + " : ${union.name().simpleName}" // TODO: this breaks if has nested objects
+        is Model.DiscriminatedObject -> TODO("Nested DiscriminatedObject not supported in Union")
+        is Model.Union -> TODO("Inline defined nested Union not yet supported in Union")
         is Model.Collection -> valueClass()
+
+        is Model.Object -> model.render(union.name())
         is Model.Enum -> model.render(union.name())
         is Model.Primitive.Unit -> """
                    |@Serializable
                    |data object Empty : ${union.name().simpleName}
                 """.trimMargin()
-
-
-        is Model.Union -> TODO()
-        is Model.DiscriminatedObject -> TODO("Currently discriminated objects are not supported in unions")
     }
-}
-
-fun Model.Union.collection(case: Model.Union.Case, model: Model.Collection) {
-
-}
-
-context(ctx: Renderer)
-private fun Model.Union.inlineOrNull(): String? {
-    val inline = inline.filter { it !is Model.Object }
-    if (inline.isEmpty()) return null
-    return null // TODO
 }
 
 fun Model.contextOrNull(): NamingContext? = when (this) {

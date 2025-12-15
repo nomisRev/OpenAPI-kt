@@ -5,31 +5,31 @@ import io.github.nomisrev.openapi.Model
 import kotlin.math.max
 
 context(ctx: Renderer)
-fun Model.Object.render(): String = buildString {
+fun Model.Object.render(parentClass: TypeName.Class? = null): String = buildString {
     +"@Serializable"
     when (properties.size) {
-        0 -> append("data object ${name().simpleName}")
-        1 -> valueClass()
-        else -> dataClass()
+        0 -> append("data object ${name().simpleName}${parentClass.renderSuperclass()}")
+        1 -> valueClass(parentClass)
+        else -> dataClass(parentClass)
     }
     body()
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun Model.Object.valueClass() {
+private fun Model.Object.valueClass(parentClass: TypeName.Class?) {
     if (ctx.jvm) +"@JvmInline"
-    append("value class ${name().simpleName}(${properties.single().render()})")
+    append("value class ${name().simpleName}(${properties.single().render()})${parentClass.renderSuperclass()}")
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-fun Model.Object.dataClass() {
+fun Model.Object.dataClass(parentClass: TypeName.Class?) {
     val simpleName = name().simpleName
-    val line = "data class $simpleName(${properties.joinToString { it.render() }})"
+    val line = "data class $simpleName(${properties.joinToString { it.render() }})${parentClass.renderSuperclass()}"
     if (line.length <= ctx.maxLineLength) append(line)
     else {
         +"data class $simpleName("
         properties.joinTo(separator = ",\n", postfix = "\n") { "${ctx.indent}${it.render()}" }
-        append(")")
+        append(")${parentClass.renderSuperclass()}")
     }
 }
 
