@@ -51,7 +51,7 @@ data class ExpectedApi(
     val schema: Schema,
     val model: Model,
     val api: OpenAPI,
-    val names: List<NamingContext>
+    val names: List<NamingContext.Reference>
 )
 
 @OptIn(ExperimentalAtomicApi::class)
@@ -121,7 +121,7 @@ fun TestSuite.verifyAll(
                 val resolved = actual(expected.schema)
                 with(registry) {
                     when (resolved) {
-                        is ResolvedSchema.Reference -> ReferenceOr.schema(resolved.name.name)
+                        is ResolvedSchema.Reference -> ReferenceOr.schema(resolved.reference.name)
                         is ResolvedSchema.Value -> ReferenceOr.value(resolved.schema)
                         is ResolvedSchema.Recursive -> ReferenceOr.schema((resolved.name as NamingContext.Reference).name)
                     }.toModel(resolved.name, context)
@@ -161,7 +161,7 @@ inline fun <reified T : Throwable> TestSuite.verifyFails(
 ) = test(name) {
     val e = assertFailsWith<T> {
         with(Registry(api)) {
-            val ignored = ReferenceOr.value(schema).toModel(NamingContext.ObjectProperty("test"), Write)
+            val ignored = ReferenceOr.value(schema).toModel(NamingContext.path("test"), Write)
         }
     }
     assertEquals(message, e.message)
@@ -182,7 +182,7 @@ fun TestSuite.verifyAll(
     values: List<Expect<Schema, Model>>,
     context: SchemaContext = Write,
     actual: suspend (Schema) -> ResolvedSchema =
-        { schema -> ResolvedSchema.Value(NamingContext.ObjectProperty("test"), schema) }
+        { schema -> ResolvedSchema.Value(NamingContext.path("test"), schema) }
 ) {
     test(name) {
         val registry = Registry(api)
@@ -191,7 +191,7 @@ fun TestSuite.verifyAll(
                 with(registry) {
                     val resolved = actual(schema)
                     when (resolved) {
-                        is ResolvedSchema.Reference -> ReferenceOr.schema("#/components/schema/${resolved.name.name}")
+                        is ResolvedSchema.Reference -> ReferenceOr.schema("#/components/schema/${resolved.reference.name}")
                         is ResolvedSchema.Value -> ReferenceOr.value(resolved.schema)
                         is ResolvedSchema.Recursive -> ReferenceOr.schema("#/components/schema/${(resolved.name as NamingContext.Reference).name}")
                     }.toModel(resolved.name, context)

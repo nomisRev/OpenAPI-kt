@@ -24,7 +24,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
     override fun close() = client.close()
 
     suspend fun NamingContext.Reference.toModel(): Model =
-        ReferenceOr.schema(name).toModel(this, SchemaContext.Null)
+        ReferenceOr.schema(name).toModel(NamingContext(this, emptyList()), SchemaContext.Null)
 
     suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
         with(ScopeImpl(null, emptySet())) { resolve(name, context) { it.toModel(context) } }
@@ -140,16 +140,14 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
                 null -> throw IllegalStateException("Schema $name could not be found in ${openAPI.components.schemas.keys}.")
             }
             val contextSpecific = schema.readOrWriteOnly()
-            val context = if (contextSpecific) context else SchemaContext.Null
-            val reference = NamingContext.Reference(name, context)
-            val resolved = if (expanding.contains(reference)) ResolvedSchema.Recursive(reference, schema)
+            val schemaContext = if (contextSpecific) context else SchemaContext.Null
+            val reference = NamingContext.Reference(name, schemaContext)
+            val context = NamingContext(reference, emptyList())
+            val resolved = if (expanding.contains(context)) ResolvedSchema.Recursive(context, schema)
             else ResolvedSchema.Reference(reference, schema)
             cache.add(reference)
-            val currentAnchor = if (schema.recursiveAnchor == true) Pair(
-                NamingContext.Reference(name, context),
-                schema
-            ) else null
-            block.invoke(ScopeImpl(currentAnchor, expanding + reference), resolved)
+            val currentAnchor = if (schema.recursiveAnchor == true) Pair(context, schema) else null
+            block.invoke(ScopeImpl(currentAnchor, expanding + context), resolved)
         }
     }
 }
@@ -176,5 +174,11 @@ suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaCont
     resolve(name, context) { it.toModel(context) }
 
 context(ctx: Registry)
+suspend fun ReferenceOr<Schema>.toModel(name: NamingContext.Head, context: SchemaContext): Model =
+    with(ctx) { toModel(NamingContext(name, emptyList()), context) }
+
+
+context(ctx: Registry)
 suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
     with(ctx) { toModel(name, context) }
+

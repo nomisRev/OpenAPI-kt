@@ -12,7 +12,7 @@ val enumRenderSpec by testSuite {
            |    ASC, DESC;
            |}""".trimMargin(),
         Model.Enum(
-            NamingContext.Reference("Sort", SchemaContext.Null),
+            NamingContext.reference("Sort", SchemaContext.Null),
             Model.Primitive.String(null, null, null, false),
             listOf("ASC", "DESC"),
             null,
@@ -38,7 +38,7 @@ val enumRenderSpec by testSuite {
            |    VeryLongEnumValue5;
            |}""".trimMargin(),
         Model.Enum(
-            NamingContext.Reference("Sort", SchemaContext.Null),
+            NamingContext.reference("Sort", SchemaContext.Null),
             Model.Primitive.String(null, null, null, false),
             (1..5).map { "very_long_enum_value_$it" },
             null,

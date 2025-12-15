@@ -1,6 +1,7 @@
 package io.github.nomisrev
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.routes.Endpoint
 import io.github.nomisrev.openapi.NamingContext.RouteParam
 import io.github.nomisrev.openapi.NamingContext.Path
@@ -55,12 +56,12 @@ val endpointSpec by testSuite {
     }
 
     listOf(
-        endpoint("/") to Path(emptyList()).nest(RouteParam(name = "param", operationId = "get")),
-        endpoint("/test") to Path("test").nest(RouteParam(name = "param", operationId = "get")),
-        endpoint("/test/{user_id}") to Path("test").nest(RouteParam(name = "param", operationId = "getByUser_id")),
-        endpoint("/test/{userId}/test2") to Path(listOf("test", "test2"))
+        endpoint("/") to NamingContext.path(emptyList()).nest(RouteParam(name = "param", operationId = "get")),
+        endpoint("/test") to NamingContext.path("test").nest(RouteParam(name = "param", operationId = "get")),
+        endpoint("/test/{user_id}") to NamingContext.path("test").nest(RouteParam(name = "param", operationId = "getByUser_id")),
+        endpoint("/test/{userId}/test2") to NamingContext.path(listOf("test", "test2"))
             .nest(RouteParam(name = "param", operationId = "get")),
-        endpoint("/test/{userId}/test2/{param2}") to Path(listOf("test", "test2"))
+        endpoint("/test/{userId}/test2/{param2}") to NamingContext.path(listOf("test", "test2"))
             .nest(RouteParam(name = "param", operationId = "getByParam2")),
     ).verifyAll("Endpoint.context(..)") { (endpoint, expected) ->
         Eq(expected, endpoint.context(RouteParam("param", endpoint.operationId)))

@@ -40,12 +40,10 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
     schema.type != null -> when (val type = schema.type!!) {
         is Schema.Type.Array -> { // Flatten Null
             val resolved = if (type.types.contains(Schema.Type.Basic.Null) && schema.nullable != true) {
-                val newSchema = schema.copy(nullable = true)
                 when (this) {
-                    // TODO Kotlin 2.3.0 DFA checking, ResolvedSchema.Recursive is not needed.
-                    is ResolvedSchema.Recursive -> copy(schema = newSchema)
-                    is ResolvedSchema.Reference -> copy(name = name, schema = newSchema)
-                    is ResolvedSchema.Value -> copy(name = name, schema = newSchema)
+                    is ResolvedSchema.Recursive -> copy(schema = schema.copy(nullable = true))
+                    is ResolvedSchema.Reference -> copy(schema = schema.copy(nullable = true))
+                    is ResolvedSchema.Value -> copy(schema = schema.copy(nullable = true))
                 }
             } else this
 
@@ -82,7 +80,7 @@ context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.fallback(): Model = when (this) {
     is Value -> FreeFormJson(description(), Constraints.Object(schema), isNullable)
     is Reference -> Object.value(
-        name,
+        reference,
         FreeFormJson(description(), Constraints.Object(schema), isNullable),
         title = schema.title
     )

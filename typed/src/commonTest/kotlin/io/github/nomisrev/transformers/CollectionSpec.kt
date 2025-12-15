@@ -53,7 +53,7 @@ val collectionSpec by testSuite {
                 listOf(NamingContext.Reference("CollectionItem", SchemaContext.Null))
             )
         }
-    ) { schema -> Value(NamingContext.Reference("Boop", SchemaContext.Null), schema) }
+    ) { schema -> Value(NamingContext.reference("Boop", SchemaContext.Null), schema) }
 
     verifyAll(
         "Collection with referenced primitive without type: Array",
@@ -68,7 +68,7 @@ val collectionSpec by testSuite {
                 listOf(NamingContext.Reference("CollectionItem", SchemaContext.Null))
             )
         }
-    ) { schema -> Value(NamingContext.Reference("Boop", SchemaContext.Null), schema) }
+    ) { schema -> Value(NamingContext.reference("Boop", SchemaContext.Null), schema) }
 
     verifyAll(
         "Referenced Collection with primitive",

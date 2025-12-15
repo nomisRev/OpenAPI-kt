@@ -69,7 +69,7 @@ val anyOfSpec by testSuite {
                 nullable = isNullable
             )
             val expected = Model.Union(
-                NamingContext.ObjectProperty("test"),
+                NamingContext.path("test"),
                 anyOf.expected,
                 null,
                 description.expected,

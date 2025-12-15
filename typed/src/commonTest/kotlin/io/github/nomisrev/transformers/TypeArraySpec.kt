@@ -16,16 +16,16 @@ val typeArraySpec by testSuite {
     verifyAll("TypeArray", values())
     verifyAll("TypeArray with explicit Null type", values(nullable = true))
 
-    val root = NamingContext.Reference("Root", SchemaContext.Null)
+    val root =
     verifyAll(
         "TypeArray Referenced",
-        values(root),
-        root
+        values(NamingContext.reference("Root", SchemaContext.Null)),
+        NamingContext.Reference("Root", SchemaContext.Null)
     )
 }
 
 private fun values(
-    name: NamingContext = NamingContext.ObjectProperty("test"),
+    name: NamingContext = NamingContext.path("test"),
     nullable: Boolean? = null
 ): List<Expect<Schema, Model.Union>> =
     description.product(listOf(true, false, null)) { description, isNullable ->

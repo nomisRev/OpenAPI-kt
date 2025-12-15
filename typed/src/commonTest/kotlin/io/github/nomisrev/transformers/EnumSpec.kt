@@ -70,9 +70,9 @@ fun Model.Enum.Companion.floats(name: NamingContext): List<Expect<Schema, Model>
 
 @OptIn(ExperimentalAtomicApi::class)
 val closedEnumSpec by testSuite {
-    verifyAll("ClosedEnum(Int)", Model.Enum.ints(NamingContext.ObjectProperty("test")))
-    verifyAll("ClosedEnum(String)", Model.Enum.strings(NamingContext.ObjectProperty("test")))
-    verifyAll("ClosedEnum(Float)", Model.Enum.floats(NamingContext.ObjectProperty("test")))
+    verifyAll("ClosedEnum(Int)", Model.Enum.ints(NamingContext.path("test")))
+    verifyAll("ClosedEnum(String)", Model.Enum.strings(NamingContext.path("test")))
+    verifyAll("ClosedEnum(Float)", Model.Enum.floats(NamingContext.path("test")))
 
     verifyFails<IllegalArgumentException>(
         "Empty enum throws IllegalArgumentException",

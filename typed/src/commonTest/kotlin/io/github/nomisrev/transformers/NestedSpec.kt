@@ -21,7 +21,7 @@ val nestedSpec by testSuite {
         val intM = Model.Primitive.Long(null, null, null, false)
         val intObj = Model.Object.value(topInt, intM)
         val expected = Model.Object(
-            NamingContext.RouteParam("get", "getBy"),
+            NamingContext.path("get"),
             null,
             null,
             listOf(
@@ -38,7 +38,7 @@ val nestedSpec by testSuite {
                     type = Type.Basic.Object,
                     properties = mapOf("prop" to schema("TopInt"))
                 )
-            ).toModel(NamingContext.RouteParam("get", "getBy"), SchemaContext.Write)
+            ).toModel(NamingContext.path("get"), SchemaContext.Write)
         }
         assertEq(expected, actual)
         assertEquals(setOf(topInt), registry.names())

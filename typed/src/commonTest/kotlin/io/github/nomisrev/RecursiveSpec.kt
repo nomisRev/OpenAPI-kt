@@ -39,9 +39,10 @@ val recursiveSpec by testSuite {
             recursiveAnchor expect expected
         }
 
-    verifyAll("Recursive anchors", recursiveAnchors(NamingContext.ObjectProperty("test")))
+    verifyAll("Recursive anchors", recursiveAnchors(NamingContext.path("test")))
 
-    val root = NamingContext.Reference("Root", SchemaContext.Null)
+    val rootRef = NamingContext.Reference("Root", SchemaContext.Null)
+    val root = NamingContext.reference("Root", SchemaContext.Null)
     verifyAll(
         "Recursive anchors reference",
         recursiveAnchors(root).map { (schema, model) ->
@@ -49,13 +50,12 @@ val recursiveSpec by testSuite {
                 schema,
                 model,
                 api.reference("Root", schema),
-                listOf(root)
+                listOf(rootRef)
             )
         }
-    ) { schema -> ResolvedSchema.Reference(root, schema) }
+    ) { schema -> ResolvedSchema.Reference(rootRef, schema) }
 
-
-    val recursiveReferences =
+    val recursiveReferences: List<Expect<Schema, Model.Object>> =
         listOf(true, false, null).product(description) { isNullable, description ->
             val recursiveAnchor = Schema(
                 recursiveAnchor = true,
@@ -82,9 +82,9 @@ val recursiveSpec by testSuite {
             recursiveAnchor expect expected
         }
 
-    verifyAll("Recursive references", recursiveReferences, root)
+    verifyAll("Recursive references", recursiveReferences, NamingContext.Reference("Root", SchemaContext.Null))
 
-    val nestedRecursiveReferences =
+    val nestedRecursiveReferences: List<Expect<Schema, Model.Object>> =
         listOf(true, false, null).product(description) { isNullable, description ->
             val recursiveAnchor = Schema(
                 recursiveAnchor = true,
@@ -124,27 +124,27 @@ val recursiveSpec by testSuite {
             recursiveAnchor expect expected
         }
 
-    verifyAll("Recursive nested collection references", nestedRecursiveReferences, root)
+    verifyAll("Recursive nested collection references", nestedRecursiveReferences, NamingContext.Reference("Root", SchemaContext.Null))
 
     val A = Schema(
         type = Schema.Type.Basic.Object,
         properties = mapOf("b" to ReferenceOr.schema("B"))
     )
     val expectedA = Model.Object(
-        context = NamingContext.Reference("A", SchemaContext.Null),
+        context = NamingContext.reference("A", SchemaContext.Null),
         description = null,
         title = null,
         properties = listOf(
             Model.Object.Property(
                 baseName = "b",
                 model = Model.Object(
-                    NamingContext.Reference("B", SchemaContext.Null),
+                    NamingContext.reference("B", SchemaContext.Null),
                     description = null,
                     title = null,
                     properties = listOf(
                         Model.Object.Property(
                             baseName = "a",
-                            model = Model.Reference(NamingContext.Reference("A", SchemaContext.Null), null, false),
+                            model = Model.Reference(NamingContext.reference("A", SchemaContext.Null), null, false),
                             isRequired = false
                         )
                     ),
@@ -166,20 +166,20 @@ val recursiveSpec by testSuite {
     )
 
     val expectedB = Model.Object(
-        context = NamingContext.Reference("B", SchemaContext.Null),
+        context = NamingContext.reference("B", SchemaContext.Null),
         description = null,
         title = null,
         properties = listOf(
             Model.Object.Property(
                 baseName = "a",
                 model = Model.Object(
-                    context = NamingContext.Reference("A", SchemaContext.Null),
+                    context = NamingContext.reference("A", SchemaContext.Null),
                     description = null,
                     title = null,
                     properties = listOf(
                         Model.Object.Property(
                             "b",
-                            Model.Reference(NamingContext.Reference("B", SchemaContext.Null), null, false),
+                            Model.Reference(NamingContext.reference("B", SchemaContext.Null), null, false),
                             false
                         )
                     ),

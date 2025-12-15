@@ -13,10 +13,10 @@ internal tailrec fun Model.nestedOrNull(): Model? = when (this) {
     is Model.Uuid,
     is Model.Primitive -> null
 
-    is Model.DiscriminatedObject if context is NamingContext.Reference -> null
-    is Model.Enum if context is NamingContext.Reference -> null
-    is Model.Object if context is NamingContext.Reference -> null
-    is Model.Union if context is NamingContext.Reference -> null
+    is Model.DiscriminatedObject if context.head is NamingContext.Reference -> null
+    is Model.Enum if context.head is NamingContext.Reference -> null
+    is Model.Object if context.head is NamingContext.Reference -> null
+    is Model.Union if context.head is NamingContext.Reference -> null
     is Model.DiscriminatedObject,
     is Model.Enum,
     is Model.Object,

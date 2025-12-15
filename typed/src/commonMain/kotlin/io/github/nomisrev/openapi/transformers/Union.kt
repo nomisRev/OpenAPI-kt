@@ -21,8 +21,8 @@ suspend fun ResolvedSchema.union(
         subtype.resolve(name.nest(unionCase(index, subtype)), context) {
             val discriminatorValue = schema.discriminator?.mapping?.let { discriminator ->
                 when (it) {
-                    is ResolvedSchema.Recursive if it.name is NamingContext.Reference -> discriminator[it.name.name]
-                    is ResolvedSchema.Reference -> discriminator[it.name.name]
+                    is ResolvedSchema.Recursive if it.name.head is NamingContext.Reference -> discriminator[it.name.head.name]
+                    is ResolvedSchema.Reference -> discriminator[it.reference.name]
                     is ResolvedSchema.Recursive,
                     is ResolvedSchema.Value -> null
                 }
@@ -63,22 +63,3 @@ suspend fun unionCase(index: Int, subtype: ReferenceOr<Schema>): NamingContext.U
 
     return NamingContext.UnionCase(discriminatorValue() ?: specialName() ?: name() ?: "Case$index")
 }
-
-// TODO: This only needs to be done in the Serializer... No need to adjust the actual schema or order during type gen
-//private val unionSchemaComparator: Comparator<Model> = Comparator { m1, m2 ->
-//    val m1Complexity =
-//        when (m1) {
-//            is Model.Object -> m1.properties.size
-//            is Model.Enum -> m1.values.size
-//            is Primitive.String -> Int.MIN_VALUE
-//            else -> 0
-//        }
-//    val m2Complexity =
-//        when (m2) {
-//            is Model.Object -> m2.properties.size
-//            is Model.Enum -> m2.values.size
-//            is Primitive.String -> Int.MIN_VALUE
-//            else -> 0
-//        }
-//    m2Complexity - m1Complexity
-//}

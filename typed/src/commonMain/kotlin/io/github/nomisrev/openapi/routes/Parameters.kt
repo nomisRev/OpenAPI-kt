@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi.routes
 
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.RouteParam
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.ReferenceOr
@@ -25,7 +26,7 @@ suspend fun Endpoint.parameters(): List<Route.Input> {
 }
 
 context(ctx: Registry, endpoint: Endpoint)
-private suspend fun ResolvedParameter.toRouteInput(name: io.github.nomisrev.openapi.NamingContext): Route.Input {
+private suspend fun ResolvedParameter.toRouteInput(name: NamingContext): Route.Input {
     val refOrSchema = requireNotNull(value.schema) {
         "Parameter ${name()} without schema for ${endpoint.path} ${endpoint.method}"
     }

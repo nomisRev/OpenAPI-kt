@@ -39,7 +39,7 @@ val typeNameSpec by testSuite {
     test("TypeName.JsonObject") {
         val actual = renderer {
             Model.Object(
-                context = NamingContext.Reference("Foo", SchemaContext.Null),
+                context = NamingContext.reference("Foo", SchemaContext.Null),
                 description = null,
                 title = null,
                 properties = emptyList(),

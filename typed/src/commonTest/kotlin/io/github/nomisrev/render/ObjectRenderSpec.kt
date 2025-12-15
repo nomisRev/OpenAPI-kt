@@ -89,7 +89,7 @@ val renderObjectSpec by testSuite {
         |data object Foo
         """.trimMargin(),
         Model.Object(
-            NamingContext.Reference("Foo", SchemaContext.Null),
+            NamingContext.reference("Foo", SchemaContext.Null),
             null,
             null,
             emptyList(),
@@ -120,7 +120,7 @@ val renderObjectSpec by testSuite {
     )
 
     val singline = Model.Object(
-        context = NamingContext.Reference("Foo", SchemaContext.Null),
+        context = NamingContext.reference("Foo", SchemaContext.Null),
         description = null,
         title = null,
         properties = listOf(
@@ -152,7 +152,7 @@ val renderObjectSpec by testSuite {
     )
 
     val enum = Model.Enum(
-        NamingContext.Reference("Sort", SchemaContext.Null),
+        NamingContext.reference("Sort", SchemaContext.Null),
         Model.Primitive.String(null, null, null, false),
         listOf("ASC", "DESC"),
         null,

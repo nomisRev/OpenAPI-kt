@@ -240,7 +240,7 @@ sealed interface Model {
                 inline: Set<Model> = emptySet(),
                 title: String? = null
             ) = Object(
-                context,
+                NamingContext(context, emptyList()),
                 property.description,
                 title,
                 listOf(

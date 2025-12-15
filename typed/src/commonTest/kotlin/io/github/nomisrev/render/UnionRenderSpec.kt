@@ -12,7 +12,7 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.reference
 
 val unionRenderSpec by testSuite {
-    val union = NamingContext.Reference("Union", SchemaContext.Null)
+    val union = NamingContext.reference("Union", SchemaContext.Null)
     verify(
         """
             |@Serializable
@@ -51,8 +51,8 @@ val unionRenderSpec by testSuite {
         )
     )
 
-    fun employeeCase(ctx: NamingContext) = Model.Object(
-        context = union.nest(ctx),
+    fun employeeCase(ctx: NamingContext.Nested) = Model.Object(
+        context = NamingContext(NamingContext.Reference("Union", SchemaContext.Null), listOf(ctx)),
         description = null,
         title = null,
         properties = listOf(

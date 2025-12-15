@@ -5,6 +5,7 @@ import io.github.nomisrev.Expect
 import io.github.nomisrev.ExpectedApi
 import io.github.nomisrev.all
 import io.github.nomisrev.api
+import io.github.nomisrev.context
 import io.github.nomisrev.verifyAll
 import io.github.nomisrev.description
 import io.github.nomisrev.expect
@@ -105,9 +106,9 @@ val objectSpec by testSuite {
             val expectedModel = Model.Object.value(NamingContext.Reference("Top", SchemaContext.Null), model)
             ExpectedApi(actualSchema, expectedModel, api, listOf(topName))
         }
-    ) { schema -> Value(NamingContext.Reference("Top", SchemaContext.Null), schema) }
+    ) { schema -> Value(NamingContext.reference("Top", SchemaContext.Null), schema) }
 
-    val objNames = sequenceOf(NamingContext.ObjectProperty("test")).forever()
+    val objNames = sequenceOf(NamingContext.path("test")).forever()
 
     val obj = objNames.zip(
         properties,
@@ -139,15 +140,21 @@ val objectSpec by testSuite {
     verifyAll("Object", obj.take(10_000).toList())
     verifyAll("Object without type: Object", obj.take(10_000).toList().removeType())
 
-    val enum = Model.Enum.strings(NamingContext.ObjectProperty("enum")).map {
+    val enum = Model.Enum.strings(NamingContext.path("test")).map {
         val schema =
             Schema(type = Type.Basic.Object, properties = mapOf("enum" to ReferenceOr.value(it.actual)))
         val model = Model.Object(
-            context = NamingContext.ObjectProperty("test"),
+            context = NamingContext.path("test"),
             description = null,
             title = null,
-            properties = listOf(Model.Object.Property("enum", it.expected, false)),
-            inline = setOf(it.expected),
+            properties = listOf(
+                Model.Object.Property(
+                    "enum",
+                    it.expected.context { it.nest(NamingContext.ObjectProperty("enum")) },
+                    false
+                )
+            ),
+            inline = setOf(it.expected.context { it.nest(NamingContext.ObjectProperty("enum")) }),
             additionalProperties = false,
             isNullable = false
         )
@@ -156,18 +163,18 @@ val objectSpec by testSuite {
 
     verifyAll("Enum Value", enum)
 
-    val enumNesting = Model.Enum.strings(NamingContext.ObjectProperty("enum"))
+    val enumNesting = Model.Enum.strings(NamingContext.path("test"))
         .map { (innerSchema, innerModel) ->
             val listSchema = Schema(type = Type.Basic.Array, items = ReferenceOr.value(innerSchema))
-            val listModel = Model.Collection(innerModel, null, null, null, false)
+            val listModel = Model.Collection(innerModel.context { it.nest(NamingContext.ObjectProperty("enum")) }, null, null, null, false)
             val objSchema =
                 Schema(type = Type.Basic.Object, properties = mapOf("enum" to ReferenceOr.value(listSchema)))
             val model = Model.Object(
-                context = NamingContext.ObjectProperty("test"),
+                context = NamingContext.path("test"),
                 description = null,
                 title = null,
                 properties = listOf(Model.Object.Property("enum", listModel, false)),
-                inline = setOf(innerModel),
+                inline = setOf(innerModel.context { it.nest(NamingContext.ObjectProperty("enum")) }),
                 additionalProperties = false,
                 isNullable = false
             )

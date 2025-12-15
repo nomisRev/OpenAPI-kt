@@ -18,7 +18,9 @@ sealed interface ResolvedSchema {
         get() = schema.nullable ?: false
 
     data class Value(override val name: NamingContext, override val schema: Schema) : ResolvedSchema
-    data class Reference(override val name: NamingContext.Reference, override val schema: Schema) : ResolvedSchema
+    data class Reference(val reference: NamingContext.Reference, override val schema: Schema) : ResolvedSchema {
+        override val name: NamingContext = NamingContext(reference, emptyList())
+    }
     data class Recursive(override val name: NamingContext, override val schema: Schema) : ResolvedSchema
 }
 

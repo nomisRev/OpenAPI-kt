@@ -1,6 +1,7 @@
 package io.github.nomisrev
 
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.Components
 import io.github.nomisrev.openapi.parser.Info
 import io.github.nomisrev.openapi.parser.OpenAPI
@@ -34,6 +35,18 @@ fun Model.default(default: Model.Default<*>?): Model = when (this) {
     is Model.Object,
     is Model.FreeFormJson,
     is Model.ByteArray -> this
+}
+
+fun Model.context(block: (NamingContext) -> NamingContext): Model = when (this) {
+    is Model.ContextHolder -> when (this) {
+        is Model.DiscriminatedObject -> copy(context = block(context))
+        is Model.Enum -> copy(context = block(context))
+        is Model.Object -> copy(context = block(context))
+        is Model.Reference -> copy(context = block(context))
+        is Model.Union -> copy(context = block(context))
+    }
+
+    else -> this
 }
 
 val api = OpenAPI(

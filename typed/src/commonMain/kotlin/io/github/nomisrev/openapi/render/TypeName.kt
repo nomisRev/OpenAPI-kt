@@ -64,7 +64,7 @@ fun Model.toTypeName(): TypeName = when (this) {
     is Model.FreeFormJson -> TypeName.JsonElement
     is Model.Object if properties.isEmpty() && additionalProperties is Allowed && additionalProperties.value -> TypeName.JsonObject
     is Model.Object if properties.isEmpty() && additionalProperties is Schema -> additionalProperties.value.toTypeName()
-    is Model.ContextHolder -> context.name(this)
+    is Model.ContextHolder -> context.name()
 }
 
 private fun SchemaContext.name(): String = when (this) {
@@ -73,49 +73,25 @@ private fun SchemaContext.name(): String = when (this) {
     SchemaContext.Null -> ""
 }
 
-context(builder: MutableList<NamingContext>)
-private fun NamingContext.Nested.nested() {
-    if (inner !is NamingContext.Nested) builder.add(inner)
-    if (outer !is NamingContext.Nested) builder.add(outer)
-}
+context(ctx: Renderer)
+fun Model.ContextHolder.name(): Class = context.name()
 
 context(ctx: Renderer)
-fun Model.ContextHolder.name(): Class = context.name(this)
-
-context(ctx: Renderer)
-private fun NamingContext.name(model: Model.ContextHolder): Class = when (val context = this) {
-    is NamingContext.Reference -> Class(
-        "${ctx.packageName}.model",
-        "${context.name}${context.context.name()}"
-    )
-
-    is NamingContext.Path -> Class("${ctx.packageName}.api", context.parts)
-
-    NamingContext.AdditionalProperties -> throw IllegalStateException("AdditionalProperties cannot be rendered as a top-level type name")
-    is NamingContext.DiscriminatedObjectCase -> throw IllegalStateException("DiscriminatedObjectCase cannot be rendered as a top-level type name")
-    is NamingContext.ObjectProperty -> throw IllegalStateException("ObjectProperty cannot be rendered as a top-level type name")
-    is NamingContext.Response -> throw IllegalStateException("Response cannot be rendered as a top-level type name")
-    is NamingContext.RouteBody -> throw IllegalStateException("RouteBody cannot be rendered as a top-level type name")
-    is NamingContext.RouteParam -> throw IllegalStateException("RouteParam cannot be rendered as a top-level type name")
-    is NamingContext.UnionCase -> throw IllegalStateException("UnionCase cannot be rendered as a top-level type name")
-    is NamingContext.Nested -> {
-        val parts = buildList { context.nested() }.reversed()
-        val head = parts.first().name(model)
-        parts.drop(1).fold(head) { acc, context ->
-            val nestedName = when (context) {
-                NamingContext.AdditionalProperties -> "Additional"
-                is NamingContext.DiscriminatedObjectCase -> context.discriminator.toPascalCase()
-                is NamingContext.ObjectProperty -> context.name.toPascalCase()
-                is NamingContext.Response -> "${context.operationId.toPascalCase()}Response"
-                is NamingContext.RouteBody -> "${context.operationId.toPascalCase()}Body"
-                is NamingContext.RouteParam -> context.name.toPascalCase()
-                is NamingContext.UnionCase -> context.value.toPascalCase()
-                is NamingContext.Nested -> throw IllegalStateException("Nested was filtered out.")
-                is NamingContext.Path -> throw IllegalStateException("Path cannot be nested")
-                is NamingContext.Reference -> throw IllegalStateException("Reference cannot be nested")
-            }
-            acc.nest(nestedName)
-        }
+private fun NamingContext.name(): Class {
+    val head = when (head) {
+        is NamingContext.Path -> Class("${ctx.packageName}.api", head.parts)
+        is NamingContext.Reference -> Class("${ctx.packageName}.model", "${head.name}${head.context.name()}")
     }
-
+    return nested.fold(head) { acc, context ->
+        val nestedName = when (context) {
+            NamingContext.AdditionalProperties -> "Additional"
+            is NamingContext.DiscriminatedObjectCase -> context.discriminator.toPascalCase()
+            is NamingContext.ObjectProperty -> context.name.toPascalCase()
+            is NamingContext.Response -> "${context.operationId.toPascalCase()}Response"
+            is NamingContext.RouteBody -> "${context.operationId.toPascalCase()}Body"
+            is NamingContext.RouteParam -> context.name.toPascalCase()
+            is NamingContext.UnionCase -> context.value.toPascalCase()
+        }
+        acc.nest(nestedName)
+    }
 }
