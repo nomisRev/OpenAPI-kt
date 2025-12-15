@@ -28,11 +28,7 @@ class Endpoint(val path: String, val method: HttpMethod, val operation: Operatio
     val pathParameters = pathParamRegex.findAll(path).map { it.value.removeSurrounding("{", "}") }.toList()
     val operationId = operation.operationId ?: generateSyntheticOperationId(path, method)
 
-    fun context(context: NamingContext): NamingContext =
-        when (pathSegments.size) {
-            0 -> context
-            else -> Path(pathSegments).nest(context)
-        }
+    fun context(context: NamingContext): NamingContext = Path(pathSegments).nest(context)
 
     private fun generateSyntheticOperationId(path: String, method: HttpMethod): String {
         val params = path.split("/")

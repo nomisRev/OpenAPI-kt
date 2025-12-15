@@ -7,6 +7,7 @@ import kotlin.jvm.JvmInline
 
 /**
  * Name generation is tricky... Still considering if or how to redesign.
+ * Design is horrible. It needs to be split, check [TypeName] name function for the problem.
  */
 @Serializable
 sealed interface NamingContext {
@@ -20,7 +21,7 @@ sealed interface NamingContext {
     @Serializable
     @JvmInline
     @SerialName("Path")
-    value class Path(val part: List<String>) : NamingContext {
+    value class Path(val parts: List<String>) : NamingContext {
         constructor(part: String) : this(listOf(part))
     }
 
@@ -34,7 +35,7 @@ sealed interface NamingContext {
     data class Nested private constructor(val inner: NamingContext, val outer: NamingContext) : NamingContext {
         companion object {
             operator fun invoke(inner: NamingContext, outer: NamingContext): NamingContext = when (outer) {
-                is Path if inner is Path -> Path(outer.part + inner.part)
+                is Path if inner is Path -> Path(outer.parts + inner.parts)
                 else -> Nested(inner, outer)
             }
         }
@@ -58,7 +59,9 @@ sealed interface NamingContext {
 
     @Serializable
     @SerialName("UnionCase")
-    data object UnionCase : GenerateName
+    // TODO move UnionCase name generation to Model, this way we can provide a nicer API for modifying it.
+    @JvmInline
+    value class UnionCase(val value: String) : GenerateName
 
     @Serializable
     @SerialName("DiscriminatedObjectCase")

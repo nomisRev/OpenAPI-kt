@@ -9,6 +9,8 @@ import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.registry
 import io.github.nomisrev.openapi.registry.toModel
+import io.github.nomisrev.openapi.render.render
+import io.github.nomisrev.openapi.render.renderer
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.routes.toApiModel
 import kotlinx.io.buffered
@@ -25,19 +27,22 @@ val integrationSpec by testSuite {
 //    jsonSpec("youtrack.json")
 
     test("SavedQuery") {
-//        val schemas = Json.decodeFromString(
-//            MapSerializer(String.serializer(), ReferenceOr.serializer(Schema.serializer())),
-//            readText("Test.json")
-//        )
-//        val api = api.copy(
-//            components = api.components.copy(schemas = api.components.schemas + schemas)
-//        )
+        val schemas = Json.decodeFromString(
+            MapSerializer(String.serializer(), ReferenceOr.serializer(Schema.serializer())),
+            readText("Test.json")
+        )
+        val api = api.copy(
+            components = api.components.copy(schemas = api.components.schemas + schemas)
+        )
 
-//        with(api) {
-//            (api.components.schemas["SavedQuery"] as ReferenceOr.Value<Schema>)
-//                .value
-//                .printAllProperties()
-//        }
+        registry(api) {
+            val model = (api.components.schemas["SavedQuery"] as ReferenceOr.Value<Schema>)
+                .toModel(NamingContext.Reference("SavedQuery", SchemaContext.Read), SchemaContext.Read)
+
+            val x = renderer {
+                model.render()
+            }
+        }
 
 //        val y = registry(api) {
 //            val x = ReferenceOr.schema("SavedQuery").toModel(NamingContext.ObjectProperty("test"), SchemaContext.Write)

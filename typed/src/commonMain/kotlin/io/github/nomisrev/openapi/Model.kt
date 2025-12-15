@@ -9,6 +9,10 @@ sealed interface Model {
     val description: String?
     val isNullable: Boolean
 
+    sealed interface ContextHolder {
+        val context: NamingContext
+    }
+
     fun with(
         description: String? = this.description,
         isNullable: Boolean = this.isNullable,
@@ -40,10 +44,10 @@ sealed interface Model {
      */
     @Serializable
     data class Reference(
-        val context: NamingContext,
+        override val context: NamingContext,
         override val description: String?,
         override val isNullable: Boolean
-    ) : Model
+    ) : Model, ContextHolder
 
     @Serializable
     sealed interface Default<out A : Any> {
@@ -181,14 +185,14 @@ sealed interface Model {
     @SerialName("Object")
     @Serializable
     data class Object(
-        val context: NamingContext,
+        override val context: NamingContext,
         override val description: String?,
         val title: String?,
         val properties: List<Property>,
         val inline: Set<Model>,
         val additionalProperties: AdditionalProperties,
         override val isNullable: Boolean
-    ) : Model {
+    ) : Model, ContextHolder {
         constructor(
             context: NamingContext,
             description: String?,
@@ -256,7 +260,7 @@ sealed interface Model {
     @SerialName("Union")
     @Serializable
     data class Union(
-        val context: NamingContext,
+        override val context: NamingContext,
         val cases: List<Case>,
         val default: Default<String>?,
         override val description: String?,
@@ -264,7 +268,7 @@ sealed interface Model {
         val inline: Set<Model>,
         val discriminator: String?,
         override val isNullable: Boolean
-    ) : Model {
+    ) : Model, ContextHolder {
         @Serializable
         data class Case(val model: Model, val discriminator: String?)
     }
@@ -281,7 +285,7 @@ sealed interface Model {
     @SerialName("DiscriminatedObject")
     @Serializable
     data class DiscriminatedObject(
-        val context: NamingContext,
+        override val context: NamingContext,
         val baseObject: Object,
         val subtypes: List<Object>,
         override val description: String?,
@@ -289,12 +293,12 @@ sealed interface Model {
         val discriminator: String?,
         val selfReference: Boolean,
         override val isNullable: Boolean
-    ) : Model
+    ) : Model, ContextHolder
 
     @SerialName("Enum")
     @Serializable
     data class Enum(
-        val context: NamingContext,
+        override val context: NamingContext,
         val inner: Model,
         val values: List<String?>,
         val default: Default<String>?,
@@ -302,5 +306,5 @@ sealed interface Model {
         override val description: String?,
         val title: String?,
         override val isNullable: Boolean,
-    ) : Model
+    ) : Model, ContextHolder
 }

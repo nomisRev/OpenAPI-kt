@@ -4,9 +4,9 @@ import io.github.nomisrev.openapi.Model
 import kotlinx.serialization.SerialName
 
 context(ctx: Renderer)
-fun Model.Enum.render(): String = """
+fun Model.Enum.render(parentClass: TypeName.Class? = null): String = """
     |@Serializable
-    |enum class ${className().render()} {
+    |enum class ${name().simpleName}${parentClass?.simpleName?.let { " : $it" } ?: ""} {
     |${values()}
     |}
     """.trimMargin()

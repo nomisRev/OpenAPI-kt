@@ -8,16 +8,17 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.resolve
+import io.github.nomisrev.openapi.registry.schemaName
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.union(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
 ): Model {
-
-    val cases = subtypes.map { subtype ->
-        subtype.resolve(NamingContext.UnionCase, context) {
+    val cases = subtypes.mapIndexed { index, subtype ->
+        subtype.resolve(name.nest(unionCase(index, subtype)), context) {
             val discriminatorValue = schema.discriminator?.mapping?.let { discriminator ->
                 when (it) {
                     is ResolvedSchema.Recursive if it.name is NamingContext.Reference -> discriminator[it.name.name]
@@ -40,6 +41,27 @@ suspend fun ResolvedSchema.union(
         schema.discriminator?.propertyName,
         isNullable
     )
+}
+
+context(ctx: Registry.Scope)
+suspend fun unionCase(index: Int, subtype: ReferenceOr<Schema>): NamingContext.UnionCase {
+    val schema = subtype.peek()
+    fun discriminatorValue() = schema.discriminator?.mapping?.let { discriminator ->
+        when (subtype) {
+            is ReferenceOr.Reference -> discriminator[subtype.ref.schemaName()]
+            is ReferenceOr.Value<Schema> -> null
+        }
+    }
+
+    suspend fun specialName() = schema.properties
+        ?.entries
+        ?.firstOrNull { (key, _) -> key in setOf("type", "event", $$"$type") }
+        ?.let { (_, refOrSchema) -> refOrSchema.peek().enum?.singleOrNull() }
+
+    fun name() =
+        schema.enum?.joinToString(prefix = "", separator = "Or") { it?.replaceFirstChar(Char::uppercaseChar) ?: "" }
+
+    return NamingContext.UnionCase(discriminatorValue() ?: specialName() ?: name() ?: "Case$index")
 }
 
 // TODO: This only needs to be done in the Serializer... No need to adjust the actual schema or order during type gen

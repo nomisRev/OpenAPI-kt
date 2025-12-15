@@ -1,11 +1,18 @@
 package io.github.nomisrev.render
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.nomisrev.api
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.registry.registry
+import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.routes.SchemaContext
+import io.github.nomisrev.reference
 
 val unionRenderSpec by testSuite {
+    val union = NamingContext.Reference("Union", SchemaContext.Null)
     verify(
         """
             |@Serializable
@@ -17,13 +24,23 @@ val unionRenderSpec by testSuite {
             |    @Serializable
             |    @JvmInline
             |    value class CaseInt(val value: Int) : Union
+            |    
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseFloat(val value: Float) : Union
+            |    
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseDouble(val value: Double) : Union
             |}
         """.trimMargin(),
         Model.Union(
-            context = NamingContext.Reference("Union", SchemaContext.Null),
+            context = union,
             listOf(
                 Model.Union.Case(Model.Primitive.String(null, null, null, false), null),
                 Model.Union.Case(Model.Primitive.Int(null, null, null, false), null),
+                Model.Union.Case(Model.Primitive.Float(null, null, null, false), null),
+                Model.Union.Case(Model.Primitive.Double(null, null, null, false), null),
             ),
             null,
             null,
@@ -34,8 +51,8 @@ val unionRenderSpec by testSuite {
         )
     )
 
-    val employeeCase = Model.Object(
-        context = NamingContext.UnionCase,
+    fun employeeCase(ctx: NamingContext) = Model.Object(
+        context = union.nest(ctx),
         description = null,
         title = null,
         properties = listOf(
@@ -60,15 +77,15 @@ val unionRenderSpec by testSuite {
             |}
         """.trimMargin(),
         Model.Union(
-            context = NamingContext.Reference("Union", SchemaContext.Null),
+            context = union,
             listOf(
                 Model.Union.Case(Model.Primitive.String(null, null, null, false), null),
-                Model.Union.Case(employeeCase, null),
+                Model.Union.Case(employeeCase(NamingContext.UnionCase("Case1")), null),
             ),
             null,
             null,
             null,
-            setOf(employeeCase),
+            setOf(employeeCase(NamingContext.UnionCase("Case1"))),
             null,
             false
         )
@@ -90,22 +107,22 @@ val unionRenderSpec by testSuite {
             |}
         """.trimMargin(),
         Model.Union(
-            context = NamingContext.Reference("Union", SchemaContext.Null),
+            context = union,
             listOf(
                 Model.Union.Case(Model.Primitive.String(null, null, null, false), "reference"),
-                Model.Union.Case(employeeCase, "employee"),
+                Model.Union.Case(employeeCase(NamingContext.UnionCase("employee")), "employee"),
             ),
             null,
             null,
             null,
-            setOf(employeeCase),
+            setOf(employeeCase(NamingContext.UnionCase("employee"))),
             $$"$type",
             false
         )
     )
 
     val aOrB = Model.Enum(
-        context = NamingContext.UnionCase,
+        context =union.nest(NamingContext.UnionCase("AscOrDesc")),
         inner = Model.Primitive.String(null, null, null, false),
         values = listOf("asc", "desc"),
         default = null,
@@ -130,7 +147,7 @@ val unionRenderSpec by testSuite {
             |}
         """.trimMargin(),
         Model.Union(
-            context = NamingContext.Reference("Union", SchemaContext.Null),
+            context = union,
             listOf(
                 Model.Union.Case(Model.Primitive.String(null, null, null, false), null),
                 Model.Union.Case(aOrB, null),
@@ -142,5 +159,102 @@ val unionRenderSpec by testSuite {
             null,
             false
         )
+    )
+
+    verify(
+        """
+            |@Serializable
+            |sealed interface Union {
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseStrings(val value: List<String>) : Union
+            |    
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseInt(val value: Int) : Union
+            |}
+        """.trimMargin(),
+        Model.Union(
+            context = union,
+            listOf(
+                Model.Union.Case(
+                    Model.Collection(
+                        Model.Primitive.String(null, null, null, false),
+                        null,
+                        null,
+                        null,
+                        false
+                    ),
+                    null
+                ),
+                Model.Union.Case(Model.Primitive.Int(null, null, null, false), null),
+            ),
+            null,
+            null,
+            null,
+            emptySet(),
+            null,
+            false
+        )
+    )
+
+    verify(
+        """
+            |@Serializable
+            |sealed interface Union {
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseStringsList(val value: List<List<String>>) : Union
+            |    
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseInt(val value: Int) : Union
+            |}
+        """.trimMargin(),
+        Model.Union(
+            context = union,
+            listOf(
+                Model.Union.Case(
+                    Model.Collection(
+                        Model.Collection(
+                            Model.Primitive.String(null, null, null, false),
+                            null,
+                            null,
+                            null,
+                            false
+                        ),
+                        null,
+                        null,
+                        null,
+                        false
+                    ),
+                    null
+                ),
+                Model.Union.Case(Model.Primitive.Int(null, null, null, false), null),
+            ),
+            null,
+            null,
+            null,
+            emptySet(),
+            null,
+            false
+        )
+    )
+
+    verify(
+        """
+        |@Serializable
+        |sealed interface Foo {
+        |    @Serializable
+        |    enum class FooOrBar : Foo {
+        |        @SerialName("foo") Foo, @SerialName("bar") Bar;
+        |    }
+        |    
+        |    @Serializable
+        |    @JvmInline
+        |    value class CaseString(val value: String) : Foo
+        |}
+        """.trimMargin(),
+        Schema(anyOf = listOf(ReferenceOr.value(Schema(type = Schema.Type.Basic.String, enum = listOf("foo", "bar"))), ReferenceOr.value(Schema(type = Schema.Type.Basic.String))))
     )
 }

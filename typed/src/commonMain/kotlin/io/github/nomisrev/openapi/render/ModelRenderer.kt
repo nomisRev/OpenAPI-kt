@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.NamingContext
 
 context(ctx: Renderer)
 fun Model.render(): String = when (this) {
@@ -12,7 +13,6 @@ fun Model.render(): String = when (this) {
     is Model.Reference,
     is Model.Uuid,
     is Model.Primitive -> throw IllegalStateException("Cannot render $this")
-
     is Model.Enum -> render()
     is Model.Object -> render()
     is Model.Union -> render()

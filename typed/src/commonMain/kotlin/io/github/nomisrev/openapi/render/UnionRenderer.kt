@@ -2,7 +2,6 @@ package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.render.body
 
 context(builder: StringBuilder)
 operator fun String?.unaryPlus() {
@@ -42,7 +41,7 @@ context(ctx: Renderer)
 fun Model.Union.render(): String = buildString {
     if (discriminator != null) +"@JsonClassDiscriminator(${discriminator.stringValue()})"
     +"@Serializable"
-    +"sealed interface ${className().render()} {"
+    +"sealed interface ${name().simpleName} {"
     +body().prependIndent(ctx.indent)
     +inlineOrNull()?.prependIndent(ctx.indent)
     append("}")
@@ -50,73 +49,69 @@ fun Model.Union.render(): String = buildString {
 
 context(ctx: Renderer, union: Model.Union)
 private fun Model.Union.Case.valueClass(): String {
-    val className = discriminator?.toPascalCase() ?: "Case${model.className().render()}"
+    val className = discriminator?.toPascalCase() ?: "Case${model.toTypeName().name()}"
+
     return """
     |@Serializable
     |@JvmInline
-    |value class $className(val value: ${model.className().render()}) : ${union.className().render()}
+    |value class $className(val value: ${model.toTypeName().type()}) : ${union.name().simpleName}
     """.trimMargin()
+}
+
+private class Index {
+    var index = 1
 }
 
 context(ctx: Renderer)
 private fun Model.Union.body(): String {
-    var index = 1
     return cases.joinToString("\n\n") { case ->
         val serialName = if (case.discriminator != null) "@SerialName(\"${case.discriminator}\")\n" else ""
         val ctxOrNull = case.model.contextOrNull()
-        val renderedCase: String = when (case.model) {
-            is Model.Reference -> case.valueClass()
-            else if (ctxOrNull != null && ctxOrNull is NamingContext.Reference) -> case.valueClass()
-            is Model.Primitive,
-            is Model.DateTime,
-            is Model.ByteArray,
-            is Model.Union,
-            is Model.FreeFormJson,
-            is Model.Uuid,
-            is Model.Date -> case.valueClass()
-
-            is Model.Enum -> {
-                val name = case.model.values.joinToString(
-                    prefix = "",
-                    separator = "Or"
-                ) { it?.replaceFirstChar(Char::uppercaseChar) ?: "" }
-
-                """
-                |@Serializable
-                |enum class $name : ${className().render()} {
-                |${case.model.values()}
-                |}
-                """.trimMargin()
-            }
-
-            is Model.Primitive.Unit -> """
-                   |@Serializable
-                   |data object Empty : ${className().render()}
-                """.trimMargin()
-
-            is Model.Collection -> TODO()
-            is Model.DiscriminatedObject -> TODO("Currently discriminated objects are not supported in unions")
-            is Model.Object -> {
-                val discriminatorName = case.discriminator?.toPascalCase()
-                val enumSpecialName = case.model.properties
-                    .firstOrNull { it.baseName in setOf("type", "event", $$"$type") }
-                    ?.let { (it.model as? Model.Enum)?.values?.singleOrNull() }
-
-                val name = discriminatorName ?: enumSpecialName ?: "Case${index++}"
-
-                case.model.render(ClassName("ignore-always-nested", name)) + " : ${className().render()}"
-            }
-        }
+        val renderedCase: String = case.render(ctxOrNull, Index(), 0)
 
         "$serialName$renderedCase"
     }
+}
+
+context(ctx: Renderer, union: Model.Union)
+private fun Model.Union.Case.render(
+    ctxOrNull: NamingContext?,
+    index: Index,
+    depth: Int
+): String {
+    return when (model) {
+        is Model.Reference -> valueClass()
+        else if (ctxOrNull != null && ctxOrNull is NamingContext.Reference) -> valueClass()
+        is Model.Primitive,
+        is Model.DateTime,
+        is Model.ByteArray,
+        is Model.FreeFormJson,
+        is Model.Uuid,
+        is Model.Date -> valueClass()
+
+        is Model.Object -> model.render() + " : ${union.name().simpleName}" // TODO: this breaks if has nested objects
+        is Model.Collection -> valueClass()
+        is Model.Enum -> model.render(union.name())
+        is Model.Primitive.Unit -> """
+                   |@Serializable
+                   |data object Empty : ${union.name().simpleName}
+                """.trimMargin()
+
+
+        is Model.Union -> TODO()
+        is Model.DiscriminatedObject -> TODO("Currently discriminated objects are not supported in unions")
+    }
+}
+
+fun Model.Union.collection(case: Model.Union.Case, model: Model.Collection) {
+
 }
 
 context(ctx: Renderer)
 private fun Model.Union.inlineOrNull(): String? {
     val inline = inline.filter { it !is Model.Object }
     if (inline.isEmpty()) return null
-    return null
+    return null // TODO
 }
 
 fun Model.contextOrNull(): NamingContext? = when (this) {
@@ -134,3 +129,17 @@ fun Model.contextOrNull(): NamingContext? = when (this) {
     is Model.Primitive -> null
 }
 
+
+private fun TypeName.name(depth: Int = 0): String = when (this) {
+    is TypeName.Collection -> type.name(depth + 1)
+    is TypeName.Class -> {
+        val postfix =
+            if (depth == 0) ""
+            else if (simpleName.endsWith("s")) (0..depth).joinToString(separator = "") { "List" }
+            else {
+                val postfix = (0..depth - 2).joinToString(separator = "") { "List" }
+                "s$postfix"
+            }
+        simpleName + postfix
+    }
+}

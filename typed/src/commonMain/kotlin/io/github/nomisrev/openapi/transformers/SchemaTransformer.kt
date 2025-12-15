@@ -23,8 +23,7 @@ context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
     this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable)
     this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> toDiscriminatedObject(context)
-
-    isOpenEnumeration() -> toOpenEnum(context, schema.anyOf!!)
+//    isOpenEnumeration() -> union(context, schema.anyOf!!)//toOpenEnum(context, schema.anyOf!!)
     schema.enum != null -> toClosedEnum(context, schema.enum!!)
 
     isAllOfNullableType() -> flattenNull(context, schema.allOf!!)
@@ -87,6 +86,7 @@ private suspend fun ResolvedSchema.fallback(): Model = when (this) {
         FreeFormJson(description(), Constraints.Object(schema), isNullable),
         title = schema.title
     )
+
     is Recursive -> Model.Reference(name, description(), isNullable)
 }
 

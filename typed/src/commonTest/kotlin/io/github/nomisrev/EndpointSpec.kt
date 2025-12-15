@@ -55,7 +55,7 @@ val endpointSpec by testSuite {
     }
 
     listOf(
-        endpoint("/") to RouteParam(name = "param", operationId = "get"),
+        endpoint("/") to Path(emptyList()).nest(RouteParam(name = "param", operationId = "get")),
         endpoint("/test") to Path("test").nest(RouteParam(name = "param", operationId = "get")),
         endpoint("/test/{user_id}") to Path("test").nest(RouteParam(name = "param", operationId = "getByUser_id")),
         endpoint("/test/{userId}/test2") to Path(listOf("test", "test2"))
