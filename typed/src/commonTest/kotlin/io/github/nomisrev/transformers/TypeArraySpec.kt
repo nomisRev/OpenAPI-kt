@@ -45,10 +45,10 @@ private fun values(
         val expect = Model.Union(
             name,
             listOf(
-                Model.Union.Case(Model.Primitive.Boolean(null, null, false), null),
-                Model.Union.Case(Model.Primitive.Long(null, null, null, false), null),
-                Model.Union.Case(Model.Primitive.String(null, null, null, false), null),
-                Model.Union.Case(Model.Primitive.Double(null, null, null, false), null),
+                Model.Union.Case(Model.Primitive.Boolean(null, null, false, null), null),
+                Model.Union.Case(Model.Primitive.Long(null, null, null, false, null), null),
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
+                Model.Union.Case(Model.Primitive.Double(null, null, null, false, null), null),
             ),
             null,
             description.expected,

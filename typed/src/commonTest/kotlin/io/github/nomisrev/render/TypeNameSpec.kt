@@ -19,7 +19,7 @@ import kotlin.test.assertEquals
 
 fun Model.Primitive.Unit.Companion.all() =
     description.product(listOf(true, false)) { desc, isNullable ->
-        Model.Primitive.Unit(desc.expected, isNullable)
+        Model.Primitive.Unit(desc.expected, isNullable, null)
     }
 
 val typeNameSpec by testSuite {
@@ -54,8 +54,8 @@ val typeNameSpec by testSuite {
     test("TypeName.JsonArray") {
         val actual = renderer {
             Model.Collection(
-                Model.FreeFormJson(null, null, false),
-                null, null, null, false
+                Model.FreeFormJson(null, null, false, null),
+                null, null, null, false, null
             ).toTypeName()
         }.first
         assertEquals(TypeName.JsonArray, actual)

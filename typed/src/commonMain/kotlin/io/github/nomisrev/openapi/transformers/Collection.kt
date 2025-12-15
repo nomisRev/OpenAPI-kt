@@ -13,8 +13,8 @@ import io.github.nomisrev.openapi.registry.toModel
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.collection(context: SchemaContext): Model {
     val inner = schema.items?.toModel(name, context)
-        ?: Model.FreeFormJson(description = null, constraint = null, isNullable = false)
-    return Model.Collection(inner, collectionDefault(), description(), Constraints.Collection(schema), isNullable)
+        ?: Model.FreeFormJson(description = null, constraint = null, isNullable = false, title = null)
+    return Model.Collection(inner, collectionDefault(), description(), Constraints.Collection(schema), isNullable, schema.title)
 }
 
 private fun ResolvedSchema.collectionDefault() = when (val example = schema.default) {

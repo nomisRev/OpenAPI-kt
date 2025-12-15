@@ -33,10 +33,10 @@ val unionRenderSpec by testSuite {
         Model.Union(
             context = union,
             listOf(
-                Model.Union.Case(Model.Primitive.String(null, null, null, false), null),
-                Model.Union.Case(Model.Primitive.Int(null, null, null, false), null),
-                Model.Union.Case(Model.Primitive.Float(null, null, null, false), null),
-                Model.Union.Case(Model.Primitive.Double(null, null, null, false), null),
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
+                Model.Union.Case(Model.Primitive.Int(null, null, null, false, null), null),
+                Model.Union.Case(Model.Primitive.Float(null, null, null, false, null), null),
+                Model.Union.Case(Model.Primitive.Double(null, null, null, false, null), null),
             ),
             null,
             null,
@@ -52,8 +52,8 @@ val unionRenderSpec by testSuite {
         description = null,
         title = null,
         properties = listOf(
-            Model.Object.Property("age", Model.Primitive.Int(null, null, null, false), false),
-            Model.Object.Property("name", Model.Primitive.String(null, null, null, false), false),
+            Model.Object.Property("age", Model.Primitive.Int(null, null, null, false, null), false),
+            Model.Object.Property("name", Model.Primitive.String(null, null, null, false, null), false),
         ),
         inline = emptySet(),
         additionalProperties = false,
@@ -75,7 +75,7 @@ val unionRenderSpec by testSuite {
         Model.Union(
             context = union,
             listOf(
-                Model.Union.Case(Model.Primitive.String(null, null, null, false), null),
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
                 Model.Union.Case(employeeCase(NamingContext.UnionCase("Case1")), null),
             ),
             null,
@@ -105,7 +105,7 @@ val unionRenderSpec by testSuite {
         Model.Union(
             context = union,
             listOf(
-                Model.Union.Case(Model.Primitive.String(null, null, null, false), "reference"),
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), "reference"),
                 Model.Union.Case(employeeCase(NamingContext.UnionCase("employee")), "employee"),
             ),
             null,
@@ -119,7 +119,7 @@ val unionRenderSpec by testSuite {
 
     val aOrB = Model.Enum(
         context =union.nest(NamingContext.UnionCase("AscOrDesc")),
-        inner = Model.Primitive.String(null, null, null, false),
+        inner = Model.Primitive.String(null, null, null, false, null),
         values = listOf("asc", "desc"),
         default = null,
         description = null,
@@ -144,7 +144,7 @@ val unionRenderSpec by testSuite {
         Model.Union(
             context = union,
             listOf(
-                Model.Union.Case(Model.Primitive.String(null, null, null, false), null),
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
                 Model.Union.Case(aOrB, null),
             ),
             null,
@@ -174,15 +174,16 @@ val unionRenderSpec by testSuite {
             listOf(
                 Model.Union.Case(
                     Model.Collection(
-                        Model.Primitive.String(null, null, null, false),
+                        Model.Primitive.String(null, null, null, false, null),
                         null,
                         null,
                         null,
-                        false
+                        false,
+                        null
                     ),
                     null
                 ),
-                Model.Union.Case(Model.Primitive.Int(null, null, null, false), null),
+                Model.Union.Case(Model.Primitive.Int(null, null, null, false, null), null),
             ),
             null,
             null,
@@ -212,20 +213,22 @@ val unionRenderSpec by testSuite {
                 Model.Union.Case(
                     Model.Collection(
                         Model.Collection(
-                            Model.Primitive.String(null, null, null, false),
+                            Model.Primitive.String(null, null, null, false, null),
                             null,
                             null,
                             null,
-                            false
+                            false,
+                            null
                         ),
                         null,
                         null,
                         null,
-                        false
+                        false,
+                        null
                     ),
                     null
                 ),
-                Model.Union.Case(Model.Primitive.Int(null, null, null, false), null),
+                Model.Union.Case(Model.Primitive.Int(null, null, null, false, null), null),
             ),
             null,
             null,

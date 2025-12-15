@@ -10,7 +10,7 @@ import io.github.nomisrev.openapi.parser.Schema
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.primitive(): Model = when (this) {
-    is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable)
+    is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
     is ResolvedSchema.Value -> toPrimitive()
     is ResolvedSchema.Reference -> {
         val inner = toPrimitive()
@@ -40,21 +40,24 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
                 default = default("Number", String::toFloatOrNull),
                 description = description(),
                 constraint = Constraints.Number(schema),
-                isNullable = isNullable
+                isNullable = isNullable,
+                title = schema.title
             )
 
             else -> Model.Primitive.Double(
                 default = default("Number", String::toDoubleOrNull),
                 description = description(),
                 constraint = Constraints.Number(schema),
-                isNullable = isNullable
+                isNullable = isNullable,
+                title = schema.title
             )
         }
 
         Schema.Type.Basic.Boolean -> Model.Primitive.Boolean(
             default = default("Boolean") { it.lowercase().toBooleanStrictOrNull() },
             description = description(),
-            isNullable = isNullable
+            isNullable = isNullable,
+            title = schema.title
         )
 
         Schema.Type.Basic.Integer -> when (schema.format) {
@@ -62,27 +65,30 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
                 default = default("Integer", String::toIntOrNull),
                 description = description(),
                 constraint = Constraints.Number(schema),
-                isNullable = isNullable
+                isNullable = isNullable,
+                title = schema.title
             )
 
             else -> Model.Primitive.Long(
                 default = default("Integer", String::toLongOrNull),
                 description = description(),
                 constraint = Constraints.Number(schema),
-                isNullable = isNullable
+                isNullable = isNullable,
+                title = schema.title
             )
         }
 
         Schema.Type.Basic.String -> when (schema.format) {
-            "binary" -> Model.ByteArray(description(), isNullable)
-            "uuid" -> Model.Uuid(description(), isNullable)
-            "date" -> Model.Date(description(), isNullable)
-            "date-time" -> Model.DateTime(description(), isNullable)
+            "binary" -> Model.ByteArray(description(), isNullable, schema.title)
+            "uuid" -> Model.Uuid(description(), isNullable, schema.title)
+            "date" -> Model.Date(description(), isNullable, schema.title)
+            "date-time" -> Model.DateTime(description(), isNullable, schema.title)
             else -> Model.Primitive.String(
                 default = default("String", String::toString) { it.joinToString() },
                 description = description(),
                 constraint = Constraints.Text(schema),
-                isNullable = isNullable
+                isNullable = isNullable,
+                title = schema.title
             )
         }
     }

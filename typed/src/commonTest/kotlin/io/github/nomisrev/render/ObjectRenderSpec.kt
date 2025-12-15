@@ -105,7 +105,7 @@ val renderObjectSpec by testSuite {
            |value class Foo(@Required val value: String)""".trimMargin(),
         Model.Object.value(
             NamingContext.Reference("Foo", SchemaContext.Null),
-            Model.Primitive.String(null, null, null, false)
+            Model.Primitive.String(null, null, null, false, null)
         )
     )
 
@@ -115,7 +115,7 @@ val renderObjectSpec by testSuite {
            |value class Foo(@Required val value: String)""".trimMargin(),
         Model.Object.value(
             NamingContext.Reference("Foo", SchemaContext.Null),
-            Model.Primitive.String(null, null, null, true)
+            Model.Primitive.String(null, null, null, true, null)
         )
     )
 
@@ -124,13 +124,13 @@ val renderObjectSpec by testSuite {
         description = null,
         title = null,
         properties = listOf(
-            Model.Object.Property("name", Model.Primitive.String(null, null, null, false), false),
-            Model.Object.Property("email", Model.Primitive.Long(null, null, null, true), false),
-            Model.Object.Property("age", Model.Primitive.Int(null, null, null, false), true),
-            Model.Object.Property("longername", Model.Primitive.Double(null, null, null, true), true),
-            Model.Object.Property("longername2", Model.Primitive.Float(null, null, null, false), false),
-            Model.Object.Property("longer_name_3", Model.Uuid(null, false), false),
-            Model.Object.Property("longername4", Model.DateTime(null, false), false),
+            Model.Object.Property("name", Model.Primitive.String(null, null, null, false, null), false),
+            Model.Object.Property("email", Model.Primitive.Long(null, null, null, true, null), false),
+            Model.Object.Property("age", Model.Primitive.Int(null, null, null, false, null), true),
+            Model.Object.Property("longername", Model.Primitive.Double(null, null, null, true, null), true),
+            Model.Object.Property("longername2", Model.Primitive.Float(null, null, null, false, null), false),
+            Model.Object.Property("longer_name_3", Model.Uuid(null, false, null), false),
+            Model.Object.Property("longername4", Model.DateTime(null, false, null), false),
         ),
         inline = emptySet(),
         additionalProperties = false,
@@ -153,7 +153,7 @@ val renderObjectSpec by testSuite {
 
     val enum = Model.Enum(
         NamingContext.reference("Sort", SchemaContext.Null),
-        Model.Primitive.String(null, null, null, false),
+        Model.Primitive.String(null, null, null, false, null),
         listOf("ASC", "DESC"),
         null,
         null,

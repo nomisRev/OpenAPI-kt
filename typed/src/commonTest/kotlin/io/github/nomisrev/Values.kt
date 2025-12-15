@@ -25,12 +25,12 @@ fun Constraints.Text.Companion.all(): List<Expect<TextConstraints, Constraints.T
 )
 
 fun Model.Primitive.String.Companion.all(): List<Expect<Schema, Model.Primitive.String>> = listOf(
-    Schema.string expect Model.Primitive.String(null, null, null, false),
-    Schema.string.nullable() expect Model.Primitive.String(null, null, null, true),
-    Schema.string.copy(format = "byte") expect Model.Primitive.String(null, null, null, false),
-    Schema.string.nullable().copy(format = "byte") expect Model.Primitive.String(null, null, null, true),
-    Schema.string.copy(format = "random") expect Model.Primitive.String(null, null, null, false),
-    Schema.string.nullable().copy(format = "random") expect Model.Primitive.String(null, null, null, true),
+    Schema.string expect Model.Primitive.String(null, null, null, false, null),
+    Schema.string.nullable() expect Model.Primitive.String(null, null, null, true, null),
+    Schema.string.copy(format = "byte") expect Model.Primitive.String(null, null, null, false, null),
+    Schema.string.nullable().copy(format = "byte") expect Model.Primitive.String(null, null, null, true, null),
+    Schema.string.copy(format = "random") expect Model.Primitive.String(null, null, null, false, null),
+    Schema.string.nullable().copy(format = "random") expect Model.Primitive.String(null, null, null, true, null),
 ).product(description, Model.Default.string(), Constraints.Text.all()) { schema, description, default, constraint ->
     schema.actual.copy(
         description = description.actual,
@@ -45,33 +45,33 @@ fun Model.Primitive.String.Companion.all(): List<Expect<Schema, Model.Primitive.
     )
 } + Expect(
     Schema.string.copy(nullable = true, default = ExampleValue.Single("null")),
-    Model.Primitive.String(Model.Default.Null, null, null, true),
+    Model.Primitive.String(Model.Default.Null, null, null, true, null),
 )
 
 fun Model.ByteArray.Companion.all(): List<Expect<Schema, Model.ByteArray>> = listOf(
-    Schema.string.copy(format = "binary") expect Model.ByteArray(null, false),
-    Schema.string.nullable().copy(format = "binary") expect Model.ByteArray(null, true),
+    Schema.string.copy(format = "binary") expect Model.ByteArray(null, false, null),
+    Schema.string.nullable().copy(format = "binary") expect Model.ByteArray(null, true, null),
 ).product(description) { schema, description ->
     schema.actual.copy(description = description.actual) expect schema.expected.copy(description = description.expected)
 }
 
 fun Model.Uuid.Companion.all() = listOf(
-    Schema.string.copy(format = "uuid") expect Model.Uuid(null, false),
-    Schema.string.nullable().copy(format = "uuid") expect Model.Uuid(null, true),
+    Schema.string.copy(format = "uuid") expect Model.Uuid(null, false, null),
+    Schema.string.nullable().copy(format = "uuid") expect Model.Uuid(null, true, null),
 ).product(description) { schema, description ->
     schema.actual.copy(description = description.actual) expect schema.expected.copy(description = description.expected)
 }
 
 fun Model.Date.Companion.all() = listOf(
-    Schema.string.copy(format = "date") expect Model.Date(null, false),
-    Schema.string.nullable().copy(format = "date") expect Model.Date(null, true),
+    Schema.string.copy(format = "date") expect Model.Date(null, false, null),
+    Schema.string.nullable().copy(format = "date") expect Model.Date(null, true, null),
 ).product(description) { schema, description ->
     schema.actual.copy(description = description.actual) expect schema.expected.copy(description = description.expected)
 }
 
 fun Model.DateTime.Companion.all() = listOf(
-    Schema.string.copy(format = "date-time") expect Model.DateTime(null, false),
-    Schema.string.nullable().copy(format = "date-time") expect Model.DateTime(null, true),
+    Schema.string.copy(format = "date-time") expect Model.DateTime(null, false, null),
+    Schema.string.nullable().copy(format = "date-time") expect Model.DateTime(null, true, null),
 ).product(description) { schema, description ->
     schema.actual.copy(description = description.actual) expect schema.expected.copy(description = description.expected)
 }
@@ -89,8 +89,8 @@ fun Model.Default.Companion.bool() = listOf(
 )
 
 fun Model.Primitive.Boolean.Companion.all() = listOf(
-    Schema.boolean expect Model.Primitive.Boolean(null, null, false),
-    Schema.boolean.nullable() expect Model.Primitive.Boolean(null, null, true),
+    Schema.boolean expect Model.Primitive.Boolean(null, null, false, null),
+    Schema.boolean.nullable() expect Model.Primitive.Boolean(null, null, true, null),
 ).product(description, Model.Default.bool()) { schema, description, default ->
     schema.actual.copy(
         description = description.actual,
@@ -101,7 +101,7 @@ fun Model.Primitive.Boolean.Companion.all() = listOf(
     )
 } + Expect(
     Schema.boolean.copy(nullable = true, default = ExampleValue.Single("null")),
-    Model.Primitive.Boolean(Model.Default.Null, null, true),
+    Model.Primitive.Boolean(Model.Default.Null, null, true, null),
 )
 
 data class SchemaNumberConstraints(
@@ -135,8 +135,8 @@ fun Constraints.Number.Companion.all() = listOf(true, false, null).product(
 }
 
 fun Model.Primitive.Int.Companion.all() = listOf(
-    Schema.integer.copy(format = "int32") expect Model.Primitive.Int(null, null, null, false),
-    Schema.integer.nullable().copy(format = "int32") expect Model.Primitive.Int(null, null, null, true),
+    Schema.integer.copy(format = "int32") expect Model.Primitive.Int(null, null, null, false, null),
+    Schema.integer.nullable().copy(format = "int32") expect Model.Primitive.Int(null, null, null, true, null),
 ).product(description, Model.Default.integer(), Constraints.Number.all()) { schema, description, default, constraints ->
     schema.actual.copy(
         description = description.actual,
@@ -153,7 +153,7 @@ fun Model.Primitive.Int.Companion.all() = listOf(
     )
 } + Expect(
     Schema.integer.copy(nullable = true, format = "int32", default = ExampleValue.Single("null")),
-    Model.Primitive.Int(Model.Default.Null, null, null, true),
+    Model.Primitive.Int(Model.Default.Null, null, null, true, null),
 )
 
 fun Model.Default.Companion.number() = listOf(
@@ -163,10 +163,10 @@ fun Model.Default.Companion.number() = listOf(
 )
 
 fun Model.Primitive.Long.Companion.all() = listOf(
-    Schema.integer expect Model.Primitive.Long(null, null, null, false),
-    Schema.integer.nullable() expect Model.Primitive.Long(null, null, null, true),
-    Schema.integer.copy(format = "int64") expect Model.Primitive.Long(null, null, null, false),
-    Schema.integer.nullable().copy(format = "int64") expect Model.Primitive.Long(null, null, null, true),
+    Schema.integer expect Model.Primitive.Long(null, null, null, false, null),
+    Schema.integer.nullable() expect Model.Primitive.Long(null, null, null, true, null),
+    Schema.integer.copy(format = "int64") expect Model.Primitive.Long(null, null, null, false, null),
+    Schema.integer.nullable().copy(format = "int64") expect Model.Primitive.Long(null, null, null, true, null),
 ).product(description, Model.Default.integer(), Constraints.Number.all()) { schema, description, default, constraints ->
     schema.actual.copy(
         description = description.actual,
@@ -183,14 +183,14 @@ fun Model.Primitive.Long.Companion.all() = listOf(
     )
 } + Expect(
     Schema.integer.copy(nullable = true, default = ExampleValue.Single("null")),
-    Model.Primitive.Long(Model.Default.Null, null, null, true),
+    Model.Primitive.Long(Model.Default.Null, null, null, true, null),
 )
 
 fun Model.Primitive.Double.Companion.all() = listOf(
-    Schema.number expect Model.Primitive.Double(null, null, null, false),
-    Schema.number.copy(format = "double") expect Model.Primitive.Double(null, null, null, false),
-    Schema.number.nullable() expect Model.Primitive.Double(null, null, null, true),
-    Schema.number.nullable().copy(format = "double") expect Model.Primitive.Double(null, null, null, true),
+    Schema.number expect Model.Primitive.Double(null, null, null, false, null),
+    Schema.number.copy(format = "double") expect Model.Primitive.Double(null, null, null, false, null),
+    Schema.number.nullable() expect Model.Primitive.Double(null, null, null, true, null),
+    Schema.number.nullable().copy(format = "double") expect Model.Primitive.Double(null, null, null, true, null),
 ).product(description, Model.Default.number(), Constraints.Number.all()) { schema, description, default, constraints ->
     schema.actual.copy(
         description = description.actual,
@@ -207,12 +207,12 @@ fun Model.Primitive.Double.Companion.all() = listOf(
     )
 } + Expect(
     Schema.number.copy(nullable = true, default = ExampleValue.Single("null")),
-    Model.Primitive.Double(Model.Default.Null, null, null, true),
+    Model.Primitive.Double(Model.Default.Null, null, null, true, null),
 )
 
 fun Model.Primitive.Float.Companion.all() = listOf(
-    Schema.number.copy(format = "float") expect Model.Primitive.Float(null, null, null, false),
-    Schema.number.nullable().copy(format = "float") expect Model.Primitive.Float(null, null, null, true),
+    Schema.number.copy(format = "float") expect Model.Primitive.Float(null, null, null, false, null),
+    Schema.number.nullable().copy(format = "float") expect Model.Primitive.Float(null, null, null, true, null),
 ).product(description, Model.Default.number(), Constraints.Number.all()) { schema, description, default, constraints ->
     schema.actual.copy(
         description = description.actual,
@@ -229,7 +229,7 @@ fun Model.Primitive.Float.Companion.all() = listOf(
     )
 } + Expect(
     Schema.number.copy(format = "float", nullable = true, default = ExampleValue.Single("null")),
-    Model.Primitive.Float(Model.Default.Null, null, null, true),
+    Model.Primitive.Float(Model.Default.Null, null, null, true, null),
 )
 
 fun Model.Primitive.Companion.all(): List<Expect<Schema, Model>> =
@@ -245,8 +245,8 @@ fun Constraints.Object.Companion.all() = listOf(
 )
 
 fun Model.FreeFormJson.Companion.all(): List<Expect<Schema, Model.FreeFormJson>> = listOf(
-    Schema() expect Model.FreeFormJson(null, null, false),
-    Schema(nullable = true) expect Model.FreeFormJson(null, null, true),
+    Schema() expect Model.FreeFormJson(null, null, false, null),
+    Schema(nullable = true) expect Model.FreeFormJson(null, null, true, null),
 ).product(description, Constraints.Object.all()) { schema, description, constraints ->
     schema.actual.copy(
         description = description.actual,

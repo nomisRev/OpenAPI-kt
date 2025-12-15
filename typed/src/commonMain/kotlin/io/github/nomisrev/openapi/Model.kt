@@ -7,6 +7,7 @@ import kotlin.jvm.JvmInline
 @Serializable
 sealed interface Model {
     val description: String?
+    val title: String?
     val isNullable: Boolean
 
     sealed interface ContextHolder {
@@ -46,7 +47,8 @@ sealed interface Model {
     data class Reference(
         override val context: NamingContext,
         override val description: String?,
-        override val isNullable: Boolean
+        override val isNullable: Boolean,
+        override val title: String?
     ) : Model, ContextHolder
 
     @Serializable
@@ -74,7 +76,8 @@ sealed interface Model {
             val default: Default<kotlin.Int>?,
             override val description: kotlin.String?,
             val constraint: Constraints.Number?,
-            override val isNullable: kotlin.Boolean
+            override val isNullable: kotlin.Boolean,
+            override val title: kotlin.String?
         ) : Primitive
 
         @SerialName("Long")
@@ -83,7 +86,8 @@ sealed interface Model {
             val default: Default<kotlin.Long>?,
             override val description: kotlin.String?,
             val constraint: Constraints.Number?,
-            override val isNullable: kotlin.Boolean
+            override val isNullable: kotlin.Boolean,
+            override val title: kotlin.String?
         ) : Primitive
 
         @SerialName("Float")
@@ -92,7 +96,8 @@ sealed interface Model {
             val default: Default<kotlin.Float>?,
             override val description: kotlin.String?,
             val constraint: Constraints.Number?,
-            override val isNullable: kotlin.Boolean
+            override val isNullable: kotlin.Boolean,
+            override val title: kotlin.String?
         ) : Primitive
 
         @SerialName("Double")
@@ -101,7 +106,8 @@ sealed interface Model {
             val default: Default<kotlin.Double>?,
             override val description: kotlin.String?,
             val constraint: Constraints.Number?,
-            override val isNullable: kotlin.Boolean
+            override val isNullable: kotlin.Boolean,
+            override val title: kotlin.String?
         ) : Primitive
 
         @SerialName("Boolean")
@@ -109,7 +115,8 @@ sealed interface Model {
         data class Boolean(
             val default: Default<kotlin.Boolean>?,
             override val description: kotlin.String?,
-            override val isNullable: kotlin.Boolean
+            override val isNullable: kotlin.Boolean,
+            override val title: kotlin.String?
         ) : Primitive
 
         @SerialName("String")
@@ -118,14 +125,16 @@ sealed interface Model {
             val default: Default<kotlin.String>?,
             override val description: kotlin.String?,
             val constraint: Constraints.Text?,
-            override val isNullable: kotlin.Boolean
+            override val isNullable: kotlin.Boolean,
+            override val title: kotlin.String?
         ) : Primitive
 
         @SerialName("Unit")
         @Serializable
         data class Unit(
             override val description: kotlin.String?,
-            override val isNullable: kotlin.Boolean
+            override val isNullable: kotlin.Boolean,
+            override val title: kotlin.String?
         ) : Primitive
 
         companion object
@@ -134,25 +143,29 @@ sealed interface Model {
     @Serializable
     data class ByteArray(
         override val description: String?,
-        override val isNullable: Boolean
+        override val isNullable: Boolean,
+        override val title: String?
     ) : Model
 
     @Serializable
     data class Uuid(
         override val description: String?,
-        override val isNullable: Boolean
+        override val isNullable: Boolean,
+        override val title: String?
     ) : Model
 
     @Serializable
     data class Date(
         override val description: String?,
-        override val isNullable: Boolean
+        override val isNullable: Boolean,
+        override val title: String?
     ) : Model
 
     @Serializable
     data class DateTime(
         override val description: String?,
-        override val isNullable: Boolean
+        override val isNullable: Boolean,
+        override val title: String?
     ) : Model
 
     @Serializable
@@ -160,6 +173,7 @@ sealed interface Model {
         override val description: String?,
         val constraint: Constraints.Object?,
         override val isNullable: Boolean,
+        override val title: String?,
         //  val default: Default<String>?
     ) : Model {
         // TODO support default values
@@ -179,7 +193,8 @@ sealed interface Model {
         val default: Default<List<String>>?,
         override val description: String?,
         val constraint: Constraints.Collection?,
-        override val isNullable: Boolean
+        override val isNullable: Boolean,
+        override val title: String?
     ) : Model
 
     @SerialName("Object")
@@ -187,7 +202,7 @@ sealed interface Model {
     data class Object(
         override val context: NamingContext,
         override val description: String?,
-        val title: String?,
+        override val title: String?,
         val properties: List<Property>,
         val inline: Set<Model>,
         val additionalProperties: AdditionalProperties,
@@ -264,7 +279,7 @@ sealed interface Model {
         val cases: List<Case>,
         val default: Default<String>?,
         override val description: String?,
-        val title: String?,
+        override val title: String?,
         val inline: Set<Model>,
         val discriminator: String?,
         override val isNullable: Boolean
@@ -289,7 +304,7 @@ sealed interface Model {
         val baseObject: Object,
         val subtypes: List<Object>,
         override val description: String?,
-        val title: String?,
+        override val title: String?,
         val discriminator: String?,
         val selfReference: Boolean,
         override val isNullable: Boolean
@@ -303,7 +318,7 @@ sealed interface Model {
         val values: List<String?>,
         val default: Default<String>?,
         override val description: String?,
-        val title: String?,
+        override val title: String?,
         override val isNullable: Boolean,
     ) : Model, ContextHolder
 }

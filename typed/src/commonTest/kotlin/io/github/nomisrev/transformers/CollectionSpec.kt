@@ -24,7 +24,7 @@ val collectionSpec by testSuite {
     val name = NamingContext.ObjectProperty("values")
     val primitives = (Model.Primitive.all() + Model.FreeFormJson.all()).map { (schema, model) ->
         val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.Value(schema))
-        val expected = Model.Collection(model, null, null, null, false)
+        val expected = Model.Collection(model, null, null, null, false, null)
         schema expect expected
     }
 
@@ -44,7 +44,8 @@ val collectionSpec by testSuite {
                 null,
                 null,
                 null,
-                false
+                false,
+                null
             )
             ExpectedApi(
                 schema,
@@ -60,7 +61,7 @@ val collectionSpec by testSuite {
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(items = ReferenceOr.schema("CollectionItem"))
             val wrapped = Model.Object.value(NamingContext.Reference("CollectionItem", SchemaContext.Null), model)
-            val expected = Model.Collection(wrapped, null, null, null, false)
+            val expected = Model.Collection(wrapped, null, null, null, false, null)
             ExpectedApi(
                 schema,
                 expected,
@@ -74,7 +75,7 @@ val collectionSpec by testSuite {
         "Referenced Collection with primitive",
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.Value(innerSchema))
-            val expected = Model.Collection(model, null, null, null, false)
+            val expected = Model.Collection(model, null, null, null, false, null)
             ExpectedApi(
                 schema,
                 expected,
@@ -88,7 +89,7 @@ val collectionSpec by testSuite {
         "Referenced Collection with primitive without type: array",
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(items = ReferenceOr.Value(innerSchema))
-            val expected = Model.Collection(model, null, null, null, false)
+            val expected = Model.Collection(model, null, null, null, false, null)
             ExpectedApi(
                 schema,
                 expected,
@@ -102,18 +103,19 @@ val collectionSpec by testSuite {
         "Default - empty JS array",
         Schema(type = Type.Basic.Array, default = ExampleValue.Single("[]")),
         Model.Collection(
-            Model.FreeFormJson(null, null, false),
+            Model.FreeFormJson(null, null, false, null),
             Model.Default.Value(emptyList()),
             null,
             null,
-            false
+            false,
+            null
         )
     )
 
     verify(
         "Default - null on nullable array",
         Schema(type = Type.Basic.Array, default = ExampleValue.Single("null"), nullable = true),
-        Model.Collection(Model.FreeFormJson(null, null, false), Model.Default.Null, null, null, true)
+        Model.Collection(Model.FreeFormJson(null, null, false, null), Model.Default.Null, null, null, true, null)
     )
 
     verifyFails<IllegalArgumentException>(
@@ -131,11 +133,12 @@ val collectionSpec by testSuite {
             nullable = false
         ),
         Model.Collection(
-            Model.Primitive.String(null, null, null, false),
+            Model.Primitive.String(null, null, null, false, null),
             Model.Default.Value(listOf("A")),
             null,
             null,
-            false
+            false,
+            null
         )
     )
 
@@ -148,11 +151,12 @@ val collectionSpec by testSuite {
             nullable = false
         ),
         Model.Collection(
-            Model.Primitive.String(null, null, null, false),
+            Model.Primitive.String(null, null, null, false, null),
             Model.Default.Value(listOf("A", "B")),
             null,
             null,
-            false
+            false,
+            null
         )
     )
 }

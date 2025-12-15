@@ -14,14 +14,13 @@ import io.github.nomisrev.openapi.registry.isAnyOfNullableType
 import io.github.nomisrev.openapi.registry.isNull
 import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.isOneOfNullableType
-import io.github.nomisrev.openapi.registry.isOpenEnumeration
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
-    this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable)
+    this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
     this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> toDiscriminatedObject(context)
 //    isOpenEnumeration() -> union(context, schema.anyOf!!)//toOpenEnum(context, schema.anyOf!!)
     schema.enum != null -> toClosedEnum(context, schema.enum!!)
@@ -73,19 +72,19 @@ private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContex
     when (val ap = schema.additionalProperties) {
         null -> fallback()
         is PSchema -> ap.value.toModel(name, context)
-        is Allowed -> if (ap.value) fallback() else Model.Primitive.Unit(description(), isNullable)
+        is Allowed -> if (ap.value) fallback() else Model.Primitive.Unit(description(), isNullable, schema.title)
     }
 
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.fallback(): Model = when (this) {
-    is Value -> FreeFormJson(description(), Constraints.Object(schema), isNullable)
+    is Value -> FreeFormJson(description(), Constraints.Object(schema), isNullable, schema.title)
     is Reference -> Object.value(
         reference,
-        FreeFormJson(description(), Constraints.Object(schema), isNullable),
+        FreeFormJson(description(), Constraints.Object(schema), isNullable, schema.title),
         title = schema.title
     )
 
-    is Recursive -> Model.Reference(name, description(), isNullable)
+    is Recursive -> Model.Reference(name, description(), isNullable, schema.title)
 }
 
 /**

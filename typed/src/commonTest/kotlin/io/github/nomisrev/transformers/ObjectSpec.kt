@@ -73,20 +73,20 @@ val objectSpec by testSuite {
             additionalProperties = Allowed(true),
             description = description.actual,
             nullable = isNullable
-        ) expect Model.FreeFormJson(description.expected, null, isNullable ?: false)
+        ) expect Model.FreeFormJson(description.expected, null, isNullable ?: false, null)
     } + description.product(listOf(true, false, null)) { description, isNullable ->
         Schema(
             type = Type.Basic.Object,
             additionalProperties = Allowed(false),
             description = description.actual,
             nullable = isNullable
-        ) expect Model.Primitive.Unit(description.expected, isNullable ?: false)
+        ) expect Model.Primitive.Unit(description.expected, isNullable ?: false, null)
     } + description.product(listOf(true, false, null)) { description, isNullable ->
         Schema(
             type = Type.Basic.Object,
             description = description.actual,
             nullable = isNullable
-        ) expect Model.FreeFormJson(description.expected, null, isNullable ?: false)
+        ) expect Model.FreeFormJson(description.expected, null, isNullable ?: false, null)
     }
 
     verifyAll("Additional Properties", aProps)
@@ -166,7 +166,14 @@ val objectSpec by testSuite {
     val enumNesting = Model.Enum.strings(NamingContext.path("test"))
         .map { (innerSchema, innerModel) ->
             val listSchema = Schema(type = Type.Basic.Array, items = ReferenceOr.value(innerSchema))
-            val listModel = Model.Collection(innerModel.context { it.nest(NamingContext.ObjectProperty("enum")) }, null, null, null, false)
+            val listModel = Model.Collection(
+                innerModel.context { it.nest(NamingContext.ObjectProperty("enum")) },
+                null,
+                null,
+                null,
+                false,
+                null
+            )
             val objSchema =
                 Schema(type = Type.Basic.Object, properties = mapOf("enum" to ReferenceOr.value(listSchema)))
             val model = Model.Object(

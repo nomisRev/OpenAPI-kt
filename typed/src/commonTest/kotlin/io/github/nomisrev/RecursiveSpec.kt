@@ -28,7 +28,7 @@ val recursiveSpec by testSuite {
                 listOf(
                     Model.Object.Property(
                         "self",
-                        Model.Reference(name, description.expected, isNullable ?: false),
+                        Model.Reference(name, description.expected, isNullable ?: false, null),
                         isRequired = false
                     )
                 ),
@@ -71,7 +71,7 @@ val recursiveSpec by testSuite {
                 listOf(
                     Model.Object.Property(
                         "self",
-                        Model.Reference(root, description.expected, isNullable ?: false),
+                        Model.Reference(root, description.expected, isNullable ?: false, null),
                         isRequired = false
                     )
                 ),
@@ -108,11 +108,12 @@ val recursiveSpec by testSuite {
                     Model.Object.Property(
                         "self",
                         Model.Collection(
-                            Model.Reference(root, description.expected, isNullable ?: false),
+                            Model.Reference(root, description.expected, isNullable ?: false, null),
                             null,
                             null,
                             null,
-                            false
+                            false,
+                            null
                         ),
                         isRequired = false
                     )
@@ -144,7 +145,7 @@ val recursiveSpec by testSuite {
                     properties = listOf(
                         Model.Object.Property(
                             baseName = "a",
-                            model = Model.Reference(NamingContext.reference("A", SchemaContext.Null), null, false),
+                            model = Model.Reference(NamingContext.reference("A", SchemaContext.Null), null, false, null),
                             isRequired = false
                         )
                     ),
@@ -179,7 +180,7 @@ val recursiveSpec by testSuite {
                     properties = listOf(
                         Model.Object.Property(
                             "b",
-                            Model.Reference(NamingContext.reference("B", SchemaContext.Null), null, false),
+                            Model.Reference(NamingContext.reference("B", SchemaContext.Null), null, false, null),
                             false
                         )
                     ),

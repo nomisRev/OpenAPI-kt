@@ -26,8 +26,9 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
         inner = inner.merge(other.inner, name),
         default = default ?: other.default,
         description = description ?: other.description,
+        constraint = constraint.merge(other.constraint),
         isNullable = isNullable || other.isNullable,
-        constraint = constraint.merge(other.constraint)
+        title = title ?: other.title
     )
 
     is Model.Object if other is Model.FreeFormJson -> copy(
@@ -67,50 +68,57 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
 }
 
 private fun Model.Primitive.merge(other: Model.Primitive): Model.Primitive = when (this) {
-    is Model.Primitive.Boolean if other is Model.Primitive.Boolean -> copy(
-        default = default ?: other.default,
-        description = description ?: other.description,
-        isNullable = isNullable || other.isNullable
-    )
-
-    is Model.Primitive.Double if other is Model.Primitive.Double -> copy(
+    is Model.Primitive.Boolean if other is Model.Primitive.Boolean -> Model.Primitive.Boolean(
         default = default ?: other.default,
         description = description ?: other.description,
         isNullable = isNullable || other.isNullable,
-        constraint = constraint.merge(other.constraint)
+        title = title ?: other.title
+    )
+
+    is Model.Primitive.Double if other is Model.Primitive.Double -> Model.Primitive.Double(
+        default = default ?: other.default,
+        description = description ?: other.description,
+        isNullable = isNullable || other.isNullable,
+        constraint = constraint.merge(other.constraint),
+        title = title ?: other.title
     )
 
     is Model.Primitive.Float if other is Model.Primitive.Float -> Model.Primitive.Float(
         default = default ?: other.default,
         description = description ?: other.description,
+        constraint = constraint.merge(other.constraint),
         isNullable = isNullable || other.isNullable,
-        constraint = constraint.merge(other.constraint)
+        title = title ?: other.title
     )
 
     is Model.Primitive.Int if other is Model.Primitive.Int -> Model.Primitive.Int(
         default = default ?: other.default,
         description = description ?: other.description,
+        constraint = constraint.merge(other.constraint),
         isNullable = isNullable || other.isNullable,
-        constraint = constraint.merge(other.constraint)
+        title = title ?: other.title,
     )
 
     is Model.Primitive.Long if other is Model.Primitive.Long -> Model.Primitive.Long(
         default = default ?: other.default,
         description = description ?: other.description,
+        constraint = constraint.merge(other.constraint),
         isNullable = isNullable || other.isNullable,
-        constraint = constraint.merge(other.constraint)
+        title = title ?: other.title
     )
 
     is Model.Primitive.String if other is Model.Primitive.String -> Model.Primitive.String(
         default = default ?: other.default,
         description = description ?: other.description,
+        constraint = constraint.merge(other.constraint),
         isNullable = isNullable || other.isNullable,
-        constraint = constraint.merge(other.constraint)
+        title = title ?: other.title
     )
 
     is Model.Primitive.Unit if other is Model.Primitive.Unit -> Model.Primitive.Unit(
         description = description ?: other.description,
-        isNullable = isNullable || other.isNullable
+        isNullable = isNullable || other.isNullable,
+        title = title ?: other.title
     )
 
     is Model.Primitive -> throw IllegalStateException("Cannot merge allOf $this with $other")
