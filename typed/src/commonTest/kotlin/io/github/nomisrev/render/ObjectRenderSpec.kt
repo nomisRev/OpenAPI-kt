@@ -1,86 +1,10 @@
 package io.github.nomisrev.render
 
-import de.infix.testBalloon.framework.core.TestSuite
 import de.infix.testBalloon.framework.core.testSuite
-import de.infix.testBalloon.framework.shared.TestRegistering
-import io.github.nomisrev.api
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.parser.ReferenceOr
-import io.github.nomisrev.openapi.parser.Schema
-import io.github.nomisrev.openapi.registry.registry
-import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.render.TypeName
-import io.github.nomisrev.openapi.render.renderer
-import io.github.nomisrev.openapi.render.render
 import io.github.nomisrev.openapi.routes.SchemaContext
-import io.github.nomisrev.reference
-import kotlin.test.assertEquals
-
-@TestRegistering
-fun TestSuite.verify(
-    expected: String,
-    schema: Schema,
-    expectedImports: Set<TypeName> = emptySet()
-) {
-    fun eq(expected: String, actual: String) =
-        if (expected != actual) throw AssertionError(
-            """
-            |###################
-            |###### Actual #####
-            |$actual
-            |###################
-            |###### Expected ###
-            |###################
-            |$expected
-            |###################
-        """.trimMargin()
-        )
-        else Unit
-
-    test(expected) {
-        val model = registry(api.reference("Foo", schema)) {
-            ReferenceOr.schema("Foo")
-                .toModel(NamingContext.Reference("Foo", SchemaContext.Null), SchemaContext.Write)
-        }
-        val (actual, imports) = renderer { model.render() }
-        eq(expected, actual)
-        if (expectedImports.isNotEmpty()) {
-            assertEquals(expectedImports, imports)
-        }
-    }
-}
-
-
-@TestRegistering
-fun TestSuite.verify(
-    expected: String,
-    model: Model,
-    expectedImports: Set<TypeName> = emptySet()
-) {
-    fun eq(expected: String, actual: String) =
-        if (expected != actual) throw AssertionError(
-            """
-            |###################
-            |###### Actual #####
-            |$actual
-            |###################
-            |###### Expected ###
-            |###################
-            |$expected
-            |###################
-        """.trimMargin()
-        )
-        else Unit
-
-    test(expected) {
-        val (actual, imports) = renderer { model.render() }
-        eq(expected, actual)
-        if (expectedImports.isNotEmpty()) {
-            assertEquals(expectedImports, imports)
-        }
-    }
-}
 
 val renderObjectSpec by testSuite {
     verify(
@@ -119,7 +43,29 @@ val renderObjectSpec by testSuite {
         )
     )
 
-    val singline = Model.Object(
+    val singleline = Model.Object(
+        context = NamingContext.reference("Foo", SchemaContext.Null),
+        description = null,
+        title = null,
+        properties = listOf(
+            Model.Object.Property("name", Model.Primitive.String(null, null, null, false, null), false),
+            Model.Object.Property("email", Model.Primitive.Long(null, null, null, true, null), false),
+            Model.Object.Property("age", Model.Primitive.Int(null, null, null, false, null), true),
+            Model.Object.Property("longername", Model.Primitive.Double(null, null, null, true, null), true),
+        ),
+        inline = emptySet(),
+        additionalProperties = false,
+        isNullable = false
+    )
+
+    verify(
+        """|@Serializable
+           |data class Foo(val name: String, val email: Long? = null, @Required val age: Int, @Required val longername: Double?)
+           """.trimMargin(),
+        singleline
+    )
+
+    val multiline = Model.Object(
         context = NamingContext.reference("Foo", SchemaContext.Null),
         description = null,
         title = null,
@@ -148,11 +94,13 @@ val renderObjectSpec by testSuite {
            |    @SerialName("longer_name_3") val longerName3: Uuid,
            |    val longername4: LocalDateTime
            |)""".trimMargin(),
-        singline
+        multiline,
+        setOf(TypeName.Uuid, TypeName.DateTime)
     )
 
     val enum = Model.Enum(
-        NamingContext.reference("Sort", SchemaContext.Null),
+        NamingContext.reference("Foo", SchemaContext.Null)
+            .nest(NamingContext.ObjectProperty("Sort")),
         Model.Primitive.String(null, null, null, false, null),
         listOf("ASC", "DESC"),
         null,
@@ -176,5 +124,62 @@ val renderObjectSpec by testSuite {
            |    }
            |}""".trimMargin(),
         nestedEnum
+    )
+
+    val primitiveImports = Model.Object(
+        context = NamingContext.reference("Foo", SchemaContext.Null),
+        description = null,
+        title = null,
+        properties = listOf(
+            Model.Object.Property("date", Model.Date(null, false, null), false),
+            Model.Object.Property("dateTime", Model.DateTime(null, false, null), false),
+            Model.Object.Property("uuid", Model.Uuid(null, false, null), false),
+            Model.Object.Property("json", Model.FreeFormJson(null, null, false, null), false),
+            Model.Object.Property(
+                "jsonArray", Model.Collection(
+                    Model.FreeFormJson(null, null, false, null), null, null, null, false, null
+                ), false
+            ),
+            Model.Object.Property(
+                "jsonObject",
+                Model.Object(
+                    NamingContext.reference("Foo", SchemaContext.Null)
+                        .nest(NamingContext.ObjectProperty("jsonObject")),
+                    null,
+                    null,
+                    emptyList(),
+                    emptySet(),
+                    true,
+                    false
+                ),
+                false
+            )
+        ),
+        inline = emptySet(),
+        additionalProperties = false,
+        isNullable = false
+    )
+
+    verify(
+        """
+           |@Serializable
+           |data class Foo(
+           |    val date: LocalDate,
+           |    val dateTime: LocalDateTime,
+           |    val uuid: Uuid,
+           |    val json: JsonElement,
+           |    val jsonArray: JsonArray,
+           |    val jsonObject: JsonObject
+           |)
+           """.trimMargin(),
+        primitiveImports,
+        setOf(
+            TypeName.Uuid,
+            TypeName.Date,
+            TypeName.DateTime,
+            TypeName.JsonArray,
+            TypeName.JsonElement,
+            TypeName.JsonObject,
+        )
     )
 }

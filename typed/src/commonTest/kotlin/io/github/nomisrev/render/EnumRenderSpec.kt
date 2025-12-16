@@ -4,6 +4,17 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.routes.SchemaContext
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.buildSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import kotlin.jvm.JvmInline
+import kotlin.test.assertEquals
 
 val enumRenderSpec by testSuite {
     verify(
@@ -46,4 +57,49 @@ val enumRenderSpec by testSuite {
             false
         )
     )
+
+    test("asc") {
+        val actual = Json.decodeFromString(Test.Serializer, "\"asc\"")
+        assertEquals(AscOrDesc.Asc, actual)
+    }
+
+    test("desc") {
+        val actual = Json.decodeFromString(Test.Serializer, "\"desc\"")
+        assertEquals(AscOrDesc.Desc, actual)
+    }
+
+    test("open") {
+        val actual = Json.decodeFromString(Test.Serializer, "\"any\"")
+        assertEquals(CaseString("any"), actual)
+    }
 }
+
+// TODO Example of OpenEnum generation Serializer
+@Serializable(with = Test.Serializer::class)
+sealed interface Test {
+    companion object Serializer : KSerializer<Test> {
+        @OptIn(InternalSerializationApi::class)
+        override val descriptor: SerialDescriptor = buildSerialDescriptor("Test", SerialKind.CONTEXTUAL)
+
+        override fun serialize(encoder: Encoder, value: Test) =
+            when (value) {
+                AscOrDesc.Asc -> encoder.encodeString("asc")
+                AscOrDesc.Desc -> encoder.encodeString("desc")
+                is CaseString -> encoder.encodeString(value.value)
+            }
+
+        override fun deserialize(decoder: Decoder): Test =
+            when (val value = decoder.decodeString()) {
+                "asc" -> AscOrDesc.Asc
+                "desc" -> AscOrDesc.Desc
+                else -> CaseString(value)
+            }
+    }
+}
+
+@Serializable
+@JvmInline
+value class CaseString(val value: String) : Test
+
+@Serializable
+enum class AscOrDesc : Test { Asc, Desc }

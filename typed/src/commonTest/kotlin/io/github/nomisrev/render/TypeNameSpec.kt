@@ -51,6 +51,21 @@ val typeNameSpec by testSuite {
         assertEquals(TypeName.JsonObject, actual)
     }
 
+    test("(empty) object)") {
+        val actual = renderer {
+            Model.Object(
+                context = NamingContext.reference("Foo", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = emptyList(),
+                additionalProperties = false,
+                isNullable = false,
+                inline = emptySet()
+            ).toTypeName()
+        }.first
+        assertEquals(TypeName.Class("io.github.nomisrev.model", listOf("Foo")), actual)
+    }
+
     test("TypeName.JsonArray") {
         val actual = renderer {
             Model.Collection(
@@ -59,6 +74,36 @@ val typeNameSpec by testSuite {
             ).toTypeName()
         }.first
         assertEquals(TypeName.JsonArray, actual)
+    }
+
+    test("FooRequest") {
+        val actual = renderer {
+            Model.Object(
+                context = NamingContext.reference("Foo", SchemaContext.Write),
+                description = null,
+                title = null,
+                properties = emptyList(),
+                additionalProperties = false,
+                isNullable = false,
+                inline = emptySet()
+            ).toTypeName()
+        }.first
+        assertEquals(TypeName.Class("io.github.nomisrev.model", listOf("FooRequest")), actual)
+    }
+
+    test("FooResponse") {
+        val actual = renderer {
+            Model.Object(
+                context = NamingContext.reference("Foo", SchemaContext.Read),
+                description = null,
+                title = null,
+                properties = emptyList(),
+                additionalProperties = false,
+                isNullable = false,
+                inline = emptySet()
+            ).toTypeName()
+        }.first
+        assertEquals(TypeName.Class("io.github.nomisrev.model", listOf("FooResponse")), actual)
     }
 }
 

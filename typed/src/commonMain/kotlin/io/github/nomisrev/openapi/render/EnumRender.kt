@@ -2,13 +2,10 @@ package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Model
 
-fun TypeName.Class?.renderSuperclass(): String =
-    this?.simpleName?.let { " : $it" } ?: ""
-
 context(ctx: Renderer)
 fun Model.Enum.render(parentClass: TypeName.Class? = null): String = """
     |@Serializable
-    |enum class ${name().simpleName}${parentClass.renderSuperclass()} {
+    |enum class ${name().simpleName}${parentClass.renderAsSuperclass()} {
     |${values()}
     |}
     """.trimMargin()

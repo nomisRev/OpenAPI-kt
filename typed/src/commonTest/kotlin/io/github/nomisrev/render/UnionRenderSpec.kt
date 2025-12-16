@@ -5,6 +5,7 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.render.TypeName
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 val unionRenderSpec by testSuite {
@@ -28,6 +29,25 @@ val unionRenderSpec by testSuite {
             |    @Serializable
             |    @JvmInline
             |    value class CaseDouble(val value: Double) : Union
+            |    
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseLocalDate(val value: LocalDate) : Union
+            |    
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseLocalDateTime(val value: LocalDateTime) : Union
+            |    
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseByteArray(val value: ByteArray) : Union
+            |    
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseUuid(val value: Uuid) : Union
+            |    
+            |    @Serializable
+            |    data object Empty : Union
             |}
         """.trimMargin(),
         Model.Union(
@@ -37,6 +57,11 @@ val unionRenderSpec by testSuite {
                 Model.Union.Case(Model.Primitive.Int(null, null, null, false, null), null),
                 Model.Union.Case(Model.Primitive.Float(null, null, null, false, null), null),
                 Model.Union.Case(Model.Primitive.Double(null, null, null, false, null), null),
+                Model.Union.Case(Model.Date(null, false, null), null),
+                Model.Union.Case(Model.DateTime(null, false, null), null),
+                Model.Union.Case(Model.ByteArray(null, false, null), null),
+                Model.Union.Case(Model.Uuid(null, false, null), null),
+                Model.Union.Case(Model.Primitive.Unit(null, false, null), null),
             ),
             null,
             null,
@@ -44,6 +69,11 @@ val unionRenderSpec by testSuite {
             emptySet(),
             null,
             false
+        ),
+        setOf(
+            TypeName.Uuid,
+            TypeName.Date,
+            TypeName.DateTime,
         )
     )
 
@@ -118,7 +148,7 @@ val unionRenderSpec by testSuite {
     )
 
     val aOrB = Model.Enum(
-        context =union.nest(NamingContext.UnionCase("AscOrDesc")),
+        context = union.nest(NamingContext.UnionCase("AscOrDesc")),
         inner = Model.Primitive.String(null, null, null, false, null),
         values = listOf("asc", "desc"),
         default = null,
@@ -253,6 +283,11 @@ val unionRenderSpec by testSuite {
         |    value class CaseString(val value: String) : Foo
         |}
         """.trimMargin(),
-        Schema(anyOf = listOf(ReferenceOr.value(Schema(type = Schema.Type.Basic.String, enum = listOf("foo", "bar"))), ReferenceOr.value(Schema(type = Schema.Type.Basic.String))))
+        Schema(
+            anyOf = listOf(
+                ReferenceOr.value(Schema(type = Schema.Type.Basic.String, enum = listOf("foo", "bar"))),
+                ReferenceOr.value(Schema(type = Schema.Type.Basic.String))
+            )
+        )
     )
 }

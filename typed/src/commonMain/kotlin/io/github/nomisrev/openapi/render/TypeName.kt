@@ -76,6 +76,9 @@ private fun SchemaContext.name(): String = when (this) {
 context(ctx: Renderer)
 fun Model.ContextHolder.name(): Class = context.name()
 
+fun Class?.renderAsSuperclass(): String =
+    this?.simpleName?.let { " : $it" } ?: ""
+
 context(ctx: Renderer)
 private fun NamingContext.name(): Class {
     val head = when (head) {
