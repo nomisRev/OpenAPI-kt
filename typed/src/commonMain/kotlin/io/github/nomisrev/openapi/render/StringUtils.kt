@@ -1,6 +1,6 @@
 package io.github.nomisrev.openapi.render
 
-private val arrayPattern = """\[(?:\d*|])?]""".toRegex()
+private val arrayPattern = """\[\d*\]""".toRegex()
 fun String.dropArraySyntax(): String = replace(arrayPattern, "")
 
 fun String.splitToWords(): List<String> {

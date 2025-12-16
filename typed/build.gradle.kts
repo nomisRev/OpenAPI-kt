@@ -18,6 +18,8 @@ kotlin {
 
     jvm()
     macosArm64()
+    linuxX64()
+    js(IR) { browser() }
     //  linuxX64()
 
     sourceSets {
@@ -31,6 +33,11 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation("de.infix.testBalloon:testBalloon-framework-core:0.7.1-K2.2.21")
+            }
+        }
+        jvmTest {
+            dependencies {
+                implementation("dev.zacsweers.kctfork:core:0.11.0")
             }
         }
     }
