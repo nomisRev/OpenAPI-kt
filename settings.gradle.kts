@@ -25,3 +25,4 @@ rootProject.name = "openapi-kt"
 
 include("parser")
 include("typed")
+include("test")

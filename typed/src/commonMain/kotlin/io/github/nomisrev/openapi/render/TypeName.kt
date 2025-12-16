@@ -80,7 +80,7 @@ fun Class?.renderAsSuperclass(): String =
     this?.simpleName?.let { " : $it" } ?: ""
 
 context(ctx: Renderer)
-private fun NamingContext.name(): Class {
+fun NamingContext.name(): Class {
     val head = when (head) {
         is NamingContext.Path -> Class("${ctx.packageName}.api", head.parts)
         is NamingContext.Reference -> Class("${ctx.packageName}.model", "${head.name}${head.context.name()}")
