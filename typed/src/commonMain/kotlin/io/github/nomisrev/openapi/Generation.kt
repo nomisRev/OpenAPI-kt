@@ -6,11 +6,7 @@ import io.github.nomisrev.openapi.render.render
 import io.github.nomisrev.openapi.render.renderer
 import io.github.nomisrev.openapi.routes.ApiModel
 
-data class KFile(
-    val name: String,
-    val packageName: String,
-    val content: String
-)
+data class KFile(val name: String, val packageName: String, val content: String)
 
 tailrec fun Model.contextOrNull(): NamingContext? = when (this) {
     is Model.Collection -> inner.contextOrNull()

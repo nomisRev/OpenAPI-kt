@@ -4,6 +4,7 @@ import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.FreeFormJson
 import io.github.nomisrev.openapi.Model.Object
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
@@ -22,7 +23,6 @@ context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
     this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
     this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> toDiscriminatedObject(context)
-//    isOpenEnumeration() -> union(context, schema.anyOf!!)//toOpenEnum(context, schema.anyOf!!)
     schema.enum != null -> toClosedEnum(context, schema.enum!!)
 
     isAllOfNullableType() -> flattenNull(context, schema.allOf!!)
@@ -49,7 +49,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
             resolved.union(context, (type.types - Schema.Type.Basic.Null).map { ReferenceOr.value(Schema(type = it)) })
         }
 
-        Schema.Type.Basic.Object if schema.properties != null -> toObject(context, schema.properties!!)
+        Schema.Type.Basic.Object if schema.properties?.isNotEmpty() == true -> toObject(context, schema.properties!!)
         Schema.Type.Basic.Object -> objectWithoutProperties(context)
         Schema.Type.Basic.Array -> collection(context)
         Schema.Type.Basic.Number,
@@ -61,7 +61,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
             throw IllegalStateException("Null  should always be resolved to result in nullable types. Please report this bug. $schema")
     }
 
-    schema.properties != null -> toObject(context, schema.properties!!)
+    schema.properties?.isNotEmpty() == true -> toObject(context, schema.properties!!)
     schema.additionalProperties != null -> objectWithoutProperties(context)
     schema.items != null -> collection(context)
     else -> fallback()
@@ -71,20 +71,31 @@ context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContext): Model =
     when (val ap = schema.additionalProperties) {
         null -> fallback()
-        is PSchema -> ap.value.toModel(name, context)
-        is Allowed -> if (ap.value) fallback() else Model.Primitive.Unit(description(), isNullable, schema.title)
+        is PSchema -> toObject(context, emptyMap())
+        is Allowed -> when (ap.value) {
+            true -> fallback()
+            false -> when (this) {
+                is ResolvedSchema.Recursive if (name.head is NamingContext.Reference && name.nested.isEmpty()) ->
+                    Object(name, description(), schema.title, emptyList(), emptySet(), false, isNullable)
+
+                is ResolvedSchema.Reference ->
+                    Object(name, description(), schema.title, emptyList(), emptySet(), false, isNullable)
+
+                is ResolvedSchema.Recursive -> Model.Primitive.Unit(description(), isNullable, schema.title)
+                is ResolvedSchema.Value -> Model.Primitive.Unit(description(), isNullable, schema.title)
+            }
+        }
     }
 
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.fallback(): Model = when (this) {
     is Value -> FreeFormJson(description(), Constraints.Object(schema), isNullable, schema.title)
+    is Recursive -> Model.Reference(name, description(), isNullable, schema.title)
     is Reference -> Object.value(
         reference,
         FreeFormJson(description(), Constraints.Object(schema), isNullable, schema.title),
         title = schema.title
     )
-
-    is Recursive -> Model.Reference(name, description(), isNullable, schema.title)
 }
 
 /**
@@ -98,8 +109,8 @@ private suspend fun ResolvedSchema.fallback(): Model = when (this) {
  */
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.flattenNull(context: SchemaContext, schemas: List<ReferenceOr<Schema>>): Model =
-    schemas.firstNotNullOf {
-        it.resolve(name, context) {
-            if (it.schema.isNull()) null else it.toModel(context)
+    schemas.firstNotNullOf { refOrSchema ->
+        refOrSchema.resolve(name, context) { resolved ->
+            if (resolved.schema.isNull()) null else resolved.toModel(context)
         }
     }.with(isNullable = true)

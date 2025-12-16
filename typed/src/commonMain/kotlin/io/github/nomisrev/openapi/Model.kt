@@ -230,8 +230,7 @@ sealed interface Model {
         sealed interface AdditionalProperties {
             @Serializable
             @SerialName("Allowed")
-            @JvmInline
-            value class Allowed(val value: Boolean) : AdditionalProperties
+            data class Allowed(val value: Boolean) : AdditionalProperties
 
             @Serializable
             @SerialName("Schema")

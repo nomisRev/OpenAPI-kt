@@ -27,7 +27,10 @@ suspend fun ResolvedSchema.toObject(
             SchemaContext.Read if refOrSchema.writeOnly() == true -> null
             SchemaContext.Write,
             SchemaContext.Read,
-            SchemaContext.Null -> refOrSchema.resolve(this@toObject.name.nest(ObjectProperty(name)), context) { propSchema ->
+            SchemaContext.Null -> refOrSchema.resolve(
+                this@toObject.name.nest(ObjectProperty(name)),
+                context
+            ) { propSchema ->
                 val model = propSchema.toModel(context)
                 Property(
                     name,

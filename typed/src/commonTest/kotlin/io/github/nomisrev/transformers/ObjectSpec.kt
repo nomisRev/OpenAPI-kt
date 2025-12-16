@@ -20,6 +20,7 @@ import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
+import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.product
 import io.github.nomisrev.randomChunked
 import io.github.nomisrev.reference
@@ -62,11 +63,18 @@ private val additionalProperties = primitives.flatMap { (actual, expected) ->
 
 val objectSpec by testSuite {
     val aProps = Model.Primitive.all().map { (schema, model) ->
-        // TODO is this correct behavior? multiple values of PSchema allowed?
         Schema(
             type = Type.Basic.Object,
             additionalProperties = PSchema(ReferenceOr.value(schema)),
-        ) expect model
+        ) expect Model.Object(
+            context = NamingContext.path("test"),
+            description = null,
+            title = null,
+            properties = emptyList(),
+            inline = emptySet(),
+            additionalProperties = Model.Object.AdditionalProperties.Schema(model),
+            isNullable = false
+        )
     } + description.product(listOf(true, false, null)) { description, isNullable ->
         Schema(
             type = Type.Basic.Object,
@@ -98,15 +106,29 @@ val objectSpec by testSuite {
     verifyAll("Additional Properties without type: Object", aProps.removeType())
 
     verifyAll(
-        "AdditionalProperties.Schema (null properties) is flattened",
+        "AdditionalProperties referenced schema remains referenced",
         Model.Primitive.all().map { (schema, model) ->
-            val topName = NamingContext.Reference("Top", SchemaContext.Null)
             val api = api.reference("Top", schema)
             val actualSchema = Schema(type = Type.Basic.Object, additionalProperties = PSchema(schema("Top")))
-            val expectedModel = Model.Object.value(NamingContext.Reference("Top", SchemaContext.Null), model)
-            ExpectedApi(actualSchema, expectedModel, api, listOf(topName))
+            val expectedModel = Model.Object(
+                context = NamingContext.path("Test"),
+                description = null,
+                title = null,
+                properties = emptyList(),
+                inline = emptySet(),
+                additionalProperties = Model.Object.AdditionalProperties.Schema(
+                    Model.Object.value(
+                        NamingContext.Reference(
+                            "Top",
+                            SchemaContext.Null
+                        ), model
+                    )
+                ),
+                isNullable = false
+            )
+            ExpectedApi(actualSchema, expectedModel, api, listOf(NamingContext.Reference("Top", SchemaContext.Null)))
         }
-    ) { schema -> Value(NamingContext.reference("Top", SchemaContext.Null), schema) }
+    ) { schema -> Value(NamingContext.path("Test"), schema) }
 
     val objNames = sequenceOf(NamingContext.path("test")).forever()
 
@@ -123,7 +145,7 @@ val objectSpec by testSuite {
             additionalProperties = additionalProperties.actual,
             nullable = isNullable
         )
-        val obj = Model.Object(
+        val obj: Model.Object = Model.Object(
             context = name,
             description = null,
             title = null,
@@ -296,4 +318,33 @@ val objectSpec by testSuite {
         objWithWriteOnly.take(10_000).toList(),
         SchemaContext.Read
     )
+
+    verifyAll(
+        "Empty Objects", listOf(
+            Schema(
+                type = Type.Basic.Object,
+                additionalProperties = Allowed(false),
+                properties = emptyMap()
+            ),
+            Schema(
+                type = Type.Basic.Object,
+                additionalProperties = Allowed(false)
+            ),
+            Schema(additionalProperties = Allowed(false))
+        ).map { schema ->
+            ExpectedApi(
+                schema,
+                Model.Object(
+                    context = NamingContext.reference("EmptyObject", SchemaContext.Null),
+                    description = null,
+                    title = null,
+                    properties = emptyList(),
+                    inline = emptySet(),
+                    additionalProperties = Model.Object.AdditionalProperties.Allowed(false),
+                    isNullable = false
+                ),
+                api.reference("EmptyObject", schema),
+                listOf(NamingContext.Reference("EmptyObject", SchemaContext.Null))
+            )
+        }) { ResolvedSchema.Reference(NamingContext.Reference("EmptyObject", SchemaContext.Null), it) }
 }

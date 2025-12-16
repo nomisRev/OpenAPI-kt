@@ -21,6 +21,8 @@ kotlin {
     linuxX64()
     js(IR) { browser() }
 
+    applyDefaultHierarchyTemplate()
+
     sourceSets {
         val jvmAndNative by creating { dependsOn(commonMain.get()) }
         macosArm64Main.get().dependsOn(jvmAndNative)
