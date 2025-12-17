@@ -9,7 +9,7 @@ fun Model.render(): String = when (this) {
     is Model.Enum -> render()
     is Model.Object -> render()
     is Model.Union -> render()
-    is Model.DiscriminatedObject -> TODO()
+    is Model.DiscriminatedObject -> render()
 
     is Model.Collection if inner is Model.ContextHolder && inner.context.isTopLevel() ->
         Model.Object.value(

@@ -2,6 +2,7 @@ package io.github.nomisrev.transformers
 
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.api
+import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
@@ -10,157 +11,95 @@ import io.github.nomisrev.openapi.registry.registry
 import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.reference
+import kotlin.test.assertEquals
 import kotlin.to
 
 val discriminatedObjectSpec by testSuite {
-    val id = Schema(type = Schema.Type.Basic.String, readOnly = true)
-    val query = Schema(type = Schema.Type.Basic.String, readOnly = false)
-    val savedQuery = Schema(
-        allOf = listOf(
-            ReferenceOr.schema("WatchFolder"),
-            ReferenceOr.value(
-                Schema(
-                    type = Schema.Type.Basic.Object,
-                    properties = mapOf(
-                        "id" to ReferenceOr.value(id),
-                        "query" to ReferenceOr.value(query),
-                        "issues" to ReferenceOr.value(
-                            Schema(
-                                type = Schema.Type.Basic.Array,
-                                items = ReferenceOr.schema("Issue"),
-                                readOnly = true
-                            )
-                        ),
-                        "visibleFor" to ReferenceOr.schema("UserGroup"),
-                        "updateableBy" to ReferenceOr.schema("UserGroup"),
-                        "readSharingSettings" to ReferenceOr.schema("WatchFolderSharingSettings"),
-                        "updateSharingSettings" to ReferenceOr.schema("WatchFolderSharingSettings")
-                    )
-                )
-            )
-        )
-    )
-    val watchFolder = Schema(
-        allOf = listOf(
-            ReferenceOr.schema("IssueFolder"),
-            ReferenceOr.value(
-                Schema(
-                    type = Schema.Type.Basic.Object,
-                    properties = mapOf(
-                        "id" to ReferenceOr.value(id),
-                        "owner" to ReferenceOr.schema("User"),
-                        "visibleFor" to ReferenceOr.schema("UserGroup"),
-                        "updateableBy" to ReferenceOr.schema("UserGroup"),
-                        "readSharingSettings" to ReferenceOr.schema("WatchFolderSharingSettings"),
-                        "updateSharingSettings" to ReferenceOr.schema("WatchFolderSharingSettings")
-                    )
-                )
-            )
-        )
-    )
 
-    val name = Schema(type = Schema.Type.Basic.String, readOnly = false)
-    val type = Schema(type = Schema.Type.Basic.String, readOnly = true)
-    val issueFolder = Schema(
+    val baseName = NamingContext.reference("User", SchemaContext.Null)
+    val abstractProperties =
+        listOf(Model.Object.Property("id", Model.Primitive.Long(null, null, null, false, null), true))
+    val base = Model.Object(
+        baseName.nest(NamingContext.DiscriminatedObjectCase("AnonymousUser")),
+        null,
+        null,
+        abstractProperties,
+        emptySet(),
+        false,
+        false
+    )
+    val baseSchema = Schema(
+        type = Schema.Type.Basic.Object,
+        properties = mapOf("id" to ReferenceOr.value(Schema.integer)),
+        discriminator = Schema.Discriminator(
+            "type",
+            mapOf(
+                "AnonymousUser" to "#/components/schemas/User",
+                "RegisteredUser" to "#/components/schemas/RegisteredUser",
+                "ProUser" to "#/components/schemas/ProUser"
+            )
+        )
+    )
+    val registered = Model.Object(
+        baseName.nest(NamingContext.DiscriminatedObjectCase("RegisteredUser")),
+        null,
+        null,
+        listOf(
+            Model.Object.Property("id", Model.Primitive.Long(null, null, null, false, null), true),
+            Model.Object.Property("email", Model.Primitive.String(null, null, null, false, null), true),
+        ),
+        emptySet(),
+        false,
+        false
+    )
+    val registeredSchema = Schema(
         type = Schema.Type.Basic.Object,
         properties = mapOf(
-            "id" to ReferenceOr.value(id),
-            "name" to ReferenceOr.value(name),
-            "type" to ReferenceOr.value(type)
+            "id" to ReferenceOr.value(Schema.integer),
+            "email" to ReferenceOr.value(Schema.string),
+        )
+    )
+    val pro = Model.Object(
+        baseName.nest(NamingContext.DiscriminatedObjectCase("ProUser")),
+        null,
+        null,
+        listOf(
+            Model.Object.Property("id", Model.Primitive.Long(null, null, null, false, null), true),
+            Model.Object.Property("email", Model.Primitive.String(null, null, null, false, null), true),
+            Model.Object.Property("subscriptionId", Model.Uuid(null, false, null), true),
         ),
-        discriminator = Schema.Discriminator(
-            $$"$type", mapOf(
-                "IssueFolder" to "#/components/schemas/IssueFolder",
-                "WatchFolder" to "#/components/schemas/WatchFolder",
-                "IssueTag" to "#/components/schemas/IssueTag",
-                "Tag" to "#/components/schemas/Tag",
-                "SavedQuery" to "#/components/schemas/SavedQuery",
-                "Project" to "#/components/schemas/Project"
-            )
+        emptySet(),
+        false,
+        false
+    )
+    val proSchema = Schema(
+        type = Schema.Type.Basic.Object,
+        properties = mapOf(
+            "id" to ReferenceOr.value(Schema.integer),
+            "email" to ReferenceOr.value(Schema.string),
+            "subscriptionId" to ReferenceOr.value(Schema.uuid)
         )
     )
-
-    val issueTag = Schema(allOf = listOf(ReferenceOr.schema("Tag")))
-    val tag = Schema(
-        allOf = listOf(
-            ReferenceOr.schema("WatchFolder"),
-            ReferenceOr.value(
-                Schema(
-                    type = Schema.Type.Basic.Object,
-                    properties = mapOf(
-                        "id" to ReferenceOr.value(id),
-                        "issues" to ReferenceOr.value(
-                            Schema(
-                                type = Schema.Type.Basic.Array,
-                                items = ReferenceOr.schema("Issue"),
-                                readOnly = false
-                            )
-                        ),
-                        "color" to ReferenceOr.schema("FieldStyle"),
-                        "untagOnResolve" to ReferenceOr.value(
-                            Schema(
-                                type = Schema.Type.Basic.Boolean,
-                                readOnly = false
-                            )
-                        ),
-                        "visibleFor" to ReferenceOr.schema("UserGroup"),
-                        "updateableBy" to ReferenceOr.schema("UserGroup"),
-                        "readSharingSettings" to ReferenceOr.schema("WatchFolderSharingSettings"),
-                        "tagSharingSettings" to ReferenceOr.schema("TagSharingSettings"),
-                        "updateSharingSettings" to ReferenceOr.schema("WatchFolderSharingSettings"),
-                    )
-                )
-            )
-        )
+    val expected = Model.DiscriminatedObject(
+        baseName,
+        abstractProperties,
+        listOf(base, registered, pro),
+        null,
+        null,
+        "type",
+        false
     )
-    val project = Schema(
-        allOf = listOf(
-            ReferenceOr.schema("IssueFolder"),
-            ReferenceOr.value(
-                Schema(
-                    type = Schema.Type.Basic.Object,
-                    properties = mapOf(
-                        "id" to ReferenceOr.value(id),
-                        "archived" to ReferenceOr.value(Schema(type = Schema.Type.Basic.Boolean, readOnly = false)),
-                        "createdBy" to ReferenceOr.schema("User"),
-                        "customFields" to ReferenceOr.value(Schema(type = Schema.Type.Basic.Object, readOnly = true)),
-                        "description" to ReferenceOr.value(Schema(type = Schema.Type.Basic.String, readOnly = false)),
-                        "fromEmail" to ReferenceOr.value(Schema(type = Schema.Type.Basic.String, readOnly = false)),
-                        "iconUrl" to ReferenceOr.value(Schema(type = Schema.Type.Basic.String, readOnly = true)),
-                        "issues" to ReferenceOr.value(
-                            Schema(
-                                type = Schema.Type.Basic.Array,
-                                items = ReferenceOr.schema("Issue"),
-                                readOnly = false
-                            )
-                        ),
-                        "leader" to ReferenceOr.schema("User"),
-                        "name" to ReferenceOr.value(name),
-                        "replyToEmail" to ReferenceOr.value(Schema(type = Schema.Type.Basic.String, readOnly = false)),
-                        "shortName" to ReferenceOr.value(Schema(type = Schema.Type.Basic.String, readOnly = false)),
-                        "startingNumber" to ReferenceOr.value(
-                            Schema(
-                                type = Schema.Type.Basic.Integer,
-                                format = "int64",
-                                readOnly = false
-                            )
-                        ),
-                        "team" to ReferenceOr.schema("ProjectTeam"),
-                        "template" to ReferenceOr.value(Schema(type = Schema.Type.Basic.Boolean, readOnly = false)),
-                    )
-                )
-            )
-        )
-    )
-    val api = api
-        .reference("SavedQuery", savedQuery)
-        .reference("WatchFolder", watchFolder)
-        .reference("IssueFolder", issueFolder)
-        .reference("IssueTag", issueTag)
-        .reference("Tag", tag)
-        .reference("Project", project)
 
     test("check") {
-
+        registry(
+            api.reference("User", baseSchema)
+                .reference("RegisteredUser", registeredSchema)
+                .reference("ProUser", proSchema)
+        ) {
+            assertEquals(
+                expected,
+                ReferenceOr.schema("User").toModel(NamingContext.Reference("User", SchemaContext.Null), SchemaContext.Write)
+            )
+        }
     }
 }

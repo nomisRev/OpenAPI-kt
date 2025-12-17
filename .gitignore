@@ -220,3 +220,4 @@ kotlin-js-store
 **/kotlin-js-store/
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,windows,gradle,kotlin,java,intellij+all
+/typed/karma.config.d/testBalloonParameters.js

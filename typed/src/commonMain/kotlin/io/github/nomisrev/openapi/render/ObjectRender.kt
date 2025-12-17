@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
+import kotlinx.serialization.Serializable
 
 context(ctx: Renderer)
 fun Model.Object.render(parentClass: TypeName.Class? = null): String = buildString {
@@ -56,7 +57,7 @@ private fun Model.hasDefault(): Boolean = when (this) {
 }
 
 context(ctx: Renderer)
-private fun Model.Object.Property.render(): String = buildString {
+fun Model.Object.Property.render(): String = buildString {
     val paramName = baseName.sanitize().dropArraySyntax().toCamelCase()
     if (paramName != baseName) append("@SerialName(\"$baseName\") ")
     if (isRequired && model.hasDefault()) append("@Required ")

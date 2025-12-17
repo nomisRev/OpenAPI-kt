@@ -21,25 +21,7 @@ suspend fun ResolvedSchema.toObject(
     context: SchemaContext,
     properties: Map<String, ReferenceOr<Schema>>
 ): Model.Object {
-    val properties = properties.mapNotNull { (name, refOrSchema) ->
-        when (context) {
-            SchemaContext.Write if refOrSchema.readOnly() == true -> null
-            SchemaContext.Read if refOrSchema.writeOnly() == true -> null
-            SchemaContext.Write,
-            SchemaContext.Read,
-            SchemaContext.Null -> refOrSchema.resolve(
-                this@toObject.name.nest(ObjectProperty(name)),
-                context
-            ) { propSchema ->
-                val model = propSchema.toModel(context)
-                Property(
-                    name,
-                    model,
-                    schema.required.contains(name)
-                )
-            }
-        }
-    }
+    val properties = properties(properties, context)
 
     val additionalProperties = additionalProperties(context)
     val nested = properties.mapNotNullTo(mutableSetOf()) { prop -> prop.model.nestedOrNull() } +
@@ -53,6 +35,30 @@ suspend fun ResolvedSchema.toObject(
         additionalProperties = additionalProperties,
         isNullable = isNullable
     )
+}
+
+context(ctx: Registry.Scope)
+suspend fun ResolvedSchema.properties(
+    properties: Map<String, ReferenceOr<Schema>>,
+    context: SchemaContext
+): List<Property> = properties.mapNotNull { (name, refOrSchema) ->
+    when (context) {
+        SchemaContext.Write if refOrSchema.readOnly() == true -> null
+        SchemaContext.Read if refOrSchema.writeOnly() == true -> null
+        SchemaContext.Write,
+        SchemaContext.Read,
+        SchemaContext.Null -> refOrSchema.resolve(
+            this.name.nest(ObjectProperty(name)),
+            context
+        ) { propSchema ->
+            val model = propSchema.toModel(context)
+            Property(
+                name,
+                model,
+                schema.required.contains(name)
+            )
+        }
+    }
 }
 
 context(ctx: Registry.Scope)

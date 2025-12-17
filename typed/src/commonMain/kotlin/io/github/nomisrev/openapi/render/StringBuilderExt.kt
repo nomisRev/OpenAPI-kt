@@ -30,6 +30,6 @@ fun String.stringValue(): String {
         else {
             max = count
         }
-    val dollars = "$".repeat(count + 1)
+    val dollars = if(count > 0) "$".repeat(count + 1) else ""
     return "$dollars\"$this\""
 }

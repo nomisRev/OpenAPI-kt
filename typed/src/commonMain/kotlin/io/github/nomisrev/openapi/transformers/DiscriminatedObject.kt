@@ -16,28 +16,53 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
     val mapping = requireNotNull(discriminator.mapping) { "Discriminator mapping required" }
     require(this is ResolvedSchema.Reference) { "Expected reference for discriminated object" }
 
-    val hasSelfReference = mapping.entries.any { (_, ref) -> ref == "#/components/schemas/${context.name}" }
     val mappings = mapping.filterValues { it != "#/components/schemas/${reference.name}" }
 
-    val baseObject = toObject(context, schema.properties!!)
-    val subtypes = mappings.map { (_, ref) ->
-        // Skip 'resolve' since we're inlining schemas even top-level ones
-        val subtype = ResolvedSchema.Value(
-            name.nest(NamingContext.DiscriminatedObjectCase(ref.schemaName())),
-            ReferenceOr.schema(ref).peek()
-        ).toModel(context)
-        require(subtype is Model.Object) { "DiscriminatedObject subtype expected to be Model.Object got $subtype" }
-        subtype
+    val abstractProperties = properties(schema.properties!!, context)
+
+    val subtypes = mappings.map { (mappedName, ref) ->
+        val name = name.nest(NamingContext.DiscriminatedObjectCase(mappedName))
+        val subtypeSchema = ReferenceOr.schema(ref).peek()
+
+
+
+
+        TODO()
+//        require(subtype is Model.Object) { "DiscriminatedObject subtype expected to be Model.Object got $subtype" }
+//        subtype
     }
 
     return Model.DiscriminatedObject(
         name,
-        baseObject,
-        subtypes,
+        abstractProperties,
+        listOfNotNull(selfObjectOrNull(mapping, context, abstractProperties)) + subtypes,
         description(),
         schema.title,
         discriminator.propertyName,
-        hasSelfReference,
+        isNullable
+    )
+}
+
+private fun ResolvedSchema.Reference.selfObjectOrNull(
+    mapping: Map<String, String>,
+    context: SchemaContext,
+    abstractProperties: List<Model.Object.Property>
+): Model.Object? {
+    val refName = mapping.entries
+        .singleOrNull { (_, ref) -> ref == "#/components/schemas/${context.name}" }
+        ?.value ?: return null
+
+    val selfName =
+        if (refName == reference.name) name.nest(NamingContext.DiscriminatedObjectCase("Default"))
+        else name.nest(NamingContext.DiscriminatedObjectCase(refName))
+
+    return Model.Object(
+        selfName,
+        null,
+        null,
+        abstractProperties,
+        emptySet(),
+        Model.Object.AdditionalProperties.Allowed(false),
         isNullable
     )
 }

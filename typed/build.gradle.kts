@@ -6,7 +6,7 @@ plugins {
     id(libs.plugins.publish.get().pluginId)
     alias(libs.plugins.dokka)
     id(libs.plugins.kover.get().pluginId)
-    id("de.infix.testBalloon") version "0.7.1-K2.3.0"
+    alias(libs.plugins.testballoon)
 }
 
 kotlin {
@@ -37,7 +37,7 @@ kotlin {
         commonTest {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("de.infix.testBalloon:testBalloon-framework-core:0.7.1-K2.2.21")
+                implementation(libs.testballoon)
             }
         }
     }

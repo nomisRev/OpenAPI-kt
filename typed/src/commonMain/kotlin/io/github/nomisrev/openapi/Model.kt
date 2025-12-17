@@ -301,12 +301,15 @@ sealed interface Model {
     @Serializable
     data class DiscriminatedObject(
         override val context: NamingContext,
-        val baseObject: Object,
+        // abstractProperties
+//        val baseObject: Object,
+        val abstractProperties: List<Model.Object.Property>,
+        // Contain the NamingContext from their MAPPED Name,
+        // not their original schema name since these are always inlined.
         val subtypes: List<Object>,
         override val description: String?,
         override val title: String?,
-        val discriminator: String?,
-        val selfReference: Boolean,
+        val discriminator: String,
         override val isNullable: Boolean
     ) : Model, ContextHolder
 

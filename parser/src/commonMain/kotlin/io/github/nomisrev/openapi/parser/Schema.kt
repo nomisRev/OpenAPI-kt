@@ -78,6 +78,7 @@ public data class Schema(
 ) {
     public companion object {
         public val string: Schema = Schema(type = Type.Basic.String)
+        public val uuid: Schema = Schema(type = Type.Basic.String, format = "uuid")
         public val integer: Schema = Schema(type = Type.Basic.Integer)
         public val boolean: Schema = Schema(type = Type.Basic.Boolean)
         public val number: Schema = Schema(type = Type.Basic.Number)
