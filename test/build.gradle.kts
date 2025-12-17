@@ -9,7 +9,6 @@ kotlin {
 
   jvm()
   macosArm64()
-  linuxX64()
   js(IR) { browser() }
 
   sourceSets {

@@ -26,7 +26,7 @@ val renderObjectSpec by testSuite {
     verify(
         """|@Serializable
            |@JvmInline
-           |value class Foo(@Required val value: String)""".trimMargin(),
+           |value class Foo(val value: String)""".trimMargin(),
         Model.Object.value(
             NamingContext.Reference("Foo", SchemaContext.Null),
             Model.Primitive.String(null, null, null, false, null)
@@ -36,7 +36,7 @@ val renderObjectSpec by testSuite {
     verify(
         """|@Serializable
            |@JvmInline
-           |value class Foo(@Required val value: String)""".trimMargin(),
+           |value class Foo(val value: String)""".trimMargin(),
         Model.Object.value(
             NamingContext.Reference("Foo", SchemaContext.Null),
             Model.Primitive.String(null, null, null, true, null)
@@ -60,7 +60,7 @@ val renderObjectSpec by testSuite {
 
     verify(
         """|@Serializable
-           |data class Foo(val name: String, val email: Long? = null, @Required val age: Int, @Required val longername: Double?)
+           |data class Foo(val name: String, val email: Long? = null, val age: Int, val longername: Double?)
            """.trimMargin(),
         singleline
     )
@@ -88,8 +88,8 @@ val renderObjectSpec by testSuite {
            |data class Foo(
            |    val name: String,
            |    val email: Long? = null,
-           |    @Required val age: Int,
-           |    @Required val longername: Double?,
+           |    val age: Int,
+           |    val longername: Double?,
            |    val longername2: Float,
            |    @SerialName("longer_name_3") val longerName3: Uuid,
            |    val longername4: LocalDateTime
@@ -117,7 +117,7 @@ val renderObjectSpec by testSuite {
     verify(
         """|@Serializable
            |@JvmInline
-           |value class Foo(@Required val value: Sort) {
+           |value class Foo(val value: Sort) {
            |    @Serializable
            |    enum class Sort {
            |        ASC, DESC;
@@ -180,6 +180,21 @@ val renderObjectSpec by testSuite {
             TypeName.JsonArray,
             TypeName.JsonElement,
             TypeName.JsonObject,
+        )
+    )
+
+    verify(
+        """|@Serializable
+           |data object EmptyObject
+        """.trimMargin(),
+        Model.Object(
+            context = NamingContext.reference("EmptyObject", SchemaContext.Null),
+            description = null,
+            title = null,
+            properties = emptyList(),
+            inline = emptySet(),
+            additionalProperties = Model.Object.AdditionalProperties.Allowed(false),
+            isNullable = false
         )
     )
 }

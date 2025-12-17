@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.NamingContext.Companion.path
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.routes.ApiModel
 import io.github.nomisrev.openapi.routes.toApiModel
@@ -13,10 +14,10 @@ import kotlinx.io.writeString
 fun ApiModel.generate(output: String) {
     val files = generate()
     for (file in files) {
-        val path = Path(output + "/" + file.packageName.replace('.', '/') + "/" + file.name)
+        val path = Path(output + "/" + file.packageName.replace('.', '/'))
         with(SystemFileSystem) {
             createDirectories(path)
-            sink(path).buffered().use { it.writeString(file.content) }
+            sink(Path("$path/${file.name}")).buffered().use { it.writeString(file.content) }
         }
     }
 }

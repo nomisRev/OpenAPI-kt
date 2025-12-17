@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi.transformers
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Default
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ExampleValue
@@ -11,10 +12,71 @@ import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.toModel
 
 context(ctx: Registry.Scope)
-suspend fun ResolvedSchema.collection(context: SchemaContext): Model {
+suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
+    when (this) {
+        is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
+        is ResolvedSchema.Value -> toCollection(context)
+        is ResolvedSchema.Reference -> {
+            fun wrapIfNeeded(inner: Model?): Model = when (inner) {
+                is Model.ContextHolder if inner.context.isTopLevel() && inner.context != name -> inner
+                is Model.Collection -> inner.copy(inner = wrapIfNeeded(inner.inner))
+                is Model.ContextHolder -> when (inner) {
+                    is Model.DiscriminatedObject -> throw IllegalStateException("Discriminated objects are not supported inline")
+                    is Model.Reference -> throw IllegalStateException("References are not supported inline")
+                    is Model.Enum -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
+                    is Model.Object -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
+                    is Model.Union -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
+                }
+
+                is Model.ByteArray,
+                is Model.Date,
+                is Model.DateTime,
+                is Model.FreeFormJson,
+                is Model.Uuid,
+                is Model.Primitive -> inner
+
+                null -> Model.FreeFormJson(description = null, constraint = null, isNullable = false, title = null)
+            }
+
+            val inner = wrapIfNeeded(schema.items?.toModel(name, context))
+
+            Model.Object(
+                name,
+                description(),
+                schema.title,
+                listOf(
+                    Model.Object.Property(
+                        "items",
+                        Model.Collection(
+                            inner,
+                            collectionDefault(),
+                            null,
+                            Constraints.Collection(schema),
+                            false,
+                            null
+                        ),
+                        true
+                    )
+                ),
+                setOfNotNull(inner.nestedOrNull()),
+                additionalProperties = false,
+                isNullable
+            )
+        }
+    }
+
+context(ctx: Registry.Scope)
+private suspend fun ResolvedSchema.toCollection(context: SchemaContext): Model.Collection {
     val inner = schema.items?.toModel(name, context)
         ?: Model.FreeFormJson(description = null, constraint = null, isNullable = false, title = null)
-    return Model.Collection(inner, collectionDefault(), description(), Constraints.Collection(schema), isNullable, schema.title)
+    return Model.Collection(
+        inner,
+        collectionDefault(),
+        description(),
+        Constraints.Collection(schema),
+        isNullable,
+        schema.title
+    )
 }
 
 private fun ResolvedSchema.collectionDefault() = when (val example = schema.default) {

@@ -17,25 +17,26 @@ sealed interface Model {
     fun with(
         description: String? = this.description,
         isNullable: Boolean = this.isNullable,
+        title: String? = this.title
     ) = when (this) {
-        is ByteArray -> copy(description = description, isNullable = isNullable)
-        is Collection -> copy(description = description, isNullable = isNullable)
-        is Date -> copy(description = description, isNullable = isNullable)
-        is DateTime -> copy(description = description, isNullable = isNullable)
-        is DiscriminatedObject -> copy(description = description, isNullable = isNullable)
-        is Enum -> copy(description = description, isNullable = isNullable)
-        is FreeFormJson -> copy(description = description, isNullable = isNullable)
-        is Object -> copy(description = description, isNullable = isNullable)
-        is Primitive.Boolean -> copy(description = description, isNullable = isNullable)
-        is Primitive.Double -> copy(description = description, isNullable = isNullable)
-        is Primitive.Float -> copy(description = description, isNullable = isNullable)
-        is Primitive.Int -> copy(description = description, isNullable = isNullable)
-        is Primitive.Long -> copy(description = description, isNullable = isNullable)
-        is Primitive.String -> copy(description = description, isNullable = isNullable)
-        is Primitive.Unit -> copy(description = description, isNullable = isNullable)
-        is Reference -> copy(description = description, isNullable = isNullable)
-        is Union -> copy(description = description, isNullable = isNullable)
-        is Uuid -> copy(description = description, isNullable = isNullable)
+        is ByteArray -> copy(description = description, isNullable = isNullable, title = title)
+        is Collection -> copy(description = description, isNullable = isNullable, title = title)
+        is Date -> copy(description = description, isNullable = isNullable, title = title)
+        is DateTime -> copy(description = description, isNullable = isNullable, title = title)
+        is DiscriminatedObject -> copy(description = description, isNullable = isNullable, title = title)
+        is Enum -> copy(description = description, isNullable = isNullable, title = title)
+        is FreeFormJson -> copy(description = description, isNullable = isNullable, title = title)
+        is Object -> copy(description = description, isNullable = isNullable, title = title)
+        is Primitive.Boolean -> copy(description = description, isNullable = isNullable, title = title)
+        is Primitive.Double -> copy(description = description, isNullable = isNullable, title = title)
+        is Primitive.Float -> copy(description = description, isNullable = isNullable, title = title)
+        is Primitive.Int -> copy(description = description, isNullable = isNullable, title = title)
+        is Primitive.Long -> copy(description = description, isNullable = isNullable, title = title)
+        is Primitive.String -> copy(description = description, isNullable = isNullable, title = title)
+        is Primitive.Unit -> copy(description = description, isNullable = isNullable, title = title)
+        is Reference -> copy(description = description, isNullable = isNullable, title = title)
+        is Union -> copy(description = description, isNullable = isNullable, title = title)
+        is Uuid -> copy(description = description, isNullable = isNullable, title = title)
     }
 
     /**

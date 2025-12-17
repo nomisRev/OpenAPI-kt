@@ -34,14 +34,35 @@ fun Model.Object.dataClass(parentClass: TypeName.Class?) {
     }
 }
 
+private fun Model.hasDefault(): Boolean = when (this) {
+    is Model.Enum -> default != null
+    is Model.Collection -> default != null
+    is Model.Primitive.Boolean -> default != null
+    is Model.Primitive.Double -> default != null
+    is Model.Primitive.Float -> default != null
+    is Model.Primitive.Int -> default != null
+    is Model.Primitive.Long -> default != null
+    is Model.Primitive.String -> default != null
+    is Model.ByteArray,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.FreeFormJson,
+    is Model.Object,
+    is Model.Primitive.Unit,
+    is Model.Reference,
+    is Model.Union,
+    is Model.Uuid,
+    is Model.DiscriminatedObject -> false
+}
+
 context(ctx: Renderer)
 private fun Model.Object.Property.render(): String = buildString {
     val paramName = baseName.sanitize().dropArraySyntax().toCamelCase()
     if (paramName != baseName) append("@SerialName(\"$baseName\") ")
-    if (isRequired) append("@Required ")
+    if (isRequired && model.hasDefault()) append("@Required ")
     append("val $paramName: ${model.toTypeName().type()}")
     if (model.isNullable) append("?")
-    if (model.isNullable && !isRequired) append(" = null")
+    if (model.isNullable && !isRequired) append(" = null") // TODO default values
 }
 
 context(ctx: Renderer, builder: StringBuilder)

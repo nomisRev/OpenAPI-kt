@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.transformers.isTopLevel
 
 context(ctx: Renderer)
 fun Model.Union.render(): String = buildString {
@@ -36,7 +37,7 @@ private fun Model.Union.body(): String =
 context(ctx: Renderer, union: Model.Union)
 private fun Model.Union.Case.render(): String {
     return when (model) {
-        is Model.ContextHolder if model.context.head is NamingContext.Reference && model.context.nested.isEmpty() -> valueClass()
+        is Model.ContextHolder if model.context.isTopLevel() -> valueClass()
         is Model.Primitive.Unit -> """
                    |@Serializable
                    |data object Empty : ${union.name().simpleName}

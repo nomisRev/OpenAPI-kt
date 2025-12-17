@@ -16,9 +16,12 @@ import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
+import io.github.nomisrev.openapi.registry.registry
+import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.reference
 import io.github.nomisrev.verifyFails
 import kotlin.collections.emptyList
+import kotlin.test.assertEquals
 
 val collectionSpec by testSuite {
     val name = NamingContext.ObjectProperty("values")
@@ -75,11 +78,26 @@ val collectionSpec by testSuite {
         "Referenced Collection with primitive",
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.Value(innerSchema))
-            val expected = Model.Collection(model, null, null, null, false, null)
+            val expected = Model.Object(
+                context = NamingContext.reference("Collection", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = listOf(
+                    Model.Object.Property(
+                        "items",
+                        Model.Collection(model, null, null, null, false, null),
+                        true
+                    )
+                ),
+                inline = emptySet(),
+                additionalProperties = false,
+                isNullable = false
+            )
+
             ExpectedApi(
                 schema,
                 expected,
-                api.reference("Collection",schema),
+                api.reference("Collection", schema),
                 listOf(NamingContext.Reference("Collection", SchemaContext.Null))
             )
         }
@@ -89,7 +107,21 @@ val collectionSpec by testSuite {
         "Referenced Collection with primitive without type: array",
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(items = ReferenceOr.Value(innerSchema))
-            val expected = Model.Collection(model, null, null, null, false, null)
+            val expected = Model.Object(
+                context = NamingContext.reference("Collection", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = listOf(
+                    Model.Object.Property(
+                        "items",
+                        Model.Collection(model, null, null, null, false, null),
+                        true
+                    )
+                ),
+                inline = emptySet(),
+                additionalProperties = false,
+                isNullable = false
+            )
             ExpectedApi(
                 schema,
                 expected,
@@ -159,4 +191,59 @@ val collectionSpec by testSuite {
             null
         )
     )
+
+
+    val itemSchema = Schema(
+        type = Type.Basic.Object,
+        properties = mapOf(
+            "id" to ReferenceOr.value(Schema(type = Type.Basic.String)),
+            "name" to ReferenceOr.value(Schema(type = Type.Basic.String))
+        )
+    )
+
+    val s = Schema(type = Type.Basic.Array, items = ReferenceOr.value(itemSchema))
+    val item = Model.Object(
+        NamingContext.reference("Collection", SchemaContext.Null)
+            .nest(NamingContext.ObjectProperty("item")),
+        null,
+        null,
+        listOf(
+            Model.Object.Property("id", Model.Primitive.String(null, null, null, false, null), false),
+            Model.Object.Property("name", Model.Primitive.String(null, null, null, false, null), false)
+        ),
+        emptySet(),
+        false,
+        false
+    )
+    val collection = Model.Object(
+        NamingContext.reference("Collection", SchemaContext.Null),
+        null,
+        null,
+        listOf(
+            Model.Object.Property(
+                "items",
+                Model.Collection(
+                    item,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null
+                ),
+                true
+            )
+        ),
+        setOf(item),
+        false,
+        false
+    )
+
+
+    test("Referenced Collection with inline context holder") {
+        registry(api.reference("Collection", s)) {
+            val model = ReferenceOr.schema("Collection")
+                .toModel(NamingContext.Reference("Collection", SchemaContext.Null), SchemaContext.Write)
+            assertEquals(collection, model)
+        }
+    }
 }

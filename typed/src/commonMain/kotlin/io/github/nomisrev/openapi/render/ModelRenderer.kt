@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.transformers.isTopLevel
 
 context(ctx: Renderer)
 fun Model.render(): String = when (this) {
@@ -10,7 +11,7 @@ fun Model.render(): String = when (this) {
     is Model.Union -> render()
     is Model.DiscriminatedObject -> TODO()
 
-    is Model.Collection if inner is Model.ContextHolder && inner.context.head is NamingContext.Reference && inner.context.nested.isEmpty() ->
+    is Model.Collection if inner is Model.ContextHolder && inner.context.isTopLevel() ->
         Model.Object.value(
             inner.context.head as NamingContext.Reference,
             this@render,

@@ -1,0 +1,55 @@
+package io.github.nomisrev.render
+
+import de.infix.testBalloon.framework.core.testSuite
+import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.routes.SchemaContext
+
+val collectionRenderSpec by testSuite {
+    val item = Model.Object(
+        NamingContext.reference("Foo", SchemaContext.Null)
+            .nest(NamingContext.ObjectProperty("item")),
+        null,
+        null,
+        listOf(
+            Model.Object.Property("id", Model.Primitive.String(null, null, null, false, null), false),
+            Model.Object.Property("name", Model.Primitive.String(null, null, null, false, null), false)
+        ),
+        emptySet(),
+        false,
+        false
+    )
+    val collection = Model.Object(
+        NamingContext.reference("Foo", SchemaContext.Null),
+        null,
+        null,
+        listOf(
+            Model.Object.Property(
+                "items",
+                Model.Collection(
+                    item,
+                    null,
+                    null,
+                    null,
+                    false,
+                    null
+                ),
+                true
+            )
+        ),
+        setOf(item),
+        false,
+        false
+    )
+    verify(
+        """
+            |@Serializable
+            |@JvmInline
+            |value class Foo(val items: List<Item>) {
+            |    @Serializable
+            |    data class Item(val id: String, val name: String)
+            |}
+        """.trimMargin(),
+        collection
+    )
+}

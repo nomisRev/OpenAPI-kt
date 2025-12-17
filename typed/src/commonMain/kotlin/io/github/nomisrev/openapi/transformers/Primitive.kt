@@ -17,7 +17,7 @@ suspend fun ResolvedSchema.primitive(): Model = when (this) {
         Model.Object(
             name,
             inner.description,
-            null, // TODO inner.title
+            inner.title,
             listOf(Model.Object.Property("value", inner.with(description = null, isNullable = false), true)),
             emptySet(),
             false,

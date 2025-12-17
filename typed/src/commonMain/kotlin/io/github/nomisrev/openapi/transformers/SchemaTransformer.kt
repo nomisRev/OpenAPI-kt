@@ -75,7 +75,7 @@ private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContex
         is Allowed -> when (ap.value) {
             true -> fallback()
             false -> when (this) {
-                is ResolvedSchema.Recursive if (name.head is NamingContext.Reference && name.nested.isEmpty()) ->
+                is ResolvedSchema.Recursive if name.isTopLevel() ->
                     Object(name, description(), schema.title, emptyList(), emptySet(), false, isNullable)
 
                 is ResolvedSchema.Reference ->

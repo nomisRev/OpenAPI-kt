@@ -6,7 +6,7 @@ plugins {
     id(libs.plugins.publish.get().pluginId)
     alias(libs.plugins.dokka)
     id(libs.plugins.kover.get().pluginId)
-    id("de.infix.testBalloon") version "0.7.1-K2.2.21"
+    id("de.infix.testBalloon") version "0.7.1-K2.3.0"
 }
 
 kotlin {
@@ -18,16 +18,15 @@ kotlin {
 
     jvm()
     macosArm64()
-    linuxX64()
     js(IR) { browser() }
 
     applyDefaultHierarchyTemplate()
 
     sourceSets {
+        // jvmAndNative is the target we use for generation (we'll include js/wasm node later).
         val jvmAndNative by creating { dependsOn(commonMain.get()) }
         macosArm64Main.get().dependsOn(jvmAndNative)
         jvmMain.get().dependsOn(jvmAndNative)
-        linuxX64Main.get().dependsOn(jvmAndNative)
 
         commonMain {
             dependencies {
@@ -39,11 +38,6 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation("de.infix.testBalloon:testBalloon-framework-core:0.7.1-K2.2.21")
-            }
-        }
-        jvmTest {
-            dependencies {
-                implementation("dev.zacsweers.kctfork:core:0.11.0")
             }
         }
     }
