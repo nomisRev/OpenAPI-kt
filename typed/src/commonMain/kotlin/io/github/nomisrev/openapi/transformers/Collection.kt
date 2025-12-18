@@ -44,9 +44,8 @@ suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
                 name,
                 description(),
                 schema.title,
-                listOf(
-                    Model.Object.Property(
-                        "items",
+                mapOf(
+                    "items" to Model.Object.Property(
                         Model.Collection(
                             inner,
                             collectionDefault(),

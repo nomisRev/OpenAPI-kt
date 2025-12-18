@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 context(ctx: Renderer)
 fun Model.Object.render(parentClass: TypeName.Class? = null): String = buildString {
-    import(properties.map { it.model })
+    import(properties.map { (_, prop) -> prop.model })
 
     +"@Serializable"
     when (properties.size) {
@@ -20,8 +20,9 @@ fun Model.Object.render(parentClass: TypeName.Class? = null): String = buildStri
 context(ctx: Renderer, builder: StringBuilder)
 private fun Model.Object.valueClass(parentClass: TypeName.Class?) {
     if (ctx.jvm) +"@JvmInline"
-    append("value class ${name().simpleName}(${properties.single().render()})${parentClass.renderAsSuperclass()}")
+    append("value class ${name().simpleName}(${properties.entries.single().render()})${parentClass.renderAsSuperclass()}")
 }
+
 
 context(ctx: Renderer, builder: StringBuilder)
 fun Model.Object.dataClass(parentClass: TypeName.Class?) {
@@ -57,13 +58,13 @@ private fun Model.hasDefault(): Boolean = when (this) {
 }
 
 context(ctx: Renderer)
-fun Model.Object.Property.render(): String = buildString {
-    val paramName = baseName.sanitize().dropArraySyntax().toCamelCase()
-    if (paramName != baseName) append("@SerialName(\"$baseName\") ")
-    if (isRequired && model.hasDefault()) append("@Required ")
-    append("val $paramName: ${model.toTypeName().type()}")
-    if (model.isNullable) append("?")
-    if (model.isNullable && !isRequired) append(" = null") // TODO default values
+fun Map.Entry<String, Model.Object.Property>.render(): String = buildString {
+    val paramName = key.sanitize().dropArraySyntax().toCamelCase()
+    if (paramName != key) append("@SerialName(\"$key\") ")
+    if (value.isRequired && value.model.hasDefault()) append("@Required ")
+    append("val $paramName: ${value.model.toTypeName().type()}")
+    if (value.model.isNullable) append("?")
+    if (value.model.isNullable && !value.isRequired) append(" = null") // TODO default values
 }
 
 context(ctx: Renderer, builder: StringBuilder)

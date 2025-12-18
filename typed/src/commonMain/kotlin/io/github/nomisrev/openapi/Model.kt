@@ -204,7 +204,7 @@ sealed interface Model {
         override val context: NamingContext,
         override val description: String?,
         override val title: String?,
-        val properties: List<Property>,
+        val properties: Map<String, Property>,
         val inline: Set<Model>,
         val additionalProperties: AdditionalProperties,
         override val isNullable: Boolean
@@ -213,7 +213,7 @@ sealed interface Model {
             context: NamingContext,
             description: String?,
             title: String?,
-            properties: List<Property>,
+            properties: Map<String, Property>,
             inline: Set<Model>,
             additionalProperties: Boolean,
             isNullable: Boolean
@@ -245,7 +245,7 @@ sealed interface Model {
 
         @SerialName("Property")
         @Serializable
-        data class Property(val baseName: String, val model: Model, val isRequired: Boolean)
+        data class Property(val model: Model, val isRequired: Boolean)
 
         companion object {
             // TODO write proper tests for this
@@ -258,13 +258,7 @@ sealed interface Model {
                 NamingContext(context, emptyList()),
                 property.description,
                 title,
-                listOf(
-                    Property(
-                        "value",
-                        property.with(description = null, isNullable = false),
-                        true
-                    )
-                ),
+                mapOf("value" to Property(property.with(description = null, isNullable = false), true)),
                 inline,
                 additionalProperties = AdditionalProperties.Allowed(false),
                 property.isNullable
@@ -303,7 +297,7 @@ sealed interface Model {
         override val context: NamingContext,
         // abstractProperties
 //        val baseObject: Object,
-        val abstractProperties: List<Model.Object.Property>,
+        val abstractProperties: Map<String, Object.Property>,
         // Contain the NamingContext from their MAPPED Name,
         // not their original schema name since these are always inlined.
         val subtypes: List<Object>,
@@ -311,7 +305,16 @@ sealed interface Model {
         override val title: String?,
         val discriminator: String,
         override val isNullable: Boolean
-    ) : Model, ContextHolder
+    ) : Model, ContextHolder {
+        // TODO: add nested, description & title
+//        @Serializable
+//        @SerialName("Case")
+//        data class Case(
+//            val name: NamingContext,
+//            val properties: List<Object.Property>,
+//            val isNullable: Boolean
+//        )
+    }
 
     @SerialName("Enum")
     @Serializable

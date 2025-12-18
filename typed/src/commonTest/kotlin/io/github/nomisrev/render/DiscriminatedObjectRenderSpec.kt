@@ -57,8 +57,9 @@ val discriminatedObjectRenderSpec by testSuite {
            |    @Serializable
            |    data class RegisteredUser(val id: Long, val email: String): User
            |    
+           |    @OptIn(ExperimentalUuidApi::class)
            |    @Serializable
-           |    data class ProUser(val id: Long, val email: String, val subscriptionId: Uuid): User
+           |    data class ProUser(val id: Long, val email: String, val subscriptionId: Uuid): RegisteredUser
            |}
         """.trimMargin(),
         Model.DiscriminatedObject(

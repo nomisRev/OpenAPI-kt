@@ -36,8 +36,8 @@ private suspend fun RequestBody.formDataToBody(contentType: String, mediaType: M
     val name = endpoint.context(NamingContext.RouteBody("body", endpoint.operationId))
     return when (val model = schema.toModel(name, SchemaContext.Write)) {
         is Model.Object -> {
-            val params = model.properties.map { p ->
-                Route.Body.Multipart.FormData(p.baseName, p.model)
+            val params = model.properties.map { (baseName, prop) ->
+                Route.Body.Multipart.FormData(baseName, prop.model)
             }
             Route.Body.Multipart.Value(params, description, mediaType.extensions)
         }
@@ -53,7 +53,7 @@ private suspend fun RequestBody.formUrlEncoded(contentType: String, mediaType: M
     val obj = requireNotNull(schema.toModel(name, SchemaContext.Write) as? Model.Object) {
         "Form URL encoded body must be an object. $this"
     }
-    val params = obj.properties.map { p -> Route.Body.Multipart.FormData(p.baseName, p.model) }
+    val params = obj.properties.map { (baseName, prop) -> Route.Body.Multipart.FormData(baseName, prop.model) }
     return Route.Body.FormUrlEncoded(params, description, mediaType.extensions)
 }
 

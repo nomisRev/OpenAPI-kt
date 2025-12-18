@@ -18,7 +18,7 @@ suspend fun ResolvedSchema.primitive(): Model = when (this) {
             name,
             inner.description,
             inner.title,
-            listOf(Model.Object.Property("value", inner.with(description = null, isNullable = false), true)),
+            mapOf("value" to Model.Object.Property(inner.with(description = null, isNullable = false), true)),
             emptySet(),
             false,
             inner.isNullable

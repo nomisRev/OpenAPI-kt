@@ -10,11 +10,12 @@ plugins {
 }
 
 kotlin {
-    compilerOptions.freeCompilerArgs.addAll(
+    val debug = if (System.getProperty("idea.active") == "true") "-Xdebug" else null
+    compilerOptions.freeCompilerArgs.addAll(listOfNotNull(
         "-Xcontext-sensitive-resolution",
         "-Xcontext-parameters",
-        "-Xreturn-value-checker=full"
-    )
+        "-Xreturn-value-checker=full",
+    ))
 
     jvm()
     macosArm64()

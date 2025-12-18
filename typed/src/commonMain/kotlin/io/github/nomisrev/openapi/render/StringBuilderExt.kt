@@ -10,8 +10,8 @@ fun append(line: String?) {
     if (line != null) builder.append(line)
 }
 
-context(builder: StringBuilder)
-fun <A> Iterable<A>.joinTo(
+context(appendable: AA)
+fun <A, AA: Appendable> Iterable<A>.joinTo(
     separator: CharSequence = ", ",
     prefix: CharSequence = "",
     postfix: CharSequence = "",
@@ -19,7 +19,28 @@ fun <A> Iterable<A>.joinTo(
     truncated: CharSequence = "...",
     transform: ((A) -> CharSequence)? = null
 ) {
-    joinTo(builder, separator, prefix, postfix, limit, truncated, transform)
+    joinTo(appendable, separator, prefix, postfix, limit, truncated, transform)
+}
+
+fun <A, B> Map<A, B>.joinToString(
+    separator: CharSequence = ", ",
+    prefix: CharSequence = "",
+    postfix: CharSequence = "",
+    limit: Int = -1,
+    truncated: CharSequence = "...",
+    transform: (Map.Entry<A, B>) -> String
+): String = entries.joinToString(separator, prefix, postfix, limit, truncated, transform)
+
+context(appendable: AA)
+fun <A, B, AA : Appendable> Map<A, B>.joinTo(
+    separator: CharSequence = ", ",
+    prefix: CharSequence = "",
+    postfix: CharSequence = "",
+    limit: Int = -1,
+    truncated: CharSequence = "...",
+    transform: (Map.Entry<A, B>) -> String
+) {
+    entries.joinTo(appendable, separator, prefix, postfix, limit, truncated, transform)
 }
 
 fun String.stringValue(): String {
@@ -33,3 +54,4 @@ fun String.stringValue(): String {
     val dollars = if(count > 0) "$".repeat(count + 1) else ""
     return "$dollars\"$this\""
 }
+

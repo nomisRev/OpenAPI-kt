@@ -1,11 +1,12 @@
 package io.github.nomisrev.openapi.registry
 
-import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.NamingContext.Companion.reference
 import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Reference
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
-import io.github.nomisrev.openapi.routes.SchemaContext
+import io.github.nomisrev.openapi.render.name
 
 context(ctx: Registry.Scope)
 suspend fun ReferenceOr<Schema>.readOnly(): Boolean? = with(ctx) { peek().readOnly }
@@ -47,17 +48,28 @@ suspend fun ResolvedSchema.isAllOfNullableType(): Boolean = with(ctx) {
 }
 
 context(ctx: Registry.Scope)
-suspend fun ResolvedSchema.Reference.isObjectWithDiscriminator(): Boolean = with(ctx) {
-    schema.properties != null &&
-            schema.discriminator?.mapping?.isNotEmpty() == true &&
-            schema.discriminator?.mapping?.all { (_, ref) ->
-                val mappingName = ref.schemaName()
-                if (name == NamingContext.Reference(mappingName, SchemaContext.Null)) {
+suspend fun ResolvedSchema.Reference.isObjectWithDiscriminator(): Boolean =
+    schema.isObjectWithDiscriminator(reference.name)
+
+context(ctx: Registry.Scope)
+suspend fun ReferenceOr<Schema>.isObjectWithDiscriminator(): Boolean =
+    when (this) {
+        is ReferenceOr.Reference if peek().isObjectWithDiscriminator(ref) -> true
+        is ReferenceOr.Reference, is ReferenceOr.Value<*> -> false
+    }
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.isObjectWithDiscriminator(ref: String): Boolean = with(ctx) {
+    properties != null &&
+            discriminator?.mapping?.isNotEmpty() == true &&
+            discriminator?.mapping?.all { (_, mappingName) ->
+                val x = if (ref == mappingName.schemaName()) {
                     true
                 } else {
-                    val s = peek(ref)
+                    val s = peek(mappingName)
                     s.allOf != null && s.type == null
                 }
+                x
             } ?: false
 }
 
@@ -67,8 +79,9 @@ suspend fun ResolvedSchema.description(): String? = with(ctx) {
         is ReferenceOr.Value -> value
         null -> null
         is ReferenceOr.Reference ->
-            copy(ref =
-                if (ref.endsWith("/description")) ref.dropLast("/description".length) else ref
+            copy(
+                ref =
+                    if (ref.endsWith("/description")) ref.dropLast("/description".length) else ref
             ).peek().description.get()
     }
 

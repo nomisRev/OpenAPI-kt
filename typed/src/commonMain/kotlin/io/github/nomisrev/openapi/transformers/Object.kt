@@ -8,6 +8,7 @@ import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
@@ -24,7 +25,7 @@ suspend fun ResolvedSchema.toObject(
     val properties = properties(properties, context)
 
     val additionalProperties = additionalProperties(context)
-    val nested = properties.mapNotNullTo(mutableSetOf()) { prop -> prop.model.nestedOrNull() } +
+    val nested = properties.mapNotNullTo(mutableSetOf()) { (_, prop) -> prop.model.nestedOrNull() } +
             listOfNotNull((additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.nestedOrNull())
     return Model.Object(
         context = name,
@@ -41,22 +42,18 @@ context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.properties(
     properties: Map<String, ReferenceOr<Schema>>,
     context: SchemaContext
-): List<Property> = properties.mapNotNull { (name, refOrSchema) ->
-    when (context) {
-        SchemaContext.Write if refOrSchema.readOnly() == true -> null
-        SchemaContext.Read if refOrSchema.writeOnly() == true -> null
-        SchemaContext.Write,
-        SchemaContext.Read,
-        SchemaContext.Null -> refOrSchema.resolve(
-            this.name.nest(ObjectProperty(name)),
-            context
-        ) { propSchema ->
-            val model = propSchema.toModel(context)
-            Property(
-                name,
-                model,
-                schema.required.contains(name)
-            )
+): Map<String, Property> = buildMap {
+    properties.forEach { (name, refOrSchema) ->
+        when (context) {
+            SchemaContext.Write if refOrSchema.readOnly() == true -> {}
+            SchemaContext.Read if refOrSchema.writeOnly() == true -> {}
+            SchemaContext.Write,
+            SchemaContext.Read,
+            SchemaContext.Null ->
+                refOrSchema.resolve(this@properties.name.nest(ObjectProperty(name)), context) { propSchema ->
+                    val model = propSchema.toModel(context)
+                    put(name, Property(model, schema.required.contains(name)))
+                }
         }
     }
 }

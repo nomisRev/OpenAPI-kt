@@ -25,9 +25,8 @@ val recursiveSpec by testSuite {
                 name,
                 description.expected,
                 null,
-                listOf(
-                    Model.Object.Property(
-                        "self",
+                mapOf(
+                    "self" to Model.Object.Property(
                         Model.Reference(name, description.expected, isNullable ?: false, null),
                         isRequired = false
                     )
@@ -68,9 +67,8 @@ val recursiveSpec by testSuite {
                 root,
                 description.expected,
                 null,
-                listOf(
-                    Model.Object.Property(
-                        "self",
+                mapOf(
+                    "self" to Model.Object.Property(
                         Model.Reference(root, description.expected, isNullable ?: false, null),
                         isRequired = false
                     )
@@ -125,7 +123,11 @@ val recursiveSpec by testSuite {
             recursiveAnchor expect expected
         }
 
-    verifyAll("Recursive nested collection references", nestedRecursiveReferences, NamingContext.Reference("Root", SchemaContext.Null))
+    verifyAll(
+        "Recursive nested collection references",
+        nestedRecursiveReferences,
+        NamingContext.Reference("Root", SchemaContext.Null)
+    )
 
     val A = Schema(
         type = Schema.Type.Basic.Object,
@@ -145,7 +147,12 @@ val recursiveSpec by testSuite {
                     properties = listOf(
                         Model.Object.Property(
                             baseName = "a",
-                            model = Model.Reference(NamingContext.reference("A", SchemaContext.Null), null, false, null),
+                            model = Model.Reference(
+                                NamingContext.reference("A", SchemaContext.Null),
+                                null,
+                                false,
+                                null
+                            ),
                             isRequired = false
                         )
                     ),

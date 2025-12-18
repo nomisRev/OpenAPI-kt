@@ -4,7 +4,6 @@ import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.FreeFormJson
 import io.github.nomisrev.openapi.Model.Object
-import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
@@ -61,6 +60,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
             throw IllegalStateException("Null  should always be resolved to result in nullable types. Please report this bug. $schema")
     }
 
+
     schema.properties?.isNotEmpty() == true -> toObject(context, schema.properties!!)
     schema.additionalProperties != null -> objectWithoutProperties(context)
     schema.items != null -> collection(context)
@@ -76,10 +76,10 @@ private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContex
             true -> fallback()
             false -> when (this) {
                 is ResolvedSchema.Recursive if name.isTopLevel() ->
-                    Object(name, description(), schema.title, emptyList(), emptySet(), false, isNullable)
+                    Object(name, description(), schema.title, emptyMap(), emptySet(), false, isNullable)
 
                 is ResolvedSchema.Reference ->
-                    Object(name, description(), schema.title, emptyList(), emptySet(), false, isNullable)
+                    Object(name, description(), schema.title, emptyMap(), emptySet(), false, isNullable)
 
                 is ResolvedSchema.Recursive -> Model.Primitive.Unit(description(), isNullable, schema.title)
                 is ResolvedSchema.Value -> Model.Primitive.Unit(description(), isNullable, schema.title)

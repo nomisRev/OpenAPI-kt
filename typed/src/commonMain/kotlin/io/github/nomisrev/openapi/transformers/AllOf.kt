@@ -3,19 +3,24 @@ package io.github.nomisrev.openapi.transformers
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.parser.AdditionalProperties
+import io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
+import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.peek
+import io.github.nomisrev.openapi.registry.toModel
 
 context(scope: Registry.Scope)
 suspend fun ResolvedSchema.allOf(context: SchemaContext, allOf: List<ReferenceOr<Schema>>): Model =
-    allOf.map {
-        // Skip 'resolve' since we're inlining schemas even top-level ones
-        ResolvedSchema.Value(name, it.peek()).toModel(context)
-    }.reduce { acc, or -> acc.merge(or, name) }
+    ReferenceOr.value(allOf.map {
+        val schema = if (it.isObjectWithDiscriminator()) it.peek().copy(discriminator = null) else it.peek()
+//        ResolvedSchema.Value(name, schema).toModel(context)
+        schema
+    }.reduce { acc, or -> acc.merge(or) }).toModel(name, context)
 
 private fun Model.merge(other: Model, name: NamingContext): Model = when (this) {
     else if this == other -> this
@@ -162,10 +167,9 @@ private fun Constraints.Collection?.merge(other: Constraints.Collection?): Const
     }
 
 private fun Model.Object.merge(context: NamingContext, model: Model.Object): Model.Object {
-    val properties = (properties + model.properties)
-        .groupBy { it.baseName }
-        .values
-        .map { props -> props.reduce { acc, prop -> acc.merge(prop, context) } }
+    val properties = properties.merge(model.properties) { name, a, b ->
+        Model.Object.Property(a.model.merge(b.model, context), a.isRequired || b.isRequired)
+    }
     return Model.Object(
         context,
         description ?: model.description,
@@ -193,6 +197,3 @@ private fun Model.Object.AdditionalProperties.merge(
         is Model.Object.AdditionalProperties.Schema,
         is Model.Object.AdditionalProperties.Allowed -> throw IllegalStateException("Cannot merge allOf $this with $other")
     }
-
-private fun Model.Object.Property.merge(other: Model.Object.Property, context: NamingContext): Model.Object.Property =
-    Model.Object.Property(baseName, model.merge(other.model, context), isRequired || other.isRequired)

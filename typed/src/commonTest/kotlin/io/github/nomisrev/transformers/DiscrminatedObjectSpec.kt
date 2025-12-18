@@ -38,7 +38,8 @@ val discriminatedObjectSpec by testSuite {
                 "RegisteredUser" to "#/components/schemas/RegisteredUser",
                 "ProUser" to "#/components/schemas/ProUser"
             )
-        )
+        ),
+        required = listOf("id")
     )
     val registered = Model.Object(
         baseName.nest(NamingContext.DiscriminatedObjectCase("RegisteredUser")),
@@ -53,12 +54,18 @@ val discriminatedObjectSpec by testSuite {
         false
     )
     val registeredSchema = Schema(
-        type = Schema.Type.Basic.Object,
-        properties = mapOf(
-            "id" to ReferenceOr.value(Schema.integer),
-            "email" to ReferenceOr.value(Schema.string),
-        )
+        allOf = listOf(
+            ReferenceOr.schema("User"),
+            ReferenceOr.value(
+                Schema(
+                    type = Schema.Type.Basic.Object,
+                    properties = mapOf("email" to ReferenceOr.value(Schema.string))
+                )
+            )
+        ),
+        required = listOf("email")
     )
+
     val pro = Model.Object(
         baseName.nest(NamingContext.DiscriminatedObjectCase("ProUser")),
         null,
@@ -73,11 +80,15 @@ val discriminatedObjectSpec by testSuite {
         false
     )
     val proSchema = Schema(
-        type = Schema.Type.Basic.Object,
-        properties = mapOf(
-            "id" to ReferenceOr.value(Schema.integer),
-            "email" to ReferenceOr.value(Schema.string),
-            "subscriptionId" to ReferenceOr.value(Schema.uuid)
+        allOf = listOf(
+            ReferenceOr.schema("RegisteredUser"),
+            ReferenceOr.value(
+                Schema(
+                    type = Schema.Type.Basic.Object,
+                    properties = mapOf("subscriptionId" to ReferenceOr.value(Schema.uuid)),
+                    required = listOf("subscriptionId")
+                )
+            )
         )
     )
     val expected = Model.DiscriminatedObject(
@@ -98,7 +109,8 @@ val discriminatedObjectSpec by testSuite {
         ) {
             assertEquals(
                 expected,
-                ReferenceOr.schema("User").toModel(NamingContext.Reference("User", SchemaContext.Null), SchemaContext.Write)
+                ReferenceOr.schema("User")
+                    .toModel(NamingContext.Reference("User", SchemaContext.Null), SchemaContext.Null)
             )
         }
     }
