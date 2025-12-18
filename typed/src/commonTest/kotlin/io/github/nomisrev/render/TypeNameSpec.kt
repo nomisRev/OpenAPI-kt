@@ -42,7 +42,7 @@ val typeNameSpec by testSuite {
                 context = NamingContext.reference("Foo", SchemaContext.Null),
                 description = null,
                 title = null,
-                properties = emptyList(),
+                properties = emptyMap(),
                 additionalProperties = true,
                 isNullable = false,
                 inline = emptySet()
@@ -57,7 +57,7 @@ val typeNameSpec by testSuite {
                 context = NamingContext.reference("Foo", SchemaContext.Null),
                 description = null,
                 title = null,
-                properties = emptyList(),
+                properties = emptyMap(),
                 additionalProperties = false,
                 isNullable = false,
                 inline = emptySet()
@@ -82,7 +82,7 @@ val typeNameSpec by testSuite {
                 context = NamingContext.reference("Foo", SchemaContext.Write),
                 description = null,
                 title = null,
-                properties = emptyList(),
+                properties = emptyMap(),
                 additionalProperties = false,
                 isNullable = false,
                 inline = emptySet()
@@ -97,7 +97,7 @@ val typeNameSpec by testSuite {
                 context = NamingContext.reference("Foo", SchemaContext.Read),
                 description = null,
                 title = null,
-                properties = emptyList(),
+                properties = emptyMap(),
                 additionalProperties = false,
                 isNullable = false,
                 inline = emptySet()

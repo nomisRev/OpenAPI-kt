@@ -70,7 +70,7 @@ val objectSpec by testSuite {
             context = NamingContext.path("test"),
             description = null,
             title = null,
-            properties = emptyList(),
+            properties = emptyMap(),
             inline = emptySet(),
             additionalProperties = Model.Object.AdditionalProperties.Schema(model),
             isNullable = false
@@ -114,7 +114,7 @@ val objectSpec by testSuite {
                 context = NamingContext.path("Test"),
                 description = null,
                 title = null,
-                properties = emptyList(),
+                properties = emptyMap(),
                 inline = emptySet(),
                 additionalProperties = Model.Object.AdditionalProperties.Schema(
                     Model.Object.value(
@@ -149,8 +149,8 @@ val objectSpec by testSuite {
             context = name,
             description = null,
             title = null,
-            properties = props.map { (name, schema, isRequired) ->
-                Model.Object.Property(name, schema.expected, isRequired)
+            properties = props.associate { (name, schema, isRequired) ->
+                name to Model.Object.Property(schema.expected, isRequired)
             },
             inline = emptySet(),
             additionalProperties = additionalProperties.expected,
@@ -169,9 +169,8 @@ val objectSpec by testSuite {
             context = NamingContext.path("test"),
             description = null,
             title = null,
-            properties = listOf(
-                Model.Object.Property(
-                    "enum",
+            properties = mapOf(
+                "enum" to Model.Object.Property(
                     it.expected.context { it.nest(NamingContext.ObjectProperty("enum")) },
                     false
                 )
@@ -202,7 +201,7 @@ val objectSpec by testSuite {
                 context = NamingContext.path("test"),
                 description = null,
                 title = null,
-                properties = listOf(Model.Object.Property("enum", listModel, false)),
+                properties = mapOf("enum" to Model.Object.Property(listModel, false)),
                 inline = setOf(innerModel.context { it.nest(NamingContext.ObjectProperty("enum")) }),
                 additionalProperties = false,
                 isNullable = false
@@ -214,7 +213,7 @@ val objectSpec by testSuite {
 
     val writeOnly = listOf(true, false, null)
     val readOnly = listOf(true, false, null)
-    fun Sequence<List<Prop>>.randomRead(): Sequence<Expect<Pair<Map<String, ReferenceOr<Schema>>, List<String>>, List<Model.Object.Property>>> =
+    fun Sequence<List<Prop>>.randomRead(): Sequence<Expect<Pair<Map<String, ReferenceOr<Schema>>, List<String>>, Map<String, Model.Object.Property>>> =
         map { props ->
             val props = props.map {
                 Triple(
@@ -227,9 +226,8 @@ val objectSpec by testSuite {
                 Pair(prop.name, ReferenceOr.value(prop.schema.actual.copy(readOnly = readOnly, writeOnly = writeOnly)))
             }, props.filter { (_, _, prop) -> prop.isRequired }.map { (_, _, prop) -> prop.name })
 
-            val expected = props.filter { (readOnly, _, _) -> readOnly != true }.map { (_, _, prop) ->
-                Model.Object.Property(
-                    prop.name,
+            val expected = props.filter { (readOnly, _, _) -> readOnly != true }.associate { (_, _, prop) ->
+                prop.name to Model.Object.Property(
                     prop.schema.expected,
                     prop.isRequired
                 )
@@ -268,7 +266,7 @@ val objectSpec by testSuite {
         objWithReadOnly.take(10_000).toList()
     )
 
-    fun Sequence<List<Prop>>.randomWrite(): Sequence<Expect<Pair<Map<String, ReferenceOr<Schema>>, List<String>>, List<Model.Object.Property>>> =
+    fun Sequence<List<Prop>>.randomWrite(): Sequence<Expect<Pair<Map<String, ReferenceOr<Schema>>, List<String>>, Map<String, Model.Object.Property>>> =
         map { props ->
             val props = props.map {
                 Triple(readOnly[RANDOM.nextInt(0, 2)], writeOnly[RANDOM.nextInt(0, 2)], it)
@@ -277,9 +275,8 @@ val objectSpec by testSuite {
                 Pair(prop.name, ReferenceOr.value(prop.schema.actual.copy(readOnly = readOnly, writeOnly = writeOnly)))
             }, props.filter { (_, _, prop) -> prop.isRequired }.map { (_, _, prop) -> prop.name })
 
-            val expected = props.filter { (_, writeOnly, _) -> writeOnly != true }.map { (_, _, prop) ->
-                Model.Object.Property(
-                    prop.name,
+            val expected = props.filter { (_, writeOnly, _) -> writeOnly != true }.associate { (_, _, prop) ->
+                prop.name to Model.Object.Property(
                     prop.schema.expected,
                     prop.isRequired
                 )
@@ -338,7 +335,7 @@ val objectSpec by testSuite {
                     context = NamingContext.reference("EmptyObject", SchemaContext.Null),
                     description = null,
                     title = null,
-                    properties = emptyList(),
+                    properties = emptyMap(),
                     inline = emptySet(),
                     additionalProperties = Model.Object.AdditionalProperties.Allowed(false),
                     isNullable = false

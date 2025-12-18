@@ -16,7 +16,7 @@ val renderObjectSpec by testSuite {
             NamingContext.reference("Foo", SchemaContext.Null),
             null,
             null,
-            emptyList(),
+            emptyMap(),
             emptySet(),
             false,
             false
@@ -47,11 +47,11 @@ val renderObjectSpec by testSuite {
         context = NamingContext.reference("Foo", SchemaContext.Null),
         description = null,
         title = null,
-        properties = listOf(
-            Model.Object.Property("name", Model.Primitive.String(null, null, null, false, null), false),
-            Model.Object.Property("email", Model.Primitive.Long(null, null, null, true, null), false),
-            Model.Object.Property("age", Model.Primitive.Int(null, null, null, false, null), true),
-            Model.Object.Property("longername", Model.Primitive.Double(null, null, null, true, null), true),
+        properties = mapOf(
+            "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
+            "email" to Model.Object.Property(Model.Primitive.Long(null, null, null, true, null), false),
+            "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, false, null), true),
+            "longername" to Model.Object.Property(Model.Primitive.Double(null, null, null, true, null), true),
         ),
         inline = emptySet(),
         additionalProperties = false,
@@ -69,14 +69,14 @@ val renderObjectSpec by testSuite {
         context = NamingContext.reference("Foo", SchemaContext.Null),
         description = null,
         title = null,
-        properties = listOf(
-            Model.Object.Property("name", Model.Primitive.String(null, null, null, false, null), false),
-            Model.Object.Property("email", Model.Primitive.Long(null, null, null, true, null), false),
-            Model.Object.Property("age", Model.Primitive.Int(null, null, null, false, null), true),
-            Model.Object.Property("longername", Model.Primitive.Double(null, null, null, true, null), true),
-            Model.Object.Property("longername2", Model.Primitive.Float(null, null, null, false, null), false),
-            Model.Object.Property("longer_name_3", Model.Uuid(null, false, null), false),
-            Model.Object.Property("longername4", Model.DateTime(null, false, null), false),
+        properties = mapOf(
+            "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
+            "email" to Model.Object.Property(Model.Primitive.Long(null, null, null, true, null), false),
+            "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, false, null), true),
+            "longername" to Model.Object.Property(Model.Primitive.Double(null, null, null, true, null), true),
+            "longername2" to Model.Object.Property(Model.Primitive.Float(null, null, null, false, null), false),
+            "longer_name_3" to Model.Object.Property(Model.Uuid(null, false, null), false),
+            "longername4" to Model.Object.Property(Model.DateTime(null, false, null), false),
         ),
         inline = emptySet(),
         additionalProperties = false,
@@ -130,24 +130,23 @@ val renderObjectSpec by testSuite {
         context = NamingContext.reference("Foo", SchemaContext.Null),
         description = null,
         title = null,
-        properties = listOf(
-            Model.Object.Property("date", Model.Date(null, false, null), false),
-            Model.Object.Property("dateTime", Model.DateTime(null, false, null), false),
-            Model.Object.Property("uuid", Model.Uuid(null, false, null), false),
-            Model.Object.Property("json", Model.FreeFormJson(null, null, false, null), false),
-            Model.Object.Property(
-                "jsonArray", Model.Collection(
+        properties = mapOf(
+            "date" to Model.Object.Property(Model.Date(null, false, null), false),
+            "dateTime" to Model.Object.Property(Model.DateTime(null, false, null), false),
+            "uuid" to Model.Object.Property(Model.Uuid(null, false, null), false),
+            "json" to Model.Object.Property(Model.FreeFormJson(null, null, false, null), false),
+            "jsonArray" to Model.Object.Property(
+                Model.Collection(
                     Model.FreeFormJson(null, null, false, null), null, null, null, false, null
                 ), false
             ),
-            Model.Object.Property(
-                "jsonObject",
+            "jsonObject" to Model.Object.Property(
                 Model.Object(
                     NamingContext.reference("Foo", SchemaContext.Null)
                         .nest(NamingContext.ObjectProperty("jsonObject")),
                     null,
                     null,
-                    emptyList(),
+                    emptyMap(),
                     emptySet(),
                     true,
                     false
@@ -191,7 +190,7 @@ val renderObjectSpec by testSuite {
             context = NamingContext.reference("EmptyObject", SchemaContext.Null),
             description = null,
             title = null,
-            properties = emptyList(),
+            properties = emptyMap(),
             inline = emptySet(),
             additionalProperties = Model.Object.AdditionalProperties.Allowed(false),
             isNullable = false

@@ -13,9 +13,16 @@ import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.peek
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 typealias AtomicStateFlow<A> = MutableStateFlow<A>
 
+// Horrible but maintains order of properties...
+private fun <A, B> Map<A, B>.reversed(): Map<A, B> =
+    buildMap {
+        this@reversed.entries.reversed().forEach { put(it.key, it.value) }
+    }
 
 context(scope: Registry.Scope)
 suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.DiscriminatedObject {
@@ -33,19 +40,15 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
         val subtypeSchema = ReferenceOr.Reference(ref).peek()
         val allOf = requireNotNull(subtypeSchema.allOf) { "Subtype schema must be allOf" }
 
+        val parentClass = allOf.single { it.isSubtype(mapping) }
         val (superRequired, superProps) =
-            collectSuperTypeProperties(Pair(schema.required, schema.properties.orEmpty()), allOf, mapping)
+            parentClass.collectSuperTypeProperties(mapping)
 
         val peeked =
-            (allOf - allOf.single { refOrSchema -> refOrSchema.isSubtype(mapping) }).singleOrNull()?.peek() ?: Schema()
-        val single = peeked.properties.orEmpty()
-        val properties = buildMap {
-            putAll(superProps)
-            single.forEach { (name, refOrSchema) ->
-                if (containsKey(name)) put(name, ReferenceOr.value(getValue(name).peek().merge(refOrSchema.peek())))
-                else put(name, refOrSchema)
-            }
-        }
+            (allOf - parentClass).singleOrNull()?.peek() ?: Schema()
+
+        val properties =
+            superProps.reversed().merge(peeked.properties.orEmpty()) { _, a, b -> a.combine(b) }
 
         ResolvedSchema.Value(
             name,
@@ -78,12 +81,22 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
     )
 }
 
-inline fun <A, B> Map<A, B>.merge(other: Map<A, B>, merge: (key: A, B, B) -> B): Map<A, B> =
+inline fun <Key, Value> Map<Key, Value>.merge(
+    other: Map<Key, Value>,
+    merge: (key: Key, Value, Value) -> Value
+): Map<Key, Value> =
     buildMap {
-        putAll(this@merge)
-        other.forEach { (key, value) ->
-            put(key, get(key)?.let { merge(key, it, value) } ?: value)
+        this@merge.forEach { (key, value) ->
+            if (other.contains(key)) {
+                val otherValue = other[key]!!
+                if (value != otherValue) {
+                    put(key, merge(key, value, otherValue))
+                } else put(key, otherValue)
+            } else {
+                put(key, value)
+            }
         }
+        putAll(other - this@merge.keys)
     }
 
 fun Schema.isEmpty(): Boolean =
@@ -104,58 +117,60 @@ fun Schema.isEmpty(): Boolean =
  * This cannot conveniently be modeled in Kotlin, and the additional boilerplate during 'when' is simpler than the more complex data structure.
  */
 context(scope: Registry.Scope)
-private tailrec suspend fun ResolvedSchema.Reference.collectSuperTypeProperties(
-    properties: Pair<List<String>, Map<String, ReferenceOr<Schema>>>,
-    allOf: List<ReferenceOr<Schema>>,
-    mapping: Map<String, String>
+private tailrec suspend fun ReferenceOr<Schema>.collectSuperTypeProperties(
+    mapping: Map<String, String>,
+    properties: Pair<List<String>, Map<String, ReferenceOr<Schema>>> = Pair(emptyList(), emptyMap())
 ): Pair<List<String>, Map<String, ReferenceOr<Schema>>> {
-    val parentClass = allOf.single { refOrSchema -> refOrSchema.isSubtype(mapping) }
-    val schema = (allOf - parentClass).single().peek()
-    val next = combineProperties(properties, schema)
-    val parentSchema = parentClass.peek()
+    val parentSchema = peek()
     val superTypeOrNull = parentSchema.allOf?.singleOrNull { it.isSubtype(mapping) }
-    return if (superTypeOrNull != null) collectSuperTypeProperties(next, parentSchema.allOf!!, mapping) else next
+    return if (superTypeOrNull != null) {
+        val schema = (parentSchema.allOf!! - superTypeOrNull).single()
+        superTypeOrNull.collectSuperTypeProperties(
+            mapping,
+            Pair(
+                properties.first + parentSchema.required,
+                properties.second.merge(schema.peek().properties.orEmpty()) { _, a, b -> a.combine(b) }
+            )
+        )
+    } else {
+        Pair(
+            properties.first + parentSchema.required,
+            properties.second.merge(parentSchema.properties.orEmpty()) { _, a, b -> a.combine(b) }
+        )
+    }
 }
 
 context(ctx: Registry.Scope)
-private suspend fun combineProperties(
-    properties: Pair<List<String>, Map<String, ReferenceOr<Schema>>>,
-    schema: Schema
-): Pair<List<String>, Map<String, ReferenceOr<Schema>>> = Pair(
-    properties.first + schema.required,
-    properties.second.merge(schema.properties.orEmpty()) { name, a, b ->
-        when (a) {
-            is ReferenceOr.Reference -> when (b) {
-                is ReferenceOr.Value<Schema> -> {
-                    require(b.value.isEmpty()) { "Cannot merge non-empty schema $b with reference $a" }
-                    b
-                }
+private suspend fun ReferenceOr<Schema>.combine(other: ReferenceOr<Schema>): ReferenceOr<Schema> = when (this) {
+    is ReferenceOr.Reference -> when (other) {
+        is ReferenceOr.Value<Schema> -> {
+            require(other.value.isEmpty()) { "Cannot merge non-empty schema $other with reference $this" }
+            other
+        }
 
-                is ReferenceOr.Reference -> {
-                    require(a.ref == b.ref) { "Cannot merge property $name from different referened schemas: ${a.ref}, ${b.ref}" }
-                    a
-                }
-            }
+        is ReferenceOr.Reference -> {
+            require(this.ref == other.ref) { "Cannot merge property from different referened schemas: ${this.ref}, ${other.ref}" }
+            this
+        }
+    }
 
-            is ReferenceOr.Value<Schema> -> when (b) {
-                is ReferenceOr.Reference -> {
-                    require(a.value.isEmpty()) { "Cannot merge non-empty schema $a with reference $b" }
-                    b
-                }
+    is ReferenceOr.Value<Schema> -> when (other) {
+        is ReferenceOr.Reference -> {
+            require(this.value.isEmpty()) { "Cannot merge non-empty schema $this with reference $other" }
+            other
+        }
 
-                is ReferenceOr.Value<Schema> -> {
-                    if (a.value.isEmpty()) b
-                    else if (b.value.isEmpty()) a
-                    else {
-                        val result = a.value.merge(b.value)
-                        require(result.type == Type.Basic.Object) { "Cannot merge non-object schemas $a, $b" }
-                        ReferenceOr.value(result)
-                    }
-                }
+        is ReferenceOr.Value<Schema> -> {
+            if (this.value.isEmpty()) other
+            else if (other.value.isEmpty()) this
+            else {
+                val result = this.value.merge(other.value)
+                require(result.type == Type.Basic.Object) { "Cannot merge non-object schemas $this, $other" }
+                ReferenceOr.value(result)
             }
         }
     }
-)
+}
 
 private fun ReferenceOr<Schema>.isSubtype(mapping: Map<String, String>): Boolean =
     if (this is ReferenceOr.Reference) this.ref in mapping.values else false

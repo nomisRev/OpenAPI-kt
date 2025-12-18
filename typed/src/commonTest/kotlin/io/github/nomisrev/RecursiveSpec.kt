@@ -102,9 +102,8 @@ val recursiveSpec by testSuite {
                 root,
                 description.expected,
                 null,
-                listOf(
-                    Model.Object.Property(
-                        "self",
+                mapOf(
+                    "self" to Model.Object.Property(
                         Model.Collection(
                             Model.Reference(root, description.expected, isNullable ?: false, null),
                             null,
@@ -137,16 +136,14 @@ val recursiveSpec by testSuite {
         context = NamingContext.reference("A", SchemaContext.Null),
         description = null,
         title = null,
-        properties = listOf(
-            Model.Object.Property(
-                baseName = "b",
+        properties = mapOf(
+            "b" to Model.Object.Property(
                 model = Model.Object(
                     NamingContext.reference("B", SchemaContext.Null),
                     description = null,
                     title = null,
-                    properties = listOf(
-                        Model.Object.Property(
-                            baseName = "a",
+                    properties = mapOf(
+                        "a" to Model.Object.Property(
                             model = Model.Reference(
                                 NamingContext.reference("A", SchemaContext.Null),
                                 null,
@@ -177,16 +174,14 @@ val recursiveSpec by testSuite {
         context = NamingContext.reference("B", SchemaContext.Null),
         description = null,
         title = null,
-        properties = listOf(
-            Model.Object.Property(
-                baseName = "a",
+        properties = mapOf(
+            "a" to Model.Object.Property(
                 model = Model.Object(
                     context = NamingContext.reference("A", SchemaContext.Null),
                     description = null,
                     title = null,
-                    properties = listOf(
-                        Model.Object.Property(
-                            "b",
+                    properties = mapOf(
+                        "b" to Model.Object.Property(
                             Model.Reference(NamingContext.reference("B", SchemaContext.Null), null, false, null),
                             false
                         )

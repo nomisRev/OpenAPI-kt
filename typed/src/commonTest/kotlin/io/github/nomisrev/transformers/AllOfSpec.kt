@@ -44,9 +44,9 @@ val allOfSpec by testSuite {
     )
     val ab = Schema(allOf = listOf(ReferenceOr.schema("A"), ReferenceOr.schema("B")))
     val expected = Model.Object(
-        NamingContext.reference("AB", SchemaContext.Null), null, null, listOf(
-            Model.Object.Property("a", Model.Primitive.String(null, null, null, false, null), false),
-            Model.Object.Property("b", Model.Primitive.String(null, null, null, false, null), false)
+        NamingContext.reference("AB", SchemaContext.Null), null, null, mapOf(
+            "a" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
+            "b" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false)
         ), emptySet(), false, false
     )
     test("AB") {

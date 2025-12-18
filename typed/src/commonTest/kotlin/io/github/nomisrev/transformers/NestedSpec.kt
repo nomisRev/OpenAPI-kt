@@ -24,8 +24,8 @@ val nestedSpec by testSuite {
             NamingContext.path("get"),
             null,
             null,
-            listOf(
-                Model.Object.Property("prop", intObj, false)
+            mapOf(
+                "prop" to Model.Object.Property(intObj, false)
             ),
             emptySet(),
             false,

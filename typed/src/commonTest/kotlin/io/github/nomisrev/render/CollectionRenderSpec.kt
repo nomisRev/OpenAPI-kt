@@ -11,9 +11,9 @@ val collectionRenderSpec by testSuite {
             .nest(NamingContext.ObjectProperty("item")),
         null,
         null,
-        listOf(
-            Model.Object.Property("id", Model.Primitive.String(null, null, null, false, null), false),
-            Model.Object.Property("name", Model.Primitive.String(null, null, null, false, null), false)
+        mapOf(
+            "id" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
+            "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false)
         ),
         emptySet(),
         false,
@@ -23,9 +23,8 @@ val collectionRenderSpec by testSuite {
         NamingContext.reference("Foo", SchemaContext.Null),
         null,
         null,
-        listOf(
-            Model.Object.Property(
-                "items",
+        mapOf(
+            "items" to Model.Object.Property(
                 Model.Collection(
                     item,
                     null,

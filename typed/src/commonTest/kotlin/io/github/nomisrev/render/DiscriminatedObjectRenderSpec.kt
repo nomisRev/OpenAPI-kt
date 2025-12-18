@@ -8,7 +8,7 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 
 val discriminatedObjectRenderSpec by testSuite {
     val baseName = NamingContext.reference("User", SchemaContext.Null)
-    val abstractProperties = listOf(Model.Object.Property("id", Model.Primitive.Long(null, null, null, false, null), true))
+    val abstractProperties = mapOf("id" to Model.Object.Property(Model.Primitive.Long(null, null, null, false, null), true))
     val base = Model.Object(
         baseName.nest(NamingContext.DiscriminatedObjectCase("AnonymousUser")),
         null,
@@ -22,9 +22,9 @@ val discriminatedObjectRenderSpec by testSuite {
         baseName.nest(NamingContext.DiscriminatedObjectCase("RegisteredUser")),
         null,
         null,
-        listOf(
-            Model.Object.Property("id", Model.Primitive.Long(null, null, null, false, null), true),
-            Model.Object.Property("email", Model.Primitive.String(null, null, null, false, null), true),
+        mapOf(
+            "id" to Model.Object.Property(Model.Primitive.Long(null, null, null, false, null), true),
+            "email" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
         ),
         emptySet(),
         false,
@@ -34,10 +34,10 @@ val discriminatedObjectRenderSpec by testSuite {
         baseName.nest(NamingContext.DiscriminatedObjectCase("ProUser")),
         null,
         null,
-        listOf(
-            Model.Object.Property("id", Model.Primitive.Long(null, null, null, false, null), true),
-            Model.Object.Property("email", Model.Primitive.String(null, null, null, false, null), true),
-            Model.Object.Property("subscriptionId", Model.Uuid(null, false, null), true),
+        mapOf(
+            "id" to Model.Object.Property(Model.Primitive.Long(null, null, null, false, null), true),
+            "email" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
+            "subscriptionId" to Model.Object.Property(Model.Uuid(null, false, null), true),
         ),
         emptySet(),
         false,

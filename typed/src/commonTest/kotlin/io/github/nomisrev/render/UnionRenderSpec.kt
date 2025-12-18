@@ -81,9 +81,9 @@ val unionRenderSpec by testSuite {
         context = NamingContext(NamingContext.Reference("Union", SchemaContext.Null), listOf(ctx)),
         description = null,
         title = null,
-        properties = listOf(
-            Model.Object.Property("age", Model.Primitive.Int(null, null, null, false, null), false),
-            Model.Object.Property("name", Model.Primitive.String(null, null, null, false, null), false),
+        properties = mapOf(
+            "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, false, null), false),
+            "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
         ),
         inline = emptySet(),
         additionalProperties = false,
