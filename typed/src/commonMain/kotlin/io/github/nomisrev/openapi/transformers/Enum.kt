@@ -14,7 +14,7 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<Strin
     val inner = ResolvedSchema.Value(
         name,
         schema.copy(description = null, default = null, enum = null, nullable = false)
-    ).toModel(context)
+    ).toModel(context, false)
     val enumDefault = default()
     require(!(enumDefault == Model.Default.Null && !nestedNull)) {
         "The default value $enumDefault is not present in the enum values: ${schema.enum} & schema is not nullable."

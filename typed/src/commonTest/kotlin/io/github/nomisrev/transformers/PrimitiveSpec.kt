@@ -14,7 +14,6 @@ import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type.Basic
-import io.github.nomisrev.openapi.transformers.toModel
 import io.github.nomisrev.reference
 import io.github.nomisrev.verifyFails
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -33,9 +32,6 @@ val PrimitiveSpec by testSuite {
         val expected = Model.Object.value(NamingContext.Reference(schema.toString(), SchemaContext.Null), inner)
         Eq(expected, actual)
     }
-
-    context(scope: Registry.Scope)
-    suspend fun Schema.primitive(): Model = Value(name, this).toModel(SchemaContext.Write)
 
     verifyFails<IllegalArgumentException>(
         "Schema.Type.Basic.Number multiple default values throws IllegalArgumentException",

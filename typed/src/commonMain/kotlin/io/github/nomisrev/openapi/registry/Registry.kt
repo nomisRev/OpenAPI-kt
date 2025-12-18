@@ -27,7 +27,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
         ReferenceOr.schema(name).toModel(NamingContext(this, emptyList()), SchemaContext.Null)
 
     suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
-        with(ScopeImpl(null, emptySet())) { resolve(name, context) { it.toModel(context) } }
+        with(ScopeImpl(null, emptySet())) { resolve(name, context) { it.toModel(context, true) } }
 
     interface Scope {
         /**
@@ -172,7 +172,7 @@ suspend fun ReferenceOr<Schema>.peek(): Schema = with(ctx) { peek() }
 
 context(ctx: Registry.Scope)
 suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
-    resolve(name, context) { it.toModel(context) }
+    resolve(name, context) { it.toModel(context, true) }
 
 context(ctx: Registry)
 suspend fun ReferenceOr<Schema>.toModel(name: NamingContext.Head, context: SchemaContext): Model =

@@ -27,7 +27,7 @@ suspend fun ResolvedSchema.union(
                     is ResolvedSchema.Value -> null
                 }
             }
-            Model.Union.Case(it.toModel(context), discriminatorValue)
+            Model.Union.Case(it.toModel(context, false), discriminatorValue)
         }
     }
 

@@ -27,6 +27,7 @@ suspend fun ResolvedSchema.toObject(
     val additionalProperties = additionalProperties(context)
     val nested = properties.mapNotNullTo(mutableSetOf()) { (_, prop) -> prop.model.nestedOrNull() } +
             listOfNotNull((additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.nestedOrNull())
+
     return Model.Object(
         context = name,
         description = description(),
@@ -39,22 +40,25 @@ suspend fun ResolvedSchema.toObject(
 }
 
 context(ctx: Registry.Scope)
+suspend fun ReferenceOr<Schema>.takeIf(context: SchemaContext): ReferenceOr<Schema>? = when (context) {
+    SchemaContext.Write if readOnly() == true -> null
+    SchemaContext.Read if writeOnly() == true -> null
+    SchemaContext.Write,
+    SchemaContext.Read,
+    SchemaContext.Null -> this
+}
+
+context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.properties(
     properties: Map<String, ReferenceOr<Schema>>,
     context: SchemaContext
 ): Map<String, Property> = buildMap {
     properties.forEach { (name, refOrSchema) ->
-        when (context) {
-            SchemaContext.Write if refOrSchema.readOnly() == true -> {}
-            SchemaContext.Read if refOrSchema.writeOnly() == true -> {}
-            SchemaContext.Write,
-            SchemaContext.Read,
-            SchemaContext.Null ->
-                refOrSchema.resolve(this@properties.name.nest(ObjectProperty(name)), context) { propSchema ->
-                    val model = propSchema.toModel(context)
-                    put(name, Property(model, schema.required.contains(name)))
-                }
-        }
+        refOrSchema.takeIf(context)
+            ?.resolve(this@properties.name.nest(ObjectProperty(name)), context) { propSchema ->
+                val model = propSchema.toModel(context, false)
+                put(name, Property(model, schema.required.contains(name)))
+            }
     }
 }
 

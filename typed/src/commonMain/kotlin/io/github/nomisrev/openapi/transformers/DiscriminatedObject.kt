@@ -12,11 +12,8 @@ import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.peek
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlin.collections.component1
 import kotlin.collections.component2
-
-typealias AtomicStateFlow<A> = MutableStateFlow<A>
 
 // Horrible but maintains order of properties...
 private fun <A, B> Map<A, B>.reversed(): Map<A, B> =
@@ -42,13 +39,15 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
 
         val parentClass = allOf.single { it.isSubtype(mapping) }
         val (superRequired, superProps) =
-            parentClass.collectSuperTypeProperties(mapping)
+            parentClass.collectSuperTypeProperties(mapping, context)
 
         val peeked =
             (allOf - parentClass).singleOrNull()?.peek() ?: Schema()
+        val peekedProperties =
+            peeked.properties.orEmpty().filter { (_, refOrSchema) -> refOrSchema.takeIf(context) != null }
 
         val properties =
-            superProps.reversed().merge(peeked.properties.orEmpty()) { _, a, b -> a.combine(b) }
+            superProps.merge(peekedProperties) { _, a, b -> a.combine(b) }
 
         ResolvedSchema.Value(
             name,
@@ -84,20 +83,19 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
 inline fun <Key, Value> Map<Key, Value>.merge(
     other: Map<Key, Value>,
     merge: (key: Key, Value, Value) -> Value
-): Map<Key, Value> =
-    buildMap {
-        this@merge.forEach { (key, value) ->
-            if (other.contains(key)) {
-                val otherValue = other[key]!!
-                if (value != otherValue) {
-                    put(key, merge(key, value, otherValue))
-                } else put(key, otherValue)
-            } else {
-                put(key, value)
-            }
+): Map<Key, Value> = buildMap {
+    this@merge.forEach { (key, value) ->
+        if (other.contains(key)) {
+            val otherValue = other[key]!!
+            if (value != otherValue) {
+                put(key, merge(key, value, otherValue))
+            } else put(key, otherValue)
+        } else {
+            put(key, value)
         }
-        putAll(other - this@merge.keys)
     }
+    putAll(other - this@merge.keys)
+}
 
 fun Schema.isEmpty(): Boolean =
     properties.isNullOrEmpty() &&
@@ -119,29 +117,36 @@ fun Schema.isEmpty(): Boolean =
 context(scope: Registry.Scope)
 private tailrec suspend fun ReferenceOr<Schema>.collectSuperTypeProperties(
     mapping: Map<String, String>,
+    context: SchemaContext,
     properties: Pair<List<String>, Map<String, ReferenceOr<Schema>>> = Pair(emptyList(), emptyMap())
 ): Pair<List<String>, Map<String, ReferenceOr<Schema>>> {
     val parentSchema = peek()
     val superTypeOrNull = parentSchema.allOf?.singleOrNull { it.isSubtype(mapping) }
     return if (superTypeOrNull != null) {
-        val schema = (parentSchema.allOf!! - superTypeOrNull).single()
+        val schema = (parentSchema.allOf!! - superTypeOrNull).singleOrNull()?.peek()
+        val schemaProps = schema?.properties.orEmpty()
+            .filter { (_, refOrSchema) -> refOrSchema.takeIf(context) != null }
+
         superTypeOrNull.collectSuperTypeProperties(
             mapping,
+            context,
             Pair(
-                properties.first + parentSchema.required,
-                properties.second.merge(schema.peek().properties.orEmpty()) { _, a, b -> a.combine(b) }
+                properties.first + schema?.required.orEmpty(),
+                properties.second.merge(schemaProps) { _, a, b -> a.combine(b) }
             )
         )
     } else {
         Pair(
             properties.first + parentSchema.required,
-            properties.second.merge(parentSchema.properties.orEmpty()) { _, a, b -> a.combine(b) }
+            parentSchema.properties.orEmpty().merge(properties.second) { _, a, b -> a.combine(b) }
         )
     }
 }
 
 context(ctx: Registry.Scope)
-private suspend fun ReferenceOr<Schema>.combine(other: ReferenceOr<Schema>): ReferenceOr<Schema> = when (this) {
+private suspend fun ReferenceOr<Schema>.combine(
+    other: ReferenceOr<Schema>,
+): ReferenceOr<Schema> = when (this) {
     is ReferenceOr.Reference -> when (other) {
         is ReferenceOr.Value<Schema> -> {
             require(other.value.isEmpty()) { "Cannot merge non-empty schema $other with reference $this" }
@@ -149,8 +154,10 @@ private suspend fun ReferenceOr<Schema>.combine(other: ReferenceOr<Schema>): Ref
         }
 
         is ReferenceOr.Reference -> {
-            require(this.ref == other.ref) { "Cannot merge property from different referened schemas: ${this.ref}, ${other.ref}" }
-            this
+            // TODO properly implement finding the right type
+            if (peek().allOf.orEmpty().contains(other)) other
+            else if (other.peek().allOf.orEmpty().contains(this)) this
+            else other //throw IllegalStateException("Cannot merge unrelated referenced schemas: $this, $other")
         }
     }
 
@@ -165,7 +172,7 @@ private suspend fun ReferenceOr<Schema>.combine(other: ReferenceOr<Schema>): Ref
             else if (other.value.isEmpty()) this
             else {
                 val result = this.value.merge(other.value)
-                require(result.type == Type.Basic.Object) { "Cannot merge non-object schemas $this, $other" }
+//                require(result.type == Type.Basic.Object) { "Cannot merge non-object schemas $this, $other" }
                 ReferenceOr.value(result)
             }
         }
@@ -202,15 +209,17 @@ context(ctx: Registry.Scope)
 suspend fun Schema.merge(other: Schema): Schema = when {
     this == other -> this
     type != null && type == other.type -> when (type!!) {
-        Schema.Type.Basic.Array -> mergeCommon(other)
+        Type.Basic.Array -> mergeCommon(other)
             .mergeCollectionConstraints(other) // TODO merge items
-        Schema.Type.Basic.Object -> mergeObject(other)
-        Schema.Type.Basic.Number -> mergeCommon(other).numberConstraints(other) // TODO Select biggest format
-        Schema.Type.Basic.Boolean -> mergeCommon(other)
-        Schema.Type.Basic.Integer -> mergeCommon(other).numberConstraints(other) // TODO Select biggest format
-        Schema.Type.Basic.Null -> mergeCommon(other)
-        Schema.Type.Basic.String -> mergeCommon(other).mergeTextConstraints(other)
-        is Schema.Type.Array -> mergeCommon(other)
+            .copy(items = other.items)
+
+        Type.Basic.Object -> mergeObject(other)
+        Type.Basic.Number -> mergeCommon(other).numberConstraints(other) // TODO Select biggest format
+        Type.Basic.Boolean -> mergeCommon(other)
+        Type.Basic.Integer -> mergeCommon(other).numberConstraints(other) // TODO Select biggest format
+        Type.Basic.Null -> mergeCommon(other)
+        Type.Basic.String -> mergeCommon(other).mergeTextConstraints(other)
+        is Type.Array -> mergeCommon(other)
     }
 
     properties != null || other.properties != null -> mergeObject(other)
@@ -257,13 +266,7 @@ fun Schema.mergeCollectionConstraints(other: Schema): Schema =
 
 context(ctx: Registry.Scope)
 suspend fun Schema.mergeObject(other: Schema): Schema {
-    val properties = buildMap {
-        properties.orEmpty().forEach { (name, schema) -> put(name, schema) }
-        other.properties?.forEach { (name, schema) ->
-            if (containsKey(name)) put(name, ReferenceOr.value(get(name)!!.peek().merge(schema.peek())))
-            else put(name, schema)
-        }
-    }
+    val properties = properties.orEmpty().merge(other.properties.orEmpty()) { name, a, b -> a.combine(b) }
 
     return mergeCommon(other)
         .mergeObjectConstraints(other)

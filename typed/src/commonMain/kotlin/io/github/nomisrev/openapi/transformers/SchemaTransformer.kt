@@ -19,7 +19,10 @@ import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 context(ctx: Registry.Scope)
-suspend fun ResolvedSchema.toModel(context: SchemaContext): Model = when {
+suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boolean): Model = when {
+    this is ResolvedSchema.Reference && !resolveReference ->
+        Model.Reference(name, description(), isNullable, schema.title)
+
     this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
     this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> toDiscriminatedObject(context)
     schema.enum != null -> toClosedEnum(context, schema.enum!!)
@@ -111,6 +114,6 @@ context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.flattenNull(context: SchemaContext, schemas: List<ReferenceOr<Schema>>): Model =
     schemas.firstNotNullOf { refOrSchema ->
         refOrSchema.resolve(name, context) { resolved ->
-            if (resolved.schema.isNull()) null else resolved.toModel(context)
+            if (resolved.schema.isNull()) null else resolved.toModel(context, true)
         }
     }.with(isNullable = true)

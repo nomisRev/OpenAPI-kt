@@ -17,10 +17,11 @@ import io.github.nomisrev.openapi.registry.toModel
 context(scope: Registry.Scope)
 suspend fun ResolvedSchema.allOf(context: SchemaContext, allOf: List<ReferenceOr<Schema>>): Model =
     ReferenceOr.value(allOf.map {
-        val schema = if (it.isObjectWithDiscriminator()) it.peek().copy(discriminator = null) else it.peek()
-//        ResolvedSchema.Value(name, schema).toModel(context)
-        schema
-    }.reduce { acc, or -> acc.merge(or) }).toModel(name, context)
+//        if (it.isObjectWithDiscriminator()) error("Discriminated Object not allowed within allOf")
+//        else it.peek()
+        it.peek()
+    }.reduce { acc, or -> acc.merge(or) })
+        .toModel(name, context)
 
 private fun Model.merge(other: Model, name: NamingContext): Model = when (this) {
     else if this == other -> this

@@ -73,7 +73,7 @@ val discriminatedObjectSpec by testSuite {
         mapOf(
             "id" to Model.Object.Property(Model.Primitive.Long(null, null, null, false, null), true),
             "email" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
-            "subscriptionId" to Model.Object.Property(Model.Uuid(null, false, null), true),
+            "subscriptionId" to Model.Object.Property(Model.Uuid(null, false, null), true)
         ),
         emptySet(),
         false,
