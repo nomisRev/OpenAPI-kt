@@ -4,12 +4,16 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.api
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.registry
+import io.github.nomisrev.openapi.registry.schemaName
 import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.routes.SchemaContext
+import io.github.nomisrev.openapi.transformers.discriminatedSubtypeOrNull
 import io.github.nomisrev.reference
 import kotlin.test.assertEquals
 import kotlin.to
@@ -106,6 +110,7 @@ val discriminatedObjectSpec by testSuite {
             api.reference("User", baseSchema)
                 .reference("RegisteredUser", registeredSchema)
                 .reference("ProUser", proSchema)
+                .reference("empty", Schema())
         ) {
             assertEquals(
                 expected,
@@ -114,4 +119,41 @@ val discriminatedObjectSpec by testSuite {
             )
         }
     }
+
+    test("allOf") {
+        testScope(
+            api.reference("User", baseSchema)
+                .reference("RegisteredUser", registeredSchema)
+                .reference("ProUser", proSchema)
+        ) {
+            val context = proSchema.discriminatedSubtypeOrNull(SchemaContext.Read, "ProUser")
+
+            assertEquals(
+                NamingContext(
+                    NamingContext.Reference("User", SchemaContext.Read),
+                    listOf(NamingContext.DiscriminatedObjectCase("ProUser"))
+                ),
+                context
+            )
+        }
+    }
+}
+
+private inline fun testScope(api: OpenAPI, block: context(Registry.Scope) () -> Unit) = registry(api) {
+    block(object : Registry.Scope {
+        override suspend fun <A> ReferenceOr<Schema>.resolve(
+            name: NamingContext,
+            context: SchemaContext,
+            block: suspend context(Registry.Scope) (ResolvedSchema) -> A
+        ): A = TODO()
+
+        override suspend fun ReferenceOr<Schema>.peek(): Schema =
+            when (this) {
+                is ReferenceOr.Reference -> peek(ref)
+                is ReferenceOr.Value<Schema> -> value
+            }
+
+        override suspend fun peek(ref: String): Schema =
+            requireNotNull(api.components.schemas.getValue(ref.schemaName()).valueOrNull())
+    })
 }

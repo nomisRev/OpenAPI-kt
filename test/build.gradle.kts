@@ -1,5 +1,3 @@
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
-
 plugins {
   id(libs.plugins.multiplatform.get().pluginId)
   alias(libs.plugins.serialization)

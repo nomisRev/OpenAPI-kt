@@ -6,11 +6,13 @@ import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
+import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.peek
 import kotlin.collections.component1
 import kotlin.collections.component2
@@ -48,6 +50,7 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
 
         val properties =
             superProps.merge(peekedProperties) { _, a, b -> a.combine(b) }
+                .filter { (name, _) -> name != discriminator.propertyName }
 
         ResolvedSchema.Value(
             name,
@@ -56,17 +59,6 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
                 required = superRequired + peeked.required
             )
         ).toObject(context, properties)
-
-//        Model.DiscriminatedObject.Case(
-//            name,
-//            properties.map { (propName, schema) ->
-//                Model.Object.Property(
-//                    propName,
-//                    schema.toModel(name.nest(NamingContext.ObjectProperty(propName)), context),
-//                    required.contains(propName)
-//                )
-//            }
-//        )
     }
 
     return Model.DiscriminatedObject(
@@ -172,7 +164,6 @@ private suspend fun ReferenceOr<Schema>.combine(
             else if (other.value.isEmpty()) this
             else {
                 val result = this.value.merge(other.value)
-//                require(result.type == Type.Basic.Object) { "Cannot merge non-object schemas $this, $other" }
                 ReferenceOr.value(result)
             }
         }
@@ -210,8 +201,8 @@ suspend fun Schema.merge(other: Schema): Schema = when {
     this == other -> this
     type != null && type == other.type -> when (type!!) {
         Type.Basic.Array -> mergeCommon(other)
-            .mergeCollectionConstraints(other) // TODO merge items
-            .copy(items = other.items)
+            .mergeCollectionConstraints(other)
+            .copy(items = let(items, other.items) { a, b -> a.combine(b) })
 
         Type.Basic.Object -> mergeObject(other)
         Type.Basic.Number -> mergeCommon(other).numberConstraints(other) // TODO Select biggest format

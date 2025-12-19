@@ -11,6 +11,7 @@ import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.transformers.topLevelNames
 import io.github.nomisrev.reference
 import kotlin.test.assertEquals
 
@@ -41,6 +42,6 @@ val nestedSpec by testSuite {
             ).toModel(NamingContext.path("get"), SchemaContext.Write)
         }
         assertEq(expected, actual)
-        assertEquals(setOf(topInt), registry.names())
+        assertEquals(setOf(topInt), actual.topLevelNames())
     }
 }

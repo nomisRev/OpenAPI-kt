@@ -3,25 +3,84 @@ package io.github.nomisrev.openapi.transformers
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.parser.AdditionalProperties
-import io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
+import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.peek
+import io.github.nomisrev.openapi.registry.schemaName
 import io.github.nomisrev.openapi.registry.toModel
 
 context(scope: Registry.Scope)
+suspend fun Schema.discriminatedSubtypeOrNull(context: SchemaContext, name: String): NamingContext? {
+    if (allOf.orEmpty().isEmpty()) return null
+
+    val references = allOf!!.mapNotNull { refOrSchema ->
+        when (refOrSchema) {
+            is ReferenceOr.Reference -> refOrSchema
+            is ReferenceOr.Value<Schema> -> null
+        }
+    }
+
+    val singleReference = references.singleOrNull() ?: return null
+    val singlePeeked = singleReference.peek()
+    return when (singleReference) {
+        else if singlePeeked.allOf.orEmpty().size in 1..2 -> singlePeeked.discriminatedSubtypeOrNull(context, name)
+        else if singlePeeked.discriminator?.mapping.orEmpty().containsValue("#/components/schemas/$name") ->
+            NamingContext(
+                NamingContext.Reference(singleReference.ref.schemaName(), context),
+                listOf(NamingContext.DiscriminatedObjectCase(name))
+            )
+
+        else -> null
+    }
+}
+
+
+context(scope: Registry.Scope)
 suspend fun ResolvedSchema.allOf(context: SchemaContext, allOf: List<ReferenceOr<Schema>>): Model =
-    ReferenceOr.value(allOf.map {
-//        if (it.isObjectWithDiscriminator()) error("Discriminated Object not allowed within allOf")
-//        else it.peek()
-        it.peek()
-    }.reduce { acc, or -> acc.merge(or) })
-        .toModel(name, context)
+    if (this is ResolvedSchema.Reference && allOf.size in 1..2) {
+        schema.discriminatedSubtypeOrNull(context, reference.name)?.let { naming ->
+            Model.Reference(naming, description(), isNullable, schema.title)
+        } ?: resolveAllOf(allOf, context)
+    } else {
+        resolveAllOf(allOf, context)
+    }
+
+context(scope: Registry.Scope)
+private suspend fun ResolvedSchema.resolveAllOf(
+    allOf: List<ReferenceOr<Schema>>,
+    context: SchemaContext
+): Model = ReferenceOr.value(allOf.map { it.peek() }.reduce { acc, or -> acc.merge(or) }).toModel(name, context)
+
+context(scope: Registry.Scope)
+private tailrec suspend fun ReferenceOr<Schema>.getSuperTypeOrNull(
+    context: SchemaContext,
+    name: String,
+): NamingContext? {
+    val parentSchema = peek()
+    val superTypeOrNull = parentSchema
+        .allOf
+        ?.singleOrNull { it.isObjectWithDiscriminator() }
+    return if (superTypeOrNull != null) {
+        superTypeOrNull.getSuperTypeOrNull(context, name)
+    } else {
+        if (parentSchema.discriminator?.mapping?.contains(name) == true) {
+            parentSchema.discriminator
+                ?.mapping
+                ?.entries
+                ?.singleOrNull { (mappingName, ref) ->
+                    ref.schemaName() == name
+                }?.let { (mappingName, _) ->
+                    NamingContext.reference((this as ReferenceOr.Reference).ref.schemaName(), context)
+                        .nest(NamingContext.DiscriminatedObjectCase(mappingName))
+                }
+        } else null
+    }
+}
 
 private fun Model.merge(other: Model, name: NamingContext): Model = when (this) {
     else if this == other -> this

@@ -19,6 +19,7 @@ fun Model.render(): String = when (this) {
             description
         ).render()
 
+    is Model.Reference if context.nested.single() is NamingContext.DiscriminatedObjectCase -> TODO()
     is Model.Date,
     is Model.DateTime,
     is Model.FreeFormJson,

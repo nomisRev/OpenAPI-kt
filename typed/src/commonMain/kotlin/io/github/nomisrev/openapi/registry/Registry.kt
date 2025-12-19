@@ -24,10 +24,12 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
     override fun close() = client.close()
 
     suspend fun NamingContext.Reference.toModel(): Model =
-        ReferenceOr.schema(name).toModel(NamingContext(this, emptyList()), SchemaContext.Null)
+        ReferenceOr.schema(name).toModel(NamingContext(this, emptyList()), context)
 
     suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
-        with(ScopeImpl(null, emptySet())) { resolve(name, context) { it.toModel(context, true) } }
+        with(ScopeImpl(null, emptySet())) {
+            resolve(name, context) { it.toModel(context, true) }
+        }
 
     interface Scope {
         /**
@@ -146,7 +148,11 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
             val context = NamingContext(reference, emptyList())
             val resolved = if (expanding.contains(context)) ResolvedSchema.Recursive(context, schema)
             else ResolvedSchema.Reference(reference, schema)
-            cache.add(reference)
+
+            // if schema isDiscriminatedObjectSubtype
+
+//            cache.add(reference)
+
             val currentAnchor = if (schema.recursiveAnchor == true) Pair(context, schema) else null
             block.invoke(ScopeImpl(currentAnchor, expanding + context), resolved)
         }

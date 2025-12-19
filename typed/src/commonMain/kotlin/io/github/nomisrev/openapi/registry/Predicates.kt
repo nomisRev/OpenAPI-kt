@@ -7,6 +7,8 @@ import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Reference
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
 import io.github.nomisrev.openapi.render.name
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 
 context(ctx: Registry.Scope)
 suspend fun ReferenceOr<Schema>.readOnly(): Boolean? = with(ctx) { peek().readOnly }
@@ -51,25 +53,29 @@ context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.Reference.isObjectWithDiscriminator(): Boolean =
     schema.isObjectWithDiscriminator(reference.name)
 
+@OptIn(ExperimentalContracts::class)
 context(ctx: Registry.Scope)
-suspend fun ReferenceOr<Schema>.isObjectWithDiscriminator(): Boolean =
-    when (this) {
+suspend fun ReferenceOr<Schema>.isObjectWithDiscriminator(): Boolean {
+    contract {
+        returns(true) implies (this@isObjectWithDiscriminator is ReferenceOr.Reference)
+    }
+    return when (this) {
         is ReferenceOr.Reference if peek().isObjectWithDiscriminator(ref) -> true
         is ReferenceOr.Reference, is ReferenceOr.Value<*> -> false
     }
+}
 
 context(ctx: Registry.Scope)
 private suspend fun Schema.isObjectWithDiscriminator(ref: String): Boolean = with(ctx) {
     properties != null &&
             discriminator?.mapping?.isNotEmpty() == true &&
             discriminator?.mapping?.all { (_, mappingName) ->
-                val x = if (ref == mappingName.schemaName()) {
+                if (ref == mappingName.schemaName()) {
                     true
                 } else {
                     val s = peek(mappingName)
                     s.allOf != null && s.type == null
                 }
-                x
             } ?: false
 }
 

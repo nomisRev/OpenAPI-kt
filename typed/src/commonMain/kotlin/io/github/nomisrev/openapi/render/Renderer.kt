@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi.render
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.Object.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.Model.Object.AdditionalProperties.Schema
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.Reference
 
 fun interface Importer {
@@ -40,6 +41,7 @@ fun import(model: Model) {
             is Model.Enum,
             is Model.Primitive -> Unit
 
+            is Model.Reference if model.context.nested.single() is NamingContext.DiscriminatedObjectCase -> ctx.import(model.toTypeName())
             is Model.Reference -> throw IllegalStateException("Model.Reference without NamingContext(Reference, []). ${model.context}")
         }
     }

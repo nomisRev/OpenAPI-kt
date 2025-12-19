@@ -42,7 +42,7 @@ sealed interface TypeName {
 }
 
 tailrec fun TypeName.import(): String = when (this) {
-    is Class -> "${`package`}.$names"
+    is Class -> "${`package`}.${names.joinToString(separator = ".")}"
     is TypeName.Collection -> type.import()
 }
 

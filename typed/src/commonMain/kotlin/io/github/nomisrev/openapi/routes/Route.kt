@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi.routes
 
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.Root
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Parameter
@@ -11,6 +12,7 @@ import io.github.nomisrev.openapi.routes.Route.Input
 import io.github.nomisrev.openapi.routes.Route.Returns
 import io.github.nomisrev.openapi.sort
 import io.github.nomisrev.openapi.transformers.nestedOrNull
+import io.github.nomisrev.openapi.transformers.topLevelNames
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -48,8 +50,10 @@ class ApiModel(
 suspend fun OpenAPI.toApiModel(): ApiModel {
     val registry = Registry(this)
     val routes = with(registry) { endpoints().map { it.toRoute() } }
-    val seen = registry.names()
-    val models = with(registry) { seen.map { it.toModel() } }
+    val names: List<NamingContext.Reference> = routes.flatMap {
+        it.parameters.topLevelNames() + it.returns.topLevelNames() + it.body.topLevelNames()
+    }
+    val models = with(registry) { names.map { it.toModel() } }
     return ApiModel(routes, models)
 }
 
@@ -78,6 +82,7 @@ data class Route(
     val deprecated: Boolean,
 ) {
     val nested: Set<Model> = body.nested() + parameters.nested() + returns.nested()
+
 
     data class Bodies(
         /** Request bodies are optional by default! */
@@ -179,6 +184,16 @@ private fun Bodies?.nested(): Set<Model> =
         }
     }
 
+private fun Bodies?.topLevelNames(): Set<NamingContext.Reference> =
+    this?.types.orEmpty().flatMapTo(mutableSetOf()) { (_, body) ->
+        when (body) {
+            is Body.Multipart.Value -> body.parameters.flatMap { it.type.topLevelNames() }
+            is Body.Multipart.Ref -> body.value.topLevelNames()
+            is Body.FormUrlEncoded -> body.parameters.flatMap { it.type.topLevelNames() }
+            is Body.SetBody -> body.type.topLevelNames()
+        }
+    }
+
 private fun Returns.nested(): Set<Model> {
     val defaultNested = default?.types?.values.orEmpty().mapNotNullTo(mutableSetOf()) { it.nestedOrNull() }
     val responsesNested = responses.values.flatMapTo(mutableSetOf()) { returnType ->
@@ -187,4 +202,15 @@ private fun Returns.nested(): Set<Model> {
     return defaultNested + responsesNested
 }
 
+private fun Returns.topLevelNames(): Set<NamingContext.Reference> {
+    val defaultNested = default?.types?.values.orEmpty().flatMapTo(mutableSetOf()) { it.topLevelNames() }
+    val responsesNested = responses.values.flatMapTo(mutableSetOf()) { returnType ->
+        returnType.types.values.flatMap { it.topLevelNames() }
+    }
+    return defaultNested + responsesNested
+}
+
 private fun List<Input>.nested(): Set<Model> = mapNotNullTo(mutableSetOf()) { it.type.nestedOrNull() }
+
+private fun List<Input>.topLevelNames(): Set<NamingContext.Reference> =
+    flatMapTo(mutableSetOf()) { it.type.topLevelNames() }

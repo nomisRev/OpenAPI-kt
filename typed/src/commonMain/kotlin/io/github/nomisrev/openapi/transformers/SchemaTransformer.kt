@@ -21,7 +21,9 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boolean): Model = when {
     this is ResolvedSchema.Reference && !resolveReference ->
-        Model.Reference(name, description(), isNullable, schema.title)
+        Model.Reference(schema.discriminatedSubtypeOrNull(context, reference.name) ?: name, description(), isNullable, schema.title)
+    this is ResolvedSchema.Reference && schema.discriminatedSubtypeOrNull(context, reference.name) != null ->
+        Model.Reference(schema.discriminatedSubtypeOrNull(context, reference.name)!!, description(), isNullable, schema.title)
 
     this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
     this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> toDiscriminatedObject(context)

@@ -11,6 +11,7 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.transformers.topLevelNames
 import kotlinx.serialization.json.Json
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.jvm.JvmName
@@ -97,7 +98,8 @@ fun TestSuite.verifyAll(
                 """.trimIndent()
                 )
             }
-            if (!registry.names().containsAll(names)) {
+
+            if (!actual.topLevelNames().containsAll(names)) {
                 val missing = names - registry.names()
                 throw AssertionError("{$missing} are missing from registry. ${registry.names()}")
             }
@@ -144,7 +146,7 @@ fun TestSuite.verifyAll(
                 """.trimIndent()
                 )
             }
-            if (!registry.names().containsAll(expected.names)) {
+            if (!actual.topLevelNames().containsAll(expected.names)) {
                 val missing = expected.names - registry.names()
                 throw AssertionError("{$missing} are missing from registry. ${registry.names()}")
             }
