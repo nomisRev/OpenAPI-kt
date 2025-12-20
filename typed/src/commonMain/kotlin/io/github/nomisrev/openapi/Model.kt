@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.transformers.nestedOrNull
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
@@ -186,7 +187,6 @@ sealed interface Model {
         //         }
     }
 
-
     @SerialName("List")
     @Serializable
     data class Collection(
@@ -205,10 +205,13 @@ sealed interface Model {
         override val description: String?,
         override val title: String?,
         val properties: Map<String, Property>,
-        val inline: Set<Model>,
         val additionalProperties: AdditionalProperties,
         override val isNullable: Boolean
     ) : Model, ContextHolder {
+        val inline: Set<Model> =
+            properties.mapNotNullTo(mutableSetOf()) { (_, prop) -> prop.model.nestedOrNull() } +
+                    setOfNotNull((additionalProperties as? AdditionalProperties.Schema)?.value?.nestedOrNull())
+
         constructor(
             context: NamingContext,
             description: String?,
@@ -222,7 +225,6 @@ sealed interface Model {
             description,
             title,
             properties,
-            inline,
             AdditionalProperties.Allowed(additionalProperties),
             isNullable
         )
@@ -259,7 +261,6 @@ sealed interface Model {
                 property.description,
                 title,
                 mapOf("value" to Property(property.with(description = null, isNullable = false), true)),
-                inline,
                 additionalProperties = AdditionalProperties.Allowed(false),
                 property.isNullable
             )
@@ -274,10 +275,11 @@ sealed interface Model {
         val default: Default<String>?,
         override val description: String?,
         override val title: String?,
-        val inline: Set<Model>,
         val discriminator: String?,
         override val isNullable: Boolean
     ) : Model, ContextHolder {
+        val inline: Set<Model> = cases.mapNotNullTo(mutableSetOf()) { it.model.nestedOrNull() }
+
         @Serializable
         data class Case(val model: Model, val discriminator: String?)
     }

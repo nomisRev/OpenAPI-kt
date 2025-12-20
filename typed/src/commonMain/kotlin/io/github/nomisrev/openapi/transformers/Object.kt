@@ -8,7 +8,6 @@ import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.parser.ReferenceOr
-import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
@@ -33,7 +32,6 @@ suspend fun ResolvedSchema.toObject(
         description = description(),
         title = schema.title,
         properties = properties,
-        inline = nested,
         additionalProperties = additionalProperties,
         isNullable = isNullable
     )

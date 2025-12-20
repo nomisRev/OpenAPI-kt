@@ -21,17 +21,20 @@ import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.ResolvedSchema
+import io.github.nomisrev.openapi.registry.registry
+import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.product
 import io.github.nomisrev.randomChunked
 import io.github.nomisrev.reference
 import io.github.nomisrev.zip
 import kotlin.random.Random
+import kotlin.test.assertEquals
+import kotlin.to
 
 private val propNames = sequence {
     var i = 0
     while (true) yield("name${i++}")
 }
-
 
 private val SEED = Random.nextLong().also { println("#### SEED: $it") }
 private val RANDOM = Random(SEED)
@@ -66,14 +69,13 @@ val objectSpec by testSuite {
         Schema(
             type = Type.Basic.Object,
             additionalProperties = PSchema(ReferenceOr.value(schema)),
-        ) expect Model.Object(
-            context = NamingContext.path("test"),
-            description = null,
-            title = null,
-            properties = emptyMap(),
-            inline = emptySet(),
-            additionalProperties = Model.Object.AdditionalProperties.Schema(model),
-            isNullable = false
+        ) expect Model.Collection(
+            inner = model,
+            Model.Default.Value(emptyList()),
+            null,
+            null,
+            false,
+            null
         )
     } + description.product(listOf(true, false, null)) { description, isNullable ->
         Schema(
@@ -110,21 +112,13 @@ val objectSpec by testSuite {
         Model.Primitive.all().map { (schema, model) ->
             val api = api.reference("Top", schema)
             val actualSchema = Schema(type = Type.Basic.Object, additionalProperties = PSchema(schema("Top")))
-            val expectedModel = Model.Object(
-                context = NamingContext.path("Test"),
-                description = null,
-                title = null,
-                properties = emptyMap(),
-                inline = emptySet(),
-                additionalProperties = Model.Object.AdditionalProperties.Schema(
-                    Model.Object.value(
-                        NamingContext.Reference(
-                            "Top",
-                            SchemaContext.Null
-                        ), model
-                    )
-                ),
-                isNullable = false
+            val expectedModel = Model.Collection(
+                Model.Object.value(NamingContext.Reference("Top", SchemaContext.Null), model),
+                Model.Default.Value(emptyList()),
+                null,
+                null,
+                false,
+                null
             )
             ExpectedApi(actualSchema, expectedModel, api, listOf(NamingContext.Reference("Top", SchemaContext.Null)))
         }
@@ -152,7 +146,6 @@ val objectSpec by testSuite {
             properties = props.associate { (name, schema, isRequired) ->
                 name to Model.Object.Property(schema.expected, isRequired)
             },
-            inline = emptySet(),
             additionalProperties = additionalProperties.expected,
             isNullable = isNullable
         )
@@ -254,7 +247,6 @@ val objectSpec by testSuite {
             description = null,
             title = null,
             properties = props.expected,
-            inline = emptySet(),
             additionalProperties = additionalProperties.expected,
             isNullable = isNullable
         )
@@ -303,7 +295,6 @@ val objectSpec by testSuite {
             description = null,
             title = null,
             properties = props.expected,
-            inline = emptySet(),
             additionalProperties = additionalProperties.expected,
             isNullable = isNullable
         )
@@ -336,7 +327,6 @@ val objectSpec by testSuite {
                     description = null,
                     title = null,
                     properties = emptyMap(),
-                    inline = emptySet(),
                     additionalProperties = Model.Object.AdditionalProperties.Allowed(false),
                     isNullable = false
                 ),
@@ -344,4 +334,45 @@ val objectSpec by testSuite {
                 listOf(NamingContext.Reference("EmptyObject", SchemaContext.Null))
             )
         }) { ResolvedSchema.Reference(NamingContext.Reference("EmptyObject", SchemaContext.Null), it) }
+
+    test("Inline AdditionalProperties scheme inherits outer context if schema is empty") {
+        val s = Schema(
+            type = Type.Basic.Object,
+            additionalProperties = PSchema(
+                ReferenceOr.value(
+                    Schema(
+                        type = Type.Basic.Object,
+                        properties = mapOf(
+                            "filename" to ReferenceOr.value(Schema.string),
+                            "type" to ReferenceOr.value(Schema.string),
+                        )
+                    )
+                )
+            )
+        )
+        val expected = Model.Collection(
+            inner = Model.Object(
+                context = NamingContext.reference("test", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = mapOf(
+                    "filename" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
+                    "type" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false)
+                ),
+                inline = emptySet(),
+                additionalProperties = false,
+                isNullable = false
+            ),
+            description = null,
+            title = null,
+            default = Model.Default.Value(emptyList()),
+            constraint = null,
+            isNullable = false
+        )
+        registry(api) {
+            val actual = ReferenceOr.value(s)
+                .toModel(NamingContext.reference("test", SchemaContext.Null), SchemaContext.Null)
+            assertEquals(expected, actual)
+        }
+    }
 }

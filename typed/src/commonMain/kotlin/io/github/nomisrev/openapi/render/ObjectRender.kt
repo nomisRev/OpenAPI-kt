@@ -82,12 +82,6 @@ private fun Model.hasDefault(): Boolean = when (this) {
     is Model.DiscriminatedObject -> false
 }
 
-
-fun String.toParamName(): String = when (this) {
-    $$"$type" -> "type"
-    else -> sanitize().dropArraySyntax().toCamelCase()
-}
-
 context(ctx: Renderer)
 fun Map.Entry<String, Model.Object.Property>.render(
     baseProperties: Set<String>,

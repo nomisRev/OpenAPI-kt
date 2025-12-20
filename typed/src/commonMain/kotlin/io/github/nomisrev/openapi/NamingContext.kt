@@ -3,6 +3,8 @@ package io.github.nomisrev.openapi
 import io.github.nomisrev.openapi.routes.SchemaContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
 import kotlin.jvm.JvmInline
 
 // TODO refactor model so you can recognise NamingContext.Reference (isTopLevel) by type like before

@@ -24,12 +24,8 @@ fun ApiModel.generate(output: String) {
 }
 
 fun main() = runBlocking {
-    val githubJson = readText("youtrack.json")
+    val githubJson = readText("github.json")
     val api = OpenAPI.fromJson(githubJson).toApiModel()
-    val columSettings = api.models.find {
-        it is Model.Object && it.context == NamingContext.reference("ColumnSettings", SchemaContext.Read)
-    }
-    println(columSettings)
     val path = Path(path("/test", "../test"), "/src/commonMain/kotlin")
     api.generate(path.toString())
 }

@@ -4,6 +4,7 @@ import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.FreeFormJson
 import io.github.nomisrev.openapi.Model.Object
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
@@ -88,7 +89,61 @@ context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContext): Model =
     when (val ap = schema.additionalProperties) {
         null -> fallback()
-        is PSchema -> toObject(context, emptyMap())
+        is PSchema -> {
+            when (this) {
+                is ResolvedSchema.Recursive -> Object(
+                    name,
+                    description(),
+                    schema.title,
+                    mapOf(
+                        "values" to Object.Property(
+                            Model.Collection(
+                                inner = ap.value.toModel(name.nest(NamingContext.AdditionalProperties), context),
+                                default = Model.Default.Value(emptyList()),
+                                description = null,
+                                title = null,
+                                constraint = null,
+                                isNullable = false,
+                            ),
+                            false
+                        )
+                    ),
+                    Object.AdditionalProperties.False,
+                    isNullable
+                )
+
+                is ResolvedSchema.Reference -> Object(
+                    name,
+                    description(),
+                    schema.title,
+                    mapOf(
+                        "values" to Object.Property(
+                            Model.Collection(
+                                inner = ap.value.toModel(name.nest(NamingContext.AdditionalProperties), context),
+                                default = Model.Default.Value(emptyList()),
+                                description = null,
+                                title = null,
+                                constraint = null,
+                                isNullable = false,
+                            ),
+                            false
+                        )
+                    ),
+                    Object.AdditionalProperties.False,
+                    isNullable
+                )
+
+                is ResolvedSchema.Value -> Model.Collection(
+                    inner = ap.value.toModel(name, context),
+                    default = Model.Default.Value(emptyList()),
+                    description = description(),
+                    constraint = null,
+                    isNullable = isNullable,
+                    title = schema.title
+                )
+            }
+        }
+
         is Allowed -> when (ap.value) {
             true -> fallback()
             false -> when (this) {

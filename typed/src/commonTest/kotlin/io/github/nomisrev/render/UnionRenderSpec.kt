@@ -66,7 +66,6 @@ val unionRenderSpec by testSuite {
             null,
             null,
             null,
-            emptySet(),
             null,
             false
         ),
@@ -111,7 +110,6 @@ val unionRenderSpec by testSuite {
             null,
             null,
             null,
-            setOf(employeeCase(NamingContext.UnionCase("Case1"))),
             null,
             false
         ),
@@ -143,7 +141,6 @@ val unionRenderSpec by testSuite {
             null,
             null,
             null,
-            setOf(employeeCase(NamingContext.UnionCase("employee"))),
             $$"$type",
             false
         ),
@@ -186,7 +183,6 @@ val unionRenderSpec by testSuite {
             null,
             null,
             null,
-            setOf(aOrB),
             null,
             false
         ),
@@ -227,7 +223,6 @@ val unionRenderSpec by testSuite {
             null,
             null,
             null,
-            emptySet(),
             null,
             false
         ),
@@ -274,7 +269,6 @@ val unionRenderSpec by testSuite {
             null,
             null,
             null,
-            emptySet(),
             null,
             false
         ),

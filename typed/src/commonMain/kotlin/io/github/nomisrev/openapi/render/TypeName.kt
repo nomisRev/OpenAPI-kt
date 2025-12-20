@@ -6,23 +6,19 @@ import io.github.nomisrev.openapi.Model.Object.AdditionalProperties.Schema
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.render.TypeName.Class
 import io.github.nomisrev.openapi.routes.SchemaContext
-import kotlinx.serialization.Required
-import kotlinx.serialization.Serializable
-import kotlin.js.JsName
-import kotlin.jvm.JvmInline
 
 sealed interface TypeName {
     data class Collection(val type: TypeName) : TypeName
     data class Class(val `package`: String, val names: List<String>) : TypeName {
         constructor(`package`: String, name: String) : this(`package`, listOf(name))
 
-        val simpleName: String get() = names.last()
+        val simpleName: String get() = names.last().toPascalCase()
 
         fun nest(name: String) = copy(names = names + name)
     }
 
     fun type(): String = when (this) {
-        is Class -> names.last()
+        is Class -> simpleName
         is Collection -> "List<${type.type()}>"
     }
 

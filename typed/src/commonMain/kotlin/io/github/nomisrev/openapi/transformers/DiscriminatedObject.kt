@@ -194,7 +194,6 @@ private fun ResolvedSchema.Reference.simpleCase(
         null,
         null,
         abstractProperties,
-        emptySet(),
         Model.Object.AdditionalProperties.Allowed(false),
         isNullable
     )

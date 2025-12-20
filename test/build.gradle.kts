@@ -14,6 +14,7 @@ kotlin {
       dependencies {
         api(ktorLibs.client.cio)
         api(libs.json)
+        api(libs.datetime)
       }
     }
   }

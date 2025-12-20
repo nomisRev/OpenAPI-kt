@@ -159,8 +159,8 @@ val renderObjectSpec by testSuite {
                     null,
                     emptyMap(),
                     emptySet(),
-                    true,
-                    false
+                    additionalProperties = true,
+                    isNullable = false
                 ),
                 false
             )
@@ -201,7 +201,6 @@ val renderObjectSpec by testSuite {
             description = null,
             title = null,
             properties = emptyMap(),
-            inline = emptySet(),
             additionalProperties = Model.Object.AdditionalProperties.Allowed(false),
             isNullable = false
         ),

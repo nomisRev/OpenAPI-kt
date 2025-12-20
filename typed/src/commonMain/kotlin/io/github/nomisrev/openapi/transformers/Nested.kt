@@ -2,9 +2,6 @@ package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.contextOrNull
-import kotlinx.serialization.EncodeDefault
-import kotlin.collections.plus
 
 internal tailrec fun Model.nestedOrNull(): Model? = when (this) {
     is Model.Collection -> inner.nestedOrNull()
@@ -16,10 +13,11 @@ internal tailrec fun Model.nestedOrNull(): Model? = when (this) {
     is Model.Uuid,
     is Model.Primitive -> null
 
-    is Model.DiscriminatedObject if context.isTopLevel() -> null
-    is Model.Enum if context.isTopLevel() -> null
-    is Model.Object if context.isTopLevel() -> null
-    is Model.Union if context.isTopLevel() -> null
+    is Model.ContextHolder if context.isTopLevel() -> null
+    is Model.Object if properties.isEmpty()
+            && additionalProperties is Model.Object.AdditionalProperties.Allowed
+            && additionalProperties.value -> null //JsonObject
+
     is Model.DiscriminatedObject,
     is Model.Enum,
     is Model.Object,
