@@ -1,9 +1,13 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.render.import
+import io.github.nomisrev.openapi.render.TypeName
+import io.github.nomisrev.openapi.render.TypeName.Class
+import io.github.nomisrev.openapi.render.joinTo
 import io.github.nomisrev.openapi.render.name
+import io.github.nomisrev.openapi.render.newLine
 import io.github.nomisrev.openapi.render.render
 import io.github.nomisrev.openapi.render.renderer
+import io.github.nomisrev.openapi.render.unaryPlus
 import io.github.nomisrev.openapi.routes.ApiModel
 
 data class KFile(val name: String, val packageName: String, val content: String)
@@ -29,17 +33,35 @@ fun ApiModel.generate(): List<KFile> =
         require(context != null && context.head is NamingContext.Reference) {
             "$context is not a top-level reference. $model"
         }
+
         val result = renderer {
             Pair(context.name(), model.render())
         }
+
+        tailrec fun TypeName.import(): Class = when (this) {
+            is Class -> this
+            is TypeName.Collection -> type.import()
+        }
+
+        tailrec fun TypeName.importString(): String = when (this) {
+            is Class -> "${`package`}.${names.joinToString(separator = ".")}"
+            is TypeName.Collection -> type.importString()
+        }
+
+        val imports = result.second
+            .map { it.import() }
+            .filter { clazz -> clazz.`package` != result.first.first.`package` || clazz.names.size > 1 }
+
         KFile(
             "${result.first.first.simpleName}.kt",
             result.first.first.`package`,
-            """|package ${result.first.first.`package`}
-               |
-               |${result.second.joinToString("\n") { "import ${it.import()}" }}
-               |
-               |${result.first.second}
-            """.trimMargin()
+            buildString {
+                +"package ${result.first.first.`package`}"
+                newLine()
+                imports.joinTo(separator = "\n", postfix = "\n\n") {
+                    "import ${it.importString()}"
+                }
+                +result.first.second
+            }
         )
     }

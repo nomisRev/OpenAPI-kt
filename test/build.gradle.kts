@@ -13,6 +13,7 @@ kotlin {
     commonMain {
       dependencies {
         api(ktorLibs.client.cio)
+        api(libs.json)
       }
     }
   }

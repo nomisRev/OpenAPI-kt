@@ -295,26 +295,13 @@ sealed interface Model {
     @Serializable
     data class DiscriminatedObject(
         override val context: NamingContext,
-        // abstractProperties
-//        val baseObject: Object,
         val abstractProperties: Map<String, Object.Property>,
-        // Contain the NamingContext from their MAPPED Name,
-        // not their original schema name since these are always inlined.
         val subtypes: List<Object>,
         override val description: String?,
         override val title: String?,
         val discriminator: String,
         override val isNullable: Boolean
-    ) : Model, ContextHolder {
-        // TODO: add nested, description & title
-//        @Serializable
-//        @SerialName("Case")
-//        data class Case(
-//            val name: NamingContext,
-//            val properties: List<Object.Property>,
-//            val isNullable: Boolean
-//        )
-    }
+    ) : Model, ContextHolder
 
     @SerialName("Enum")
     @Serializable

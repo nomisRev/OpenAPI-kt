@@ -2,26 +2,45 @@ package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.merge
 import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
-import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
-import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.peek
+import io.github.nomisrev.openapi.registry.schemaName
 import kotlin.collections.component1
 import kotlin.collections.component2
 
-// Horrible but maintains order of properties...
-private fun <A, B> Map<A, B>.reversed(): Map<A, B> =
-    buildMap {
-        this@reversed.entries.reversed().forEach { put(it.key, it.value) }
+context(scope: Registry.Scope)
+suspend fun Schema.discriminatedSubtypeOrNull(context: SchemaContext, name: String): NamingContext? {
+    if (allOf.orEmpty().isEmpty()) return null
+
+    val references = allOf!!.mapNotNull { refOrSchema ->
+        when (refOrSchema) {
+            is ReferenceOr.Reference -> refOrSchema
+            is ReferenceOr.Value<Schema> -> null
+        }
     }
+
+    val singleReference = references.singleOrNull() ?: return null
+    val singlePeeked = singleReference.peek()
+    return when (singleReference) {
+        else if singlePeeked.allOf.orEmpty().size in 1..2 -> singlePeeked.discriminatedSubtypeOrNull(context, name)
+        else if singlePeeked.discriminator?.mapping.orEmpty().containsValue("#/components/schemas/$name") ->
+            NamingContext(
+                NamingContext.Reference(singleReference.ref.schemaName(), context),
+                listOf(NamingContext.DiscriminatedObjectCase(name))
+            )
+
+        else -> null
+    }
+}
 
 context(scope: Registry.Scope)
 suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.DiscriminatedObject {
@@ -32,7 +51,7 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
     val mappings = mapping.filterValues { it != "#/components/schemas/${reference.name}" }
 
     val abstractProperties = properties(schema.properties!!, context)
-        .filter { it.value.model !is Model.FreeFormJson }
+        .filter { (name, prop) -> prop.model !is Model.FreeFormJson && name != discriminator.propertyName }
 
     val subtypes = mappings.map { (mappedName, ref) ->
         val name = name.nest(NamingContext.DiscriminatedObjectCase(mappedName))
@@ -58,7 +77,9 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
                 properties = properties,
                 required = superRequired + peeked.required
             )
-        ).toObject(context, properties)
+        )   // TODO: To remove 'resolveReference' make this toObject to work with resolveReference = false
+            //  It's the only place where indirect recursion due to subtype relationship is broken and results in OOM
+            .toObject(context, properties)
     }
 
     return Model.DiscriminatedObject(
@@ -70,23 +91,6 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
         discriminator.propertyName,
         isNullable
     )
-}
-
-inline fun <Key, Value> Map<Key, Value>.merge(
-    other: Map<Key, Value>,
-    merge: (key: Key, Value, Value) -> Value
-): Map<Key, Value> = buildMap {
-    this@merge.forEach { (key, value) ->
-        if (other.contains(key)) {
-            val otherValue = other[key]!!
-            if (value != otherValue) {
-                put(key, merge(key, value, otherValue))
-            } else put(key, otherValue)
-        } else {
-            put(key, value)
-        }
-    }
-    putAll(other - this@merge.keys)
 }
 
 fun Schema.isEmpty(): Boolean =
@@ -227,7 +231,6 @@ fun Schema.mergeCommon(other: Schema): Schema = copy(
 
 fun Schema.numberConstraints(other: Schema): Schema =
     copy(
-//        format = format ?: other.format,
         minimum = let(minimum, other.minimum, ::maxOf),
         maximum = let(maximum, other.maximum, ::minOf),
         exclusiveMinimum = exclusiveMinimum ?: false || other.exclusiveMinimum ?: false,

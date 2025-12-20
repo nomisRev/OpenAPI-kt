@@ -47,13 +47,22 @@ class ApiModel(
         }
 }
 
+private tailrec suspend fun Set<NamingContext.Reference>.topLevelModels(registry: Registry): List<Model> {
+    val models = with(registry) { map { it.toModel() } }
+    val newNames: Set<NamingContext.Reference> = models.flatMapTo(mutableSetOf()) { it.topLevelNames() }
+    return if (newNames == this@topLevelModels) models else newNames.topLevelModels(registry)
+}
+
 suspend fun OpenAPI.toApiModel(): ApiModel {
     val registry = Registry(this)
     val routes = with(registry) { endpoints().map { it.toRoute() } }
-    val names: List<NamingContext.Reference> = routes.flatMap {
-        it.parameters.topLevelNames() + it.returns.topLevelNames() + it.body.topLevelNames()
+
+    val models = with(registry) {
+        routes.flatMapTo(mutableSetOf()) {
+            it.parameters.topLevelNames() + it.returns.topLevelNames() + it.body.topLevelNames()
+        }.topLevelModels(registry)
     }
-    val models = with(registry) { names.map { it.toModel() } }
+
     return ApiModel(routes, models)
 }
 

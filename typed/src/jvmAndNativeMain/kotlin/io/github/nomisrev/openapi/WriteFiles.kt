@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi
 import io.github.nomisrev.openapi.NamingContext.Companion.path
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.routes.ApiModel
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.routes.toApiModel
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.buffered
@@ -25,7 +26,11 @@ fun ApiModel.generate(output: String) {
 fun main() = runBlocking {
     val githubJson = readText("youtrack.json")
     val api = OpenAPI.fromJson(githubJson).toApiModel()
-    val path = Path(path("/test", "../test"), "/src/commonMain")
+    val columSettings = api.models.find {
+        it is Model.Object && it.context == NamingContext.reference("ColumnSettings", SchemaContext.Read)
+    }
+    println(columSettings)
+    val path = Path(path("/test", "../test"), "/src/commonMain/kotlin")
     api.generate(path.toString())
 }
 

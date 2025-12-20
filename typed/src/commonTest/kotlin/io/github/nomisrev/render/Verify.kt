@@ -50,6 +50,15 @@ fun TestSuite.verify(
     }
 }
 
+@TestRegistering
+fun TestSuite.verify(
+    expected: String,
+    model: Model,
+    vararg imports: TypeName
+) {
+    verify(expected, model, imports.toSet())
+}
+
 
 @TestRegistering
 fun TestSuite.verify(

@@ -26,54 +26,54 @@ internal tailrec fun Model.nestedOrNull(): Model? = when (this) {
     is Model.Union -> this
 }
 
-fun Model.topLevelNames(): Set<NamingContext.Reference> = buildSet {
-    // Do not add NamingContext.Reference when nested is DiscriminatedObjectCase
-    fun NamingContext.addIfReference() {
-        when {
-            head is NamingContext.Reference -> add(head)
-            else -> {}
-        }
+fun NamingContext.isTopLevel(): Boolean = head is NamingContext.Reference && nested.isEmpty()
+
+internal fun Model.topLevelNames(): Set<NamingContext.Reference> =
+    buildSet { addNames() }
+
+context(builder: MutableSet<NamingContext.Reference>)
+private fun NamingContext.addIfReference() {
+    when {
+        head is NamingContext.Reference -> builder.add(head)
+        else -> {}
     }
-
-    fun Model.topLevelNames() {
-        when (this) {
-            is Model.ContextHolder -> when (this) {
-                is Model.DiscriminatedObject -> {
-                    context.addIfReference()
-                    abstractProperties.forEach { (_, prop) -> prop.model.topLevelNames() }
-                    subtypes.forEach {
-                        it.properties.forEach { (_, prop) -> prop.model.topLevelNames() }
-                        (it.additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.topLevelNames()
-                    }
-                }
-
-                is Model.Union -> {
-                    context.addIfReference()
-                    cases.forEach { it.model.topLevelNames() }
-                }
-
-                is Model.Enum -> context.addIfReference()
-                is Model.Object -> {
-                    context.addIfReference()
-                    properties.forEach { (_, prop) -> prop.model.topLevelNames() }
-                    (additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.topLevelNames()
-                }
-
-                is Model.Reference -> context.addIfReference()
-            }
-
-            is Model.Collection -> inner.topLevelNames()
-            is Model.ByteArray,
-            is Model.Date,
-            is Model.DateTime,
-            is Model.FreeFormJson,
-            is Model.Uuid,
-            is Model.Primitive -> {
-            }
-        }
-    }
-
-    topLevelNames()
 }
 
-fun NamingContext.isTopLevel(): Boolean = head is NamingContext.Reference && nested.isEmpty()
+context(builder: MutableSet<NamingContext.Reference>)
+private fun Model.addNames() {
+    when (this) {
+        is Model.ContextHolder -> when (this) {
+            is Model.DiscriminatedObject -> {
+                context.addIfReference()
+                abstractProperties.forEach { (_, prop) -> prop.model.addNames() }
+                subtypes.forEach { subtype ->
+                    subtype.properties.forEach { (_, prop) -> prop.model.addNames() }
+                    (subtype.additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.addNames()
+                }
+            }
+
+            is Model.Union -> {
+                context.addIfReference()
+                cases.forEach { it.model.addNames() }
+            }
+
+            is Model.Enum -> context.addIfReference()
+            is Model.Object -> {
+                context.addIfReference()
+                properties.forEach { (_, prop) -> prop.model.addNames() }
+                (additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.addNames()
+            }
+
+            is Model.Reference -> context.addIfReference()
+        }
+
+        is Model.Collection -> inner.addNames()
+        is Model.ByteArray,
+        is Model.Date,
+        is Model.DateTime,
+        is Model.FreeFormJson,
+        is Model.Uuid,
+        is Model.Primitive -> {
+        }
+    }
+}

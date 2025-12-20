@@ -4,23 +4,18 @@ kotlin = "2.3.0"
 kover = "0.9.1"
 knit = "0.5.0"
 publish="0.34.0"
-json="1.9.0"
 okio="3.16.0"
 kotlinpoet="2.2.0"
 agp = "8.13.0"
 test-compile = "0.8.0"
 testballoon="0.7.1-K2.3.0"
+serialization="1.10.0-RC"
 
 [libraries]
 gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "json" }
-okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
-okio-fakefilesystem = { module = "com.squareup.okio:okio-fakefilesystem", version.ref = "okio" }
-kotlinpoet = { module = "com.squareup:kotlinpoet", version.ref="kotlinpoet" }
-android-plugin = { module = "com.android.tools.build:gradle", version.ref = "agp" }
-test-compile = { module = "dev.zacsweers.kctfork:core", version.ref = "test-compile"}
+json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.94.0" }
 testballoon = { group="de.infix.testBalloon", name="testBalloon-framework-core", version.ref="testballoon"  }
 

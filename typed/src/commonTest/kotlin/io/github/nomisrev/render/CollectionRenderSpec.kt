@@ -3,6 +3,7 @@ package io.github.nomisrev.render
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.render.TypeName
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 val collectionRenderSpec by testSuite {
@@ -12,8 +13,8 @@ val collectionRenderSpec by testSuite {
         null,
         null,
         mapOf(
-            "id" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
-            "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false)
+            "id" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
+            "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)
         ),
         emptySet(),
         false,
@@ -49,6 +50,8 @@ val collectionRenderSpec by testSuite {
             |    data class Item(val id: String, val name: String)
             |}
         """.trimMargin(),
-        collection
+        collection,
+        TypeName.Serializable,
+        TypeName.JvmInline
     )
 }

@@ -3,6 +3,7 @@ package io.github.nomisrev.render
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.render.TypeName
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 val discriminatedObjectRenderSpec by testSuite {
@@ -47,21 +48,21 @@ val discriminatedObjectRenderSpec by testSuite {
     verify( // TODO discriminator for not properly lifted to Model
         """|@JsonClassDiscriminator("type")
            |@Serializable
-           |sealed class User {
-           |    abstract val id: Long
+           |sealed interface User {
+           |    val id: Long
            |
            |    @SerialName("AnonymousUser")
            |    @Serializable
            |    @JvmInline
-           |    value class AnonymousUser(val id: Long) : User
+           |    value class AnonymousUser(override val id: Long) : User
            |
            |    @SerialName("RegisteredUser")
            |    @Serializable
-           |    data class RegisteredUser(val id: Long, val email: String) : User
+           |    data class RegisteredUser(override val id: Long, val email: String) : User
            |
            |    @SerialName("ProUser")
            |    @Serializable
-           |    data class ProUser(val id: Long, val email: String, val subscriptionId: Long) : User
+           |    data class ProUser(override val id: Long, val email: String, val subscriptionId: Long) : User
            |}
         """.trimMargin(),
         Model.DiscriminatedObject(
@@ -72,6 +73,10 @@ val discriminatedObjectRenderSpec by testSuite {
             null,
             discriminator = "type",
             false
-        )
+        ),
+        TypeName.JsonClassDiscriminator,
+        TypeName.Serializable,
+        TypeName.SerialName,
+        TypeName.JvmInline,
     )
 }

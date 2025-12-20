@@ -70,11 +70,11 @@ val unionRenderSpec by testSuite {
             null,
             false
         ),
-        setOf(
-            TypeName.Uuid,
-            TypeName.Date,
-            TypeName.DateTime,
-        )
+        TypeName.Serializable,
+        TypeName.JvmInline,
+        TypeName.Uuid,
+        TypeName.Date,
+        TypeName.DateTime,
     )
 
     fun employeeCase(ctx: NamingContext.Nested) = Model.Object(
@@ -82,8 +82,8 @@ val unionRenderSpec by testSuite {
         description = null,
         title = null,
         properties = mapOf(
-            "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, false, null), false),
-            "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
+            "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, false, null), true),
+            "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
         ),
         inline = emptySet(),
         additionalProperties = false,
@@ -114,7 +114,9 @@ val unionRenderSpec by testSuite {
             setOf(employeeCase(NamingContext.UnionCase("Case1"))),
             null,
             false
-        )
+        ),
+        TypeName.Serializable,
+        TypeName.JvmInline,
     )
 
     verify(
@@ -144,7 +146,11 @@ val unionRenderSpec by testSuite {
             setOf(employeeCase(NamingContext.UnionCase("employee"))),
             $$"$type",
             false
-        )
+        ),
+        TypeName.JsonClassDiscriminator,
+        TypeName.Serializable,
+        TypeName.JvmInline,
+        TypeName.SerialName
     )
 
     val aOrB = Model.Enum(
@@ -183,7 +189,10 @@ val unionRenderSpec by testSuite {
             setOf(aOrB),
             null,
             false
-        )
+        ),
+        TypeName.Serializable,
+        TypeName.JvmInline,
+        TypeName.SerialName
     )
 
     verify(
@@ -221,7 +230,9 @@ val unionRenderSpec by testSuite {
             emptySet(),
             null,
             false
-        )
+        ),
+        TypeName.Serializable,
+        TypeName.JvmInline
     )
 
     verify(
@@ -266,7 +277,9 @@ val unionRenderSpec by testSuite {
             emptySet(),
             null,
             false
-        )
+        ),
+        TypeName.Serializable,
+        TypeName.JvmInline
     )
 
     verify(

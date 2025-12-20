@@ -20,7 +20,8 @@ val renderObjectSpec by testSuite {
             emptySet(),
             false,
             false
-        )
+        ),
+        TypeName.Serializable,
     )
 
     verify(
@@ -30,7 +31,9 @@ val renderObjectSpec by testSuite {
         Model.Object.value(
             NamingContext.Reference("Foo", SchemaContext.Null),
             Model.Primitive.String(null, null, null, false, null)
-        )
+        ),
+        TypeName.Serializable,
+        TypeName.JvmInline,
     )
 
     verify(
@@ -40,7 +43,9 @@ val renderObjectSpec by testSuite {
         Model.Object.value(
             NamingContext.Reference("Foo", SchemaContext.Null),
             Model.Primitive.String(null, null, null, true, null)
-        )
+        ),
+        TypeName.Serializable,
+        TypeName.JvmInline,
     )
 
     val singleline = Model.Object(
@@ -60,9 +65,10 @@ val renderObjectSpec by testSuite {
 
     verify(
         """|@Serializable
-           |data class Foo(val name: String, val email: Long? = null, val age: Int, val longername: Double?)
+           |data class Foo(val name: String? = null, val email: Long? = null, val age: Int, val longername: Double?)
            """.trimMargin(),
-        singleline
+        singleline,
+        TypeName.Serializable,
     )
 
     val multiline = Model.Object(
@@ -86,16 +92,19 @@ val renderObjectSpec by testSuite {
     verify(
         """|@Serializable
            |data class Foo(
-           |    val name: String,
+           |    val name: String? = null,
            |    val email: Long? = null,
            |    val age: Int,
            |    val longername: Double?,
-           |    val longername2: Float,
-           |    @SerialName("longer_name_3") val longerName3: Uuid,
-           |    val longername4: LocalDateTime
+           |    val longername2: Float? = null,
+           |    @SerialName("longer_name_3") val longerName3: Uuid? = null,
+           |    val longername4: LocalDateTime? = null
            |)""".trimMargin(),
         multiline,
-        setOf(TypeName.Uuid, TypeName.DateTime)
+        TypeName.Serializable,
+        TypeName.SerialName,
+        TypeName.Uuid,
+        TypeName.DateTime,
     )
 
     val enum = Model.Enum(
@@ -123,7 +132,9 @@ val renderObjectSpec by testSuite {
            |        ASC, DESC;
            |    }
            |}""".trimMargin(),
-        nestedEnum
+        nestedEnum,
+        TypeName.Serializable,
+        TypeName.JvmInline,
     )
 
     val primitiveImports = Model.Object(
@@ -163,23 +174,22 @@ val renderObjectSpec by testSuite {
         """
            |@Serializable
            |data class Foo(
-           |    val date: LocalDate,
-           |    val dateTime: LocalDateTime,
-           |    val uuid: Uuid,
-           |    val json: JsonElement,
-           |    val jsonArray: JsonArray,
-           |    val jsonObject: JsonObject
+           |    val date: LocalDate? = null,
+           |    val dateTime: LocalDateTime? = null,
+           |    val uuid: Uuid? = null,
+           |    val json: JsonElement? = null,
+           |    val jsonArray: JsonArray? = null,
+           |    val jsonObject: JsonObject? = null
            |)
            """.trimMargin(),
         primitiveImports,
-        setOf(
-            TypeName.Uuid,
-            TypeName.Date,
-            TypeName.DateTime,
-            TypeName.JsonArray,
-            TypeName.JsonElement,
-            TypeName.JsonObject,
-        )
+        TypeName.Serializable,
+        TypeName.Uuid,
+        TypeName.Date,
+        TypeName.DateTime,
+        TypeName.JsonArray,
+        TypeName.JsonElement,
+        TypeName.JsonObject,
     )
 
     verify(
@@ -194,6 +204,7 @@ val renderObjectSpec by testSuite {
             inline = emptySet(),
             additionalProperties = Model.Object.AdditionalProperties.Allowed(false),
             isNullable = false
-        )
+        ),
+        TypeName.Serializable,
     )
 }

@@ -11,6 +11,7 @@ fun Model.render(): String = when (this) {
     is Model.Union -> render()
     is Model.DiscriminatedObject -> render()
 
+    // TODO: Move to transformers
     is Model.Collection if inner is Model.ContextHolder && inner.context.isTopLevel() ->
         Model.Object.value(
             inner.context.head as NamingContext.Reference,

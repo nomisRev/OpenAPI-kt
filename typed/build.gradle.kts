@@ -10,11 +10,11 @@ plugins {
 }
 
 kotlin {
-    val debug = if (System.getProperty("idea.active") == "true") "-Xdebug" else null
     compilerOptions.freeCompilerArgs.addAll(listOfNotNull(
         "-Xcontext-sensitive-resolution",
         "-Xcontext-parameters",
         "-Xreturn-value-checker=full",
+        "-Xdebug".takeIf { System.getProperty("idea.active") == "true" } ?: null
     ))
 
     jvm()
@@ -25,9 +25,13 @@ kotlin {
 
     sourceSets {
         // jvmAndNative is the target we use for generation (we'll include js/wasm node later).
-        val jvmAndNative by creating { dependsOn(commonMain.get()) }
-        macosArm64Main.get().dependsOn(jvmAndNative)
-        jvmMain.get().dependsOn(jvmAndNative)
+        val jvmAndNativeMain by creating { dependsOn(commonMain.get()) }
+        macosArm64Main.get().dependsOn(jvmAndNativeMain)
+        jvmMain.get().dependsOn(jvmAndNativeMain)
+
+        val jvmAndNativeTest by creating { dependsOn(commonTest.get()) }
+        macosArm64Test.get().dependsOn(jvmAndNativeTest)
+        jvmTest.get().dependsOn(jvmAndNativeTest)
 
         commonMain {
             dependencies {

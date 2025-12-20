@@ -3,6 +3,7 @@ package io.github.nomisrev.render
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.render.TypeName
 import io.github.nomisrev.openapi.routes.SchemaContext
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -30,7 +31,8 @@ val enumRenderSpec by testSuite {
             null,
             null,
             false
-        )
+        ),
+        TypeName.Serializable
     )
 
     verify(
@@ -55,7 +57,9 @@ val enumRenderSpec by testSuite {
             null,
             null,
             false
-        )
+        ),
+        TypeName.Serializable,
+        TypeName.SerialName
     )
 
     test("asc") {

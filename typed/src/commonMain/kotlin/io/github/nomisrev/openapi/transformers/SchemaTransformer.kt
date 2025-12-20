@@ -18,12 +18,24 @@ import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.routes.SchemaContext
 
+// TODO: resolveReference is always false for nested calls, and true for top-level.. Split the diff and remove bool?
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boolean): Model = when {
     this is ResolvedSchema.Reference && !resolveReference ->
-        Model.Reference(schema.discriminatedSubtypeOrNull(context, reference.name) ?: name, description(), isNullable, schema.title)
+        Model.Reference(
+            schema.discriminatedSubtypeOrNull(context, reference.name) ?: name,
+            description(),
+            isNullable,
+            schema.title
+        )
+
     this is ResolvedSchema.Reference && schema.discriminatedSubtypeOrNull(context, reference.name) != null ->
-        Model.Reference(schema.discriminatedSubtypeOrNull(context, reference.name)!!, description(), isNullable, schema.title)
+        Model.Reference(
+            schema.discriminatedSubtypeOrNull(context, reference.name)!!,
+            description(),
+            isNullable,
+            schema.title
+        )
 
     this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
     this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> toDiscriminatedObject(context)

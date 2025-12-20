@@ -1,13 +1,15 @@
 package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Model
-import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.transformers.isTopLevel
 
 context(ctx: Renderer)
 fun Model.Union.render(): String = buildString {
-    if (discriminator != null) +"@JsonClassDiscriminator(${discriminator.stringValue()})"
-    +"@Serializable"
+    if (discriminator != null) {
+        ctx.import(TypeName.JsonClassDiscriminator)
+        +"@JsonClassDiscriminator(${discriminator.stringValue()})"
+    }
+    serializable()
     +"sealed interface ${name().simpleName} {"
     +body().prependIndent(ctx.indent)
     append("}")
@@ -19,17 +21,20 @@ private fun Model.Union.Case.valueClass(): String {
     val className = discriminator?.toPascalCase() ?: "Case${typeName.name()}"
     import(model)
 
-    return """
-    |@Serializable
-    |@JvmInline
-    |value class $className(val value: ${typeName.type()}) : ${union.name().simpleName}
-    """.trimMargin()
+    return buildString {
+        serializable()
+        if (ctx.jvm) jvmInline()
+        append("value class $className(val value: ${typeName.type()}) : ${union.name().simpleName}")
+    }
 }
 
 context(ctx: Renderer)
 private fun Model.Union.body(): String =
     cases.joinToString("\n\n") { case ->
-        val serialName = if (case.discriminator != null) "@SerialName(\"${case.discriminator}\")\n" else ""
+        val serialName = if (case.discriminator != null) {
+            ctx.import(TypeName.SerialName)
+            "@SerialName(\"${case.discriminator}\")\n"
+        } else ""
         val renderedCase: String = case.render()
         "$serialName$renderedCase"
     }
@@ -42,6 +47,7 @@ private fun Model.Union.Case.render(): String {
                    |@Serializable
                    |data object Empty : ${union.name().simpleName}
                 """.trimMargin()
+
         is Model.Reference -> valueClass()
         is Model.Primitive,
         is Model.DateTime,

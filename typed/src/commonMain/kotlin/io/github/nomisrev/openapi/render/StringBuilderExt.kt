@@ -6,12 +6,17 @@ operator fun String?.unaryPlus() {
 }
 
 context(builder: StringBuilder)
+fun newLine() {
+    builder.appendLine()
+}
+
+context(builder: StringBuilder)
 fun append(line: String?) {
     if (line != null) builder.append(line)
 }
 
 context(appendable: AA)
-fun <A, AA: Appendable> Iterable<A>.joinTo(
+fun <A, AA : Appendable> Collection<A>.joinTo(
     separator: CharSequence = ", ",
     prefix: CharSequence = "",
     postfix: CharSequence = "",
@@ -19,6 +24,7 @@ fun <A, AA: Appendable> Iterable<A>.joinTo(
     truncated: CharSequence = "...",
     transform: ((A) -> CharSequence)? = null
 ) {
+    if (isEmpty()) return
     joinTo(appendable, separator, prefix, postfix, limit, truncated, transform)
 }
 
@@ -51,7 +57,7 @@ fun String.stringValue(): String {
         else {
             max = count
         }
-    val dollars = if(count > 0) "$".repeat(count + 1) else ""
+    val dollars = if (count > 0) "$".repeat(count + 1) else ""
     return "$dollars\"$this\""
 }
 

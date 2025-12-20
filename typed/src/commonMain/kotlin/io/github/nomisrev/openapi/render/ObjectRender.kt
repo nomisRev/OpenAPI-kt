@@ -2,36 +2,61 @@ package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
-import kotlinx.serialization.Serializable
+
+context(ctx: Renderer, builder: StringBuilder)
+fun serializable() {
+    ctx.import(TypeName.Serializable)
+    +"@Serializable"
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+fun jvmInline() {
+    ctx.import(TypeName.JvmInline)
+    +"@JvmInline"
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+fun jsName() {
+    ctx.import(TypeName.JvmInline)
+    +"@JvmInline"
+}
 
 context(ctx: Renderer)
-fun Model.Object.render(parentClass: TypeName.Class? = null): String = buildString {
+fun Model.Object.render(
+    parentClass: TypeName.Class? = null,
+    baseProperties: Set<String> = emptySet()
+): String = buildString {
     import(properties.map { (_, prop) -> prop.model })
 
-    +"@Serializable"
+    serializable()
     when (properties.size) {
         0 -> append("data object ${name().simpleName}${parentClass.renderAsSuperclass()}")
-        1 -> valueClass(parentClass)
-        else -> dataClass(parentClass)
+        1 -> valueClass(parentClass, baseProperties)
+        else -> dataClass(parentClass, baseProperties)
     }
     body()
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun Model.Object.valueClass(parentClass: TypeName.Class?) {
-    if (ctx.jvm) +"@JvmInline"
-    append("value class ${name().simpleName}(${properties.entries.single().render()})${parentClass.renderAsSuperclass()}")
+private fun Model.Object.valueClass(parentClass: TypeName.Class?, baseProperties: Set<String>) {
+    if (ctx.jvm) jvmInline()
+    append(
+        "value class ${name().simpleName}(${
+            properties.entries.single().render(baseProperties)
+        })${parentClass.renderAsSuperclass()}"
+    )
 }
 
 
 context(ctx: Renderer, builder: StringBuilder)
-fun Model.Object.dataClass(parentClass: TypeName.Class?) {
+fun Model.Object.dataClass(parentClass: TypeName.Class?, baseProperties: Set<String>) {
     val simpleName = name().simpleName
-    val line = "data class $simpleName(${properties.joinToString { it.render() }})${parentClass.renderAsSuperclass()}"
+    val line =
+        "data class $simpleName(${properties.joinToString { it.render(baseProperties) }})${parentClass.renderAsSuperclass()}"
     if (line.length <= ctx.maxLineLength) append(line)
     else {
         +"data class $simpleName("
-        properties.joinTo(separator = ",\n", postfix = "\n") { "${ctx.indent}${it.render()}" }
+        properties.joinTo(separator = ",\n", postfix = "\n") { "${ctx.indent}${it.render(baseProperties)}" }
         append(")${parentClass.renderAsSuperclass()}")
     }
 }
@@ -57,14 +82,49 @@ private fun Model.hasDefault(): Boolean = when (this) {
     is Model.DiscriminatedObject -> false
 }
 
+
+fun String.toParamName(): String = when (this) {
+    $$"$type" -> "type"
+    else -> sanitize().dropArraySyntax().toCamelCase()
+}
+
 context(ctx: Renderer)
-fun Map.Entry<String, Model.Object.Property>.render(): String = buildString {
-    val paramName = key.sanitize().dropArraySyntax().toCamelCase()
-    if (paramName != key) append("@SerialName(\"$key\") ")
-    if (value.isRequired && value.model.hasDefault()) append("@Required ")
-    append("val $paramName: ${value.model.toTypeName().type()}")
-    if (value.model.isNullable) append("?")
-    if (value.model.isNullable && !value.isRequired) append(" = null") // TODO default values
+fun Map.Entry<String, Model.Object.Property>.render(
+    baseProperties: Set<String>,
+    defaultValue: Boolean = true
+): String = render(key, value, baseProperties, defaultValue)
+
+context(ctx: Renderer)
+fun render(
+    baseName: String,
+    prop: Model.Object.Property,
+    baseProperties: Set<String>,
+    defaultValue: Boolean = true
+): String = buildString {
+    val paramName = baseName.toParamName()
+
+    if (paramName != baseName) {
+        ctx.import(TypeName.SerialName)
+        append("@SerialName(${baseName.stringValue()}) ")
+    }
+
+    val hasDefault = prop.model.hasDefault()
+    if (prop.isRequired && hasDefault) {
+        ctx.import(TypeName.Required)
+        append("@Required ")
+    }
+
+    if (baseName in baseProperties) append("override ")
+
+    append("val $paramName: ${prop.model.toTypeName().type()}")
+
+    if (prop.model.isNullable || !prop.isRequired) append("?")
+
+    when {
+        !defaultValue -> {}
+        prop.model.isNullable && prop.isRequired && !hasDefault -> {}
+        prop.model.isNullable || !prop.isRequired -> append(" = null")
+    }
 }
 
 context(ctx: Renderer, builder: StringBuilder)

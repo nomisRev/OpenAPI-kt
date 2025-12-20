@@ -6,6 +6,10 @@ import io.github.nomisrev.openapi.Model.Object.AdditionalProperties.Schema
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.render.TypeName.Class
 import io.github.nomisrev.openapi.routes.SchemaContext
+import kotlinx.serialization.Required
+import kotlinx.serialization.Serializable
+import kotlin.js.JsName
+import kotlin.jvm.JvmInline
 
 sealed interface TypeName {
     data class Collection(val type: TypeName) : TypeName
@@ -38,12 +42,15 @@ sealed interface TypeName {
         val Date = Class("kotlinx.datetime", "LocalDate")
         val DateTime = Class("kotlinx.datetime", "LocalDateTime")
         val Uuid = Class("kotlin.uuid", "Uuid")
-    }
-}
 
-tailrec fun TypeName.import(): String = when (this) {
-    is Class -> "${`package`}.${names.joinToString(separator = ".")}"
-    is TypeName.Collection -> type.import()
+        val JvmInline = Class("kotlin.jvm", "JvmInline")
+        val JsName = Class("kotlin.js", "JsName")
+
+        val Serializable = Class("kotlinx.serialization", "Serializable")
+        val SerialName = Class("kotlinx.serialization", "SerialName")
+        val Required = Class("kotlinx.serialization", "Required")
+        val JsonClassDiscriminator = Class("kotlinx.serialization.json", "JsonClassDiscriminator")
+    }
 }
 
 context(ctx: Renderer)

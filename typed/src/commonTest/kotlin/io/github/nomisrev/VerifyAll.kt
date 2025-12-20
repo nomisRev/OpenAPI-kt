@@ -125,7 +125,7 @@ fun TestSuite.verifyAll(
                     when (resolved) {
                         is ResolvedSchema.Reference -> ReferenceOr.schema(resolved.reference.name)
                         is ResolvedSchema.Value -> ReferenceOr.value(resolved.schema)
-                        is ResolvedSchema.Recursive -> ReferenceOr.schema((resolved.name as NamingContext.Reference).name)
+                        is ResolvedSchema.Recursive -> ReferenceOr.schema((resolved.name.head as NamingContext.Reference).name)
                     }.toModel(resolved.name, context)
                 }
             } catch (e: Throwable) {
@@ -195,7 +195,7 @@ fun TestSuite.verifyAll(
                     when (resolved) {
                         is ResolvedSchema.Reference -> ReferenceOr.schema("#/components/schema/${resolved.reference.name}")
                         is ResolvedSchema.Value -> ReferenceOr.value(resolved.schema)
-                        is ResolvedSchema.Recursive -> ReferenceOr.schema("#/components/schema/${(resolved.name as NamingContext.Reference).name}")
+                        is ResolvedSchema.Recursive -> ReferenceOr.schema("#/components/schema/${(resolved.name.head as NamingContext.Reference).name}")
                     }.toModel(resolved.name, context)
                 }
             } catch (e: Throwable) {
