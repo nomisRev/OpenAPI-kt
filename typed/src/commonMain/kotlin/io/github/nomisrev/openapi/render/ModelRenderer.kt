@@ -16,7 +16,6 @@ fun Model.render(): String = when (this) {
         Model.Object.value(
             inner.context.head as NamingContext.Reference,
             this@render,
-            emptySet(),
             description
         ).render()
 

@@ -16,7 +16,6 @@ val collectionRenderSpec by testSuite {
             "id" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
             "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)
         ),
-        emptySet(),
         false,
         false
     )
@@ -37,7 +36,6 @@ val collectionRenderSpec by testSuite {
                 true
             )
         ),
-        setOf(item),
         false,
         false
     )

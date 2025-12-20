@@ -67,7 +67,10 @@ sealed interface Constraints {
      * This can be useful when using additionalProperties, or free-form objects.
      */
     @Serializable
-    data class Object(val minProperties: Int?, val maxProperties: Int?) : Constraints {
+    data class Object(
+        val minProperties: Int?,
+        val maxProperties: Int?
+    ) : Constraints {
         companion object {
             operator fun invoke(schema: Schema): Object? =
                 if (schema.minProperties != null || schema.maxProperties != null)

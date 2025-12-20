@@ -40,19 +40,6 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
 
     this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
     this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> toDiscriminatedObject(context)
-    schema.enum != null -> toClosedEnum(context, schema.enum!!)
-
-    isAllOfNullableType() -> flattenNull(context, schema.allOf!!)
-    schema.allOf != null -> allOf(context, schema.allOf!!)
-
-    isOneOfNullableType() -> flattenNull(context, schema.oneOf!!)
-    schema.oneOf?.size == 1 -> schema.oneOf!!.single().toModel(name, context)
-    schema.oneOf?.isNotEmpty() == true -> union(context, schema.oneOf!!)
-
-    isAnyOfNullableType() -> flattenNull(context, schema.anyOf!!)
-    schema.anyOf?.size == 1 -> schema.anyOf!!.single().toModel(name, context)
-    schema.anyOf?.isNotEmpty() == true -> union(context, schema.anyOf!!)
-
     schema.type != null -> when (val type = schema.type!!) {
         is Schema.Type.Array -> { // Flatten Null
             val resolved = if (type.types.contains(Schema.Type.Basic.Null) && schema.nullable != true) {
@@ -69,6 +56,10 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
         Schema.Type.Basic.Object if schema.properties?.isNotEmpty() == true -> toObject(context, schema.properties!!)
         Schema.Type.Basic.Object -> objectWithoutProperties(context)
         Schema.Type.Basic.Array -> collection(context)
+        Schema.Type.Basic.String if schema.enum != null -> toClosedEnum(context, schema.enum!!)
+        Schema.Type.Basic.Number if schema.enum != null -> toClosedEnum(context, schema.enum!!)
+        Schema.Type.Basic.Boolean if schema.enum != null -> toClosedEnum(context, schema.enum!!)
+        Schema.Type.Basic.Integer if schema.enum != null -> toClosedEnum(context, schema.enum!!)
         Schema.Type.Basic.Number,
         Schema.Type.Basic.Boolean,
         Schema.Type.Basic.Integer,
@@ -78,6 +69,18 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
             throw IllegalStateException("Null  should always be resolved to result in nullable types. Please report this bug. $schema")
     }
 
+    schema.enum != null -> toClosedEnum(context, schema.enum!!)
+
+    isAllOfNullableType() -> flattenNull(context, schema.allOf!!)
+    schema.allOf != null -> allOf(context, schema.allOf!!)
+
+    isOneOfNullableType() -> flattenNull(context, schema.oneOf!!)
+    schema.oneOf?.size == 1 -> schema.oneOf!!.single().toModel(name, context)
+    schema.oneOf?.isNotEmpty() == true -> union(context, schema.oneOf!!)
+
+    isAnyOfNullableType() -> flattenNull(context, schema.anyOf!!)
+    schema.anyOf?.size == 1 -> schema.anyOf!!.single().toModel(name, context)
+    schema.anyOf?.isNotEmpty() == true -> union(context, schema.anyOf!!)
 
     schema.properties?.isNotEmpty() == true -> toObject(context, schema.properties!!)
     schema.additionalProperties != null -> objectWithoutProperties(context)
@@ -148,10 +151,10 @@ private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContex
             true -> fallback()
             false -> when (this) {
                 is ResolvedSchema.Recursive if name.isTopLevel() ->
-                    Object(name, description(), schema.title, emptyMap(), emptySet(), false, isNullable)
+                    Object(name, description(), schema.title, emptyMap(), false, isNullable)
 
                 is ResolvedSchema.Reference ->
-                    Object(name, description(), schema.title, emptyMap(), emptySet(), false, isNullable)
+                    Object(name, description(), schema.title, emptyMap(), false, isNullable)
 
                 is ResolvedSchema.Recursive -> Model.Primitive.Unit(description(), isNullable, schema.title)
                 is ResolvedSchema.Value -> Model.Primitive.Unit(description(), isNullable, schema.title)

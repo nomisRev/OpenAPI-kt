@@ -28,7 +28,6 @@ val nestedSpec by testSuite {
             mapOf(
                 "prop" to Model.Object.Property(Model.Reference(NamingContext.reference("TopInt", SchemaContext.Null), null, false, null), false)
             ),
-            emptySet(),
             false,
             false
         )

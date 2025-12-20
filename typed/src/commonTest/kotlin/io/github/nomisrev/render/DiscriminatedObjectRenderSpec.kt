@@ -15,7 +15,6 @@ val discriminatedObjectRenderSpec by testSuite {
         null,
         null,
         abstractProperties,
-        emptySet(),
         false,
         false
     )
@@ -27,7 +26,6 @@ val discriminatedObjectRenderSpec by testSuite {
             "id" to Model.Object.Property(Model.Primitive.Long(null, null, null, false, null), true),
             "email" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
         ),
-        emptySet(),
         false,
         false
     )
@@ -40,7 +38,6 @@ val discriminatedObjectRenderSpec by testSuite {
             "email" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
             "subscriptionId" to Model.Object.Property(Model.Primitive.Long(null, null, null, false, null), true),
         ),
-        emptySet(),
         false,
         false
     )

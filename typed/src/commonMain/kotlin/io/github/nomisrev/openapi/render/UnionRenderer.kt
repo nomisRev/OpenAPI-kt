@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.transformers.isTopLevel
+import io.github.nomisrev.openapi.transformers.nestedOrNull
 
 context(ctx: Renderer)
 fun Model.Union.render(): String = buildString {
@@ -25,6 +26,14 @@ private fun Model.Union.Case.valueClass(): String {
         serializable()
         if (ctx.jvm) jvmInline()
         append("value class $className(val value: ${typeName.type()}) : ${union.name().simpleName}")
+        when(val nestedOrNull = model.nestedOrNull()?.render()) {
+           null -> {}
+           else -> {
+               append(" {\n")
+               +nestedOrNull.prependIndent(ctx.indent)
+               append("}")
+           }
+        }
     }
 }
 

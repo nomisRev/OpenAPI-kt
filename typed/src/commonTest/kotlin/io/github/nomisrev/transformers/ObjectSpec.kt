@@ -168,7 +168,6 @@ val objectSpec by testSuite {
                     false
                 )
             ),
-            inline = setOf(it.expected.context { it.nest(NamingContext.ObjectProperty("enum")) }),
             additionalProperties = false,
             isNullable = false
         )
@@ -195,7 +194,6 @@ val objectSpec by testSuite {
                 description = null,
                 title = null,
                 properties = mapOf("enum" to Model.Object.Property(listModel, false)),
-                inline = setOf(innerModel.context { it.nest(NamingContext.ObjectProperty("enum")) }),
                 additionalProperties = false,
                 isNullable = false
             )
@@ -359,7 +357,6 @@ val objectSpec by testSuite {
                     "filename" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
                     "type" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false)
                 ),
-                inline = emptySet(),
                 additionalProperties = false,
                 isNullable = false
             ),
@@ -373,6 +370,100 @@ val objectSpec by testSuite {
             val actual = ReferenceOr.value(s)
                 .toModel(NamingContext.reference("test", SchemaContext.Null), SchemaContext.Null)
             assertEquals(expected, actual)
+        }
+    }
+
+    //             file_search:
+    //              type: object
+    //              properties:
+    //                vector_store_ids:
+    //                  type: array
+    //                  maxItems: 1
+    //                  items:
+    //                    type: string
+    //                vector_stores:
+    //                  type: array
+    //                  description: >
+    //                    A helper to create a [vector
+    //                    store](/docs/api-reference/vector-stores/object) with
+    //                    file_ids and attach it to this assistant. There can be a
+    //                    maximum of 1 vector store attached to the assistant.
+    //                  maxItems: 1
+    //                  items:
+    //                    type: object
+    //                    properties:
+    //                      file_ids:
+    //                        type: array
+    //                        description: >
+    //                          A list of [file](/docs/api-reference/files) IDs to add
+    //                          to the vector store. There can be a maximum of 10000
+    //                          files in a vector store.
+    //                        maxItems: 10000
+    //                        items:
+    //                          type: string
+    //              oneOf:
+    //                - required:
+    //                    - vector_store_ids
+    //                - required:
+    //                    - vector_stores
+    test("Object with oneOf requires") {
+        val s = Schema(
+            type = Type.Basic.Object,
+            properties = mapOf(
+                "vector_store_ids" to ReferenceOr.value(
+                    Schema(
+                        type = Type.Basic.Array,
+                        items = ReferenceOr.value(Schema.string)
+                    )
+                ),
+                "vector_store" to ReferenceOr.value(
+                    Schema(
+                        type = Type.Basic.Array,
+                        items = ReferenceOr.value(Schema.string)
+                    )
+                ),
+            ),
+            oneOf = listOf(
+                ReferenceOr.value(Schema(required = listOf("vector_store_ids"))),
+                ReferenceOr.value(Schema(required = listOf("vector_store")))
+            )
+        )
+        val expected = Model.Object(
+            context = NamingContext.reference("test", SchemaContext.Null),
+            description = null,
+            title = null,
+            properties = mapOf(
+                "vector_store_ids" to Model.Object.Property(
+                    Model.Collection(
+                        inner = Model.Primitive.String(null, null, null, false, null),
+                        null,
+                        null,
+                        null,
+                        false,
+                        null
+                    ),
+                    false
+                ),
+                "vector_store" to Model.Object.Property(
+                    Model.Collection(
+                        inner = Model.Primitive.String(null, null, null, false, null),
+                        null,
+                        null,
+                        null,
+                        false,
+                        null
+                    ),
+                    false
+                )
+            ),
+            false,
+            false
+        )
+        registry(api) {
+            assertEquals(
+                expected,
+                ReferenceOr.value(s).toModel(NamingContext.reference("test", SchemaContext.Null), SchemaContext.Null)
+            )
         }
     }
 }

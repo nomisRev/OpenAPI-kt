@@ -9,7 +9,6 @@ import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.registry
 import io.github.nomisrev.openapi.registry.toModel
-import kotlin.collections.emptySet
 
 val recursiveSpec by testSuite {
     fun recursiveAnchors(name: NamingContext) =
@@ -31,7 +30,6 @@ val recursiveSpec by testSuite {
                         isRequired = false
                     )
                 ),
-                inline = emptySet(),
                 additionalProperties = false,
                 isNullable = isNullable ?: false
             )
@@ -73,7 +71,6 @@ val recursiveSpec by testSuite {
                         isRequired = false
                     )
                 ),
-                inline = emptySet(),
                 additionalProperties = false,
                 isNullable = isNullable ?: false
             )
@@ -115,7 +112,6 @@ val recursiveSpec by testSuite {
                         isRequired = false
                     )
                 ),
-                inline = emptySet(),
                 additionalProperties = false,
                 isNullable = isNullable ?: false
             )
@@ -142,7 +138,6 @@ val recursiveSpec by testSuite {
                 isRequired = false
             )
         ),
-        inline = emptySet(),
         additionalProperties = false,
         isNullable = false
     )
@@ -162,7 +157,6 @@ val recursiveSpec by testSuite {
                 isRequired = false
             )
         ),
-        inline = emptySet(),
         additionalProperties = false,
         isNullable = false
     )

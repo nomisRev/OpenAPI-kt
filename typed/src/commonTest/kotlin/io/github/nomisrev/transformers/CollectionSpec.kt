@@ -88,7 +88,6 @@ val collectionSpec by testSuite {
                         true
                     )
                 ),
-                inline = emptySet(),
                 additionalProperties = false,
                 isNullable = false
             )
@@ -116,7 +115,6 @@ val collectionSpec by testSuite {
                         true
                     )
                 ),
-                inline = emptySet(),
                 additionalProperties = false,
                 isNullable = false
             )
@@ -209,7 +207,6 @@ val collectionSpec by testSuite {
             "id" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
             "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false)
         ),
-        emptySet(),
         false,
         false
     )
@@ -230,7 +227,6 @@ val collectionSpec by testSuite {
                 true
             )
         ),
-        setOf(item),
         false,
         false
     )

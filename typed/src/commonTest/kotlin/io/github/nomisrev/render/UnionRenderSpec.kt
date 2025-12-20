@@ -84,7 +84,6 @@ val unionRenderSpec by testSuite {
             "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, false, null), true),
             "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
         ),
-        inline = emptySet(),
         additionalProperties = false,
         isNullable = false
     )

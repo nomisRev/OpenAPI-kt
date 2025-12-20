@@ -217,7 +217,6 @@ sealed interface Model {
             description: String?,
             title: String?,
             properties: Map<String, Property>,
-            inline: Set<Model>,
             additionalProperties: Boolean,
             isNullable: Boolean
         ) : this(
@@ -250,11 +249,9 @@ sealed interface Model {
         data class Property(val model: Model, val isRequired: Boolean)
 
         companion object {
-            // TODO write proper tests for this
             fun value(
                 context: NamingContext.Reference,
                 property: Model,
-                inline: Set<Model> = emptySet(),
                 title: String? = null
             ) = Object(
                 NamingContext(context, emptyList()),

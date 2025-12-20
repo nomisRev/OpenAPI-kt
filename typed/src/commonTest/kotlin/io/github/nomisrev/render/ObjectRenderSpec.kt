@@ -17,7 +17,6 @@ val renderObjectSpec by testSuite {
             null,
             null,
             emptyMap(),
-            emptySet(),
             false,
             false
         ),
@@ -58,7 +57,6 @@ val renderObjectSpec by testSuite {
             "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, false, null), true),
             "longername" to Model.Object.Property(Model.Primitive.Double(null, null, null, true, null), true),
         ),
-        inline = emptySet(),
         additionalProperties = false,
         isNullable = false
     )
@@ -84,7 +82,6 @@ val renderObjectSpec by testSuite {
             "longer_name_3" to Model.Object.Property(Model.Uuid(null, false, null), false),
             "longername4" to Model.Object.Property(Model.DateTime(null, false, null), false),
         ),
-        inline = emptySet(),
         additionalProperties = false,
         isNullable = false
     )
@@ -119,8 +116,7 @@ val renderObjectSpec by testSuite {
     )
     val nestedEnum = Model.Object.value(
         NamingContext.Reference("Foo", SchemaContext.Null),
-        enum,
-        inline = setOf(enum)
+        enum
     )
 
     verify(
@@ -158,14 +154,12 @@ val renderObjectSpec by testSuite {
                     null,
                     null,
                     emptyMap(),
-                    emptySet(),
                     additionalProperties = true,
                     isNullable = false
                 ),
                 false
             )
         ),
-        inline = emptySet(),
         additionalProperties = false,
         isNullable = false
     )

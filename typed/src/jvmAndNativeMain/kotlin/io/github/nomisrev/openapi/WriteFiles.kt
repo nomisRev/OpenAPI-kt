@@ -24,8 +24,8 @@ fun ApiModel.generate(output: String) {
 }
 
 fun main() = runBlocking {
-    val githubJson = readText("github.json")
-    val api = OpenAPI.fromJson(githubJson).toApiModel()
+    val githubJson = readText("openai.yaml")
+    val api = OpenAPI.fromYaml(githubJson).toApiModel()
     val path = Path(path("/test", "../test"), "/src/commonMain/kotlin")
     api.generate(path.toString())
 }

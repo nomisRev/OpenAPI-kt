@@ -24,8 +24,6 @@ suspend fun ResolvedSchema.toObject(
     val properties = properties(properties, context)
 
     val additionalProperties = additionalProperties(context)
-    val nested = properties.mapNotNullTo(mutableSetOf()) { (_, prop) -> prop.model.nestedOrNull() } +
-            listOfNotNull((additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.nestedOrNull())
 
     return Model.Object(
         context = name,

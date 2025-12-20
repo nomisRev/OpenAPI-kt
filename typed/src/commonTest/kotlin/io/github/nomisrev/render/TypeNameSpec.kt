@@ -44,8 +44,7 @@ val typeNameSpec by testSuite {
                 title = null,
                 properties = emptyMap(),
                 additionalProperties = true,
-                isNullable = false,
-                inline = emptySet()
+                isNullable = false
             ).toTypeName()
         }.first
         assertEquals(TypeName.JsonObject, actual)
@@ -59,8 +58,7 @@ val typeNameSpec by testSuite {
                 title = null,
                 properties = emptyMap(),
                 additionalProperties = false,
-                isNullable = false,
-                inline = emptySet()
+                isNullable = false
             ).toTypeName()
         }.first
         assertEquals(TypeName.Class("io.github.nomisrev.model", listOf("Foo")), actual)
@@ -84,8 +82,7 @@ val typeNameSpec by testSuite {
                 title = null,
                 properties = emptyMap(),
                 additionalProperties = false,
-                isNullable = false,
-                inline = emptySet()
+                isNullable = false
             ).toTypeName()
         }.first
         assertEquals(TypeName.Class("io.github.nomisrev.model", listOf("FooRequest")), actual)
@@ -99,8 +96,7 @@ val typeNameSpec by testSuite {
                 title = null,
                 properties = emptyMap(),
                 additionalProperties = false,
-                isNullable = false,
-                inline = emptySet()
+                isNullable = false
             ).toTypeName()
         }.first
         assertEquals(TypeName.Class("io.github.nomisrev.model", listOf("FooResponse")), actual)

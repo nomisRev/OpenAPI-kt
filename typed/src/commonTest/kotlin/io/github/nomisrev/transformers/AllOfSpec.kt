@@ -47,7 +47,7 @@ val allOfSpec by testSuite {
         NamingContext.reference("AB", SchemaContext.Null), null, null, mapOf(
             "a" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
             "b" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false)
-        ), emptySet(), false, false
+        ), false, false
     )
     test("AB") {
         val registry = Registry(api.reference("A", a).reference("B", b).reference("AB", ab))

@@ -136,8 +136,8 @@ val closedEnumSpec by testSuite {
                 Model.Union.Case(nestedEnum, null),
                 Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
             ),
-            inline = setOf(nestedEnum),
-            discriminator = null
+            discriminator = null,
+            isNullable = isNullable ?: false
         )
     }
 

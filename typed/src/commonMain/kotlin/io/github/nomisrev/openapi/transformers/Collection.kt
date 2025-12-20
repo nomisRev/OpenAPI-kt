@@ -57,7 +57,6 @@ suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
                         true
                     )
                 ),
-                setOfNotNull(inner.nestedOrNull()),
                 additionalProperties = false,
                 isNullable
             )

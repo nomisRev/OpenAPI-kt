@@ -19,7 +19,6 @@ suspend fun ResolvedSchema.primitive(): Model = when (this) {
             inner.description,
             inner.title,
             mapOf("value" to Model.Object.Property(inner.with(description = null, isNullable = false), true)),
-            emptySet(),
             false,
             inner.isNullable
         )
