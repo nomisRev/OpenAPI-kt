@@ -9,6 +9,7 @@ import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.registry
 import io.github.nomisrev.openapi.registry.toModel
+import io.github.nomisrev.openapi.render.Import
 import io.github.nomisrev.openapi.render.TypeName
 import io.github.nomisrev.openapi.render.render
 import io.github.nomisrev.openapi.render.renderer
@@ -54,7 +55,7 @@ fun TestSuite.verify(
 fun TestSuite.verify(
     expected: String,
     model: Model,
-    vararg imports: TypeName
+    vararg imports: Import
 ) {
     verify(expected, model, imports.toSet())
 }
@@ -64,19 +65,12 @@ fun TestSuite.verify(
 fun TestSuite.verify(
     expected: String,
     model: Model,
-    expectedImports: Set<TypeName> = emptySet()
+    expectedImports: Set<Import> = emptySet()
 ) {
     fun eq(expected: String, actual: String) =
         if (expected != actual) throw AssertionError(
             """
-            |###################
-            |###### Actual #####
-            |$actual
-            |###################
-            |###### Expected ###
-            |###################
-            |$expected
-            |###################
+            |${expected.diff(actual)}
         """.trimMargin()
         )
         else Unit

@@ -61,49 +61,4 @@ val enumRenderSpec by testSuite {
         TypeName.Serializable,
         TypeName.SerialName
     )
-
-    test("asc") {
-        val actual = Json.decodeFromString(Test.Serializer, "\"asc\"")
-        assertEquals(AscOrDesc.Asc, actual)
-    }
-
-    test("desc") {
-        val actual = Json.decodeFromString(Test.Serializer, "\"desc\"")
-        assertEquals(AscOrDesc.Desc, actual)
-    }
-
-    test("open") {
-        val actual = Json.decodeFromString(Test.Serializer, "\"any\"")
-        assertEquals(CaseString("any"), actual)
-    }
 }
-
-// TODO Example of OpenEnum generation Serializer
-@Serializable(with = Test.Serializer::class)
-sealed interface Test {
-    companion object Serializer : KSerializer<Test> {
-        @OptIn(InternalSerializationApi::class)
-        override val descriptor: SerialDescriptor = buildSerialDescriptor("Test", SerialKind.CONTEXTUAL)
-
-        override fun serialize(encoder: Encoder, value: Test) =
-            when (value) {
-                AscOrDesc.Asc -> encoder.encodeString("asc")
-                AscOrDesc.Desc -> encoder.encodeString("desc")
-                is CaseString -> encoder.encodeString(value.value)
-            }
-
-        override fun deserialize(decoder: Decoder): Test =
-            when (val value = decoder.decodeString()) {
-                "asc" -> AscOrDesc.Asc
-                "desc" -> AscOrDesc.Desc
-                else -> CaseString(value)
-            }
-    }
-}
-
-@Serializable
-@JvmInline
-value class CaseString(val value: String) : Test
-
-@Serializable
-enum class AscOrDesc : Test { Asc, Desc }

@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.render.Import
+import io.github.nomisrev.openapi.render.TopLevelFunction
 import io.github.nomisrev.openapi.render.TypeName
 import io.github.nomisrev.openapi.render.TypeName.Class
 import io.github.nomisrev.openapi.render.joinTo
@@ -38,25 +40,26 @@ fun ApiModel.generate(): List<KFile> =
             Pair(context.name(), model.render())
         }
 
-        tailrec fun TypeName.import(): Class = when (this) {
+        tailrec fun Import.import(): Class = when (this) {
             is Class -> this
             is TypeName.Collection -> type.import()
+            is TopLevelFunction -> TODO()
         }
 
         tailrec fun TypeName.importString(): String = when (this) {
-            is Class -> "${`package`}.${names.joinToString(separator = ".")}"
+            is Class -> "${packageName}.${names.joinToString(separator = ".")}"
             is TypeName.Collection -> type.importString()
         }
 
         val imports = result.second
             .map { it.import() }
-            .filter { clazz -> clazz.`package` != result.first.first.`package` || clazz.names.size > 1 }
+            .filter { clazz -> clazz.packageName != result.first.first.packageName || clazz.names.size > 1 }
 
         KFile(
             "${result.first.first.simpleName}.kt",
-            result.first.first.`package`,
+            result.first.first.packageName,
             buildString {
-                +"package ${result.first.first.`package`}"
+                +"package ${result.first.first.packageName}"
                 newLine()
                 imports.joinTo(separator = "\n", postfix = "\n\n") {
                     "import ${it.importString()}"

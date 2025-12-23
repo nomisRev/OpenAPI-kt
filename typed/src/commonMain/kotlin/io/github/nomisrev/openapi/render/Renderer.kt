@@ -6,8 +6,10 @@ import io.github.nomisrev.openapi.Model.Object.AdditionalProperties.Schema
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.Reference
 
-fun interface Importer {
+interface Importer {
     fun import(name: TypeName)
+    fun import(vararg names: TypeName) = names.forEach(::import)
+    fun import(function: TopLevelFunction)
 }
 
 context(ctx: Renderer)
@@ -59,9 +61,9 @@ class Renderer(
     val indent: String get() = " ".repeat(indentSize)
 }
 
-fun <A> renderer(block: context(Renderer) () -> A): Pair<A, Set<TypeName>> {
-    val buffer = mutableSetOf<TypeName>()
-    val ctx = Renderer(120, 4, jvm = true, js = true) { typeName ->
+fun <A> renderer(block: context(Renderer) () -> A): Pair<A, Set<Import>> {
+    val buffer = mutableSetOf<Import>()
+    val ctx = Renderer(120, 4, jvm = true, js = true, import = object : Importer {
         fun add(typeName: TypeName) {
             when (typeName) {
                 TypeName.String,
@@ -76,7 +78,12 @@ fun <A> renderer(block: context(Renderer) () -> A): Pair<A, Set<TypeName>> {
                 is TypeName.Class -> buffer.add(typeName)
             }
         }
-        add(typeName)
-    }
+
+        override fun import(name: TypeName) = add(name)
+
+        override fun import(function: TopLevelFunction) {
+            buffer.add(function)
+        }
+    })
     return Pair(block(ctx), buffer)
 }

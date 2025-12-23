@@ -33,7 +33,7 @@ suspend fun ResolvedSchema.union(
      *  So in this case whenever there are n casses, and n-1 cases are references than the non-referenced case should inherit the outer name.
      */
     val cases = subtypes.mapIndexed { index, subtype ->
-        subtype.resolve(name.unionCase(index, subtype, context), context) {
+        subtype.resolve(name.unionCase(index, subtype, subtypes, context), context) {
             val discriminatorValue = schema.discriminator?.mapping?.let { discriminator ->
                 when (it) {
                     is ResolvedSchema.Recursive if it.name.head is NamingContext.Reference -> discriminator[it.name.head.name]
@@ -58,32 +58,92 @@ suspend fun ResolvedSchema.union(
 }
 
 context(ctx: Registry.Scope)
-suspend fun NamingContext.unionCase(index: Int, subtype: ReferenceOr<Schema>, context: SchemaContext): NamingContext {
+suspend fun NamingContext.unionCase(
+    index: Int,
+    subtype: ReferenceOr<Schema>,
+    allSubtypes: List<ReferenceOr<Schema>>,
+    context: SchemaContext
+): NamingContext {
     val schema = subtype.peek()
 
     if (schema.type == Type.Basic.Array && schema.items != null) {
         return when (val refOrSchema = schema.items!!) {
             is ReferenceOr.Reference -> NamingContext.reference(refOrSchema.ref.schemaName(), context)
-            is ReferenceOr.Value<Schema> -> unionCase(index, refOrSchema, context)
+            is ReferenceOr.Value<Schema> -> unionCase(index, refOrSchema, allSubtypes, context)
         }
     }
 
-    fun discriminatorValue() = schema.discriminator?.mapping?.let { discriminator ->
+    val discriminatorValue: String? = schema.discriminator?.mapping?.let { discriminator ->
         when (subtype) {
             is ReferenceOr.Reference -> discriminator[subtype.ref.schemaName()]
             is ReferenceOr.Value<Schema> -> null
         }
     }
 
-    suspend fun specialName() = schema.properties
+    val specialName = schema.properties
         ?.entries
         ?.firstOrNull { (key, _) -> key in setOf("type", "event", $$"$type") }
         ?.let { (_, refOrSchema) -> refOrSchema.peek().enum?.singleOrNull() }
 
-    fun enumName() =
+    val enumName =
         schema.enum?.joinToString(prefix = "", separator = "Or") {
             it?.replaceFirstChar(Char::uppercaseChar) ?: ""
         }.takeIf { (it?.length ?: 0) < 90 }
 
-    return nest(NamingContext.UnionCase(discriminatorValue() ?: specialName() ?: enumName() ?: "Case$index"))
+    /**
+     * Checks if this is an OpenEnum pattern where n-1 cases are plain string types
+     * and 1 case is a string enum. Returns true if current subtype is the enum case.
+     */
+    suspend fun isOpenEnumCase(): Boolean {
+        if (allSubtypes.size < 2) return false
+        val schemas = allSubtypes.map { it.peek() }
+        val stringTypes = schemas.filter { it.type == Type.Basic.String && it.enum == null }
+        val enumTypes = schemas.filter { it.type == Type.Basic.String && it.enum != null }
+        return stringTypes.size == allSubtypes.size - 1 &&
+                enumTypes.size == 1 &&
+                schema.type == Type.Basic.String &&
+                schema.enum != null
+    }
+
+    /**
+     * Checks if this is a reference pattern where n-1 cases are references
+     * and 1 case is a non-reference (value). Returns true if current subtype is the non-reference case.
+     */
+    fun isNonReferenceCaseInRefPattern(): Boolean {
+        if (allSubtypes.size < 2) return false
+        val referenceCount = allSubtypes.count { it is ReferenceOr.Reference }
+        val valueCount = allSubtypes.count { it is ReferenceOr.Value }
+        return referenceCount == allSubtypes.size - 1 &&
+                valueCount == 1 &&
+                subtype is ReferenceOr.Value
+    }
+
+    val caseIndex = listOf(
+        "One",
+        "Two",
+        "Three",
+        "Four",
+        "Five",
+        "Six",
+        "Seven",
+        "Eight",
+        "Nine",
+        "Ten",
+        "Eleven",
+        "Twelve",
+        "Thirteen",
+        "Fourteen",
+        "Fifteen",
+        "Sixteen",
+    )
+
+    val name = when {
+        discriminatorValue != null -> discriminatorValue
+        specialName != null -> specialName
+        isOpenEnumCase() -> enumName ?: "CaseEnum"
+        isNonReferenceCaseInRefPattern() -> "Else"
+        else -> caseIndex[index]
+    }
+
+    return nest(NamingContext.UnionCase(name))
 }

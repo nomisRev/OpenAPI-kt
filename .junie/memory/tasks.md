@@ -28,3 +28,13 @@
     "NEW INSTRUCTION": "WHEN compile errors mention 'baseName' parameter missing THEN convert property lists to maps and remove name arguments in Property constructors"
 }
 
+[2025-12-20 19:42] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "suboptimal",
+    "REDUNDANT STEPS": "analyze test helpers",
+    "MISSING STEPS": "open core file, inspect call site, implement detection logic, add tests, run tests",
+    "BOTTLENECK": "Lacked inspection of Union.kt and its call site to confirm available context.",
+    "PROJECT NOTE": "Outer name can be derived from NamingContext.head; unionCase likely needs all union cases to decide inheritance.",
+    "NEW INSTRUCTION": "WHEN union naming depends on all cases THEN open Union.kt and call site, pass all cases into naming function"
+}
+

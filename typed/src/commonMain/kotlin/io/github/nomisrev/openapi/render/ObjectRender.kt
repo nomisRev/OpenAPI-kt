@@ -2,24 +2,8 @@ package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
-
-context(ctx: Renderer, builder: StringBuilder)
-fun serializable() {
-    ctx.import(TypeName.Serializable)
-    +"@Serializable"
-}
-
-context(ctx: Renderer, builder: StringBuilder)
-fun jvmInline() {
-    ctx.import(TypeName.JvmInline)
-    +"@JvmInline"
-}
-
-context(ctx: Renderer, builder: StringBuilder)
-fun jsName() {
-    ctx.import(TypeName.JvmInline)
-    +"@JvmInline"
-}
+import kotlin.text.isBlank
+import kotlin.text.lineSequence
 
 context(ctx: Renderer)
 fun Model.Object.render(
@@ -28,10 +12,19 @@ fun Model.Object.render(
 ): String = buildString {
     import(properties.map { (_, prop) -> prop.model })
 
-    serializable()
+    if (needsSerializer()) {
+        ctx.import(TypeName.ExperimentalSerializationApi, TypeName.KeepGeneratedSerializer)
+        +"@OptIn(ExperimentalSerializationApi::class)"
+        +"@KeepGeneratedSerializer"
+        serializable(this@render)
+    } else {
+        serializable()
+    }
     when (properties.size) {
         0 -> append("data object ${name().simpleName}${parentClass.renderAsSuperclass()}")
-        1 -> valueClass(parentClass, baseProperties)
+        1 if additionalProperties is Model.Object.AdditionalProperties.Allowed && !additionalProperties.value ->
+            valueClass(parentClass, baseProperties)
+
         else -> dataClass(parentClass, baseProperties)
     }
     body()
@@ -49,14 +42,25 @@ private fun Model.Object.valueClass(parentClass: TypeName.Class?, baseProperties
 
 
 context(ctx: Renderer, builder: StringBuilder)
-fun Model.Object.dataClass(parentClass: TypeName.Class?, baseProperties: Set<String>) {
+private fun Model.Object.dataClass(parentClass: TypeName.Class?, baseProperties: Set<String>) {
     val simpleName = name().simpleName
+    val additionalLine = when (additionalProperties) {
+        is Model.Object.AdditionalProperties.Allowed -> if (additionalProperties.value) ", additional: JsonObject? = null" else ""
+        is Model.Object.AdditionalProperties.Schema -> ""
+    }
     val line =
-        "data class $simpleName(${properties.joinToString { it.render(baseProperties) }})${parentClass.renderAsSuperclass()}"
+        "data class $simpleName(${properties.joinToString { it.render(baseProperties) }}$additionalLine)${parentClass.renderAsSuperclass()}"
     if (line.length <= ctx.maxLineLength) append(line)
     else {
         +"data class $simpleName("
-        properties.joinTo(separator = ",\n", postfix = "\n") { "${ctx.indent}${it.render(baseProperties)}" }
+        indented {
+            properties.joinTo(separator = ",\n", postfix = ",\n") { it.render(baseProperties) }
+            when (additionalProperties) {
+                is Model.Object.AdditionalProperties.Schema -> TODO()
+                is Model.Object.AdditionalProperties.Allowed ->
+                    if (additionalProperties.value) +"val additional: JsonObject? = null," else Unit
+            }
+        }
         append(")${parentClass.renderAsSuperclass()}")
     }
 }
@@ -125,9 +129,131 @@ context(ctx: Renderer, builder: StringBuilder)
 private fun Model.Object.body() {
     if (inline.isNotEmpty()) {
         +" {"
-        inline.joinTo(separator = "\n\n", postfix = "\n") { it.render().prependIndent(ctx.indent) }
+        indented {
+            inline.joinTo(separator = "\n\n", postfix = "\n") { it.render() }
+            serializer()
+        }
         append("}")
     }
+}
+
+private fun Model.Object.needsSerializer(): Boolean = when (additionalProperties) {
+    is Model.Object.AdditionalProperties.Allowed -> additionalProperties.value
+    is Model.Object.AdditionalProperties.Schema -> true
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+fun indented(block: StringBuilder.() -> Unit) {
+    val string = buildString(block)
+    string.lineSequence().joinTo(builder, "\n") {
+        when {
+            it.isBlank() -> it
+            else -> ctx.indent + it
+        }
+    }
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+private fun Model.Object.serializer() = if (needsSerializer()) {
+    newLine()
+    +"companion object Serializer : KSerializer<${name().simpleName}> {"
+    indented {
+        +"override val descriptor: SerialDescriptor = generatedSerializer().descriptor"
+        newLine()
+        +"override fun serialize(encoder: Encoder, value: ${name().simpleName}) {"
+        indented {
+            +"val json = (encoder as JsonEncoder).json"
+            +"return encoder.encodeSerializableValue("
+            indented {
+                +"JsonObject.serializer(),"
+                +"buildJsonObject {"
+                indented {
+                    properties.forEach { (name, prop) ->
+                        +"put(\"$name\", json.encodeToJsonElement(${prop.model.serializer()}, value.$name))"
+                    }
+
+                    when (additionalProperties) {
+                        is Model.Object.AdditionalProperties.Allowed if additionalProperties.value -> +"putAll(value.additional)"
+                        is Model.Object.AdditionalProperties.Allowed -> {}
+                        is Model.Object.AdditionalProperties.Schema -> TODO()
+                    }
+
+                }
+                +"})"
+            }
+        }
+        +"}"
+        newLine()
+        +"override fun deserialize(decoder: Decoder): ${name().simpleName} {"
+        indented {
+            +"val json = (decoder as JsonDecoder).json"
+            +"val element = decoder.decodeSerializableValue(JsonObject.serializer())"
+            append("val names = ")
+            properties.keys.joinTo(prefix = "setOf(", postfix = ")\n") { "\"$it\"" }
+            +"require(element.keys.containsAll(names)) { \"Missing required properties: \${names - element.keys}\" }"
+            +"return ${name().simpleName}("
+            indented {
+                properties.joinTo(separator = ",\n", postfix = ",\n") { (name, prop) ->
+                    if (!prop.isRequired) {
+                        "$name = if(element.containsKey(\"$name\")) json.decodeFromJsonElement(${prop.model.serializer()}, element[\"$name\"]!!) else null"
+                    } else {
+                        "$name = json.decodeFromJsonElement(${prop.model.serializer()}, element[\"$name\"]!!)"
+                    }
+                }
+                when (additionalProperties) {
+                    is Model.Object.AdditionalProperties.Allowed if additionalProperties.value ->
+                        +"additional = JsonObject(element - names).ifEmpty { null }"
+
+                    is Model.Object.AdditionalProperties.Allowed -> {}
+                    is Model.Object.AdditionalProperties.Schema -> TODO()
+                }
+            }
+            +")"
+        }
+        +"}"
+    }
+} else Unit
+
+context(ctx: Renderer)
+fun Model.serializer(): String = when (this) {
+    is Model.Primitive -> {
+        ctx.import(Import.serializer)
+        when (this) {
+            is Model.Primitive.Boolean -> "Boolean.serializer()"
+            is Model.Primitive.Double -> "Double.serializer()"
+            is Model.Primitive.Float -> "Float.serializer()"
+            is Model.Primitive.Int -> "Int.serializer()"
+            is Model.Primitive.Long -> "Long.serializer()"
+            is Model.Primitive.String -> "String.serializer()"
+            is Model.Primitive.Unit -> "Unit.serializer()"
+        }
+    }
+
+    is Model.Uuid -> "Uuid.serializer()"
+    is Model.Date -> "LocalDate.serializer()"
+    is Model.DateTime -> "LocalDateTime.serializer()"
+    is Model.FreeFormJson -> "JsonElement.serializer()"
+
+    is Model.ByteArray -> {
+        ctx.import(TopLevelFunction("kotlinx.serialization.builtins", "ByteArraySerializer"))
+        "ByteArraySerializer()"
+    }
+
+    is Model.Collection if inner is Model.FreeFormJson -> "JsonArray.serializer()"
+    is Model.Collection -> {
+        ctx.import(TopLevelFunction("kotlinx.serialization.builtins", "ListSerializer"))
+        "ListSerializer(${inner.serializer()})"
+    }
+
+    is Model.Object if properties.isEmpty() && additionalProperties is Allowed && additionalProperties.value -> "JsonObject.serializer()"
+    is Model.Object if properties.isEmpty() && additionalProperties is Schema -> additionalProperties.value.serializer()
+
+    is Model.ContextHolder -> "${name().simpleName}.serializer()"
+}.let { serializer ->
+    if (isNullable) {
+        ctx.import(Import.nullable)
+        "$serializer.nullable"
+    } else serializer
 }
 
 // TODO: Wip

@@ -7,9 +7,20 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.render.TypeName.Class
 import io.github.nomisrev.openapi.routes.SchemaContext
 
-sealed interface TypeName {
+sealed interface Import {
+
+    companion object {
+        val serializer = TopLevelFunction("kotlinx.serialization.builtins", "serializer")
+        val nullable = TopLevelFunction("kotlinx.serialization.builtins", "nullable")
+    }
+}
+
+data class TopLevelFunction(val packageName: String, val functionName: String) : Import
+
+sealed interface TypeName : Import {
     data class Collection(val type: TypeName) : TypeName
-    data class Class(val `package`: String, val names: List<String>) : TypeName {
+
+    data class Class(val packageName: String, val names: List<String>) : TypeName {
         constructor(`package`: String, name: String) : this(`package`, listOf(name))
 
         val simpleName: String get() = names.last().toPascalCase()
@@ -46,6 +57,8 @@ sealed interface TypeName {
         val SerialName = Class("kotlinx.serialization", "SerialName")
         val Required = Class("kotlinx.serialization", "Required")
         val JsonClassDiscriminator = Class("kotlinx.serialization.json", "JsonClassDiscriminator")
+        val ExperimentalSerializationApi = Class("kotlinx.serialization", "ExperimentalSerializationApi")
+        val KeepGeneratedSerializer = Class("kotlinx.serialization", "KeepGeneratedSerializer")
     }
 }
 

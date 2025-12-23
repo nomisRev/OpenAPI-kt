@@ -8,3 +8,23 @@
     "NEW INSTRUCTION": "WHEN editing files via apply_patch THEN submit complete valid diff hunks without ellipsis"
 }
 
+[2025-12-20 19:41] - Updated by Junie - Error analysis
+{
+    "TYPE": "invalid args",
+    "TOOL": "search_replace",
+    "ERROR": "Truncated file path argument",
+    "ROOT CAUSE": "The file_path was cut off with an ellipsis, making it an invalid path.",
+    "PROJECT NOTE": "Locate target files (e.g., Union.kt) via search_project and use the exact absolute path before edits.",
+    "NEW INSTRUCTION": "WHEN passing file paths to tools THEN use complete exact paths without ellipsis"
+}
+
+[2025-12-23 20:24] - Updated by Junie - Error analysis
+{
+    "TYPE": "invalid args",
+    "TOOL": "bash",
+    "ERROR": "Grep command malformed by unicode ellipsis",
+    "ROOT CAUSE": "The grep invocation ended with a unicode ellipsis, breaking the shell command.",
+    "PROJECT NOTE": "Gradle captures full logs in .output.txt at the repo root; filter it with grep.",
+    "NEW INSTRUCTION": "WHEN composing shell commands includes ellipsis or smart quotes THEN replace with plain ASCII characters"
+}
+

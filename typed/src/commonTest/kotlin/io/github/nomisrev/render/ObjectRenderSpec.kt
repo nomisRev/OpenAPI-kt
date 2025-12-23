@@ -3,6 +3,8 @@ package io.github.nomisrev.render
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.render.Import
+import io.github.nomisrev.openapi.render.TopLevelFunction
 import io.github.nomisrev.openapi.render.TypeName
 import io.github.nomisrev.openapi.routes.SchemaContext
 
@@ -95,7 +97,7 @@ val renderObjectSpec by testSuite {
            |    val longername: Double?,
            |    val longername2: Float? = null,
            |    @SerialName("longer_name_3") val longerName3: Uuid? = null,
-           |    val longername4: LocalDateTime? = null
+           |    val longername4: LocalDateTime? = null,
            |)""".trimMargin(),
         multiline,
         TypeName.Serializable,
@@ -173,7 +175,7 @@ val renderObjectSpec by testSuite {
            |    val uuid: Uuid? = null,
            |    val json: JsonElement? = null,
            |    val jsonArray: JsonArray? = null,
-           |    val jsonObject: JsonObject? = null
+           |    val jsonObject: JsonObject? = null,
            |)
            """.trimMargin(),
         primitiveImports,
@@ -200,4 +202,87 @@ val renderObjectSpec by testSuite {
         ),
         TypeName.Serializable,
     )
+
+    verify(
+        """
+            |@OptIn(ExperimentalSerializationApi::class)
+            |@KeepGeneratedSerializer
+            |@Serializable(with = PersonWithAdditionalProperties.Serializer::class)
+            |data class PersonWithAdditionalProperties(
+            |    val name: String,
+            |    val age: Int?,
+            |    val nested: NestedClass,
+            |    val additional: JsonObject? = null,
+            |) {
+            |    @Serializable
+            |    data class NestedClass(val config1: String, val config2: Long)
+            |
+            |    companion object Serializer : KSerializer<PersonWithAdditionalProperties> {
+            |        override val descriptor: SerialDescriptor = generatedSerializer().descriptor
+            |
+            |        override fun serialize(encoder: Encoder, value: PersonWithAdditionalProperties) {
+            |            val json = (encoder as JsonEncoder).json
+            |            return encoder.encodeSerializableValue(
+            |                JsonObject.serializer(),
+            |                buildJsonObject {
+            |                    put("name", json.encodeToJsonElement(String.serializer(), value.name))
+            |                    put("age", json.encodeToJsonElement(Int.serializer().nullable, value.age))
+            |                    put("nested", json.encodeToJsonElement(NestedClass.serializer(), value.nested))
+            |                    putAll(value.additional)
+            |                })
+            |        }
+            |
+            |        override fun deserialize(decoder: Decoder): PersonWithAdditionalProperties {
+            |            val json = (decoder as JsonDecoder).json
+            |            val element = decoder.decodeSerializableValue(JsonObject.serializer())
+            |            val names = setOf("name", "age", "nested")
+            |            require(element.keys.containsAll(names)) { "Missing required properties: ${'$'}{names - element.keys}" }
+            |            return PersonWithAdditionalProperties(
+            |                name = json.decodeFromJsonElement(String.serializer(), element["name"]!!),
+            |                age = json.decodeFromJsonElement(Int.serializer().nullable, element["age"]!!),
+            |                nested = json.decodeFromJsonElement(NestedClass.serializer(), element["nested"]!!),
+            |                additional = JsonObject(element - names).ifEmpty { null }
+            |            )
+            |        }
+            |}
+        """.trimMargin(),
+        Model.Object(
+            NamingContext.reference("PersonWithAdditionalProperties", SchemaContext.Null),
+            null,
+            null,
+            mapOf(
+                "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
+                "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, true, null), true),
+                "nested" to nested(),
+            ),
+            additionalProperties = true,
+            isNullable = false
+        ),
+        TypeName.ExperimentalSerializationApi,
+        TypeName.KeepGeneratedSerializer,
+        TypeName.Serializable,
+        Import.serializer,
+        Import.nullable
+    )
 }
+
+private fun nested(): Model.Object.Property = Model.Object.Property(
+    Model.Object(
+        NamingContext.reference("Foo", SchemaContext.Null)
+            .nest(NamingContext.ObjectProperty("nestedClass")),
+        null,
+        null,
+        mapOf(
+            "config1" to Model.Object.Property(
+                Model.Primitive.String(null, null, null, false, null),
+                true
+            ),
+            "config2" to Model.Object.Property(
+                Model.Primitive.Long(null, null, null, false, null),
+                true
+            ),
+        ),
+        false,
+        false
+    ), true
+)
