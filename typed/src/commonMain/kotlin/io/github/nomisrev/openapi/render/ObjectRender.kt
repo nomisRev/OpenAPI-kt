@@ -2,6 +2,8 @@ package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
+import kotlin.collections.component1
+import kotlin.collections.component2
 import kotlin.text.isBlank
 import kotlin.text.lineSequence
 
@@ -44,10 +46,8 @@ private fun Model.Object.valueClass(parentClass: TypeName.Class?, baseProperties
 context(ctx: Renderer, builder: StringBuilder)
 private fun Model.Object.dataClass(parentClass: TypeName.Class?, baseProperties: Set<String>) {
     val simpleName = name().simpleName
-    val additionalLine = when (additionalProperties) {
-        is Model.Object.AdditionalProperties.Allowed -> if (additionalProperties.value) ", additional: JsonObject? = null" else ""
-        is Model.Object.AdditionalProperties.Schema -> ""
-    }
+    val additionalLine = additionalProperty()?.let { ", $it" } ?: ""
+
     val line =
         "data class $simpleName(${properties.joinToString { it.render(baseProperties) }}$additionalLine)${parentClass.renderAsSuperclass()}"
     if (line.length <= ctx.maxLineLength) append(line)
@@ -55,15 +55,18 @@ private fun Model.Object.dataClass(parentClass: TypeName.Class?, baseProperties:
         +"data class $simpleName("
         indented {
             properties.joinTo(separator = ",\n", postfix = ",\n") { it.render(baseProperties) }
-            when (additionalProperties) {
-                is Model.Object.AdditionalProperties.Schema -> TODO()
-                is Model.Object.AdditionalProperties.Allowed ->
-                    if (additionalProperties.value) +"val additional: JsonObject? = null," else Unit
-            }
+            additionalProperty()?.let { +"$it," }
         }
         append(")${parentClass.renderAsSuperclass()}")
     }
 }
+
+context(ctx: Renderer)
+private fun Model.Object.additionalProperty(): String? =
+    when (additionalProperties) {
+        is Model.Object.AdditionalProperties.Allowed -> if (additionalProperties.value) "val additional: JsonObject? = null" else null
+        is Model.Object.AdditionalProperties.Schema -> "val additional: Map<String, ${additionalProperties.value.toTypeName().type()}>? = null"
+    }
 
 private fun Model.hasDefault(): Boolean = when (this) {
     is Model.Enum -> default != null
@@ -175,7 +178,11 @@ private fun Model.Object.serializer() = if (needsSerializer()) {
                     when (additionalProperties) {
                         is Model.Object.AdditionalProperties.Allowed if additionalProperties.value -> +"putAll(value.additional)"
                         is Model.Object.AdditionalProperties.Allowed -> {}
-                        is Model.Object.AdditionalProperties.Schema -> TODO()
+                        is Model.Object.AdditionalProperties.Schema -> {
+                            +"value.additional?.forEach { (key, value) ->"
+                            +"${ctx.indent}put(key, json.encodeToJsonElement(NestedClass.serializer(), value))"
+                            +"}"
+                        }
                     }
 
                 }
@@ -205,7 +212,10 @@ private fun Model.Object.serializer() = if (needsSerializer()) {
                         +"additional = JsonObject(element - names).ifEmpty { null }"
 
                     is Model.Object.AdditionalProperties.Allowed -> {}
-                    is Model.Object.AdditionalProperties.Schema -> TODO()
+                    is Model.Object.AdditionalProperties.Schema -> {
+                        +"additional = (element - names)"
+                        +"${ctx.indent}.mapValues { (_, value) -> json.decodeFromJsonElement(${additionalProperties.value.serializer()}, value) }"
+                    }
                 }
             }
             +")"

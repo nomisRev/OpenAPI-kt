@@ -3,6 +3,7 @@ package io.github.nomisrev
 import de.infix.testBalloon.framework.core.TestSuite
 import de.infix.testBalloon.framework.core.testSuite
 import de.infix.testBalloon.framework.shared.TestRegistering
+import io.github.nomisrev.PersonWithAdditionalProperties.Serializer.generatedSerializer
 import io.github.nomisrev.Union.CaseBoolean
 import io.github.nomisrev.Union.CaseInt
 import io.github.nomisrev.Union.CaseLong
@@ -23,6 +24,7 @@ import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.Json.Default.decodeFromJsonElement
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
@@ -104,7 +106,7 @@ val serializerSpec by testSuite {
     )
 
     test("age: Not a number") {
-        val ex = assertFailsWith<NumberFormatException> {
+        val ex = assertFailsWith<SerializationException> {
             Json.decodeFromJsonElement<PersonWithAdditionalPropertiesSchema>(
                 buildJsonObject {
                     put("name", "John")
@@ -114,8 +116,8 @@ val serializerSpec by testSuite {
         }
         assertEquals(
             """
-            |Unexpected JSON token at offset 0: Unexpected symbol 'n' in numeric literal at path: $
-            |JSON input: not-a-number
+            |Failed to parse literal '"not-a-number"' as an int value at element: $.primitive
+            |JSON input: "not-a-number"
             """.trimMargin(),
             ex.message
         )
@@ -300,7 +302,7 @@ inline fun <reified A> TestSuite.verify(
 data class PersonWithAdditionalPropertiesSchema(
     val name: String,
     val age: Int?,
-    val additional: Map<String, NestedClass> = emptyMap(),
+    val additional: Map<String, NestedClass>? = null
 ) {
     @Serializable
     data class NestedClass(val config1: String, val config2: Int)
@@ -315,22 +317,25 @@ data class PersonWithAdditionalPropertiesSchema(
                 buildJsonObject {
                     put("name", JsonPrimitive(value.name)) // required
                     if (value.age != null) put("age", JsonPrimitive(value.age)) // required nullable
-                    value.additional.forEach { (key, value) ->
+                    value.additional?.forEach { (key, value) ->
                         put(key, json.encodeToJsonElement(NestedClass.serializer(), value))
                     }
                 })
         }
 
-        override fun deserialize(decoder: Decoder): PersonWithAdditionalPropertiesSchema =
-            decoder.require("name", "age") { name, age, additional ->
-                val name = name.jsonPrimitive.content
-                val age = age.orNull()?.jsonPrimitive?.int
-                val additional = decodeFromJsonElement(
-                    MapSerializer(String.serializer(), NestedClass.serializer()),
-                    additional ?: JsonObject(emptyMap())
-                )
-                PersonWithAdditionalPropertiesSchema(name, age, additional)
-            }
+        override fun deserialize(decoder: Decoder): PersonWithAdditionalPropertiesSchema {
+            val json = (decoder as JsonDecoder).json
+            val element = decoder.decodeSerializableValue(JsonObject.serializer())
+            val names = setOf("name", "age")
+            require(element.keys.containsAll(names)) { "Missing required properties: ${names - element.keys}" }
+            return PersonWithAdditionalPropertiesSchema(
+                name = json.decodeFromJsonElement(String.serializer(), element["name"]!!),
+                age = json.decodeFromJsonElement(Int.serializer().nullable, element["age"]!!),
+                additional = (element - names)
+                    .mapValues { (_, value) -> decodeFromJsonElement(NestedClass.serializer(), value) }
+                    .ifEmpty { null }
+            )
+        }
     }
 }
 
