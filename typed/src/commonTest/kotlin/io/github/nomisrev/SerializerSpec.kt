@@ -566,10 +566,6 @@ sealed interface Union {
     }
 }
 
-val unionCaseComparator = Comparator<Model.Union.Case> { case1, case2 ->
-
-}
-
 public class UnionSerializationException(
     public val payload: JsonElement,
     public val errors: Map<KClass<*>, IllegalArgumentException>,

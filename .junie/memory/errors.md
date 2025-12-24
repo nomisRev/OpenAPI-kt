@@ -28,3 +28,23 @@
     "NEW INSTRUCTION": "WHEN composing shell commands includes ellipsis or smart quotes THEN replace with plain ASCII characters"
 }
 
+[2025-12-24 21:14] - Updated by Junie - Error analysis
+{
+    "TYPE": "invalid args",
+    "TOOL": "run_test",
+    "ERROR": "No tests found for given file path",
+    "ROOT CAUSE": "The test runner was invoked with a single source file path, which it does not support for discovery.",
+    "PROJECT NOTE": "This Kotlin Multiplatform repo discovers tests via Gradle tasks (e.g., :typed:test or allTests); sources under typed/src/commonTest aren’t runnable per-file.",
+    "NEW INSTRUCTION": "WHEN running tests for commonTest sources THEN run the module Gradle test task instead"
+}
+
+[2025-12-24 21:15] - Updated by Junie - Error analysis
+{
+    "TYPE": "tool failure",
+    "TOOL": "build",
+    "ERROR": "Build tool aborted on Kotlin '-Xdebug' unsupported flag warnings",
+    "ROOT CAUSE": "The generic build tool treated warning output as failure; Gradle build actually succeeds.",
+    "PROJECT NOTE": "This is a Kotlin Multiplatform repo; use Gradle tasks like :typed:compileKotlinJvm or :typed:test to build/run tests.",
+    "NEW INSTRUCTION": "WHEN build tool reports -Xdebug unsupported THEN run Gradle compile or test tasks via bash"
+}
+

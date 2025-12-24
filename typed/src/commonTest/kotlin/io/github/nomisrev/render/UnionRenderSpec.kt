@@ -70,13 +70,13 @@ val unionRenderSpec by testSuite {
             |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
             |            return attemptDeserialize(
             |                value,
-            |                CaseUnit::class to { CaseUnit(decodeFromJsonElement(Unit.serializer(), it)) },
             |                CaseInt::class to { CaseInt(decodeFromJsonElement(Int.serializer(), it)) },
             |                CaseFloat::class to { CaseFloat(decodeFromJsonElement(Float.serializer(), it)) },
             |                CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
+            |                CaseUnit::class to { CaseUnit(decodeFromJsonElement(Unit.serializer(), it)) },
+            |                CaseUuid::class to { CaseUuid(decodeFromJsonElement(Uuid.serializer(), it)) },
             |                CaseLocalDate::class to { CaseLocalDate(decodeFromJsonElement(LocalDate.serializer(), it)) },
             |                CaseLocalDateTime::class to { CaseLocalDateTime(decodeFromJsonElement(LocalDateTime.serializer(), it)) },
-            |                CaseUuid::class to { CaseUuid(decodeFromJsonElement(Uuid.serializer(), it)) },
             |                CaseByteArray::class to { CaseByteArray(decodeFromJsonElement(ByteArraySerializer(), it)) },
             |                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
             |            )
@@ -120,6 +120,13 @@ val unionRenderSpec by testSuite {
         TypeName.Uuid,
         TypeName.Date,
         TypeName.DateTime,
+        TypeName.ExperimentalSerializationApi,
+        TypeName.InternalSerializationApi,
+        TypeName.PolymorphicKind,
+        Import.serializer,
+        Import.ByteArraySerializer,
+        TypeName.JsonElement,
+        TypeName.JsonDecoder,
     )
 
     fun employeeCase(ctx: NamingContext.Nested) = Model.Object(
@@ -160,8 +167,8 @@ val unionRenderSpec by testSuite {
             |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
             |            return attemptDeserialize(
             |                value,
-            |                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
             |                CaseCase1::class to { decodeFromJsonElement(Case1.serializer(), it) },
+            |                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
             |            )
             |        }
             |

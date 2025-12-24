@@ -46,13 +46,13 @@ fun Model.serializer(): String = when (this) {
     is Model.FreeFormJson -> "JsonElement.serializer()"
 
     is Model.ByteArray -> {
-        ctx.import(TopLevelFunction("kotlinx.serialization.builtins", "ByteArraySerializer"))
+        ctx.import(Import.ByteArraySerializer)
         "ByteArraySerializer()"
     }
 
     is Model.Collection if inner is Model.FreeFormJson -> "JsonArray.serializer()"
     is Model.Collection -> {
-        ctx.import(TopLevelFunction("kotlinx.serialization.builtins", "ListSerializer"))
+        ctx.import(Import.ListSerializer)
         "ListSerializer(${inner.serializer()})"
     }
 

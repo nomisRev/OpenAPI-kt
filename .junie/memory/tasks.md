@@ -38,3 +38,13 @@
     "NEW INSTRUCTION": "WHEN union naming depends on all cases THEN open Union.kt and call site, pass all cases into naming function"
 }
 
+[2025-12-24 21:15] - Updated by Junie - Trajectory analysis
+{
+    "PLAN QUALITY": "near-optimal",
+    "REDUNDANT STEPS": "run tests",
+    "MISSING STEPS": "scan project, add deterministic tiebreaker, resolve references before compare",
+    "BOTTLENECK": "Comparator lacks reference resolution and stable tie-breaking, risking nondeterministic ordering.",
+    "PROJECT NOTE": "Comparator sits in tests; consider centralizing logic for reuse in production serializers.",
+    "NEW INSTRUCTION": "WHEN union cases share priority and property count THEN tiebreak by stable qualified name"
+}
+

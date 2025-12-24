@@ -12,6 +12,7 @@ sealed interface Import {
     companion object {
         val serializer = TopLevelFunction("kotlinx.serialization.builtins", "serializer")
         val ListSerializer = TopLevelFunction("kotlinx.serialization.builtins", "ListSerializer")
+        val ByteArraySerializer = TopLevelFunction("kotlinx.serialization.builtins", "ByteArraySerializer")
         val nullable = TopLevelFunction("kotlinx.serialization.builtins", "nullable")
     }
 }

@@ -101,7 +101,7 @@ private fun Model.Union.body() {
                     +"return attemptDeserialize("
                     indented {
                         +"value,"
-                        cases.joinTo(separator = ",\n", postfix = ",\n") { case ->
+                        cases.sortedWith(unionCaseComparator).joinTo(separator = ",\n", postfix = ",\n") { case ->
                             case.renderDeserializeAttempt()
                         }
                     }
@@ -121,7 +121,6 @@ private fun Model.Union.body() {
         +"}"
     }
 }
-
 
 
 context(builder: StringBuilder, ctx: Renderer)
@@ -239,4 +238,70 @@ private fun TypeName.name(depth: Int = 0): String = when (this) {
             }
         simpleName + postfix
     }
+}
+
+/**
+ * Comparator for ordering union cases to ensure proper deserialization.
+ *
+ * The ordering prevents "wider" types from swallowing "narrow" types:
+ * 1. Objects without additional properties (more properties first to prevent overlapping schemas issues)
+ * 2. Objects with additional properties schema (typed additional props, more properties first)
+ * 3. Objects with additional properties allowed (swallow extra keys, more properties first)
+ * 4. DiscriminatedObjects (inheritance-based, should be tried early)
+ * 5. Nested Unions (tricky, should be tried early)
+ * 6. Enums (before primitives or they get swallowed by String)
+ * 7. Collections/Arrays (don't conflict with other types)
+ * 8. Primitives in order: Int → Long → Float → Double → Boolean (narrower numeric types first)
+ * 9. String-like types: Uuid, Date, DateTime, ByteArray (before String or get swallowed)
+ * 10. String (swallows other string-representable types)
+ * 11. FreeFormJson (dead last - swallows everything)
+ */
+val unionCaseComparator = Comparator<Model.Union.Case> { case1, case2 ->
+    fun Model.Object.additionalPropertiesPriority(): Int = when (additionalProperties) {
+        is Model.Object.AdditionalProperties.Allowed -> if (additionalProperties.value) 2 else 0
+        is Model.Object.AdditionalProperties.Schema -> 1
+    }
+
+    fun Model.priority(): Int = when (this) {
+        // Objects: lower priority number = tried first
+        // Objects without additional properties come first, sorted by property count (more = first)
+        is Model.Object -> additionalPropertiesPriority() * 1000 - properties.size
+
+        // DiscriminatedObjects should be tried early (they have discriminator field)
+        is Model.DiscriminatedObject -> 3000
+
+        // Nested unions are tricky, try early
+        is Model.Union -> 4000
+
+        // Enums before primitives (or String swallows them)
+        is Model.Enum -> 5000
+
+        // Collections don't conflict
+        is Model.Collection -> 6000
+
+        // References - depends on what they reference, treat as medium priority
+        is Model.Reference -> 7000
+
+        // Primitives in order: narrower numeric types first
+        is Model.Primitive.Int -> 8000
+        is Model.Primitive.Long -> 8100
+        is Model.Primitive.Float -> 8200
+        is Model.Primitive.Double -> 8300
+        is Model.Primitive.Boolean -> 8400
+        is Model.Primitive.Unit -> 8500
+
+        // String-like types before String (or get swallowed)
+        is Model.Uuid -> 9000
+        is Model.Date -> 9100
+        is Model.DateTime -> 9200
+        is Model.ByteArray -> 9300
+
+        // String swallows other string types
+        is Model.Primitive.String -> 10000
+
+        // FreeFormJson is dead last - swallows everything
+        is Model.FreeFormJson -> Int.MAX_VALUE
+    }
+
+    case1.model.priority().compareTo(case2.model.priority())
 }
