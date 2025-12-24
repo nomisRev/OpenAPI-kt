@@ -1,27 +1,34 @@
 package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.NamingContext.Named
+import io.github.nomisrev.openapi.NamingContext.Nested
+import io.github.nomisrev.openapi.NamingContext.RouteBody
+import io.github.nomisrev.openapi.NamingContext.RouteParam
+import io.github.nomisrev.openapi.ReferenceOr.Reference
+import io.github.nomisrev.openapi.ReferenceOr.Value
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.isSuccess
 
-fun OpenAPI.routes(): List<Route> = TypedApiContext(this).routes()
+fun OpenAPI.routes(): List<Route> =
+  TypedApiContext(this).routes()
 
-private fun TypedApiContext.routes(): List<Route> =
+fun TypedApiContext.routes(): List<Route> =
   openAPI.operations().map { (path, method, operation) ->
     val parts = path.pathSegments()
     val operationId = operation.getOrCreateOperationId(path, method)
+    val nested = mutableListOf<Model>()
 
     fun context(context: NamingContext): NamingContext =
       when (parts.size) {
         0 -> context
-        1 -> NamingContext.Nested(context, Named(parts[0]))
+        1 -> Nested(context, Named(parts[0]))
         else ->
-          NamingContext.Nested(
+          Nested(
             context,
             parts.drop(1).fold<String, NamingContext>(Named(parts[0])) { acc, part ->
-              NamingContext.Nested(Named(part), acc)
+              Nested(Named(part), acc)
             },
           )
       }
@@ -31,131 +38,107 @@ private fun TypedApiContext.routes(): List<Route> =
         body?.required ?: false,
         body
           ?.content
-          ?.entries
-          ?.associate { (contentType, mediaType) ->
+          ?.mapValues { (contentType, mediaType) ->
+            val model = when (val schema = mediaType.schema) {
+              null -> null
+              is Reference -> {
+                val resolved = schema.resolve(SchemaResolutionStrategy.ForInline, null)
+                resolved.toModel(ModelResolutionContext(
+                  resolved.namedOr { 
+                    context(
+                      RouteParam(
+                        "body",
+                        operationId,
+                        "Request"
+                      )
+                    )
+                  }, 
+                  SchemaResolutionStrategy.ForInline
+                )).value.also { nested += it }
+              }
+              is Value<Schema> -> schema.value.toModel(
+                ModelResolutionContext(
+                  context(
+                    RouteParam(
+                      "body",
+                      operationId,
+                      "Request"
+                    )
+                  ),
+                  SchemaResolutionStrategy.ForInline
+                )
+              ).also { nested += it }
+            }
+
+
             when {
               ContentType.MultiPart.FormData.match(contentType) -> {
-                val resolved =
-                  requireNotNull(mediaType.schema?.resolve()) { "$mediaType without a schema. Generation doesn't know what to do, please open a ticket!" }
+                requireNotNull(model) { "Multipart without a schema." }
 
-                val multipart =
-                  when (resolved) {
-                    is Resolved.Ref -> {
-                      val modelResolved = resolved.toModel(Named(resolved.name))
-                      when (val m = modelResolved.value) {
-                        is Model.Object -> {
-                          val params = m.properties.map { p ->
-                            Route.Body.Multipart.FormData(p.baseName, p.model)
-                          }
-                          Route.Body.Multipart.Value(params, body.description, mediaType.extensions)
-                        }
-
-                        else -> Route.Body.Multipart.Ref(
-                          resolved.name,
-                          m,
-                          body.description,
-                          mediaType.extensions,
-                        )
-                      }
+                when (model) {
+                  is Model.Object -> {
+                    val params = model.properties.map { p ->
+                      Route.Body.Multipart.FormData(p.baseName, p.model)
                     }
-
-                    is Resolved.Value -> {
-                      val modelResolved = resolved.toModel(
-                        resolved.namedOr { context(NamingContext.RouteParam("body", operationId, "Request")) }
-                      )
-                      when (val m = modelResolved.value) {
-                        is Model.Object -> {
-                          val params = m.properties.map { p ->
-                            Route.Body.Multipart.FormData(p.baseName, p.model)
-                          }
-                          Route.Body.Multipart.Value(params, body.description, mediaType.extensions)
-                        }
-
-                        else -> Route.Body.Multipart.Ref(
-                          resolved.value.title ?: "body",
-                          m,
-                          body.description,
-                          mediaType.extensions,
-                        )
-                      }
-                    }
+                    Route.Body.Multipart.Value(params, body.description, mediaType.extensions)
                   }
 
-                Pair(contentType, multipart)
+                  else -> Route.Body.Multipart.Ref(
+                    when (val schema = mediaType.schema) {
+                      is Reference -> schema.ref.takeLastWhile { it != '/' }
+                      is Value<Schema> -> "body"
+                      null -> throw IllegalStateException("Multipart without a schema. Generation doesn't know what to do, please open a ticket!")
+                    },
+                    model,
+                    body.description,
+                    mediaType.extensions,
+                  )
+                }
               }
 
               ContentType.Application.FormUrlEncoded.match(contentType) -> {
-                val resolved =
-                  mediaType.schema?.resolve()
-                    ?: throw IllegalStateException(
-                      "$mediaType without a schema. Generation doesn't know what to do, please open a ticket!"
-                    )
-
-                val params: List<Route.Body.Multipart.FormData> =
-                  when (resolved) {
-                    is Resolved.Ref -> {
-                      val model = resolved.toModel(Named(resolved.name)) as Resolved.Ref
-                      val obj =
-                        model.value as? Model.Object
-                          ?: throw IllegalStateException(
-                            "FormUrlEncoded only supports object schemas"
-                          )
-                      obj.properties.map { p -> Route.Body.Multipart.FormData(p.baseName, p.model) }
-                    }
-
-                    is Resolved.Value -> {
-                      val obj = resolved.value
-                      val props = obj.properties ?: emptyMap()
-                      props.map { (name, ref) ->
-                        val context =
-                          resolved.namedOr { context(NamingContext.RouteParam(name, operationId, "Request")) }
-                        Route.Body.Multipart.FormData(name, ref.resolve().toModel(context).value)
-                      }
-                    }
-                  }
-                Pair(
-                  contentType,
-                  Route.Body.FormUrlEncoded(params, body.description, mediaType.extensions),
+                requireNotNull(model) { "Multipart without a schema." }
+                require(model is Model.Object) { "FormUrlEncoded only supports object schemas" }
+                Route.Body.FormUrlEncoded(
+                  model.properties.map { p -> Route.Body.Multipart.FormData(p.baseName, p.model) },
+                  body.description,
+                  mediaType.extensions
                 )
               }
 
               // default to `setBody(any: Any?)` + contentType
-              else -> {
-                val model =
-                  mediaType.schema?.resolve()?.let { resolved ->
-                    val context = resolved.namedOr {
-                      context(NamingContext.RouteParam("body", operationId, "Request"))
-                    }
-
-                    resolved.toModel(context).value
-                  } ?: Model.FreeFormJson(body.description, null)
-                Pair(contentType, Route.Body.SetBody(model, body.description, mediaType.extensions))
-              }
+              else -> Route.Body.SetBody(
+                model ?: Model.FreeFormJson(body.description, null),
+                body.description,
+                mediaType.extensions
+              )
             }
-          }
-          .orEmpty(),
+          }.orEmpty(),
         body?.extensions.orEmpty(),
       )
 
     fun toResponses(): Route.Returns {
       fun Response.allContentModels(): Map<String, Model> =
-        content.entries.associate { (contentType, mediaType) ->
-          val resolved = mediaType.schema?.resolve()
-          val context = resolved?.namedOr {
-            context(NamingContext.RouteBody(operationId, "Response"))
+        content.mapValues { (_, mediaType) ->
+          when (val schema = mediaType.schema) {
+            is Reference -> {
+              val resolved = schema.resolve(
+                SchemaResolutionStrategy.ForInline, null
+              )
+              resolved.toModel(ModelResolutionContext(
+                resolved.namedOr { context(RouteBody(operationId, "Response")) }, 
+                SchemaResolutionStrategy.ForInline
+              )).value.also { nested += it }
+            }
+            is Value<Schema> -> schema.value.toModel(
+              ModelResolutionContext(
+                context(RouteBody(operationId, "Response")),
+                SchemaResolutionStrategy.ForInline
+              )
+            ).also { nested += it }
+
+            null -> Model.FreeFormJson(description, null)
           }
-          val model =
-            when (resolved) {
-              is Resolved -> resolved.toModel(context!!).value
-              null -> Model.FreeFormJson(description, null)
-            }
-          val cleaned =
-            when (model) {
-              is Model.Object -> model.copy(inline = emptyList())
-              is Model.Union -> model.copy(inline = emptyList())
-              else -> model
-            }
-          contentType to cleaned
         }
 
       fun Response.toReturnType(): Route.ReturnType =
@@ -183,45 +166,24 @@ private fun TypedApiContext.routes(): List<Route> =
 
     val inputs = operation.parameters.map { p ->
       val param = p.get()
-      val resolved = requireNotNull(param.schema?.resolve()) { "No Schema for Parameter." }
-      val context = resolved.namedOr {
-        context(NamingContext.RouteParam(param.name, operationId, "Request"))
-      }
-      resolved.toModel(context)
-    }
-    val nestedInput = inputs.mapNotNull { (it as? Resolved.Value)?.value }
-    val nestedResponses =
-      operation.responses.responses.mapNotNull { (_, refOrResponse) ->
-        when (refOrResponse) {
-          is ReferenceOr.Reference -> null
-          is ReferenceOr.Value -> {
-            val resolved =
-              refOrResponse.value.content
-                .getOrElse("application/json") { null }
-                ?.schema
-                ?.resolve() ?: return@mapNotNull null
-
-            val context =
-              resolved.namedOr { context(NamingContext.RouteBody(operationId, "Response")) }
-
-            (resolved.toModel(context) as? Resolved.Value)?.value
-          }
+      when (val schema = param.schema) {
+        is Reference -> {
+          val resolved = schema.resolve(SchemaResolutionStrategy.ForInline, null)
+          resolved.toModel(ModelResolutionContext(
+            resolved.namedOr { context(RouteParam(param.name, operationId, "Request")) }, 
+            SchemaResolutionStrategy.ForInline
+          )).value.also { nested += it }
         }
+        is Value<Schema> -> schema.value.toModel(
+          ModelResolutionContext(
+            context(RouteParam(param.name, operationId, "Request")),
+            SchemaResolutionStrategy.ForInline
+          )
+        ).also { nested += it }
+
+        null -> throw IllegalStateException("Parameter without a schema. Generation doesn't know what to do, please open a ticket!")
       }
-
-    val json =
-      operation.requestBody
-        ?.valueOrNull()
-        ?.content
-        ?.getOrElse("application/json") { null }
-        ?.schema
-        ?.resolve()
-
-    val nestedBody =
-      json
-        ?.namedOr { context(Named("${operationId}Request")) }
-        ?.let { (json.toModel(it) as? Resolved.Value)?.value }
-        .let(::listOfNotNull)
+    }
 
     Route(
       operationId = operationId,
@@ -232,11 +194,11 @@ private fun TypedApiContext.routes(): List<Route> =
       input =
         inputs.zip(operation.parameters) { model, p ->
           val param = p.get()
-          Route.Input(param.name, model.value, param.required, param.input, param.description)
+          Route.Input(param.name, model, param.required, param.input, param.description)
         },
       returnType = toResponses(),
       extensions = operation.extensions,
-      nested = nestedInput + nestedResponses + nestedBody,
+      nested = nested,
     )
   }
 
@@ -267,4 +229,43 @@ private fun OpenAPI.operations(): List<Triple<String, HttpMethod, Operation>> =
       p.trace?.let { Triple(path, HttpMethod.parse("Trace"), it) },
       p.patch?.let { Triple(path, HttpMethod.Patch, it) },
     )
+  }
+
+context(ctx: TypedApiContext)
+private tailrec fun ReferenceOr<Response>.get(): Response =
+  when (this) {
+    is Value -> value
+    is Reference -> {
+      val typeName = ref.drop("#/components/responses/".length)
+      requireNotNull(ctx.openAPI.components.responses[typeName]) {
+        "Response $typeName could not be found in ${ctx.openAPI.components.responses}. Is it missing?"
+      }
+        .get()
+    }
+  }
+
+context(ctx: TypedApiContext)
+private tailrec fun ReferenceOr<Parameter>.get(): Parameter =
+  when (this) {
+    is Value -> value
+    is Reference -> {
+      val typeName = ref.drop("#/components/parameters/".length)
+      requireNotNull(ctx.openAPI.components.parameters[typeName]) {
+        "Parameter $typeName could not be found in ${ctx.openAPI.components.parameters}. Is it missing?"
+      }
+        .get()
+    }
+  }
+
+context(ctx: TypedApiContext)
+private tailrec fun ReferenceOr<RequestBody>.get(): RequestBody =
+  when (this) {
+    is Value -> value
+    is Reference -> {
+      val typeName = ref.drop("#/components/requestBodies/".length)
+      requireNotNull(ctx.openAPI.components.requestBodies[typeName]) {
+        "RequestBody $typeName could not be found in ${ctx.openAPI.components.requestBodies}. Is it missing?"
+      }
+        .get()
+    }
   }
