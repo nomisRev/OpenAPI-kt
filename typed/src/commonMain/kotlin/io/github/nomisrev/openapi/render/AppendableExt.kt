@@ -1,5 +1,15 @@
 package io.github.nomisrev.openapi.render
 
+@IgnorableReturnValue
+context(ctx: Renderer, builder: StringBuilder)
+fun indented(block: StringBuilder.() -> Unit) =
+    buildString(block).lineSequence().joinTo(builder, "\n") {
+        when {
+            it.isBlank() -> it
+            else -> ctx.indent + it
+        }
+    }
+
 context(builder: StringBuilder)
 operator fun String?.unaryPlus() {
     if (this != null) builder.appendLine(this)
@@ -48,16 +58,3 @@ fun <A, B, AA : Appendable> Map<A, B>.joinTo(
 ) {
     entries.joinTo(appendable, separator, prefix, postfix, limit, truncated, transform)
 }
-
-fun String.stringValue(): String {
-    var max = 0
-    var count = 0
-    for (c in this)
-        if (c != '$' || count++ <= max) Unit
-        else {
-            max = count
-        }
-    val dollars = if (count > 0) "$".repeat(count + 1) else ""
-    return "$dollars\"$this\""
-}
-

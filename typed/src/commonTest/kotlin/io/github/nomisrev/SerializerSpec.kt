@@ -7,6 +7,7 @@ import io.github.nomisrev.PersonWithAdditionalProperties.Serializer.generatedSer
 import io.github.nomisrev.Union.CaseBoolean
 import io.github.nomisrev.Union.CaseInt
 import io.github.nomisrev.Union.CaseLong
+import io.github.nomisrev.openapi.Model
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -163,21 +164,27 @@ val serializerSpec by testSuite {
         }
     )
 
+    fun asc(): OpenEnum = OpenEnum.AscOrDesc.Asc
+
     verify(
         "OpenEnum - Enum A",
-        OpenEnum.AscOrDesc.Asc,
+        asc(),
         JsonPrimitive("asc")
     )
 
+    fun desc(): OpenEnum = OpenEnum.AscOrDesc.Desc
+
     verify(
         "OpenEnum - AscOrDesc Desc",
-        OpenEnum.AscOrDesc.Desc,
+        desc(),
         JsonPrimitive("desc")
     )
 
+    fun open(): OpenEnum = OpenEnum.CaseString("open")
+
     verify(
         "OpenEnum - open",
-        OpenEnum.CaseString("open"),
+        open(),
         JsonPrimitive("open")
     )
 
@@ -390,7 +397,7 @@ private fun JsonElement.orNull(): JsonElement? = when (this) {
     else -> this
 }
 
-@Serializable
+@Serializable(with = OpenEnum.Serializer::class)
 sealed interface OpenEnum {
     @Serializable
     @JvmInline
@@ -430,6 +437,12 @@ inline fun <reified Value, reified Union> Json.parseSerializable(
     Pair(Union::class) { json: JsonElement ->
         createUnion(decodeFromJsonElement(serializer<Value>(), json))
     }
+
+fun <Value, Union> Json.parseSerializable(
+    serializer: KSerializer<Value>,
+    createUnion: (Value) -> Union
+): Pair<KClass<*>, (JsonElement) -> Union> =
+    Pair(Union::class) { createUnion(decodeFromJsonElement(serializer, it)) }
 
 inline fun <reified Union> Json.parseUnionCase(): Pair<KClass<*>, (JsonElement) -> Union> =
     Pair(Union::class) { json: JsonElement -> decodeFromJsonElement(serializer<Union>(), json) }
@@ -483,8 +496,16 @@ sealed interface Union {
         @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
         override val descriptor: SerialDescriptor =
             buildSerialDescriptor("io.github.nomisrev.Union2", PolymorphicKind.SEALED) {
-                element("CasePerson", PersonWithAdditionalProperties.serializer().descriptor)
+                element("Empty", Empty.serializer().descriptor)
                 element("CaseElse", CaseElse.serializer().descriptor)
+                element("CasePerson", PersonWithAdditionalProperties.serializer().descriptor)
+                element("AOrB", AOrB.serializer().descriptor)
+                element("CaseInt", Int.serializer().descriptor)
+                element("CaseLong", Long.serializer().descriptor)
+                element("CaseFloat", Float.serializer().descriptor)
+                element("CaseDouble", Double.serializer().descriptor)
+                element("CaseBoolean", Boolean.serializer().descriptor)
+                element("CaseString", String.serializer().descriptor)
             }
 
         override fun deserialize(decoder: Decoder): Union {
@@ -494,18 +515,39 @@ sealed interface Union {
             // TODO: this has critical order.
             return attemptDeserialize(
                 value,
-                json.parseUnionCase<Empty>(),
-                json.parseUnionCase<CaseElse>(),
-                // Only 1 object in Union can have additional properties, or it swallows all objects 'below'
-                // Doesn't really make sense either but we need to order the cases anyway
-                json.parseSerializable<PersonWithAdditionalProperties, Union>(::CasePerson),
-                json.parseUnionCase<AOrB>(),
-                json.parseSerializable(::CaseInt),
-                json.parseSerializable(::CaseLong),
-                json.parseSerializable(::CaseFloat),
-                json.parseSerializable(::CaseDouble),
-                json.parseSerializable(::CaseBoolean),
-                json.parseSerializable(::CaseString)
+                // Objects most properties first to prevent small objects being returned first in anyOf overlapping schemas
+                CaseElse::class to { decodeFromJsonElement(CaseElse.serializer(), it) },
+                Empty::class to { decodeFromJsonElement(Empty.serializer(), it) },
+                // Objects with additional propertis PSchema go second last
+                // Objects with additional properties go last because they swallow everything
+                CasePerson::class to {
+                    CasePerson(
+                        decodeFromJsonElement(
+                            PersonWithAdditionalProperties.serializer(),
+                            it
+                        )
+                    )
+                },
+
+                // Nested Union is extremely tricky... should be first?
+                // DiscriminatedObject is not allowed
+
+                // Enums should go before primitives or might get swallowed
+                AOrB::class to { decodeFromJsonElement(AOrB.serializer(), it) },
+
+                // List (JsArray) can be anywhere since it doesn't conflict
+
+                // Primitives should come in this order
+                CaseInt::class to { CaseInt(decodeFromJsonElement(Int.serializer(), it)) },
+                CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
+                CaseFloat::class to { CaseFloat(decodeFromJsonElement(Float.serializer(), it)) },
+                CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
+                CaseBoolean::class to { CaseBoolean(decodeFromJsonElement(Boolean.serializer(), it)) },
+
+                // All other string types come before (uuid, date, date-time, binary) or get swallowed
+                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+
+                // FreeFormJson should be dead last
             )
         }
 
@@ -519,9 +561,13 @@ sealed interface Union {
             is CaseFloat -> encoder.encodeFloat(value.value)
             is CaseInt -> encoder.encodeInt(value.value)
             is CaseLong -> encoder.encodeLong(value.value)
-            is CaseString -> encoder.encodeString(value.value)
+            is CaseString -> encoder.encodeSerializableValue(String.serializer(), value.value)
         }
     }
+}
+
+val unionCaseComparator = Comparator<Model.Union.Case> { case1, case2 ->
+
 }
 
 public class UnionSerializationException(

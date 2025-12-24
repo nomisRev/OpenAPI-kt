@@ -1,7 +1,25 @@
 package io.github.nomisrev.openapi.render
 
-private val arrayPattern = """\[\d*\]""".toRegex()
-fun String.dropArraySyntax(): String = replace(arrayPattern, "")
+context(ctx: Renderer)
+fun String.prepend(): String =
+    lineSequence().joinToString("\n") {
+        when {
+            it.isBlank() -> it
+            else -> ctx.indent + it
+        }
+    }
+
+fun String.stringValue(): String {
+  var max = 0
+  var count = 0
+  for (c in this)
+    if (c != '$' || count++ <= max) Unit
+    else {
+      max = count
+    }
+  val dollars = if (count > 0) "$".repeat(count + 1) else ""
+  return "$dollars\"$this\""
+}
 
 fun String.splitToWords(): List<String> {
   val boundaries = setOf(' ', '-', '_', '.', '/', '[', '*', ']')

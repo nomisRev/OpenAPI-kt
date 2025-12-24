@@ -11,13 +11,17 @@ fun Model.Enum.render(parentClass: TypeName.Class? = null): String =
         append("}")
     }
 
+fun Model.Enum.valueNames(): Map<String, String> =
+    values.associate { rawName -> Pair(rawName ?: "null", toEnumValueName(rawName ?: "null")) }
+
 context(ctx: Renderer)
-fun Model.Enum.values(): String {
-    val rawToName = values.associate { rawName -> Pair(rawName ?: "null", toEnumValueName(rawName ?: "null")) }
-    val line = rawToName.entries.joinToString(", ", postfix = ";") { it.value(" ") }.prependIndent(ctx.indent)
+private fun Model.Enum.values(): String {
+    val rawToName = valueNames()
+    val line = rawToName.entries.joinToString(", ", postfix = ";") { it.value(" ") }.prepend()
     return if (line.length <= ctx.maxLineLength) line
-    else rawToName.entries.joinToString(",\n", postfix = ";") { it.value("\n").prependIndent(ctx.indent) }
+    else rawToName.entries.joinToString(",\n", postfix = ";") { it.value("\n").prepend() }
 }
+
 context(ctx: Renderer)
 private fun Map.Entry<String, String>.value(separator: String): String {
     val (rawName, valueName) = this

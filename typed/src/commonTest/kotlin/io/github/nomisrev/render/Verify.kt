@@ -24,18 +24,7 @@ fun TestSuite.verify(
     expectedImports: Set<TypeName> = emptySet()
 ) {
     fun eq(expected: String, actual: String) =
-        if (expected != actual) throw AssertionError(
-            """
-            |###################
-            |###### Actual #####
-            |$actual
-            |###################
-            |###### Expected ###
-            |###################
-            |$expected
-            |###################
-        """.trimMargin()
-        )
+        if (expected != actual) throw AssertionError(expected.diff(actual))
         else Unit
 
     test(expected) {
@@ -59,7 +48,6 @@ fun TestSuite.verify(
 ) {
     verify(expected, model, imports.toSet())
 }
-
 
 @TestRegistering
 fun TestSuite.verify(

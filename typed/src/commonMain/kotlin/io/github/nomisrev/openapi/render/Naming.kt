@@ -1,8 +1,10 @@
 package io.github.nomisrev.openapi.render
 
+private val arrayPattern = """\[\d*\]""".toRegex()
+fun String.dropArraySyntax(): String = replace(arrayPattern, "")
+
 private val negativeNumberRegex = "^-\\d+(\\.\\d+)?\$".toRegex()
-fun String.invalidJsName(): Boolean =
-    Regex("`[0-9]").matchesAt(this, 0)
+fun String.invalidJsName(): Boolean = Regex("`[0-9]").matchesAt(this, 0)
 
 fun toEnumValueName(rawToName: String): String {
     if (rawToName == "*") return "Star"

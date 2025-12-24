@@ -19,3 +19,9 @@ fun jvmInline() {
     ctx.import(TypeName.JvmInline)
     +"@JvmInline"
 }
+
+context(ctx: Renderer, builder: StringBuilder)
+fun serialName(name: String) = with(ctx) {
+    ctx.import(TypeName.SerialName)
+    +"@SerialName(${name.stringValue()})"
+}

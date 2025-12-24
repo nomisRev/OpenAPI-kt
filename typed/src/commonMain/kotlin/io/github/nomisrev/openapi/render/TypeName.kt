@@ -11,6 +11,7 @@ sealed interface Import {
 
     companion object {
         val serializer = TopLevelFunction("kotlinx.serialization.builtins", "serializer")
+        val ListSerializer = TopLevelFunction("kotlinx.serialization.builtins", "ListSerializer")
         val nullable = TopLevelFunction("kotlinx.serialization.builtins", "nullable")
     }
 }
@@ -24,6 +25,7 @@ sealed interface TypeName : Import {
         constructor(`package`: String, name: String) : this(`package`, listOf(name))
 
         val simpleName: String get() = names.last().toPascalCase()
+        val fqName: String get() = "$packageName.${names.joinToString(".")}"
 
         fun nest(name: String) = copy(names = names + name)
     }
@@ -41,24 +43,29 @@ sealed interface TypeName : Import {
         val Float = Class("kotlin", "Float")
         val Double = Class("kotlin", "Double")
         val Unit = Class("kotlin", "Unit")
-
-        val ByteArray = Class("kotlin", "ByteArray")
-        val JsonElement = Class("kotlinx.serialization.json", "JsonElement")
-        val JsonObject = Class("kotlinx.serialization.json", "JsonObject")
-        val JsonArray = Class("kotlinx.serialization.json", "JsonArray")
-        val Date = Class("kotlinx.datetime", "LocalDate")
-        val DateTime = Class("kotlinx.datetime", "LocalDateTime")
         val Uuid = Class("kotlin.uuid", "Uuid")
+        val ByteArray = Class("kotlin", "ByteArray")
 
         val JvmInline = Class("kotlin.jvm", "JvmInline")
+
         val JsName = Class("kotlin.js", "JsName")
+
+        val Date = Class("kotlinx.datetime", "LocalDate")
+        val DateTime = Class("kotlinx.datetime", "LocalDateTime")
+
+        val JsonElement = Class("kotlinx.serialization.json", "JsonElement")
+        val JsonArray = Class("kotlinx.serialization.json", "JsonArray")
+        val JsonObject = Class("kotlinx.serialization.json", "JsonObject")
+        val JsonClassDiscriminator = Class("kotlinx.serialization.json", "JsonClassDiscriminator")
+        val JsonDecoder = Class("kotlinx.serialization.json", "JsonDecoder")
 
         val Serializable = Class("kotlinx.serialization", "Serializable")
         val SerialName = Class("kotlinx.serialization", "SerialName")
         val Required = Class("kotlinx.serialization", "Required")
-        val JsonClassDiscriminator = Class("kotlinx.serialization.json", "JsonClassDiscriminator")
         val ExperimentalSerializationApi = Class("kotlinx.serialization", "ExperimentalSerializationApi")
         val KeepGeneratedSerializer = Class("kotlinx.serialization", "KeepGeneratedSerializer")
+        val InternalSerializationApi = Class("kotlinx.serialization", "InternalSerializationApi")
+        val PolymorphicKind = Class("kotlinx.serialization.descriptors", "PolymorphicKind")
     }
 }
 

@@ -1,11 +1,6 @@
 package io.github.nomisrev.openapi.render
 
-import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.text.isBlank
-import kotlin.text.lineSequence
 
 context(ctx: Renderer)
 fun Model.Object.render(
@@ -32,6 +27,13 @@ fun Model.Object.render(
     body()
 }
 
+context(ctx: Renderer)
+fun Map.Entry<String, Model.Object.Property>.render(
+    baseProperties: Set<String>,
+    defaultValue: Boolean = true
+): String = renderProperty(key, value, baseProperties, defaultValue)
+
+
 context(ctx: Renderer, builder: StringBuilder)
 private fun Model.Object.valueClass(parentClass: TypeName.Class?, baseProperties: Set<String>) {
     if (ctx.jvm) jvmInline()
@@ -42,14 +44,11 @@ private fun Model.Object.valueClass(parentClass: TypeName.Class?, baseProperties
     )
 }
 
-
 context(ctx: Renderer, builder: StringBuilder)
 private fun Model.Object.dataClass(parentClass: TypeName.Class?, baseProperties: Set<String>) {
     val simpleName = name().simpleName
-    val additionalLine = additionalProperty()?.let { ", $it" } ?: ""
 
-    val line =
-        "data class $simpleName(${properties.joinToString { it.render(baseProperties) }}$additionalLine)${parentClass.renderAsSuperclass()}"
+    val line = dataClassSingleLine(baseProperties, simpleName, parentClass)
     if (line.length <= ctx.maxLineLength) append(line)
     else {
         +"data class $simpleName("
@@ -62,41 +61,28 @@ private fun Model.Object.dataClass(parentClass: TypeName.Class?, baseProperties:
 }
 
 context(ctx: Renderer)
-private fun Model.Object.additionalProperty(): String? =
-    when (additionalProperties) {
-        is Model.Object.AdditionalProperties.Allowed -> if (additionalProperties.value) "val additional: JsonObject? = null" else null
-        is Model.Object.AdditionalProperties.Schema -> "val additional: Map<String, ${additionalProperties.value.toTypeName().type()}>? = null"
-    }
-
-private fun Model.hasDefault(): Boolean = when (this) {
-    is Model.Enum -> default != null
-    is Model.Collection -> default != null
-    is Model.Primitive.Boolean -> default != null
-    is Model.Primitive.Double -> default != null
-    is Model.Primitive.Float -> default != null
-    is Model.Primitive.Int -> default != null
-    is Model.Primitive.Long -> default != null
-    is Model.Primitive.String -> default != null
-    is Model.ByteArray,
-    is Model.Date,
-    is Model.DateTime,
-    is Model.FreeFormJson,
-    is Model.Object,
-    is Model.Primitive.Unit,
-    is Model.Reference,
-    is Model.Union,
-    is Model.Uuid,
-    is Model.DiscriminatedObject -> false
+private fun Model.Object.dataClassSingleLine(
+    baseProperties: Set<String>,
+    simpleName: String,
+    parentClass: TypeName.Class?
+): String {
+    val additionalLine = additionalProperty()?.let { ", $it" } ?: ""
+    val propertiesLine = "${properties.joinToString { it.render(baseProperties) }}$additionalLine"
+    return "data class $simpleName($propertiesLine)${parentClass.renderAsSuperclass()}"
 }
 
 context(ctx: Renderer)
-fun Map.Entry<String, Model.Object.Property>.render(
-    baseProperties: Set<String>,
-    defaultValue: Boolean = true
-): String = render(key, value, baseProperties, defaultValue)
+private fun Model.Object.additionalProperty(): String? =
+    when (additionalProperties) {
+        is Model.Object.AdditionalProperties.Allowed -> if (additionalProperties.value) "val additional: JsonObject? = null" else null
+        is Model.Object.AdditionalProperties.Schema -> {
+            val typeName = additionalProperties.value.toTypeName().type()
+            "val additional: Map<String, $typeName>? = null"
+        }
+    }
 
 context(ctx: Renderer)
-fun render(
+private fun renderProperty(
     baseName: String,
     prop: Model.Object.Property,
     baseProperties: Set<String>,
@@ -146,20 +132,10 @@ private fun Model.Object.needsSerializer(): Boolean = when (additionalProperties
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-fun indented(block: StringBuilder.() -> Unit) {
-    val string = buildString(block)
-    string.lineSequence().joinTo(builder, "\n") {
-        when {
-            it.isBlank() -> it
-            else -> ctx.indent + it
-        }
-    }
-}
-
-context(ctx: Renderer, builder: StringBuilder)
-private fun Model.Object.serializer() = if (needsSerializer()) {
+private fun Model.Object.serializer() {
+    if (!needsSerializer()) return
     newLine()
-    +"companion object Serializer : KSerializer<${name().simpleName}> {"
+    +"object Serializer : KSerializer<${name().simpleName}> {"
     indented {
         +"override val descriptor: SerialDescriptor = generatedSerializer().descriptor"
         newLine()
@@ -197,7 +173,7 @@ private fun Model.Object.serializer() = if (needsSerializer()) {
             +"val element = decoder.decodeSerializableValue(JsonObject.serializer())"
             append("val names = ")
             properties.keys.joinTo(prefix = "setOf(", postfix = ")\n") { "\"$it\"" }
-            +"require(element.keys.containsAll(names)) { \"Missing required properties: \${names - element.keys}\" }"
+            +$$"""require(element.keys.containsAll(names)) { "Missing required properties: ${names - element.keys}" }"""
             +"return ${name().simpleName}("
             indented {
                 properties.joinTo(separator = ",\n", postfix = ",\n") { (name, prop) ->
@@ -222,59 +198,4 @@ private fun Model.Object.serializer() = if (needsSerializer()) {
         }
         +"}"
     }
-} else Unit
-
-context(ctx: Renderer)
-fun Model.serializer(): String = when (this) {
-    is Model.Primitive -> {
-        ctx.import(Import.serializer)
-        when (this) {
-            is Model.Primitive.Boolean -> "Boolean.serializer()"
-            is Model.Primitive.Double -> "Double.serializer()"
-            is Model.Primitive.Float -> "Float.serializer()"
-            is Model.Primitive.Int -> "Int.serializer()"
-            is Model.Primitive.Long -> "Long.serializer()"
-            is Model.Primitive.String -> "String.serializer()"
-            is Model.Primitive.Unit -> "Unit.serializer()"
-        }
-    }
-
-    is Model.Uuid -> "Uuid.serializer()"
-    is Model.Date -> "LocalDate.serializer()"
-    is Model.DateTime -> "LocalDateTime.serializer()"
-    is Model.FreeFormJson -> "JsonElement.serializer()"
-
-    is Model.ByteArray -> {
-        ctx.import(TopLevelFunction("kotlinx.serialization.builtins", "ByteArraySerializer"))
-        "ByteArraySerializer()"
-    }
-
-    is Model.Collection if inner is Model.FreeFormJson -> "JsonArray.serializer()"
-    is Model.Collection -> {
-        ctx.import(TopLevelFunction("kotlinx.serialization.builtins", "ListSerializer"))
-        "ListSerializer(${inner.serializer()})"
-    }
-
-    is Model.Object if properties.isEmpty() && additionalProperties is Allowed && additionalProperties.value -> "JsonObject.serializer()"
-    is Model.Object if properties.isEmpty() && additionalProperties is Schema -> additionalProperties.value.serializer()
-
-    is Model.ContextHolder -> "${name().simpleName}.serializer()"
-}.let { serializer ->
-    if (isNullable) {
-        ctx.import(Import.nullable)
-        "$serializer.nullable"
-    } else serializer
-}
-
-// TODO: Wip
-context(ctx: Renderer)
-suspend fun Constraints.Number.requirements(
-    name: String
-) {
-    val min = if (exclusiveMinimum == true) "<" else "<="
-    val max = if (exclusiveMaximum == true) "<" else "<="
-    val rangeCheck = "$minimum $min $name $maximum $max"
-    val rangeMessage = "$name must be $minimum $min $name $maximum $max"
-    val multipleOf = "$name % $multipleOf == 0"
-    val multipleOfMessage = "$name must be a multiple of $multipleOf"
 }

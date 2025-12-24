@@ -218,7 +218,7 @@ val renderObjectSpec by testSuite {
             |    @Serializable
             |    data class NestedClass(val config1: String, val config2: Long)
             |
-            |    companion object Serializer : KSerializer<PersonWithAdditionalProperties> {
+            |    object Serializer : KSerializer<PersonWithAdditionalProperties> {
             |        override val descriptor: SerialDescriptor = generatedSerializer().descriptor
             |
             |        override fun serialize(encoder: Encoder, value: PersonWithAdditionalProperties) {
@@ -279,7 +279,7 @@ val renderObjectSpec by testSuite {
             |    @Serializable
             |    data class NestedClass(val config1: String, val config2: Long)
             |
-            |    companion object Serializer : KSerializer<PersonWithAdditionalProperties> {
+            |    object Serializer : KSerializer<PersonWithAdditionalProperties> {
             |        override val descriptor: SerialDescriptor = generatedSerializer().descriptor
             |
             |        override fun serialize(encoder: Encoder, value: PersonWithAdditionalProperties) {
