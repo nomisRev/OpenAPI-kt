@@ -33,5 +33,5 @@ assert = { id = "org.jetbrains.kotlin.plugin.power-assert",  version.ref = "kotl
 serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
 knit = { id = "org.jetbrains.kotlinx.knit", version.ref = "knit" }
-spotless = { id = "com.diffplug.spotless", version = "7.2.1" }
+spotless = { id = "com.diffplug.spotless", version = "8.1.0" }
 publish = { id = "com.vanniktech.maven.publish", version.ref="publish" }
