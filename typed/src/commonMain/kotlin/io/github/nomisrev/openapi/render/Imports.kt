@@ -25,3 +25,10 @@ fun serialName(name: String) = with(ctx) {
     ctx.import(TypeName.SerialName)
     +"@SerialName(${name.stringValue()})"
 }
+
+context(ctx: Renderer, builder: StringBuilder)
+fun jsonClassDiscriminator(name: String) {
+    ctx.import(TypeName.JsonClassDiscriminator, TypeName.ExperimentalSerializationApi)
+    +"@OptIn(ExperimentalSerializationApi::class)"
+    +"@JsonClassDiscriminator(${name.stringValue()})"
+}

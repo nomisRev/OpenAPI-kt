@@ -26,6 +26,15 @@ fun Model.hasDefault(): Boolean = when (this) {
 }
 
 context(ctx: Renderer)
+fun Model.Object.Property.serializer(): String {
+    val serializer = model.serializer()
+    return if (!isRequired && !serializer.endsWith(".nullable")) {
+        ctx.import(Import.nullable)
+        "$serializer.nullable"
+    } else serializer
+}
+
+context(ctx: Renderer)
 fun Model.serializer(): String = when (this) {
     is Model.Primitive -> {
         ctx.import(Import.serializer)

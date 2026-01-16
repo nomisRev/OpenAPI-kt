@@ -3,20 +3,16 @@ package io.github.nomisrev
 import de.infix.testBalloon.framework.core.TestSuite
 import de.infix.testBalloon.framework.core.testSuite
 import de.infix.testBalloon.framework.shared.TestRegistering
-import io.github.nomisrev.PersonWithAdditionalProperties.Serializer.generatedSerializer
 import io.github.nomisrev.Union.CaseBoolean
 import io.github.nomisrev.Union.CaseInt
 import io.github.nomisrev.Union.CaseLong
-import io.github.nomisrev.openapi.Model
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.serializer
 import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
-import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PolymorphicKind
@@ -35,15 +31,12 @@ import kotlinx.serialization.json.JsonObjectBuilder
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.decodeFromJsonElement
-import kotlinx.serialization.json.int
-import kotlinx.serialization.json.jsonPrimitive
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.jvm.JvmInline
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-
 
 @IgnorableReturnValue
 fun JsonObjectBuilder.put(key: String, element: String): JsonElement? = put(key, JsonPrimitive(element))
@@ -57,7 +50,8 @@ fun JsonObjectBuilder.put(key: String, element: Boolean): JsonElement? = put(key
 @IgnorableReturnValue
 fun JsonObjectBuilder.put(key: String, element: Double): JsonElement? = put(key, JsonPrimitive(element))
 
-fun JsonObjectBuilder.putAll(jsonObject: JsonObject?) = jsonObject.orEmpty().forEach { (key, value) -> put(key, value) }
+fun JsonObjectBuilder.putAll(jsonObject: JsonObject?) =
+    jsonObject.orEmpty().forEach { (key, value) -> put(key, value) }
 
 val serializerSpec by testSuite {
     fun nested(index: Int): JsonObject = buildJsonObject {
@@ -303,6 +297,28 @@ inline fun <reified A> TestSuite.verify(
     json: JsonElement
 ) = test(name) { assertEquals(expected, Json.decodeFromJsonElement<A>(json)) }
 
+// TODO: this is needed for referenced union cases, and wrapped top-level collections & primitives
+@Serializable(with = Wrapped.Serializer::class)
+@JvmInline
+value class Wrapped(val value: PersonWithAdditionalPropertiesSchema) {
+    object Serializer : KSerializer<Wrapped> by ValueClassSerializer(
+        Wrapped::value,
+        ::Wrapped,
+        PersonWithAdditionalPropertiesSchema.serializer()
+    )
+}
+
+fun <Wrapped, Value> ValueClassSerializer(
+    unwrap: (Wrapped) -> Value,
+    wrap: (Value) -> Wrapped,
+    valueSerializer: KSerializer<Value>
+) = object : KSerializer<Wrapped> {
+    override val descriptor: SerialDescriptor = valueSerializer.descriptor
+    override fun deserialize(decoder: Decoder): Wrapped = wrap(decoder.decodeSerializableValue(valueSerializer))
+    override fun serialize(encoder: Encoder, value: Wrapped) =
+        encoder.encodeSerializableValue(valueSerializer, unwrap(value))
+}
+
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable(with = PersonWithAdditionalPropertiesSchema.Serializer::class)
 @KeepGeneratedSerializer
@@ -430,23 +446,6 @@ sealed interface OpenEnum {
     }
 }
 
-// TODO: Should we generate 'serializer<Value>()' instead of relying on the reflection lookup?
-inline fun <reified Value, reified Union> Json.parseSerializable(
-    noinline createUnion: (Value) -> Union
-): Pair<KClass<*>, (JsonElement) -> Union> =
-    Pair(Union::class) { json: JsonElement ->
-        createUnion(decodeFromJsonElement(serializer<Value>(), json))
-    }
-
-fun <Value, Union> Json.parseSerializable(
-    serializer: KSerializer<Value>,
-    createUnion: (Value) -> Union
-): Pair<KClass<*>, (JsonElement) -> Union> =
-    Pair(Union::class) { createUnion(decodeFromJsonElement(serializer, it)) }
-
-inline fun <reified Union> Json.parseUnionCase(): Pair<KClass<*>, (JsonElement) -> Union> =
-    Pair(Union::class) { json: JsonElement -> decodeFromJsonElement(serializer<Union>(), json) }
-
 @Serializable(with = Union.Serializer::class)
 sealed interface Union {
     @Serializable
@@ -510,8 +509,6 @@ sealed interface Union {
 
         override fun deserialize(decoder: Decoder): Union {
             val value = decoder.decodeSerializableValue(JsonElement.serializer())
-            val json = requireNotNull(decoder as? JsonDecoder) { "Currently only supporting Json" }.json
-
             // TODO: this has critical order.
             return attemptDeserialize(
                 value,
@@ -566,9 +563,9 @@ sealed interface Union {
     }
 }
 
-public class UnionSerializationException(
-    public val payload: JsonElement,
-    public val errors: Map<KClass<*>, IllegalArgumentException>,
+class UnionSerializationException(
+    val payload: JsonElement,
+    val errors: Map<KClass<*>, IllegalArgumentException>,
 ) : SerializationException(
     """
         Failed to deserialize Json: $payload.
@@ -580,10 +577,7 @@ public class UnionSerializationException(
     }""".trimIndent()
 )
 
-public fun <A> attemptDeserialize(
-    json: JsonElement,
-    vararg block: Pair<KClass<*>, (JsonElement) -> A>
-): A {
+fun <A> attemptDeserialize(json: JsonElement, vararg block: Pair<KClass<*>, (JsonElement) -> A>): A {
     val errors = linkedMapOf<KClass<*>, IllegalArgumentException>()
     block.forEach { (kclass, parse) ->
         try {
@@ -593,46 +587,4 @@ public fun <A> attemptDeserialize(
         }
     }
     throw UnionSerializationException(json, errors)
-}
-
-// TODO: Write a function that automatically generates poly-n version of this function.
-//   Use this inside of serializers to avoid complex code in serializers, and splitting complexity.
-inline fun <A> Decoder.require(
-    name: String,
-    block: Json.(a: JsonElement, additional: JsonObject?) -> A
-): A {
-    require(this is JsonDecoder) { "Additional properties are only supported for Json" }
-    val element = decodeSerializableValue(JsonObject.serializer())
-    require(element.containsKey(name)) { "Missing required property '$name'" }
-    return json.block(element[name]!!, JsonObject(element - name))
-}
-
-inline fun <A> Decoder.require(
-    name: String,
-    name2: String,
-    block: Json.(a: JsonElement, b: JsonElement, additional: JsonObject?) -> A
-): A {
-    require(this is JsonDecoder) { "Additional properties are only supported for Json" }
-    val element = decodeSerializableValue(JsonObject.serializer())
-    val names = setOf(name, name2)
-    require(element.keys.containsAll(names)) { "Missing required properties '$name' and '$name2'" }
-    return json.block(element[name]!!, element[name2]!!, JsonObject(element - names))
-}
-
-inline fun <A> Decoder.require(
-    name: String,
-    name2: String,
-    name3: String,
-    block: Json.(a: JsonElement, b: JsonElement, c: JsonElement, additional: JsonObject?) -> A
-): A {
-    require(this is JsonDecoder) { "Additional properties are only supported for Json" }
-    val element = decodeSerializableValue(JsonObject.serializer())
-    val names = setOf(name, name2, name3)
-    require(element.keys.containsAll(names)) { "Missing required properties '$name', '$name2' and '$name3'" }
-    return json.block(
-        element[name]!!,
-        element[name2]!!,
-        element[name3]!!,
-        JsonObject(element - names).ifEmpty { null }
-    )
 }

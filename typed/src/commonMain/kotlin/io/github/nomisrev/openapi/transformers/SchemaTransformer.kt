@@ -39,6 +39,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
         )
 
     this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
+
     this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> toDiscriminatedObject(context)
     schema.type != null -> when (val type = schema.type!!) {
         is Schema.Type.Array -> { // Flatten Null

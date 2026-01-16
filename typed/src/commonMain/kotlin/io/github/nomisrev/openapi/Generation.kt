@@ -40,20 +40,21 @@ fun ApiModel.generate(): List<KFile> =
             Pair(context.name(), model.render())
         }
 
-        tailrec fun Import.import(): Class = when (this) {
+        tailrec fun Import.import(): Import = when (this) {
             is Class -> this
             is TypeName.Collection -> type.import()
-            is TopLevelFunction -> TODO()
+            is TopLevelFunction -> this
         }
 
-        tailrec fun TypeName.importString(): String = when (this) {
+        tailrec fun Import.importString(): String = when (this) {
             is Class -> "${packageName}.${names.joinToString(separator = ".")}"
             is TypeName.Collection -> type.importString()
+            is TopLevelFunction -> "${packageName}.${functionName}"
         }
 
         val imports = result.second
             .map { it.import() }
-            .filter { clazz -> clazz.packageName != result.first.first.packageName || clazz.names.size > 1 }
+            .filter { clazz -> clazz.packageName != result.first.first.packageName }
 
         KFile(
             "${result.first.first.simpleName}.kt",

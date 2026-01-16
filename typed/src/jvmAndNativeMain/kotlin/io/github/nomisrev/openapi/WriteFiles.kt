@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.NamingContext.Companion.path
 import io.github.nomisrev.openapi.parser.OpenAPI
+import io.github.nomisrev.openapi.render.attemptDeserialize
 import io.github.nomisrev.openapi.routes.ApiModel
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.routes.toApiModel
@@ -14,12 +15,15 @@ import kotlinx.io.writeString
 
 fun ApiModel.generate(output: String) {
     val files = generate()
-    for (file in files) {
-        val path = Path(output + "/" + file.packageName.replace('.', '/'))
-        with(SystemFileSystem) {
+    with(SystemFileSystem) {
+        for (file in files) {
+            val path = Path(output + "/" + file.packageName.replace('.', '/'))
             createDirectories(path)
             sink(Path("$path/${file.name}")).buffered().use { it.writeString(file.content) }
         }
+        sink(Path("$output/io/github/nomisrev/model/AttemptDeserialize.kt"))
+            .buffered()
+            .use { it.writeString(attemptDeserialize) }
     }
 }
 

@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.transformers.isTopLevel
 
 context(ctx: Renderer)
 fun Model.Object.render(
@@ -17,6 +18,7 @@ fun Model.Object.render(
     } else {
         serializable()
     }
+
     when (properties.size) {
         0 -> append("data object ${name().simpleName}${parentClass.renderAsSuperclass()}")
         1 if additionalProperties is Model.Object.AdditionalProperties.Allowed && !additionalProperties.value ->
@@ -24,6 +26,7 @@ fun Model.Object.render(
 
         else -> dataClass(parentClass, baseProperties)
     }
+
     body()
 }
 
@@ -33,6 +36,11 @@ fun Map.Entry<String, Model.Object.Property>.render(
     defaultValue: Boolean = true
 ): String = renderProperty(key, value, baseProperties, defaultValue)
 
+// This is the other way around for Unions...
+fun Model.isWrapped(): Boolean = when(this) {
+    is Model.ContextHolder -> false
+    else -> true
+}
 
 context(ctx: Renderer, builder: StringBuilder)
 private fun Model.Object.valueClass(parentClass: TypeName.Class?, baseProperties: Set<String>) {
@@ -74,8 +82,13 @@ private fun Model.Object.dataClassSingleLine(
 context(ctx: Renderer)
 private fun Model.Object.additionalProperty(): String? =
     when (additionalProperties) {
-        is Model.Object.AdditionalProperties.Allowed -> if (additionalProperties.value) "val additional: JsonObject? = null" else null
+        is Model.Object.AdditionalProperties.Allowed -> if (additionalProperties.value) {
+            ctx.import(TypeName.JsonObject)
+            "val additional: JsonObject? = null"
+        } else null
+
         is Model.Object.AdditionalProperties.Schema -> {
+            import(additionalProperties.value)
             val typeName = additionalProperties.value.toTypeName().type()
             "val additional: Map<String, $typeName>? = null"
         }
@@ -116,7 +129,7 @@ private fun renderProperty(
 
 context(ctx: Renderer, builder: StringBuilder)
 private fun Model.Object.body() {
-    if (inline.isNotEmpty()) {
+    if (inline.isNotEmpty() || needsSerializer()) {
         +" {"
         indented {
             inline.joinTo(separator = "\n\n", postfix = "\n") { it.render() }
@@ -135,6 +148,16 @@ context(ctx: Renderer, builder: StringBuilder)
 private fun Model.Object.serializer() {
     if (!needsSerializer()) return
     newLine()
+    ctx.import(
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder,
+        TypeName.JsonDecoder,
+        TypeName.JsonEncoder,
+        TypeName.JsonObject,
+        Import.buildJsonObject
+    )
     +"object Serializer : KSerializer<${name().simpleName}> {"
     indented {
         +"override val descriptor: SerialDescriptor = generatedSerializer().descriptor"
@@ -147,16 +170,18 @@ private fun Model.Object.serializer() {
                 +"JsonObject.serializer(),"
                 +"buildJsonObject {"
                 indented {
-                    properties.forEach { (name, prop) ->
-                        +"put(\"$name\", json.encodeToJsonElement(${prop.model.serializer()}, value.$name))"
-                    }
+                    properties
+                        .mapKeys { (name, _) -> name.toParamName() }
+                        .forEach { (name, prop) ->
+                            +"put(\"$name\", json.encodeToJsonElement(${prop.serializer()}, value.$name))"
+                        }
 
                     when (additionalProperties) {
                         is Model.Object.AdditionalProperties.Allowed if additionalProperties.value -> +"putAll(value.additional)"
                         is Model.Object.AdditionalProperties.Allowed -> {}
                         is Model.Object.AdditionalProperties.Schema -> {
                             +"value.additional?.forEach { (key, value) ->"
-                            +"${ctx.indent}put(key, json.encodeToJsonElement(NestedClass.serializer(), value))"
+                            +"${ctx.indent}put(key, json.encodeToJsonElement(${additionalProperties.value.serializer()}, value))"
                             +"}"
                         }
                     }
@@ -176,13 +201,15 @@ private fun Model.Object.serializer() {
             +$$"""require(element.keys.containsAll(names)) { "Missing required properties: ${names - element.keys}" }"""
             +"return ${name().simpleName}("
             indented {
-                properties.joinTo(separator = ",\n", postfix = ",\n") { (name, prop) ->
-                    if (!prop.isRequired) {
-                        "$name = if(element.containsKey(\"$name\")) json.decodeFromJsonElement(${prop.model.serializer()}, element[\"$name\"]!!) else null"
-                    } else {
-                        "$name = json.decodeFromJsonElement(${prop.model.serializer()}, element[\"$name\"]!!)"
+                properties
+                    .mapKeys { (name, _) -> name.toParamName() }
+                    .joinTo(separator = ",\n", postfix = ",\n") { (name, prop) ->
+                        if (!prop.isRequired) {
+                            "$name = if(element.containsKey(\"$name\")) json.decodeFromJsonElement(${prop.serializer()}, element[\"$name\"]!!) else null"
+                        } else {
+                            "$name = json.decodeFromJsonElement(${prop.serializer()}, element[\"$name\"]!!)"
+                        }
                     }
-                }
                 when (additionalProperties) {
                     is Model.Object.AdditionalProperties.Allowed if additionalProperties.value ->
                         +"additional = JsonObject(element - names).ifEmpty { null }"
@@ -198,4 +225,5 @@ private fun Model.Object.serializer() {
         }
         +"}"
     }
+    +"}"
 }

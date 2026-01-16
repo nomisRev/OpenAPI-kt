@@ -5,9 +5,9 @@ import io.github.nomisrev.openapi.NamingContext
 
 context(ctx: Renderer)
 fun Model.DiscriminatedObject.render(): String = buildString {
-    ctx.import(TypeName.SerialName, TypeName.JsonClassDiscriminator)
+    ctx.import(TypeName.SerialName)
 
-    +"@JsonClassDiscriminator(${discriminator.stringValue()})"
+    jsonClassDiscriminator(discriminator)
     serializable()
     +"sealed interface ${name().simpleName} {"
 

@@ -277,8 +277,13 @@ sealed interface Model {
     ) : Model, ContextHolder {
         val inline: Set<Model> = cases.mapNotNullTo(mutableSetOf()) { it.model.nestedOrNull() }
 
+        // Introduce NamingContext?? Duplicated with inner NamingContext?
+        // Alternative: compute naming
         @Serializable
-        data class Case(val model: Model, val discriminator: String?)
+        data class Case(
+            val model: Model,
+            val discriminator: String?
+        )
     }
 
     /**

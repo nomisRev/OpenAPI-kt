@@ -153,7 +153,7 @@ val unionSpec by testSuite {
                     Union.Case(
                         Model.Object(
                             NamingContext.reference("Event", SchemaContext.Null)
-                                .nest(NamingContext.UnionCase("Else")), null, null, mapOf(
+                                .nest(NamingContext.UnionCase("CaseElse")), null, null, mapOf(
                                 "value" to Model.Object.Property(
                                     Model.Primitive.String(null, null, null, false, null),
                                     false

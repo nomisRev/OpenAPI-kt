@@ -33,15 +33,15 @@ val unionRenderSpec by testSuite {
             |
             |    @Serializable
             |    @JvmInline
-            |    value class CaseLocalDate(val value: LocalDate) : Union
+            |    value class CaseDate(val value: LocalDate) : Union
             |
             |    @Serializable
             |    @JvmInline
-            |    value class CaseLocalDateTime(val value: LocalDateTime) : Union
+            |    value class CaseDateTime(val value: LocalDateTime) : Union
             |
             |    @Serializable
             |    @JvmInline
-            |    value class CaseByteArray(val value: ByteArray) : Union
+            |    value class CaseBinary(val value: ByteArray) : Union
             |
             |    @Serializable
             |    @JvmInline
@@ -58,9 +58,9 @@ val unionRenderSpec by testSuite {
             |                element("CaseInt", Int.serializer().descriptor)
             |                element("CaseFloat", Float.serializer().descriptor)
             |                element("CaseDouble", Double.serializer().descriptor)
-            |                element("CaseLocalDate", LocalDate.serializer().descriptor)
-            |                element("CaseLocalDateTime", LocalDateTime.serializer().descriptor)
-            |                element("CaseByteArray", ByteArraySerializer().descriptor)
+            |                element("CaseDate", LocalDate.serializer().descriptor)
+            |                element("CaseDateTime", LocalDateTime.serializer().descriptor)
+            |                element("CaseBinary", ByteArraySerializer().descriptor)
             |                element("CaseUuid", Uuid.serializer().descriptor)
             |                element("CaseUnit", Unit.serializer().descriptor)
             |            }
@@ -68,16 +68,16 @@ val unionRenderSpec by testSuite {
             |        override fun deserialize(decoder: Decoder): Union {
             |            val value = decoder.decodeSerializableValue(JsonElement.serializer())
             |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            |            return attemptDeserialize(
+            |            return json.attemptDeserialize(
             |                value,
             |                CaseInt::class to { CaseInt(decodeFromJsonElement(Int.serializer(), it)) },
             |                CaseFloat::class to { CaseFloat(decodeFromJsonElement(Float.serializer(), it)) },
             |                CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
             |                CaseUnit::class to { CaseUnit(decodeFromJsonElement(Unit.serializer(), it)) },
             |                CaseUuid::class to { CaseUuid(decodeFromJsonElement(Uuid.serializer(), it)) },
-            |                CaseLocalDate::class to { CaseLocalDate(decodeFromJsonElement(LocalDate.serializer(), it)) },
-            |                CaseLocalDateTime::class to { CaseLocalDateTime(decodeFromJsonElement(LocalDateTime.serializer(), it)) },
-            |                CaseByteArray::class to { CaseByteArray(decodeFromJsonElement(ByteArraySerializer(), it)) },
+            |                CaseDate::class to { CaseDate(decodeFromJsonElement(LocalDate.serializer(), it)) },
+            |                CaseDateTime::class to { CaseDateTime(decodeFromJsonElement(LocalDateTime.serializer(), it)) },
+            |                CaseBinary::class to { CaseBinary(decodeFromJsonElement(ByteArraySerializer(), it)) },
             |                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
             |            )
             |        }
@@ -87,9 +87,9 @@ val unionRenderSpec by testSuite {
             |            is CaseInt -> encoder.encodeSerializableValue(Int.serializer(), value.value)
             |            is CaseFloat -> encoder.encodeSerializableValue(Float.serializer(), value.value)
             |            is CaseDouble -> encoder.encodeSerializableValue(Double.serializer(), value.value)
-            |            is CaseLocalDate -> encoder.encodeSerializableValue(LocalDate.serializer(), value.value)
-            |            is CaseLocalDateTime -> encoder.encodeSerializableValue(LocalDateTime.serializer(), value.value)
-            |            is CaseByteArray -> encoder.encodeSerializableValue(ByteArraySerializer(), value.value)
+            |            is CaseDate -> encoder.encodeSerializableValue(LocalDate.serializer(), value.value)
+            |            is CaseDateTime -> encoder.encodeSerializableValue(LocalDateTime.serializer(), value.value)
+            |            is CaseBinary -> encoder.encodeSerializableValue(ByteArraySerializer(), value.value)
             |            is CaseUuid -> encoder.encodeSerializableValue(Uuid.serializer(), value.value)
             |            is CaseUnit -> encoder.encodeSerializableValue(Unit.serializer(), value.value)
             |        }
@@ -127,6 +127,11 @@ val unionRenderSpec by testSuite {
         Import.ByteArraySerializer,
         TypeName.JsonElement,
         TypeName.JsonDecoder,
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder,
+        Import.buildSerialDescriptor
     )
 
     fun employeeCase(ctx: NamingContext.Nested) = Model.Object(
@@ -159,22 +164,22 @@ val unionRenderSpec by testSuite {
             |        override val descriptor: SerialDescriptor =
             |            buildSerialDescriptor("io.github.nomisrev.model.Union", PolymorphicKind.SEALED) {
             |                element("CaseString", String.serializer().descriptor)
-            |                element("CaseCase1", Case1.serializer().descriptor)
+            |                element("Case1", Case1.serializer().descriptor)
             |            }
             |
             |        override fun deserialize(decoder: Decoder): Union {
             |            val value = decoder.decodeSerializableValue(JsonElement.serializer())
             |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            |            return attemptDeserialize(
+            |            return json.attemptDeserialize(
             |                value,
-            |                CaseCase1::class to { decodeFromJsonElement(Case1.serializer(), it) },
+            |                Case1::class to { decodeFromJsonElement(Case1.serializer(), it) },
             |                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
             |            )
             |        }
             |
             |        override fun serialize(encoder: Encoder, value: Union) = when(value) {
             |            is CaseString -> encoder.encodeSerializableValue(String.serializer(), value.value)
-            |            is CaseCase1 -> encoder.encodeSerializableValue(Case1.serializer(), value)
+            |            is Case1 -> encoder.encodeSerializableValue(Case1.serializer(), value)
             |        }
             |    }
             |}
@@ -199,11 +204,17 @@ val unionRenderSpec by testSuite {
         Import.serializer,
         TypeName.JsonElement,
         TypeName.JsonDecoder,
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder,
+        Import.buildSerialDescriptor
     )
 
     // TODO: the referenced type needs a flattening serializer.
     verify(
         $$$"""
+            |@OptIn(ExperimentalSerializationApi::class)
             |@JsonClassDiscriminator($$"$type")
             |@Serializable
             |sealed interface Union {
@@ -229,6 +240,7 @@ val unionRenderSpec by testSuite {
             $$"$type",
             false
         ),
+        TypeName.ExperimentalSerializationApi,
         TypeName.JsonClassDiscriminator,
         TypeName.Serializable,
         TypeName.JvmInline,
@@ -292,6 +304,10 @@ val unionRenderSpec by testSuite {
         TypeName.JvmInline,
         TypeName.SerialName,
         Import.serializer,
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder
     )
 
     verify(
@@ -317,7 +333,7 @@ val unionRenderSpec by testSuite {
             |        override fun deserialize(decoder: Decoder): Union {
             |            val value = decoder.decodeSerializableValue(JsonElement.serializer())
             |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            |            return attemptDeserialize(
+            |            return json.attemptDeserialize(
             |                value,
             |                CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
             |                CaseInt::class to { CaseInt(decodeFromJsonElement(Int.serializer(), it)) },
@@ -362,6 +378,11 @@ val unionRenderSpec by testSuite {
         Import.serializer,
         TypeName.JsonElement,
         TypeName.JsonDecoder,
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder,
+        Import.buildSerialDescriptor
     )
 
     verify(
@@ -387,7 +408,7 @@ val unionRenderSpec by testSuite {
             |        override fun deserialize(decoder: Decoder): Union {
             |            val value = decoder.decodeSerializableValue(JsonElement.serializer())
             |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            |            return attemptDeserialize(
+            |            return json.attemptDeserialize(
             |                value,
             |                CaseStringsList::class to { CaseStringsList(decodeFromJsonElement(ListSerializer(ListSerializer(String.serializer())), it)) },
             |                CaseInt::class to { CaseInt(decodeFromJsonElement(Int.serializer(), it)) },
@@ -439,5 +460,10 @@ val unionRenderSpec by testSuite {
         Import.serializer,
         TypeName.JsonElement,
         TypeName.JsonDecoder,
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder,
+        Import.buildSerialDescriptor
     )
 }

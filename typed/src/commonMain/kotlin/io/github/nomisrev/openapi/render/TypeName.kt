@@ -8,21 +8,26 @@ import io.github.nomisrev.openapi.render.TypeName.Class
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 sealed interface Import {
+    val packageName: String
 
     companion object {
         val serializer = TopLevelFunction("kotlinx.serialization.builtins", "serializer")
         val ListSerializer = TopLevelFunction("kotlinx.serialization.builtins", "ListSerializer")
         val ByteArraySerializer = TopLevelFunction("kotlinx.serialization.builtins", "ByteArraySerializer")
         val nullable = TopLevelFunction("kotlinx.serialization.builtins", "nullable")
+        val buildSerialDescriptor = TopLevelFunction("kotlinx.serialization.descriptors", "buildSerialDescriptor")
+        val buildJsonObject = TopLevelFunction("kotlinx.serialization.json", "buildJsonObject")
     }
 }
 
-data class TopLevelFunction(val packageName: String, val functionName: String) : Import
+data class TopLevelFunction(override val packageName: String, val functionName: String) : Import
 
 sealed interface TypeName : Import {
-    data class Collection(val type: TypeName) : TypeName
+    data class Collection(val type: TypeName) : TypeName {
+        override val packageName: String get() = type.packageName
+    }
 
-    data class Class(val packageName: String, val names: List<String>) : TypeName {
+    data class Class(override val packageName: String, val names: List<String>) : TypeName {
         constructor(`package`: String, name: String) : this(`package`, listOf(name))
 
         val simpleName: String get() = names.last().toPascalCase()
@@ -59,14 +64,21 @@ sealed interface TypeName : Import {
         val JsonObject = Class("kotlinx.serialization.json", "JsonObject")
         val JsonClassDiscriminator = Class("kotlinx.serialization.json", "JsonClassDiscriminator")
         val JsonDecoder = Class("kotlinx.serialization.json", "JsonDecoder")
+        val JsonEncoder = Class("kotlinx.serialization.json", "JsonEncoder")
 
         val Serializable = Class("kotlinx.serialization", "Serializable")
+        val KSerializer = Class("kotlinx.serialization", "KSerializer")
         val SerialName = Class("kotlinx.serialization", "SerialName")
         val Required = Class("kotlinx.serialization", "Required")
         val ExperimentalSerializationApi = Class("kotlinx.serialization", "ExperimentalSerializationApi")
         val KeepGeneratedSerializer = Class("kotlinx.serialization", "KeepGeneratedSerializer")
         val InternalSerializationApi = Class("kotlinx.serialization", "InternalSerializationApi")
+
         val PolymorphicKind = Class("kotlinx.serialization.descriptors", "PolymorphicKind")
+        val SerialDescriptor = Class("kotlinx.serialization.descriptors", "SerialDescriptor")
+
+        val Decoder = Class("kotlinx.serialization.encoding", "Decoder")
+        val Encoder = Class("kotlinx.serialization.encoding", "Encoder")
     }
 }
 

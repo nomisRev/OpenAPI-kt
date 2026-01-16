@@ -42,8 +42,9 @@ val discriminatedObjectRenderSpec by testSuite {
         false
     )
 
-    verify( // TODO discriminator for not properly lifted to Model
-        """|@JsonClassDiscriminator("type")
+    verify(
+        """|@OptIn(ExperimentalSerializationApi::class)
+           |@JsonClassDiscriminator("type")
            |@Serializable
            |sealed interface User {
            |    val id: Long
@@ -71,6 +72,7 @@ val discriminatedObjectRenderSpec by testSuite {
             discriminator = "type",
             false
         ),
+        TypeName.ExperimentalSerializationApi,
         TypeName.JsonClassDiscriminator,
         TypeName.Serializable,
         TypeName.SerialName,

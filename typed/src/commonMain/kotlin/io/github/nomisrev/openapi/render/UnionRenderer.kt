@@ -1,19 +1,17 @@
 package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.render.TypeName.Companion.ExperimentalSerializationApi
 import io.github.nomisrev.openapi.render.TypeName.Companion.InternalSerializationApi
 import io.github.nomisrev.openapi.render.TypeName.Companion.PolymorphicKind
-import io.github.nomisrev.openapi.render.openEnum
 import io.github.nomisrev.openapi.transformers.isTopLevel
 import io.github.nomisrev.openapi.transformers.nestedOrNull
-import kotlinx.serialization.descriptors.PolymorphicKind
 
 context(ctx: Renderer)
 fun Model.Union.render(): String = buildString {
     if (discriminator != null) {
-        ctx.import(TypeName.JsonClassDiscriminator)
-        +"@JsonClassDiscriminator(${discriminator.stringValue()})"
+        jsonClassDiscriminator(discriminator)
         serializable()
     } else {
         serializable(this@render)
@@ -33,10 +31,57 @@ private fun Model.Union.Case.discriminator(): String? =
     } else discriminator
 
 context(ctx: Renderer, union: Model.Union)
-private fun Model.Union.Case.unionClassName(): String {
-    val typeName = model.toTypeName()
-    return discriminator()?.toPascalCase() ?: "Case${typeName.name()}"
-}
+private fun Model.Union.Case.unionClassName(): String =
+    (discriminator() ?: when (model) {
+        is Model.ByteArray -> "CaseBinary"
+        is Model.Date -> "CaseDate"
+        is Model.DateTime -> "CaseDateTime"
+        is Model.FreeFormJson -> "CaseJsonElement"
+        is Model.Primitive.Boolean -> "CaseBoolean"
+        is Model.Primitive.Double -> "CaseDouble"
+        is Model.Primitive.Float -> "CaseFloat"
+        is Model.Primitive.Long -> "CaseLong"
+        is Model.Collection -> {
+            var depth = 1
+            var inner = model.inner
+            while (inner is Model.Collection) {
+                inner = inner.inner
+                depth++
+            }
+            val name = copy(model = inner).unionClassName()
+
+            val postfix =
+                if (name.endsWith("s")) (0..depth).joinToString(separator = "") { "List" }
+                else {
+                    val postfix = (0..depth - 2).joinToString(separator = "") { "List" }
+                    "s$postfix"
+                }
+
+            "$name$postfix"
+        }
+
+        is Model.Object if model.context.isTopLevel() -> "Case${model.name().simpleName}"
+        is Model.Enum if model.context.isTopLevel() -> "Case${model.name().simpleName}"
+        is Model.Enum -> {
+            val unionCaseCtx = model.context.nested.last()
+            require(unionCaseCtx is NamingContext.UnionCase)
+            unionCaseCtx.value
+        }
+
+        is Model.Object -> {
+            val unionCaseCtx = model.context.nested.last()
+            require(unionCaseCtx is NamingContext.UnionCase)
+            unionCaseCtx.value
+        }
+
+        is Model.Primitive.Int -> "CaseInt"
+        is Model.Primitive.String -> "CaseString"
+        is Model.Primitive.Unit -> "CaseUnit"
+        is Model.Reference -> "Case${model.name().simpleName}"
+        is Model.DiscriminatedObject -> TODO("Cannot be nested in Union")
+        is Model.Union -> TODO("nested union case")
+        is Model.Uuid -> "CaseUuid"
+    }).toPascalCase()
 
 context(ctx: Renderer, union: Model.Union)
 private fun Model.Union.Case.valueClass(): String {
@@ -46,7 +91,8 @@ private fun Model.Union.Case.valueClass(): String {
     return buildString {
         serializable()
         if (ctx.jvm) jvmInline()
-        append("value class ${unionClassName()}(val value: ${typeName.type()}) : ${union.name().simpleName}")
+        val nullable = if (model.isNullable) "?" else ""
+        append("value class ${unionClassName()}(val value: ${typeName.type()}$nullable) : ${union.name().simpleName}")
         when (val nestedOrNull = model.nestedOrNull()?.render()) {
             null -> {}
             else -> {
@@ -69,6 +115,7 @@ private fun Model.Union.body() {
 
     if (discriminator == null) {
         newLine()
+        ctx.import(TypeName.KSerializer, TypeName.SerialDescriptor, TypeName.Encoder, TypeName.Decoder)
         +"object Serializer : KSerializer<${name().simpleName}> {"
         indented {
             val isOpenEnum = cases.size == 2 &&
@@ -80,7 +127,13 @@ private fun Model.Union.body() {
                     cases.firstNotNullOf { it.model as? Model.Enum }
                 )
             } else {
-                ctx.import(ExperimentalSerializationApi, InternalSerializationApi, PolymorphicKind)
+                ctx.import(
+                    ExperimentalSerializationApi,
+                    InternalSerializationApi,
+                    PolymorphicKind,
+                    Import.buildSerialDescriptor
+                )
+
                 +"@OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)"
                 +"override val descriptor: SerialDescriptor ="
                 indented {
@@ -98,7 +151,7 @@ private fun Model.Union.body() {
                     ctx.import(TypeName.JsonElement, TypeName.JsonDecoder)
                     +"val value = decoder.decodeSerializableValue(JsonElement.serializer())"
                     +"val json = requireNotNull(decoder as? JsonDecoder) { \"Complex unions currently only supported for Json\" }.json"
-                    +"return attemptDeserialize("
+                    +"return json.attemptDeserialize("
                     indented {
                         +"value,"
                         cases.sortedWith(unionCaseComparator).joinTo(separator = ",\n", postfix = ",\n") { case ->
@@ -173,6 +226,7 @@ private fun Model.Union.Case.render(): String =
         is Model.Union -> TODO("Inline defined nested Union not yet supported in Union")
         is Model.Collection -> valueClass()
 
+        // need to be generated with `unionNameCase()`
         is Model.Object -> model.render(union.name())
         is Model.Enum -> model.render(union.name())
     }
@@ -181,7 +235,7 @@ context(ctx: Renderer, union: Model.Union)
 private fun Model.Union.Case.renderDeserializeAttempt(): String =
     when (model) {
         is Model.ContextHolder if model.context.isTopLevel() ->
-            "${unionClassName()} to { ${unionClassName()}(decodeFromJsonElement(${model.serializer()}, it)) }"
+            "${unionClassName()}::class to { ${unionClassName()}(decodeFromJsonElement(${model.serializer()}, it)) }"
 
         is Model.Primitive,
         is Model.DateTime,

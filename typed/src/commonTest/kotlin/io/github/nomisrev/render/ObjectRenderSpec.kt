@@ -4,6 +4,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.render.Import
 import io.github.nomisrev.openapi.render.TopLevelFunction
 import io.github.nomisrev.openapi.render.TypeName
@@ -245,6 +246,7 @@ val renderObjectSpec by testSuite {
             |                additional = JsonObject(element - names).ifEmpty { null }
             |            )
             |        }
+            |    }
             |}
         """.trimMargin(),
         Model.Object(
@@ -263,7 +265,15 @@ val renderObjectSpec by testSuite {
         TypeName.KeepGeneratedSerializer,
         TypeName.Serializable,
         Import.serializer,
-        Import.nullable
+        Import.nullable,
+        TypeName.JsonObject,
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder,
+        TypeName.JsonDecoder,
+        TypeName.JsonEncoder,
+        Import.buildJsonObject,
     )
 
     verify(
@@ -307,6 +317,7 @@ val renderObjectSpec by testSuite {
             |                    .mapValues { (_, value) -> json.decodeFromJsonElement(NestedClass.serializer(), value) }
             |            )
             |        }
+            |    }
             |}
         """.trimMargin(),
         Model.Object(
@@ -324,7 +335,15 @@ val renderObjectSpec by testSuite {
         TypeName.KeepGeneratedSerializer,
         TypeName.Serializable,
         Import.serializer,
-        Import.nullable
+        Import.nullable,
+        TypeName.JsonObject,
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder,
+        TypeName.JsonDecoder,
+        TypeName.JsonEncoder,
+        Import.buildJsonObject,
     )
 }
 

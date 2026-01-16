@@ -1,7 +1,9 @@
 package io.github.nomisrev.openapi.registry
 
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.routes.SchemaContext
 import kotlin.jvm.JvmInline
 
 /**
