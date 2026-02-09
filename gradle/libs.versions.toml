@@ -1,6 +1,6 @@
 [versions]
 dokka = "2.1.0"
-kotlin = "2.3.0"
+kotlin = "2.3.10"
 kover = "0.9.4"
 knit = "0.5.1"
 publish="0.36.0"
