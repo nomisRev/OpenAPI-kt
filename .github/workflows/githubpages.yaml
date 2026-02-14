@@ -16,7 +16,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v5
 
       - run: ./gradlew -Pversion=${{ github.event.release.tag_name }} dokkaHtmlMultiModule
 
