@@ -86,7 +86,10 @@ class AllOfInlineObjectsResponseTest {
               description = null,
             ),
           ),
-        inline = emptyList(),
+        inline = listOf(
+          Model.Primitive.int(),
+          Model.Primitive.string()
+        ),
       ),
       openApi.routes().single().returnType.entries[HttpStatusCode.OK]?.types?.entries?.single()?.value,
     )
