@@ -9,7 +9,7 @@ okio="3.16.4"
 kasechange="1.4.1"
 ktor="3.4.0"
 kotlinpoet="2.2.0"
-agp = "8.13.2"
+agp = "9.0.1"
 test-compile = "0.12.1"
 
 [libraries]
