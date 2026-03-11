@@ -4,11 +4,13 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.Root
+import io.github.nomisrev.openapi.generateClient
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.render.renderRootFile
 import io.github.nomisrev.openapi.render.renderer
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.SchemaContext
+import io.github.nomisrev.openapi.sort
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -475,8 +477,309 @@ val clientRenderSpec by testSuite {
         assertTrue(actual.contains("fineTuningJobId: String"), "Expected camelCase param name 'fineTuningJobId':\n$actual")
         assertTrue(actual.contains("\$fineTuningJobId"), "Expected camelCase interpolation in URL:\n$actual")
     }
+
+    test("generateClient splits direct root children into separate files") {
+        val root = listOf(
+            route("createChatCompletion", "/chat/completions", method = HttpMethod.Post),
+            route("listModels", "/models"),
+            route("retrieveModel", "/models/{model}", parameters = listOf(pathParam("model")))
+        ).sort("OpenAI")
+
+        val files = root.generateClient()
+        val actual = files.snapshot()
+        val expected = """
+            |// Chat.kt
+            |package io.github.nomisrev.api
+            |
+            |import io.ktor.client.HttpClient
+            |import io.ktor.client.call.body
+            |
+            |interface Chat {
+            |    val completions: Completions
+            |
+            |    interface Completions {
+            |        suspend fun createChatCompletion(): String
+            |    }
+            |}
+            |
+            |internal class KtorChat(private val client: HttpClient) : Chat {
+            |    override val completions: Chat.Completions = KtorChatCompletions(client)
+            |}
+            |
+            |internal class KtorChatCompletions(private val client: HttpClient) : Chat.Completions {
+            |    override suspend fun createChatCompletion(): String =
+            |        client.post("/chat/completions").body()
+            |}
+            |
+            |// Models.kt
+            |package io.github.nomisrev.api
+            |
+            |import io.ktor.client.HttpClient
+            |import io.ktor.client.call.body
+            |
+            |interface Models {
+            |    suspend fun listModels(): String
+            |
+            |    suspend fun retrieveModel(
+            |        model: String,
+            |    ): String
+            |}
+            |
+            |internal class KtorModels(private val client: HttpClient) : Models {
+            |    override suspend fun listModels(): String =
+            |        client.get("/models").body()
+            |
+            |    override suspend fun retrieveModel(model: String): String =
+            |        client.get("/models/${'$'}model").body()
+            |}
+            |
+            |// OpenAI.kt
+            |package io.github.nomisrev.api
+            |
+            |import io.ktor.client.HttpClient
+            |import io.ktor.client.HttpClientConfig
+            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+            |import io.ktor.serialization.kotlinx.json.json
+            |import io.ktor.client.plugins.defaultRequest
+            |
+            |interface OpenAI {
+            |    val chat: Chat
+            |
+            |    val models: Models
+            |}
+            |
+            |internal class KtorOpenAI(private val client: HttpClient) : OpenAI {
+            |    override val chat: Chat = KtorChat(client)
+            |    override val models: Models = KtorModels(client)
+            |}
+            |
+            |fun OpenAIClient(
+            |    baseUrl: String,
+            |    block: HttpClientConfig<*>.() -> Unit = {},
+            |): OpenAI {
+            |    val client = HttpClient {
+            |        install(ContentNegotiation) { json() }
+            |        defaultRequest { url(baseUrl) }
+            |        block()
+            |    }
+            |    return KtorOpenAI(client)
+            |}
+        """.trimMargin()
+
+        assertEq(expected, actual)
+    }
+
+    test("deeper nesting is rendered as inner interfaces in the top-level child file") {
+        val root = listOf(
+            route(
+                "listFineTuningEvents",
+                "/fine_tuning/jobs/{fine_tuning_job_id}/events",
+                parameters = listOf(pathParam("fine_tuning_job_id"))
+            )
+        ).sort("OpenAI")
+
+        val files = root.generateClient()
+        val actual = files.snapshot()
+        val expected = """
+            |// FineTuning.kt
+            |package io.github.nomisrev.api
+            |
+            |import io.ktor.client.HttpClient
+            |import io.ktor.client.call.body
+            |
+            |interface FineTuning {
+            |    val jobs: Jobs
+            |
+            |    interface Jobs {
+            |        val events: Events
+            |
+            |        interface Events {
+            |            suspend fun listFineTuningEvents(
+            |                fineTuningJobId: String,
+            |            ): String
+            |        }
+            |    }
+            |}
+            |
+            |internal class KtorFineTuning(private val client: HttpClient) : FineTuning {
+            |    override val jobs: FineTuning.Jobs = KtorFineTuningJobs(client)
+            |}
+            |
+            |internal class KtorFineTuningJobs(private val client: HttpClient) : FineTuning.Jobs {
+            |    override val events: FineTuning.Jobs.Events = KtorFineTuningJobsEvents(client)
+            |}
+            |
+            |internal class KtorFineTuningJobsEvents(private val client: HttpClient) : FineTuning.Jobs.Events {
+            |    override suspend fun listFineTuningEvents(fineTuningJobId: String): String =
+            |        client.get("/fine_tuning/jobs/${'$'}fineTuningJobId/events").body()
+            |}
+            |
+            |// OpenAI.kt
+            |package io.github.nomisrev.api
+            |
+            |import io.ktor.client.HttpClient
+            |import io.ktor.client.HttpClientConfig
+            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+            |import io.ktor.serialization.kotlinx.json.json
+            |import io.ktor.client.plugins.defaultRequest
+            |
+            |interface OpenAI {
+            |    val fineTuning: FineTuning
+            |}
+            |
+            |internal class KtorOpenAI(private val client: HttpClient) : OpenAI {
+            |    override val fineTuning: FineTuning = KtorFineTuning(client)
+            |}
+            |
+            |fun OpenAIClient(
+            |    baseUrl: String,
+            |    block: HttpClientConfig<*>.() -> Unit = {},
+            |): OpenAI {
+            |    val client = HttpClient {
+            |        install(ContentNegotiation) { json() }
+            |        defaultRequest { url(baseUrl) }
+            |        block()
+            |    }
+            |    return KtorOpenAI(client)
+            |}
+        """.trimMargin()
+
+        assertEq(expected, actual)
+    }
+
+    test("operations at root path are generated on the root interface only") {
+        val root = listOf(
+            route("health", "/"),
+            route("listModels", "/models")
+        ).sort("Api")
+
+        val files = root.generateClient()
+        val actual = files.snapshot()
+        val expected = """
+            |// Api.kt
+            |package io.github.nomisrev.api
+            |
+            |import io.ktor.client.HttpClient
+            |import io.ktor.client.call.body
+            |import io.ktor.client.HttpClientConfig
+            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+            |import io.ktor.serialization.kotlinx.json.json
+            |import io.ktor.client.plugins.defaultRequest
+            |
+            |interface Api {
+            |    val models: Models
+            |
+            |    suspend fun health(): String
+            |}
+            |
+            |internal class KtorApi(private val client: HttpClient) : Api {
+            |    override val models: Models = KtorModels(client)
+            |
+            |    override suspend fun health(): String =
+            |        client.get("/").body()
+            |}
+            |
+            |fun ApiClient(
+            |    baseUrl: String,
+            |    block: HttpClientConfig<*>.() -> Unit = {},
+            |): Api {
+            |    val client = HttpClient {
+            |        install(ContentNegotiation) { json() }
+            |        defaultRequest { url(baseUrl) }
+            |        block()
+            |    }
+            |    return KtorApi(client)
+            |}
+            |
+            |// Models.kt
+            |package io.github.nomisrev.api
+            |
+            |import io.ktor.client.HttpClient
+            |import io.ktor.client.call.body
+            |
+            |interface Models {
+            |    suspend fun listModels(): String
+            |}
+            |
+            |internal class KtorModels(private val client: HttpClient) : Models {
+            |    override suspend fun listModels(): String =
+            |        client.get("/models").body()
+            |}
+        """.trimMargin()
+
+        assertEq(expected, actual)
+    }
+
+    test("interface names are PascalCase and child properties are camelCase") {
+        val root = listOf(
+            route("createFineTuningJob", "/fine_tuning/jobs", method = HttpMethod.Post)
+        ).sort("OpenAI")
+
+        val files = root.generateClient()
+        val actual = files.snapshot()
+        val expected = """
+            |// FineTuning.kt
+            |package io.github.nomisrev.api
+            |
+            |import io.ktor.client.HttpClient
+            |import io.ktor.client.call.body
+            |
+            |interface FineTuning {
+            |    val jobs: Jobs
+            |
+            |    interface Jobs {
+            |        suspend fun createFineTuningJob(): String
+            |    }
+            |}
+            |
+            |internal class KtorFineTuning(private val client: HttpClient) : FineTuning {
+            |    override val jobs: FineTuning.Jobs = KtorFineTuningJobs(client)
+            |}
+            |
+            |internal class KtorFineTuningJobs(private val client: HttpClient) : FineTuning.Jobs {
+            |    override suspend fun createFineTuningJob(): String =
+            |        client.post("/fine_tuning/jobs").body()
+            |}
+            |
+            |// OpenAI.kt
+            |package io.github.nomisrev.api
+            |
+            |import io.ktor.client.HttpClient
+            |import io.ktor.client.HttpClientConfig
+            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+            |import io.ktor.serialization.kotlinx.json.json
+            |import io.ktor.client.plugins.defaultRequest
+            |
+            |interface OpenAI {
+            |    val fineTuning: FineTuning
+            |}
+            |
+            |internal class KtorOpenAI(private val client: HttpClient) : OpenAI {
+            |    override val fineTuning: FineTuning = KtorFineTuning(client)
+            |}
+            |
+            |fun OpenAIClient(
+            |    baseUrl: String,
+            |    block: HttpClientConfig<*>.() -> Unit = {},
+            |): OpenAI {
+            |    val client = HttpClient {
+            |        install(ContentNegotiation) { json() }
+            |        defaultRequest { url(baseUrl) }
+            |        block()
+            |    }
+            |    return KtorOpenAI(client)
+            |}
+        """.trimMargin()
+
+        assertEq(expected, actual)
+    }
 }
 
 private fun assertEq(expected: String, actual: String) {
     if (expected != actual) throw AssertionError(expected.diff(actual))
 }
+
+private fun List<io.github.nomisrev.openapi.KFile>.snapshot(): String =
+    sortedBy { it.name }.joinToString("\n\n") { file ->
+        "// ${file.name}\n${file.content.trimEnd()}"
+    }

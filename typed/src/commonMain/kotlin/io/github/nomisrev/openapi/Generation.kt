@@ -7,6 +7,7 @@ import io.github.nomisrev.openapi.render.TypeName.Class
 import io.github.nomisrev.openapi.render.joinTo
 import io.github.nomisrev.openapi.render.name
 import io.github.nomisrev.openapi.render.newLine
+import io.github.nomisrev.openapi.render.renderApiFile
 import io.github.nomisrev.openapi.render.render
 import io.github.nomisrev.openapi.render.renderRootFile
 import io.github.nomisrev.openapi.render.renderer
@@ -76,15 +77,13 @@ fun Root.generateClient(packageName: String = "io.github.nomisrev"): List<KFile>
     val apiPackage = "$packageName.api"
     val rootFileName = name.toPascalCase()
 
-    val (content, rawImports) = renderer { renderRootFile() }
+    fun renderClientFile(fileName: String, content: String, rawImports: Set<Import>): KFile {
+        val imports = rawImports
+            .map { it.resolveImport() }
+            .filter { it.packageName != apiPackage }
 
-    val imports = rawImports
-        .map { it.resolveImport() }
-        .filter { it.packageName != apiPackage }
-
-    return listOf(
-        KFile(
-            "$rootFileName.kt",
+        return KFile(
+            fileName,
             apiPackage,
             buildString {
                 +"package $apiPackage"
@@ -95,7 +94,18 @@ fun Root.generateClient(packageName: String = "io.github.nomisrev"): List<KFile>
                 +content
             }
         )
-    )
+    }
+
+    val (rootContent, rootImports) = renderer { renderRootFile() }
+    val rootFile = renderClientFile("$rootFileName.kt", rootContent, rootImports)
+
+    val endpointFiles = endpoints.map { api ->
+        val fileName = "${api.name.toPascalCase()}.kt"
+        val (content, rawImports) = renderer { api.renderApiFile() }
+        renderClientFile(fileName, content, rawImports)
+    }
+
+    return listOf(rootFile) + endpointFiles
 }
 
 private tailrec fun Import.resolveImport(): Import = when (this) {

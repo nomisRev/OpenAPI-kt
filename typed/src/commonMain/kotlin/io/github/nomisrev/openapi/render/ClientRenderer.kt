@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi.render
 
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.API
 import io.github.nomisrev.openapi.Root
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
@@ -29,6 +30,14 @@ fun Root.renderRootFile(): String = buildString {
 
     // Factory function
     renderFactory(interfaceName, implName)
+}
+
+context(ctx: Renderer)
+fun API.renderApiFile(): String = buildString {
+    renderApiInterface()
+    newLine()
+    newLine()
+    renderApiImpls(listOf(name))
 }
 
 context(ctx: Renderer, builder: StringBuilder)
@@ -71,7 +80,7 @@ private fun Root.renderRootImpl(interfaceName: String, implName: String) {
             endpoints.forEach { api ->
                 val propName = api.name.toCamelCase()
                 val typeName = api.name.toPascalCase()
-                val implTypeName = "${typeName}Impl"
+                val implTypeName = "Ktor$typeName"
                 +"override val $propName: $typeName = $implTypeName(client)"
             }
             if (endpoints.isNotEmpty() && operations.isNotEmpty()) newLine()
@@ -84,6 +93,107 @@ private fun Root.renderRootImpl(interfaceName: String, implName: String) {
         }
         append("}")
     }
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+private fun API.renderApiInterface() {
+    val interfaceName = name.toPascalCase()
+    val children = nested
+    val hasMembers = children.isNotEmpty() || routes.isNotEmpty()
+    if (!hasMembers) {
+        append("interface $interfaceName")
+        return
+    }
+
+    +"interface $interfaceName {"
+    indented {
+        children.forEachIndexed { index, child ->
+            val propName = child.name.toCamelCase()
+            val typeName = child.name.toPascalCase()
+            +"val $propName: $typeName"
+            if (index < children.size - 1) newLine()
+        }
+
+        if (children.isNotEmpty() && routes.isNotEmpty()) {
+            newLine()
+        }
+
+        routes.forEachIndexed { index, route ->
+            +renderSuspendFun(route)
+            if (index < routes.size - 1) {
+                newLine()
+            }
+        }
+
+        if (routes.isNotEmpty() && children.isNotEmpty()) {
+            newLine()
+        }
+
+        if (children.isNotEmpty() && routes.isEmpty()) {
+            newLine()
+        }
+
+        children.forEachIndexed { index, child ->
+            child.renderApiInterface()
+            if (index < children.size - 1) {
+                newLine()
+                newLine()
+            }
+        }
+
+        if (children.isNotEmpty()) {
+            newLine()
+        }
+    }
+    append("}")
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+private fun API.renderApiImpls(path: List<String>) {
+    renderApiImpl(path)
+    nested.forEach { child ->
+        newLine()
+        newLine()
+        child.renderApiImpls(path + child.name)
+    }
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+private fun API.renderApiImpl(path: List<String>) {
+    ctx.import(TypeName.Class("io.ktor.client", "HttpClient"))
+
+    val implName = path.implName()
+    val interfaceName = path.interfaceName()
+    val children = nested
+    val hasBody = children.isNotEmpty() || routes.isNotEmpty()
+    if (!hasBody) {
+        append("internal class $implName(private val client: HttpClient) : $interfaceName")
+        return
+    }
+
+    +"internal class $implName(private val client: HttpClient) : $interfaceName {"
+    indented {
+        children.forEachIndexed { index, child ->
+            val propName = child.name.toCamelCase()
+            val childPath = path + child.name
+            +"override val $propName: ${childPath.interfaceName()} = ${childPath.implName()}(client)"
+            if (index < children.size - 1) {
+                newLine()
+            }
+        }
+
+        if (children.isNotEmpty() && routes.isNotEmpty()) {
+            newLine()
+        }
+
+        routes.forEachIndexed { index, route ->
+            renderOperationImpl(route)
+            if (index < routes.size - 1) {
+                newLine()
+            }
+        }
+    }
+    append("}")
 }
 
 context(ctx: Renderer, builder: StringBuilder)
@@ -271,6 +381,10 @@ private fun Route.ReturnType.preferredModel(): Model =
 
 private fun Map<ContentType, Model>.firstModelFor(contentType: ContentType): Model? =
     entries.firstNotNullOfOrNull { (ct, model) -> if (contentType.match(ct)) model else null }
+
+private fun List<String>.implName(): String = "Ktor" + joinToString("") { it.toPascalCase() }
+
+private fun List<String>.interfaceName(): String = joinToString(".") { it.toPascalCase() }
 
 private fun HttpMethod.ktorFunction(): String = when (this) {
     HttpMethod.Get -> "get"
