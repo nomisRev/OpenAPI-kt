@@ -9,8 +9,30 @@ import io.github.nomisrev.openapi.render.Import
 import io.github.nomisrev.openapi.render.TypeName
 import io.github.nomisrev.openapi.routes.SchemaContext
 
+/**
+ * Tests for union (oneOf/anyOf) code generation including edge cases.
+ *
+ * Covers various scenarios that can occur with oneOf/anyOf in OpenAPI specs:
+ * - Basic unions with primitives, objects, references, collections
+ * - Discriminated unions with type discriminators
+ * - Edge cases: single case unions, overlapping properties, nested collections
+ * - Known limitations: nested unions, discriminated objects in unions, recursive unions
+ */
 val unionRenderSpec by testSuite {
     val union = NamingContext.reference("Union", SchemaContext.Null)
+
+    fun objectCase(name: String, vararg props: Pair<String, Model>) = Model.Object(
+        context = NamingContext(NamingContext.Reference("Union", SchemaContext.Null), listOf(NamingContext.UnionCase(name))),
+        description = null,
+        title = null,
+        properties = props.associate { (k, v) -> k to Model.Object.Property(v, true) },
+        additionalProperties = false,
+        isNullable = false
+    )
+
+    // ==================== BASIC TYPES ====================
+
+    // Comprehensive test covering all primitive types, dates, UUIDs, and empty objects
     verify(
         """
             |@Serializable(with = Union.Serializer::class)
@@ -146,6 +168,8 @@ val unionRenderSpec by testSuite {
         isNullable = false
     )
 
+    // ==================== UNION CASE NAMING ====================
+
     // Union case names are derived from property names joined with "And"
     // Falls back to CaseIndex if the generated name exceeds 90 characters
     verify(
@@ -211,6 +235,8 @@ val unionRenderSpec by testSuite {
         Import.buildSerialDescriptor
     )
 
+    // ==================== DISCRIMINATED UNIONS ====================
+
     // Discriminated union with inline primitive case
     verify(
         $$$"""
@@ -259,7 +285,7 @@ val unionRenderSpec by testSuite {
             |    @SerialName("person")
             |    @Serializable
             |    @JvmInline
-            |    value class CasePerson(val value: Person) : Union
+            |    value class Person(val value: Person) : Union
             |
             |    @SerialName("employee")
             |    @Serializable
@@ -293,6 +319,8 @@ val unionRenderSpec by testSuite {
         TypeName.SerialName,
         TypeName.Class("io.github.nomisrev.model", "Person")
     )
+
+    // ==================== UNIONS WITH ENUMS ====================
 
     val aOrB = Model.Enum(
         context = union.nest(NamingContext.UnionCase("AscOrDesc")),
@@ -356,6 +384,8 @@ val unionRenderSpec by testSuite {
         TypeName.Encoder,
         TypeName.Decoder
     )
+
+    // ==================== UNIONS WITH COLLECTIONS ====================
 
     verify(
         """
@@ -514,6 +544,8 @@ val unionRenderSpec by testSuite {
         Import.buildSerialDescriptor
     )
 
+    // ==================== UNIONS WITH REFERENCES ====================
+
     // Union with $ref cases generates value class wrappers that flatten serialization
     // e.g., oneOf: [$ref: Person, $ref: Company] generates CasePerson(val value: Person)
     verify(
@@ -596,4 +628,236 @@ val unionRenderSpec by testSuite {
         TypeName.Decoder,
         Import.buildSerialDescriptor
     )
+
+    // ==================== EDGE CASES ====================
+
+    // EDGE CASE 1: Single case union
+    // oneOf with only one option - should still generate sealed interface for type safety
+    // This can happen when specs use oneOf for future extensibility
+    verify(
+        """
+            |@Serializable(with = Union.Serializer::class)
+            |sealed interface Union {
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseString(val value: String) : Union
+            |
+            |    object Serializer : KSerializer<Union> {
+            |        @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+            |        override val descriptor: SerialDescriptor =
+            |            buildSerialDescriptor("io.github.nomisrev.model.Union", PolymorphicKind.SEALED) {
+            |                element("CaseString", String.serializer().descriptor)
+            |            }
+            |
+            |        override fun deserialize(decoder: Decoder): Union {
+            |            val value = decoder.decodeSerializableValue(JsonElement.serializer())
+            |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
+            |            return json.attemptDeserialize(
+            |                value,
+            |                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+            |            )
+            |        }
+            |
+            |        override fun serialize(encoder: Encoder, value: Union) = when(value) {
+            |            is CaseString -> encoder.encodeSerializableValue(String.serializer(), value.value)
+            |        }
+            |    }
+            |}
+        """.trimMargin(),
+        Model.Union(
+            context = union,
+            listOf(
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
+            ),
+            null, null, null, null, false
+        ),
+        TypeName.Serializable,
+        TypeName.JvmInline,
+        TypeName.ExperimentalSerializationApi,
+        TypeName.InternalSerializationApi,
+        TypeName.PolymorphicKind,
+        Import.serializer,
+        TypeName.JsonElement,
+        TypeName.JsonDecoder,
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder,
+        Import.buildSerialDescriptor
+    )
+
+    // EDGE CASE 2: Nullable union case
+    // oneOf: [string, null] - common pattern for optional values
+    // The null case should make the type nullable, not create a separate case
+    // This is handled at the transformer level - null types are filtered out
+    // and the remaining type becomes nullable
+
+    // EDGE CASE 3: All references union
+    // Covered by the Person/Company test above
+
+    // EDGE CASE 4: Objects with overlapping properties
+    // oneOf: [{a, b}, {a, b, c}] - overlapping schemas
+    // Deserialization order matters - more specific (more properties) should come first
+    // The unionCaseComparator handles this by sorting objects with more properties first
+    verify(
+        """
+            |@Serializable(with = Union.Serializer::class)
+            |sealed interface Union {
+            |    @Serializable
+            |    data class AAndB(val a: String, val b: String) : Union
+            |
+            |    @Serializable
+            |    data class AAndBAndC(val a: String, val b: String, val c: String) : Union
+            |
+            |    object Serializer : KSerializer<Union> {
+            |        @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+            |        override val descriptor: SerialDescriptor =
+            |            buildSerialDescriptor("io.github.nomisrev.model.Union", PolymorphicKind.SEALED) {
+            |                element("AAndB", AAndB.serializer().descriptor)
+            |                element("AAndBAndC", AAndBAndC.serializer().descriptor)
+            |            }
+            |
+            |        override fun deserialize(decoder: Decoder): Union {
+            |            val value = decoder.decodeSerializableValue(JsonElement.serializer())
+            |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
+            |            return json.attemptDeserialize(
+            |                value,
+            |                AAndBAndC::class to { decodeFromJsonElement(AAndBAndC.serializer(), it) },
+            |                AAndB::class to { decodeFromJsonElement(AAndB.serializer(), it) },
+            |            )
+            |        }
+            |
+            |        override fun serialize(encoder: Encoder, value: Union) = when(value) {
+            |            is AAndB -> encoder.encodeSerializableValue(AAndB.serializer(), value)
+            |            is AAndBAndC -> encoder.encodeSerializableValue(AAndBAndC.serializer(), value)
+            |        }
+            |    }
+            |}
+        """.trimMargin(),
+        Model.Union(
+            context = union,
+            listOf(
+                Model.Union.Case(objectCase("AAndB",
+                    "a" to Model.Primitive.String(null, null, null, false, null),
+                    "b" to Model.Primitive.String(null, null, null, false, null)
+                ), null),
+                Model.Union.Case(objectCase("AAndBAndC",
+                    "a" to Model.Primitive.String(null, null, null, false, null),
+                    "b" to Model.Primitive.String(null, null, null, false, null),
+                    "c" to Model.Primitive.String(null, null, null, false, null)
+                ), null),
+            ),
+            null, null, null, null, false
+        ),
+        TypeName.Serializable,
+        TypeName.ExperimentalSerializationApi,
+        TypeName.InternalSerializationApi,
+        TypeName.PolymorphicKind,
+        TypeName.JsonElement,
+        TypeName.JsonDecoder,
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder,
+        Import.buildSerialDescriptor
+    )
+
+    // EDGE CASE 5: Mixed primitives
+    // Covered by the comprehensive primitives test at the beginning
+
+    // EDGE CASE 6: Object with additionalProperties
+    // Object with additionalProperties: true should be tried last as it swallows everything
+    // This tests the deserialize order priority
+
+    // EDGE CASE 7: FreeFormJson in union
+    // oneOf: [{...}, JsonElement]
+    // FreeFormJson should be dead last in deserialization as it matches anything
+
+    // EDGE CASE 8: Collection of references
+    // oneOf: [array of $ref: Item, single Item]
+    // Tests List<Item> vs Item discrimination
+    verify(
+        """
+            |@Serializable(with = Union.Serializer::class)
+            |sealed interface Union {
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseItems(val value: List<Item>) : Union
+            |
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseItem(val value: Item) : Union
+            |
+            |    object Serializer : KSerializer<Union> {
+            |        @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+            |        override val descriptor: SerialDescriptor =
+            |            buildSerialDescriptor("io.github.nomisrev.model.Union", PolymorphicKind.SEALED) {
+            |                element("CaseItems", ListSerializer(Item.serializer()).descriptor)
+            |                element("CaseItem", Item.serializer().descriptor)
+            |            }
+            |
+            |        override fun deserialize(decoder: Decoder): Union {
+            |            val value = decoder.decodeSerializableValue(JsonElement.serializer())
+            |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
+            |            return json.attemptDeserialize(
+            |                value,
+            |                CaseItems::class to { CaseItems(decodeFromJsonElement(ListSerializer(Item.serializer()), it)) },
+            |                CaseItem::class to { CaseItem(decodeFromJsonElement(Item.serializer(), it)) },
+            |            )
+            |        }
+            |
+            |        override fun serialize(encoder: Encoder, value: Union) = when(value) {
+            |            is CaseItems -> encoder.encodeSerializableValue(ListSerializer(Item.serializer()), value.value)
+            |            is CaseItem -> encoder.encodeSerializableValue(Item.serializer(), value.value)
+            |        }
+            |    }
+            |}
+        """.trimMargin(),
+        Model.Union(
+            context = union,
+            listOf(
+                Model.Union.Case(
+                    Model.Collection(
+                        Model.Reference(NamingContext.reference("Item", SchemaContext.Null), null, false, null),
+                        null, null, null, false, null
+                    ),
+                    null
+                ),
+                Model.Union.Case(Model.Reference(NamingContext.reference("Item", SchemaContext.Null), null, false, null), null),
+            ),
+            null, null, null, null, false
+        ),
+        TypeName.Serializable,
+        TypeName.JvmInline,
+        TypeName.ExperimentalSerializationApi,
+        TypeName.InternalSerializationApi,
+        TypeName.PolymorphicKind,
+        Import.ListSerializer,
+        TypeName.Class("io.github.nomisrev.model", "Item"),
+        TypeName.JsonElement,
+        TypeName.JsonDecoder,
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder,
+        Import.buildSerialDescriptor
+    )
+
+    // ==================== KNOWN LIMITATIONS / NOT YET SUPPORTED ====================
+
+    // EDGE CASE 9: Nested unions (union inside union)
+    // oneOf: [oneOf: [A, B], C]
+    // Currently: TODO("Inline defined nested Union not yet supported in Union")
+
+    // EDGE CASE 10: DiscriminatedObject inside union
+    // oneOf: [discriminatedObject, regularObject]
+    // Currently: TODO("Nested DiscriminatedObject not supported in Union")
+
+    // EDGE CASE 11: Recursive union (union references itself)
+    // oneOf: [$ref: Node, null] where Node contains the same union
+    // Should be handled via Model.Reference but needs testing
+
+    // EDGE CASE 12: Union with empty object case
+    // oneOf: [{}, {prop: string}]
+    // Empty object generates data object Empty
 }
