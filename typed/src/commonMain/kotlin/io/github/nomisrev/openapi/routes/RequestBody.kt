@@ -61,7 +61,12 @@ context(endpoint: Endpoint, scope: Registry)
 private suspend fun RequestBody.toBody(contentType: String, mediaType: MediaType): Route.Body {
     val schema = requireNotNull(mediaType.schema) { "$mediaType without a schema. $this" }
     val name = endpoint.context(NamingContext.RouteBody("body", endpoint.operationId))
-    return Route.Body.SetBody(schema.toModel(name, SchemaContext.Write), description, mediaType.extensions)
+    return Route.Body.SetBody(
+        contentType = ContentType.parse(contentType),
+        type = schema.toModel(name, SchemaContext.Write),
+        description = description,
+        extensions = mediaType.extensions,
+    )
 }
 
 private sealed interface ResolvedBody {

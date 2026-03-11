@@ -228,7 +228,8 @@ private fun renderFactory(interfaceName: String, implName: String) {
 context(ctx: Renderer)
 private fun renderSuspendFun(route: Route): String = buildString {
     val returnType = route.resolveReturnType()
-    val params = route.sortedParameters()
+    val body = route.preferredBodyOrNull()
+    val params = route.signatureParameters(body)
 
     if (route.deprecated) {
         appendLine("@Deprecated(\"Deprecated by the API provider\")")
@@ -238,19 +239,24 @@ private fun renderSuspendFun(route: Route): String = buildString {
         import(input.type)
     }
 
+    body?.signatureParameters?.forEach { input ->
+        import(input.type)
+    }
+
     if (params.isEmpty()) {
         append("suspend fun ${route.operationId}(): $returnType")
     } else {
         appendLine("suspend fun ${route.operationId}(")
         params.forEachIndexed { index, input ->
-            val paramName = input.name.toParamName()
+            val paramName = input.name
             val typeName = input.type.toTypeName().type()
-            val isNullable = !input.isRequired && !input.type.hasDefault()
+            val hasDefault = input.hasDefault()
+            val isNullable = !input.isRequired && !hasDefault
             val line = buildString {
                 append("$paramName: $typeName")
                 if (isNullable) append("?")
                 when {
-                    input.type.hasDefault() -> append(" = ${input.type.renderDefault()}")
+                    hasDefault -> append(" = ${input.type.renderDefault()}")
                     isNullable -> append(" = null")
                 }
                 append(",")
@@ -265,7 +271,8 @@ context(ctx: Renderer, builder: StringBuilder)
 private fun renderOperationImpl(route: Route) {
     val returnType = route.resolveReturnType()
     val method = route.method.ktorFunction()
-    val params = route.sortedParameters()
+    val body = route.preferredBodyOrNull()
+    val params = route.signatureParameters(body)
 
     if (route.deprecated) {
         +"@Deprecated(\"Deprecated by the API provider\")"
@@ -275,8 +282,13 @@ private fun renderOperationImpl(route: Route) {
         import(input.type)
     }
 
-    val pathParams = params.filter { it.input == Parameter.Input.Path }
-    val blockParams = params.filter { it.input != Parameter.Input.Path }
+    body?.signatureParameters?.forEach { input ->
+        import(input.type)
+    }
+
+    val routeParams = route.sortedParameters()
+    val pathParams = routeParams.filter { it.input == Parameter.Input.Path }
+    val blockParams = routeParams.filter { it.input != Parameter.Input.Path }
 
     // Build the URL with path parameter interpolation
     val url = if (pathParams.isEmpty()) {
@@ -296,16 +308,17 @@ private fun renderOperationImpl(route: Route) {
         }
     } else {
         val paramList = params.joinToString(", ") { input ->
-            val paramName = input.name.toParamName()
+            val paramName = input.name
             val typeName = input.type.toTypeName().type()
-            val isNullable = !input.isRequired && !input.type.hasDefault()
+            val hasDefault = input.hasDefault()
+            val isNullable = !input.isRequired && !hasDefault
             buildString {
                 append("$paramName: $typeName")
                 if (isNullable) append("?")
             }
         }
 
-        if (blockParams.isEmpty()) {
+        if (blockParams.isEmpty() && body == null) {
             // Only path params — no request block needed
             +"override suspend fun ${route.operationId}($paramList): $returnType ="
             indented {
@@ -321,6 +334,9 @@ private fun renderOperationImpl(route: Route) {
                 indented {
                     blockParams.forEach { input ->
                         renderParamPlacement(input)
+                    }
+                    body?.let {
+                        renderBodyPlacement(it)
                     }
                 }
                 +"}.body()"
@@ -370,6 +386,245 @@ private fun Route.resolveReturnType(): String {
     val model = returnType.preferredModel()
     import(model)
     return model.toTypeName().type()
+}
+
+private data class SignatureParameter(
+    val wireName: String,
+    val name: String,
+    val type: Model,
+    val isRequired: Boolean,
+    val allowModelDefault: Boolean,
+) {
+    fun hasDefault(): Boolean = allowModelDefault && type.hasDefault()
+}
+
+private sealed interface RequestBody {
+    val required: Boolean
+    val signatureParameters: List<SignatureParameter>
+
+    data class SetBody(
+        override val required: Boolean,
+        val contentType: ContentType,
+        val type: Model,
+    ) : RequestBody {
+        override val signatureParameters: List<SignatureParameter> = listOf(
+            SignatureParameter(
+                wireName = "body",
+                name = "body",
+                type = type,
+                isRequired = required,
+                allowModelDefault = required,
+            )
+        )
+    }
+
+    data class MultipartInline(
+        override val required: Boolean,
+        val parameters: List<Route.Body.Multipart.FormData>,
+    ) : RequestBody {
+        override val signatureParameters: List<SignatureParameter> =
+            parameters.map { form ->
+                SignatureParameter(
+                    wireName = form.name,
+                    name = form.name.toParamName(),
+                    type = form.type,
+                    isRequired = required,
+                    allowModelDefault = required,
+                )
+            }
+    }
+
+    data class MultipartRef(
+        override val required: Boolean,
+        val type: Model,
+    ) : RequestBody {
+        override val signatureParameters: List<SignatureParameter> = listOf(
+            SignatureParameter(
+                wireName = "body",
+                name = "body",
+                type = type,
+                isRequired = required,
+                allowModelDefault = required,
+            )
+        )
+    }
+
+    data class FormUrlEncoded(
+        override val required: Boolean,
+        val parameters: List<Route.Body.Multipart.FormData>,
+    ) : RequestBody {
+        override val signatureParameters: List<SignatureParameter> =
+            parameters.map { form ->
+                SignatureParameter(
+                    wireName = form.name,
+                    name = form.name.toParamName(),
+                    type = form.type,
+                    isRequired = required,
+                    allowModelDefault = required,
+                )
+            }
+    }
+}
+
+private fun Route.signatureParameters(body: RequestBody?): List<SignatureParameter> {
+    val standard = sortedParameters().map { input ->
+        SignatureParameter(
+            wireName = input.name,
+            name = input.name.toParamName(),
+            type = input.type,
+            isRequired = input.isRequired,
+            allowModelDefault = true,
+        )
+    }
+    val resolvedBody = body ?: return standard
+    val bodyParameters = resolvedBody.signatureParameters
+    if (bodyParameters.isEmpty()) return standard
+
+    return if (resolvedBody.required) {
+        val firstOptional = standard.indexOfFirst { !it.isRequired && !it.hasDefault() }
+        val splitIndex = if (firstOptional == -1) standard.size else firstOptional
+        standard.take(splitIndex) + bodyParameters + standard.drop(splitIndex)
+    } else {
+        standard + bodyParameters
+    }
+}
+
+private fun Route.preferredBodyOrNull(): RequestBody? {
+    val bodies = body ?: return null
+    val body = bodies.preferredBodyOrNull() ?: return null
+    return when (body) {
+        is Route.Body.SetBody -> RequestBody.SetBody(
+            required = bodies.required,
+            contentType = body.contentType,
+            type = body.type,
+        )
+        is Route.Body.Multipart.Value -> RequestBody.MultipartInline(
+            required = bodies.required,
+            parameters = body.parameters,
+        )
+        is Route.Body.Multipart.Ref -> RequestBody.MultipartRef(
+            required = bodies.required,
+            type = body.value,
+        )
+        is Route.Body.FormUrlEncoded -> RequestBody.FormUrlEncoded(
+            required = bodies.required,
+            parameters = body.parameters,
+        )
+    }
+}
+
+private fun Route.Bodies.preferredBodyOrNull(): Route.Body? =
+    findBodyOrNull(ContentType.Application.Json)
+        ?: findBodyOrNull(ContentType.Application.Xml)
+        ?: findBodyOrNull(ContentType.Application.OctetStream)
+        ?: findBodyOrNull(ContentType.Text.Plain)
+        ?: findBodyOrNull(ContentType.MultiPart.FormData)
+        ?: findBodyOrNull(ContentType.Application.FormUrlEncoded)
+
+private fun Route.Bodies.findBodyOrNull(contentType: ContentType): Route.Body? =
+    types.entries.firstNotNullOfOrNull { (key, value) ->
+        if (contentType.match(key)) {
+            when (value) {
+                is Route.Body.SetBody -> value.copy(contentType = key)
+                else -> value
+            }
+        } else null
+    }
+
+private fun ContentType.asExpression(): String = when {
+    ContentType.Application.Json.match(this) -> "ContentType.Application.Json"
+    ContentType.Application.Xml.match(this) -> "ContentType.Application.Xml"
+    ContentType.Application.OctetStream.match(this) -> "ContentType.Application.OctetStream"
+    ContentType.Text.Plain.match(this) -> "ContentType.Text.Plain"
+    ContentType.MultiPart.FormData.match(this) -> "ContentType.MultiPart.FormData"
+    ContentType.Application.FormUrlEncoded.match(this) -> "ContentType.Application.FormUrlEncoded"
+    else -> "ContentType.parse(\"$this\")"
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+private fun renderBodyPlacement(body: RequestBody) {
+    when (body) {
+        is RequestBody.SetBody -> {
+            ctx.import(
+                TypeName.Class("io.ktor.http", "ContentType"),
+                TopLevelFunction("io.ktor.client.request", "contentType"),
+                TopLevelFunction("io.ktor.client.request", "setBody"),
+            )
+            +"contentType(${body.contentType.asExpression()})"
+            if (body.required) {
+                +"setBody(body)"
+            } else {
+                +"body?.let { setBody(it) }"
+            }
+        }
+        is RequestBody.MultipartInline -> {
+            ctx.import(
+                TopLevelFunction("io.ktor.client.request", "setBody"),
+                TypeName.Class("io.ktor.client.request.forms", "MultiPartFormDataContent"),
+                TopLevelFunction("io.ktor.client.request.forms", "formData"),
+            )
+            +"setBody("
+            indented {
+                +"MultiPartFormDataContent("
+                indented {
+                    +"formData {"
+                    indented {
+                        body.signatureParameters.forEach { parameter ->
+                            val value = parameter.name
+                            val appendValue = if (parameter.type is Model.ByteArray) value else "$value.toString()"
+                            if (parameter.isRequired) {
+                                +"append(\"${parameter.wireName}\", $appendValue)"
+                            } else {
+                                +"$value?.let { append(\"${parameter.wireName}\", ${if (parameter.type is Model.ByteArray) "it" else "it.toString()"}) }"
+                            }
+                        }
+                    }
+                    +"}"
+                }
+                +")"
+            }
+            +")"
+        }
+        is RequestBody.MultipartRef -> {
+            ctx.import(
+                TypeName.Class("io.ktor.http", "ContentType"),
+                TopLevelFunction("io.ktor.client.request", "contentType"),
+                TopLevelFunction("io.ktor.client.request", "setBody"),
+            )
+            +"contentType(ContentType.MultiPart.FormData)"
+            if (body.required) {
+                +"setBody(body)"
+            } else {
+                +"body?.let { setBody(it) }"
+            }
+        }
+        is RequestBody.FormUrlEncoded -> {
+            ctx.import(
+                TypeName.Class("io.ktor.http", "ContentType"),
+                TypeName.Class("io.ktor.http", "Parameters"),
+                TopLevelFunction("io.ktor.http", "formUrlEncode"),
+                TopLevelFunction("io.ktor.client.request", "contentType"),
+                TopLevelFunction("io.ktor.client.request", "setBody"),
+            )
+            +"contentType(ContentType.Application.FormUrlEncoded)"
+            +"setBody("
+            indented {
+                +"Parameters.build {"
+                indented {
+                    body.signatureParameters.forEach { parameter ->
+                        val value = parameter.name
+                        if (parameter.isRequired) {
+                            +"append(\"${parameter.wireName}\", $value.toString())"
+                        } else {
+                            +"$value?.let { append(\"${parameter.wireName}\", it.toString()) }"
+                        }
+                    }
+                }
+                +"}.formUrlEncode()"
+            }
+            +")"
+        }
+    }
 }
 
 private fun Route.ReturnType.preferredModel(): Model =

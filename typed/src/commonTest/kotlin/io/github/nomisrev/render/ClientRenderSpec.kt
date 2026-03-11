@@ -23,6 +23,7 @@ private fun route(
     method: HttpMethod = HttpMethod.Get,
     returnModel: Model = Model.Primitive.String(null, null, null, false, null),
     statusCode: HttpStatusCode = HttpStatusCode.OK,
+    body: Route.Bodies? = null,
     parameters: List<Route.Input> = emptyList(),
     deprecated: Boolean = false,
 ): Route = Route(
@@ -30,7 +31,7 @@ private fun route(
     summary = null,
     path = path,
     method = method,
-    body = null,
+    body = body,
     parameters = parameters,
     returns = Route.Returns(
         default = null,
@@ -772,6 +773,257 @@ val clientRenderSpec by testSuite {
         """.trimMargin()
 
         assertEq(expected, actual)
+    }
+
+    test("required JSON body is rendered as typed body parameter with placement in request block") {
+        val requestModel = Model.Reference(
+            context = NamingContext.reference("CreateChatCompletion", SchemaContext.Write),
+            description = null,
+            isNullable = false,
+            title = null
+        )
+        val requestBody = Route.Bodies(
+            required = true,
+            types = mapOf(
+                ContentType.Application.Json to Route.Body.SetBody(
+                    contentType = ContentType.Application.Json,
+                    type = requestModel,
+                    description = null,
+                    extensions = emptyMap()
+                )
+            ),
+            extensions = emptyMap()
+        )
+        val root = Root(
+            name = "Api",
+            operations = listOf(
+                route(
+                    operationId = "createChatCompletion",
+                    path = "/chat/completions/{model}",
+                    method = HttpMethod.Post,
+                    body = requestBody,
+                    parameters = listOf(
+                        pathParam("model"),
+                        queryParam("limit", isRequired = true),
+                        headerParam("OpenAI-Organization", isRequired = true),
+                        queryParam("after", isRequired = false),
+                        headerParam("X-Trace-Id", isRequired = false),
+                    )
+                )
+            ),
+            endpoints = emptyList(),
+        )
+
+        val (actual, _) = renderer { root.renderRootFile() }
+
+        assertTrue(actual.contains("body: CreateChatCompletionRequest,"), "Expected typed body parameter:\n$actual")
+        assertTrue(actual.contains("openAIOrganization: String,"), "Expected required header param:\n$actual")
+        assertTrue(actual.contains("after: String? = null,"), "Expected optional query param:\n$actual")
+        assertTrue(actual.contains("xTraceId: String? = null,"), "Expected optional header param:\n$actual")
+        assertTrue(actual.contains("contentType(ContentType.Application.Json)"), "Expected JSON contentType in impl:\n$actual")
+        assertTrue(actual.contains("setBody(body)"), "Expected body placement in impl:\n$actual")
+    }
+
+    test("optional JSON body is nullable and conditionally set") {
+        val requestModel = Model.Reference(
+            context = NamingContext.reference("UpdateSettings", SchemaContext.Write),
+            description = null,
+            isNullable = false,
+            title = null
+        )
+        val requestBody = Route.Bodies(
+            required = false,
+            types = mapOf(
+                ContentType.Application.Json to Route.Body.SetBody(
+                    contentType = ContentType.Application.Json,
+                    type = requestModel,
+                    description = null,
+                    extensions = emptyMap()
+                )
+            ),
+            extensions = emptyMap()
+        )
+        val root = Root(
+            name = "Api",
+            operations = listOf(
+                route(
+                    operationId = "updateSettings",
+                    path = "/settings",
+                    method = HttpMethod.Patch,
+                    body = requestBody,
+                )
+            ),
+            endpoints = emptyList(),
+        )
+
+        val (actual, _) = renderer { root.renderRootFile() }
+
+        assertTrue(actual.contains("body: UpdateSettingsRequest? = null"), "Expected optional body parameter:\n$actual")
+        assertTrue(actual.contains("body?.let { setBody(it) }"), "Expected conditional setBody for optional body:\n$actual")
+    }
+
+    test("multipart inline schema expands into parameters and uses MultiPartFormDataContent") {
+        val multipartBody = Route.Bodies(
+            required = true,
+            types = mapOf(
+                ContentType.MultiPart.FormData to Route.Body.Multipart.Value(
+                    parameters = listOf(
+                        Route.Body.Multipart.FormData("file", Model.ByteArray(null, false, null)),
+                        Route.Body.Multipart.FormData("purpose", Model.Primitive.String(null, null, null, false, null))
+                    ),
+                    description = null,
+                    extensions = emptyMap()
+                )
+            ),
+            extensions = emptyMap()
+        )
+        val root = Root(
+            name = "Api",
+            operations = listOf(
+                route(
+                    operationId = "uploadFile",
+                    path = "/files",
+                    method = HttpMethod.Post,
+                    body = multipartBody,
+                )
+            ),
+            endpoints = emptyList(),
+        )
+
+        val (actual, _) = renderer { root.renderRootFile() }
+
+        assertTrue(actual.contains("file: ByteArray,"), "Expected file parameter:\n$actual")
+        assertTrue(actual.contains("purpose: String,"), "Expected purpose parameter:\n$actual")
+        assertTrue(actual.contains("MultiPartFormDataContent("), "Expected multipart body content:\n$actual")
+        assertTrue(actual.contains("append(\"file\", file)"), "Expected binary multipart append:\n$actual")
+        assertTrue(actual.contains("append(\"purpose\", purpose.toString())"), "Expected multipart string append:\n$actual")
+    }
+
+    test("multipart ref schema uses a single typed body parameter") {
+        val requestModel = Model.Reference(
+            context = NamingContext.reference("UploadFile", SchemaContext.Write),
+            description = null,
+            isNullable = false,
+            title = null
+        )
+        val multipartBody = Route.Bodies(
+            required = true,
+            types = mapOf(
+                ContentType.MultiPart.FormData to Route.Body.Multipart.Ref(
+                    value = requestModel,
+                    description = null,
+                    extensions = emptyMap()
+                )
+            ),
+            extensions = emptyMap()
+        )
+        val root = Root(
+            name = "Api",
+            operations = listOf(
+                route(
+                    operationId = "uploadFile",
+                    path = "/files",
+                    method = HttpMethod.Post,
+                    body = multipartBody,
+                )
+            ),
+            endpoints = emptyList(),
+        )
+
+        val (actual, _) = renderer { root.renderRootFile() }
+
+        assertTrue(actual.contains("body: UploadFileRequest,"), "Expected single multipart body parameter:\n$actual")
+        assertTrue(actual.contains("contentType(ContentType.MultiPart.FormData)"), "Expected multipart contentType:\n$actual")
+        assertTrue(actual.contains("setBody(body)"), "Expected multipart setBody:\n$actual")
+    }
+
+    test("form-urlencoded schema expands properties and encodes Parameters") {
+        val formBody = Route.Bodies(
+            required = true,
+            types = mapOf(
+                ContentType.Application.FormUrlEncoded to Route.Body.FormUrlEncoded(
+                    parameters = listOf(
+                        Route.Body.Multipart.FormData("grant_type", Model.Primitive.String(null, null, null, false, null)),
+                        Route.Body.Multipart.FormData("code", Model.Primitive.String(null, null, null, false, null)),
+                        Route.Body.Multipart.FormData("redirect_uri", Model.Primitive.String(null, null, null, false, null)),
+                    ),
+                    description = null,
+                    extensions = emptyMap()
+                )
+            ),
+            extensions = emptyMap()
+        )
+        val root = Root(
+            name = "Api",
+            operations = listOf(
+                route(
+                    operationId = "createToken",
+                    path = "/oauth/token",
+                    method = HttpMethod.Post,
+                    body = formBody,
+                )
+            ),
+            endpoints = emptyList(),
+        )
+
+        val (actual, _) = renderer { root.renderRootFile() }
+
+        assertTrue(actual.contains("grantType: String,"), "Expected camelCase form parameter:\n$actual")
+        assertTrue(actual.contains("contentType(ContentType.Application.FormUrlEncoded)"), "Expected form contentType:\n$actual")
+        assertTrue(actual.contains("Parameters.build {"), "Expected Parameters builder:\n$actual")
+        assertTrue(actual.contains("append(\"grant_type\", grantType.toString())"), "Expected grant_type append:\n$actual")
+        assertTrue(actual.contains("}.formUrlEncode()"), "Expected formUrlEncode call:\n$actual")
+    }
+
+    test("body content type preference follows json over multipart and form-urlencoded") {
+        val jsonBody = Route.Body.SetBody(
+            contentType = ContentType.Application.Json,
+            type = Model.Reference(
+                context = NamingContext.reference("CreateThing", SchemaContext.Write),
+                description = null,
+                isNullable = false,
+                title = null
+            ),
+            description = null,
+            extensions = emptyMap()
+        )
+        val multipartBody = Route.Body.Multipart.Value(
+            parameters = listOf(Route.Body.Multipart.FormData("file", Model.ByteArray(null, false, null))),
+            description = null,
+            extensions = emptyMap()
+        )
+        val formBody = Route.Body.FormUrlEncoded(
+            parameters = listOf(Route.Body.Multipart.FormData("grant_type", Model.Primitive.String(null, null, null, false, null))),
+            description = null,
+            extensions = emptyMap()
+        )
+        val requestBody = Route.Bodies(
+            required = true,
+            types = mapOf(
+                ContentType.MultiPart.FormData to multipartBody,
+                ContentType.Application.FormUrlEncoded to formBody,
+                ContentType.Application.Json to jsonBody,
+            ),
+            extensions = emptyMap()
+        )
+        val root = Root(
+            name = "Api",
+            operations = listOf(
+                route(
+                    operationId = "createThing",
+                    path = "/things",
+                    method = HttpMethod.Post,
+                    body = requestBody,
+                )
+            ),
+            endpoints = emptyList(),
+        )
+
+        val (actual, _) = renderer { root.renderRootFile() }
+
+        assertTrue(actual.contains("body: CreateThingRequest,"), "Expected JSON body param to win preference:\n$actual")
+        assertTrue(actual.contains("contentType(ContentType.Application.Json)"), "Expected JSON content type to win preference:\n$actual")
+        assertTrue(!actual.contains("file: ByteArray"), "Did not expect multipart parameters when JSON is present:\n$actual")
     }
 }
 

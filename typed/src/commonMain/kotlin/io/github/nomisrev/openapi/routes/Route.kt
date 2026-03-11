@@ -133,6 +133,7 @@ data class Route(
          * that are directly supported by Ktor serialization/plugins.
          */
         data class SetBody(
+            val contentType: ContentType,
             val type: Model,
             override val description: String?,
             override val extensions: Map<String, JsonElement>,
