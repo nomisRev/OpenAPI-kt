@@ -6,6 +6,7 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.Root
 import io.github.nomisrev.openapi.generateClient
 import io.github.nomisrev.openapi.parser.Parameter
+import io.github.nomisrev.openapi.parser.Server
 import io.github.nomisrev.openapi.render.renderRootFile
 import io.github.nomisrev.openapi.render.renderer
 import io.github.nomisrev.openapi.routes.Route
@@ -50,14 +51,47 @@ private fun route(
 private fun pathParam(name: String, type: Model = Model.Primitive.String(null, null, null, false, null)) =
     Route.Input(name = name, type = type, isRequired = true, input = Parameter.Input.Path, description = null)
 
-private fun queryParam(name: String, type: Model = Model.Primitive.String(null, null, null, false, null), isRequired: Boolean = false) =
+private fun queryParam(
+    name: String,
+    type: Model = Model.Primitive.String(null, null, null, false, null),
+    isRequired: Boolean = false
+) =
     Route.Input(name = name, type = type, isRequired = isRequired, input = Parameter.Input.Query, description = null)
 
-private fun headerParam(name: String, type: Model = Model.Primitive.String(null, null, null, false, null), isRequired: Boolean = false) =
+private fun headerParam(
+    name: String,
+    type: Model = Model.Primitive.String(null, null, null, false, null),
+    isRequired: Boolean = false
+) =
     Route.Input(name = name, type = type, isRequired = isRequired, input = Parameter.Input.Header, description = null)
 
-private fun cookieParam(name: String, type: Model = Model.Primitive.String(null, null, null, false, null), isRequired: Boolean = false) =
+private fun cookieParam(
+    name: String,
+    type: Model = Model.Primitive.String(null, null, null, false, null),
+    isRequired: Boolean = false
+) =
     Route.Input(name = name, type = type, isRequired = isRequired, input = Parameter.Input.Cookie, description = null)
+
+private fun server(
+    url: String,
+    description: String? = null,
+    variables: Map<String, Server.Variable>? = null,
+): Server = Server(
+    url = url,
+    description = description,
+    variables = variables,
+    extensions = emptyMap(),
+)
+
+private fun serverVariable(
+    default: String,
+    enum: List<String>? = null,
+): Server.Variable = Server.Variable(
+    enum = enum,
+    default = default,
+    description = null,
+    extensions = emptyMap(),
+)
 
 val clientRenderSpec by testSuite {
 
@@ -188,7 +222,7 @@ val clientRenderSpec by testSuite {
         assertEq(expected, actual)
     }
 
-    test("empty root generates interface with no members") {
+      test("empty root generates interface with no members") {
         val root = Root(
             name = "EmptyApi",
             operations = emptyList(),
@@ -215,10 +249,107 @@ val clientRenderSpec by testSuite {
             |}
         """.trimMargin()
 
-        assertEq(expected, actual)
-    }
+          assertEq(expected, actual)
+      }
 
-    test("read variant type is used for response types") {
+      test("server sealed interface and factory parameter are generated for static servers") {
+          val root = Root(
+              name = "OpenAI",
+              operations = listOf(route("listModels", "/models")),
+              endpoints = emptyList(),
+              servers = listOf(
+                  server("https://api.openai.com/v1", description = "Production"),
+                  server("https://staging.api.openai.com/v1", description = "Staging Server"),
+              ),
+          )
+
+          val (actual, _) = renderer { root.renderRootFile() }
+
+          assertTrue(actual.contains("sealed interface OpenAIServer {"), "Expected server sealed interface:\\n$actual")
+          assertTrue(actual.contains("data object Production : OpenAIServer"), "Expected production server case:\\n$actual")
+          assertTrue(actual.contains("data object Staging : OpenAIServer"), "Expected trailing 'Server' to be stripped:\\n$actual")
+          assertTrue(actual.contains("data class Custom(override val url: String) : OpenAIServer"), "Expected custom escape hatch:\\n$actual")
+          assertTrue(
+              actual.contains("server: OpenAIServer = OpenAIServer.Production,"),
+              "Expected factory server parameter with default first server:\\n$actual"
+          )
+          assertTrue(actual.contains("defaultRequest { url(server.url) }"), "Expected defaultRequest to use server.url:\\n$actual")
+          assertTrue(!actual.contains("baseUrl: String"), "Did not expect baseUrl parameter when servers are declared:\\n$actual")
+      }
+
+      test("server variables render enum and string parameters with interpolated url") {
+          val root = Root(
+              name = "Example",
+              operations = listOf(route("listData", "/data")),
+              endpoints = emptyList(),
+              servers = listOf(
+                  server(
+                      url = "https://{environment}.api.example.com/{version}",
+                      description = "Multi-environment server",
+                      variables = mapOf(
+                          "environment" to serverVariable(
+                              default = "production",
+                              enum = listOf("production", "staging", "dev"),
+                          ),
+                          "version" to serverVariable(default = "v2"),
+                      ),
+                  ),
+              ),
+          )
+
+          val (actual, _) = renderer { root.renderRootFile() }
+
+          assertTrue(actual.contains("data class MultiEnvironment("), "Expected variable server data class:\\n$actual")
+          assertTrue(
+              actual.contains("val environment: Environment = Environment.Production,"),
+              "Expected enum-constrained variable parameter:\\n$actual"
+          )
+          assertTrue(actual.contains("val version: String = \"v2\","), "Expected free-form String variable parameter:\\n$actual")
+          assertTrue(
+              actual.contains("get() = \"https://${'$'}{environment.value}.api.example.com/${'$'}{version}\""),
+              "Expected interpolated url getter:\\n$actual"
+          )
+          assertTrue(actual.contains("enum class Environment(val value: String) {"), "Expected nested enum declaration:\\n$actual")
+          assertTrue(actual.contains("Production(\"production\"),"), "Expected enum entry for production:\\n$actual")
+          assertTrue(actual.contains("Staging(\"staging\"),"), "Expected enum entry for staging:\\n$actual")
+          assertTrue(actual.contains("Dev(\"dev\"),"), "Expected enum entry for dev:\\n$actual")
+      }
+
+      test("server case naming falls back to default and indexed names when descriptions are missing") {
+          val singleServerRoot = Root(
+              name = "Example",
+              operations = listOf(route("listData", "/data")),
+              endpoints = emptyList(),
+              servers = listOf(server("https://api.example.com/v1")),
+          )
+          val (singleActual, _) = renderer { singleServerRoot.renderRootFile() }
+
+          assertTrue(singleActual.contains("data object Default : ExampleServer"), "Expected single unnamed server to fallback to Default:\\n$singleActual")
+          assertTrue(
+              singleActual.contains("server: ExampleServer = ExampleServer.Default,"),
+              "Expected factory default to use ExampleServer.Default:\\n$singleActual"
+          )
+
+          val multiServerRoot = Root(
+              name = "Example",
+              operations = listOf(route("listData", "/data")),
+              endpoints = emptyList(),
+              servers = listOf(
+                  server("https://api-1.example.com/v1"),
+                  server("https://api-2.example.com/v1"),
+              ),
+          )
+          val (multiActual, _) = renderer { multiServerRoot.renderRootFile() }
+
+          assertTrue(multiActual.contains("data object Server1 : ExampleServer"), "Expected first unnamed server to fallback to Server1:\\n$multiActual")
+          assertTrue(multiActual.contains("data object Server2 : ExampleServer"), "Expected second unnamed server to fallback to Server2:\\n$multiActual")
+          assertTrue(
+              multiActual.contains("server: ExampleServer = ExampleServer.Server1,"),
+              "Expected first documented server to be default in factory:\\n$multiActual"
+          )
+      }
+
+      test("read variant type is used for response types") {
         // A reference with SchemaContext.Read should produce the "Response" suffix
         val returnModel = Model.Reference(
             context = NamingContext.reference("Pet", SchemaContext.Read),
@@ -259,8 +390,14 @@ val clientRenderSpec by testSuite {
 
         val (actual, _) = renderer { root.renderRootFile() }
 
-        assertTrue(actual.contains("suspend fun retrieveModel(\n        model: String,\n    ): String"), "Expected path param in interface:\n$actual")
-        assertTrue(actual.contains("override suspend fun retrieveModel(model: String): String ="), "Expected path param in impl:\n$actual")
+        assertTrue(
+            actual.contains("suspend fun retrieveModel(\n        model: String,\n    ): String"),
+            "Expected path param in interface:\n$actual"
+        )
+        assertTrue(
+            actual.contains("override suspend fun retrieveModel(model: String): String ="),
+            "Expected path param in impl:\n$actual"
+        )
         assertTrue(actual.contains("\"/models/\$model\""), "Expected path interpolation in impl:\n$actual")
     }
 
@@ -299,7 +436,10 @@ val clientRenderSpec by testSuite {
         val (actual, _) = renderer { root.renderRootFile() }
 
         assertTrue(actual.contains("limit: Int? = null,"), "Expected optional query param in interface:\n$actual")
-        assertTrue(actual.contains("limit?.let { parameter(\"limit\", it) }"), "Expected ?.let pattern in impl:\n$actual")
+        assertTrue(
+            actual.contains("limit?.let { parameter(\"limit\", it) }"),
+            "Expected ?.let pattern in impl:\n$actual"
+        )
     }
 
     test("header parameter") {
@@ -363,7 +503,8 @@ val clientRenderSpec by testSuite {
 
         // Extract parameter lines from the interface suspend fun
         val paramSection = actual.substringAfter("suspend fun getResource(").substringBefore("): String")
-        val paramNames = paramSection.lines().map { it.trim() }.filter { it.contains(":") }.map { it.substringBefore(":").trim() }
+        val paramNames =
+            paramSection.lines().map { it.trim() }.filter { it.contains(":") }.map { it.substringBefore(":").trim() }
 
         assertEquals(
             listOf("id", "requiredQ", "xRequired", "optionalQ", "xOptional"),
@@ -401,7 +542,10 @@ val clientRenderSpec by testSuite {
 
         assertTrue(actual.contains("limit: Int = 20,"), "Expected default value in interface:\n$actual")
         // Non-null default means always sent (no ?.let)
-        assertTrue(actual.contains("parameter(\"limit\", limit)"), "Expected direct parameter() call (no ?.let) for param with default:\n$actual")
+        assertTrue(
+            actual.contains("parameter(\"limit\", limit)"),
+            "Expected direct parameter() call (no ?.let) for param with default:\n$actual"
+        )
     }
 
     test("required parameter with default renders default value without annotation") {
@@ -475,7 +619,10 @@ val clientRenderSpec by testSuite {
 
         val (actual, _) = renderer { root.renderRootFile() }
 
-        assertTrue(actual.contains("fineTuningJobId: String"), "Expected camelCase param name 'fineTuningJobId':\n$actual")
+        assertTrue(
+            actual.contains("fineTuningJobId: String"),
+            "Expected camelCase param name 'fineTuningJobId':\n$actual"
+        )
         assertTrue(actual.contains("\$fineTuningJobId"), "Expected camelCase interpolation in URL:\n$actual")
     }
 
@@ -820,7 +967,10 @@ val clientRenderSpec by testSuite {
         assertTrue(actual.contains("openAIOrganization: String,"), "Expected required header param:\n$actual")
         assertTrue(actual.contains("after: String? = null,"), "Expected optional query param:\n$actual")
         assertTrue(actual.contains("xTraceId: String? = null,"), "Expected optional header param:\n$actual")
-        assertTrue(actual.contains("contentType(ContentType.Application.Json)"), "Expected JSON contentType in impl:\n$actual")
+        assertTrue(
+            actual.contains("contentType(ContentType.Application.Json)"),
+            "Expected JSON contentType in impl:\n$actual"
+        )
         assertTrue(actual.contains("setBody(body)"), "Expected body placement in impl:\n$actual")
     }
 
@@ -859,7 +1009,10 @@ val clientRenderSpec by testSuite {
         val (actual, _) = renderer { root.renderRootFile() }
 
         assertTrue(actual.contains("body: UpdateSettingsRequest? = null"), "Expected optional body parameter:\n$actual")
-        assertTrue(actual.contains("body?.let { setBody(it) }"), "Expected conditional setBody for optional body:\n$actual")
+        assertTrue(
+            actual.contains("body?.let { setBody(it) }"),
+            "Expected conditional setBody for optional body:\n$actual"
+        )
     }
 
     test("multipart inline schema expands into parameters and uses MultiPartFormDataContent") {
@@ -896,7 +1049,10 @@ val clientRenderSpec by testSuite {
         assertTrue(actual.contains("purpose: String,"), "Expected purpose parameter:\n$actual")
         assertTrue(actual.contains("MultiPartFormDataContent("), "Expected multipart body content:\n$actual")
         assertTrue(actual.contains("append(\"file\", file)"), "Expected binary multipart append:\n$actual")
-        assertTrue(actual.contains("append(\"purpose\", purpose.toString())"), "Expected multipart string append:\n$actual")
+        assertTrue(
+            actual.contains("append(\"purpose\", purpose.toString())"),
+            "Expected multipart string append:\n$actual"
+        )
     }
 
     test("multipart ref schema uses a single typed body parameter") {
@@ -933,7 +1089,10 @@ val clientRenderSpec by testSuite {
         val (actual, _) = renderer { root.renderRootFile() }
 
         assertTrue(actual.contains("body: UploadFileRequest,"), "Expected single multipart body parameter:\n$actual")
-        assertTrue(actual.contains("contentType(ContentType.MultiPart.FormData)"), "Expected multipart contentType:\n$actual")
+        assertTrue(
+            actual.contains("contentType(ContentType.MultiPart.FormData)"),
+            "Expected multipart contentType:\n$actual"
+        )
         assertTrue(actual.contains("setBody(body)"), "Expected multipart setBody:\n$actual")
     }
 
@@ -943,9 +1102,15 @@ val clientRenderSpec by testSuite {
             types = mapOf(
                 ContentType.Application.FormUrlEncoded to Route.Body.FormUrlEncoded(
                     parameters = listOf(
-                        Route.Body.Multipart.FormData("grant_type", Model.Primitive.String(null, null, null, false, null)),
+                        Route.Body.Multipart.FormData(
+                            "grant_type",
+                            Model.Primitive.String(null, null, null, false, null)
+                        ),
                         Route.Body.Multipart.FormData("code", Model.Primitive.String(null, null, null, false, null)),
-                        Route.Body.Multipart.FormData("redirect_uri", Model.Primitive.String(null, null, null, false, null)),
+                        Route.Body.Multipart.FormData(
+                            "redirect_uri",
+                            Model.Primitive.String(null, null, null, false, null)
+                        ),
                     ),
                     description = null,
                     extensions = emptyMap()
@@ -969,9 +1134,15 @@ val clientRenderSpec by testSuite {
         val (actual, _) = renderer { root.renderRootFile() }
 
         assertTrue(actual.contains("grantType: String,"), "Expected camelCase form parameter:\n$actual")
-        assertTrue(actual.contains("contentType(ContentType.Application.FormUrlEncoded)"), "Expected form contentType:\n$actual")
+        assertTrue(
+            actual.contains("contentType(ContentType.Application.FormUrlEncoded)"),
+            "Expected form contentType:\n$actual"
+        )
         assertTrue(actual.contains("Parameters.build {"), "Expected Parameters builder:\n$actual")
-        assertTrue(actual.contains("append(\"grant_type\", grantType.toString())"), "Expected grant_type append:\n$actual")
+        assertTrue(
+            actual.contains("append(\"grant_type\", grantType.toString())"),
+            "Expected grant_type append:\n$actual"
+        )
         assertTrue(actual.contains("}.formUrlEncode()"), "Expected formUrlEncode call:\n$actual")
     }
 
@@ -993,7 +1164,12 @@ val clientRenderSpec by testSuite {
             extensions = emptyMap()
         )
         val formBody = Route.Body.FormUrlEncoded(
-            parameters = listOf(Route.Body.Multipart.FormData("grant_type", Model.Primitive.String(null, null, null, false, null))),
+            parameters = listOf(
+                Route.Body.Multipart.FormData(
+                    "grant_type",
+                    Model.Primitive.String(null, null, null, false, null)
+                )
+            ),
             description = null,
             extensions = emptyMap()
         )
@@ -1022,8 +1198,221 @@ val clientRenderSpec by testSuite {
         val (actual, _) = renderer { root.renderRootFile() }
 
         assertTrue(actual.contains("body: CreateThingRequest,"), "Expected JSON body param to win preference:\n$actual")
-        assertTrue(actual.contains("contentType(ContentType.Application.Json)"), "Expected JSON content type to win preference:\n$actual")
-        assertTrue(!actual.contains("file: ByteArray"), "Did not expect multipart parameters when JSON is present:\n$actual")
+        assertTrue(
+            actual.contains("contentType(ContentType.Application.Json)"),
+            "Expected JSON content type to win preference:\n$actual"
+        )
+        assertTrue(
+            !actual.contains("file: ByteArray"),
+            "Did not expect multipart parameters when JSON is present:\n$actual"
+        )
+    }
+
+    test("multiple responses generate a sealed result and status dispatch in implementation") {
+        val returns = Route.Returns(
+            default = null,
+            responses = mapOf(
+                HttpStatusCode.OK to Route.ReturnType(
+                    types = mapOf(
+                        ContentType.Application.Json to Model.Primitive.String(
+                            null,
+                            null,
+                            null,
+                            false,
+                            null
+                        )
+                    ),
+                    extensions = emptyMap()
+                ),
+                HttpStatusCode.NotFound to Route.ReturnType(
+                    types = mapOf(
+                        ContentType.Application.Json to Model.Primitive.String(
+                            null,
+                            null,
+                            null,
+                            false,
+                            null
+                        )
+                    ),
+                    extensions = emptyMap()
+                ),
+            ),
+            extensions = emptyMap()
+        )
+        val root = Root(
+            name = "Api",
+            operations = listOf(
+                route(
+                    operationId = "retrieveModel",
+                    path = "/models/{model}",
+                    parameters = listOf(pathParam("model"))
+                ).copy(
+                    returns = returns
+                )
+            ),
+            endpoints = emptyList(),
+        )
+
+          val (actual, _) = renderer { root.renderRootFile() }
+          val expectedSnippet = """
+              |    sealed interface RetrieveModelResult {
+              |        data class OK(val value: String) : RetrieveModelResult
+              |
+              |        data class NotFound(val value: String) : RetrieveModelResult
+              |    }
+              |
+              |    suspend fun retrieveModel(
+              |        model: String,
+              |    ): RetrieveModelResult
+              |}
+              |
+              |internal class KtorApi(private val client: HttpClient) : Api {
+            |    override suspend fun retrieveModel(model: String): Api.RetrieveModelResult {
+            |        val response = client.get("/models/${'$'}model") {
+            |            expectSuccess = false
+            |        }
+            |        return when (response.status) {
+            |            HttpStatusCode.OK -> Api.RetrieveModelResult.OK(response.body())
+            |            HttpStatusCode.NotFound -> Api.RetrieveModelResult.NotFound(response.body())
+            |            else -> throw ResponseException(response, "Undocumented status code: ${'$'}{response.status}")
+            |        }
+            |    }
+            |}
+        """.trimMargin()
+
+        assertTrue(
+            actual.contains(expectedSnippet),
+            "Expected sealed result type and status dispatch snippet:\n$actual"
+        )
+    }
+
+    test("default response is rendered and used in else branch") {
+        val returns = Route.Returns(
+            default = Route.ReturnType(
+                types = mapOf(ContentType.Application.Json to Model.Primitive.String(null, null, null, false, null)),
+                extensions = emptyMap()
+            ),
+            responses = mapOf(
+                HttpStatusCode.OK to Route.ReturnType(
+                    types = mapOf(
+                        ContentType.Application.Json to Model.Primitive.String(
+                            null,
+                            null,
+                            null,
+                            false,
+                            null
+                        )
+                    ),
+                    extensions = emptyMap()
+                ),
+            ),
+            extensions = emptyMap()
+        )
+        val root = Root(
+            name = "Api",
+            operations = listOf(
+                route(operationId = "getModel", path = "/models/{model}", parameters = listOf(pathParam("model"))).copy(
+                    returns = returns
+                )
+            ),
+            endpoints = emptyList(),
+        )
+
+          val (actual, _) = renderer { root.renderRootFile() }
+          val expectedSnippet = """
+              |    sealed interface GetModelResult {
+              |        data class OK(val value: String) : GetModelResult
+              |
+              |        data class Default(val status: HttpStatusCode, val value: String) : GetModelResult
+              |    }
+              |
+              |    suspend fun getModel(
+              |        model: String,
+              |    ): GetModelResult
+              |}
+              |
+              |internal class KtorApi(private val client: HttpClient) : Api {
+              |    override suspend fun getModel(model: String): Api.GetModelResult {
+              |        val response = client.get("/models/${'$'}model") {
+              |            expectSuccess = false
+              |        }
+              |        return when (response.status) {
+              |            HttpStatusCode.OK -> Api.GetModelResult.OK(response.body())
+              |            else -> Api.GetModelResult.Default(response.status, response.body())
+              |        }
+              |    }
+              |}
+          """.trimMargin()
+
+        assertTrue(actual.contains(expectedSnippet), "Expected default-case snippet:\n$actual")
+    }
+
+    test("no-content response renders data object case") {
+        val returns = Route.Returns(
+            default = null,
+            responses = mapOf(
+                HttpStatusCode.NoContent to Route.ReturnType(
+                    types = emptyMap(),
+                    extensions = emptyMap()
+                ),
+                HttpStatusCode.OK to Route.ReturnType(
+                    types = mapOf(
+                        ContentType.Application.Json to Model.Primitive.String(
+                            null,
+                            null,
+                            null,
+                            false,
+                            null
+                        )
+                    ),
+                    extensions = emptyMap()
+                ),
+            ),
+            extensions = emptyMap()
+        )
+        val root = Root(
+            name = "Api",
+            operations = listOf(
+                route(
+                    operationId = "deleteModel",
+                    path = "/models/{model}",
+                    method = HttpMethod.Delete,
+                    parameters = listOf(pathParam("model"))
+                ).copy(
+                    returns = returns
+                )
+            ),
+            endpoints = emptyList(),
+        )
+
+          val (actual, _) = renderer { root.renderRootFile() }
+          val expectedSnippet = """
+              |    sealed interface DeleteModelResult {
+              |        data class OK(val value: String) : DeleteModelResult
+              |
+              |        data object NoContent : DeleteModelResult
+              |    }
+              |
+              |    suspend fun deleteModel(
+              |        model: String,
+              |    ): DeleteModelResult
+              |}
+              |
+              |internal class KtorApi(private val client: HttpClient) : Api {
+              |    override suspend fun deleteModel(model: String): Api.DeleteModelResult {
+              |        val response = client.delete("/models/${'$'}model") {
+              |            expectSuccess = false
+              |        }
+              |        return when (response.status) {
+              |            HttpStatusCode.OK -> Api.DeleteModelResult.OK(response.body())
+              |            HttpStatusCode.NoContent -> Api.DeleteModelResult.NoContent
+              |            else -> throw ResponseException(response, "Undocumented status code: ${'$'}{response.status}")
+              |        }
+              |    }
+              |}
+          """.trimMargin()
+
+        assertTrue(actual.contains(expectedSnippet), "Expected NoContent object-case snippet:\n$actual")
     }
 }
 

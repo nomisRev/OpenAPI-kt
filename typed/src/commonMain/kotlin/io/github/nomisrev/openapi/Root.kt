@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.parser.Server
 import io.github.nomisrev.openapi.routes.Route
 
 /**
@@ -17,6 +18,7 @@ data class Root(
     val name: String,
     val operations: List<Route>,
     val endpoints: List<API>,
+    val servers: List<Server> = emptyList(),
 )
 
 data class API(val name: String, val routes: List<Route>, val nested: List<API>)
@@ -25,8 +27,9 @@ private data class RootBuilder(
     val name: String,
     val operations: MutableList<Route>,
     val nested: MutableList<APIBuilder>,
+    val servers: List<Server>,
 ) {
-    fun build(): Root = Root(name, operations, nested.map { it.build() })
+    fun build(): Root = Root(name, operations, nested.map { it.build() }, servers)
 }
 
 private data class APIBuilder(
@@ -37,8 +40,8 @@ private data class APIBuilder(
     fun build(): API = API(name, routes, nested.map { it.build() })
 }
 
-fun Iterable<Route>.sort(name: String): Root {
-    val root = RootBuilder(name, mutableListOf(), mutableListOf())
+fun Iterable<Route>.sort(name: String, servers: List<Server> = emptyList()): Root {
+    val root = RootBuilder(name, mutableListOf(), mutableListOf(), servers)
     forEach { route ->
         // Reduce paths like `/threads/{thread_id}/runs/{run_id}/submit_tool_outputs`
         // into [threads, runs, submit_tool_outputs]

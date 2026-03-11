@@ -5,6 +5,7 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.Root
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Parameter
+import io.github.nomisrev.openapi.parser.Server
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.Route.Bodies
 import io.github.nomisrev.openapi.routes.Route.Body
@@ -25,9 +26,10 @@ import kotlin.collections.orEmpty
 
 class ApiModel(
     val routes: List<Route>,
-    val models: List<Model>
+    val models: List<Model>,
+    val servers: List<Server>,
 ) {
-    fun root(name: String): Root = routes.sort(name)
+    fun root(name: String): Root = routes.sort(name, servers)
     override fun toString(): String =
         routes.joinToString { it.operationId } + "\n" + models.joinToString {
             when (it) {
@@ -55,6 +57,7 @@ private tailrec suspend fun Set<NamingContext.Reference>.topLevelModels(registry
 
 suspend fun OpenAPI.toApiModel(): ApiModel =
     Registry(this).use { registry ->
+        val globalServers = servers.normalizeForClientGeneration()
         val routes = with(registry) { endpoints().map { it.toRoute() } }
 
         val models = with(registry) {
@@ -63,8 +66,18 @@ suspend fun OpenAPI.toApiModel(): ApiModel =
             }.topLevelModels(registry)
         }
 
-        ApiModel(routes, models)
+        ApiModel(routes, models, globalServers)
     }
+
+private fun List<Server>.normalizeForClientGeneration(): List<Server> {
+    if (size != 1) return this
+    val only = first()
+    val isImplicitDefault = only.url == "/" &&
+        only.description == null &&
+        only.variables.isNullOrEmpty() &&
+        only.extensions.isNullOrEmpty()
+    return if (isImplicitDefault) emptyList() else this
+}
 
 context(ctx: Registry)
 suspend fun Endpoint.toRoute(): Route = Route(

@@ -4,6 +4,7 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.API
 import io.github.nomisrev.openapi.Root
 import io.github.nomisrev.openapi.parser.Parameter
+import io.github.nomisrev.openapi.parser.Server
 import io.github.nomisrev.openapi.routes.Route
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
@@ -20,6 +21,11 @@ fun Root.renderRootFile(): String = buildString {
 
     // Root interface
     renderRootInterface(interfaceName)
+    if (servers.isNotEmpty()) {
+        newLine()
+        newLine()
+        renderServerInterface(interfaceName)
+    }
     newLine()
     newLine()
 
@@ -59,7 +65,7 @@ private fun Root.renderRootInterface(interfaceName: String) {
 
         // Root-level operations
         operations.forEachIndexed { index, route ->
-            +renderSuspendFun(route)
+            renderRouteSignature(route)
             if (index < operations.size - 1) newLine()
         }
     }
@@ -87,12 +93,91 @@ private fun Root.renderRootImpl(interfaceName: String, implName: String) {
 
             // Root-level operation implementations
             operations.forEachIndexed { index, route ->
-                renderOperationImpl(route)
+                renderOperationImpl(route, interfaceName)
                 if (index < operations.size - 1) newLine()
             }
         }
         append("}")
     }
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+private fun Root.renderServerInterface(interfaceName: String) {
+    val serverInterfaceName = "${interfaceName}Server"
+    val caseNames = servers.caseNames()
+
+    +"sealed interface $serverInterfaceName {"
+    indented {
+        +"val url: String"
+        newLine()
+
+        servers.forEachIndexed { index, server ->
+            renderServerCase(serverInterfaceName, caseNames[index], server)
+            if (index < servers.lastIndex) {
+                newLine()
+                newLine()
+            }
+        }
+
+        if (servers.isNotEmpty()) {
+            newLine()
+            newLine()
+        }
+        +"data class Custom(override val url: String) : $serverInterfaceName"
+    }
+    +"}"
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+private fun renderServerCase(
+    serverInterfaceName: String,
+    caseName: String,
+    server: Server,
+) {
+    val variables = server.variables.orEmpty().entries.toList()
+    if (variables.isEmpty()) {
+        +"data object $caseName : $serverInterfaceName {"
+        indented {
+            +"override val url = ${server.url.toKotlinStringLiteral()}"
+        }
+        +"}"
+        return
+    }
+
+    val renderedVariables = variables.renderVariables(caseName)
+
+    +"data class $caseName("
+    indented {
+        renderedVariables.forEach { variable ->
+            +"val ${variable.parameterName}: ${variable.parameterType} = ${variable.defaultExpression},"
+        }
+    }
+    +") : $serverInterfaceName {"
+    indented {
+        +"override val url: String"
+        indented {
+            val interpolationByName = renderedVariables.associateBy({ it.wireName }, { it.interpolationExpression })
+            +"get() = ${server.url.toInterpolatedKotlinStringLiteral(interpolationByName)}"
+        }
+
+        val enums = renderedVariables.mapNotNull { it.enumDeclaration }
+        if (enums.isNotEmpty()) {
+            newLine()
+            enums.forEachIndexed { index, enumDeclaration ->
+                +"enum class ${enumDeclaration.name}(val value: String) {"
+                indented {
+                    enumDeclaration.entries.forEach { (entryName, value) ->
+                        +"$entryName(${value.toKotlinStringLiteral()}),"
+                    }
+                }
+                +"}"
+                if (index < enums.lastIndex) {
+                    newLine()
+                }
+            }
+        }
+    }
+    +"}"
 }
 
 context(ctx: Renderer, builder: StringBuilder)
@@ -119,7 +204,7 @@ private fun API.renderApiInterface() {
         }
 
         routes.forEachIndexed { index, route ->
-            +renderSuspendFun(route)
+            renderRouteSignature(route)
             if (index < routes.size - 1) {
                 newLine()
             }
@@ -187,7 +272,7 @@ private fun API.renderApiImpl(path: List<String>) {
         }
 
         routes.forEachIndexed { index, route ->
-            renderOperationImpl(route)
+            renderOperationImpl(route, interfaceName)
             if (index < routes.size - 1) {
                 newLine()
             }
@@ -197,7 +282,7 @@ private fun API.renderApiImpl(path: List<String>) {
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun renderFactory(interfaceName: String, implName: String) {
+private fun Root.renderFactory(interfaceName: String, implName: String) {
     ctx.import(
         TypeName.Class("io.ktor.client", "HttpClient"),
         TypeName.Class("io.ktor.client", "HttpClientConfig"),
@@ -208,7 +293,13 @@ private fun renderFactory(interfaceName: String, implName: String) {
 
     +"fun ${interfaceName}Client("
     indented {
-        +"baseUrl: String,"
+        if (servers.isEmpty()) {
+            +"baseUrl: String,"
+        } else {
+            val serverInterfaceName = "${interfaceName}Server"
+            val defaultServerCase = servers.caseNames().firstOrNull() ?: "Custom"
+            +"server: $serverInterfaceName = $serverInterfaceName.$defaultServerCase,"
+        }
         +"block: HttpClientConfig<*>.() -> Unit = {},"
     }
     +"): $interfaceName {"
@@ -216,13 +307,71 @@ private fun renderFactory(interfaceName: String, implName: String) {
         +"val client = HttpClient {"
         indented {
             +"install(ContentNegotiation) { json() }"
-            +"defaultRequest { url(baseUrl) }"
+            if (servers.isEmpty()) {
+                +"defaultRequest { url(baseUrl) }"
+            } else {
+                +"defaultRequest { url(server.url) }"
+            }
             +"block()"
         }
         +"}"
         +"return ${implName}(client)"
     }
     append("}")
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+private fun renderRouteSignature(route: Route) {
+    if (route.usesSealedReturnType()) {
+        route.renderSealedResultType()
+        newLine()
+    }
+    +renderSuspendFun(route)
+}
+
+context(ctx: Renderer, builder: StringBuilder)
+private fun Route.renderSealedResultType() {
+    val resultTypeName = sealedResultTypeName()
+
+    +"sealed interface $resultTypeName {"
+    indented {
+        returns.responses.entries
+            .sortedBy { (status, _) -> status.value }
+            .forEachIndexed { index, (status, returnType) ->
+                +renderStatusCase(resultTypeName, status, returnType)
+                if (index < returns.responses.size - 1 || returns.default != null) {
+                    newLine()
+                }
+            }
+
+        returns.default?.let { defaultReturn ->
+            val model = defaultReturn.preferredModel()
+            import(model)
+            ctx.import(TypeName.Class("io.ktor.http", "HttpStatusCode"))
+            val modelType = model.toTypeName().type()
+            +"data class Default(val status: HttpStatusCode, val value: $modelType) : $resultTypeName"
+        }
+    }
+    +"}"
+}
+
+context(ctx: Renderer)
+private fun Route.renderStatusCase(
+    resultTypeName: String,
+    status: io.ktor.http.HttpStatusCode,
+    returnType: Route.ReturnType,
+): String {
+    val caseName = status.sealedCaseName()
+    val model = returnType.preferredModel()
+    import(model)
+    val isEmpty = returnType.isEmptyBody()
+
+    return if (isEmpty) {
+        "data object $caseName : $resultTypeName"
+    } else {
+        val modelType = model.toTypeName().type()
+        "data class $caseName(val value: $modelType) : $resultTypeName"
+    }
 }
 
 context(ctx: Renderer)
@@ -268,8 +417,8 @@ private fun renderSuspendFun(route: Route): String = buildString {
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun renderOperationImpl(route: Route) {
-    val returnType = route.resolveReturnType()
+private fun renderOperationImpl(route: Route, interfaceName: String) {
+    val returnType = route.resolveReturnType(interfaceName)
     val method = route.method.ktorFunction()
     val body = route.preferredBodyOrNull()
     val params = route.signatureParameters(body)
@@ -290,7 +439,6 @@ private fun renderOperationImpl(route: Route) {
     val pathParams = routeParams.filter { it.input == Parameter.Input.Path }
     val blockParams = routeParams.filter { it.input != Parameter.Input.Path }
 
-    // Build the URL with path parameter interpolation
     val url = if (pathParams.isEmpty()) {
         "\"${route.path}\""
     } else {
@@ -300,47 +448,92 @@ private fun renderOperationImpl(route: Route) {
         "\"$interpolated\""
     }
 
+    val paramList = params.joinToString(", ") { input ->
+        val paramName = input.name
+        val typeName = input.type.toTypeName().type()
+        val hasDefault = input.hasDefault()
+        val isNullable = !input.isRequired && !hasDefault
+        buildString {
+            append("$paramName: $typeName")
+            if (isNullable) append("?")
+        }
+    }
+
+    if (route.usesSealedReturnType()) {
+        if (params.isEmpty()) {
+            +"override suspend fun ${route.operationId}(): $returnType {"
+        } else {
+            +"override suspend fun ${route.operationId}($paramList): $returnType {"
+        }
+
+        indented {
+            ctx.import(
+                TypeName.Class("io.ktor.http", "HttpStatusCode"),
+                TopLevelFunction("io.ktor.client.call", "body"),
+            )
+            +"val response = client.$method($url) {"
+            indented {
+                +"expectSuccess = false"
+                blockParams.forEach { input ->
+                    renderParamPlacement(input)
+                }
+                body?.let { requestBody ->
+                    renderBodyPlacement(requestBody)
+                }
+            }
+            +"}"
+            +"return when (response.status) {"
+            indented {
+                route.returns.responses.entries
+                    .sortedBy { (status, _) -> status.value }
+                    .forEach { (status, returnTypeCase) ->
+                        val caseName = status.sealedCaseName()
+                        if (returnTypeCase.isEmptyBody()) {
+                            +"${status.asWhenCondition()} -> $returnType.$caseName"
+                        } else {
+                            +"${status.asWhenCondition()} -> $returnType.$caseName(response.body())"
+                        }
+                    }
+
+                if (route.returns.default != null) {
+                    +"else -> $returnType.Default(response.status, response.body())"
+                } else {
+                    ctx.import(TypeName.Class("io.ktor.client.plugins", "ResponseException"))
+                    +"else -> throw ResponseException(response, \"Undocumented status code: ${'$'}{response.status}\")"
+                }
+            }
+            +"}"
+        }
+        +"}"
+        return
+    }
+
     if (params.isEmpty()) {
         +"override suspend fun ${route.operationId}(): $returnType ="
         indented {
             ctx.import(TypeName.Class("io.ktor.client.call", "body"))
             +"client.$method($url).body()"
         }
-    } else {
-        val paramList = params.joinToString(", ") { input ->
-            val paramName = input.name
-            val typeName = input.type.toTypeName().type()
-            val hasDefault = input.hasDefault()
-            val isNullable = !input.isRequired && !hasDefault
-            buildString {
-                append("$paramName: $typeName")
-                if (isNullable) append("?")
-            }
+    } else if (blockParams.isEmpty() && body == null) {
+        +"override suspend fun ${route.operationId}($paramList): $returnType ="
+        indented {
+            ctx.import(TypeName.Class("io.ktor.client.call", "body"))
+            +"client.$method($url).body()"
         }
-
-        if (blockParams.isEmpty() && body == null) {
-            // Only path params — no request block needed
-            +"override suspend fun ${route.operationId}($paramList): $returnType ="
+    } else {
+        +"override suspend fun ${route.operationId}($paramList): $returnType ="
+        indented {
+            ctx.import(TypeName.Class("io.ktor.client.call", "body"))
+            +"client.$method($url) {"
             indented {
-                ctx.import(TypeName.Class("io.ktor.client.call", "body"))
-                +"client.$method($url).body()"
-            }
-        } else {
-            // Has query/header/cookie params — need a request block
-            +"override suspend fun ${route.operationId}($paramList): $returnType ="
-            indented {
-                ctx.import(TypeName.Class("io.ktor.client.call", "body"))
-                +"client.$method($url) {"
-                indented {
-                    blockParams.forEach { input ->
-                        renderParamPlacement(input)
-                    }
-                    body?.let {
-                        renderBodyPlacement(it)
-                    }
+                blockParams.forEach { input ->
+                    renderParamPlacement(input)
                 }
-                +"}.body()"
+                body?.let { requestBody ->
+                    renderBodyPlacement(requestBody)
+                }
             }
+            +"}.body()"
         }
     }
 }
@@ -379,10 +572,13 @@ private fun renderParamPlacement(input: Route.Input) {
 }
 
 context(ctx: Renderer)
-private fun Route.resolveReturnType(): String {
-    val responses = returns.responses
-    // Phase 1: single response, no default → return body type directly
-    val (_, returnType) = responses.entries.first()
+private fun Route.resolveReturnType(interfaceName: String? = null): String {
+    if (usesSealedReturnType()) {
+        val resultTypeName = sealedResultTypeName()
+        return if (interfaceName == null) resultTypeName else "$interfaceName.$resultTypeName"
+    }
+
+    val (_, returnType) = returns.responses.entries.first()
     val model = returnType.preferredModel()
     import(model)
     return model.toTypeName().type()
@@ -627,12 +823,228 @@ private fun renderBodyPlacement(body: RequestBody) {
     }
 }
 
+private data class RenderedServerVariable(
+    val wireName: String,
+    val parameterName: String,
+    val parameterType: String,
+    val defaultExpression: String,
+    val interpolationExpression: String,
+    val enumDeclaration: RenderedServerEnum? = null,
+)
+
+private data class RenderedServerEnum(
+    val name: String,
+    val entries: List<RenderedServerEnumEntry>,
+)
+
+private data class RenderedServerEnumEntry(
+    val name: String,
+    val value: String,
+)
+
+private fun List<Server>.caseNames(): List<String> {
+    val hasMultipleServers = size > 1
+    val usedNames = mutableSetOf("Custom")
+
+    return mapIndexed { index, server ->
+        val fallback = if (hasMultipleServers) "Server${index + 1}" else "Default"
+        val baseName = server.description
+            ?.toServerCaseNameOrNull()
+            ?.takeIf { it.isValidParamName() }
+            ?: fallback
+
+        var candidate = baseName
+        var duplicateCounter = 2
+        while (!usedNames.add(candidate)) {
+            candidate = "$baseName$duplicateCounter"
+            duplicateCounter += 1
+        }
+        candidate
+    }
+}
+
+private fun List<Map.Entry<String, Server.Variable>>.renderVariables(caseName: String): List<RenderedServerVariable> {
+    val usedEnumNames = mutableSetOf<String>()
+    return mapIndexed { index, (wireName, variable) ->
+        val parameterName = wireName.toParamName()
+        val enumValues = variable.enum.orEmpty()
+        if (enumValues.isEmpty()) {
+            RenderedServerVariable(
+                wireName = wireName,
+                parameterName = parameterName,
+                parameterType = "String",
+                defaultExpression = variable.default.toKotlinStringLiteral(),
+                interpolationExpression = "\${$parameterName}",
+            )
+        } else {
+            val fallbackEnumName = "${caseName}Variable${index + 1}"
+            val proposedEnumName = wireName.toPascalCase().takeIf { it.isValidParamName() } ?: fallbackEnumName
+            var enumName = proposedEnumName
+            var duplicateCounter = 2
+            while (!usedEnumNames.add(enumName)) {
+                enumName = "$proposedEnumName$duplicateCounter"
+                duplicateCounter += 1
+            }
+
+            val enumEntries = enumValues.map { rawValue ->
+                RenderedServerEnumEntry(name = toEnumValueName(rawValue), value = rawValue)
+            }
+            val defaultEntryName = enumEntries.firstOrNull { it.value == variable.default }?.name
+                ?: enumEntries.first().name
+
+            RenderedServerVariable(
+                wireName = wireName,
+                parameterName = parameterName,
+                parameterType = enumName,
+                defaultExpression = "$enumName.$defaultEntryName",
+                interpolationExpression = "\${$parameterName.value}",
+                enumDeclaration = RenderedServerEnum(name = enumName, entries = enumEntries),
+            )
+        }
+    }
+}
+
+private fun String.toServerCaseNameOrNull(): String? {
+    val words = splitToWords().map { it.trim() }.filter { it.isNotEmpty() }
+    if (words.isEmpty()) return null
+
+    val stripped = if (words.last().equals("server", ignoreCase = true)) words.dropLast(1) else words
+    if (stripped.isEmpty()) return null
+
+    return stripped.joinToString(" ").toPascalCase().takeIf { it.isNotBlank() }
+}
+
+private fun String.toInterpolatedKotlinStringLiteral(interpolationByName: Map<String, String>): String {
+    val placeholderRegex = "\\{([^{}]+)}".toRegex()
+    val rendered = buildString {
+        var start = 0
+        for (match in placeholderRegex.findAll(this@toInterpolatedKotlinStringLiteral)) {
+            val matchStart = match.range.first
+            val matchEndExclusive = match.range.last + 1
+            append(this@toInterpolatedKotlinStringLiteral.substring(start, matchStart).escapeKotlinString())
+
+            val placeholderName = match.groupValues[1]
+            val interpolation = interpolationByName[placeholderName]
+            if (interpolation == null) {
+                append(match.value.escapeKotlinString())
+            } else {
+                append(interpolation)
+            }
+            start = matchEndExclusive
+        }
+
+        append(this@toInterpolatedKotlinStringLiteral.substring(start).escapeKotlinString())
+    }
+
+    return "\"$rendered\""
+}
+
+private fun String.toKotlinStringLiteral(): String = "\"${escapeKotlinString()}\""
+
+private fun String.escapeKotlinString(): String = buildString {
+    this@escapeKotlinString.forEach { char ->
+        when (char) {
+            '\\' -> append("\\\\")
+            '"' -> append("\\\"")
+            '$' -> append("\\$")
+            '\n' -> append("\\n")
+            '\r' -> append("\\r")
+            '\t' -> append("\\t")
+            else -> append(char)
+        }
+    }
+}
+
 private fun Route.ReturnType.preferredModel(): Model =
     types.firstModelFor(ContentType.Application.Json)
         ?: types.firstModelFor(ContentType.Application.Xml)
         ?: types.firstModelFor(ContentType.Text.Plain)
         ?: types.firstModelFor(ContentType.Application.OctetStream)
-        ?: types.values.first()
+        ?: types.values.firstOrNull()
+        ?: Model.Primitive.Unit(null, false, null)
+
+private fun Route.usesSealedReturnType(): Boolean =
+    returns.responses.size > 1 || returns.default != null
+
+private fun Route.sealedResultTypeName(): String =
+    "${operationId.toPascalCase()}Result"
+
+private fun Route.ReturnType.isEmptyBody(): Boolean =
+    types.isEmpty() || preferredModel() is Model.Primitive.Unit
+
+private fun io.ktor.http.HttpStatusCode.sealedCaseName(): String = when (value) {
+    204 -> "NoContent"
+    else -> description
+        .replace(Regex("[^A-Za-z0-9]+"), " ")
+        .trim()
+        .toPascalCase()
+}
+
+private fun io.ktor.http.HttpStatusCode.asWhenCondition(): String =
+    when (value) {
+        100 -> "HttpStatusCode.Continue"
+        101 -> "HttpStatusCode.SwitchingProtocols"
+        102 -> "HttpStatusCode.Processing"
+        103 -> "HttpStatusCode.EarlyHints"
+        200 -> "HttpStatusCode.OK"
+        201 -> "HttpStatusCode.Created"
+        202 -> "HttpStatusCode.Accepted"
+        203 -> "HttpStatusCode.NonAuthoritativeInformation"
+        204 -> "HttpStatusCode.NoContent"
+        205 -> "HttpStatusCode.ResetContent"
+        206 -> "HttpStatusCode.PartialContent"
+        207 -> "HttpStatusCode.MultiStatus"
+        208 -> "HttpStatusCode.AlreadyReported"
+        226 -> "HttpStatusCode.IMUsed"
+        300 -> "HttpStatusCode.MultipleChoices"
+        301 -> "HttpStatusCode.MovedPermanently"
+        302 -> "HttpStatusCode.Found"
+        303 -> "HttpStatusCode.SeeOther"
+        304 -> "HttpStatusCode.NotModified"
+        305 -> "HttpStatusCode.UseProxy"
+        307 -> "HttpStatusCode.TemporaryRedirect"
+        308 -> "HttpStatusCode.PermanentRedirect"
+        400 -> "HttpStatusCode.BadRequest"
+        401 -> "HttpStatusCode.Unauthorized"
+        402 -> "HttpStatusCode.PaymentRequired"
+        403 -> "HttpStatusCode.Forbidden"
+        404 -> "HttpStatusCode.NotFound"
+        405 -> "HttpStatusCode.MethodNotAllowed"
+        406 -> "HttpStatusCode.NotAcceptable"
+        407 -> "HttpStatusCode.ProxyAuthenticationRequired"
+        408 -> "HttpStatusCode.RequestTimeout"
+        409 -> "HttpStatusCode.Conflict"
+        410 -> "HttpStatusCode.Gone"
+        411 -> "HttpStatusCode.LengthRequired"
+        412 -> "HttpStatusCode.PreconditionFailed"
+        413 -> "HttpStatusCode.PayloadTooLarge"
+        414 -> "HttpStatusCode.UriTooLong"
+        415 -> "HttpStatusCode.UnsupportedMediaType"
+        416 -> "HttpStatusCode.RangeNotSatisfiable"
+        417 -> "HttpStatusCode.ExpectationFailed"
+        421 -> "HttpStatusCode.MisdirectedRequest"
+        422 -> "HttpStatusCode.UnprocessableEntity"
+        423 -> "HttpStatusCode.Locked"
+        424 -> "HttpStatusCode.FailedDependency"
+        425 -> "HttpStatusCode.TooEarly"
+        426 -> "HttpStatusCode.UpgradeRequired"
+        428 -> "HttpStatusCode.PreconditionRequired"
+        429 -> "HttpStatusCode.TooManyRequests"
+        431 -> "HttpStatusCode.RequestHeaderFieldsTooLarge"
+        451 -> "HttpStatusCode.UnavailableForLegalReasons"
+        500 -> "HttpStatusCode.InternalServerError"
+        501 -> "HttpStatusCode.NotImplemented"
+        502 -> "HttpStatusCode.BadGateway"
+        503 -> "HttpStatusCode.ServiceUnavailable"
+        504 -> "HttpStatusCode.GatewayTimeout"
+        505 -> "HttpStatusCode.HttpVersionNotSupported"
+        506 -> "HttpStatusCode.VariantAlsoNegotiates"
+        507 -> "HttpStatusCode.InsufficientStorage"
+        508 -> "HttpStatusCode.LoopDetected"
+        510 -> "HttpStatusCode.NotExtended"
+        511 -> "HttpStatusCode.NetworkAuthenticationRequired"
+        else -> "HttpStatusCode($value, ${description.stringValue()})"
+    }
 
 private fun Map<ContentType, Model>.firstModelFor(contentType: ContentType): Model? =
     entries.firstNotNullOfOrNull { (ct, model) -> if (contentType.match(ct)) model else null }
