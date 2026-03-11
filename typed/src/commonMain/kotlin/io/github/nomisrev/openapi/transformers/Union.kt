@@ -142,13 +142,58 @@ suspend fun NamingContext.unionCase(
         specialName != null -> specialName
         isOpenEnumCase() -> enumName ?: "CaseEnum"
         isNonReferenceCaseInRefPattern() -> "Else"
-        else -> TODO()// caseIndex[index]
+        else -> schema.unionCaseName(index)
     }
 
     return nest(NamingContext.UnionCase(name))
 }
 
 private val primitives = setOf(Type.Basic.String, Type.Basic.Number, Type.Basic.Boolean, Type.Basic.Integer)
+
+/**
+ * Generates a union case name based on the schema type and structure.
+ * For objects: joins property names with "And" (e.g., `AgeAndName`)
+ * For primitives: uses type-based names (e.g., `CaseInt`, `CaseString`)
+ * For enums: joins enum values with "Or" (e.g., `AscOrDesc`)
+ */
+private fun Schema.unionCaseName(index: Int): String {
+    val fmt = format
+    return when (type) {
+        Type.Basic.Object -> properties?.entries?.joinToString(
+            prefix = "",
+            separator = "And"
+        ) { (name, _) -> name.toPascalCase() }
+            .takeIf { (it?.length ?: 0) < 90 }
+            ?: caseIndex.getOrElse(index) { "Case$index" }
+
+        Type.Basic.Number -> if (fmt == "float") "CaseFloat" else "CaseDouble"
+        Type.Basic.Boolean -> "CaseBoolean"
+        Type.Basic.Integer -> if (fmt == "int32") "CaseInt" else "CaseLong"
+
+        Type.Basic.String -> when {
+            enum != null -> enum!!.joinToString(separator = "Or") {
+                it?.toPascalCase() ?: ""
+            }.takeIf { it.length < 90 } ?: caseIndex.getOrElse(index) { "Case$index" }
+            fmt == "binary" -> "CaseBinary"
+            fmt == "uuid" -> "CaseUuid"
+            fmt == "date" -> "CaseDate"
+            fmt == "date-time" -> "CaseDateTime"
+            !fmt.isNullOrBlank() -> "Case${fmt.toPascalCase()}"
+            else -> "CaseString"
+        }
+
+        Type.Basic.Array -> "CaseArray"
+        Type.Basic.Null -> "CaseNull"
+
+        is Type.Array -> (type as Type.Array).types.joinToString(
+            prefix = "Case",
+            separator = "Or"
+        ) { it.name.toPascalCase() }.takeIf { it.length < 90 }
+            ?: caseIndex.getOrElse(index) { "Case$index" }
+
+        null -> caseIndex.getOrElse(index) { "Case$index" }
+    }
+}
 
 val caseIndex = listOf(
     "One",

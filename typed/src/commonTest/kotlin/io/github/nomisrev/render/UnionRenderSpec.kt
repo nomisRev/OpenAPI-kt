@@ -146,8 +146,8 @@ val unionRenderSpec by testSuite {
         isNullable = false
     )
 
-    // TODO, similarly to enum name gen try to generate AgeAndName object name instead of Case1
-    //  Only fallback to CaseIndex if name exceeds certain length
+    // Union case names are derived from property names joined with "And"
+    // Falls back to CaseIndex if the generated name exceeds 90 characters
     verify(
         """
             |@Serializable(with = Union.Serializer::class)
@@ -157,14 +157,14 @@ val unionRenderSpec by testSuite {
             |    value class CaseString(val value: String) : Union
             |
             |    @Serializable
-            |    data class Case1(val age: Int, val name: String) : Union
+            |    data class AgeAndName(val age: Int, val name: String) : Union
             |
             |    object Serializer : KSerializer<Union> {
             |        @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
             |        override val descriptor: SerialDescriptor =
             |            buildSerialDescriptor("io.github.nomisrev.model.Union", PolymorphicKind.SEALED) {
             |                element("CaseString", String.serializer().descriptor)
-            |                element("Case1", Case1.serializer().descriptor)
+            |                element("AgeAndName", AgeAndName.serializer().descriptor)
             |            }
             |
             |        override fun deserialize(decoder: Decoder): Union {
@@ -172,14 +172,14 @@ val unionRenderSpec by testSuite {
             |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
             |            return json.attemptDeserialize(
             |                value,
-            |                Case1::class to { decodeFromJsonElement(Case1.serializer(), it) },
+            |                AgeAndName::class to { decodeFromJsonElement(AgeAndName.serializer(), it) },
             |                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
             |            )
             |        }
             |
             |        override fun serialize(encoder: Encoder, value: Union) = when(value) {
             |            is CaseString -> encoder.encodeSerializableValue(String.serializer(), value.value)
-            |            is Case1 -> encoder.encodeSerializableValue(Case1.serializer(), value)
+            |            is AgeAndName -> encoder.encodeSerializableValue(AgeAndName.serializer(), value)
             |        }
             |    }
             |}
@@ -188,7 +188,7 @@ val unionRenderSpec by testSuite {
             context = union,
             listOf(
                 Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
-                Model.Union.Case(employeeCase(NamingContext.UnionCase("Case1")), null),
+                Model.Union.Case(employeeCase(NamingContext.UnionCase("AgeAndName")), null),
             ),
             null,
             null,

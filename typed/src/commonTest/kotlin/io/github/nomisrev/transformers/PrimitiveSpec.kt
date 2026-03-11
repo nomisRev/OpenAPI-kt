@@ -13,6 +13,8 @@ import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type.Basic
+import io.github.nomisrev.openapi.registry.registry
+import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.reference
 import io.github.nomisrev.verifyFails
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
@@ -24,7 +26,7 @@ val PrimitiveSpec by testSuite {
     verifyAll("Primitive types", Model.Primitive.String.all())
 
     verifyAll("Referenced primitives", Model.Primitive.all()) { schema, inner ->
-        val actual = with(Registry(api.reference(schema.toString(), schema))) {
+        val actual = registry(api.reference(schema.toString(), schema)) {
             ReferenceOr.schema(schema.toString())
                 .toModel(NamingContext.reference(schema.toString(), SchemaContext.Null), SchemaContext.Write)
         }

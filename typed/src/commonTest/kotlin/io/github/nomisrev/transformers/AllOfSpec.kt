@@ -11,6 +11,8 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.registry
+import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.reference
 import io.github.nomisrev.verifyAll
 import kotlin.collections.listOf
@@ -50,8 +52,7 @@ val allOfSpec by testSuite {
         ), false, false
     )
     test("AB") {
-        val registry = Registry(api.reference("A", a).reference("B", b).reference("AB", ab))
-        val actual = with(registry) {
+        val actual = registry(api.reference("A", a).reference("B", b).reference("AB", ab)) {
             ReferenceOr.schema("AB").toModel(NamingContext.reference("AB", SchemaContext.Null), SchemaContext.Write)
         }
         assertEq(expected, actual)

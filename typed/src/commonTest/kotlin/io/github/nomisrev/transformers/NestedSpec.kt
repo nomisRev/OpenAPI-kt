@@ -11,6 +11,8 @@ import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.registry
+import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.transformers.topLevelNames
 import io.github.nomisrev.reference
 import kotlin.test.assertEquals
@@ -31,8 +33,7 @@ val nestedSpec by testSuite {
             false,
             false
         )
-        val registry = Registry(api)
-        val actual = with(registry) {
+        val actual = registry(api) {
             ReferenceOr.value(
                 Schema(
                     type = Type.Basic.Object,
