@@ -28,7 +28,7 @@ Add the kotlin-compile-testing dependency and create a helper that takes a `List
 ### Changes
 
 **`gradle/libs.versions.toml`**
-- Update `test-compile = "0.8.0"` → `test-compile = "0.12.1"`
+- Update `test-compile = "0.12.1"`
 - Add library entry: `compile-testing = { module = "dev.zacsweers.kctfork:core", version.ref = "test-compile" }`
 
 **`typed/build.gradle.kts`**
