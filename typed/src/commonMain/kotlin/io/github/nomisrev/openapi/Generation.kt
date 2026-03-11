@@ -8,7 +8,9 @@ import io.github.nomisrev.openapi.render.joinTo
 import io.github.nomisrev.openapi.render.name
 import io.github.nomisrev.openapi.render.newLine
 import io.github.nomisrev.openapi.render.render
+import io.github.nomisrev.openapi.render.renderRootFile
 import io.github.nomisrev.openapi.render.renderer
+import io.github.nomisrev.openapi.render.toPascalCase
 import io.github.nomisrev.openapi.render.unaryPlus
 import io.github.nomisrev.openapi.routes.ApiModel
 
@@ -69,3 +71,41 @@ fun ApiModel.generate(): List<KFile> =
             }
         )
     }
+
+fun Root.generateClient(packageName: String = "io.github.nomisrev"): List<KFile> {
+    val apiPackage = "$packageName.api"
+    val rootFileName = name.toPascalCase()
+
+    val (content, rawImports) = renderer { renderRootFile() }
+
+    val imports = rawImports
+        .map { it.resolveImport() }
+        .filter { it.packageName != apiPackage }
+
+    return listOf(
+        KFile(
+            "$rootFileName.kt",
+            apiPackage,
+            buildString {
+                +"package $apiPackage"
+                newLine()
+                imports.joinTo(separator = "\n", postfix = "\n\n") {
+                    "import ${it.importString()}"
+                }
+                +content
+            }
+        )
+    )
+}
+
+private tailrec fun Import.resolveImport(): Import = when (this) {
+    is Class -> this
+    is TypeName.Collection -> type.resolveImport()
+    is TopLevelFunction -> this
+}
+
+private fun Import.importString(): String = when (this) {
+    is Class -> "${packageName}.${names.joinToString(separator = ".")}"
+    is TypeName.Collection -> type.importString()
+    is TopLevelFunction -> "${packageName}.${functionName}"
+}
