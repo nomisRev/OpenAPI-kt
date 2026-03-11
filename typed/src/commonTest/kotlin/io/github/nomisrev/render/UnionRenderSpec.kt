@@ -466,4 +466,87 @@ val unionRenderSpec by testSuite {
         TypeName.Decoder,
         Import.buildSerialDescriptor
     )
+
+    // Union with $ref cases generates value class wrappers that flatten serialization
+    // e.g., oneOf: [$ref: Person, $ref: Company] generates CasePerson(val value: Person)
+    verify(
+        """
+            |@Serializable(with = Union.Serializer::class)
+            |sealed interface Union {
+            |    @Serializable
+            |    @JvmInline
+            |    value class CasePerson(val value: Person) : Union
+            |
+            |    @Serializable
+            |    @JvmInline
+            |    value class CaseCompany(val value: Company) : Union
+            |
+            |    object Serializer : KSerializer<Union> {
+            |        @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+            |        override val descriptor: SerialDescriptor =
+            |            buildSerialDescriptor("io.github.nomisrev.model.Union", PolymorphicKind.SEALED) {
+            |                element("CasePerson", Person.serializer().descriptor)
+            |                element("CaseCompany", Company.serializer().descriptor)
+            |            }
+            |
+            |        override fun deserialize(decoder: Decoder): Union {
+            |            val value = decoder.decodeSerializableValue(JsonElement.serializer())
+            |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
+            |            return json.attemptDeserialize(
+            |                value,
+            |                CasePerson::class to { CasePerson(decodeFromJsonElement(Person.serializer(), it)) },
+            |                CaseCompany::class to { CaseCompany(decodeFromJsonElement(Company.serializer(), it)) },
+            |            )
+            |        }
+            |
+            |        override fun serialize(encoder: Encoder, value: Union) = when(value) {
+            |            is CasePerson -> encoder.encodeSerializableValue(Person.serializer(), value.value)
+            |            is CaseCompany -> encoder.encodeSerializableValue(Company.serializer(), value.value)
+            |        }
+            |    }
+            |}
+        """.trimMargin(),
+        Model.Union(
+            context = union,
+            listOf(
+                Model.Union.Case(
+                    Model.Reference(
+                        NamingContext.reference("Person", SchemaContext.Null),
+                        null,
+                        false,
+                        null
+                    ),
+                    null
+                ),
+                Model.Union.Case(
+                    Model.Reference(
+                        NamingContext.reference("Company", SchemaContext.Null),
+                        null,
+                        false,
+                        null
+                    ),
+                    null
+                ),
+            ),
+            null,
+            null,
+            null,
+            null,
+            false
+        ),
+        TypeName.Serializable,
+        TypeName.JvmInline,
+        TypeName.ExperimentalSerializationApi,
+        TypeName.InternalSerializationApi,
+        TypeName.PolymorphicKind,
+        TypeName.Class("io.github.nomisrev.model", "Person"),
+        TypeName.Class("io.github.nomisrev.model", "Company"),
+        TypeName.JsonElement,
+        TypeName.JsonDecoder,
+        TypeName.KSerializer,
+        TypeName.SerialDescriptor,
+        TypeName.Encoder,
+        TypeName.Decoder,
+        Import.buildSerialDescriptor
+    )
 }
