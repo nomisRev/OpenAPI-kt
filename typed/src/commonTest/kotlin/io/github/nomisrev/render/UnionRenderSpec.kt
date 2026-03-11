@@ -211,7 +211,7 @@ val unionRenderSpec by testSuite {
         Import.buildSerialDescriptor
     )
 
-    // TODO: the referenced type needs a flattening serializer.
+    // Discriminated union with inline primitive case
     verify(
         $$$"""
             |@OptIn(ExperimentalSerializationApi::class)
@@ -245,6 +245,53 @@ val unionRenderSpec by testSuite {
         TypeName.Serializable,
         TypeName.JvmInline,
         TypeName.SerialName
+    )
+
+    // Discriminated union with $ref case - value class wraps the referenced type
+    // The @JvmInline value class serializes the inner Person directly (flattening)
+    // KotlinX Serialization's polymorphic handling adds the discriminator
+    verify(
+        $$$"""
+            |@OptIn(ExperimentalSerializationApi::class)
+            |@JsonClassDiscriminator($$"$type")
+            |@Serializable
+            |sealed interface Union {
+            |    @SerialName("person")
+            |    @Serializable
+            |    @JvmInline
+            |    value class CasePerson(val value: Person) : Union
+            |
+            |    @SerialName("employee")
+            |    @Serializable
+            |    data class Employee(val age: Int, val name: String) : Union
+            |}
+        """.trimMargin(),
+        Model.Union(
+            context = union,
+            listOf(
+                Model.Union.Case(
+                    Model.Reference(
+                        NamingContext.reference("Person", SchemaContext.Null),
+                        null,
+                        false,
+                        null
+                    ),
+                    "person"
+                ),
+                Model.Union.Case(employeeCase(NamingContext.UnionCase("employee")), "employee"),
+            ),
+            null,
+            null,
+            null,
+            $$"$type",
+            false
+        ),
+        TypeName.ExperimentalSerializationApi,
+        TypeName.JsonClassDiscriminator,
+        TypeName.Serializable,
+        TypeName.JvmInline,
+        TypeName.SerialName,
+        TypeName.Class("io.github.nomisrev.model", "Person")
     )
 
     val aOrB = Model.Enum(

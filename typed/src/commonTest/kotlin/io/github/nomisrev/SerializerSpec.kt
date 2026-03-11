@@ -588,3 +588,54 @@ fun <A> attemptDeserialize(json: JsonElement, vararg block: Pair<KClass<*>, (Jso
     }
     throw UnionSerializationException(json, errors)
 }
+
+// Discriminated union with value class wrapping a referenced type
+// This tests that @JvmInline value class correctly flattens the inner type for polymorphic serialization
+@Serializable
+data class Person(val id: Int, val name: String)
+
+@OptIn(ExperimentalSerializationApi::class)
+@kotlinx.serialization.json.JsonClassDiscriminator("type")
+@Serializable
+sealed interface DiscriminatedUnion {
+    @SerialName("person")
+    @Serializable
+    @JvmInline
+    value class CasePerson(val value: Person) : DiscriminatedUnion
+
+    @SerialName("employee")
+    @Serializable
+    data class Employee(val age: Int, val department: String) : DiscriminatedUnion
+}
+
+val discriminatedUnionSpec by testSuite {
+    val json = Json { classDiscriminator = "type" }
+
+    fun casePerson(): DiscriminatedUnion =
+        DiscriminatedUnion.CasePerson(Person(id = 1, name = "John"))
+
+    // Discriminated union with value class - the Person fields should be flattened
+    // JSON: {"type": "person", "id": 1, "name": "John"}
+    verify(
+        "DiscriminatedUnion - CasePerson",
+        casePerson(),
+        buildJsonObject {
+            put("type", "person")
+            put("id", 1)
+            put("name", "John")
+        }
+    )
+
+    fun employee(): DiscriminatedUnion =
+        DiscriminatedUnion.Employee(age = 30, department = "Engineering")
+
+    verify(
+        "DiscriminatedUnion - Employee",
+        employee(),
+        buildJsonObject {
+            put("type", "employee")
+            put("age", 30)
+            put("department", "Engineering")
+        }
+    )
+}
