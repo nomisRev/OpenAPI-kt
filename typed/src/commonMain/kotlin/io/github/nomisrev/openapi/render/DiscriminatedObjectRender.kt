@@ -16,7 +16,9 @@ fun Model.DiscriminatedObject.render(): String = buildString {
     }
 
     subtypes.joinTo(separator = "\n\n", postfix = "\n") {
-        val serialName = (it.context.nested.single() as NamingContext.DiscriminatedObjectCase).discriminator
+        val serialName = it.context.nested
+            .asReversed()
+            .firstNotNullOf { nested -> (nested as? NamingContext.DiscriminatedObjectCase)?.discriminator }
         "@SerialName(${serialName.stringValue()})\n${it.render(name(), abstractProperties.keys)}".prepend()
     }
 

@@ -1,13 +1,20 @@
 package io.github.nomisrev.render
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.nomisrev.api
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.render.Import
 import io.github.nomisrev.openapi.render.TypeName
+import io.github.nomisrev.openapi.render.render
+import io.github.nomisrev.openapi.render.renderer
+import io.github.nomisrev.openapi.registry.registry
+import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.routes.SchemaContext
+import io.github.nomisrev.reference
+import kotlin.test.assertTrue
 
 /**
  * Tests for union (oneOf/anyOf) code generation including edge cases.
@@ -21,14 +28,26 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 val unionRenderSpec by testSuite {
     val union = NamingContext.reference("Union", SchemaContext.Null)
 
-    fun objectCase(name: String, vararg props: Pair<String, Model>) = Model.Object(
+    fun objectCase(
+        name: String,
+        vararg props: Pair<String, Model>,
+        additionalProperties: Boolean = false,
+    ) = Model.Object(
         context = NamingContext(NamingContext.Reference("Union", SchemaContext.Null), listOf(NamingContext.UnionCase(name))),
         description = null,
         title = null,
         properties = props.associate { (k, v) -> k to Model.Object.Property(v, true) },
-        additionalProperties = false,
+        additionalProperties = additionalProperties,
         isNullable = false
     )
+
+    fun assertOrdered(text: String, first: String, second: String) {
+        val firstIndex = text.indexOf(first)
+        val secondIndex = text.indexOf(second)
+        assertTrue(firstIndex >= 0, "Could not find '$first' in:\n$text")
+        assertTrue(secondIndex >= 0, "Could not find '$second' in:\n$text")
+        assertTrue(firstIndex < secondIndex, "Expected '$first' before '$second' in:\n$text")
+    }
 
     // ==================== BASIC TYPES ====================
 
@@ -765,13 +784,118 @@ val unionRenderSpec by testSuite {
     // EDGE CASE 5: Mixed primitives
     // Covered by the comprehensive primitives test at the beginning
 
-    // EDGE CASE 6: Object with additionalProperties
-    // Object with additionalProperties: true should be tried last as it swallows everything
-    // This tests the deserialize order priority
+    test("Nullable oneOf [string, null] property is flattened (no explicit null union case)") {
+        val schema = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "value" to ReferenceOr.value(
+                    Schema(
+                        oneOf = listOf(
+                            ReferenceOr.value(Schema.string),
+                            ReferenceOr.value(Schema.NULL)
+                        )
+                    )
+                )
+            ),
+            required = listOf("value")
+        )
+        val model = registry(api.reference("Container", schema)) {
+            ReferenceOr.schema("Container")
+                .toModel(NamingContext.Reference("Container", SchemaContext.Null), SchemaContext.Write)
+        }
 
-    // EDGE CASE 7: FreeFormJson in union
-    // oneOf: [{...}, JsonElement]
-    // FreeFormJson should be dead last in deserialization as it matches anything
+        assertTrue(model is Model.Object, "Expected object model but found: $model")
+        val value = model.properties["value"]?.model
+        assertTrue(value is Model.Primitive.String, "Expected flattened primitive but found: $value")
+        assertTrue(value.isNullable, "Expected flattened primitive to be nullable")
+    }
+
+    test("Union with empty object case renders data object Empty") {
+        val model = Model.Union(
+            context = union,
+            cases = listOf(
+                Model.Union.Case(objectCase("Empty"), null),
+                Model.Union.Case(
+                    objectCase("WithProp", "prop" to Model.Primitive.String(null, null, null, false, null)),
+                    null
+                ),
+            ),
+            default = null,
+            description = null,
+            title = null,
+            discriminator = null,
+            isNullable = false
+        )
+
+        val (rendered, _) = renderer { model.render() }
+        assertTrue(rendered.contains("data object Empty : Union"))
+        assertOrdered(
+            rendered,
+            "WithProp::class to { decodeFromJsonElement(WithProp.serializer(), it) }",
+            "Empty::class to { decodeFromJsonElement(Empty.serializer(), it) }"
+        )
+    }
+
+    test("Union additionalProperties object case is ordered last among object-like cases") {
+        val model = Model.Union(
+            context = union,
+            cases = listOf(
+                Model.Union.Case(
+                    objectCase("Strict", "name" to Model.Primitive.String(null, null, null, false, null)),
+                    null
+                ),
+                Model.Union.Case(
+                    objectCase(
+                        "WithAdditional",
+                        "name" to Model.Primitive.String(null, null, null, false, null),
+                        additionalProperties = true,
+                    ),
+                    null
+                ),
+            ),
+            default = null,
+            description = null,
+            title = null,
+            discriminator = null,
+            isNullable = false
+        )
+        val (rendered, _) = renderer { model.render() }
+        assertOrdered(
+            rendered,
+            "Strict::class to { decodeFromJsonElement(Strict.serializer(), it) }",
+            "WithAdditional::class to { decodeFromJsonElement(WithAdditional.serializer(), it) }"
+        )
+    }
+
+    test("Union FreeFormJson case is dead last in deserialize attempts") {
+        val model = Model.Union(
+            context = union,
+            cases = listOf(
+                Model.Union.Case(
+                    objectCase("Id", "id" to Model.Primitive.Int(null, null, null, false, null)),
+                    null
+                ),
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
+                Model.Union.Case(Model.FreeFormJson(null, null, false, null), null),
+            ),
+            default = null,
+            description = null,
+            title = null,
+            discriminator = null,
+            isNullable = false
+        )
+        val (rendered, _) = renderer { model.render() }
+        assertOrdered(
+            rendered,
+            "CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) }",
+            "CaseJsonElement::class to { CaseJsonElement(decodeFromJsonElement(JsonElement.serializer(), it)) }"
+        )
+        assertOrdered(
+            rendered,
+            "Id::class to { decodeFromJsonElement(Id.serializer(), it) }",
+            "CaseJsonElement::class to { CaseJsonElement(decodeFromJsonElement(JsonElement.serializer(), it)) }"
+        )
+    }
 
     // EDGE CASE 8: Collection of references
     // oneOf: [array of $ref: Item, single Item]
@@ -843,21 +967,131 @@ val unionRenderSpec by testSuite {
         Import.buildSerialDescriptor
     )
 
-    // ==================== KNOWN LIMITATIONS / NOT YET SUPPORTED ====================
+    test("Nested union case renders as wrapped value class and nested sealed union") {
+        val nested = Model.Union(
+            context = union.nest(NamingContext.UnionCase("Inner")),
+            cases = listOf(
+                Model.Union.Case(Model.Primitive.Int(null, null, null, false, null), null),
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
+            ),
+            default = null,
+            description = null,
+            title = null,
+            discriminator = null,
+            isNullable = false
+        )
 
-    // EDGE CASE 9: Nested unions (union inside union)
-    // oneOf: [oneOf: [A, B], C]
-    // Currently: TODO("Inline defined nested Union not yet supported in Union")
+        val model = Model.Union(
+            context = union,
+            cases = listOf(
+                Model.Union.Case(nested, null),
+                Model.Union.Case(Model.Primitive.Boolean(null, null, false, null), null),
+            ),
+            default = null,
+            description = null,
+            title = null,
+            discriminator = null,
+            isNullable = false
+        )
 
-    // EDGE CASE 10: DiscriminatedObject inside union
-    // oneOf: [discriminatedObject, regularObject]
-    // Currently: TODO("Nested DiscriminatedObject not supported in Union")
+        val (rendered, _) = renderer { model.render() }
+        assertTrue(rendered.contains("value class CaseInner(val value: Inner) : Union"))
+        assertTrue(rendered.contains("sealed interface Inner"))
+        assertTrue(
+            rendered.contains(
+                "CaseInner::class to { CaseInner(decodeFromJsonElement(Inner.serializer(), it)) }"
+            )
+        )
+    }
 
-    // EDGE CASE 11: Recursive union (union references itself)
-    // oneOf: [$ref: Node, null] where Node contains the same union
-    // Should be handled via Model.Reference but needs testing
+    test("Nested discriminated object case renders as wrapped value class") {
+        val authContext = union.nest(NamingContext.UnionCase("Auth"))
+        val kindProp = Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)
+        val auth = Model.DiscriminatedObject(
+            context = authContext,
+            abstractProperties = mapOf("kind" to kindProp),
+            subtypes = listOf(
+                Model.Object(
+                    context = authContext.nest(NamingContext.DiscriminatedObjectCase("password")),
+                    description = null,
+                    title = null,
+                    properties = mapOf(
+                        "kind" to kindProp,
+                        "password" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)
+                    ),
+                    additionalProperties = false,
+                    isNullable = false
+                ),
+                Model.Object(
+                    context = authContext.nest(NamingContext.DiscriminatedObjectCase("token")),
+                    description = null,
+                    title = null,
+                    properties = mapOf(
+                        "kind" to kindProp,
+                        "token" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)
+                    ),
+                    additionalProperties = false,
+                    isNullable = false
+                )
+            ),
+            description = null,
+            title = null,
+            discriminator = "kind",
+            isNullable = false
+        )
 
-    // EDGE CASE 12: Union with empty object case
-    // oneOf: [{}, {prop: string}]
-    // Empty object generates data object Empty
+        val model = Model.Union(
+            context = union,
+            cases = listOf(
+                Model.Union.Case(auth, null),
+                Model.Union.Case(Model.Primitive.Int(null, null, null, false, null), null),
+            ),
+            default = null,
+            description = null,
+            title = null,
+            discriminator = null,
+            isNullable = false
+        )
+
+        val (rendered, _) = renderer { model.render() }
+        assertTrue(rendered.contains("value class CaseAuth(val value: Auth) : Union"))
+        assertTrue(rendered.contains("@JsonClassDiscriminator(\"kind\")"))
+        assertTrue(rendered.contains("sealed interface Auth"))
+        assertTrue(
+            rendered.contains(
+                "CaseAuth::class to { CaseAuth(decodeFromJsonElement(Auth.serializer(), it)) }"
+            )
+        )
+    }
+
+    test("Recursive union through \$ref renders without infinite expansion") {
+        val treeSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf("leaf" to ReferenceOr.value(Schema.string))
+                    )
+                ),
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "children" to ReferenceOr.value(
+                                Schema.list(ReferenceOr.schema("Tree"))
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        val model = registry(api.reference("Tree", treeSchema)) {
+            ReferenceOr.schema("Tree")
+                .toModel(NamingContext.Reference("Tree", SchemaContext.Null), SchemaContext.Write)
+        }
+        val (rendered, _) = renderer { model.render() }
+        assertTrue(rendered.contains("List<Tree>"))
+        assertTrue(rendered.contains("value class CaseTree(val value: Tree) : Union").not())
+    }
 }

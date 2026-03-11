@@ -78,8 +78,8 @@ private fun Model.Union.Case.unionClassName(): String =
         is Model.Primitive.String -> "CaseString"
         is Model.Primitive.Unit -> "CaseUnit"
         is Model.Reference -> "Case${model.name().simpleName}"
-        is Model.DiscriminatedObject -> TODO("Cannot be nested in Union")
-        is Model.Union -> TODO("nested union case")
+        is Model.DiscriminatedObject -> "Case${model.name().simpleName}"
+        is Model.Union -> "Case${model.name().simpleName}"
         is Model.Uuid -> "CaseUuid"
     }).toPascalCase()
 
@@ -222,8 +222,8 @@ private fun Model.Union.Case.render(): String =
         is Model.Uuid,
         is Model.Date -> valueClass()
 
-        is Model.DiscriminatedObject -> TODO("Nested DiscriminatedObject not supported in Union")
-        is Model.Union -> TODO("Inline defined nested Union not yet supported in Union")
+        is Model.DiscriminatedObject,
+        is Model.Union -> valueClass()
         is Model.Collection -> valueClass()
 
         // need to be generated with `unionNameCase()`
@@ -247,8 +247,9 @@ private fun Model.Union.Case.renderDeserializeAttempt(): String =
         is Model.Reference ->
             "${unionClassName()}::class to { ${unionClassName()}(decodeFromJsonElement(${model.serializer()}, it)) }"
 
-        is Model.DiscriminatedObject -> TODO("Nested DiscriminatedObject not supported in Union")
-        is Model.Union -> TODO("Inline defined nested Union not yet supported in Union")
+        is Model.DiscriminatedObject,
+        is Model.Union ->
+            "${unionClassName()}::class to { ${unionClassName()}(decodeFromJsonElement(${model.serializer()}, it)) }"
 
         is Model.Primitive.Unit,
         is Model.Object,
@@ -272,8 +273,9 @@ private fun Model.Union.Case.serialiseCase(): String =
         is Model.Reference ->
             "encoder.encodeSerializableValue(${model.serializer()}, value.value)"
 
-        is Model.DiscriminatedObject -> TODO("Nested DiscriminatedObject not supported in Union")
-        is Model.Union -> TODO("Inline defined nested Union not yet supported in Union")
+        is Model.DiscriminatedObject,
+        is Model.Union ->
+            "encoder.encodeSerializableValue(${model.serializer()}, value.value)"
 
         is Model.Primitive.Unit,
         is Model.Object,

@@ -13,6 +13,7 @@ import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PolymorphicKind
@@ -37,6 +38,7 @@ import kotlin.jvm.JvmInline
 import kotlin.reflect.KClass
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 
 @IgnorableReturnValue
 fun JsonObjectBuilder.put(key: String, element: String): JsonElement? = put(key, JsonPrimitive(element))
@@ -288,6 +290,81 @@ val serializerSpec by testSuite {
         string(),
         JsonPrimitive("random")
     )
+
+    test("Union runtime ordering - overlapping object properties prefer most specific shape") {
+        val payload = buildJsonObject {
+            put("a", "x")
+            put("b", "y")
+            put("c", "z")
+        }
+
+        val parsed: Any = attemptDeserialize(
+            payload,
+            OverlappingAbc::class to { decodeFromJsonElement(OverlappingAbc.serializer(), it) },
+            OverlappingAb::class to { decodeFromJsonElement(OverlappingAb.serializer(), it) },
+        )
+
+        assertEquals(OverlappingAbc("x", "y", "z"), parsed)
+    }
+
+    test("Union runtime ordering - List<Item> is tried before Item") {
+        val payload = buildJsonObject { put("id", 1) }
+        val listPayload = kotlinx.serialization.json.JsonArray(listOf(payload))
+
+        val parsed: Any = attemptDeserialize(
+            listPayload,
+            List::class to { decodeFromJsonElement(ListSerializer(RuntimeItem.serializer()), it) },
+            RuntimeItem::class to { decodeFromJsonElement(RuntimeItem.serializer(), it) },
+        )
+
+        assertEquals(listOf(RuntimeItem(1)), parsed)
+    }
+
+    test("Union runtime ordering - additionalProperties object is tried after strict object") {
+        val payload = buildJsonObject {
+            put("name", "John")
+            put("age", 30)
+        }
+
+        val parsed: Any = attemptDeserialize(
+            payload,
+            StrictPerson::class to { decodeFromJsonElement(StrictPerson.serializer(), it) },
+            JsonObject::class to { decodeFromJsonElement(JsonObject.serializer(), it) },
+        )
+
+        assertEquals(StrictPerson("John", 30), parsed)
+    }
+
+    test("Union runtime ordering - FreeFormJson is tried last") {
+        val payload = JsonPrimitive("hello")
+
+        val parsed: Any = attemptDeserialize(
+            payload,
+            String::class to { decodeFromJsonElement(String.serializer(), it) },
+            JsonElement::class to { it },
+        )
+
+        assertTrue(parsed is String)
+        assertEquals("hello", parsed)
+    }
+
+    test("Recursive union runtime roundtrip") {
+        val expected: RecursiveUnion = RecursiveUnion.Branch(
+            listOf(
+                RecursiveUnion.Leaf("a"),
+                RecursiveUnion.Branch(
+                    listOf(
+                        RecursiveUnion.Leaf("b")
+                    )
+                )
+            )
+        )
+
+        val json = Json.encodeToJsonElement(RecursiveUnion.serializer(), expected)
+        val actual = Json.decodeFromJsonElement<RecursiveUnion>(json)
+
+        assertEquals(expected, actual)
+    }
 }
 
 @TestRegistering
@@ -296,6 +373,50 @@ inline fun <reified A> TestSuite.verify(
     expected: A,
     json: JsonElement
 ) = test(name) { assertEquals(expected, Json.decodeFromJsonElement<A>(json)) }
+
+@Serializable
+data class OverlappingAb(val a: String, val b: String)
+
+@Serializable
+data class OverlappingAbc(val a: String, val b: String, val c: String)
+
+@Serializable
+data class RuntimeItem(val id: Int)
+
+@Serializable
+data class StrictPerson(val name: String, val age: Int)
+
+@Serializable(with = RecursiveUnion.Serializer::class)
+sealed interface RecursiveUnion {
+    @Serializable
+    data class Leaf(val leaf: String) : RecursiveUnion
+
+    @Serializable
+    data class Branch(val children: List<RecursiveUnion>) : RecursiveUnion
+
+    companion object Serializer : KSerializer<RecursiveUnion> {
+        @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+        override val descriptor: SerialDescriptor =
+            buildSerialDescriptor("io.github.nomisrev.RecursiveUnion", PolymorphicKind.SEALED) {
+                element("Leaf", Leaf.serializer().descriptor)
+                element("Branch", Branch.serializer().descriptor)
+            }
+
+        override fun deserialize(decoder: Decoder): RecursiveUnion {
+            val value = decoder.decodeSerializableValue(JsonElement.serializer())
+            return attemptDeserialize(
+                value,
+                Leaf::class to { decodeFromJsonElement(Leaf.serializer(), it) },
+                Branch::class to { decodeFromJsonElement(Branch.serializer(), it) },
+            )
+        }
+
+        override fun serialize(encoder: Encoder, value: RecursiveUnion) = when (value) {
+            is Leaf -> encoder.encodeSerializableValue(Leaf.serializer(), value)
+            is Branch -> encoder.encodeSerializableValue(Branch.serializer(), value)
+        }
+    }
+}
 
 // TODO: this is needed for referenced union cases, and wrapped top-level collections & primitives
 @Serializable(with = Wrapped.Serializer::class)
