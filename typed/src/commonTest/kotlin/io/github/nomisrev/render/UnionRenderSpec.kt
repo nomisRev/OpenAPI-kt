@@ -4,14 +4,15 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.api
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.generate
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
-import io.github.nomisrev.openapi.render.Import
-import io.github.nomisrev.openapi.render.TypeName
 import io.github.nomisrev.openapi.render.render
 import io.github.nomisrev.openapi.render.renderer
 import io.github.nomisrev.openapi.registry.registry
 import io.github.nomisrev.openapi.registry.toModel
+import io.github.nomisrev.openapi.render.Import
+import io.github.nomisrev.openapi.render.TypeName
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.reference
 import kotlin.test.assertTrue
@@ -33,146 +34,15 @@ val unionRenderSpec by testSuite {
         vararg props: Pair<String, Model>,
         additionalProperties: Boolean = false,
     ) = Model.Object(
-        context = NamingContext(NamingContext.Reference("Union", SchemaContext.Null), listOf(NamingContext.UnionCase(name))),
+        context = NamingContext(
+            NamingContext.Reference("Union", SchemaContext.Null),
+            listOf(NamingContext.UnionCase(name))
+        ),
         description = null,
         title = null,
         properties = props.associate { (k, v) -> k to Model.Object.Property(v, true) },
         additionalProperties = additionalProperties,
         isNullable = false
-    )
-
-    fun assertOrdered(text: String, first: String, second: String) {
-        val firstIndex = text.indexOf(first)
-        val secondIndex = text.indexOf(second)
-        assertTrue(firstIndex >= 0, "Could not find '$first' in:\n$text")
-        assertTrue(secondIndex >= 0, "Could not find '$second' in:\n$text")
-        assertTrue(firstIndex < secondIndex, "Expected '$first' before '$second' in:\n$text")
-    }
-
-    // ==================== BASIC TYPES ====================
-
-    // Comprehensive test covering all primitive types, dates, UUIDs, and empty objects
-    verify(
-        """
-            |@Serializable(with = Union.Serializer::class)
-            |sealed interface Union {
-            |    @Serializable
-            |    @JvmInline
-            |    value class CaseString(val value: String) : Union
-            |
-            |    @Serializable
-            |    @JvmInline
-            |    value class CaseInt(val value: Int) : Union
-            |
-            |    @Serializable
-            |    @JvmInline
-            |    value class CaseFloat(val value: Float) : Union
-            |
-            |    @Serializable
-            |    @JvmInline
-            |    value class CaseDouble(val value: Double) : Union
-            |
-            |    @Serializable
-            |    @JvmInline
-            |    value class CaseDate(val value: LocalDate) : Union
-            |
-            |    @Serializable
-            |    @JvmInline
-            |    value class CaseDateTime(val value: LocalDateTime) : Union
-            |
-            |    @Serializable
-            |    @JvmInline
-            |    value class CaseBinary(val value: ByteArray) : Union
-            |
-            |    @Serializable
-            |    @JvmInline
-            |    value class CaseUuid(val value: Uuid) : Union
-            |
-            |    @Serializable
-            |    data object Empty : Union
-            |
-            |    object Serializer : KSerializer<Union> {
-            |        @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
-            |        override val descriptor: SerialDescriptor =
-            |            buildSerialDescriptor("io.github.nomisrev.model.Union", PolymorphicKind.SEALED) {
-            |                element("CaseString", String.serializer().descriptor)
-            |                element("CaseInt", Int.serializer().descriptor)
-            |                element("CaseFloat", Float.serializer().descriptor)
-            |                element("CaseDouble", Double.serializer().descriptor)
-            |                element("CaseDate", LocalDate.serializer().descriptor)
-            |                element("CaseDateTime", LocalDateTime.serializer().descriptor)
-            |                element("CaseBinary", ByteArraySerializer().descriptor)
-            |                element("CaseUuid", Uuid.serializer().descriptor)
-            |                element("CaseUnit", Unit.serializer().descriptor)
-            |            }
-            |
-            |        override fun deserialize(decoder: Decoder): Union {
-            |            val value = decoder.decodeSerializableValue(JsonElement.serializer())
-            |            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            |            return json.attemptDeserialize(
-            |                value,
-            |                CaseInt::class to { CaseInt(decodeFromJsonElement(Int.serializer(), it)) },
-            |                CaseFloat::class to { CaseFloat(decodeFromJsonElement(Float.serializer(), it)) },
-            |                CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
-            |                CaseUnit::class to { CaseUnit(decodeFromJsonElement(Unit.serializer(), it)) },
-            |                CaseUuid::class to { CaseUuid(decodeFromJsonElement(Uuid.serializer(), it)) },
-            |                CaseDate::class to { CaseDate(decodeFromJsonElement(LocalDate.serializer(), it)) },
-            |                CaseDateTime::class to { CaseDateTime(decodeFromJsonElement(LocalDateTime.serializer(), it)) },
-            |                CaseBinary::class to { CaseBinary(decodeFromJsonElement(ByteArraySerializer(), it)) },
-            |                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-            |            )
-            |        }
-            |
-            |        override fun serialize(encoder: Encoder, value: Union) = when(value) {
-            |            is CaseString -> encoder.encodeSerializableValue(String.serializer(), value.value)
-            |            is CaseInt -> encoder.encodeSerializableValue(Int.serializer(), value.value)
-            |            is CaseFloat -> encoder.encodeSerializableValue(Float.serializer(), value.value)
-            |            is CaseDouble -> encoder.encodeSerializableValue(Double.serializer(), value.value)
-            |            is CaseDate -> encoder.encodeSerializableValue(LocalDate.serializer(), value.value)
-            |            is CaseDateTime -> encoder.encodeSerializableValue(LocalDateTime.serializer(), value.value)
-            |            is CaseBinary -> encoder.encodeSerializableValue(ByteArraySerializer(), value.value)
-            |            is CaseUuid -> encoder.encodeSerializableValue(Uuid.serializer(), value.value)
-            |            is CaseUnit -> encoder.encodeSerializableValue(Unit.serializer(), value.value)
-            |        }
-            |    }
-            |}
-        """.trimMargin(),
-        Model.Union(
-            context = union,
-            listOf(
-                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
-                Model.Union.Case(Model.Primitive.Int(null, null, null, false, null), null),
-                Model.Union.Case(Model.Primitive.Float(null, null, null, false, null), null),
-                Model.Union.Case(Model.Primitive.Double(null, null, null, false, null), null),
-                Model.Union.Case(Model.Date(null, false, null), null),
-                Model.Union.Case(Model.DateTime(null, false, null), null),
-                Model.Union.Case(Model.ByteArray(null, false, null), null),
-                Model.Union.Case(Model.Uuid(null, false, null), null),
-                Model.Union.Case(Model.Primitive.Unit(null, false, null), null),
-            ),
-            null,
-            null,
-            null,
-            null,
-            false
-        ),
-        TypeName.Serializable,
-        TypeName.JvmInline,
-        TypeName.Uuid,
-        TypeName.Date,
-        TypeName.DateTime,
-        TypeName.ExperimentalSerializationApi,
-        TypeName.InternalSerializationApi,
-        TypeName.PolymorphicKind,
-        Import.serializer,
-        Import.ByteArraySerializer,
-        TypeName.JsonElement,
-        TypeName.JsonDecoder,
-        TypeName.KSerializer,
-        TypeName.SerialDescriptor,
-        TypeName.Encoder,
-        TypeName.Decoder,
-        Import.buildSerialDescriptor
     )
 
     fun employeeCase(ctx: NamingContext.Nested) = Model.Object(
@@ -186,6 +56,41 @@ val unionRenderSpec by testSuite {
         additionalProperties = false,
         isNullable = false
     )
+
+    fun assertOrdered(text: String, first: String, second: String) {
+        val firstIndex = text.indexOf(first)
+        val secondIndex = text.indexOf(second)
+        assertTrue(firstIndex >= 0, "Could not find '$first' in:\n$text")
+        assertTrue(secondIndex >= 0, "Could not find '$second' in:\n$text")
+        assertTrue(firstIndex < secondIndex, "Expected '$first' before '$second' in:\n$text")
+    }
+
+    verifyKotlinFiles(
+        name = "union renders all primitive cases",
+        resourceDirectory = "union/all-primitives"
+    ) {
+        listOf(
+            Model.Union(
+                context = union,
+                listOf(
+                    Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
+                    Model.Union.Case(Model.Primitive.Int(null, null, null, false, null), null),
+                    Model.Union.Case(Model.Primitive.Float(null, null, null, false, null), null),
+                    Model.Union.Case(Model.Primitive.Double(null, null, null, false, null), null),
+                    Model.Union.Case(Model.Date(null, false, null), null),
+                    Model.Union.Case(Model.DateTime(null, false, null), null),
+                    Model.Union.Case(Model.ByteArray(null, false, null), null),
+                    Model.Union.Case(Model.Uuid(null, false, null), null),
+                    Model.Union.Case(Model.Primitive.Unit(null, false, null), null),
+                ),
+                null,
+                null,
+                null,
+                null,
+                false
+            )
+        ).generate()
+    }
 
     // ==================== UNION CASE NAMING ====================
 
@@ -282,7 +187,7 @@ val unionRenderSpec by testSuite {
             null,
             null,
             null,
-            $$"$type",
+            "\$type",
             false
         ),
         TypeName.ExperimentalSerializationApi,
@@ -328,7 +233,7 @@ val unionRenderSpec by testSuite {
             null,
             null,
             null,
-            $$"$type",
+            "\$type",
             false
         ),
         TypeName.ExperimentalSerializationApi,

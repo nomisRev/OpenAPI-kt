@@ -32,3 +32,9 @@ fun jsonClassDiscriminator(name: String) {
     +"@OptIn(ExperimentalSerializationApi::class)"
     +"@JsonClassDiscriminator(${name.stringValue()})"
 }
+
+context(ctx: Renderer, builder: StringBuilder)
+fun experimentalUuidApi() {
+    ctx.import(TypeName.ExperimentalUuidApi)
+    +"@ExperimentalUuidApi"
+}

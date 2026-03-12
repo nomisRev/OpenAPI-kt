@@ -10,6 +10,9 @@ import io.github.nomisrev.openapi.transformers.nestedOrNull
 
 context(ctx: Renderer)
 fun Model.Union.render(): String = buildString {
+    if (cases.any { it.model.containsUuid() }) {
+        experimentalUuidApi()
+    }
     if (discriminator != null) {
         jsonClassDiscriminator(discriminator)
         serializable()
@@ -21,6 +24,27 @@ fun Model.Union.render(): String = buildString {
         body()
     }
     append("}")
+}
+
+private fun Model.containsUuid(): Boolean = when (this) {
+    is Model.Uuid -> true
+    is Model.Collection -> inner.containsUuid()
+    is Model.Object -> properties.values.any { it.model.containsUuid() } ||
+            ((additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.containsUuid() == true)
+    is Model.Union -> cases.any { it.model.containsUuid() }
+    is Model.DiscriminatedObject -> abstractProperties.values.any { it.model.containsUuid() } ||
+            subtypes.any { subtype ->
+                subtype.properties.values.any { it.model.containsUuid() } ||
+                        ((subtype.additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.containsUuid() == true)
+            }
+
+    is Model.Enum -> inner.containsUuid()
+    is Model.Reference,
+    is Model.ByteArray,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.FreeFormJson,
+    is Model.Primitive -> false
 }
 
 context(union: Model.Union)
@@ -76,7 +100,7 @@ private fun Model.Union.Case.unionClassName(): String =
 
         is Model.Primitive.Int -> "CaseInt"
         is Model.Primitive.String -> "CaseString"
-        is Model.Primitive.Unit -> "CaseUnit"
+        is Model.Primitive.Unit -> "Empty"
         is Model.Reference -> "Case${model.name().simpleName}"
         is Model.DiscriminatedObject -> "Case${model.name().simpleName}"
         is Model.Union -> "Case${model.name().simpleName}"
@@ -234,6 +258,9 @@ private fun Model.Union.Case.render(): String =
 context(ctx: Renderer, union: Model.Union)
 private fun Model.Union.Case.renderDeserializeAttempt(): String =
     when (model) {
+        is Model.Primitive.Unit ->
+            "Empty::class to { decodeFromJsonElement(Empty.serializer(), it) }"
+
         is Model.ContextHolder if model.context.isTopLevel() ->
             "${unionClassName()}::class to { ${unionClassName()}(decodeFromJsonElement(${model.serializer()}, it)) }"
 
@@ -251,7 +278,6 @@ private fun Model.Union.Case.renderDeserializeAttempt(): String =
         is Model.Union ->
             "${unionClassName()}::class to { ${unionClassName()}(decodeFromJsonElement(${model.serializer()}, it)) }"
 
-        is Model.Primitive.Unit,
         is Model.Object,
         is Model.Enum ->
             "${unionClassName()}::class to { decodeFromJsonElement(${model.serializer()}, it) }"
@@ -260,6 +286,8 @@ private fun Model.Union.Case.renderDeserializeAttempt(): String =
 context(ctx: Renderer)
 private fun Model.Union.Case.serialiseCase(): String =
     when (model) {
+        is Model.Primitive.Unit -> "encoder.encodeSerializableValue(Empty.serializer(), value)"
+
         is Model.ContextHolder if model.context.isTopLevel() ->
             "encoder.encodeSerializableValue(${model.serializer()}, value.value)"
 
@@ -277,7 +305,6 @@ private fun Model.Union.Case.serialiseCase(): String =
         is Model.Union ->
             "encoder.encodeSerializableValue(${model.serializer()}, value.value)"
 
-        is Model.Primitive.Unit,
         is Model.Object,
         is Model.Enum -> "encoder.encodeSerializableValue(${model.serializer()}, value)"
     }

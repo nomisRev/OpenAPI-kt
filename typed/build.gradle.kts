@@ -46,6 +46,7 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation(libs.testballoon)
                 implementation(libs.kotlinxresources)
+                implementation(libs.datetime)
                 implementation(ktorLibs.client.contentNegotiation)
                 implementation(ktorLibs.serialization.kotlinx.json)
             }
