@@ -1,8 +1,6 @@
 package io.github.nomisrev.render
 
-import de.infix.testBalloon.framework.core.TestSuite
 import de.infix.testBalloon.framework.core.testSuite
-import io.github.nomisrev.openapi.KFile
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.Root
@@ -91,24 +89,14 @@ private fun serverVariable(
     extensions = emptyMap(),
 )
 
-private const val updateClientGoldensProperty = "updateClientGoldens"
-
 private fun goldenPackage(resourceDirectory: String): String =
     "io.github.nomisrev.render.golden.${resourceDirectory.replace('/', '.').replace('-', '_')}"
 
-private fun TestSuite.verifyClientGolden(
-    name: String,
-    resourceDirectory: String,
-    actual: () -> List<KFile>,
-) = verifyKotlinFiles(name = name, resourceDirectory = resourceDirectory) {
-    actual()
-}
-
 val clientRenderSpec by testSuite {
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "single parameterless GET endpoint - root interface",
-        resourceDirectory = "client/root/single-parameterless-get",
+        resourceDirectory = "client/root/single-parameterless-get"
     ) {
         Root(
             name = "PetStore",
@@ -119,9 +107,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/root/single-parameterless-get"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "single GET endpoint returning a reference type",
-        resourceDirectory = "client/root/single-reference-response",
+        resourceDirectory = "client/root/single-reference-response"
     ) {
         val returnModel = Model.Reference(
             context = NamingContext.reference("ListPets", SchemaContext.Read),
@@ -129,7 +117,6 @@ val clientRenderSpec by testSuite {
             isNullable = false,
             title = null
         )
-
         Root(
             name = "PetStore",
             operations = listOf(
@@ -139,9 +126,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/root/single-reference-response"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "single GET returning Unit for empty response",
-        resourceDirectory = "client/root/unit-response",
+        resourceDirectory = "client/root/unit-response"
     ) {
         Root(
             name = "PetStore",
@@ -156,9 +143,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/root/unit-response"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "empty root generates interface with no members",
-        resourceDirectory = "client/root/empty-root",
+        resourceDirectory = "client/root/empty-root"
     ) {
         Root(
             name = "EmptyApi",
@@ -167,9 +154,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/root/empty-root"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "server sealed interface and factory parameter are generated for static servers",
-        resourceDirectory = "client/server/static",
+        resourceDirectory = "client/server/static"
     ) {
         Root(
             name = "OpenAI",
@@ -182,9 +169,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/server/static"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "server variables render enum and string parameters with interpolated url",
-        resourceDirectory = "client/server/variables",
+        resourceDirectory = "client/server/variables"
     ) {
         Root(
             name = "Example",
@@ -206,9 +193,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/server/variables"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "server case naming falls back to Default for a single unnamed server",
-        resourceDirectory = "client/server/fallback-single",
+        resourceDirectory = "client/server/fallback-single"
     ) {
         Root(
             name = "Example",
@@ -218,9 +205,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/server/fallback-single"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "server case naming falls back to indexed names for multiple unnamed servers",
-        resourceDirectory = "client/server/fallback-multi",
+        resourceDirectory = "client/server/fallback-multi"
     ) {
         Root(
             name = "Example",
@@ -233,29 +220,27 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/server/fallback-multi"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "read variant type is used for response types",
-        resourceDirectory = "client/response/read-variant",
+        resourceDirectory = "client/response/read-variant"
     ) {
-        val returnModel = Model.Reference(
+        val returnModel1 = Model.Reference(
             context = NamingContext.reference("Pet", SchemaContext.Read),
             description = null,
             isNullable = false,
             title = null
         )
-
         Root(
             name = "PetStore",
             operations = listOf(
-                route("getPet", "/pet", returnModel = returnModel)
+                route("getPet", "/pet", returnModel = returnModel1)
             ),
             endpoints = emptyList(),
         ).generateClient(goldenPackage("client/response/read-variant"))
     }
 
-    verifyClientGolden(
-        name = "path parameter interpolation",
-        resourceDirectory = "client/params/path-interpolation",
+    verifyKotlinFiles(name = "path parameter interpolation",
+        resourceDirectory = "client/params/path-interpolation"
     ) {
         Root(
             name = "PetStore",
@@ -270,9 +255,8 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/params/path-interpolation"))
     }
 
-    verifyClientGolden(
-        name = "required query parameter",
-        resourceDirectory = "client/params/required-query",
+    verifyKotlinFiles(name = "required query parameter",
+        resourceDirectory = "client/params/required-query"
     ) {
         Root(
             name = "Api",
@@ -287,9 +271,8 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/params/required-query"))
     }
 
-    verifyClientGolden(
-        name = "optional query parameter",
-        resourceDirectory = "client/params/optional-query",
+    verifyKotlinFiles(name = "optional query parameter",
+        resourceDirectory = "client/params/optional-query"
     ) {
         Root(
             name = "Api",
@@ -304,9 +287,8 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/params/optional-query"))
     }
 
-    verifyClientGolden(
-        name = "header parameter",
-        resourceDirectory = "client/params/header",
+    verifyKotlinFiles(name = "header parameter",
+        resourceDirectory = "client/params/header"
     ) {
         Root(
             name = "Api",
@@ -321,9 +303,8 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/params/header"))
     }
 
-    verifyClientGolden(
-        name = "cookie parameter",
-        resourceDirectory = "client/params/cookie",
+    verifyKotlinFiles(name = "cookie parameter",
+        resourceDirectory = "client/params/cookie"
     ) {
         Root(
             name = "Api",
@@ -338,9 +319,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/params/cookie"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "parameter ordering - path then required query then required header then optional query then optional header",
-        resourceDirectory = "client/params/ordering",
+        resourceDirectory = "client/params/ordering"
     ) {
         Root(
             name = "Api",
@@ -361,9 +342,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/params/ordering"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "query parameter with non-null default value",
-        resourceDirectory = "client/params/query-default-non-null",
+        resourceDirectory = "client/params/query-default-non-null"
     ) {
         Root(
             name = "Api",
@@ -390,9 +371,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/params/query-default-non-null"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "required parameter with default renders default value without annotation",
-        resourceDirectory = "client/params/required-with-default",
+        resourceDirectory = "client/params/required-with-default"
     ) {
         Root(
             name = "Api",
@@ -419,9 +400,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/params/required-with-default"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "@Deprecated annotation for deprecated operation",
-        resourceDirectory = "client/operation/deprecated",
+        resourceDirectory = "client/operation/deprecated"
     ) {
         Root(
             name = "Api",
@@ -436,9 +417,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/operation/deprecated"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "camelCase conversion for parameter names",
-        resourceDirectory = "client/params/camel-case",
+        resourceDirectory = "client/params/camel-case"
     ) {
         Root(
             name = "Api",
@@ -453,9 +434,9 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/params/camel-case"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "generateClient splits direct root children into separate files",
-        resourceDirectory = "client/splits-direct-root-children",
+        resourceDirectory = "client/splits-direct-root-children"
     ) {
         listOf(
             route("createChatCompletion", "/chat/completions", method = HttpMethod.Post),
@@ -464,9 +445,9 @@ val clientRenderSpec by testSuite {
         ).sort("OpenAI").generateClient(goldenPackage("client/splits-direct-root-children"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "deeper nesting is rendered as inner interfaces in the top-level child file",
-        resourceDirectory = "client/deeper-nesting",
+        resourceDirectory = "client/deeper-nesting"
     ) {
         listOf(
             route(
@@ -477,9 +458,9 @@ val clientRenderSpec by testSuite {
         ).sort("OpenAI").generateClient(goldenPackage("client/deeper-nesting"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "operations at root path are generated on the root interface only",
-        resourceDirectory = "client/root-operations",
+        resourceDirectory = "client/root-operations"
     ) {
         listOf(
             route("health", "/"),
@@ -487,31 +468,31 @@ val clientRenderSpec by testSuite {
         ).sort("Api").generateClient(goldenPackage("client/root-operations"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "interface names are PascalCase and child properties are camelCase",
-        resourceDirectory = "client/pascal-and-camel-case",
+        resourceDirectory = "client/pascal-and-camel-case"
     ) {
         listOf(
             route("createFineTuningJob", "/fine_tuning/jobs", method = HttpMethod.Post)
         ).sort("OpenAI").generateClient(goldenPackage("client/pascal-and-camel-case"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "required JSON body is rendered as typed body parameter with placement in request block",
-        resourceDirectory = "client/body/required-json",
+        resourceDirectory = "client/body/required-json"
     ) {
-        val requestModel = Model.Reference(
+        val requestModel1 = Model.Reference(
             context = NamingContext.reference("CreateChatCompletion", SchemaContext.Write),
             description = null,
             isNullable = false,
             title = null
         )
-        val requestBody = Route.Bodies(
+        val requestBody1 = Route.Bodies(
             required = true,
             types = mapOf(
                 ContentType.Application.Json to Route.Body.SetBody(
                     contentType = ContentType.Application.Json,
-                    type = requestModel,
+                    type = requestModel1,
                     description = null,
                     extensions = emptyMap()
                 )
@@ -525,7 +506,7 @@ val clientRenderSpec by testSuite {
                     operationId = "createChatCompletion",
                     path = "/chat/completions/{model}",
                     method = HttpMethod.Post,
-                    body = requestBody,
+                    body = requestBody1,
                     parameters = listOf(
                         pathParam("model"),
                         queryParam("limit", isRequired = true),
@@ -539,22 +520,22 @@ val clientRenderSpec by testSuite {
         ).generateClient(goldenPackage("client/body/required-json"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "optional JSON body is nullable and conditionally set",
-        resourceDirectory = "client/body/optional-json",
+        resourceDirectory = "client/body/optional-json"
     ) {
-        val requestModel = Model.Reference(
+        val requestModel1 = Model.Reference(
             context = NamingContext.reference("UpdateSettings", SchemaContext.Write),
             description = null,
             isNullable = false,
             title = null
         )
-        val requestBody = Route.Bodies(
+        val requestBody1 = Route.Bodies(
             required = false,
             types = mapOf(
                 ContentType.Application.Json to Route.Body.SetBody(
                     contentType = ContentType.Application.Json,
-                    type = requestModel,
+                    type = requestModel1,
                     description = null,
                     extensions = emptyMap()
                 )
@@ -568,18 +549,18 @@ val clientRenderSpec by testSuite {
                     operationId = "updateSettings",
                     path = "/settings",
                     method = HttpMethod.Patch,
-                    body = requestBody,
+                    body = requestBody1,
                 )
             ),
             endpoints = emptyList(),
         ).generateClient(goldenPackage("client/body/optional-json"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "multipart inline schema expands into parameters and uses MultiPartFormDataContent",
-        resourceDirectory = "client/body/multipart-inline",
+        resourceDirectory = "client/body/multipart-inline"
     ) {
-        val multipartBody = Route.Bodies(
+        val multipartBody1 = Route.Bodies(
             required = true,
             types = mapOf(
                 ContentType.MultiPart.FormData to Route.Body.Multipart.Value(
@@ -600,28 +581,28 @@ val clientRenderSpec by testSuite {
                     operationId = "uploadFile",
                     path = "/files",
                     method = HttpMethod.Post,
-                    body = multipartBody,
+                    body = multipartBody1,
                 )
             ),
             endpoints = emptyList(),
         ).generateClient(goldenPackage("client/body/multipart-inline"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "multipart ref schema uses a single typed body parameter",
-        resourceDirectory = "client/body/multipart-ref",
+        resourceDirectory = "client/body/multipart-ref"
     ) {
-        val requestModel = Model.Reference(
+        val requestModel1 = Model.Reference(
             context = NamingContext.reference("UploadFile", SchemaContext.Write),
             description = null,
             isNullable = false,
             title = null
         )
-        val multipartBody = Route.Bodies(
+        val multipartBody1 = Route.Bodies(
             required = true,
             types = mapOf(
                 ContentType.MultiPart.FormData to Route.Body.Multipart.Ref(
-                    value = requestModel,
+                    value = requestModel1,
                     description = null,
                     extensions = emptyMap()
                 )
@@ -635,18 +616,18 @@ val clientRenderSpec by testSuite {
                     operationId = "uploadFile",
                     path = "/files",
                     method = HttpMethod.Post,
-                    body = multipartBody,
+                    body = multipartBody1,
                 )
             ),
             endpoints = emptyList(),
         ).generateClient(goldenPackage("client/body/multipart-ref"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "form-urlencoded schema expands properties and encodes Parameters",
-        resourceDirectory = "client/body/form-urlencoded",
+        resourceDirectory = "client/body/form-urlencoded"
     ) {
-        val formBody = Route.Bodies(
+        val formBody1 = Route.Bodies(
             required = true,
             types = mapOf(
                 ContentType.Application.FormUrlEncoded to Route.Body.FormUrlEncoded(
@@ -674,18 +655,18 @@ val clientRenderSpec by testSuite {
                     operationId = "createToken",
                     path = "/oauth/token",
                     method = HttpMethod.Post,
-                    body = formBody,
+                    body = formBody1,
                 )
             ),
             endpoints = emptyList(),
         ).generateClient(goldenPackage("client/body/form-urlencoded"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "body content type preference follows json over multipart and form-urlencoded",
-        resourceDirectory = "client/body/content-type-preference",
+        resourceDirectory = "client/body/content-type-preference"
     ) {
-        val jsonBody = Route.Body.SetBody(
+        val jsonBody1 = Route.Body.SetBody(
             contentType = ContentType.Application.Json,
             type = Model.Reference(
                 context = NamingContext.reference("CreateThing", SchemaContext.Write),
@@ -696,12 +677,12 @@ val clientRenderSpec by testSuite {
             description = null,
             extensions = emptyMap()
         )
-        val multipartBody = Route.Body.Multipart.Value(
+        val multipartBody1 = Route.Body.Multipart.Value(
             parameters = listOf(Route.Body.Multipart.FormData("file", Model.ByteArray(null, false, null))),
             description = null,
             extensions = emptyMap()
         )
-        val formBody = Route.Body.FormUrlEncoded(
+        val formBody1 = Route.Body.FormUrlEncoded(
             parameters = listOf(
                 Route.Body.Multipart.FormData(
                     "grant_type",
@@ -711,12 +692,12 @@ val clientRenderSpec by testSuite {
             description = null,
             extensions = emptyMap()
         )
-        val requestBody = Route.Bodies(
+        val requestBody1 = Route.Bodies(
             required = true,
             types = mapOf(
-                ContentType.MultiPart.FormData to multipartBody,
-                ContentType.Application.FormUrlEncoded to formBody,
-                ContentType.Application.Json to jsonBody,
+                ContentType.MultiPart.FormData to multipartBody1,
+                ContentType.Application.FormUrlEncoded to formBody1,
+                ContentType.Application.Json to jsonBody1,
             ),
             extensions = emptyMap()
         )
@@ -727,18 +708,18 @@ val clientRenderSpec by testSuite {
                     operationId = "createThing",
                     path = "/things",
                     method = HttpMethod.Post,
-                    body = requestBody,
+                    body = requestBody1,
                 )
             ),
             endpoints = emptyList(),
         ).generateClient(goldenPackage("client/body/content-type-preference"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "multiple responses generate a sealed result and status dispatch in implementation",
-        resourceDirectory = "client/responses/multiple",
+        resourceDirectory = "client/responses/multiple"
     ) {
-        val returns = Route.Returns(
+        val returns1 = Route.Returns(
             default = null,
             responses = mapOf(
                 HttpStatusCode.OK to Route.ReturnType(
@@ -776,18 +757,18 @@ val clientRenderSpec by testSuite {
                     path = "/models/{model}",
                     parameters = listOf(pathParam("model"))
                 ).copy(
-                    returns = returns
+                    returns = returns1
                 )
             ),
             endpoints = emptyList(),
         ).generateClient(goldenPackage("client/responses/multiple"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "default response is rendered and used in else branch",
-        resourceDirectory = "client/responses/default",
+        resourceDirectory = "client/responses/default"
     ) {
-        val returns = Route.Returns(
+        val returns1 = Route.Returns(
             default = Route.ReturnType(
                 types = mapOf(ContentType.Application.Json to Model.Primitive.String(null, null, null, false, null)),
                 extensions = emptyMap()
@@ -812,18 +793,18 @@ val clientRenderSpec by testSuite {
             name = "Api",
             operations = listOf(
                 route(operationId = "getModel", path = "/models/{model}", parameters = listOf(pathParam("model"))).copy(
-                    returns = returns
+                    returns = returns1
                 )
             ),
             endpoints = emptyList(),
         ).generateClient(goldenPackage("client/responses/default"))
     }
 
-    verifyClientGolden(
+    verifyKotlinFiles(
         name = "no-content response renders data object case",
-        resourceDirectory = "client/responses/no-content",
+        resourceDirectory = "client/responses/no-content"
     ) {
-        val returns = Route.Returns(
+        val returns1 = Route.Returns(
             default = null,
             responses = mapOf(
                 HttpStatusCode.NoContent to Route.ReturnType(
@@ -854,7 +835,7 @@ val clientRenderSpec by testSuite {
                     method = HttpMethod.Delete,
                     parameters = listOf(pathParam("model"))
                 ).copy(
-                    returns = returns
+                    returns = returns1
                 )
             ),
             endpoints = emptyList(),
