@@ -140,29 +140,43 @@ val unionRenderSpec by testSuite {
         )
     }
 
-    verifyUnion(
+    verifyKotlinFiles(
         name = "discriminated union with reference and object cases",
         resourceDirectory = "union/discriminated-reference"
     ) {
-        Model.Union(
-            context = union,
-            listOf(
-                Model.Union.Case(
-                    Model.Reference(
-                        NamingContext.reference("Person", SchemaContext.Null),
-                        null,
-                        false,
-                        null
+        listOf(
+            Model.Union(
+                context = union,
+                listOf(
+                    Model.Union.Case(
+                        Model.Reference(
+                            NamingContext.reference("Person", SchemaContext.Null),
+                            null,
+                            false,
+                            null
+                        ),
+                        "person"
                     ),
-                    "person"
+                    Model.Union.Case(employeeCase(NamingContext.UnionCase("employee")), "employee"),
                 ),
-                Model.Union.Case(employeeCase(NamingContext.UnionCase("employee")), "employee"),
+                null,
+                null,
+                null,
+                "\$type",
+                false
             ),
-            null,
-            null,
-            null,
-            "\$type",
-            false
+            Model.Object(
+                NamingContext.reference("Person", SchemaContext.Null),
+                null,
+                null,
+                mapOf("name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)),
+                false,
+                false
+            )
+        ).generate("union.discriminated.reference") + KFile(
+            "AttemptDeserialize.kt",
+            "union.discriminated.reference.model",
+            attemptDeserialize("union.discriminated.reference")
         )
     }
 
@@ -467,34 +481,48 @@ val unionRenderSpec by testSuite {
         )
     }
 
-    verifyUnion(
+    verifyKotlinFiles(
         name = "union with collection and single reference case",
         resourceDirectory = "union/collection-of-references"
     ) {
-        Model.Union(
-            context = union,
-            listOf(
-                Model.Union.Case(
-                    Model.Collection(
-                        Model.Reference(NamingContext.reference("Item", SchemaContext.Null), null, false, null),
-                        null,
-                        null,
-                        null,
-                        false,
+        listOf(
+            Model.Union(
+                context = union,
+                listOf(
+                    Model.Union.Case(
+                        Model.Collection(
+                            Model.Reference(NamingContext.reference("Item", SchemaContext.Null), null, false, null),
+                            null,
+                            null,
+                            null,
+                            false,
+                            null
+                        ),
                         null
                     ),
-                    null
+                    Model.Union.Case(
+                        Model.Reference(NamingContext.reference("Item", SchemaContext.Null), null, false, null),
+                        null
+                    ),
                 ),
-                Model.Union.Case(
-                    Model.Reference(NamingContext.reference("Item", SchemaContext.Null), null, false, null),
-                    null
-                ),
+                null,
+                null,
+                null,
+                null,
+                false
             ),
-            null,
-            null,
-            null,
-            null,
-            false
+            Model.Object(
+                NamingContext.reference("Item", SchemaContext.Null),
+                null,
+                null,
+                mapOf("id" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)),
+                false,
+                false
+            ),
+        ).generate("union.collection.of.references") + KFile(
+            "AttemptDeserialize.kt",
+            "union.collection.of.references.model",
+            attemptDeserialize("union.collection.of.references")
         )
     }
 
@@ -531,7 +559,7 @@ val unionRenderSpec by testSuite {
 
     verifyUnion(
         name = "nested discriminated object case renders wrapped value class",
-        resourceDirectory = "union/nested-discriminated-object"
+        resourceDirectory = "union/nested-discriminated-obj"
     ) {
         val authContext = union.nest(NamingContext.UnionCase("Auth"))
         val kindProp = Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)

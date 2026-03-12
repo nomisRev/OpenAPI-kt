@@ -56,6 +56,19 @@ private fun Model.Union.Case.discriminator(): String? =
         discriminator
     } else discriminator
 
+/**
+ * Returns the serializer expression for this case's model.
+ * For nested unions/discriminated objects, prefixes with the case wrapper class name
+ * since these types are rendered inside the value class wrapper.
+ */
+context(ctx: Renderer, union: Model.Union)
+private fun Model.Union.Case.nestedSerializer(): String =
+    when (model) {
+        is Model.Union,
+        is Model.DiscriminatedObject -> "${unionClassName()}.${model.name().simpleName}.serializer()"
+        else -> model.serializer()
+    }
+
 context(ctx: Renderer, union: Model.Union)
 private fun Model.Union.Case.unionClassName(): String =
     (discriminator() ?: when (model) {
@@ -166,7 +179,7 @@ private fun Model.Union.body() {
                     +"buildSerialDescriptor(\"${name().fqName}\", PolymorphicKind.SEALED) {"
                     indented {
                         cases.forEach { case ->
-                            +"element(\"${case.unionClassName()}\", ${case.model.serializer()}.descriptor)"
+                            +"element(\"${case.unionClassName()}\", ${case.nestedSerializer()}.descriptor)"
                         }
                     }
                     +"}"
@@ -279,14 +292,14 @@ private fun Model.Union.Case.renderDeserializeAttempt(): String =
 
         is Model.DiscriminatedObject,
         is Model.Union ->
-            "${unionClassName()}::class to { ${unionClassName()}(decodeFromJsonElement(${model.serializer()}, it)) }"
+            "${unionClassName()}::class to { ${unionClassName()}(decodeFromJsonElement(${nestedSerializer()}, it)) }"
 
         is Model.Object,
         is Model.Enum ->
             "${unionClassName()}::class to { decodeFromJsonElement(${model.serializer()}, it) }"
     }
 
-context(ctx: Renderer)
+context(ctx: Renderer, union: Model.Union)
 private fun Model.Union.Case.serialiseCase(): String =
     when (model) {
         is Model.Primitive.Unit -> "encoder.encodeSerializableValue(Empty.serializer(), value)"
@@ -306,7 +319,7 @@ private fun Model.Union.Case.serialiseCase(): String =
 
         is Model.DiscriminatedObject,
         is Model.Union ->
-            "encoder.encodeSerializableValue(${model.serializer()}, value.value)"
+            "encoder.encodeSerializableValue(${nestedSerializer()}, value.value)"
 
         is Model.Object,
         is Model.Enum -> "encoder.encodeSerializableValue(${model.serializer()}, value)"

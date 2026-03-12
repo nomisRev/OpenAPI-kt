@@ -1,4 +1,4 @@
-package union.references.model
+package union.discriminated.reference.model
 
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline

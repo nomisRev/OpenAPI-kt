@@ -1,4 +1,4 @@
-package union.nested.discriminated.object.model
+package union.nested.discriminated.obj.model
 
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
@@ -44,8 +44,8 @@ sealed interface Union {
     object Serializer : KSerializer<Union> {
         @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
         override val descriptor: SerialDescriptor =
-            buildSerialDescriptor("union.nested.discriminated.object.model.Union", PolymorphicKind.SEALED) {
-                element("CaseAuth", Auth.serializer().descriptor)
+            buildSerialDescriptor("union.nested.discriminated.obj.model.Union", PolymorphicKind.SEALED) {
+                element("CaseAuth", CaseAuth.Auth.serializer().descriptor)
                 element("CaseInt", Int.serializer().descriptor)
             }
 
@@ -54,13 +54,13 @@ sealed interface Union {
             val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
             return json.attemptDeserialize(
                 value,
-                CaseAuth::class to { CaseAuth(decodeFromJsonElement(Auth.serializer(), it)) },
+                CaseAuth::class to { CaseAuth(decodeFromJsonElement(CaseAuth.Auth.serializer(), it)) },
                 CaseInt::class to { CaseInt(decodeFromJsonElement(Int.serializer(), it)) },
             )
         }
 
         override fun serialize(encoder: Encoder, value: Union) = when(value) {
-            is CaseAuth -> encoder.encodeSerializableValue(Auth.serializer(), value.value)
+            is CaseAuth -> encoder.encodeSerializableValue(CaseAuth.Auth.serializer(), value.value)
             is CaseInt -> encoder.encodeSerializableValue(Int.serializer(), value.value)
         }
     }

@@ -1,4 +1,4 @@
-package union.nested.discriminated.object.model
+package union.nested.discriminated.obj.model
     
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException

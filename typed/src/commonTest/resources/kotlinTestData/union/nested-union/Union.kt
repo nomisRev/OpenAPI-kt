@@ -63,7 +63,7 @@ sealed interface Union {
         @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
         override val descriptor: SerialDescriptor =
             buildSerialDescriptor("union.nested.union.model.Union", PolymorphicKind.SEALED) {
-                element("CaseInner", Inner.serializer().descriptor)
+                element("CaseInner", CaseInner.Inner.serializer().descriptor)
                 element("CaseBoolean", Boolean.serializer().descriptor)
             }
 
@@ -72,13 +72,13 @@ sealed interface Union {
             val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
             return json.attemptDeserialize(
                 value,
-                CaseInner::class to { CaseInner(decodeFromJsonElement(Inner.serializer(), it)) },
+                CaseInner::class to { CaseInner(decodeFromJsonElement(CaseInner.Inner.serializer(), it)) },
                 CaseBoolean::class to { CaseBoolean(decodeFromJsonElement(Boolean.serializer(), it)) },
             )
         }
 
         override fun serialize(encoder: Encoder, value: Union) = when(value) {
-            is CaseInner -> encoder.encodeSerializableValue(Inner.serializer(), value.value)
+            is CaseInner -> encoder.encodeSerializableValue(CaseInner.Inner.serializer(), value.value)
             is CaseBoolean -> encoder.encodeSerializableValue(Boolean.serializer(), value.value)
         }
     }
