@@ -1,4 +1,4 @@
-package pascal.and.camel.case.api
+package io.github.nomisrev.render.golden.client.pascal_and_camel_case.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig

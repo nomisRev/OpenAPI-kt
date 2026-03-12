@@ -1,4 +1,4 @@
-package root.operations.api
+package io.github.nomisrev.render.golden.client.root_operations.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

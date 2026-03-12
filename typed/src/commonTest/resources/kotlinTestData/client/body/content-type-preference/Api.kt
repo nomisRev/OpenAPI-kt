@@ -1,24 +1,29 @@
-package io.github.nomisrev.render.golden.client.root_operations.api
+package io.github.nomisrev.render.golden.client.body.content_type_preference.api
 
+import io.github.nomisrev.model.CreateThingRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.http.ContentType
+import io.ktor.client.request.setBody
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.http.contentType
 
 interface Api {
-    val models: Models
-
-    suspend fun health(): String
+    suspend fun createThing(
+        body: CreateThingRequest,
+    ): String
 }
 
 internal class KtorApi(private val client: HttpClient) : Api {
-    override val models: Models = KtorModels(client)
-
-    override suspend fun health(): String =
-        client.get("/").body()
+    override suspend fun createThing(body: CreateThingRequest): String =
+        client.post("/things") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+        }.body()
 }
 
 fun ApiClient(

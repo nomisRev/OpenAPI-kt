@@ -1,4 +1,4 @@
-package deeper.nesting.api
+package io.github.nomisrev.render.golden.client.deeper_nesting.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

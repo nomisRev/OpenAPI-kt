@@ -1,7 +1,5 @@
-package client.splits.direct.root.children.api
+package io.github.nomisrev.render.golden.client.splits_direct_root_children.api
 
-import client.splits.direct.root.children.api.Chat
-import client.splits.direct.root.children.api.KtorChat
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation

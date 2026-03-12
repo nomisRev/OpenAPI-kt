@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.golden.client.root_operations.api
+package io.github.nomisrev.render.golden.client.params.camel_case.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -9,16 +9,14 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 
 interface Api {
-    val models: Models
-
-    suspend fun health(): String
+    suspend fun listEvents(
+        fineTuningJobId: String,
+    ): String
 }
 
 internal class KtorApi(private val client: HttpClient) : Api {
-    override val models: Models = KtorModels(client)
-
-    override suspend fun health(): String =
-        client.get("/").body()
+    override suspend fun listEvents(fineTuningJobId: String): String =
+        client.get("/fine_tuning/jobs/$fineTuningJobId/events").body()
 }
 
 fun ApiClient(

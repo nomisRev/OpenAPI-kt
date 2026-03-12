@@ -1,23 +1,20 @@
 package io.github.nomisrev.render
 
+import de.infix.testBalloon.framework.core.TestSuite
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.nomisrev.openapi.KFile
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.Root
-import io.github.nomisrev.openapi.generate
 import io.github.nomisrev.openapi.generateClient
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.Server
-import io.github.nomisrev.openapi.render.renderRootFile
-import io.github.nomisrev.openapi.render.renderer
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.sort
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 private fun route(
     operationId: String,
@@ -94,11 +91,24 @@ private fun serverVariable(
     extensions = emptyMap(),
 )
 
+private const val updateClientGoldensProperty = "updateClientGoldens"
+
+private fun goldenPackage(resourceDirectory: String): String =
+    "io.github.nomisrev.render.golden.${resourceDirectory.replace('/', '.').replace('-', '_')}"
+
+private fun TestSuite.verifyClientGolden(
+    name: String,
+    resourceDirectory: String,
+    actual: () -> List<KFile>,
+) = verifyKotlinFiles(name = name, resourceDirectory = resourceDirectory) {
+    actual()
+}
+
 val clientRenderSpec by testSuite {
 
-    verifyKotlinFiles(
+    verifyClientGolden(
         name = "single parameterless GET endpoint - root interface",
-        resourceDirectory = "client/root/reference-response",
+        resourceDirectory = "client/root/single-parameterless-get",
     ) {
         Root(
             name = "PetStore",
@@ -106,38 +116,10 @@ val clientRenderSpec by testSuite {
                 route("listPets", "/pets")
             ),
             endpoints = emptyList(),
-        ).generateClient("root.reference.response")
+        ).generateClient(goldenPackage("client/root/single-parameterless-get"))
     }
 
-    val pet = Model.Object(
-        NamingContext.reference("Pet", SchemaContext.Read),
-        description = null,
-        title = null,
-        mapOf(
-            "name" to Model.Object.Property(
-                Model.Primitive.String(null, null, null, false, null),
-                true
-            )
-        ),
-        false,
-        false
-    )
-
-    val pets = Model.Object(
-        NamingContext.reference("ListPetsResponse", SchemaContext.Read),
-        description = null,
-        title = null,
-        mapOf(
-            "items" to Model.Object.Property(
-                Model.Collection(pet, null, null, null, false, null),
-                true
-            )
-        ),
-        false,
-        false
-    )
-
-    verifyKotlinFiles(
+    verifyClientGolden(
         name = "single GET endpoint returning a reference type",
         resourceDirectory = "client/root/single-reference-response",
     ) {
@@ -148,43 +130,18 @@ val clientRenderSpec by testSuite {
             title = null
         )
 
-        val root = Root(
+        Root(
             name = "PetStore",
             operations = listOf(
                 route("listPets", "/pets", returnModel = returnModel)
             ),
             endpoints = emptyList(),
-        )
-        root.generateClient("root.single.reference.response") + listOf(pet, pets).generate()
+        ).generateClient(goldenPackage("client/root/single-reference-response"))
     }
 
-    test("single GET endpoint returning a reference type imports model type") {
-        val returnModel = Model.Reference(
-            context = NamingContext.reference("ListPets", SchemaContext.Read),
-            description = null,
-            isNullable = false,
-            title = null
-        )
-
-        val root = Root(
-            name = "PetStore",
-            operations = listOf(
-                route("listPets", "/pets", returnModel = returnModel)
-            ),
-            endpoints = emptyList(),
-        )
-
-        val (_, imports) = renderer { root.renderRootFile() }
-
-        // Should import the model type (ListPets + SchemaContext.Read -> ListPetsResponse)
-        val modelImport = imports.filterIsInstance<io.github.nomisrev.openapi.render.TypeName.Class>()
-            .any { it.simpleName == "ListPetsResponse" && it.packageName == "io.github.nomisrev.model" }
-        assertEquals(true, modelImport, "Expected import for ListPetsResponse model type. Imports: $imports")
-    }
-
-    verifyKotlinFiles(
+    verifyClientGolden(
         name = "single GET returning Unit for empty response",
-        resourceDirectory = "client/root/unit-response/PetStore.kt",
+        resourceDirectory = "client/root/unit-response",
     ) {
         Root(
             name = "PetStore",
@@ -196,10 +153,10 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        ).generateClient("root.unit.response")
+        ).generateClient(goldenPackage("client/root/unit-response"))
     }
 
-    verifyKotlinFiles(
+    verifyClientGolden(
         name = "empty root generates interface with no members",
         resourceDirectory = "client/root/empty-root",
     ) {
@@ -207,11 +164,14 @@ val clientRenderSpec by testSuite {
             name = "EmptyApi",
             operations = emptyList(),
             endpoints = emptyList(),
-        ).generateClient("root.empty.root")
+        ).generateClient(goldenPackage("client/root/empty-root"))
     }
 
-    test("server sealed interface and factory parameter are generated for static servers") {
-        val root = Root(
+    verifyClientGolden(
+        name = "server sealed interface and factory parameter are generated for static servers",
+        resourceDirectory = "client/server/static",
+    ) {
+        Root(
             name = "OpenAI",
             operations = listOf(route("listModels", "/models")),
             endpoints = emptyList(),
@@ -219,39 +179,14 @@ val clientRenderSpec by testSuite {
                 server("https://api.openai.com/v1", description = "Production"),
                 server("https://staging.api.openai.com/v1", description = "Staging Server"),
             ),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("sealed interface OpenAIServer {"), "Expected server sealed interface:\\n$actual")
-        assertTrue(
-            actual.contains("data object Production : OpenAIServer"),
-            "Expected production server case:\\n$actual"
-        )
-        assertTrue(
-            actual.contains("data object Staging : OpenAIServer"),
-            "Expected trailing 'Server' to be stripped:\\n$actual"
-        )
-        assertTrue(
-            actual.contains("data class Custom(override val url: String) : OpenAIServer"),
-            "Expected custom escape hatch:\\n$actual"
-        )
-        assertTrue(
-            actual.contains("server: OpenAIServer = OpenAIServer.Production,"),
-            "Expected factory server parameter with default first server:\\n$actual"
-        )
-        assertTrue(
-            actual.contains("defaultRequest { url(server.url) }"),
-            "Expected defaultRequest to use server.url:\\n$actual"
-        )
-        assertTrue(
-            !actual.contains("baseUrl: String"),
-            "Did not expect baseUrl parameter when servers are declared:\\n$actual"
-        )
+        ).generateClient(goldenPackage("client/server/static"))
     }
 
-    test("server variables render enum and string parameters with interpolated url") {
-        val root = Root(
+    verifyClientGolden(
+        name = "server variables render enum and string parameters with interpolated url",
+        resourceDirectory = "client/server/variables",
+    ) {
+        Root(
             name = "Example",
             operations = listOf(route("listData", "/data")),
             endpoints = emptyList(),
@@ -268,51 +203,26 @@ val clientRenderSpec by testSuite {
                     ),
                 ),
             ),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("data class MultiEnvironment("), "Expected variable server data class:\\n$actual")
-        assertTrue(
-            actual.contains("val environment: Environment = Environment.Production,"),
-            "Expected enum-constrained variable parameter:\\n$actual"
-        )
-        assertTrue(
-            actual.contains("val version: String = \"v2\","),
-            "Expected free-form String variable parameter:\\n$actual"
-        )
-        assertTrue(
-            actual.contains("get() = \"https://${'$'}{environment.value}.api.example.com/${'$'}{version}\""),
-            "Expected interpolated url getter:\\n$actual"
-        )
-        assertTrue(
-            actual.contains("enum class Environment(val value: String) {"),
-            "Expected nested enum declaration:\\n$actual"
-        )
-        assertTrue(actual.contains("Production(\"production\"),"), "Expected enum entry for production:\\n$actual")
-        assertTrue(actual.contains("Staging(\"staging\"),"), "Expected enum entry for staging:\\n$actual")
-        assertTrue(actual.contains("Dev(\"dev\"),"), "Expected enum entry for dev:\\n$actual")
+        ).generateClient(goldenPackage("client/server/variables"))
     }
 
-    test("server case naming falls back to default and indexed names when descriptions are missing") {
-        val singleServerRoot = Root(
+    verifyClientGolden(
+        name = "server case naming falls back to Default for a single unnamed server",
+        resourceDirectory = "client/server/fallback-single",
+    ) {
+        Root(
             name = "Example",
             operations = listOf(route("listData", "/data")),
             endpoints = emptyList(),
             servers = listOf(server("https://api.example.com/v1")),
-        )
-        val (singleActual, _) = renderer { singleServerRoot.renderRootFile() }
+        ).generateClient(goldenPackage("client/server/fallback-single"))
+    }
 
-        assertTrue(
-            singleActual.contains("data object Default : ExampleServer"),
-            "Expected single unnamed server to fallback to Default:\\n$singleActual"
-        )
-        assertTrue(
-            singleActual.contains("server: ExampleServer = ExampleServer.Default,"),
-            "Expected factory default to use ExampleServer.Default:\\n$singleActual"
-        )
-
-        val multiServerRoot = Root(
+    verifyClientGolden(
+        name = "server case naming falls back to indexed names for multiple unnamed servers",
+        resourceDirectory = "client/server/fallback-multi",
+    ) {
+        Root(
             name = "Example",
             operations = listOf(route("listData", "/data")),
             endpoints = emptyList(),
@@ -320,25 +230,13 @@ val clientRenderSpec by testSuite {
                 server("https://api-1.example.com/v1"),
                 server("https://api-2.example.com/v1"),
             ),
-        )
-        val (multiActual, _) = renderer { multiServerRoot.renderRootFile() }
-
-        assertTrue(
-            multiActual.contains("data object Server1 : ExampleServer"),
-            "Expected first unnamed server to fallback to Server1:\\n$multiActual"
-        )
-        assertTrue(
-            multiActual.contains("data object Server2 : ExampleServer"),
-            "Expected second unnamed server to fallback to Server2:\\n$multiActual"
-        )
-        assertTrue(
-            multiActual.contains("server: ExampleServer = ExampleServer.Server1,"),
-            "Expected first documented server to be default in factory:\\n$multiActual"
-        )
+        ).generateClient(goldenPackage("client/server/fallback-multi"))
     }
 
-    test("read variant type is used for response types") {
-        // A reference with SchemaContext.Read should produce the "Response" suffix
+    verifyClientGolden(
+        name = "read variant type is used for response types",
+        resourceDirectory = "client/response/read-variant",
+    ) {
         val returnModel = Model.Reference(
             context = NamingContext.reference("Pet", SchemaContext.Read),
             description = null,
@@ -346,25 +244,20 @@ val clientRenderSpec by testSuite {
             title = null
         )
 
-        val root = Root(
+        Root(
             name = "PetStore",
             operations = listOf(
                 route("getPet", "/pet", returnModel = returnModel)
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        // SchemaContext.Read appends "Response" suffix
-        assertTrue(
-            actual.contains("suspend fun getPet(): PetResponse"),
-            "Expected 'PetResponse' return type (Read variant) in:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/response/read-variant"))
     }
 
-    test("path parameter interpolation") {
-        val root = Root(
+    verifyClientGolden(
+        name = "path parameter interpolation",
+        resourceDirectory = "client/params/path-interpolation",
+    ) {
+        Root(
             name = "PetStore",
             operations = listOf(
                 route(
@@ -374,23 +267,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(
-            actual.contains("suspend fun retrieveModel(\n        model: String,\n    ): String"),
-            "Expected path param in interface:\n$actual"
-        )
-        assertTrue(
-            actual.contains("override suspend fun retrieveModel(model: String): String ="),
-            "Expected path param in impl:\n$actual"
-        )
-        assertTrue(actual.contains("\"/models/\$model\""), "Expected path interpolation in impl:\n$actual")
+        ).generateClient(goldenPackage("client/params/path-interpolation"))
     }
 
-    test("required query parameter") {
-        val root = Root(
+    verifyClientGolden(
+        name = "required query parameter",
+        resourceDirectory = "client/params/required-query",
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -400,16 +284,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("query: String,"), "Expected required query param in interface:\n$actual")
-        assertTrue(actual.contains("parameter(\"query\", query)"), "Expected parameter() call in impl:\n$actual")
+        ).generateClient(goldenPackage("client/params/required-query"))
     }
 
-    test("optional query parameter") {
-        val root = Root(
+    verifyClientGolden(
+        name = "optional query parameter",
+        resourceDirectory = "client/params/optional-query",
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -419,19 +301,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("limit: Int? = null,"), "Expected optional query param in interface:\n$actual")
-        assertTrue(
-            actual.contains("limit?.let { parameter(\"limit\", it) }"),
-            "Expected ?.let pattern in impl:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/params/optional-query"))
     }
 
-    test("header parameter") {
-        val root = Root(
+    verifyClientGolden(
+        name = "header parameter",
+        resourceDirectory = "client/params/header",
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -441,16 +318,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("xApiKey: String,"), "Expected camelCase header param in interface:\n$actual")
-        assertTrue(actual.contains("header(\"X-Api-Key\", xApiKey)"), "Expected header() call in impl:\n$actual")
+        ).generateClient(goldenPackage("client/params/header"))
     }
 
-    test("cookie parameter") {
-        val root = Root(
+    verifyClientGolden(
+        name = "cookie parameter",
+        resourceDirectory = "client/params/cookie",
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -460,16 +335,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("sessionId: String,"), "Expected camelCase cookie param in interface:\n$actual")
-        assertTrue(actual.contains("cookie(\"session_id\", sessionId)"), "Expected cookie() call in impl:\n$actual")
+        ).generateClient(goldenPackage("client/params/cookie"))
     }
 
-    test("parameter ordering - path then required query then required header then optional query then optional header") {
-        val root = Root(
+    verifyClientGolden(
+        name = "parameter ordering - path then required query then required header then optional query then optional header",
+        resourceDirectory = "client/params/ordering",
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -485,24 +358,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        // Extract parameter lines from the interface suspend fun
-        val paramSection = actual.substringAfter("suspend fun getResource(").substringBefore("): String")
-        val paramNames =
-            paramSection.lines().map { it.trim() }.filter { it.contains(":") }.map { it.substringBefore(":").trim() }
-
-        assertEquals(
-            listOf("id", "requiredQ", "xRequired", "optionalQ", "xOptional"),
-            paramNames,
-            "Parameters should be ordered: path, required query, required header, optional query, optional header.\nActual interface:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/params/ordering"))
     }
 
-    test("query parameter with non-null default value") {
-        val root = Root(
+    verifyClientGolden(
+        name = "query parameter with non-null default value",
+        resourceDirectory = "client/params/query-default-non-null",
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -524,20 +387,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("limit: Int = 20,"), "Expected default value in interface:\n$actual")
-        // Non-null default means always sent (no ?.let)
-        assertTrue(
-            actual.contains("parameter(\"limit\", limit)"),
-            "Expected direct parameter() call (no ?.let) for param with default:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/params/query-default-non-null"))
     }
 
-    test("required parameter with default renders default value without annotation") {
-        val root = Root(
+    verifyClientGolden(
+        name = "required parameter with default renders default value without annotation",
+        resourceDirectory = "client/params/required-with-default",
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -559,16 +416,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("limit: Int = 20,"), "Expected default value on required param:\n$actual")
-        assertTrue(!actual.contains("@Required"), "Function parameters should not have @Required annotation:\n$actual")
+        ).generateClient(goldenPackage("client/params/required-with-default"))
     }
 
-    test("@Deprecated annotation for deprecated operation") {
-        val root = Root(
+    verifyClientGolden(
+        name = "@Deprecated annotation for deprecated operation",
+        resourceDirectory = "client/operation/deprecated",
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -578,22 +433,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(
-            actual.contains("@Deprecated(\"Deprecated by the API provider\")\n    suspend fun legacyEndpoint(): String"),
-            "Expected @Deprecated annotation on interface function:\n$actual"
-        )
-        assertTrue(
-            actual.contains("@Deprecated(\"Deprecated by the API provider\")\n    override suspend fun legacyEndpoint(): String"),
-            "Expected @Deprecated annotation on impl function:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/operation/deprecated"))
     }
 
-    test("camelCase conversion for parameter names") {
-        val root = Root(
+    verifyClientGolden(
+        name = "camelCase conversion for parameter names",
+        resourceDirectory = "client/params/camel-case",
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -603,18 +450,10 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(
-            actual.contains("fineTuningJobId: String"),
-            "Expected camelCase param name 'fineTuningJobId':\n$actual"
-        )
-        assertTrue(actual.contains("\$fineTuningJobId"), "Expected camelCase interpolation in URL:\n$actual")
+        ).generateClient(goldenPackage("client/params/camel-case"))
     }
 
-    verifyKotlinFiles(
+    verifyClientGolden(
         name = "generateClient splits direct root children into separate files",
         resourceDirectory = "client/splits-direct-root-children",
     ) {
@@ -622,10 +461,10 @@ val clientRenderSpec by testSuite {
             route("createChatCompletion", "/chat/completions", method = HttpMethod.Post),
             route("listModels", "/models"),
             route("retrieveModel", "/models/{model}", parameters = listOf(pathParam("model")))
-        ).sort("OpenAI").generateClient("client.splits.direct.root.children")
+        ).sort("OpenAI").generateClient(goldenPackage("client/splits-direct-root-children"))
     }
 
-    verifyKotlinFiles(
+    verifyClientGolden(
         name = "deeper nesting is rendered as inner interfaces in the top-level child file",
         resourceDirectory = "client/deeper-nesting",
     ) {
@@ -635,29 +474,32 @@ val clientRenderSpec by testSuite {
                 "/fine_tuning/jobs/{fine_tuning_job_id}/events",
                 parameters = listOf(pathParam("fine_tuning_job_id"))
             )
-        ).sort("OpenAI").generateClient("deeper.nesting")
+        ).sort("OpenAI").generateClient(goldenPackage("client/deeper-nesting"))
     }
 
-    verifyKotlinFiles(
+    verifyClientGolden(
         name = "operations at root path are generated on the root interface only",
         resourceDirectory = "client/root-operations",
     ) {
         listOf(
             route("health", "/"),
             route("listModels", "/models")
-        ).sort("Api").generateClient("root.operations")
+        ).sort("Api").generateClient(goldenPackage("client/root-operations"))
     }
 
-    verifyKotlinFiles(
+    verifyClientGolden(
         name = "interface names are PascalCase and child properties are camelCase",
         resourceDirectory = "client/pascal-and-camel-case",
     ) {
         listOf(
             route("createFineTuningJob", "/fine_tuning/jobs", method = HttpMethod.Post)
-        ).sort("OpenAI").generateClient("pascal.and.camel.case")
+        ).sort("OpenAI").generateClient(goldenPackage("client/pascal-and-camel-case"))
     }
 
-    test("required JSON body is rendered as typed body parameter with placement in request block") {
+    verifyClientGolden(
+        name = "required JSON body is rendered as typed body parameter with placement in request block",
+        resourceDirectory = "client/body/required-json",
+    ) {
         val requestModel = Model.Reference(
             context = NamingContext.reference("CreateChatCompletion", SchemaContext.Write),
             description = null,
@@ -676,7 +518,7 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -694,22 +536,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("body: CreateChatCompletionRequest,"), "Expected typed body parameter:\n$actual")
-        assertTrue(actual.contains("openAIOrganization: String,"), "Expected required header param:\n$actual")
-        assertTrue(actual.contains("after: String? = null,"), "Expected optional query param:\n$actual")
-        assertTrue(actual.contains("xTraceId: String? = null,"), "Expected optional header param:\n$actual")
-        assertTrue(
-            actual.contains("contentType(ContentType.Application.Json)"),
-            "Expected JSON contentType in impl:\n$actual"
-        )
-        assertTrue(actual.contains("setBody(body)"), "Expected body placement in impl:\n$actual")
+        ).generateClient(goldenPackage("client/body/required-json"))
     }
 
-    test("optional JSON body is nullable and conditionally set") {
+    verifyClientGolden(
+        name = "optional JSON body is nullable and conditionally set",
+        resourceDirectory = "client/body/optional-json",
+    ) {
         val requestModel = Model.Reference(
             context = NamingContext.reference("UpdateSettings", SchemaContext.Write),
             description = null,
@@ -728,7 +561,7 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -739,18 +572,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("body: UpdateSettingsRequest? = null"), "Expected optional body parameter:\n$actual")
-        assertTrue(
-            actual.contains("body?.let { setBody(it) }"),
-            "Expected conditional setBody for optional body:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/body/optional-json"))
     }
 
-    test("multipart inline schema expands into parameters and uses MultiPartFormDataContent") {
+    verifyClientGolden(
+        name = "multipart inline schema expands into parameters and uses MultiPartFormDataContent",
+        resourceDirectory = "client/body/multipart-inline",
+    ) {
         val multipartBody = Route.Bodies(
             required = true,
             types = mapOf(
@@ -765,7 +593,7 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -776,21 +604,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("file: ByteArray,"), "Expected file parameter:\n$actual")
-        assertTrue(actual.contains("purpose: String,"), "Expected purpose parameter:\n$actual")
-        assertTrue(actual.contains("MultiPartFormDataContent("), "Expected multipart body content:\n$actual")
-        assertTrue(actual.contains("append(\"file\", file)"), "Expected binary multipart append:\n$actual")
-        assertTrue(
-            actual.contains("append(\"purpose\", purpose.toString())"),
-            "Expected multipart string append:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/body/multipart-inline"))
     }
 
-    test("multipart ref schema uses a single typed body parameter") {
+    verifyClientGolden(
+        name = "multipart ref schema uses a single typed body parameter",
+        resourceDirectory = "client/body/multipart-ref",
+    ) {
         val requestModel = Model.Reference(
             context = NamingContext.reference("UploadFile", SchemaContext.Write),
             description = null,
@@ -808,7 +628,7 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -819,19 +639,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("body: UploadFileRequest,"), "Expected single multipart body parameter:\n$actual")
-        assertTrue(
-            actual.contains("contentType(ContentType.MultiPart.FormData)"),
-            "Expected multipart contentType:\n$actual"
-        )
-        assertTrue(actual.contains("setBody(body)"), "Expected multipart setBody:\n$actual")
+        ).generateClient(goldenPackage("client/body/multipart-ref"))
     }
 
-    test("form-urlencoded schema expands properties and encodes Parameters") {
+    verifyClientGolden(
+        name = "form-urlencoded schema expands properties and encodes Parameters",
+        resourceDirectory = "client/body/form-urlencoded",
+    ) {
         val formBody = Route.Bodies(
             required = true,
             types = mapOf(
@@ -853,7 +667,7 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -864,24 +678,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("grantType: String,"), "Expected camelCase form parameter:\n$actual")
-        assertTrue(
-            actual.contains("contentType(ContentType.Application.FormUrlEncoded)"),
-            "Expected form contentType:\n$actual"
-        )
-        assertTrue(actual.contains("Parameters.build {"), "Expected Parameters builder:\n$actual")
-        assertTrue(
-            actual.contains("append(\"grant_type\", grantType.toString())"),
-            "Expected grant_type append:\n$actual"
-        )
-        assertTrue(actual.contains("}.formUrlEncode()"), "Expected formUrlEncode call:\n$actual")
+        ).generateClient(goldenPackage("client/body/form-urlencoded"))
     }
 
-    test("body content type preference follows json over multipart and form-urlencoded") {
+    verifyClientGolden(
+        name = "body content type preference follows json over multipart and form-urlencoded",
+        resourceDirectory = "client/body/content-type-preference",
+    ) {
         val jsonBody = Route.Body.SetBody(
             contentType = ContentType.Application.Json,
             type = Model.Reference(
@@ -917,7 +720,7 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -928,22 +731,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("body: CreateThingRequest,"), "Expected JSON body param to win preference:\n$actual")
-        assertTrue(
-            actual.contains("contentType(ContentType.Application.Json)"),
-            "Expected JSON content type to win preference:\n$actual"
-        )
-        assertTrue(
-            !actual.contains("file: ByteArray"),
-            "Did not expect multipart parameters when JSON is present:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/body/content-type-preference"))
     }
 
-    test("multiple responses generate a sealed result and status dispatch in implementation") {
+    verifyClientGolden(
+        name = "multiple responses generate a sealed result and status dispatch in implementation",
+        resourceDirectory = "client/responses/multiple",
+    ) {
         val returns = Route.Returns(
             default = null,
             responses = mapOf(
@@ -974,7 +768,7 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -986,42 +780,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-        val expectedSnippet = """
-              |    sealed interface RetrieveModelResult {
-              |        data class OK(val value: String) : RetrieveModelResult
-              |
-              |        data class NotFound(val value: String) : RetrieveModelResult
-              |    }
-              |
-              |    suspend fun retrieveModel(
-              |        model: String,
-              |    ): RetrieveModelResult
-              |}
-              |
-              |internal class KtorApi(private val client: HttpClient) : Api {
-            |    override suspend fun retrieveModel(model: String): Api.RetrieveModelResult {
-            |        val response = client.get("/models/${'$'}model") {
-            |            expectSuccess = false
-            |        }
-            |        return when (response.status) {
-            |            HttpStatusCode.OK -> Api.RetrieveModelResult.OK(response.body())
-            |            HttpStatusCode.NotFound -> Api.RetrieveModelResult.NotFound(response.body())
-            |            else -> throw ResponseException(response, "Undocumented status code: ${'$'}{response.status}")
-            |        }
-            |    }
-            |}
-        """.trimMargin()
-
-        assertTrue(
-            actual.contains(expectedSnippet),
-            "Expected sealed result type and status dispatch snippet:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/responses/multiple"))
     }
 
-    test("default response is rendered and used in else branch") {
+    verifyClientGolden(
+        name = "default response is rendered and used in else branch",
+        resourceDirectory = "client/responses/default",
+    ) {
         val returns = Route.Returns(
             default = Route.ReturnType(
                 types = mapOf(ContentType.Application.Json to Model.Primitive.String(null, null, null, false, null)),
@@ -1043,7 +808,7 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(operationId = "getModel", path = "/models/{model}", parameters = listOf(pathParam("model"))).copy(
@@ -1051,38 +816,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-        val expectedSnippet = """
-              |    sealed interface GetModelResult {
-              |        data class OK(val value: String) : GetModelResult
-              |
-              |        data class Default(val status: HttpStatusCode, val value: String) : GetModelResult
-              |    }
-              |
-              |    suspend fun getModel(
-              |        model: String,
-              |    ): GetModelResult
-              |}
-              |
-              |internal class KtorApi(private val client: HttpClient) : Api {
-              |    override suspend fun getModel(model: String): Api.GetModelResult {
-              |        val response = client.get("/models/${'$'}model") {
-              |            expectSuccess = false
-              |        }
-              |        return when (response.status) {
-              |            HttpStatusCode.OK -> Api.GetModelResult.OK(response.body())
-              |            else -> Api.GetModelResult.Default(response.status, response.body())
-              |        }
-              |    }
-              |}
-          """.trimMargin()
-
-        assertTrue(actual.contains(expectedSnippet), "Expected default-case snippet:\n$actual")
+        ).generateClient(goldenPackage("client/responses/default"))
     }
 
-    test("no-content response renders data object case") {
+    verifyClientGolden(
+        name = "no-content response renders data object case",
+        resourceDirectory = "client/responses/no-content",
+    ) {
         val returns = Route.Returns(
             default = null,
             responses = mapOf(
@@ -1105,7 +845,7 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -1118,35 +858,6 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-        val expectedSnippet = """
-              |    sealed interface DeleteModelResult {
-              |        data class OK(val value: String) : DeleteModelResult
-              |
-              |        data object NoContent : DeleteModelResult
-              |    }
-              |
-              |    suspend fun deleteModel(
-              |        model: String,
-              |    ): DeleteModelResult
-              |}
-              |
-              |internal class KtorApi(private val client: HttpClient) : Api {
-              |    override suspend fun deleteModel(model: String): Api.DeleteModelResult {
-              |        val response = client.delete("/models/${'$'}model") {
-              |            expectSuccess = false
-              |        }
-              |        return when (response.status) {
-              |            HttpStatusCode.OK -> Api.DeleteModelResult.OK(response.body())
-              |            HttpStatusCode.NoContent -> Api.DeleteModelResult.NoContent
-              |            else -> throw ResponseException(response, "Undocumented status code: ${'$'}{response.status}")
-              |        }
-              |    }
-              |}
-          """.trimMargin()
-
-        assertTrue(actual.contains(expectedSnippet), "Expected NoContent object-case snippet:\n$actual")
+        ).generateClient(goldenPackage("client/responses/no-content"))
     }
 }

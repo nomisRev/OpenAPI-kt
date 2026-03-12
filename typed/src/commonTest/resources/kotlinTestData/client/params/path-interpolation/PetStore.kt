@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.golden.client.root_operations.api
+package io.github.nomisrev.render.golden.client.params.path_interpolation.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -8,27 +8,25 @@ import io.ktor.serialization.kotlinx.json.json
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 
-interface Api {
-    val models: Models
-
-    suspend fun health(): String
+interface PetStore {
+    suspend fun retrieveModel(
+        model: String,
+    ): String
 }
 
-internal class KtorApi(private val client: HttpClient) : Api {
-    override val models: Models = KtorModels(client)
-
-    override suspend fun health(): String =
-        client.get("/").body()
+internal class KtorPetStore(private val client: HttpClient) : PetStore {
+    override suspend fun retrieveModel(model: String): String =
+        client.get("/models/$model").body()
 }
 
-fun ApiClient(
+fun PetStoreClient(
     baseUrl: String,
     block: HttpClientConfig<*>.() -> Unit = {},
-): Api {
+): PetStore {
     val client = HttpClient {
         install(ContentNegotiation) { json() }
         defaultRequest { url(baseUrl) }
         block()
     }
-    return KtorApi(client)
+    return KtorPetStore(client)
 }

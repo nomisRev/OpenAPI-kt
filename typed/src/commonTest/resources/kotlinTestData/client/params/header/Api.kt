@@ -1,7 +1,8 @@
-package io.github.nomisrev.render.golden.client.root_operations.api
+package io.github.nomisrev.render.golden.client.params.header.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.request.header
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
@@ -9,16 +10,16 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
 
 interface Api {
-    val models: Models
-
-    suspend fun health(): String
+    suspend fun getData(
+        xApiKey: String,
+    ): String
 }
 
 internal class KtorApi(private val client: HttpClient) : Api {
-    override val models: Models = KtorModels(client)
-
-    override suspend fun health(): String =
-        client.get("/").body()
+    override suspend fun getData(xApiKey: String): String =
+        client.get("/data") {
+            header("X-Api-Key", xApiKey)
+        }.body()
 }
 
 fun ApiClient(

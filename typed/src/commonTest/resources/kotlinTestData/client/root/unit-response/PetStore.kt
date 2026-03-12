@@ -1,12 +1,12 @@
-package root.unit.response.api
+package io.github.nomisrev.render.golden.client.root.unit_response.api
 
 import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
-import io.ktor.serialization.kotlinx.json.json
 
 interface PetStore {
     suspend fun healthCheck(): Unit

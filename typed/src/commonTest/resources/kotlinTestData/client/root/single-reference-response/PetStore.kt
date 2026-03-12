@@ -1,13 +1,13 @@
-package root.single.reference.response.api
+package io.github.nomisrev.render.golden.client.root.single_reference_response.api
 
-import client.root.`single-reference-response`.ListPetsResponse
+import io.github.nomisrev.model.ListPetsResponse
 import io.ktor.client.HttpClient
-import io.ktor.client.HttpClientConfig
 import io.ktor.client.call.body
+import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.get
-import io.ktor.serialization.kotlinx.json.json
 
 interface PetStore {
     suspend fun listPets(): ListPetsResponse

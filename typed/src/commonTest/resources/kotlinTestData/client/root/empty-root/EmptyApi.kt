@@ -1,10 +1,10 @@
-package root.empty.root.api
+package io.github.nomisrev.render.golden.client.root.empty_root.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.defaultRequest
 import io.ktor.serialization.kotlinx.json.json
+import io.ktor.client.plugins.defaultRequest
 
 interface EmptyApi
 

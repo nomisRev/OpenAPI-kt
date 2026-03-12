@@ -1,4 +1,4 @@
-package client.splits.direct.root.children.api
+package io.github.nomisrev.render.golden.client.splits_direct_root_children.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
