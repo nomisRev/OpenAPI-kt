@@ -1,4 +1,4 @@
-package union.discriminated.reference.model
+package obj.additional.properties.json.model
     
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException

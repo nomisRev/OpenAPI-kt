@@ -44,5 +44,5 @@ fun jsonClassDiscriminator(name: String) {
 context(ctx: Renderer, builder: StringBuilder)
 fun experimentalUuidApi() {
     ctx.import(TypeName.ExperimentalUuidApi)
-    +"@ExperimentalUuidApi"
+    +"@OptIn(ExperimentalUuidApi::class)"
 }

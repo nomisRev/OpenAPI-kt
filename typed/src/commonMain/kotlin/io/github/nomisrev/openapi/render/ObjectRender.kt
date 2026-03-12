@@ -10,6 +10,10 @@ fun Model.Object.render(
 ): String = buildString {
     import(properties.map { (_, prop) -> prop.model })
 
+    if (properties.any { it.value.model is Model.Uuid }) {
+        experimentalUuidApi()
+    }
+
     if (needsSerializer()) {
         ctx.import(TypeName.ExperimentalSerializationApi, TypeName.KeepGeneratedSerializer)
         +"@OptIn(ExperimentalSerializationApi::class)"

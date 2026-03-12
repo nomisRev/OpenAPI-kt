@@ -19,7 +19,7 @@ import kotlinx.serialization.builtins.ByteArraySerializer
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonDecoder
 
-@ExperimentalUuidApi
+@OptIn(ExperimentalUuidApi::class)
 @Serializable(with = Union.Serializer::class)
 sealed interface Union {
     @Serializable

@@ -1,8 +1,8 @@
-package union.discriminated.reference.model
+package obj.value.cls.model
 
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 @Serializable
 @JvmInline
-value class Person(val name: String)
+value class Foo(val value: String)

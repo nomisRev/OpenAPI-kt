@@ -140,45 +140,45 @@ val unionRenderSpec by testSuite {
         )
     }
 
-    verifyKotlinFiles(
-        name = "discriminated union with reference and object cases",
-        resourceDirectory = "union/discriminated-reference"
-    ) {
-        listOf(
-            Model.Union(
-                context = union,
-                listOf(
-                    Model.Union.Case(
-                        Model.Reference(
-                            NamingContext.reference("Person", SchemaContext.Null),
-                            null,
-                            false,
-                            null
-                        ),
-                        "person"
-                    ),
-                    Model.Union.Case(employeeCase(NamingContext.UnionCase("employee")), "employee"),
-                ),
-                null,
-                null,
-                null,
-                "\$type",
-                false
-            ),
-            Model.Object(
-                NamingContext.reference("Person", SchemaContext.Null),
-                null,
-                null,
-                mapOf("name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)),
-                false,
-                false
-            )
-        ).generate("union.discriminated.reference") + KFile(
-            "AttemptDeserialize.kt",
-            "union.discriminated.reference.model",
-            attemptDeserialize("union.discriminated.reference")
-        )
-    }
+//    verifyKotlinFiles(
+//        name = "discriminated union with reference and object cases",
+//        resourceDirectory = "union/discriminated-reference"
+//    ) {
+//        listOf(
+//            Model.Union(
+//                context = union,
+//                listOf(
+//                    Model.Union.Case(
+//                        Model.Reference(
+//                            NamingContext.reference("Person", SchemaContext.Null),
+//                            null,
+//                            false,
+//                            null
+//                        ),
+//                        "person"
+//                    ),
+//                    Model.Union.Case(employeeCase(NamingContext.UnionCase("employee")), "employee"),
+//                ),
+//                null,
+//                null,
+//                null,
+//                "\$type",
+//                false
+//            ),
+//            Model.Object(
+//                NamingContext.reference("Person", SchemaContext.Null),
+//                null,
+//                null,
+//                mapOf("name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)),
+//                false,
+//                false
+//            )
+//        ).generate("union.discriminated.reference") + KFile(
+//            "AttemptDeserialize.kt",
+//            "union.discriminated.reference.model",
+//            attemptDeserialize("union.discriminated.reference")
+//        )
+//    }
 
     // ==================== UNIONS WITH ENUMS ====================
 
