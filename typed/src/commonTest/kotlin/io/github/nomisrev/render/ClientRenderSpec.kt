@@ -4,6 +4,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.Root
+import io.github.nomisrev.openapi.generate
 import io.github.nomisrev.openapi.generateClient
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.Server
@@ -95,44 +96,69 @@ private fun serverVariable(
 
 val clientRenderSpec by testSuite {
 
-    test("single parameterless GET endpoint - root interface") {
-        val root = Root(
+    verifyKotlinFiles(
+        name = "single parameterless GET endpoint - root interface",
+        resourceDirectory = "client/root/reference-response",
+    ) {
+        Root(
             name = "PetStore",
             operations = listOf(
                 route("listPets", "/pets")
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        val expected = """
-            |interface PetStore {
-            |    suspend fun listPets(): String
-            |}
-            |
-            |internal class KtorPetStore(private val client: HttpClient) : PetStore {
-            |    override suspend fun listPets(): String =
-            |        client.get("/pets").body()
-            |}
-            |
-            |fun PetStoreClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): PetStore {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorPetStore(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).generateClient("root.reference.response")
     }
 
-    test("single GET endpoint returning a reference type") {
+    val pet = Model.Object(
+        NamingContext.reference("Pet", SchemaContext.Read),
+        description = null,
+        title = null,
+        mapOf(
+            "name" to Model.Object.Property(
+                Model.Primitive.String(null, null, null, false, null),
+                true
+            )
+        ),
+        false,
+        false
+    )
+
+    val pets = Model.Object(
+        NamingContext.reference("ListPetsResponse", SchemaContext.Read),
+        description = null,
+        title = null,
+        mapOf(
+            "items" to Model.Object.Property(
+                Model.Collection(pet, null, null, null, false, null),
+                true
+            )
+        ),
+        false,
+        false
+    )
+
+    verifyKotlinFiles(
+        name = "single GET endpoint returning a reference type",
+        resourceDirectory = "client/root/single-reference-response",
+    ) {
+        val returnModel = Model.Reference(
+            context = NamingContext.reference("ListPets", SchemaContext.Read),
+            description = null,
+            isNullable = false,
+            title = null
+        )
+
+        val root = Root(
+            name = "PetStore",
+            operations = listOf(
+                route("listPets", "/pets", returnModel = returnModel)
+            ),
+            endpoints = emptyList(),
+        )
+        root.generateClient("root.single.reference.response") + listOf(pet, pets).generate()
+    }
+
+    test("single GET endpoint returning a reference type imports model type") {
         val returnModel = Model.Reference(
             context = NamingContext.reference("ListPets", SchemaContext.Read),
             description = null,
@@ -148,32 +174,7 @@ val clientRenderSpec by testSuite {
             endpoints = emptyList(),
         )
 
-        val (actual, imports) = renderer { root.renderRootFile() }
-
-        val expected = """
-            |interface PetStore {
-            |    suspend fun listPets(): ListPetsResponse
-            |}
-            |
-            |internal class KtorPetStore(private val client: HttpClient) : PetStore {
-            |    override suspend fun listPets(): ListPetsResponse =
-            |        client.get("/pets").body()
-            |}
-            |
-            |fun PetStoreClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): PetStore {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorPetStore(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        val (_, imports) = renderer { root.renderRootFile() }
 
         // Should import the model type (ListPets + SchemaContext.Read -> ListPetsResponse)
         val modelImport = imports.filterIsInstance<io.github.nomisrev.openapi.render.TypeName.Class>()
@@ -181,8 +182,11 @@ val clientRenderSpec by testSuite {
         assertEquals(true, modelImport, "Expected import for ListPetsResponse model type. Imports: $imports")
     }
 
-    test("single GET returning Unit for empty response") {
-        val root = Root(
+    verifyKotlinFiles(
+        name = "single GET returning Unit for empty response",
+        resourceDirectory = "client/root/unit-response/PetStore.kt",
+    ) {
+        Root(
             name = "PetStore",
             operations = listOf(
                 route(
@@ -192,164 +196,148 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        val expected = """
-            |interface PetStore {
-            |    suspend fun healthCheck(): Unit
-            |}
-            |
-            |internal class KtorPetStore(private val client: HttpClient) : PetStore {
-            |    override suspend fun healthCheck(): Unit =
-            |        client.get("/health").body()
-            |}
-            |
-            |fun PetStoreClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): PetStore {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorPetStore(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).generateClient("root.unit.response")
     }
 
-      test("empty root generates interface with no members") {
-        val root = Root(
+    verifyKotlinFiles(
+        name = "empty root generates interface with no members",
+        resourceDirectory = "client/root/empty-root",
+    ) {
+        Root(
             name = "EmptyApi",
             operations = emptyList(),
             endpoints = emptyList(),
+        ).generateClient("root.empty.root")
+    }
+
+    test("server sealed interface and factory parameter are generated for static servers") {
+        val root = Root(
+            name = "OpenAI",
+            operations = listOf(route("listModels", "/models")),
+            endpoints = emptyList(),
+            servers = listOf(
+                server("https://api.openai.com/v1", description = "Production"),
+                server("https://staging.api.openai.com/v1", description = "Staging Server"),
+            ),
         )
 
         val (actual, _) = renderer { root.renderRootFile() }
 
-        val expected = """
-            |interface EmptyApi
-            |
-            |internal class KtorEmptyApi(private val client: HttpClient) : EmptyApi
-            |
-            |fun EmptyApiClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): EmptyApi {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorEmptyApi(client)
-            |}
-        """.trimMargin()
+        assertTrue(actual.contains("sealed interface OpenAIServer {"), "Expected server sealed interface:\\n$actual")
+        assertTrue(
+            actual.contains("data object Production : OpenAIServer"),
+            "Expected production server case:\\n$actual"
+        )
+        assertTrue(
+            actual.contains("data object Staging : OpenAIServer"),
+            "Expected trailing 'Server' to be stripped:\\n$actual"
+        )
+        assertTrue(
+            actual.contains("data class Custom(override val url: String) : OpenAIServer"),
+            "Expected custom escape hatch:\\n$actual"
+        )
+        assertTrue(
+            actual.contains("server: OpenAIServer = OpenAIServer.Production,"),
+            "Expected factory server parameter with default first server:\\n$actual"
+        )
+        assertTrue(
+            actual.contains("defaultRequest { url(server.url) }"),
+            "Expected defaultRequest to use server.url:\\n$actual"
+        )
+        assertTrue(
+            !actual.contains("baseUrl: String"),
+            "Did not expect baseUrl parameter when servers are declared:\\n$actual"
+        )
+    }
 
-          assertEq(expected, actual)
-      }
+    test("server variables render enum and string parameters with interpolated url") {
+        val root = Root(
+            name = "Example",
+            operations = listOf(route("listData", "/data")),
+            endpoints = emptyList(),
+            servers = listOf(
+                server(
+                    url = "https://{environment}.api.example.com/{version}",
+                    description = "Multi-environment server",
+                    variables = mapOf(
+                        "environment" to serverVariable(
+                            default = "production",
+                            enum = listOf("production", "staging", "dev"),
+                        ),
+                        "version" to serverVariable(default = "v2"),
+                    ),
+                ),
+            ),
+        )
 
-      test("server sealed interface and factory parameter are generated for static servers") {
-          val root = Root(
-              name = "OpenAI",
-              operations = listOf(route("listModels", "/models")),
-              endpoints = emptyList(),
-              servers = listOf(
-                  server("https://api.openai.com/v1", description = "Production"),
-                  server("https://staging.api.openai.com/v1", description = "Staging Server"),
-              ),
-          )
+        val (actual, _) = renderer { root.renderRootFile() }
 
-          val (actual, _) = renderer { root.renderRootFile() }
+        assertTrue(actual.contains("data class MultiEnvironment("), "Expected variable server data class:\\n$actual")
+        assertTrue(
+            actual.contains("val environment: Environment = Environment.Production,"),
+            "Expected enum-constrained variable parameter:\\n$actual"
+        )
+        assertTrue(
+            actual.contains("val version: String = \"v2\","),
+            "Expected free-form String variable parameter:\\n$actual"
+        )
+        assertTrue(
+            actual.contains("get() = \"https://${'$'}{environment.value}.api.example.com/${'$'}{version}\""),
+            "Expected interpolated url getter:\\n$actual"
+        )
+        assertTrue(
+            actual.contains("enum class Environment(val value: String) {"),
+            "Expected nested enum declaration:\\n$actual"
+        )
+        assertTrue(actual.contains("Production(\"production\"),"), "Expected enum entry for production:\\n$actual")
+        assertTrue(actual.contains("Staging(\"staging\"),"), "Expected enum entry for staging:\\n$actual")
+        assertTrue(actual.contains("Dev(\"dev\"),"), "Expected enum entry for dev:\\n$actual")
+    }
 
-          assertTrue(actual.contains("sealed interface OpenAIServer {"), "Expected server sealed interface:\\n$actual")
-          assertTrue(actual.contains("data object Production : OpenAIServer"), "Expected production server case:\\n$actual")
-          assertTrue(actual.contains("data object Staging : OpenAIServer"), "Expected trailing 'Server' to be stripped:\\n$actual")
-          assertTrue(actual.contains("data class Custom(override val url: String) : OpenAIServer"), "Expected custom escape hatch:\\n$actual")
-          assertTrue(
-              actual.contains("server: OpenAIServer = OpenAIServer.Production,"),
-              "Expected factory server parameter with default first server:\\n$actual"
-          )
-          assertTrue(actual.contains("defaultRequest { url(server.url) }"), "Expected defaultRequest to use server.url:\\n$actual")
-          assertTrue(!actual.contains("baseUrl: String"), "Did not expect baseUrl parameter when servers are declared:\\n$actual")
-      }
+    test("server case naming falls back to default and indexed names when descriptions are missing") {
+        val singleServerRoot = Root(
+            name = "Example",
+            operations = listOf(route("listData", "/data")),
+            endpoints = emptyList(),
+            servers = listOf(server("https://api.example.com/v1")),
+        )
+        val (singleActual, _) = renderer { singleServerRoot.renderRootFile() }
 
-      test("server variables render enum and string parameters with interpolated url") {
-          val root = Root(
-              name = "Example",
-              operations = listOf(route("listData", "/data")),
-              endpoints = emptyList(),
-              servers = listOf(
-                  server(
-                      url = "https://{environment}.api.example.com/{version}",
-                      description = "Multi-environment server",
-                      variables = mapOf(
-                          "environment" to serverVariable(
-                              default = "production",
-                              enum = listOf("production", "staging", "dev"),
-                          ),
-                          "version" to serverVariable(default = "v2"),
-                      ),
-                  ),
-              ),
-          )
+        assertTrue(
+            singleActual.contains("data object Default : ExampleServer"),
+            "Expected single unnamed server to fallback to Default:\\n$singleActual"
+        )
+        assertTrue(
+            singleActual.contains("server: ExampleServer = ExampleServer.Default,"),
+            "Expected factory default to use ExampleServer.Default:\\n$singleActual"
+        )
 
-          val (actual, _) = renderer { root.renderRootFile() }
+        val multiServerRoot = Root(
+            name = "Example",
+            operations = listOf(route("listData", "/data")),
+            endpoints = emptyList(),
+            servers = listOf(
+                server("https://api-1.example.com/v1"),
+                server("https://api-2.example.com/v1"),
+            ),
+        )
+        val (multiActual, _) = renderer { multiServerRoot.renderRootFile() }
 
-          assertTrue(actual.contains("data class MultiEnvironment("), "Expected variable server data class:\\n$actual")
-          assertTrue(
-              actual.contains("val environment: Environment = Environment.Production,"),
-              "Expected enum-constrained variable parameter:\\n$actual"
-          )
-          assertTrue(actual.contains("val version: String = \"v2\","), "Expected free-form String variable parameter:\\n$actual")
-          assertTrue(
-              actual.contains("get() = \"https://${'$'}{environment.value}.api.example.com/${'$'}{version}\""),
-              "Expected interpolated url getter:\\n$actual"
-          )
-          assertTrue(actual.contains("enum class Environment(val value: String) {"), "Expected nested enum declaration:\\n$actual")
-          assertTrue(actual.contains("Production(\"production\"),"), "Expected enum entry for production:\\n$actual")
-          assertTrue(actual.contains("Staging(\"staging\"),"), "Expected enum entry for staging:\\n$actual")
-          assertTrue(actual.contains("Dev(\"dev\"),"), "Expected enum entry for dev:\\n$actual")
-      }
+        assertTrue(
+            multiActual.contains("data object Server1 : ExampleServer"),
+            "Expected first unnamed server to fallback to Server1:\\n$multiActual"
+        )
+        assertTrue(
+            multiActual.contains("data object Server2 : ExampleServer"),
+            "Expected second unnamed server to fallback to Server2:\\n$multiActual"
+        )
+        assertTrue(
+            multiActual.contains("server: ExampleServer = ExampleServer.Server1,"),
+            "Expected first documented server to be default in factory:\\n$multiActual"
+        )
+    }
 
-      test("server case naming falls back to default and indexed names when descriptions are missing") {
-          val singleServerRoot = Root(
-              name = "Example",
-              operations = listOf(route("listData", "/data")),
-              endpoints = emptyList(),
-              servers = listOf(server("https://api.example.com/v1")),
-          )
-          val (singleActual, _) = renderer { singleServerRoot.renderRootFile() }
-
-          assertTrue(singleActual.contains("data object Default : ExampleServer"), "Expected single unnamed server to fallback to Default:\\n$singleActual")
-          assertTrue(
-              singleActual.contains("server: ExampleServer = ExampleServer.Default,"),
-              "Expected factory default to use ExampleServer.Default:\\n$singleActual"
-          )
-
-          val multiServerRoot = Root(
-              name = "Example",
-              operations = listOf(route("listData", "/data")),
-              endpoints = emptyList(),
-              servers = listOf(
-                  server("https://api-1.example.com/v1"),
-                  server("https://api-2.example.com/v1"),
-              ),
-          )
-          val (multiActual, _) = renderer { multiServerRoot.renderRootFile() }
-
-          assertTrue(multiActual.contains("data object Server1 : ExampleServer"), "Expected first unnamed server to fallback to Server1:\\n$multiActual")
-          assertTrue(multiActual.contains("data object Server2 : ExampleServer"), "Expected second unnamed server to fallback to Server2:\\n$multiActual")
-          assertTrue(
-              multiActual.contains("server: ExampleServer = ExampleServer.Server1,"),
-              "Expected first documented server to be default in factory:\\n$multiActual"
-          )
-      }
-
-      test("read variant type is used for response types") {
+    test("read variant type is used for response types") {
         // A reference with SchemaContext.Read should produce the "Response" suffix
         val returnModel = Model.Reference(
             context = NamingContext.reference("Pet", SchemaContext.Read),
@@ -626,300 +614,47 @@ val clientRenderSpec by testSuite {
         assertTrue(actual.contains("\$fineTuningJobId"), "Expected camelCase interpolation in URL:\n$actual")
     }
 
-    test("generateClient splits direct root children into separate files") {
-        val root = listOf(
+    verifyKotlinFiles(
+        name = "generateClient splits direct root children into separate files",
+        resourceDirectory = "client/splits-direct-root-children",
+    ) {
+        listOf(
             route("createChatCompletion", "/chat/completions", method = HttpMethod.Post),
             route("listModels", "/models"),
             route("retrieveModel", "/models/{model}", parameters = listOf(pathParam("model")))
-        ).sort("OpenAI")
-
-        val files = root.generateClient()
-        val actual = files.snapshot()
-        val expected = """
-            |// Chat.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.call.body
-            |
-            |interface Chat {
-            |    val completions: Completions
-            |
-            |    interface Completions {
-            |        suspend fun createChatCompletion(): String
-            |    }
-            |}
-            |
-            |internal class KtorChat(private val client: HttpClient) : Chat {
-            |    override val completions: Chat.Completions = KtorChatCompletions(client)
-            |}
-            |
-            |internal class KtorChatCompletions(private val client: HttpClient) : Chat.Completions {
-            |    override suspend fun createChatCompletion(): String =
-            |        client.post("/chat/completions").body()
-            |}
-            |
-            |// Models.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.call.body
-            |
-            |interface Models {
-            |    suspend fun listModels(): String
-            |
-            |    suspend fun retrieveModel(
-            |        model: String,
-            |    ): String
-            |}
-            |
-            |internal class KtorModels(private val client: HttpClient) : Models {
-            |    override suspend fun listModels(): String =
-            |        client.get("/models").body()
-            |
-            |    override suspend fun retrieveModel(model: String): String =
-            |        client.get("/models/${'$'}model").body()
-            |}
-            |
-            |// OpenAI.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.HttpClientConfig
-            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-            |import io.ktor.serialization.kotlinx.json.json
-            |import io.ktor.client.plugins.defaultRequest
-            |
-            |interface OpenAI {
-            |    val chat: Chat
-            |
-            |    val models: Models
-            |}
-            |
-            |internal class KtorOpenAI(private val client: HttpClient) : OpenAI {
-            |    override val chat: Chat = KtorChat(client)
-            |    override val models: Models = KtorModels(client)
-            |}
-            |
-            |fun OpenAIClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): OpenAI {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorOpenAI(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).sort("OpenAI").generateClient("client.splits.direct.root.children")
     }
 
-    test("deeper nesting is rendered as inner interfaces in the top-level child file") {
-        val root = listOf(
+    verifyKotlinFiles(
+        name = "deeper nesting is rendered as inner interfaces in the top-level child file",
+        resourceDirectory = "client/deeper-nesting",
+    ) {
+        listOf(
             route(
                 "listFineTuningEvents",
                 "/fine_tuning/jobs/{fine_tuning_job_id}/events",
                 parameters = listOf(pathParam("fine_tuning_job_id"))
             )
-        ).sort("OpenAI")
-
-        val files = root.generateClient()
-        val actual = files.snapshot()
-        val expected = """
-            |// FineTuning.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.call.body
-            |
-            |interface FineTuning {
-            |    val jobs: Jobs
-            |
-            |    interface Jobs {
-            |        val events: Events
-            |
-            |        interface Events {
-            |            suspend fun listFineTuningEvents(
-            |                fineTuningJobId: String,
-            |            ): String
-            |        }
-            |    }
-            |}
-            |
-            |internal class KtorFineTuning(private val client: HttpClient) : FineTuning {
-            |    override val jobs: FineTuning.Jobs = KtorFineTuningJobs(client)
-            |}
-            |
-            |internal class KtorFineTuningJobs(private val client: HttpClient) : FineTuning.Jobs {
-            |    override val events: FineTuning.Jobs.Events = KtorFineTuningJobsEvents(client)
-            |}
-            |
-            |internal class KtorFineTuningJobsEvents(private val client: HttpClient) : FineTuning.Jobs.Events {
-            |    override suspend fun listFineTuningEvents(fineTuningJobId: String): String =
-            |        client.get("/fine_tuning/jobs/${'$'}fineTuningJobId/events").body()
-            |}
-            |
-            |// OpenAI.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.HttpClientConfig
-            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-            |import io.ktor.serialization.kotlinx.json.json
-            |import io.ktor.client.plugins.defaultRequest
-            |
-            |interface OpenAI {
-            |    val fineTuning: FineTuning
-            |}
-            |
-            |internal class KtorOpenAI(private val client: HttpClient) : OpenAI {
-            |    override val fineTuning: FineTuning = KtorFineTuning(client)
-            |}
-            |
-            |fun OpenAIClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): OpenAI {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorOpenAI(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).sort("OpenAI").generateClient("deeper.nesting")
     }
 
-    test("operations at root path are generated on the root interface only") {
-        val root = listOf(
+    verifyKotlinFiles(
+        name = "operations at root path are generated on the root interface only",
+        resourceDirectory = "client/root-operations",
+    ) {
+        listOf(
             route("health", "/"),
             route("listModels", "/models")
-        ).sort("Api")
-
-        val files = root.generateClient()
-        val actual = files.snapshot()
-        val expected = """
-            |// Api.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.call.body
-            |import io.ktor.client.HttpClientConfig
-            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-            |import io.ktor.serialization.kotlinx.json.json
-            |import io.ktor.client.plugins.defaultRequest
-            |
-            |interface Api {
-            |    val models: Models
-            |
-            |    suspend fun health(): String
-            |}
-            |
-            |internal class KtorApi(private val client: HttpClient) : Api {
-            |    override val models: Models = KtorModels(client)
-            |
-            |    override suspend fun health(): String =
-            |        client.get("/").body()
-            |}
-            |
-            |fun ApiClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): Api {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorApi(client)
-            |}
-            |
-            |// Models.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.call.body
-            |
-            |interface Models {
-            |    suspend fun listModels(): String
-            |}
-            |
-            |internal class KtorModels(private val client: HttpClient) : Models {
-            |    override suspend fun listModels(): String =
-            |        client.get("/models").body()
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).sort("Api").generateClient("root.operations")
     }
 
-    test("interface names are PascalCase and child properties are camelCase") {
-        val root = listOf(
+    verifyKotlinFiles(
+        name = "interface names are PascalCase and child properties are camelCase",
+        resourceDirectory = "client/pascal-and-camel-case",
+    ) {
+        listOf(
             route("createFineTuningJob", "/fine_tuning/jobs", method = HttpMethod.Post)
-        ).sort("OpenAI")
-
-        val files = root.generateClient()
-        val actual = files.snapshot()
-        val expected = """
-            |// FineTuning.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.call.body
-            |
-            |interface FineTuning {
-            |    val jobs: Jobs
-            |
-            |    interface Jobs {
-            |        suspend fun createFineTuningJob(): String
-            |    }
-            |}
-            |
-            |internal class KtorFineTuning(private val client: HttpClient) : FineTuning {
-            |    override val jobs: FineTuning.Jobs = KtorFineTuningJobs(client)
-            |}
-            |
-            |internal class KtorFineTuningJobs(private val client: HttpClient) : FineTuning.Jobs {
-            |    override suspend fun createFineTuningJob(): String =
-            |        client.post("/fine_tuning/jobs").body()
-            |}
-            |
-            |// OpenAI.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.HttpClientConfig
-            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-            |import io.ktor.serialization.kotlinx.json.json
-            |import io.ktor.client.plugins.defaultRequest
-            |
-            |interface OpenAI {
-            |    val fineTuning: FineTuning
-            |}
-            |
-            |internal class KtorOpenAI(private val client: HttpClient) : OpenAI {
-            |    override val fineTuning: FineTuning = KtorFineTuning(client)
-            |}
-            |
-            |fun OpenAIClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): OpenAI {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorOpenAI(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).sort("OpenAI").generateClient("pascal.and.camel.case")
     }
 
     test("required JSON body is rendered as typed body parameter with placement in request block") {
@@ -1253,8 +988,8 @@ val clientRenderSpec by testSuite {
             endpoints = emptyList(),
         )
 
-          val (actual, _) = renderer { root.renderRootFile() }
-          val expectedSnippet = """
+        val (actual, _) = renderer { root.renderRootFile() }
+        val expectedSnippet = """
               |    sealed interface RetrieveModelResult {
               |        data class OK(val value: String) : RetrieveModelResult
               |
@@ -1318,8 +1053,8 @@ val clientRenderSpec by testSuite {
             endpoints = emptyList(),
         )
 
-          val (actual, _) = renderer { root.renderRootFile() }
-          val expectedSnippet = """
+        val (actual, _) = renderer { root.renderRootFile() }
+        val expectedSnippet = """
               |    sealed interface GetModelResult {
               |        data class OK(val value: String) : GetModelResult
               |
@@ -1385,8 +1120,8 @@ val clientRenderSpec by testSuite {
             endpoints = emptyList(),
         )
 
-          val (actual, _) = renderer { root.renderRootFile() }
-          val expectedSnippet = """
+        val (actual, _) = renderer { root.renderRootFile() }
+        val expectedSnippet = """
               |    sealed interface DeleteModelResult {
               |        data class OK(val value: String) : DeleteModelResult
               |
@@ -1415,12 +1150,3 @@ val clientRenderSpec by testSuite {
         assertTrue(actual.contains(expectedSnippet), "Expected NoContent object-case snippet:\n$actual")
     }
 }
-
-private fun assertEq(expected: String, actual: String) {
-    if (expected != actual) throw AssertionError(expected.diff(actual))
-}
-
-private fun List<io.github.nomisrev.openapi.KFile>.snapshot(): String =
-    sortedBy { it.name }.joinToString("\n\n") { file ->
-        "// ${file.name}\n${file.content.trimEnd()}"
-    }

@@ -1,0 +1,31 @@
+package root.single.reference.response.api
+
+import client.root.`single-reference-response`.ListPetsResponse
+import io.ktor.client.HttpClient
+import io.ktor.client.HttpClientConfig
+import io.ktor.client.call.body
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.defaultRequest
+import io.ktor.client.request.get
+import io.ktor.serialization.kotlinx.json.json
+
+interface PetStore {
+    suspend fun listPets(): ListPetsResponse
+}
+
+internal class KtorPetStore(private val client: HttpClient) : PetStore {
+    override suspend fun listPets(): ListPetsResponse =
+        client.get("/pets").body()
+}
+
+fun PetStoreClient(
+    baseUrl: String,
+    block: HttpClientConfig<*>.() -> Unit = {},
+): PetStore {
+    val client = HttpClient {
+        install(ContentNegotiation) { json() }
+        defaultRequest { url(baseUrl) }
+        block()
+    }
+    return KtorPetStore(client)
+}

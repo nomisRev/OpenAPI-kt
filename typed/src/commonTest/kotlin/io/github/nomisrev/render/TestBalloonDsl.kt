@@ -30,3 +30,32 @@ fun TestSuite.verifyKotlinFile(
     resourceFile: String,
     actual: () -> KFile,
 ) = verifyKotlin(name, resourceFile) { actual().content }
+
+@TestRegistering
+fun TestSuite.verifyKotlinFiles(
+    name: String,
+    resourceDirectory: String,
+    actual: () -> List<KFile>,
+) = test(name) {
+    val actualFiles = actual()
+    val rendered = actualFiles.snapshot()
+    val expected = actualFiles
+        .map { file ->
+            val resourcePath = "kotlinTestData/$resourceDirectory/${file.name}"
+            val resource = Resource(resourcePath)
+            if (!resource.exists()) {
+                throw AssertionError("Missing test resource: $resourcePath")
+            }
+            file.copy(content = resource.readText())
+        }
+        .snapshot()
+
+    if (expected != rendered) {
+        throw AssertionError(expected.diff(rendered))
+    }
+}
+
+private fun List<KFile>.snapshot(): String =
+    sortedBy { it.name }.joinToString("\n\n") { file ->
+        "// ${file.name}\n${file.content.trimEnd()}"
+    }
