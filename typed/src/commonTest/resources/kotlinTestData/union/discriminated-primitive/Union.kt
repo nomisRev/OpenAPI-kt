@@ -1,4 +1,4 @@
-package discriminated.primitive.model
+package union.discriminated.primitive.model
 
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.ExperimentalSerializationApi

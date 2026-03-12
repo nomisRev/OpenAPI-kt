@@ -1,10 +1,8 @@
 package io.github.nomisrev.openapi
 
-import io.github.nomisrev.openapi.NamingContext.Companion.path
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.render.attemptDeserialize
 import io.github.nomisrev.openapi.routes.ApiModel
-import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.routes.toApiModel
 import kotlinx.coroutines.runBlocking
 import kotlinx.io.buffered

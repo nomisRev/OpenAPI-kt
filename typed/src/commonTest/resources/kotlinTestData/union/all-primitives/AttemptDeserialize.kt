@@ -1,11 +1,4 @@
-package io.github.nomisrev.openapi.render
-
-private val tripleQuote = "\"\"\""
-
-val attemptDeserialize = attemptDeserialize("io.github.nomisrev")
-
-fun attemptDeserialize(packageName: String) = $$"""
-package $$packageName.model
+package union.all.primitives.model
     
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerializationException
@@ -22,14 +15,14 @@ class UnionSerializationException(
     val payload: JsonElement,
     val errors: Map<KClass<*>, IllegalArgumentException>,
 ) : SerializationException(
-    $$tripleQuote
+    """
         Failed to deserialize Json: $payload.
         Errors:
         ${
         errors.entries.joinToString(separator = "\n") { (type, error) ->
             "$type - failed to deserialize: ${error.stackTraceToString()}"
         }
-    }$$tripleQuote.trimIndent()
+    }""".trimIndent()
 )
 
 fun <A> Json.attemptDeserialize(json: JsonElement, vararg block: Pair<KClass<*>, Json.(JsonElement) -> A>): A {
@@ -57,4 +50,3 @@ fun <Wrapped, Value> ValueClassSerializer(
     override fun serialize(encoder: Encoder, value: Wrapped) =
         encoder.encodeSerializableValue(valueSerializer, unwrap(value))
 }
-""".trimMargin()

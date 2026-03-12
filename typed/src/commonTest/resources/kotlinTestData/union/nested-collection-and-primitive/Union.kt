@@ -1,4 +1,4 @@
-package union.nested.collection.primitive.model
+package union.nested.collection.and.primitive.model
 
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
@@ -28,7 +28,7 @@ sealed interface Union {
     object Serializer : KSerializer<Union> {
         @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
         override val descriptor: SerialDescriptor =
-            buildSerialDescriptor("union.nested.collection.primitive.model.Union", PolymorphicKind.SEALED) {
+            buildSerialDescriptor("union.nested.collection.and.primitive.model.Union", PolymorphicKind.SEALED) {
                 element("CaseStringsList", ListSerializer(ListSerializer(String.serializer())).descriptor)
                 element("CaseInt", Int.serializer().descriptor)
             }

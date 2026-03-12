@@ -1,4 +1,4 @@
-package union.enum.primitive.model
+package union.enum.and.primitive.model
 
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline

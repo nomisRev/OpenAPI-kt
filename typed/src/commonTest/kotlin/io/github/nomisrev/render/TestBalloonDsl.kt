@@ -6,7 +6,7 @@ import de.infix.testBalloon.framework.shared.TestRegistering
 import io.github.nomisrev.openapi.KFile
 import io.ktor.http.ContentDisposition.Companion.File
 
-private val updateGoldens: Boolean = true
+private val updateGoldens: Boolean = false
 private fun goldenBasePath(): String = "src/commonTest/resources/kotlinTestData"
 
 expect fun writeFile(pathString: String, content: String)

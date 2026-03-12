@@ -1,4 +1,4 @@
-package discriminated.reference.model
+package union.discriminated.reference.model
 
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.ExperimentalSerializationApi
