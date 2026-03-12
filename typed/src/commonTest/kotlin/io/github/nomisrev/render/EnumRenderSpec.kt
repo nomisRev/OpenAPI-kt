@@ -24,22 +24,22 @@ private fun apiModel(model: Model.Enum): ApiModel = ApiModel(
 )
 
 val enumRenderSpec by testSuite {
-    verifyKotlinFile(
+    verifyKotlinFiles(
         name = "enum renders compact entries on one line",
-        resourceFile = "enum/basic/Sort.kt",
+        resourceDirectory = "enum/basic",
     ) {
-        apiModel(sortEnum(name = "Sort", values = listOf("ASC", "DESC"))).generate().single()
+        apiModel(sortEnum(name = "Sort", values = listOf("ASC", "DESC"))).generate()
     }
 
-    verifyKotlinFile(
+    verifyKotlinFiles(
         name = "enum renders long entries with serial names",
-        resourceFile = "enum/serial-name/SortSerialName.kt",
+        resourceDirectory = "enum/serial-name",
     ) {
         apiModel(
             sortEnum(
                 name = "SortSerialName",
                 values = (1..5).map { "very_long_enum_value_$it" }
             )
-        ).generate().single()
+        ).generate()
     }
 }

@@ -44,9 +44,9 @@ val discriminatedObjectRenderSpec by testSuite {
         false
     )
 
-    verifyKotlinFile(
+    verifyKotlinFiles(
         "User.kt",
-        "discriminatedunion/User.kt"
+        "discriminatedunion"
     ) {
         ApiModel(
             routes = emptyList(),
@@ -60,6 +60,6 @@ val discriminatedObjectRenderSpec by testSuite {
                 false
             )),
             servers = emptyList(),
-        ).generate().single()
+        ).generate()
     }
 }

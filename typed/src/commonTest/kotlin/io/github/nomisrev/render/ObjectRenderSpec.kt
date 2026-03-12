@@ -275,6 +275,7 @@ val renderObjectSpec by testSuite {
         TypeName.JsonDecoder,
         TypeName.JsonEncoder,
         Import.buildJsonObject,
+        TopLevelFunction("obj.additional.properties", "putAll")
     )
 
     verify(

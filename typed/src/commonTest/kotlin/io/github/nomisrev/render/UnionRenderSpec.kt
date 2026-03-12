@@ -263,37 +263,59 @@ val unionRenderSpec by testSuite {
 
     // ==================== UNIONS WITH REFERENCES ====================
 
-    verifyUnion(
+    verifyKotlinFiles(
         name = "union with reference cases",
         resourceDirectory = "union/references"
     ) {
-        Model.Union(
-            context = union,
-            listOf(
-                Model.Union.Case(
-                    Model.Reference(
-                        NamingContext.reference("Person", SchemaContext.Null),
-                        null,
-                        false,
+        listOf(
+            Model.Union(
+                context = union,
+                listOf(
+                    Model.Union.Case(
+                        Model.Reference(
+                            NamingContext.reference("Person", SchemaContext.Null),
+                            null,
+                            false,
+                            null
+                        ),
                         null
                     ),
-                    null
-                ),
-                Model.Union.Case(
-                    Model.Reference(
-                        NamingContext.reference("Company", SchemaContext.Null),
-                        null,
-                        false,
+                    Model.Union.Case(
+                        Model.Reference(
+                            NamingContext.reference("Company", SchemaContext.Null),
+                            null,
+                            false,
+                            null
+                        ),
                         null
                     ),
-                    null
                 ),
+                null,
+                null,
+                null,
+                null,
+                false
             ),
-            null,
-            null,
-            null,
-            null,
-            false
+            Model.Object(
+                NamingContext.reference("Person", SchemaContext.Null),
+                null,
+                null,
+                mapOf("name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)),
+                false,
+                false
+            ),
+            Model.Object(
+                NamingContext.reference("Company", SchemaContext.Null),
+                null,
+                null,
+                mapOf("name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)),
+                false,
+                false
+            ),
+        ).generate("union.references") + KFile(
+            "AttemptDeserialize.kt",
+            "union.references.model",
+            attemptDeserialize("union.references")
         )
     }
 

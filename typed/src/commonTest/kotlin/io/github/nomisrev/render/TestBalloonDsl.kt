@@ -6,46 +6,10 @@ import de.infix.testBalloon.framework.shared.TestRegistering
 import io.github.nomisrev.openapi.KFile
 import io.ktor.http.ContentDisposition.Companion.File
 
-private val updateGoldens: Boolean = false
+private val updateGoldens: Boolean = true
 private fun goldenBasePath(): String = "src/commonTest/resources/kotlinTestData"
 
 expect fun writeFile(pathString: String, content: String)
-
-@TestRegistering
-fun TestSuite.verifyKotlin(
-    name: String,
-    resourceFile: String,
-    actual: () -> String,
-) = test(name) {
-    val resourcePath = "kotlinTestData/$resourceFile"
-    val resource = Resource(resourcePath)
-    if (!resource.exists()) {
-        if (updateGoldens) {
-            writeFile("${goldenBasePath()}/$resourceFile", actual())
-            println("Created golden: ${goldenBasePath()}/$resourceFile")
-            return@test
-        }
-        throw AssertionError("Missing test resource: $resourcePath")
-    }
-
-    val expected = resource.readText()
-    val rendered = actual()
-    if (expected != rendered) {
-        if (updateGoldens) {
-            writeFile("${goldenBasePath()}/$resourceFile", rendered)
-            println("Updated golden: ${goldenBasePath()}/$resourceFile")
-            return@test
-        }
-        throw AssertionError(expected.diff(rendered))
-    }
-}
-
-@TestRegistering
-fun TestSuite.verifyKotlinFile(
-    name: String,
-    resourceFile: String,
-    actual: () -> KFile,
-) = verifyKotlin(name, resourceFile) { actual().content }
 
 @TestRegistering
 fun TestSuite.verifyKotlinFiles(

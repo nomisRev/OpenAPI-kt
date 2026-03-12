@@ -41,14 +41,14 @@ val collectionRenderSpec by testSuite {
         false
     )
 
-    verifyKotlinFile(
+    verifyKotlinFiles(
         name = "collection renders nested item",
-        resourceFile = "collection/Foo.kt",
+        resourceDirectory = "collection",
     ) {
         ApiModel(
             routes = emptyList(),
             models = listOf(collection),
             servers = emptyList(),
-        ).generate().single()
+        ).generate()
     }
 }
