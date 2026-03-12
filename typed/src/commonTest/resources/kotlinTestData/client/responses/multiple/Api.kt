@@ -8,7 +8,6 @@ import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.plugins.expectSuccess
 import io.ktor.client.request.get
 
 interface Api {

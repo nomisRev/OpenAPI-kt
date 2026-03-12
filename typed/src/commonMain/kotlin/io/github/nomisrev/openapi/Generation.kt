@@ -79,9 +79,10 @@ fun Root.generateClient(packageName: String = "io.github.nomisrev"): List<KFile>
     val rootFileName = name.toPascalCase()
 
     fun renderClientFile(fileName: String, content: String, rawImports: Set<Import>): KFile {
-        val imports = rawImports
+        val resolved = rawImports
             .map { it.resolveImport() }
             .filter { it.packageName != apiPackage }
+        val imports = resolved.reorderClientImports()
 
         return KFile(
             fileName,
@@ -113,6 +114,33 @@ private tailrec fun Import.resolveImport(): Import = when (this) {
     is Class -> this
     is TypeName.Collection -> type.resolveImport()
     is TopLevelFunction -> this
+}
+
+private fun List<Import>.reorderClientImports(): List<Import> {
+    val lateRequestHelpers = mutableListOf<TopLevelFunction>()
+    val trailingHttpContentType = mutableListOf<TopLevelFunction>()
+    val regular = mutableListOf<Import>()
+
+    for (import in this) {
+        when (import) {
+            is TopLevelFunction if import.packageName == "io.ktor.client.request" &&
+                import.functionName in setOf("get", "post", "put", "patch", "delete", "head", "options", "parameter") -> {
+                lateRequestHelpers += import
+            }
+
+            is TopLevelFunction if import.packageName == "io.ktor.http" && import.functionName == "contentType" -> {
+                trailingHttpContentType += import
+            }
+
+            else -> regular += import
+        }
+    }
+
+    return buildList {
+        addAll(regular)
+        addAll(lateRequestHelpers.sortedBy { it.functionName })
+        addAll(trailingHttpContentType)
+    }
 }
 
 private fun Import.importString(): String = when (this) {

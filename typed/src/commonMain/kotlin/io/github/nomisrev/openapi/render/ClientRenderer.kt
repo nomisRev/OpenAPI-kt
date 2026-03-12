@@ -297,8 +297,13 @@ private fun Root.renderFactory(interfaceName: String, implName: String) {
             +"baseUrl: String,"
         } else {
             val serverInterfaceName = "${interfaceName}Server"
-            val defaultServerCase = servers.caseNames().firstOrNull() ?: "Custom"
-            +"server: $serverInterfaceName = $serverInterfaceName.$defaultServerCase,"
+            val defaultServerCase = servers.caseNames().first()
+            val defaultServerExpression = if (servers.first().variables.orEmpty().isEmpty()) {
+                "$serverInterfaceName.$defaultServerCase"
+            } else {
+                "$serverInterfaceName.$defaultServerCase()"
+            }
+            +"server: $serverInterfaceName = $defaultServerExpression,"
         }
         +"block: HttpClientConfig<*>.() -> Unit = {},"
     }
@@ -420,6 +425,9 @@ context(ctx: Renderer, builder: StringBuilder)
 private fun renderOperationImpl(route: Route, interfaceName: String) {
     val returnType = route.resolveReturnType(interfaceName)
     val method = route.method.ktorFunction()
+    if (method.matches(Regex("[A-Za-z_][A-Za-z0-9_]*"))) {
+        ctx.import(TopLevelFunction("io.ktor.client.request", method))
+    }
     val body = route.preferredBodyOrNull()
     val params = route.signatureParameters(body)
 
@@ -471,17 +479,21 @@ private fun renderOperationImpl(route: Route, interfaceName: String) {
                 TypeName.Class("io.ktor.http", "HttpStatusCode"),
                 TopLevelFunction("io.ktor.client.call", "body"),
             )
-            +"val response = client.$method($url) {"
-            indented {
-                +"expectSuccess = false"
-                blockParams.forEach { input ->
-                    renderParamPlacement(input)
+            val requiresRequestBlock = blockParams.isNotEmpty() || body != null
+            if (requiresRequestBlock) {
+                +"val response = client.$method($url) {"
+                indented {
+                    blockParams.forEach { input ->
+                        renderParamPlacement(input)
+                    }
+                    body?.let { requestBody ->
+                        renderBodyPlacement(requestBody)
+                    }
                 }
-                body?.let { requestBody ->
-                    renderBodyPlacement(requestBody)
-                }
+                +"}"
+            } else {
+                +"val response = client.$method($url)"
             }
-            +"}"
             +"return when (response.status) {"
             indented {
                 route.returns.responses.entries
@@ -545,6 +557,7 @@ private fun renderParamPlacement(input: Route.Input) {
 
     when (input.input) {
         Parameter.Input.Query -> {
+            ctx.import(TopLevelFunction("io.ktor.client.request", "parameter"))
             if (isNullable) {
                 +"$paramName?.let { parameter(\"${input.name}\", it) }"
             } else {
@@ -743,7 +756,7 @@ private fun renderBodyPlacement(body: RequestBody) {
         is RequestBody.SetBody -> {
             ctx.import(
                 TypeName.Class("io.ktor.http", "ContentType"),
-                TopLevelFunction("io.ktor.client.request", "contentType"),
+                TopLevelFunction("io.ktor.http", "contentType"),
                 TopLevelFunction("io.ktor.client.request", "setBody"),
             )
             +"contentType(${body.contentType.asExpression()})"
@@ -784,7 +797,7 @@ private fun renderBodyPlacement(body: RequestBody) {
         is RequestBody.MultipartRef -> {
             ctx.import(
                 TypeName.Class("io.ktor.http", "ContentType"),
-                TopLevelFunction("io.ktor.client.request", "contentType"),
+                TopLevelFunction("io.ktor.http", "contentType"),
                 TopLevelFunction("io.ktor.client.request", "setBody"),
             )
             +"contentType(ContentType.MultiPart.FormData)"
@@ -799,7 +812,7 @@ private fun renderBodyPlacement(body: RequestBody) {
                 TypeName.Class("io.ktor.http", "ContentType"),
                 TypeName.Class("io.ktor.http", "Parameters"),
                 TopLevelFunction("io.ktor.http", "formUrlEncode"),
-                TopLevelFunction("io.ktor.client.request", "contentType"),
+                TopLevelFunction("io.ktor.http", "contentType"),
                 TopLevelFunction("io.ktor.client.request", "setBody"),
             )
             +"contentType(ContentType.Application.FormUrlEncoded)"
