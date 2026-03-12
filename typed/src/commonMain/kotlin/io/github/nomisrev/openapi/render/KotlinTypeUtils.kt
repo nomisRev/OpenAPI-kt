@@ -1,6 +1,6 @@
 package io.github.nomisrev.openapi.render
 
-private val classNameRegex = Regex("^[a-zA-Z_$][a-zA-Z\\d_$]*$")
+private val classNameRegex = Regex("^[a-zA-Z_][a-zA-Z\\d_]*$")
 
 internal fun String.isValidClassname(): Boolean = classNameRegex.matches(this)
 internal fun String.isValidParamName(): Boolean = classNameRegex.matches(this) &&

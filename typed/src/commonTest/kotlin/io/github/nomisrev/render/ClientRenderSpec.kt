@@ -640,6 +640,7 @@ val clientRenderSpec by testSuite {
             |package io.github.nomisrev.api
             |
             |import io.ktor.client.HttpClient
+            |import io.ktor.client.request.post
             |import io.ktor.client.call.body
             |
             |interface Chat {
@@ -663,6 +664,7 @@ val clientRenderSpec by testSuite {
             |package io.github.nomisrev.api
             |
             |import io.ktor.client.HttpClient
+            |import io.ktor.client.request.get
             |import io.ktor.client.call.body
             |
             |interface Models {
@@ -733,6 +735,7 @@ val clientRenderSpec by testSuite {
             |package io.github.nomisrev.api
             |
             |import io.ktor.client.HttpClient
+            |import io.ktor.client.request.get
             |import io.ktor.client.call.body
             |
             |interface FineTuning {
@@ -808,6 +811,7 @@ val clientRenderSpec by testSuite {
             |package io.github.nomisrev.api
             |
             |import io.ktor.client.HttpClient
+            |import io.ktor.client.request.get
             |import io.ktor.client.call.body
             |import io.ktor.client.HttpClientConfig
             |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -843,6 +847,7 @@ val clientRenderSpec by testSuite {
             |package io.github.nomisrev.api
             |
             |import io.ktor.client.HttpClient
+            |import io.ktor.client.request.get
             |import io.ktor.client.call.body
             |
             |interface Models {
@@ -870,6 +875,7 @@ val clientRenderSpec by testSuite {
             |package io.github.nomisrev.api
             |
             |import io.ktor.client.HttpClient
+            |import io.ktor.client.request.post
             |import io.ktor.client.call.body
             |
             |interface FineTuning {

@@ -151,6 +151,7 @@ private fun Model.Union.body() {
                     ctx.import(TypeName.JsonElement, TypeName.JsonDecoder)
                     +"val value = decoder.decodeSerializableValue(JsonElement.serializer())"
                     +"val json = requireNotNull(decoder as? JsonDecoder) { \"Complex unions currently only supported for Json\" }.json"
+                    ctx.import(Import.decodeFromJsonElement)
                     +"return json.attemptDeserialize("
                     indented {
                         +"value,"

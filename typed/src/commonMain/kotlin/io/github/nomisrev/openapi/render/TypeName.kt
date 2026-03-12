@@ -17,6 +17,7 @@ sealed interface Import {
         val nullable = TopLevelFunction("kotlinx.serialization.builtins", "nullable")
         val buildSerialDescriptor = TopLevelFunction("kotlinx.serialization.descriptors", "buildSerialDescriptor")
         val buildJsonObject = TopLevelFunction("kotlinx.serialization.json", "buildJsonObject")
+        val decodeFromJsonElement = TopLevelFunction("kotlinx.serialization.json", "decodeFromJsonElement")
     }
 }
 

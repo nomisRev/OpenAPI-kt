@@ -25,7 +25,8 @@ fun toEnumValueName(rawToName: String): String {
 fun String.toParamName(): String = when (this) {
     $$"$type" -> "type"
     else -> {
-        val camelCase = if (negativeNumberRegex.matches(this)) this else this.toCamelCase()
+        val sanitised = replace("$", "")
+        val camelCase = if (negativeNumberRegex.matches(sanitised)) sanitised else sanitised.toCamelCase()
         if (camelCase.isValidParamName()) camelCase else "`$camelCase`"
     }
 }

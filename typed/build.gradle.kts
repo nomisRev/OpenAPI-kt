@@ -32,11 +32,20 @@ kotlin {
         val jvmAndNativeTest by creating { dependsOn(commonTest.get()) }
         macosArm64Test.get().dependsOn(jvmAndNativeTest)
         jvmTest.get().dependsOn(jvmAndNativeTest)
+        jvmTest {
+            dependencies {
+                implementation(libs.compile.testing)
+            }
+        }
 
         commonMain {
             dependencies {
                 api(projects.parser)
                 implementation(ktorLibs.client.cio)
+                implementation(ktorLibs.client.contentNegotiation)
+                implementation(ktorLibs.serialization.kotlinx.json)
+                implementation(libs.json)
+                implementation(libs.datetime)
             }
         }
         commonTest {

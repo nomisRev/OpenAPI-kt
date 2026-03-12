@@ -15,7 +15,10 @@ import io.github.nomisrev.openapi.render.toPascalCase
 import io.github.nomisrev.openapi.render.unaryPlus
 import io.github.nomisrev.openapi.routes.ApiModel
 
-data class KFile(val name: String, val packageName: String, val content: String)
+data class KFile(val name: String, val packageName: String, val content: String) {
+    val relativePath: String
+        get() = "${packageName.replace('.', '/')}/$name"
+}
 
 tailrec fun Model.contextOrNull(): NamingContext? = when (this) {
     is Model.Collection -> inner.contextOrNull()
@@ -32,8 +35,8 @@ tailrec fun Model.contextOrNull(): NamingContext? = when (this) {
     is Model.Primitive -> null
 }
 
-fun ApiModel.generate(): List<KFile> =
-    models.map { model ->
+fun ApiModel.generate(name: String): List<KFile> =
+    root(name).generateClient() + models.map { model ->
         val context = model.contextOrNull()
         require(context != null && context.head is NamingContext.Reference) {
             "$context is not a top-level reference. $model"

@@ -22,7 +22,8 @@ suspend fun ResolvedSchema.union(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
 ): Model {
-    val peekedSubtypes = subtypes.associateWith { it.peek() }
+    val uniqueSubtypes = subtypes.distinct()
+    val peekedSubtypes = uniqueSubtypes.associateWith { it.peek() }
     val unionContexts = peekedSubtypes.entries.mapIndexed { index, (refOrSchema, schema) ->
         name.unionCase(index, refOrSchema, schema, peekedSubtypes, context)
     }
@@ -39,7 +40,7 @@ suspend fun ResolvedSchema.union(
      *
      *  So in this case whenever there are n casses, and n-1 cases are references than the non-referenced case should inherit the outer name.
      */
-    val cases = subtypes.mapIndexed { index, subtype ->
+    val cases = uniqueSubtypes.mapIndexed { index, subtype ->
         subtype.resolve(unionContexts[index], context) {
             val discriminatorValue = schema.discriminator?.mapping?.let { discriminator ->
                 when (it) {
