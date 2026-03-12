@@ -27,9 +27,9 @@ internal class KtorApi(private val client: HttpClient) : Api {
             contentType(ContentType.Application.FormUrlEncoded)
             setBody(
                 Parameters.build {
-                    append("grant_type", grantType.toString())
-                    append("code", code.toString())
-                    append("redirect_uri", redirectUri.toString())
+                    append("grant_type", grantType)
+                    append("code", code)
+                    append("redirect_uri", redirectUri)
                 }.formUrlEncode()
             )
         }.body()

@@ -25,7 +25,7 @@ internal class KtorApi(private val client: HttpClient) : Api {
                 MultiPartFormDataContent(
                     formData {
                         append("file", file)
-                        append("purpose", purpose.toString())
+                        append("purpose", purpose)
                     }
                 )
             )

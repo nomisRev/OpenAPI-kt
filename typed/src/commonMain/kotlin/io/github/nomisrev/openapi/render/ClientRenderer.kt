@@ -780,11 +780,12 @@ private fun renderBodyPlacement(body: RequestBody) {
                     indented {
                         body.signatureParameters.forEach { parameter ->
                             val value = parameter.name
-                            val appendValue = if (parameter.type is Model.ByteArray) value else "$value.toString()"
+                            val needsToString = parameter.type.needsToString()
+                            val appendValue = if (needsToString) "$value.toString()" else value
                             if (parameter.isRequired) {
                                 +"append(\"${parameter.wireName}\", $appendValue)"
                             } else {
-                                +"$value?.let { append(\"${parameter.wireName}\", ${if (parameter.type is Model.ByteArray) "it" else "it.toString()"}) }"
+                                +"$value?.let { append(\"${parameter.wireName}\", ${if (needsToString) "it.toString()" else "it"}) }"
                             }
                         }
                     }
@@ -822,10 +823,11 @@ private fun renderBodyPlacement(body: RequestBody) {
                 indented {
                     body.signatureParameters.forEach { parameter ->
                         val value = parameter.name
+                        val needsToString = parameter.type.needsToString()
                         if (parameter.isRequired) {
-                            +"append(\"${parameter.wireName}\", $value.toString())"
+                            +"append(\"${parameter.wireName}\", ${if (needsToString) "$value.toString()" else value})"
                         } else {
-                            +"$value?.let { append(\"${parameter.wireName}\", it.toString()) }"
+                            +"$value?.let { append(\"${parameter.wireName}\", ${if (needsToString) "it.toString()" else "it"}) }"
                         }
                     }
                 }
@@ -1121,4 +1123,13 @@ private fun Model.renderDefault(): String = when (this) {
     is Model.Primitive.Boolean -> (default as Model.Default.Value<*>).value.toString()
     is Model.Primitive.String -> "\"${(default as Model.Default.Value<*>).value}\""
     else -> "null" // Fallback for types where defaults aren't supported yet
+}
+
+/**
+ * Returns whether this type needs `.toString()` when used in parameter building.
+ * String and ByteArray types don't need conversion.
+ */
+private fun Model.needsToString(): Boolean = when (this) {
+    is Model.Primitive.String, is Model.ByteArray -> false
+    else -> true
 }
