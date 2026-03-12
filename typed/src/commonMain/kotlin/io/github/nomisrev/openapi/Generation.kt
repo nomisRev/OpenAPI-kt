@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.render.Config
 import io.github.nomisrev.openapi.render.Import
 import io.github.nomisrev.openapi.render.TopLevelFunction
 import io.github.nomisrev.openapi.render.TypeName
@@ -34,15 +35,16 @@ tailrec fun Model.contextOrNull(): NamingContext? = when (this) {
 
 fun ApiModel.generate(): List<KFile> = models.generate()
 
-fun List<Model>.generate(): List<KFile> = map { model ->
+fun List<Model>.generate(`package`: String = "io.github.nomisrev"): List<KFile> = map { model ->
     val context = model.contextOrNull()
     require(context != null && context.head is NamingContext.Reference) {
         "$context is not a top-level reference. $model"
     }
 
-    val result = renderer {
-        Pair(context.name(), model.render())
-    }
+    val result =
+        renderer(Config(120, 4, jvm = true, js = true, `package`)) {
+            Pair(context.name(), model.render())
+        }
 
     tailrec fun Import.import(): Import = when (this) {
         is Class -> this
@@ -51,9 +53,9 @@ fun List<Model>.generate(): List<KFile> = map { model ->
     }
 
     tailrec fun Import.importString(): String = when (this) {
-        is Class -> "${packageName}.${names.joinToString(separator = ".")}"
+        is Class -> "${this.packageName}.${names.joinToString(separator = ".")}"
         is TypeName.Collection -> type.importString()
-        is TopLevelFunction -> "${packageName}.${functionName}"
+        is TopLevelFunction -> "${this.packageName}.${functionName}"
     }
 
     val imports = result.second
@@ -124,7 +126,16 @@ private fun List<Import>.reorderClientImports(): List<Import> {
     for (import in this) {
         when (import) {
             is TopLevelFunction if import.packageName == "io.ktor.client.request" &&
-                import.functionName in setOf("get", "post", "put", "patch", "delete", "head", "options", "parameter") -> {
+                    import.functionName in setOf(
+                "get",
+                "post",
+                "put",
+                "patch",
+                "delete",
+                "head",
+                "options",
+                "parameter"
+            ) -> {
                 lateRequestHelpers += import
             }
 

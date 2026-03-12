@@ -1,4 +1,4 @@
-package io.github.nomisrev.model
+package union.all.primitives.model
 
 import kotlin.uuid.ExperimentalUuidApi
 import kotlinx.serialization.Serializable
@@ -60,7 +60,7 @@ sealed interface Union {
     object Serializer : KSerializer<Union> {
         @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
         override val descriptor: SerialDescriptor =
-            buildSerialDescriptor("io.github.nomisrev.model.Union", PolymorphicKind.SEALED) {
+            buildSerialDescriptor("union.all.primitives.model.Union", PolymorphicKind.SEALED) {
                 element("CaseString", String.serializer().descriptor)
                 element("CaseInt", Int.serializer().descriptor)
                 element("CaseFloat", Float.serializer().descriptor)

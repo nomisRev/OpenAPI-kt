@@ -8,6 +8,14 @@ fun serializable() {
     +"@Serializable"
 }
 
+context(ctx: Renderer)
+fun TopLevelFunction.Companion.attemptDeserialize(): Import =
+    TopLevelFunction("${ctx.packageName}.model", "attemptDeserialize")
+
+context(ctx: Renderer)
+fun TopLevelFunction.Companion.putAll(): Import =
+    TopLevelFunction("${ctx.packageName}.model", "putAll")
+
 context(ctx: Renderer, builder: StringBuilder)
 fun serializable(model: Model.ContextHolder) {
     ctx.import(TypeName.Serializable)

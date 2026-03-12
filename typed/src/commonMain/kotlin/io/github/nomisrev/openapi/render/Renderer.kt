@@ -24,9 +24,12 @@ class Renderer(val config: Config, import: Importer) : Importer by import {
     val indent: String get() = " ".repeat(indentSize)
 }
 
-fun <A> renderer(block: context(Renderer) () -> A): Pair<A, Set<Import>> {
+fun <A> renderer(
+    config: Config = Config(120, 4, jvm = true, js = true, "io.github.nomisrev"),
+    block: context(Renderer) () -> A
+): Pair<A, Set<Import>> {
     val buffer = mutableSetOf<Import>()
-    val ctx = Renderer(Config(120, 4, jvm = true, js = true, "io.github.nomisrev"), import = importer(buffer))
+    val ctx = Renderer(config, import = importer(buffer))
     return Pair(block(ctx), buffer)
 }
 

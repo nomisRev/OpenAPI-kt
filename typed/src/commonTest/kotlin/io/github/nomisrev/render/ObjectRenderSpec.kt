@@ -8,6 +8,7 @@ import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.render.Import
 import io.github.nomisrev.openapi.render.TopLevelFunction
 import io.github.nomisrev.openapi.render.TypeName
+import io.github.nomisrev.openapi.render.putAll
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 val renderObjectSpec by testSuite {

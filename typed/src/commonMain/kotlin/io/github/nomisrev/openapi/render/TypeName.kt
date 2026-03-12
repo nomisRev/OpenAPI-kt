@@ -20,7 +20,9 @@ sealed interface Import {
     }
 }
 
-data class TopLevelFunction(override val packageName: String, val functionName: String) : Import
+data class TopLevelFunction(override val packageName: String, val functionName: String) : Import {
+    companion object
+}
 
 sealed interface TypeName : Import {
     data class Collection(val type: TypeName) : TypeName {

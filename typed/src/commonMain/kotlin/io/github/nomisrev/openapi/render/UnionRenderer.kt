@@ -7,6 +7,7 @@ import io.github.nomisrev.openapi.render.TypeName.Companion.InternalSerializatio
 import io.github.nomisrev.openapi.render.TypeName.Companion.PolymorphicKind
 import io.github.nomisrev.openapi.transformers.isTopLevel
 import io.github.nomisrev.openapi.transformers.nestedOrNull
+import kotlinx.serialization.json.Json.Default.decodeFromJsonElement
 
 context(ctx: Renderer)
 fun Model.Union.render(): String = buildString {
@@ -31,6 +32,7 @@ private fun Model.containsUuid(): Boolean = when (this) {
     is Model.Collection -> inner.containsUuid()
     is Model.Object -> properties.values.any { it.model.containsUuid() } ||
             ((additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.containsUuid() == true)
+
     is Model.Union -> cases.any { it.model.containsUuid() }
     is Model.DiscriminatedObject -> abstractProperties.values.any { it.model.containsUuid() } ||
             subtypes.any { subtype ->
@@ -172,7 +174,7 @@ private fun Model.Union.body() {
                 newLine()
                 +"override fun deserialize(decoder: Decoder): ${name().simpleName} {"
                 indented {
-                    ctx.import(TypeName.JsonElement, TypeName.JsonDecoder)
+                    ctx.import(TypeName.JsonElement, TypeName.JsonDecoder, TopLevelFunction.attemptDeserialize())
                     +"val value = decoder.decodeSerializableValue(JsonElement.serializer())"
                     +"val json = requireNotNull(decoder as? JsonDecoder) { \"Complex unions currently only supported for Json\" }.json"
                     +"return json.attemptDeserialize("
@@ -248,6 +250,7 @@ private fun Model.Union.Case.render(): String =
 
         is Model.DiscriminatedObject,
         is Model.Union -> valueClass()
+
         is Model.Collection -> valueClass()
 
         // need to be generated with `unionNameCase()`

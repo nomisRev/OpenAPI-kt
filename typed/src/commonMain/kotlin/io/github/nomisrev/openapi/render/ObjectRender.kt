@@ -177,7 +177,10 @@ private fun Model.Object.serializer() {
                         }
 
                     when (additionalProperties) {
-                        is Model.Object.AdditionalProperties.Allowed if additionalProperties.value -> +"putAll(value.additional)"
+                        is Model.Object.AdditionalProperties.Allowed if additionalProperties.value -> {
+                            ctx.import(TopLevelFunction.putAll())
+                            +"putAll(value.additional)"
+                        }
                         is Model.Object.AdditionalProperties.Allowed -> {}
                         is Model.Object.AdditionalProperties.Schema -> {
                             +"value.additional?.forEach { (key, value) ->"
