@@ -40,6 +40,7 @@ kotlin {
             }
         }
         commonTest {
+            kotlin.srcDir("src/commonTest/resources/kotlinTestData")
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.testballoon)
