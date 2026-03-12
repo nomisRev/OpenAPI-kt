@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.dokka)
     id(libs.plugins.kover.get().pluginId)
     alias(libs.plugins.testballoon)
+    alias(libs.plugins.kotlinxresources)
 }
 
 kotlin {
@@ -44,6 +45,7 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.testballoon)
+                implementation(libs.kotlinxresources)
             }
         }
     }
