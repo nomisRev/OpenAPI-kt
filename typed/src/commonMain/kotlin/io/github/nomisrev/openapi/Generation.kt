@@ -81,9 +81,11 @@ fun Root.generateClient(packageName: String = "io.github.nomisrev"): List<KFile>
     val rootFileName = name.toPascalCase()
 
     fun renderClientFile(fileName: String, content: String, rawImports: Set<Import>): KFile {
+        val fileBaseName = fileName.removeSuffix(".kt")
         val resolved = rawImports
             .map { it.resolveImport() }
             .filter { it.packageName != apiPackage }
+            .filter { import -> import !is Class || import.simpleName != fileBaseName }
         val imports = resolved.reorderClientImports()
 
         return KFile(

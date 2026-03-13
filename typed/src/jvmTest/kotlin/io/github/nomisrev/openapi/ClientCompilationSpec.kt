@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.parser.OpenAPI
+import io.github.nomisrev.openapi.render.attemptDeserialize
 import io.github.nomisrev.openapi.routes.toApiModel
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -25,7 +26,7 @@ class ClientCompilationSpec {
         val files = modelFiles + clientFiles + KFile(
             "AttemptDeserialize.kt",
             "io.github.nomisrev.model",
-            io.github.nomisrev.openapi.render.attemptDeserialize
+            attemptDeserialize
         )
 
         // Write files for debugging
@@ -43,14 +44,17 @@ class ClientCompilationSpec {
     }
 
 // TODO: Fix one by one
-//    @Test
-//    fun `petstore client compiles`() = testCompilation("petstore.json")
+    @Test
+    fun `petstore client compiles`() = testCompilation("petstore.json")
 
-//    @Test
-//    fun `petstore_more client compiles`() = testCompilation("petstore_more.json")
+    @Test
+    fun `petstore_more client compiles`() = testCompilation("petstore_more.json")
 
-//    @Test
-//    fun `basic client compiles`() = testCompilation("basic.json")
+    @Test
+    fun `basic client compiles`() = testCompilation("basic.json")
+
+    @Test
+    fun github() = testCompilation("github.json")
 
 //    @Test
 //    fun `youtrack client compiles`() = testCompilation("youtrack.json")
