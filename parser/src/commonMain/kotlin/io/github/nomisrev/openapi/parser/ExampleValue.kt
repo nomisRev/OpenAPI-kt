@@ -4,9 +4,7 @@ import com.charleskorn.kaml.YamlInput
 import com.charleskorn.kaml.YamlList
 import com.charleskorn.kaml.YamlMap
 import com.charleskorn.kaml.YamlNode
-import com.charleskorn.kaml.YamlNull
 import com.charleskorn.kaml.YamlScalar
-import com.charleskorn.kaml.YamlTaggedNode
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
@@ -100,12 +98,3 @@ public sealed interface ExampleValue {
   }
 }
 
-private fun YamlNode.toJsonElement(): JsonElement =
-  when (this) {
-    is YamlScalar -> JsonPrimitive(this.content)
-    is YamlNull -> JsonPrimitive(null as String?)
-    is YamlList -> JsonArray(this.items.map { it.toJsonElement() })
-    is YamlMap ->
-      JsonObject(this.entries.mapKeys { it.key.content }.mapValues { it.value.toJsonElement() })
-    is YamlTaggedNode -> this.innerNode.toJsonElement()
-  }

@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi.parser
 
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -7,7 +9,9 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-@Serializable
+@Serializable(Response.Companion.Serializer::class)
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
 public data class Response(
   /**
    * A short description of the response. CommonMark's syntax MAY be used for rich text
@@ -42,4 +46,13 @@ public data class Response(
       links + other.links,
       extensions + other.extensions,
     )
+
+  public companion object {
+    internal object Serializer :
+      KSerializerWithExtensions<Response>(
+        generatedSerializer(),
+        Response::extensions,
+        { response, extensions -> response.copy(extensions = extensions) },
+      )
+  }
 }

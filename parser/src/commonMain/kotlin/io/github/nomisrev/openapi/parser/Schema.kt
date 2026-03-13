@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi.parser
 import com.charleskorn.kaml.YamlInput
 import com.charleskorn.kaml.YamlList
 import com.charleskorn.kaml.YamlNode
+import com.charleskorn.kaml.YamlNull
 import com.charleskorn.kaml.YamlScalar
 import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -137,8 +138,8 @@ public data class Schema(
                     is JsonDecoder -> {
                         when (val json = decoder.decodeSerializableValue(JsonElement.serializer())) {
                             is JsonArray -> Array(
-                                decoder
-                                    .decodeSerializableValue(ListSerializer(String.serializer()))
+                                json
+                                    .mapNotNull { (it as? JsonPrimitive)?.content }
                                     .mapNotNull(Basic.Companion::fromString)
                             )
 
@@ -153,8 +154,14 @@ public data class Schema(
                     is YamlInput -> {
                         when (val node = decoder.decodeSerializableValue(YamlNode.serializer())) {
                             is YamlList -> Array(
-                                decoder
-                                    .decodeSerializableValue(ListSerializer(String.serializer()))
+                                node.items
+                                    .mapNotNull { item ->
+                                        when (item) {
+                                            is YamlScalar -> item.content
+                                            is YamlNull -> "null"
+                                            else -> null
+                                        }
+                                    }
                                     .mapNotNull(Basic.Companion::fromString)
                             )
 

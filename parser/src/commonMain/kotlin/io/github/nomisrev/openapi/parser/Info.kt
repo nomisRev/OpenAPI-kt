@@ -1,5 +1,9 @@
+@file:Suppress("OPT_IN_USAGE")
+
 package io.github.nomisrev.openapi.parser
 
+import kotlinx.serialization.InternalSerializationApi
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -11,7 +15,9 @@ import kotlinx.serialization.json.JsonPrimitive
  * The object provides metadata about the API. The metadata MAY be used by the clients if needed,
  * and MAY be presented in editing or documentation generation tools for convenience.
  */
-@Serializable
+@Serializable(Info.Companion.Serializer::class)
+@OptIn(InternalSerializationApi::class)
+@KeepGeneratedSerializer
 public data class Info(
   /** The title of the API. */
   public val title: String,
@@ -39,7 +45,9 @@ public data class Info(
   public val extensions: Map<String, JsonElement> = emptyMap(),
 ) {
   /** Contact information for the exposed API. */
-  @Serializable
+  @Serializable(Contact.Companion.Serializer::class)
+  @OptIn(InternalSerializationApi::class)
+  @KeepGeneratedSerializer
   public data class Contact(
     /** The identifying name of the contact person/organization. */
     public val name: String? = null,
@@ -56,21 +64,51 @@ public data class Info(
      * [JsonPrimitive], [JsonArray] or [JsonObject].
      */
     public val extensions: Map<String, JsonElement> = emptyMap(),
-  )
+  ) {
+    public companion object {
+      internal object Serializer :
+        KSerializerWithExtensions<Contact>(
+          generatedSerializer(),
+          Contact::extensions,
+          { contact, extensions -> contact.copy(extensions = extensions) },
+        )
+    }
+  }
 
   /** License information for the exposed API. */
-  @Serializable
+  @Serializable(License.Companion.Serializer::class)
+  @OptIn(InternalSerializationApi::class)
+  @KeepGeneratedSerializer
   public data class License(
     /** The license name used for the API. */
     public val name: String,
     /** A URL to the license used for the API. MUST be in the format of a URL. */
     public val url: String? = null,
-    private val identifier: String? = null,
+    /** An SPDX license expression for the API (3.1.x). Mutually exclusive with [url]. */
+    public val identifier: String? = null,
     /**
      * Any additional external documentation for this OpenAPI document. The key is the name of the
      * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
      * [JsonPrimitive], [JsonArray] or [JsonObject].
      */
     public val extensions: Map<String, JsonElement> = emptyMap(),
-  )
+  ) {
+    public companion object {
+      internal object Serializer :
+        KSerializerWithExtensions<License>(
+          generatedSerializer(),
+          License::extensions,
+          { license, extensions -> license.copy(extensions = extensions) },
+        )
+    }
+  }
+
+  public companion object {
+    internal object Serializer :
+      KSerializerWithExtensions<Info>(
+        generatedSerializer(),
+        Info::extensions,
+        { info, extensions -> info.copy(extensions = extensions) },
+      )
+  }
 }

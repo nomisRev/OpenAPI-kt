@@ -23,7 +23,7 @@ public data class Encoding(
    *   type (e.g. application/json), a wildcard media type (e.g. image&#47;&#42;), or a
    *   comma-separated list of the two types.
    */
-  public val contentType: String,
+  public val contentType: String? = null,
     /**
    * A map allowing additional information to be provided as headers, for example
    * Content-Disposition. Content-Type is described separately and SHALL be ignored in this section.
