@@ -25,3 +25,8 @@ rootProject.name = "openapi-kt"
 
 include("parser")
 include("typed")
+
+//include("integration-tests")
+//include("integration-tests:github")
+//include("integration-tests:youtrack")
+//include("integration-tests:openai")

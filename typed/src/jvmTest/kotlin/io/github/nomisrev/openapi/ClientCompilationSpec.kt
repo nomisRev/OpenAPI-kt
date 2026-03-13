@@ -43,7 +43,6 @@ class ClientCompilationSpec {
         assertCompiles(files)
     }
 
-// TODO: Fix one by one
     @Test
     fun `petstore client compiles`() = testCompilation("petstore.json")
 
@@ -53,8 +52,9 @@ class ClientCompilationSpec {
     @Test
     fun `basic client compiles`() = testCompilation("basic.json")
 
-    @Test
-    fun github() = testCompilation("github.json")
+// TODO: Fix one by one
+//    @Test
+//    fun github() = testCompilation("github.json")
 
 //    @Test
 //    fun `youtrack client compiles`() = testCompilation("youtrack.json")

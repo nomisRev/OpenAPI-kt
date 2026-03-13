@@ -841,4 +841,36 @@ val clientRenderSpec by testSuite {
             endpoints = emptyList(),
         ).generateClient(goldenPackage("client/responses/no-content"))
     }
+
+    verifyKotlinFiles(
+        name = "inline enum query parameter generates enum type and uses it in signature",
+        resourceDirectory = "client/params/inline-enum"
+    ) {
+        val inlineEnumContext = NamingContext(
+            head = NamingContext.Path(listOf("advisories")),
+            nested = listOf(NamingContext.RouteParam("direction", "listAdvisories"))
+        )
+        val directionEnum = Model.Enum(
+            context = inlineEnumContext,
+            inner = Model.Primitive.String(null, null, null, false, null),
+            values = listOf("asc", "desc"),
+            default = Model.Default.Value("desc"),
+            description = null,
+            title = null,
+            isNullable = false
+        )
+        Root(
+            name = "Api",
+            operations = listOf(
+                route(
+                    operationId = "listAdvisories",
+                    path = "/advisories",
+                    parameters = listOf(
+                        queryParam("direction", type = directionEnum, isRequired = false)
+                    )
+                )
+            ),
+            endpoints = emptyList(),
+        ).generateClient(goldenPackage("client/params/inline-enum"))
+    }
 }

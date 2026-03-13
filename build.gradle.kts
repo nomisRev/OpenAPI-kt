@@ -6,6 +6,8 @@ import org.jetbrains.kotlin.powerassert.gradle.PowerAssertGradleExtension
 
 plugins {
     alias(libs.plugins.multiplatform) apply false
+    alias(libs.plugins.jvm) apply false
+    alias(libs.plugins.serialization) apply false
     alias(libs.plugins.publish) apply false
     alias(libs.plugins.assert)
 //  alias(libs.plugins.spotless)
@@ -21,6 +23,18 @@ dependencies {
     kover(projects.parser)
 }
 
+configure(subprojects.filter { !it.path.startsWith(":integration-tests") }) {
+    apply(plugin = publishId)
+    configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
+        publishToMavenCentral()
+        val shouldSign =
+            project.gradle.startParameter.taskNames.none {
+                it.contains("publishToMavenLocal", ignoreCase = true)
+            }
+        if (shouldSign) signAllPublications()
+    }
+}
+
 subprojects {
     apply(plugin = assertId)
     @Suppress("OPT_IN_USAGE")
@@ -33,27 +47,6 @@ subprojects {
         )
     }
 
-//  apply(plugin = spotlessId)
-//  configure<SpotlessExtension> {
-//    kotlin {
-//      target("**/*.kt", "**/*.kts")
-//      ktfmt().kotlinlangStyle().configure {
-//        it.setBlockIndent(2)
-//        it.setContinuationIndent(2)
-//        it.setRemoveUnusedImports(true)
-//        it.setManageTrailingCommas(true)
-//      }
-//    }
-//  }
-    apply(plugin = publishId)
-    configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
-        publishToMavenCentral()
-        val shouldSign =
-            project.gradle.startParameter.taskNames.none {
-                it.contains("publishToMavenLocal", ignoreCase = true)
-            }
-        if (shouldSign) signAllPublications()
-    }
     tasks {
         withType<JavaCompile> { options.release.set(11) }
         withType<KotlinCompile> {

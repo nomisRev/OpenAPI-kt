@@ -6,6 +6,7 @@ import io.github.nomisrev.openapi.Root
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.Server
 import io.github.nomisrev.openapi.routes.Route
+import io.github.nomisrev.openapi.transformers.isTopLevel
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 
@@ -53,6 +54,8 @@ private fun Root.renderRootInterface(interfaceName: String) {
         return
     }
 
+    val inlineModels = operations.inlineModels()
+
     +"interface $interfaceName {"
     indented {
         // Child interface properties
@@ -60,7 +63,12 @@ private fun Root.renderRootInterface(interfaceName: String) {
             val propName = api.name.toCamelCase()
             val typeName = api.name.toPascalCase()
             +"val $propName: $typeName"
-            if (index < endpoints.size - 1 || operations.isNotEmpty()) newLine()
+            if (index < endpoints.size - 1 || inlineModels.isNotEmpty() || operations.isNotEmpty()) newLine()
+        }
+
+        if (inlineModels.isNotEmpty()) {
+            renderInlineModels(inlineModels)
+            if (operations.isNotEmpty()) newLine()
         }
 
         // Root-level operations
@@ -184,6 +192,7 @@ context(ctx: Renderer, builder: StringBuilder)
 private fun API.renderApiInterface() {
     val interfaceName = name.toPascalCase()
     val children = nested
+    val inlineModels = routes.inlineModels()
     val hasMembers = children.isNotEmpty() || routes.isNotEmpty()
     if (!hasMembers) {
         append("interface $interfaceName")
@@ -196,11 +205,14 @@ private fun API.renderApiInterface() {
             val propName = child.name.toCamelCase()
             val typeName = child.name.toPascalCase()
             +"val $propName: $typeName"
-            if (index < children.size - 1) newLine()
+            if (index < children.size - 1 || inlineModels.isNotEmpty() || routes.isNotEmpty()) newLine()
         }
 
-        if (children.isNotEmpty() && routes.isNotEmpty()) {
-            newLine()
+        if (inlineModels.isNotEmpty()) {
+            renderInlineModels(inlineModels)
+            if (routes.isNotEmpty()) {
+                newLine()
+            }
         }
 
         routes.forEachIndexed { index, route ->
@@ -210,11 +222,7 @@ private fun API.renderApiInterface() {
             }
         }
 
-        if (routes.isNotEmpty() && children.isNotEmpty()) {
-            newLine()
-        }
-
-        if (children.isNotEmpty() && routes.isEmpty()) {
+        if (children.isNotEmpty()) {
             newLine()
         }
 
@@ -334,6 +342,27 @@ private fun renderRouteSignature(route: Route) {
     +renderSuspendFun(route)
 }
 
+context(ctx: Renderer)
+private fun List<Route>.inlineModels(): List<Model> =
+    asSequence()
+        .flatMap { it.nested.asSequence() }
+        .filterIsInstance<Model.ContextHolder>()
+        .distinctBy { it.name().fqName }
+        .sortedBy { it.name().fqName }
+        .map { it as Model }
+        .toList()
+
+context(ctx: Renderer, builder: StringBuilder)
+private fun renderInlineModels(models: List<Model>) {
+    models.forEachIndexed { index, model ->
+        +model.render()
+        if (index < models.lastIndex) {
+            newLine()
+            newLine()
+        }
+    }
+}
+
 context(ctx: Renderer, builder: StringBuilder)
 private fun Route.renderSealedResultType() {
     val resultTypeName = sealedResultTypeName()
@@ -398,12 +427,12 @@ private fun renderSuspendFun(route: Route): String = buildString {
     }
 
     if (params.isEmpty()) {
-        append("suspend fun ${route.operationId}(): $returnType")
+        append("suspend fun ${route.operationId.toCamelCase()}(): $returnType")
     } else {
-        appendLine("suspend fun ${route.operationId}(")
+        appendLine("suspend fun ${route.operationId.toCamelCase()}(")
         params.forEachIndexed { index, input ->
             val paramName = input.name
-            val typeName = input.type.toTypeName().type()
+            val typeName = input.type.renderTypeName()
             val hasDefault = input.hasDefault()
             val isNullable = !input.isRequired && !hasDefault
             val line = buildString {
@@ -458,7 +487,7 @@ private fun renderOperationImpl(route: Route, interfaceName: String) {
 
     val paramList = params.joinToString(", ") { input ->
         val paramName = input.name
-        val typeName = input.type.toTypeName().type()
+        val typeName = input.type.renderTypeName(interfaceName)
         val hasDefault = input.hasDefault()
         val isNullable = !input.isRequired && !hasDefault
         buildString {
@@ -469,9 +498,9 @@ private fun renderOperationImpl(route: Route, interfaceName: String) {
 
     if (route.usesSealedReturnType()) {
         if (params.isEmpty()) {
-            +"override suspend fun ${route.operationId}(): $returnType {"
+            +"override suspend fun ${route.operationId.toCamelCase()}(): $returnType {"
         } else {
-            +"override suspend fun ${route.operationId}($paramList): $returnType {"
+            +"override suspend fun ${route.operationId.toCamelCase()}($paramList): $returnType {"
         }
 
         indented {
@@ -521,19 +550,19 @@ private fun renderOperationImpl(route: Route, interfaceName: String) {
     }
 
     if (params.isEmpty()) {
-        +"override suspend fun ${route.operationId}(): $returnType ="
+        +"override suspend fun ${route.operationId.toCamelCase()}(): $returnType ="
         indented {
             ctx.import(TypeName.Class("io.ktor.client.call", "body"))
             +"client.$method($url).body()"
         }
     } else if (blockParams.isEmpty() && body == null) {
-        +"override suspend fun ${route.operationId}($paramList): $returnType ="
+        +"override suspend fun ${route.operationId.toCamelCase()}($paramList): $returnType ="
         indented {
             ctx.import(TypeName.Class("io.ktor.client.call", "body"))
             +"client.$method($url).body()"
         }
     } else {
-        +"override suspend fun ${route.operationId}($paramList): $returnType ="
+        +"override suspend fun ${route.operationId.toCamelCase()}($paramList): $returnType ="
         indented {
             ctx.import(TypeName.Class("io.ktor.client.call", "body"))
             +"client.$method($url) {"
@@ -594,7 +623,25 @@ private fun Route.resolveReturnType(interfaceName: String? = null): String {
     val (_, returnType) = returns.responses.entries.first()
     val model = returnType.preferredModel()
     import(model)
-    return model.toTypeName().type()
+    return model.renderTypeName(interfaceName)
+}
+
+context(ctx: Renderer)
+private fun Model.renderTypeName(interfaceName: String? = null): String = when (this) {
+    is Model.Collection if inner is Model.FreeFormJson -> TypeName.JsonArray.type()
+    is Model.Collection -> "List<${inner.renderTypeName(interfaceName)}>"
+    is Model.Object if properties.isEmpty() &&
+            additionalProperties is Model.Object.AdditionalProperties.Allowed &&
+            additionalProperties.value -> TypeName.JsonObject.type()
+    is Model.Object if properties.isEmpty() &&
+            additionalProperties is Model.Object.AdditionalProperties.Schema ->
+        additionalProperties.value.renderTypeName(interfaceName)
+
+    is Model.ContextHolder -> {
+        val typeName = toTypeName().type()
+        if (interfaceName != null && !context.isTopLevel()) "$interfaceName.$typeName" else typeName
+    }
+    else -> toTypeName().type()
 }
 
 private data class SignatureParameter(
@@ -1115,7 +1162,17 @@ private fun Route.sortedParameters(): List<Route.Input> {
 /**
  * Renders a Model's default value as a Kotlin literal.
  */
+context(ctx: Renderer)
 private fun Model.renderDefault(): String = when (this) {
+    is Model.Enum -> when (val enumDefault = default) {
+        is Model.Default.Value<*> -> {
+            val rawValue = enumDefault.value.toString()
+            val enumValues = valueNames()
+            val enumEntry = enumValues[rawValue] ?: enumValues.values.firstOrNull()
+            if (enumEntry == null) "null" else "${toTypeName().type()}.$enumEntry"
+        }
+        else -> "null"
+    }
     is Model.Primitive.Int -> (default as Model.Default.Value<*>).value.toString()
     is Model.Primitive.Long -> "${(default as Model.Default.Value<*>).value}L"
     is Model.Primitive.Float -> "${(default as Model.Default.Value<*>).value}f"

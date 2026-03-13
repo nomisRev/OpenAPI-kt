@@ -123,7 +123,7 @@ context(ctx: Renderer)
 fun NamingContext.name(): Class {
     val head = when (head) {
         is NamingContext.Path -> Class("${ctx.packageName}.api", head.parts)
-        is NamingContext.Reference -> Class("${ctx.packageName}.model", "${head.name}${head.context.name()}")
+        is NamingContext.Reference -> Class("${ctx.packageName}.model", "${head.name.toPascalCase()}${head.context.name()}")
     }
     return nested.fold(head) { acc, context ->
         val nestedName = when (context) {
