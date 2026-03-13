@@ -17,9 +17,9 @@ class ClientCompilationSpec {
             OpenAPI.fromYaml(content)
         }
         val apiModel = spec.toApiModel()
-        val modelFiles = apiModel.generate("A")
+        val modelFiles = apiModel.generate()
 
-        val root = apiModel.routes.sort(spec.info.title, spec.servers.orEmpty())
+        val root = apiModel.routes.sort(spec.info.title, spec.servers)
         val clientFiles = root.generateClient()
 
         val files = modelFiles + clientFiles + KFile(
@@ -34,7 +34,7 @@ class ClientCompilationSpec {
         debugDir.mkdirs()
         println("Writing ${files.size} files to $debugDir")
         files.forEach { f ->
-            val target = File(debugDir, f.relativePath)
+            val target = File(debugDir, f.name)
             target.parentFile?.mkdirs()
             target.writeText(f.content)
         }

@@ -12,9 +12,9 @@ import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
  */
 @OptIn(ExperimentalCompilerApi::class)
 fun assertCompiles(files: List<KFile>) {
-    println("Compiling ${files.size} files: ${files.map { it.relativePath }}")
+    println("Compiling ${files.size} files: ${files.map { it.name }}")
     val result = KotlinCompilation().apply {
-        sources = files.map { SourceFile.kotlin(it.relativePath, it.content) }
+        sources = files.map { SourceFile.kotlin(it.name, it.content) }
         inheritClassPath = true  // inherit test runtime classpath (ktor, serialization, etc.)
         kotlincArguments = listOf(
             "-Xcontext-parameters",
