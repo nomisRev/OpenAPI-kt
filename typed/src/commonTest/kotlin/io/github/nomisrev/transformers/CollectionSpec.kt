@@ -24,7 +24,6 @@ import kotlin.collections.emptyList
 import kotlin.test.assertEquals
 
 val collectionSpec by testSuite {
-    val name = NamingContext.ObjectProperty("values")
     val primitives = (Model.Primitive.all() + Model.FreeFormJson.all()).map { (schema, model) ->
         val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.Value(schema))
         val expected = Model.Collection(model, null, null, null, false, null)

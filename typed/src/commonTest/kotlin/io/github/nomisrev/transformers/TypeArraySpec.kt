@@ -15,8 +15,6 @@ import io.github.nomisrev.verifyAll
 val typeArraySpec by testSuite {
     verifyAll("TypeArray", values())
     verifyAll("TypeArray with explicit Null type", values(nullable = true))
-
-    val root =
     verifyAll(
         "TypeArray Referenced",
         values(NamingContext.reference("Root", SchemaContext.Null)),

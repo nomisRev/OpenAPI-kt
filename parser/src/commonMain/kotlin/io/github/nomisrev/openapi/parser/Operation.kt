@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonElement
 
 @Serializable(Operation.Companion.Serializer::class)
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("RUNTIME_ANNOTATION_NOT_SUPPORTED")
 @KeepGeneratedSerializer
 public data class Operation(
   /**

@@ -12,6 +12,7 @@ import kotlinx.serialization.json.JsonPrimitive
 /** Each Media Type Object provides schema and examples for the media type identified by its key. */
 @Serializable(MediaType.Companion.Serializer::class)
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("RUNTIME_ANNOTATION_NOT_SUPPORTED")
 @KeepGeneratedSerializer
 public data class MediaType(
   /** The schema defining the content of the request, response, or parameter. */

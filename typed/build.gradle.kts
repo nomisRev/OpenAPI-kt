@@ -11,12 +11,18 @@ plugins {
 }
 
 kotlin {
-    compilerOptions.freeCompilerArgs.addAll(listOfNotNull(
-        "-Xcontext-sensitive-resolution",
-        "-Xcontext-parameters",
-        "-Xreturn-value-checker=full",
-        "-Xdebug".takeIf { System.getProperty("idea.active") == "true" }
-    ))
+    compilerOptions{
+        freeCompilerArgs.addAll(listOfNotNull(
+            "-Xcontext-sensitive-resolution",
+            "-Xcontext-parameters",
+            "-Xreturn-value-checker=full",
+            "-Xdebug".takeIf { System.getProperty("idea.active") == "true" }
+        ))
+        allWarningsAsErrors = true
+        extraWarnings = true
+        progressiveMode = true
+    }
+
 
     jvm()
     macosArm64()
@@ -25,20 +31,6 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     sourceSets {
-        // jvmAndNative is the target we use for generation (we'll include js/wasm node later).
-        val jvmAndNativeMain by creating { dependsOn(commonMain.get()) }
-        macosArm64Main.get().dependsOn(jvmAndNativeMain)
-        jvmMain.get().dependsOn(jvmAndNativeMain)
-
-        val jvmAndNativeTest by creating { dependsOn(commonTest.get()) }
-        macosArm64Test.get().dependsOn(jvmAndNativeTest)
-        jvmTest.get().dependsOn(jvmAndNativeTest)
-        jvmTest {
-            dependencies {
-                implementation(libs.compile.testing)
-            }
-        }
-
         commonMain {
             dependencies {
                 api(projects.parser)

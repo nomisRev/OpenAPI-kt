@@ -9,6 +9,12 @@ plugins {
 }
 
 kotlin {
+  compilerOptions{
+    allWarningsAsErrors = true
+    extraWarnings = true
+    progressiveMode = true
+  }
+
   explicitApi()
   jvmToolchain(11)
 

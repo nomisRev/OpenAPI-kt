@@ -212,6 +212,81 @@ val renderObjectSpec by testSuite {
             )
         ).generate("obj.additional.properties.typed")
     }
+
+    verifyKotlinFiles(
+        name = "required nullable has no implicit null default and required default uses annotation",
+        resourceDirectory = "obj/required-nullable-default",
+    ) {
+        listOf(
+            Model.Object(
+                context = NamingContext.reference("Foo", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = mapOf(
+                    "requiredNullable" to Model.Object.Property(
+                        Model.Primitive.String(default = null, description = null, constraint = null, isNullable = true, title = null),
+                        true
+                    ),
+                    "requiredWithDefault" to Model.Object.Property(
+                        Model.Primitive.String(
+                            default = Model.Default.Value("default-value"),
+                            description = null,
+                            constraint = null,
+                            isNullable = false,
+                            title = null
+                        ),
+                        true
+                    )
+                ),
+                additionalProperties = false,
+                isNullable = false
+            )
+        ).generate("obj.required.nullable.default")
+    }
+
+    verifyKotlinFiles(
+        name = "single-property object with JsonObject additional properties renders as data class",
+        resourceDirectory = "obj/single-property-additional-json",
+    ) {
+        listOf(
+            Model.Object(
+                context = NamingContext.reference("SinglePropertyJsonAdditional", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = mapOf(
+                    "name" to Model.Object.Property(
+                        Model.Primitive.String(default = null, description = null, constraint = null, isNullable = false, title = null),
+                        true
+                    )
+                ),
+                additionalProperties = true,
+                isNullable = false
+            )
+        ).generate("obj.single.property.additional.json")
+    }
+
+    verifyKotlinFiles(
+        name = "single-property object with typed additional properties keeps empty map behavior",
+        resourceDirectory = "obj/single-property-additional-typed",
+    ) {
+        listOf(
+            Model.Object(
+                context = NamingContext.reference("SinglePropertyTypedAdditional", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = mapOf(
+                    "name" to Model.Object.Property(
+                        Model.Primitive.String(default = null, description = null, constraint = null, isNullable = false, title = null),
+                        true
+                    )
+                ),
+                additionalProperties = Model.Object.AdditionalProperties.Schema(
+                    Model.Primitive.Int(default = null, description = null, constraint = null, isNullable = false, title = null)
+                ),
+                isNullable = false
+            )
+        ).generate("obj.single.property.additional.typed")
+    }
 }
 
 private fun nested(): Model.Object.Property = Model.Object.Property(

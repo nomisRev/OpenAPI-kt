@@ -48,7 +48,7 @@ private tailrec suspend fun ReferenceOr<Schema>.getSuperTypeOrNull(
             parentSchema.discriminator
                 ?.mapping
                 ?.entries
-                ?.singleOrNull { (mappingName, ref) ->
+                ?.singleOrNull { (_, ref) ->
                     ref.schemaName() == name
                 }?.let { (mappingName, _) ->
                     NamingContext.reference((this as ReferenceOr.Reference).ref.schemaName(), context)
@@ -203,7 +203,7 @@ private fun Constraints.Collection?.merge(other: Constraints.Collection?): Const
     }
 
 private fun Model.Object.merge(context: NamingContext, model: Model.Object): Model.Object {
-    val properties = properties.combine(model.properties) { name, a, b ->
+    val properties = properties.combine(model.properties) { _, a, b ->
         Model.Object.Property(a.model.merge(b.model, context), a.isRequired || b.isRequired)
     }
     return Model.Object(

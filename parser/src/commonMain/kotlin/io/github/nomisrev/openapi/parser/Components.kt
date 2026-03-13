@@ -18,6 +18,7 @@ import kotlinx.serialization.json.JsonPrimitive
  */
 @Serializable(Components.Companion.Serializer::class)
 @OptIn(InternalSerializationApi::class)
+@Suppress("RUNTIME_ANNOTATION_NOT_SUPPORTED")
 @KeepGeneratedSerializer
 public data class Components(
     public val schemas: Map<String, ReferenceOr<Schema>> = emptyMap(),

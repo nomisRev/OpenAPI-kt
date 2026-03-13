@@ -21,8 +21,6 @@ import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 @OptIn(ExperimentalAtomicApi::class)
 val PrimitiveSpec by testSuite {
-    val name = NamingContext(NamingContext.Path(listOf("api")), listOf(NamingContext.RouteParam("value", "getBy")))
-
     verifyAll("Primitive types", Model.Primitive.String.all())
 
     verifyAll("Referenced primitives", Model.Primitive.all()) { schema, inner ->

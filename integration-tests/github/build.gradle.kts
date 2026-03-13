@@ -2,22 +2,12 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
-    id(libs.plugins.jvm.get().pluginId)
+    id(libs.plugins.multiplatform.get().pluginId)
     id(libs.plugins.serialization.get().pluginId)
 }
 
 val specFile = rootProject.file("test-specs/github.json")
 val clientName = "GitHub"
-
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_11)
-        freeCompilerArgs.addAll(
-            "-Xcontext-sensitive-resolution",
-            "-Xcontext-parameters"
-        )
-    }
-}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -30,22 +20,34 @@ val generator: Configuration by configurations.creating {
     isCanBeResolved = true
 }
 
+kotlin {
+    jvm()
+
+//    compilerOptions {
+//        jvmTarget.set(JvmTarget.JVM_11)
+//        freeCompilerArgs.addAll(
+//            "-Xcontext-sensitive-resolution",
+//            "-Xcontext-parameters"
+//        )
+//    }
+    sourceSets {
+        commonMain {
+            dependencies {
+                // Runtime dependencies for generated code
+                implementation(ktorLibs.client.core)
+                implementation(ktorLibs.client.cio)
+                implementation(ktorLibs.client.contentNegotiation)
+                implementation(ktorLibs.serialization.kotlinx.json)
+                implementation(libs.json)
+                implementation(libs.datetime)
+            }
+        }
+    }
+}
+
 dependencies {
-    // Generator dependencies (for running code generation)
     generator(project(":renderer"))
     generator(project(":parser"))
-
-    // Runtime dependencies for generated code
-    implementation(ktorLibs.client.core)
-    implementation(ktorLibs.client.cio)
-    implementation(ktorLibs.client.contentNegotiation)
-    implementation(ktorLibs.serialization.kotlinx.json)
-    implementation(libs.json)
-    implementation(libs.datetime)
-
-    // Test dependencies
-    testImplementation(kotlin("test"))
-    testImplementation(ktorLibs.client.mock)
 }
 
 val generateClient by tasks.registering(JavaExec::class) {
@@ -55,7 +57,7 @@ val generateClient by tasks.registering(JavaExec::class) {
     mainClass.set("io.github.nomisrev.openapi.GenerateClientKt")
     classpath = generator
 
-    val outputDir = layout.projectDirectory.dir("src/main/kotlin")
+    val outputDir = layout.projectDirectory.dir("src/commonMain/kotlin")
 
     inputs.file(specFile)
     outputs.dir(outputDir)
@@ -72,10 +74,6 @@ val generateClient by tasks.registering(JavaExec::class) {
         "--name", clientName,
         "--output", outputDir.asFile.absolutePath
     )
-}
-
-tasks.named("compileKotlin") {
-    dependsOn(generateClient)
 }
 
 tasks.withType<Test> {

@@ -241,6 +241,34 @@ val unionRenderSpec by testSuite {
     }
 
     verifyUnion(
+        name = "union with nullable list and primitive cases",
+        resourceDirectory = "union/nullable-collection-and-primitive"
+    ) {
+        Model.Union(
+            context = union,
+            listOf(
+                Model.Union.Case(
+                    Model.Collection(
+                        Model.Primitive.String(null, null, null, false, null),
+                        null,
+                        null,
+                        null,
+                        true,
+                        null
+                    ),
+                    null
+                ),
+                Model.Union.Case(Model.Primitive.Int(null, null, null, false, null), null),
+            ),
+            null,
+            null,
+            null,
+            null,
+            false
+        )
+    }
+
+    verifyUnion(
         name = "union with nested list and primitive cases",
         resourceDirectory = "union/nested-collection-and-primitive"
     ) {

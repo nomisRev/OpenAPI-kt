@@ -12,6 +12,7 @@ import kotlinx.serialization.json.JsonPrimitive
 /** A single encoding definition applied to a single schema property. */
 @Serializable(Encoding.Companion.Serializer::class)
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("RUNTIME_ANNOTATION_NOT_SUPPORTED")
 @KeepGeneratedSerializer
 public data class Encoding(
     /**

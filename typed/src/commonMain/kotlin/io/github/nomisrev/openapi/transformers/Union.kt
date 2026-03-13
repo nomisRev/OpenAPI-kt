@@ -286,7 +286,7 @@ private suspend fun NamingContext.unionCase(
             (schema.type as Type.Array).types.joinToString(
                 prefix = "Case",
                 separator = "Or"
-            ) { type ->
+            ) { _ ->
                 TODO()
             })
     )
