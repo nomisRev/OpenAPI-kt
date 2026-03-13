@@ -5,6 +5,7 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.MediaType
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.RequestBody
+import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.toModel
 import io.ktor.http.ContentType
@@ -16,23 +17,35 @@ suspend fun Endpoint.bodies(): Route.Bodies? =
     operation.requestBody?.resolve()?.value?.toBodies()
 
 context(endpoint: Endpoint, scope: Registry)
-private suspend fun RequestBody.toBodies(): Route.Bodies =
-    Route.Bodies(
-        required,
-        content.entries.associate { (contentType, mediaType) ->
-            val body = when {
-                ContentType.MultiPart.FormData.match(contentType) -> formDataToBody(contentType, mediaType)
-                ContentType.Application.FormUrlEncoded.match(contentType) -> formUrlEncoded(contentType, mediaType)
-                else -> toBody(contentType, mediaType)
-            }
-            Pair(ContentType.parse(contentType), body)
-        },
+private suspend fun RequestBody.toBodies(): Route.Bodies? {
+    val typedBodies = content.entries.mapNotNull { (contentType, mediaType) ->
+        val schema = mediaType.schema ?: return@mapNotNull null
+        val body = when {
+            ContentType.MultiPart.FormData.match(contentType) -> formDataToBody(mediaType, schema)
+            ContentType.Application.FormUrlEncoded.match(contentType) -> formUrlEncoded(mediaType, schema)
+            else -> toBody(contentType, mediaType, schema)
+        }
+        Pair(ContentType.parse(contentType), body)
+    }.toMap()
+
+    if (typedBodies.isEmpty()) {
+        if (!required) return null
+        val renderedContentTypes = content.keys.sorted().ifEmpty { listOf("<none>") }.joinToString(", ")
+        throw IllegalArgumentException(
+            "Required request body for ${endpoint.method.value} ${endpoint.path} (${endpoint.operationId}) " +
+                    "has no schema in any content type. Content types: $renderedContentTypes"
+        )
+    }
+
+    return Route.Bodies(
+        required = required,
+        types = typedBodies,
         extensions = extensions
     )
+}
 
 context(endpoint: Endpoint, scope: Registry)
-private suspend fun RequestBody.formDataToBody(contentType: String, mediaType: MediaType): Route.Body {
-    val schema = requireNotNull(mediaType.schema) { "$mediaType without a schema. $this" }
+private suspend fun RequestBody.formDataToBody(mediaType: MediaType, schema: ReferenceOr<Schema>): Route.Body {
     val name = endpoint.context(NamingContext.RouteBody("body", endpoint.operationId))
     return when (val model = schema.toModel(name, SchemaContext.Write)) {
         is Model.Object -> {
@@ -47,8 +60,7 @@ private suspend fun RequestBody.formDataToBody(contentType: String, mediaType: M
 }
 
 context(endpoint: Endpoint, scope: Registry)
-private suspend fun RequestBody.formUrlEncoded(contentType: String, mediaType: MediaType): Route.Body {
-    val schema = requireNotNull(mediaType.schema) { "$mediaType without a schema. $this" }
+private suspend fun RequestBody.formUrlEncoded(mediaType: MediaType, schema: ReferenceOr<Schema>): Route.Body {
     val name = endpoint.context(NamingContext.RouteBody("body", endpoint.operationId))
     val obj = requireNotNull(schema.toModel(name, SchemaContext.Write) as? Model.Object) {
         "Form URL encoded body must be an object. $this"
@@ -58,8 +70,7 @@ private suspend fun RequestBody.formUrlEncoded(contentType: String, mediaType: M
 }
 
 context(endpoint: Endpoint, scope: Registry)
-private suspend fun RequestBody.toBody(contentType: String, mediaType: MediaType): Route.Body {
-    val schema = requireNotNull(mediaType.schema) { "$mediaType without a schema. $this" }
+private suspend fun RequestBody.toBody(contentType: String, mediaType: MediaType, schema: ReferenceOr<Schema>): Route.Body {
     val name = endpoint.context(NamingContext.RouteBody("body", endpoint.operationId))
     return Route.Body.SetBody(
         contentType = ContentType.parse(contentType),

@@ -6,7 +6,7 @@ plugins {
     id(libs.plugins.serialization.get().pluginId)
 }
 
-val specFile = rootProject.file("test-specs/github.json")
+val specFile = rootProject.file("parser/src/commonTest/resources/specs/github.json")
 val clientName = "GitHub"
 
 java {
