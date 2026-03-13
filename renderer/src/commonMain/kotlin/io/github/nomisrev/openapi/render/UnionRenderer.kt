@@ -79,6 +79,11 @@ private fun Model.collectionSerializer(caseClassName: String): String =
 
         is Model.ContextHolder if !context.isTopLevel() -> "$caseClassName.${name().simpleName}.serializer()"
         else -> serializer()
+    }.let { serializer ->
+        if (isNullable && !serializer.endsWith(".nullable")) {
+            ctx.import(Import.nullable)
+            "$serializer.nullable"
+        } else serializer
     }
 
 context(ctx: Renderer, union: Model.Union)
