@@ -275,6 +275,81 @@ val unionRenderSpec by testSuite {
         )
     }
 
+    verifyUnion(
+        name = "union collection case keeps nested enum serializer qualification",
+        resourceDirectory = "union/collection-nested-enum-qualified"
+    ) {
+        val patch = Model.Enum(
+            context = union.nest(NamingContext.UnionCase("Patch")),
+            inner = Model.Primitive.String(null, null, null, false, null),
+            values = listOf("patch"),
+            default = null,
+            description = null,
+            title = null,
+            isNullable = false
+        )
+        Model.Union(
+            context = union,
+            cases = listOf(
+                Model.Union.Case(
+                    Model.Collection(
+                        inner = patch,
+                        default = null,
+                        description = null,
+                        constraint = null,
+                        isNullable = false,
+                        title = null
+                    ),
+                    discriminator = null
+                ),
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
+            ),
+            default = null,
+            description = null,
+            title = null,
+            discriminator = null,
+            isNullable = false
+        )
+    }
+
+    verifyUnion(
+        name = "union collection case keeps nested value class serializer qualification",
+        resourceDirectory = "union/collection-nested-value-qualified"
+    ) {
+        val name = Model.Object(
+            context = union.nest(NamingContext.UnionCase("Name")),
+            description = null,
+            title = null,
+            properties = mapOf(
+                "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true)
+            ),
+            additionalProperties = false,
+            isNullable = false
+        )
+        Model.Union(
+            context = union,
+            cases = listOf(
+                Model.Union.Case(
+                    Model.Collection(
+                        inner = name,
+                        default = null,
+                        description = null,
+                        constraint = null,
+                        isNullable = false,
+                        title = null
+                    ),
+                    discriminator = null
+                ),
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
+            ),
+            default = null,
+            description = null,
+            title = null,
+            discriminator = null,
+            isNullable = false
+        )
+    }
+
     // ==================== UNIONS WITH REFERENCES ====================
 
     verifyKotlinFiles(

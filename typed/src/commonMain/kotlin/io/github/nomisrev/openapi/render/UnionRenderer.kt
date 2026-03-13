@@ -65,7 +65,20 @@ private fun Model.Union.Case.nestedSerializer(): String =
     when (model) {
         is Model.Union,
         is Model.DiscriminatedObject -> "${unionClassName()}.${model.name().simpleName}.serializer()"
+        is Model.Collection -> model.collectionSerializer(unionClassName())
         else -> model.serializer()
+    }
+
+context(ctx: Renderer)
+private fun Model.collectionSerializer(caseClassName: String): String =
+    when (this) {
+        is Model.Collection -> {
+            ctx.import(Import.ListSerializer)
+            "ListSerializer(${inner.collectionSerializer(caseClassName)})"
+        }
+
+        is Model.ContextHolder if !context.isTopLevel() -> "$caseClassName.${name().simpleName}.serializer()"
+        else -> serializer()
     }
 
 context(ctx: Renderer, union: Model.Union)
@@ -285,9 +298,11 @@ private fun Model.Union.Case.renderDeserializeAttempt(): String =
         is Model.FreeFormJson,
         is Model.Uuid,
         is Model.Date,
-        is Model.Collection,
         is Model.Reference ->
             "${unionClassName()}::class to { ${unionClassName()}(decodeFromJsonElement(${model.serializer()}, it)) }"
+
+        is Model.Collection ->
+            "${unionClassName()}::class to { ${unionClassName()}(decodeFromJsonElement(${nestedSerializer()}, it)) }"
 
         is Model.DiscriminatedObject,
         is Model.Union ->
@@ -312,9 +327,11 @@ private fun Model.Union.Case.serialiseCase(): String =
         is Model.FreeFormJson,
         is Model.Uuid,
         is Model.Primitive,
-        is Model.Collection,
         is Model.Reference ->
             "encoder.encodeSerializableValue(${model.serializer()}, value.value)"
+
+        is Model.Collection ->
+            "encoder.encodeSerializableValue(${nestedSerializer()}, value.value)"
 
         is Model.DiscriminatedObject,
         is Model.Union ->
