@@ -15,7 +15,7 @@ kotlin {
         "-Xcontext-sensitive-resolution",
         "-Xcontext-parameters",
         "-Xreturn-value-checker=full",
-        "-Xdebug".takeIf { System.getProperty("idea.active") == "true" } ?: null
+        "-Xdebug".takeIf { System.getProperty("idea.active") == "true" }
     ))
 
     jvm()
@@ -25,7 +25,6 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     sourceSets {
-        // jvmAndNative is the target we use for generation (we'll include js/wasm node later).
         val jvmAndNativeMain by creating { dependsOn(commonMain.get()) }
         macosArm64Main.get().dependsOn(jvmAndNativeMain)
         jvmMain.get().dependsOn(jvmAndNativeMain)
@@ -41,7 +40,7 @@ kotlin {
 
         commonMain {
             dependencies {
-                api(projects.parser)
+                api(projects.typed)
                 implementation(ktorLibs.client.cio)
                 implementation(ktorLibs.client.contentNegotiation)
                 implementation(ktorLibs.serialization.kotlinx.json)
@@ -52,7 +51,6 @@ kotlin {
         commonTest {
             kotlin.srcDir("src/commonTest/resources/kotlinTestData")
             dependencies {
-                implementation(projects.typed)
                 implementation(kotlin("test"))
                 implementation(libs.testballoon)
                 implementation(libs.kotlinxresources)

@@ -32,7 +32,7 @@ val generator: Configuration by configurations.creating {
 
 dependencies {
     // Generator dependencies (for running code generation)
-    generator(project(":typed"))
+    generator(project(":renderer"))
     generator(project(":parser"))
 
     // Runtime dependencies for generated code

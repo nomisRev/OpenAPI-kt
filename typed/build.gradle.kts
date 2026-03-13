@@ -15,7 +15,7 @@ kotlin {
         "-Xcontext-sensitive-resolution",
         "-Xcontext-parameters",
         "-Xreturn-value-checker=full",
-        "-Xdebug".takeIf { System.getProperty("idea.active") == "true" } ?: null
+        "-Xdebug".takeIf { System.getProperty("idea.active") == "true" }
     ))
 
     jvm()
@@ -50,7 +50,6 @@ kotlin {
             }
         }
         commonTest {
-            kotlin.srcDir("src/commonTest/resources/kotlinTestData")
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.testballoon)

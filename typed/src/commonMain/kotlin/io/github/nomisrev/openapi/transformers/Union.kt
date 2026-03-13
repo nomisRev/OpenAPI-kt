@@ -14,7 +14,7 @@ import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.schemaName
-import io.github.nomisrev.openapi.render.toPascalCase
+import io.github.nomisrev.openapi.toPascalCase
 
 
 context(ctx: Registry.Scope)

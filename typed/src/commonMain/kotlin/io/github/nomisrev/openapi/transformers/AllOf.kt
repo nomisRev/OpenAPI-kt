@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi.transformers
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.combine
 import io.github.nomisrev.openapi.merge
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
@@ -202,7 +203,7 @@ private fun Constraints.Collection?.merge(other: Constraints.Collection?): Const
     }
 
 private fun Model.Object.merge(context: NamingContext, model: Model.Object): Model.Object {
-    val properties = properties.merge(model.properties) { name, a, b ->
+    val properties = properties.combine(model.properties) { name, a, b ->
         Model.Object.Property(a.model.merge(b.model, context), a.isRequired || b.isRequired)
     }
     return Model.Object(
