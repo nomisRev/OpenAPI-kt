@@ -1,0 +1,3 @@
+# Generated source code
+# Uncomment if you want to commit generated code for faster CI builds
+*/src/main/kotlin/

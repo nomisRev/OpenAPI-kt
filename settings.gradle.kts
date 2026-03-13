@@ -25,6 +25,7 @@ rootProject.name = "openapi-kt"
 
 include("parser")
 include("typed")
+include("renderer")
 
 //include("integration-tests")
 //include("integration-tests:github")
