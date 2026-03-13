@@ -11,6 +11,7 @@ import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable(Response.Companion.Serializer::class)
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("RUNTIME_ANNOTATION_NOT_SUPPORTED")
 @KeepGeneratedSerializer
 public data class Response(
   /**

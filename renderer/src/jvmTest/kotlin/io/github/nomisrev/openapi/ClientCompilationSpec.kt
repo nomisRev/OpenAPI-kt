@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.render.attemptDeserialize
+import io.github.nomisrev.openapi.render.renderer
 import io.github.nomisrev.openapi.routes.toApiModel
 import kotlinx.coroutines.runBlocking
 import java.io.File
@@ -10,7 +11,7 @@ import kotlin.test.Test
 class ClientCompilationSpec {
 
     private fun testCompilation(fileName: String) = runBlocking {
-        val file = File("../test-specs/$fileName")
+        val file = File("../parser/src/commonTest/resources/specs/$fileName")
         val content = file.readText()
         val spec = if (fileName.endsWith(".json")) {
             OpenAPI.fromJson(content)

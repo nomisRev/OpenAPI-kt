@@ -2,6 +2,7 @@
 
 package io.github.nomisrev.openapi.parser
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -16,6 +17,8 @@ import kotlinx.serialization.json.JsonPrimitive
  * relationship and traversal mechanism between responses and other operations.
  */
 @Serializable(Link.Companion.Serializer::class)
+@OptIn(ExperimentalSerializationApi::class)
+@Suppress("RUNTIME_ANNOTATION_NOT_SUPPORTED")
 @KeepGeneratedSerializer
 public data class Link(
   /**

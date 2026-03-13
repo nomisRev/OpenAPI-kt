@@ -17,6 +17,7 @@ import kotlinx.serialization.json.JsonPrimitive
  */
 @Serializable(Info.Companion.Serializer::class)
 @OptIn(InternalSerializationApi::class)
+@Suppress("RUNTIME_ANNOTATION_NOT_SUPPORTED")
 @KeepGeneratedSerializer
 public data class Info(
   /** The title of the API. */
@@ -47,6 +48,7 @@ public data class Info(
   /** Contact information for the exposed API. */
   @Serializable(Contact.Companion.Serializer::class)
   @OptIn(InternalSerializationApi::class)
+  @Suppress("RUNTIME_ANNOTATION_NOT_SUPPORTED")
   @KeepGeneratedSerializer
   public data class Contact(
     /** The identifying name of the contact person/organization. */
@@ -78,6 +80,7 @@ public data class Info(
   /** License information for the exposed API. */
   @Serializable(License.Companion.Serializer::class)
   @OptIn(InternalSerializationApi::class)
+  @Suppress("RUNTIME_ANNOTATION_NOT_SUPPORTED")
   @KeepGeneratedSerializer
   public data class License(
     /** The license name used for the API. */
