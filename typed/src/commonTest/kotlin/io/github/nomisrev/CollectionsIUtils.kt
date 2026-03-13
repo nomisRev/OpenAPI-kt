@@ -1,6 +1,6 @@
 package io.github.nomisrev
 
-inline fun <T, T2, T3, T4, V> List<T>.zip(
+fun <T, T2, T3, T4, V> List<T>.zip(
     other: List<T2>,
     other2: List<T3>,
     other3: List<T4>,

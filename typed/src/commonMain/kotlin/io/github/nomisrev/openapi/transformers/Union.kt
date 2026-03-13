@@ -14,7 +14,7 @@ import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.schemaName
-import io.github.nomisrev.openapi.render.toPascalCase
+import io.github.nomisrev.openapi.toPascalCase
 
 
 context(ctx: Registry.Scope)
@@ -22,7 +22,8 @@ suspend fun ResolvedSchema.union(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
 ): Model {
-    val peekedSubtypes = subtypes.associateWith { it.peek() }
+    val uniqueSubtypes = subtypes.distinct()
+    val peekedSubtypes = uniqueSubtypes.associateWith { it.peek() }
     val unionContexts = peekedSubtypes.entries.mapIndexed { index, (refOrSchema, schema) ->
         name.unionCase(index, refOrSchema, schema, peekedSubtypes, context)
     }
@@ -39,16 +40,9 @@ suspend fun ResolvedSchema.union(
      *
      *  So in this case whenever there are n casses, and n-1 cases are references than the non-referenced case should inherit the outer name.
      */
-    val cases = subtypes.mapIndexed { index, subtype ->
+    val cases = uniqueSubtypes.mapIndexed { index, subtype ->
         subtype.resolve(unionContexts[index], context) {
-            val discriminatorValue = schema.discriminator?.mapping?.let { discriminator ->
-                when (it) {
-                    is ResolvedSchema.Recursive if it.name.head is NamingContext.Reference -> discriminator[it.name.head.name]
-                    is ResolvedSchema.Reference -> discriminator[it.reference.name]
-                    is ResolvedSchema.Recursive,
-                    is ResolvedSchema.Value -> null
-                }
-            }
+            val discriminatorValue = schema.discriminator.discriminatorValueForSubtype(subtype)
             Model.Union.Case(it.toModel(context, false), discriminatorValue)
         }
     }
@@ -214,6 +208,30 @@ val caseIndex = listOf(
     "Sixteen",
 )
 
+private const val schemaRefPrefix = "#/components/schemas/"
+
+private fun String.schemaRefNameOrSelf(): String =
+    if (startsWith(schemaRefPrefix)) schemaName() else this
+
+private fun Schema.Discriminator?.discriminatorValueForSubtype(
+    subtype: ReferenceOr<Schema>
+): String? = when (subtype) {
+    is ReferenceOr.Reference -> {
+        val subtypeRefName = subtype.ref.schemaRefNameOrSelf()
+        val mapped = this?.mapping
+            ?.entries
+            ?.firstOrNull { (_, ref) ->
+                ref == subtype.ref || ref.schemaRefNameOrSelf() == subtypeRefName
+            }
+            ?.key
+
+        // OpenAPI allows implicit mapping: if no explicit mapping matches, fall back to schema name.
+        mapped ?: this?.let { subtypeRefName }
+    }
+
+    is ReferenceOr.Value<Schema> -> null
+}
+
 context(ctx: Registry.Scope)
 private suspend fun NamingContext.unionCase(
     index: Int,
@@ -268,7 +286,7 @@ private suspend fun NamingContext.unionCase(
             (schema.type as Type.Array).types.joinToString(
                 prefix = "Case",
                 separator = "Or"
-            ) { type ->
+            ) { _ ->
                 TODO()
             })
     )

@@ -166,7 +166,7 @@ inline fun <reified T : Throwable> TestSuite.verifyFails(
 ) = test(name) {
     val e = assertFailsWith<T> {
         registry(api) {
-            val ignored = ReferenceOr.value(schema).toModel(NamingContext.path("test"), SchemaContext.Write)
+            ReferenceOr.value(schema).toModel(NamingContext.path("test"), SchemaContext.Write)
         }
     }
     assertEquals(message, e.message)

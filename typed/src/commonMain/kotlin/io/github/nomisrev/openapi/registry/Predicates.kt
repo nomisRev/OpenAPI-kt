@@ -6,7 +6,6 @@ import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Reference
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
-import io.github.nomisrev.openapi.render.name
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 

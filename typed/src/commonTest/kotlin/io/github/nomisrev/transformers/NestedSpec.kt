@@ -21,8 +21,6 @@ val nestedSpec by testSuite {
     test("Referenced Nested Object") {
         val topInt = NamingContext.Reference("TopInt", SchemaContext.Null)
         val api = api.reference("TopInt", Schema.integer)
-        val intM = Model.Primitive.Long(null, null, null, false, null)
-        val intObj = Model.Object.value(topInt, intM)
         val expected = Model.Object(
             NamingContext.path("get"),
             null,

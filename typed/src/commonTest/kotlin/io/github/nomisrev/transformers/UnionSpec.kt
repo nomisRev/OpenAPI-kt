@@ -169,4 +169,73 @@ val unionSpec by testSuite {
             assertEquals(expected, result)
         }
     }
+
+    test("Discriminated union infers implicit mapping from referenced schema names") {
+        val directory = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf("type" to ReferenceOr.value(Schema.string))
+        )
+        val file = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf("type" to ReferenceOr.value(Schema.string))
+        )
+        val contentSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.schema("content-directory"),
+                ReferenceOr.schema("content-file")
+            ),
+            discriminator = Schema.Discriminator(propertyName = "type")
+        )
+        val testApi = api
+            .reference("content-directory", directory)
+            .reference("content-file", file)
+            .reference("content", contentSchema)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("content")
+                .toModel(NamingContext.reference("content", SchemaContext.Null), SchemaContext.Write) as Union
+
+            assertEquals("type", result.discriminator)
+            assertEquals(
+                listOf("content-directory", "content-file"),
+                result.cases.map { it.discriminator }
+            )
+        }
+    }
+
+    test("Discriminated union resolves explicit mapping keys from mapping values") {
+        val directory = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf("type" to ReferenceOr.value(Schema.string))
+        )
+        val file = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf("type" to ReferenceOr.value(Schema.string))
+        )
+        val contentSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.schema("content-directory"),
+                ReferenceOr.schema("content-file")
+            ),
+            discriminator = Schema.Discriminator(
+                propertyName = "type",
+                mapping = mapOf(
+                    "dir" to "#/components/schemas/content-directory",
+                    "file" to "#/components/schemas/content-file"
+                )
+            )
+        )
+        val testApi = api
+            .reference("content-directory", directory)
+            .reference("content-file", file)
+            .reference("content", contentSchema)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("content")
+                .toModel(NamingContext.reference("content", SchemaContext.Null), SchemaContext.Write) as Union
+
+            assertEquals("type", result.discriminator)
+            assertEquals(listOf("dir", "file"), result.cases.map { it.discriminator })
+        }
+    }
 }

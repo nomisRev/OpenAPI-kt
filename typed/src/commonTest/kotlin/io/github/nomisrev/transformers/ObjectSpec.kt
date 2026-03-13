@@ -133,7 +133,7 @@ val objectSpec by testSuite {
     ) { name, props, isNullable, additionalProperties ->
         val schema = Schema(
             type = Type.Basic.Object,
-            properties = props.associate { (name, schema, isRequired) -> Pair(name, ReferenceOr.value(schema.actual)) },
+            properties = props.associate { (name, schema, _) -> Pair(name, ReferenceOr.value(schema.actual)) },
             description = null,
             required = props.filter { it.isRequired }.map { it.name },
             additionalProperties = additionalProperties.actual,

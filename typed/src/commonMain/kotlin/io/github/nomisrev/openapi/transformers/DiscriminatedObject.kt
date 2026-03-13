@@ -259,7 +259,7 @@ fun Schema.mergeCollectionConstraints(other: Schema): Schema =
 
 context(ctx: Registry.Scope)
 suspend fun Schema.mergeObject(other: Schema): Schema {
-    val properties = properties.orEmpty().merge(other.properties.orEmpty()) { name, a, b -> a.combine(b) }
+    val properties = properties.orEmpty().merge(other.properties.orEmpty()) { _, a, b -> a.combine(b) }
 
     return mergeCommon(other)
         .mergeObjectConstraints(other)

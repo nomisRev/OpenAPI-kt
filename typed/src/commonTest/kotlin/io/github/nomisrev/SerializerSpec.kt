@@ -442,6 +442,7 @@ fun <Wrapped, Value> ValueClassSerializer(
 
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable(with = PersonWithAdditionalPropertiesSchema.Serializer::class)
+@Suppress("RUNTIME_ANNOTATION_NOT_SUPPORTED")
 @KeepGeneratedSerializer
 data class PersonWithAdditionalPropertiesSchema(
     val name: String,
@@ -484,6 +485,7 @@ data class PersonWithAdditionalPropertiesSchema(
 }
 
 @OptIn(ExperimentalSerializationApi::class)
+@Suppress("RUNTIME_ANNOTATION_NOT_SUPPORTED")
 @KeepGeneratedSerializer
 @Serializable(with = PersonWithAdditionalProperties.Serializer::class)
 data class PersonWithAdditionalProperties(
@@ -730,8 +732,6 @@ sealed interface DiscriminatedUnion {
 }
 
 val discriminatedUnionSpec by testSuite {
-    val json = Json { classDiscriminator = "type" }
-
     fun casePerson(): DiscriminatedUnion =
         DiscriminatedUnion.CasePerson(Person(id = 1, name = "John"))
 

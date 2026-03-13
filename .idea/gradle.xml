@@ -8,7 +8,10 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/integration-tests" />
+            <option value="$PROJECT_DIR$/integration-tests/github" />
             <option value="$PROJECT_DIR$/parser" />
+            <option value="$PROJECT_DIR$/renderer" />
             <option value="$PROJECT_DIR$/typed" />
           </set>
         </option>
