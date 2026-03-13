@@ -42,14 +42,7 @@ suspend fun ResolvedSchema.union(
      */
     val cases = uniqueSubtypes.mapIndexed { index, subtype ->
         subtype.resolve(unionContexts[index], context) {
-            val discriminatorValue = schema.discriminator?.mapping?.let { discriminator ->
-                when (it) {
-                    is ResolvedSchema.Recursive if it.name.head is NamingContext.Reference -> discriminator[it.name.head.name]
-                    is ResolvedSchema.Reference -> discriminator[it.reference.name]
-                    is ResolvedSchema.Recursive,
-                    is ResolvedSchema.Value -> null
-                }
-            }
+            val discriminatorValue = schema.discriminator.discriminatorValueForSubtype(subtype)
             Model.Union.Case(it.toModel(context, false), discriminatorValue)
         }
     }
@@ -214,6 +207,30 @@ val caseIndex = listOf(
     "Fifteen",
     "Sixteen",
 )
+
+private const val schemaRefPrefix = "#/components/schemas/"
+
+private fun String.schemaRefNameOrSelf(): String =
+    if (startsWith(schemaRefPrefix)) schemaName() else this
+
+private fun Schema.Discriminator?.discriminatorValueForSubtype(
+    subtype: ReferenceOr<Schema>
+): String? = when (subtype) {
+    is ReferenceOr.Reference -> {
+        val subtypeRefName = subtype.ref.schemaRefNameOrSelf()
+        val mapped = this?.mapping
+            ?.entries
+            ?.firstOrNull { (_, ref) ->
+                ref == subtype.ref || ref.schemaRefNameOrSelf() == subtypeRefName
+            }
+            ?.key
+
+        // OpenAPI allows implicit mapping: if no explicit mapping matches, fall back to schema name.
+        mapped ?: this?.let { subtypeRefName }
+    }
+
+    is ReferenceOr.Value<Schema> -> null
+}
 
 context(ctx: Registry.Scope)
 private suspend fun NamingContext.unionCase(
