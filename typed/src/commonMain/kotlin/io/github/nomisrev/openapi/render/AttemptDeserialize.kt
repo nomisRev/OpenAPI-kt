@@ -2,11 +2,13 @@ package io.github.nomisrev.openapi.render
 
 private val tripleQuote = "\"\"\""
 
-val attemptDeserialize = $$"""
-package io.github.nomisrev.model
+val attemptDeserialize = attemptDeserialize("io.github.nomisrev")
+
+fun attemptDeserialize(packageName: String) = $$"""
+package $$packageName.model
     
-import kotlinx.serialization.SerializationException
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder

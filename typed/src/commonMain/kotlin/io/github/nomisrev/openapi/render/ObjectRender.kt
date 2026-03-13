@@ -10,6 +10,10 @@ fun Model.Object.render(
 ): String = buildString {
     import(properties.map { (_, prop) -> prop.model })
 
+    if (properties.any { it.value.model is Model.Uuid }) {
+        experimentalUuidApi()
+    }
+
     if (needsSerializer()) {
         ctx.import(TypeName.ExperimentalSerializationApi, TypeName.KeepGeneratedSerializer)
         +"@OptIn(ExperimentalSerializationApi::class)"
@@ -177,7 +181,10 @@ private fun Model.Object.serializer() {
                         }
 
                     when (additionalProperties) {
-                        is Model.Object.AdditionalProperties.Allowed if additionalProperties.value -> +"putAll(value.additional)"
+                        is Model.Object.AdditionalProperties.Allowed if additionalProperties.value -> {
+                            ctx.import(TopLevelFunction.putAll())
+                            +"putAll(value.additional)"
+                        }
                         is Model.Object.AdditionalProperties.Allowed -> {}
                         is Model.Object.AdditionalProperties.Schema -> {
                             +"value.additional?.forEach { (key, value) ->"

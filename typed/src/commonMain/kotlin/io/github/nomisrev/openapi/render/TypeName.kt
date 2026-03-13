@@ -21,7 +21,9 @@ sealed interface Import {
     }
 }
 
-data class TopLevelFunction(override val packageName: String, val functionName: String) : Import
+data class TopLevelFunction(override val packageName: String, val functionName: String) : Import {
+    companion object
+}
 
 sealed interface TypeName : Import {
     data class Collection(val type: TypeName) : TypeName {
@@ -51,6 +53,7 @@ sealed interface TypeName : Import {
         val Double = Class("kotlin", "Double")
         val Unit = Class("kotlin", "Unit")
         val Uuid = Class("kotlin.uuid", "Uuid")
+        val ExperimentalUuidApi = Class("kotlin.uuid", "ExperimentalUuidApi")
         val ByteArray = Class("kotlin", "ByteArray")
 
         val JvmInline = Class("kotlin.jvm", "JvmInline")

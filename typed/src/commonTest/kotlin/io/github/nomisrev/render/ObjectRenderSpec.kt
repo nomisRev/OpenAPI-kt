@@ -1,350 +1,217 @@
 package io.github.nomisrev.render
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.nomisrev.openapi.KFile
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.parser.ReferenceOr
-import io.github.nomisrev.openapi.parser.Schema
-import io.github.nomisrev.openapi.render.Import
-import io.github.nomisrev.openapi.render.TopLevelFunction
-import io.github.nomisrev.openapi.render.TypeName
+import io.github.nomisrev.openapi.generate
+import io.github.nomisrev.openapi.render.attemptDeserialize
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 val renderObjectSpec by testSuite {
-    verify(
-        """
-        |@Serializable
-        |data object Foo
-        """.trimMargin(),
-        Model.Object(
-            NamingContext.reference("Foo", SchemaContext.Null),
-            null,
-            null,
-            emptyMap(),
-            false,
-            false
-        ),
-        TypeName.Serializable,
-    )
-
-    verify(
-        """|@Serializable
-           |@JvmInline
-           |value class Foo(val value: String)""".trimMargin(),
-        Model.Object.value(
-            NamingContext.Reference("Foo", SchemaContext.Null),
-            Model.Primitive.String(null, null, null, false, null)
-        ),
-        TypeName.Serializable,
-        TypeName.JvmInline,
-    )
-
-    verify(
-        """|@Serializable
-           |@JvmInline
-           |value class Foo(val value: String)""".trimMargin(),
-        Model.Object.value(
-            NamingContext.Reference("Foo", SchemaContext.Null),
-            Model.Primitive.String(null, null, null, true, null)
-        ),
-        TypeName.Serializable,
-        TypeName.JvmInline,
-    )
-
-    val singleline = Model.Object(
-        context = NamingContext.reference("Foo", SchemaContext.Null),
-        description = null,
-        title = null,
-        properties = mapOf(
-            "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
-            "email" to Model.Object.Property(Model.Primitive.Long(null, null, null, true, null), false),
-            "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, false, null), true),
-            "longername" to Model.Object.Property(Model.Primitive.Double(null, null, null, true, null), true),
-        ),
-        additionalProperties = false,
-        isNullable = false
-    )
-
-    verify(
-        """|@Serializable
-           |data class Foo(val name: String? = null, val email: Long? = null, val age: Int, val longername: Double?)
-           """.trimMargin(),
-        singleline,
-        TypeName.Serializable,
-    )
-
-    val multiline = Model.Object(
-        context = NamingContext.reference("Foo", SchemaContext.Null),
-        description = null,
-        title = null,
-        properties = mapOf(
-            "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
-            "email" to Model.Object.Property(Model.Primitive.Long(null, null, null, true, null), false),
-            "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, false, null), true),
-            "longername" to Model.Object.Property(Model.Primitive.Double(null, null, null, true, null), true),
-            "longername2" to Model.Object.Property(Model.Primitive.Float(null, null, null, false, null), false),
-            "longer_name_3" to Model.Object.Property(Model.Uuid(null, false, null), false),
-            "longername4" to Model.Object.Property(Model.DateTime(null, false, null), false),
-        ),
-        additionalProperties = false,
-        isNullable = false
-    )
-
-    verify(
-        """|@Serializable
-           |data class Foo(
-           |    val name: String? = null,
-           |    val email: Long? = null,
-           |    val age: Int,
-           |    val longername: Double?,
-           |    val longername2: Float? = null,
-           |    @SerialName("longer_name_3") val longerName3: Uuid? = null,
-           |    val longername4: LocalDateTime? = null,
-           |)""".trimMargin(),
-        multiline,
-        TypeName.Serializable,
-        TypeName.SerialName,
-        TypeName.Uuid,
-        TypeName.DateTime,
-    )
-
-    val enum = Model.Enum(
-        NamingContext.reference("Foo", SchemaContext.Null)
-            .nest(NamingContext.ObjectProperty("Sort")),
-        Model.Primitive.String(null, null, null, false, null),
-        listOf("ASC", "DESC"),
-        null,
-        null,
-        null,
-        false
-    )
-    val nestedEnum = Model.Object.value(
-        NamingContext.Reference("Foo", SchemaContext.Null),
-        enum
-    )
-
-    verify(
-        """|@Serializable
-           |@JvmInline
-           |value class Foo(val value: Sort) {
-           |    @Serializable
-           |    enum class Sort {
-           |        ASC, DESC;
-           |    }
-           |}""".trimMargin(),
-        nestedEnum,
-        TypeName.Serializable,
-        TypeName.JvmInline,
-    )
-
-    val primitiveImports = Model.Object(
-        context = NamingContext.reference("Foo", SchemaContext.Null),
-        description = null,
-        title = null,
-        properties = mapOf(
-            "date" to Model.Object.Property(Model.Date(null, false, null), false),
-            "dateTime" to Model.Object.Property(Model.DateTime(null, false, null), false),
-            "uuid" to Model.Object.Property(Model.Uuid(null, false, null), false),
-            "json" to Model.Object.Property(Model.FreeFormJson(null, null, false, null), false),
-            "jsonArray" to Model.Object.Property(
-                Model.Collection(
-                    Model.FreeFormJson(null, null, false, null), null, null, null, false, null
-                ), false
-            ),
-            "jsonObject" to Model.Object.Property(
-                Model.Object(
-                    NamingContext.reference("Foo", SchemaContext.Null)
-                        .nest(NamingContext.ObjectProperty("jsonObject")),
-                    null,
-                    null,
-                    emptyMap(),
-                    additionalProperties = true,
-                    isNullable = false
-                ),
+    verifyKotlinFiles(
+        name = "empty object renders as data object",
+        resourceDirectory = "obj/empty",
+    ) {
+        listOf(
+            Model.Object(
+                NamingContext.reference("Foo", SchemaContext.Null),
+                null,
+                null,
+                emptyMap(),
+                false,
                 false
             )
-        ),
-        additionalProperties = false,
-        isNullable = false
-    )
+        ).generate("obj.empty")
+    }
 
-    verify(
-        """
-           |@Serializable
-           |data class Foo(
-           |    val date: LocalDate? = null,
-           |    val dateTime: LocalDateTime? = null,
-           |    val uuid: Uuid? = null,
-           |    val json: JsonElement? = null,
-           |    val jsonArray: JsonArray? = null,
-           |    val jsonObject: JsonObject? = null,
-           |)
-           """.trimMargin(),
-        primitiveImports,
-        TypeName.Serializable,
-        TypeName.Uuid,
-        TypeName.Date,
-        TypeName.DateTime,
-        TypeName.JsonArray,
-        TypeName.JsonElement,
-        TypeName.JsonObject,
-    )
+    verifyKotlinFiles(
+        name = "value class with String",
+        resourceDirectory = "obj/value-cls",
+    ) {
+        listOf(
+            Model.Object.value(
+                NamingContext.Reference("Foo", SchemaContext.Null),
+                Model.Primitive.String(null, null, null, false, null)
+            )
+        ).generate("obj.value.cls")
+    }
 
-    verify(
-        """|@Serializable
-           |data object EmptyObject
-        """.trimMargin(),
-        Model.Object(
-            context = NamingContext.reference("EmptyObject", SchemaContext.Null),
-            description = null,
-            title = null,
-            properties = emptyMap(),
-            additionalProperties = Model.Object.AdditionalProperties.Allowed(false),
-            isNullable = false
-        ),
-        TypeName.Serializable,
-    )
+    verifyKotlinFiles(
+        name = "value class with nullable String still renders non-null value",
+        resourceDirectory = "obj/value-cls-nullable",
+    ) {
+        listOf(
+            Model.Object.value(
+                NamingContext.Reference("Foo", SchemaContext.Null),
+                Model.Primitive.String(null, null, null, true, null)
+            )
+        ).generate("obj.value.cls.nullable")
+    }
 
-    verify(
-        """
-            |@OptIn(ExperimentalSerializationApi::class)
-            |@KeepGeneratedSerializer
-            |@Serializable(with = PersonWithAdditionalProperties.Serializer::class)
-            |data class PersonWithAdditionalProperties(
-            |    val name: String,
-            |    val age: Int?,
-            |    val nested: NestedClass,
-            |    val additional: JsonObject? = null,
-            |) {
-            |    @Serializable
-            |    data class NestedClass(val config1: String, val config2: Long)
-            |
-            |    object Serializer : KSerializer<PersonWithAdditionalProperties> {
-            |        override val descriptor: SerialDescriptor = generatedSerializer().descriptor
-            |
-            |        override fun serialize(encoder: Encoder, value: PersonWithAdditionalProperties) {
-            |            val json = (encoder as JsonEncoder).json
-            |            return encoder.encodeSerializableValue(
-            |                JsonObject.serializer(),
-            |                buildJsonObject {
-            |                    put("name", json.encodeToJsonElement(String.serializer(), value.name))
-            |                    put("age", json.encodeToJsonElement(Int.serializer().nullable, value.age))
-            |                    put("nested", json.encodeToJsonElement(NestedClass.serializer(), value.nested))
-            |                    putAll(value.additional)
-            |                })
-            |        }
-            |
-            |        override fun deserialize(decoder: Decoder): PersonWithAdditionalProperties {
-            |            val json = (decoder as JsonDecoder).json
-            |            val element = decoder.decodeSerializableValue(JsonObject.serializer())
-            |            val names = setOf("name", "age", "nested")
-            |            require(element.keys.containsAll(names)) { "Missing required properties: ${'$'}{names - element.keys}" }
-            |            return PersonWithAdditionalProperties(
-            |                name = json.decodeFromJsonElement(String.serializer(), element["name"]!!),
-            |                age = json.decodeFromJsonElement(Int.serializer().nullable, element["age"]!!),
-            |                nested = json.decodeFromJsonElement(NestedClass.serializer(), element["nested"]!!),
-            |                additional = JsonObject(element - names).ifEmpty { null }
-            |            )
-            |        }
-            |    }
-            |}
-        """.trimMargin(),
-        Model.Object(
-            NamingContext.reference("PersonWithAdditionalProperties", SchemaContext.Null),
+    verifyKotlinFiles(
+        name = "single line data class with properties",
+        resourceDirectory = "obj/single-line",
+    ) {
+        listOf(
+            Model.Object(
+                context = NamingContext.reference("Foo", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = mapOf(
+                    "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
+                    "email" to Model.Object.Property(Model.Primitive.Long(null, null, null, true, null), false),
+                    "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, false, null), true),
+                    "longername" to Model.Object.Property(Model.Primitive.Double(null, null, null, true, null), true),
+                ),
+                additionalProperties = false,
+                isNullable = false
+            )
+        ).generate("obj.single.line")
+    }
+
+    verifyKotlinFiles(
+        name = "multi line data class with properties",
+        resourceDirectory = "obj/multi-line",
+    ) {
+        listOf(
+            Model.Object(
+                context = NamingContext.reference("Foo", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = mapOf(
+                    "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), false),
+                    "email" to Model.Object.Property(Model.Primitive.Long(null, null, null, true, null), false),
+                    "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, false, null), true),
+                    "longername" to Model.Object.Property(Model.Primitive.Double(null, null, null, true, null), true),
+                    "longername2" to Model.Object.Property(Model.Primitive.Float(null, null, null, false, null), false),
+                    "longer_name_3" to Model.Object.Property(Model.Uuid(null, false, null), false),
+                    "longername4" to Model.Object.Property(Model.DateTime(null, false, null), false),
+                ),
+                additionalProperties = false,
+                isNullable = false
+            )
+        ).generate("obj.multi.line")
+    }
+
+    verifyKotlinFiles(
+        name = "value class with nested enum",
+        resourceDirectory = "obj/nested-enum",
+    ) {
+        val enum = Model.Enum(
+            NamingContext.reference("Foo", SchemaContext.Null)
+                .nest(NamingContext.ObjectProperty("Sort")),
+            Model.Primitive.String(null, null, null, false, null),
+            listOf("ASC", "DESC"),
             null,
             null,
-            mapOf(
-                "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
-                "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, true, null), true),
-                "nested" to nested(),
-            ),
-            additionalProperties = true,
-            isNullable = false
-        ),
-        TypeName.ExperimentalSerializationApi,
-        TypeName.KeepGeneratedSerializer,
-        TypeName.Serializable,
-        Import.serializer,
-        Import.nullable,
-        TypeName.JsonObject,
-        TypeName.KSerializer,
-        TypeName.SerialDescriptor,
-        TypeName.Encoder,
-        TypeName.Decoder,
-        TypeName.JsonDecoder,
-        TypeName.JsonEncoder,
-        Import.buildJsonObject,
-    )
+            null,
+            false
+        )
+        listOf(
+            Model.Object.value(
+                NamingContext.Reference("Foo", SchemaContext.Null),
+                enum
+            )
+        ).generate("obj.nested.enum")
+    }
 
-    verify(
-        """
-            |@OptIn(ExperimentalSerializationApi::class)
-            |@KeepGeneratedSerializer
-            |@Serializable(with = PersonWithAdditionalProperties.Serializer::class)
-            |data class PersonWithAdditionalProperties(
-            |    val name: String,
-            |    val age: Int?,
-            |    val additional: Map<String, NestedClass>? = null,
-            |) {
-            |    @Serializable
-            |    data class NestedClass(val config1: String, val config2: Long)
-            |
-            |    object Serializer : KSerializer<PersonWithAdditionalProperties> {
-            |        override val descriptor: SerialDescriptor = generatedSerializer().descriptor
-            |
-            |        override fun serialize(encoder: Encoder, value: PersonWithAdditionalProperties) {
-            |            val json = (encoder as JsonEncoder).json
-            |            return encoder.encodeSerializableValue(
-            |                JsonObject.serializer(),
-            |                buildJsonObject {
-            |                    put("name", json.encodeToJsonElement(String.serializer(), value.name))
-            |                    put("age", json.encodeToJsonElement(Int.serializer().nullable, value.age))
-            |                    value.additional?.forEach { (key, value) ->
-            |                        put(key, json.encodeToJsonElement(NestedClass.serializer(), value))
-            |                    }
-            |                })
-            |        }
-            |
-            |        override fun deserialize(decoder: Decoder): PersonWithAdditionalProperties {
-            |            val json = (decoder as JsonDecoder).json
-            |            val element = decoder.decodeSerializableValue(JsonObject.serializer())
-            |            val names = setOf("name", "age")
-            |            require(element.keys.containsAll(names)) { "Missing required properties: ${'$'}{names - element.keys}" }
-            |            return PersonWithAdditionalProperties(
-            |                name = json.decodeFromJsonElement(String.serializer(), element["name"]!!),
-            |                age = json.decodeFromJsonElement(Int.serializer().nullable, element["age"]!!),
-            |                additional = (element - names)
-            |                    .mapValues { (_, value) -> json.decodeFromJsonElement(NestedClass.serializer(), value) }
-            |            )
-            |        }
-            |    }
-            |}
-        """.trimMargin(),
-        Model.Object(
-            NamingContext.reference("PersonWithAdditionalProperties", SchemaContext.Null),
-            null,
-            null,
-            mapOf(
-                "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
-                "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, true, null), true)
-            ),
-            additionalProperties = Model.Object.AdditionalProperties.Schema(nested().model),
-            isNullable = false
-        ),
-        TypeName.ExperimentalSerializationApi,
-        TypeName.KeepGeneratedSerializer,
-        TypeName.Serializable,
-        Import.serializer,
-        Import.nullable,
-        TypeName.JsonObject,
-        TypeName.KSerializer,
-        TypeName.SerialDescriptor,
-        TypeName.Encoder,
-        TypeName.Decoder,
-        TypeName.JsonDecoder,
-        TypeName.JsonEncoder,
-        Import.buildJsonObject,
-    )
+    verifyKotlinFiles(
+        name = "obj with primitive imports",
+        resourceDirectory = "obj/primitive-imports",
+    ) {
+        listOf(
+            Model.Object(
+                context = NamingContext.reference("Foo", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = mapOf(
+                    "date" to Model.Object.Property(Model.Date(null, false, null), false),
+                    "dateTime" to Model.Object.Property(Model.DateTime(null, false, null), false),
+                    "uuid" to Model.Object.Property(Model.Uuid(null, false, null), false),
+                    "json" to Model.Object.Property(Model.FreeFormJson(null, null, false, null), false),
+                    "jsonArray" to Model.Object.Property(
+                        Model.Collection(
+                            Model.FreeFormJson(null, null, false, null), null, null, null, false, null
+                        ), false
+                    ),
+                    "jsonObject" to Model.Object.Property(
+                        Model.Object(
+                            NamingContext.reference("Foo", SchemaContext.Null)
+                                .nest(NamingContext.ObjectProperty("jsonObject")),
+                            null,
+                            null,
+                            emptyMap(),
+                            additionalProperties = true,
+                            isNullable = false
+                        ),
+                        false
+                    )
+                ),
+                additionalProperties = false,
+                isNullable = false
+            )
+        ).generate("obj.primitive.imports")
+    }
+
+    verifyKotlinFiles(
+        name = "empty object with explicit no additional properties",
+        resourceDirectory = "obj/empty-no-additional",
+    ) {
+        listOf(
+            Model.Object(
+                context = NamingContext.reference("EmptyObject", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = emptyMap(),
+                additionalProperties = Model.Object.AdditionalProperties.Allowed(false),
+                isNullable = false
+            )
+        ).generate("obj.empty.no.additional")
+    }
+
+    verifyKotlinFiles(
+        name = "obj with additional properties as JsonObject",
+        resourceDirectory = "obj/additional-properties-json",
+    ) {
+        listOf(
+            Model.Object(
+                NamingContext.reference("PersonWithAdditionalProperties", SchemaContext.Null),
+                null,
+                null,
+                mapOf(
+                    "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
+                    "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, true, null), true),
+                    "nested" to nested(),
+                ),
+                additionalProperties = true,
+                isNullable = false
+            )
+        ).generate("obj.additional.properties.json") + KFile(
+            "AttemptDeserialize.kt",
+            "obj.additional.properties.json.model",
+            attemptDeserialize("obj.additional.properties.json")
+        )
+    }
+
+    verifyKotlinFiles(
+        name = "obj with typed additional properties",
+        resourceDirectory = "obj/additional-properties-typed",
+    ) {
+        listOf(
+            Model.Object(
+                NamingContext.reference("PersonWithAdditionalProperties", SchemaContext.Null),
+                null,
+                null,
+                mapOf(
+                    "name" to Model.Object.Property(Model.Primitive.String(null, null, null, false, null), true),
+                    "age" to Model.Object.Property(Model.Primitive.Int(null, null, null, true, null), true)
+                ),
+                additionalProperties = Model.Object.AdditionalProperties.Schema(nested().model),
+                isNullable = false
+            )
+        ).generate("obj.additional.properties.typed")
+    }
 }
 
 private fun nested(): Model.Object.Property = Model.Object.Property(

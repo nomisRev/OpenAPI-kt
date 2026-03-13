@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.dokka)
     id(libs.plugins.kover.get().pluginId)
     alias(libs.plugins.testballoon)
+    alias(libs.plugins.kotlinxresources)
 }
 
 kotlin {
@@ -49,9 +50,14 @@ kotlin {
             }
         }
         commonTest {
+            kotlin.srcDir("src/commonTest/resources/kotlinTestData")
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.testballoon)
+                implementation(libs.kotlinxresources)
+                implementation(libs.datetime)
+                implementation(ktorLibs.client.contentNegotiation)
+                implementation(ktorLibs.serialization.kotlinx.json)
             }
         }
     }

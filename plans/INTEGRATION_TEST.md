@@ -72,10 +72,10 @@ fun assertCompiles(files: List<KFile>) {
 
 ### Acceptance criteria
 
-- [ ] `libs.versions.toml` declares `dev.zacsweers.kctfork:core:0.12.1`
-- [ ] `typed/build.gradle.kts` adds it as a `jvmTest` dependency
-- [ ] `assertCompiles(files)` helper exists and correctly configures `KotlinCompilation`
-- [ ] A trivial smoke test compiles a `fun main() {}` source to prove the infrastructure works
+- [x] `libs.versions.toml` declares `dev.zacsweers.kctfork:core:0.12.1`
+- [x] `typed/build.gradle.kts` adds it as a `jvmTest` dependency
+- [x] `assertCompiles(files)` helper exists and correctly configures `KotlinCompilation`
+- [x] A trivial smoke test compiles a `fun main() {}` source to prove the infrastructure works
 
 ---
 

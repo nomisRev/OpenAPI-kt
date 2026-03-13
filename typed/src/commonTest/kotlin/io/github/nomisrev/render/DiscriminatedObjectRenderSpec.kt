@@ -3,7 +3,9 @@ package io.github.nomisrev.render
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.generate
 import io.github.nomisrev.openapi.render.TypeName
+import io.github.nomisrev.openapi.routes.ApiModel
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 val discriminatedObjectRenderSpec by testSuite {
@@ -42,40 +44,22 @@ val discriminatedObjectRenderSpec by testSuite {
         false
     )
 
-    verify(
-        """|@OptIn(ExperimentalSerializationApi::class)
-           |@JsonClassDiscriminator("type")
-           |@Serializable
-           |sealed interface User {
-           |    val id: Long
-           |
-           |    @SerialName("AnonymousUser")
-           |    @Serializable
-           |    @JvmInline
-           |    value class AnonymousUser(override val id: Long) : User
-           |
-           |    @SerialName("RegisteredUser")
-           |    @Serializable
-           |    data class RegisteredUser(override val id: Long, val email: String) : User
-           |
-           |    @SerialName("ProUser")
-           |    @Serializable
-           |    data class ProUser(override val id: Long, val email: String, val subscriptionId: Long) : User
-           |}
-        """.trimMargin(),
-        Model.DiscriminatedObject(
-            baseName,
-            abstractProperties,
-            listOf(base, registered, pro),
-            null,
-            null,
-            discriminator = "type",
-            false
-        ),
-        TypeName.ExperimentalSerializationApi,
-        TypeName.JsonClassDiscriminator,
-        TypeName.Serializable,
-        TypeName.SerialName,
-        TypeName.JvmInline,
-    )
+    verifyKotlinFiles(
+        "User.kt",
+        "discriminatedunion"
+    ) {
+        ApiModel(
+            routes = emptyList(),
+            models = listOf(Model.DiscriminatedObject(
+                baseName,
+                abstractProperties,
+                listOf(base, registered, pro),
+                null,
+                null,
+                discriminator = "type",
+                false
+            )),
+            servers = emptyList(),
+        ).generate()
+    }
 }

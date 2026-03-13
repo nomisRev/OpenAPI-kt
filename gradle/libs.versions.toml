@@ -9,6 +9,7 @@ kotlinpoet="2.2.0"
 agp = "8.13.0"
 test-compile = "0.12.1"
 testballoon="0.7.1-K2.3.0"
+resources = "0.15.0"
 serialization="1.10.0-RC"
 
 [libraries]
@@ -20,6 +21,7 @@ json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.re
 datetime =  { module="org.jetbrains.kotlinx:kotlinx-datetime", version="0.7.1" }
 kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.94.0" }
 testballoon = { module="de.infix.testBalloon:testBalloon-framework-core", version.ref="testballoon"  }
+kotlinxresources = { module = "com.goncalossilva:resources", version.ref = "resources" }
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
@@ -32,3 +34,4 @@ knit = { id = "org.jetbrains.kotlinx.knit", version.ref = "knit" }
 spotless = { id = "com.diffplug.spotless", version = "7.2.1" }
 publish = { id = "com.vanniktech.maven.publish", version.ref="publish" }
 testballoon = { id = "de.infix.testBalloon", version.ref="testballoon" }
+kotlinxresources = { id = "com.goncalossilva.resources", version.ref = "resources" }

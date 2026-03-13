@@ -3,62 +3,43 @@ package io.github.nomisrev.render
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.render.TypeName
+import io.github.nomisrev.openapi.generate
+import io.github.nomisrev.openapi.routes.ApiModel
 import io.github.nomisrev.openapi.routes.SchemaContext
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.SerialKind
-import kotlinx.serialization.descriptors.buildSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
-import kotlin.jvm.JvmInline
-import kotlin.test.assertEquals
+
+private fun sortEnum(name: String, values: List<String>) = Model.Enum(
+    context = NamingContext.reference(name, SchemaContext.Null),
+    inner = Model.Primitive.String(null, null, null, false, null),
+    values = values,
+    description = null,
+    title = null,
+    default = null,
+    isNullable = false
+)
+
+private fun apiModel(model: Model.Enum): ApiModel = ApiModel(
+    routes = emptyList(),
+    models = listOf(model),
+    servers = emptyList(),
+)
 
 val enumRenderSpec by testSuite {
-    verify(
-        """|@Serializable
-           |enum class Sort {
-           |    ASC, DESC;
-           |}""".trimMargin(),
-        Model.Enum(
-            NamingContext.reference("Sort", SchemaContext.Null),
-            Model.Primitive.String(null, null, null, false, null),
-            listOf("ASC", "DESC"),
-            null,
-            null,
-            null,
-            false
-        ),
-        TypeName.Serializable
-    )
+    verifyKotlinFiles(
+        name = "enum renders compact entries on one line",
+        resourceDirectory = "enum/basic",
+    ) {
+        apiModel(sortEnum(name = "Sort", values = listOf("ASC", "DESC"))).generate()
+    }
 
-    verify(
-        """|@Serializable
-           |enum class Sort {
-           |    @SerialName("very_long_enum_value_1")
-           |    VeryLongEnumValue1,
-           |    @SerialName("very_long_enum_value_2")
-           |    VeryLongEnumValue2,
-           |    @SerialName("very_long_enum_value_3")
-           |    VeryLongEnumValue3,
-           |    @SerialName("very_long_enum_value_4")
-           |    VeryLongEnumValue4,
-           |    @SerialName("very_long_enum_value_5")
-           |    VeryLongEnumValue5;
-           |}""".trimMargin(),
-        Model.Enum(
-            NamingContext.reference("Sort", SchemaContext.Null),
-            Model.Primitive.String(null, null, null, false, null),
-            (1..5).map { "very_long_enum_value_$it" },
-            null,
-            null,
-            null,
-            false
-        ),
-        TypeName.Serializable,
-        TypeName.SerialName
-    )
+    verifyKotlinFiles(
+        name = "enum renders long entries with serial names",
+        resourceDirectory = "enum/serial-name",
+    ) {
+        apiModel(
+            sortEnum(
+                name = "SortSerialName",
+                values = (1..5).map { "very_long_enum_value_$it" }
+            )
+        ).generate()
+    }
 }

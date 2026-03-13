@@ -297,8 +297,13 @@ private fun Root.renderFactory(interfaceName: String, implName: String) {
             +"baseUrl: String,"
         } else {
             val serverInterfaceName = "${interfaceName}Server"
-            val defaultServerCase = servers.caseNames().firstOrNull() ?: "Custom"
-            +"server: $serverInterfaceName = $serverInterfaceName.$defaultServerCase,"
+            val defaultServerCase = servers.caseNames().first()
+            val defaultServerExpression = if (servers.first().variables.orEmpty().isEmpty()) {
+                "$serverInterfaceName.$defaultServerCase"
+            } else {
+                "$serverInterfaceName.$defaultServerCase()"
+            }
+            +"server: $serverInterfaceName = $defaultServerExpression,"
         }
         +"block: HttpClientConfig<*>.() -> Unit = {},"
     }
@@ -420,9 +425,9 @@ context(ctx: Renderer, builder: StringBuilder)
 private fun renderOperationImpl(route: Route, interfaceName: String) {
     val returnType = route.resolveReturnType(interfaceName)
     val method = route.method.ktorFunction()
-    ctx.import(
-        TopLevelFunction("io.ktor.client.request", method),
-    )
+    if (method.matches(Regex("[A-Za-z_][A-Za-z0-9_]*"))) {
+        ctx.import(TopLevelFunction("io.ktor.client.request", method))
+    }
     val body = route.preferredBodyOrNull()
     val params = route.signatureParameters(body)
 
@@ -440,13 +445,13 @@ private fun renderOperationImpl(route: Route, interfaceName: String) {
 
     val routeParams = route.sortedParameters()
     val pathParams = routeParams.filter { it.input == Parameter.Input.Path }
+    val blockParams = routeParams.filter { it.input != Parameter.Input.Path }
 
     val url = if (pathParams.isEmpty()) {
         "\"${route.path}\""
     } else {
         val interpolated = pathParams.fold(route.path) { path, input ->
-            val uniqueName = params.first { it.placement == Parameter.Input.Path && it.wireName == input.name }.name
-            path.replace("{${input.name}}", "\$$uniqueName")
+            path.replace("{${input.name}}", "\$${input.name.toParamName()}")
         }
         "\"$interpolated\""
     }
@@ -474,18 +479,21 @@ private fun renderOperationImpl(route: Route, interfaceName: String) {
                 TypeName.Class("io.ktor.http", "HttpStatusCode"),
                 TopLevelFunction("io.ktor.client.call", "body"),
             )
-            +"val response = client.$method($url) {"
-            indented {
-                +"expectSuccess = false"
-                params.filter { it.placement != null && it.placement != Parameter.Input.Path }.forEach { param ->
-                    renderParamPlacement(param)
+            val requiresRequestBlock = blockParams.isNotEmpty() || body != null
+            if (requiresRequestBlock) {
+                +"val response = client.$method($url) {"
+                indented {
+                    blockParams.forEach { input ->
+                        renderParamPlacement(input)
+                    }
+                    body?.let { requestBody ->
+                        renderBodyPlacement(requestBody)
+                    }
                 }
-                body?.let { requestBody ->
-                    val bodyParams = params.filter { it.placement == null }
-                    renderBodyPlacement(requestBody, bodyParams)
-                }
+                +"}"
+            } else {
+                +"val response = client.$method($url)"
             }
-            +"}"
             +"return when (response.status) {"
             indented {
                 route.returns.responses.entries
@@ -518,7 +526,7 @@ private fun renderOperationImpl(route: Route, interfaceName: String) {
             ctx.import(TypeName.Class("io.ktor.client.call", "body"))
             +"client.$method($url).body()"
         }
-    } else if (params.none { it.placement != null && it.placement != Parameter.Input.Path } && body == null) {
+    } else if (blockParams.isEmpty() && body == null) {
         +"override suspend fun ${route.operationId}($paramList): $returnType ="
         indented {
             ctx.import(TypeName.Class("io.ktor.client.call", "body"))
@@ -530,12 +538,11 @@ private fun renderOperationImpl(route: Route, interfaceName: String) {
             ctx.import(TypeName.Class("io.ktor.client.call", "body"))
             +"client.$method($url) {"
             indented {
-                params.filter { it.placement != null && it.placement != Parameter.Input.Path }.forEach { param ->
-                    renderParamPlacement(param)
+                blockParams.forEach { input ->
+                    renderParamPlacement(input)
                 }
                 body?.let { requestBody ->
-                    val bodyParams = params.filter { it.placement == null }
-                    renderBodyPlacement(requestBody, bodyParams)
+                    renderBodyPlacement(requestBody)
                 }
             }
             +"}.body()"
@@ -544,36 +551,36 @@ private fun renderOperationImpl(route: Route, interfaceName: String) {
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun renderParamPlacement(input: SignatureParameter) {
-    val paramName = input.name
-    val isNullable = !input.isRequired && !input.hasDefault()
+private fun renderParamPlacement(input: Route.Input) {
+    val paramName = input.name.toParamName()
+    val isNullable = !input.isRequired && !input.type.hasDefault()
 
-    when (input.placement) {
+    when (input.input) {
         Parameter.Input.Query -> {
             ctx.import(TopLevelFunction("io.ktor.client.request", "parameter"))
             if (isNullable) {
-                +"$paramName?.let { parameter(${input.wireName.stringValue()}, it) }"
+                +"$paramName?.let { parameter(\"${input.name}\", it) }"
             } else {
-                +"parameter(${input.wireName.stringValue()}, $paramName)"
+                +"parameter(\"${input.name}\", $paramName)"
             }
         }
         Parameter.Input.Header -> {
             ctx.import(TopLevelFunction("io.ktor.client.request", "header"))
             if (isNullable) {
-                +"$paramName?.let { header(${input.wireName.stringValue()}, it) }"
+                +"$paramName?.let { header(\"${input.name}\", it) }"
             } else {
-                +"header(${input.wireName.stringValue()}, $paramName)"
+                +"header(\"${input.name}\", $paramName)"
             }
         }
         Parameter.Input.Cookie -> {
             ctx.import(TopLevelFunction("io.ktor.client.request", "cookie"))
             if (isNullable) {
-                +"$paramName?.let { cookie(${input.wireName.stringValue()}, it) }"
+                +"$paramName?.let { cookie(\"${input.name}\", it) }"
             } else {
-                +"cookie(${input.wireName.stringValue()}, $paramName)"
+                +"cookie(\"${input.name}\", $paramName)"
             }
         }
-        Parameter.Input.Path, null -> {} // Handled elsewhere
+        Parameter.Input.Path -> {} // Handled via URL interpolation
     }
 }
 
@@ -596,20 +603,8 @@ private data class SignatureParameter(
     val type: Model,
     val isRequired: Boolean,
     val allowModelDefault: Boolean,
-    val placement: Parameter.Input? = null,
 ) {
     fun hasDefault(): Boolean = allowModelDefault && type.hasDefault()
-}
-
-private fun List<SignatureParameter>.deduplicateNames(): List<SignatureParameter> {
-    val usedNames = mutableSetOf<String>()
-    return map { param ->
-        var name = param.name
-        while (!usedNames.add(name)) {
-            name += "_"
-        }
-        param.copy(name = name)
-    }
 }
 
 private sealed interface RequestBody {
@@ -688,20 +683,19 @@ private fun Route.signatureParameters(body: RequestBody?): List<SignatureParamet
             type = input.type,
             isRequired = input.isRequired,
             allowModelDefault = true,
-            placement = input.input,
         )
     }
-    val resolvedBody = body ?: return standard.deduplicateNames()
+    val resolvedBody = body ?: return standard
     val bodyParameters = resolvedBody.signatureParameters
+    if (bodyParameters.isEmpty()) return standard
 
-    val all = if (resolvedBody.required) {
+    return if (resolvedBody.required) {
         val firstOptional = standard.indexOfFirst { !it.isRequired && !it.hasDefault() }
         val splitIndex = if (firstOptional == -1) standard.size else firstOptional
         standard.take(splitIndex) + bodyParameters + standard.drop(splitIndex)
     } else {
         standard + bodyParameters
     }
-    return all.deduplicateNames()
 }
 
 private fun Route.preferredBodyOrNull(): RequestBody? {
@@ -757,20 +751,19 @@ private fun ContentType.asExpression(): String = when {
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun renderBodyPlacement(body: RequestBody, signatureParameters: List<SignatureParameter>) {
+private fun renderBodyPlacement(body: RequestBody) {
     when (body) {
         is RequestBody.SetBody -> {
             ctx.import(
                 TypeName.Class("io.ktor.http", "ContentType"),
-                TopLevelFunction("io.ktor.client.request", "contentType"),
+                TopLevelFunction("io.ktor.http", "contentType"),
                 TopLevelFunction("io.ktor.client.request", "setBody"),
             )
             +"contentType(${body.contentType.asExpression()})"
-            val bodyParam = signatureParameters.first().name
             if (body.required) {
-                +"setBody($bodyParam)"
+                +"setBody(body)"
             } else {
-                +"$bodyParam?.let { setBody(it) }"
+                +"body?.let { setBody(it) }"
             }
         }
         is RequestBody.MultipartInline -> {
@@ -785,13 +778,14 @@ private fun renderBodyPlacement(body: RequestBody, signatureParameters: List<Sig
                 indented {
                     +"formData {"
                     indented {
-                        signatureParameters.forEach { parameter ->
+                        body.signatureParameters.forEach { parameter ->
                             val value = parameter.name
-                            val appendValue = if (parameter.type is Model.ByteArray) value else "$value.toString()"
+                            val needsToString = parameter.type.needsToString()
+                            val appendValue = if (needsToString) "$value.toString()" else value
                             if (parameter.isRequired) {
-                                +"append(${parameter.wireName.stringValue()}, $appendValue)"
+                                +"append(\"${parameter.wireName}\", $appendValue)"
                             } else {
-                                +"$value?.let { append(${parameter.wireName.stringValue()}, ${if (parameter.type is Model.ByteArray) "it" else "it.toString()"}) }"
+                                +"$value?.let { append(\"${parameter.wireName}\", ${if (needsToString) "it.toString()" else "it"}) }"
                             }
                         }
                     }
@@ -804,15 +798,14 @@ private fun renderBodyPlacement(body: RequestBody, signatureParameters: List<Sig
         is RequestBody.MultipartRef -> {
             ctx.import(
                 TypeName.Class("io.ktor.http", "ContentType"),
-                TopLevelFunction("io.ktor.client.request", "contentType"),
+                TopLevelFunction("io.ktor.http", "contentType"),
                 TopLevelFunction("io.ktor.client.request", "setBody"),
             )
             +"contentType(ContentType.MultiPart.FormData)"
-            val bodyParam = signatureParameters.first().name
             if (body.required) {
-                +"setBody($bodyParam)"
+                +"setBody(body)"
             } else {
-                +"$bodyParam?.let { setBody(it) }"
+                +"body?.let { setBody(it) }"
             }
         }
         is RequestBody.FormUrlEncoded -> {
@@ -820,7 +813,7 @@ private fun renderBodyPlacement(body: RequestBody, signatureParameters: List<Sig
                 TypeName.Class("io.ktor.http", "ContentType"),
                 TypeName.Class("io.ktor.http", "Parameters"),
                 TopLevelFunction("io.ktor.http", "formUrlEncode"),
-                TopLevelFunction("io.ktor.client.request", "contentType"),
+                TopLevelFunction("io.ktor.http", "contentType"),
                 TopLevelFunction("io.ktor.client.request", "setBody"),
             )
             +"contentType(ContentType.Application.FormUrlEncoded)"
@@ -828,12 +821,13 @@ private fun renderBodyPlacement(body: RequestBody, signatureParameters: List<Sig
             indented {
                 +"Parameters.build {"
                 indented {
-                    signatureParameters.forEach { parameter ->
+                    body.signatureParameters.forEach { parameter ->
                         val value = parameter.name
+                        val needsToString = parameter.type.needsToString()
                         if (parameter.isRequired) {
-                            +"append(${parameter.wireName.stringValue()}, $value.toString())"
+                            +"append(\"${parameter.wireName}\", ${if (needsToString) "$value.toString()" else value})"
                         } else {
-                            +"$value?.let { append(${parameter.wireName.stringValue()}, it.toString()) }"
+                            +"$value?.let { append(\"${parameter.wireName}\", ${if (needsToString) "it.toString()" else "it"}) }"
                         }
                     }
                 }
@@ -1127,6 +1121,15 @@ private fun Model.renderDefault(): String = when (this) {
     is Model.Primitive.Float -> "${(default as Model.Default.Value<*>).value}f"
     is Model.Primitive.Double -> (default as Model.Default.Value<*>).value.toString()
     is Model.Primitive.Boolean -> (default as Model.Default.Value<*>).value.toString()
-    is Model.Primitive.String -> (default as Model.Default.Value<*>).value.toString().stringValue()
+    is Model.Primitive.String -> "\"${(default as Model.Default.Value<*>).value}\""
     else -> "null" // Fallback for types where defaults aren't supported yet
+}
+
+/**
+ * Returns whether this type needs `.toString()` when used in parameter building.
+ * String and ByteArray types don't need conversion.
+ */
+private fun Model.needsToString(): Boolean = when (this) {
+    is Model.Primitive.String, is Model.ByteArray -> false
+    else -> true
 }

@@ -7,16 +7,12 @@ import io.github.nomisrev.openapi.Root
 import io.github.nomisrev.openapi.generateClient
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.Server
-import io.github.nomisrev.openapi.render.renderRootFile
-import io.github.nomisrev.openapi.render.renderer
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.sort
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 private fun route(
     operationId: String,
@@ -93,96 +89,48 @@ private fun serverVariable(
     extensions = emptyMap(),
 )
 
+private fun goldenPackage(resourceDirectory: String): String =
+    "io.github.nomisrev.render.golden.${resourceDirectory.replace('/', '.').replace('-', '_')}"
+
 val clientRenderSpec by testSuite {
 
-    test("single parameterless GET endpoint - root interface") {
-        val root = Root(
+    verifyKotlinFiles(
+        name = "single parameterless GET endpoint - root interface",
+        resourceDirectory = "client/root/single-parameterless-get"
+    ) {
+        Root(
             name = "PetStore",
             operations = listOf(
                 route("listPets", "/pets")
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        val expected = """
-            |interface PetStore {
-            |    suspend fun listPets(): String
-            |}
-            |
-            |internal class KtorPetStore(private val client: HttpClient) : PetStore {
-            |    override suspend fun listPets(): String =
-            |        client.get("/pets").body()
-            |}
-            |
-            |fun PetStoreClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): PetStore {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorPetStore(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).generateClient(goldenPackage("client/root/single-parameterless-get"))
     }
 
-    test("single GET endpoint returning a reference type") {
+    verifyKotlinFiles(
+        name = "single GET endpoint returning a reference type",
+        resourceDirectory = "client/root/single-reference-response"
+    ) {
         val returnModel = Model.Reference(
             context = NamingContext.reference("ListPets", SchemaContext.Read),
             description = null,
             isNullable = false,
             title = null
         )
-
-        val root = Root(
+        Root(
             name = "PetStore",
             operations = listOf(
                 route("listPets", "/pets", returnModel = returnModel)
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, imports) = renderer { root.renderRootFile() }
-
-        val expected = """
-            |interface PetStore {
-            |    suspend fun listPets(): ListPetsResponse
-            |}
-            |
-            |internal class KtorPetStore(private val client: HttpClient) : PetStore {
-            |    override suspend fun listPets(): ListPetsResponse =
-            |        client.get("/pets").body()
-            |}
-            |
-            |fun PetStoreClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): PetStore {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorPetStore(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
-
-        // Should import the model type (ListPets + SchemaContext.Read -> ListPetsResponse)
-        val modelImport = imports.filterIsInstance<io.github.nomisrev.openapi.render.TypeName.Class>()
-            .any { it.simpleName == "ListPetsResponse" && it.packageName == "io.github.nomisrev.model" }
-        assertEquals(true, modelImport, "Expected import for ListPetsResponse model type. Imports: $imports")
+        ).generateClient(goldenPackage("client/root/single-reference-response"))
     }
 
-    test("single GET returning Unit for empty response") {
-        val root = Root(
+    verifyKotlinFiles(
+        name = "single GET returning Unit for empty response",
+        resourceDirectory = "client/root/unit-response"
+    ) {
+        Root(
             name = "PetStore",
             operations = listOf(
                 route(
@@ -192,191 +140,109 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        val expected = """
-            |interface PetStore {
-            |    suspend fun healthCheck(): Unit
-            |}
-            |
-            |internal class KtorPetStore(private val client: HttpClient) : PetStore {
-            |    override suspend fun healthCheck(): Unit =
-            |        client.get("/health").body()
-            |}
-            |
-            |fun PetStoreClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): PetStore {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorPetStore(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).generateClient(goldenPackage("client/root/unit-response"))
     }
 
-      test("empty root generates interface with no members") {
-        val root = Root(
+    verifyKotlinFiles(
+        name = "empty root generates interface with no members",
+        resourceDirectory = "client/root/empty-root"
+    ) {
+        Root(
             name = "EmptyApi",
             operations = emptyList(),
             endpoints = emptyList(),
-        )
+        ).generateClient(goldenPackage("client/root/empty-root"))
+    }
 
-        val (actual, _) = renderer { root.renderRootFile() }
+    verifyKotlinFiles(
+        name = "server sealed interface and factory parameter are generated for static servers",
+        resourceDirectory = "client/server/static"
+    ) {
+        Root(
+            name = "OpenAI",
+            operations = listOf(route("listModels", "/models")),
+            endpoints = emptyList(),
+            servers = listOf(
+                server("https://api.openai.com/v1", description = "Production"),
+                server("https://staging.api.openai.com/v1", description = "Staging Server"),
+            ),
+        ).generateClient(goldenPackage("client/server/static"))
+    }
 
-        val expected = """
-            |interface EmptyApi
-            |
-            |internal class KtorEmptyApi(private val client: HttpClient) : EmptyApi
-            |
-            |fun EmptyApiClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): EmptyApi {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorEmptyApi(client)
-            |}
-        """.trimMargin()
+    verifyKotlinFiles(
+        name = "server variables render enum and string parameters with interpolated url",
+        resourceDirectory = "client/server/variables"
+    ) {
+        Root(
+            name = "Example",
+            operations = listOf(route("listData", "/data")),
+            endpoints = emptyList(),
+            servers = listOf(
+                server(
+                    url = "https://{environment}.api.example.com/{version}",
+                    description = "Multi-environment server",
+                    variables = mapOf(
+                        "environment" to serverVariable(
+                            default = "production",
+                            enum = listOf("production", "staging", "dev"),
+                        ),
+                        "version" to serverVariable(default = "v2"),
+                    ),
+                ),
+            ),
+        ).generateClient(goldenPackage("client/server/variables"))
+    }
 
-          assertEq(expected, actual)
-      }
+    verifyKotlinFiles(
+        name = "server case naming falls back to Default for a single unnamed server",
+        resourceDirectory = "client/server/fallback-single"
+    ) {
+        Root(
+            name = "Example",
+            operations = listOf(route("listData", "/data")),
+            endpoints = emptyList(),
+            servers = listOf(server("https://api.example.com/v1")),
+        ).generateClient(goldenPackage("client/server/fallback-single"))
+    }
 
-      test("server sealed interface and factory parameter are generated for static servers") {
-          val root = Root(
-              name = "OpenAI",
-              operations = listOf(route("listModels", "/models")),
-              endpoints = emptyList(),
-              servers = listOf(
-                  server("https://api.openai.com/v1", description = "Production"),
-                  server("https://staging.api.openai.com/v1", description = "Staging Server"),
-              ),
-          )
+    verifyKotlinFiles(
+        name = "server case naming falls back to indexed names for multiple unnamed servers",
+        resourceDirectory = "client/server/fallback-multi"
+    ) {
+        Root(
+            name = "Example",
+            operations = listOf(route("listData", "/data")),
+            endpoints = emptyList(),
+            servers = listOf(
+                server("https://api-1.example.com/v1"),
+                server("https://api-2.example.com/v1"),
+            ),
+        ).generateClient(goldenPackage("client/server/fallback-multi"))
+    }
 
-          val (actual, _) = renderer { root.renderRootFile() }
-
-          assertTrue(actual.contains("sealed interface OpenAIServer {"), "Expected server sealed interface:\\n$actual")
-          assertTrue(actual.contains("data object Production : OpenAIServer"), "Expected production server case:\\n$actual")
-          assertTrue(actual.contains("data object Staging : OpenAIServer"), "Expected trailing 'Server' to be stripped:\\n$actual")
-          assertTrue(actual.contains("data class Custom(override val url: String) : OpenAIServer"), "Expected custom escape hatch:\\n$actual")
-          assertTrue(
-              actual.contains("server: OpenAIServer = OpenAIServer.Production,"),
-              "Expected factory server parameter with default first server:\\n$actual"
-          )
-          assertTrue(actual.contains("defaultRequest { url(server.url) }"), "Expected defaultRequest to use server.url:\\n$actual")
-          assertTrue(!actual.contains("baseUrl: String"), "Did not expect baseUrl parameter when servers are declared:\\n$actual")
-      }
-
-      test("server variables render enum and string parameters with interpolated url") {
-          val root = Root(
-              name = "Example",
-              operations = listOf(route("listData", "/data")),
-              endpoints = emptyList(),
-              servers = listOf(
-                  server(
-                      url = "https://{environment}.api.example.com/{version}",
-                      description = "Multi-environment server",
-                      variables = mapOf(
-                          "environment" to serverVariable(
-                              default = "production",
-                              enum = listOf("production", "staging", "dev"),
-                          ),
-                          "version" to serverVariable(default = "v2"),
-                      ),
-                  ),
-              ),
-          )
-
-          val (actual, _) = renderer { root.renderRootFile() }
-
-          assertTrue(actual.contains("data class MultiEnvironment("), "Expected variable server data class:\\n$actual")
-          assertTrue(
-              actual.contains("val environment: Environment = Environment.Production,"),
-              "Expected enum-constrained variable parameter:\\n$actual"
-          )
-          assertTrue(actual.contains("val version: String = \"v2\","), "Expected free-form String variable parameter:\\n$actual")
-          assertTrue(
-              actual.contains("get() = \"https://${'$'}{environment.value}.api.example.com/${'$'}{version}\""),
-              "Expected interpolated url getter:\\n$actual"
-          )
-          assertTrue(actual.contains("enum class Environment(val value: String) {"), "Expected nested enum declaration:\\n$actual")
-          assertTrue(actual.contains("Production(\"production\"),"), "Expected enum entry for production:\\n$actual")
-          assertTrue(actual.contains("Staging(\"staging\"),"), "Expected enum entry for staging:\\n$actual")
-          assertTrue(actual.contains("Dev(\"dev\"),"), "Expected enum entry for dev:\\n$actual")
-      }
-
-      test("server case naming falls back to default and indexed names when descriptions are missing") {
-          val singleServerRoot = Root(
-              name = "Example",
-              operations = listOf(route("listData", "/data")),
-              endpoints = emptyList(),
-              servers = listOf(server("https://api.example.com/v1")),
-          )
-          val (singleActual, _) = renderer { singleServerRoot.renderRootFile() }
-
-          assertTrue(singleActual.contains("data object Default : ExampleServer"), "Expected single unnamed server to fallback to Default:\\n$singleActual")
-          assertTrue(
-              singleActual.contains("server: ExampleServer = ExampleServer.Default,"),
-              "Expected factory default to use ExampleServer.Default:\\n$singleActual"
-          )
-
-          val multiServerRoot = Root(
-              name = "Example",
-              operations = listOf(route("listData", "/data")),
-              endpoints = emptyList(),
-              servers = listOf(
-                  server("https://api-1.example.com/v1"),
-                  server("https://api-2.example.com/v1"),
-              ),
-          )
-          val (multiActual, _) = renderer { multiServerRoot.renderRootFile() }
-
-          assertTrue(multiActual.contains("data object Server1 : ExampleServer"), "Expected first unnamed server to fallback to Server1:\\n$multiActual")
-          assertTrue(multiActual.contains("data object Server2 : ExampleServer"), "Expected second unnamed server to fallback to Server2:\\n$multiActual")
-          assertTrue(
-              multiActual.contains("server: ExampleServer = ExampleServer.Server1,"),
-              "Expected first documented server to be default in factory:\\n$multiActual"
-          )
-      }
-
-      test("read variant type is used for response types") {
-        // A reference with SchemaContext.Read should produce the "Response" suffix
-        val returnModel = Model.Reference(
+    verifyKotlinFiles(
+        name = "read variant type is used for response types",
+        resourceDirectory = "client/response/read-variant"
+    ) {
+        val returnModel1 = Model.Reference(
             context = NamingContext.reference("Pet", SchemaContext.Read),
             description = null,
             isNullable = false,
             title = null
         )
-
-        val root = Root(
+        Root(
             name = "PetStore",
             operations = listOf(
-                route("getPet", "/pet", returnModel = returnModel)
+                route("getPet", "/pet", returnModel = returnModel1)
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        // SchemaContext.Read appends "Response" suffix
-        assertTrue(
-            actual.contains("suspend fun getPet(): PetResponse"),
-            "Expected 'PetResponse' return type (Read variant) in:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/response/read-variant"))
     }
 
-    test("path parameter interpolation") {
-        val root = Root(
+    verifyKotlinFiles(name = "path parameter interpolation",
+        resourceDirectory = "client/params/path-interpolation"
+    ) {
+        Root(
             name = "PetStore",
             operations = listOf(
                 route(
@@ -386,23 +252,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(
-            actual.contains("suspend fun retrieveModel(\n        model: String,\n    ): String"),
-            "Expected path param in interface:\n$actual"
-        )
-        assertTrue(
-            actual.contains("override suspend fun retrieveModel(model: String): String ="),
-            "Expected path param in impl:\n$actual"
-        )
-        assertTrue(actual.contains("\"/models/\$model\""), "Expected path interpolation in impl:\n$actual")
+        ).generateClient(goldenPackage("client/params/path-interpolation"))
     }
 
-    test("required query parameter") {
-        val root = Root(
+    verifyKotlinFiles(name = "required query parameter",
+        resourceDirectory = "client/params/required-query"
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -412,16 +268,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("query: String,"), "Expected required query param in interface:\n$actual")
-        assertTrue(actual.contains("parameter(\"query\", query)"), "Expected parameter() call in impl:\n$actual")
+        ).generateClient(goldenPackage("client/params/required-query"))
     }
 
-    test("optional query parameter") {
-        val root = Root(
+    verifyKotlinFiles(name = "optional query parameter",
+        resourceDirectory = "client/params/optional-query"
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -431,19 +284,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("limit: Int? = null,"), "Expected optional query param in interface:\n$actual")
-        assertTrue(
-            actual.contains("limit?.let { parameter(\"limit\", it) }"),
-            "Expected ?.let pattern in impl:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/params/optional-query"))
     }
 
-    test("header parameter") {
-        val root = Root(
+    verifyKotlinFiles(name = "header parameter",
+        resourceDirectory = "client/params/header"
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -453,16 +300,13 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("xApiKey: String,"), "Expected camelCase header param in interface:\n$actual")
-        assertTrue(actual.contains("header(\"X-Api-Key\", xApiKey)"), "Expected header() call in impl:\n$actual")
+        ).generateClient(goldenPackage("client/params/header"))
     }
 
-    test("cookie parameter") {
-        val root = Root(
+    verifyKotlinFiles(name = "cookie parameter",
+        resourceDirectory = "client/params/cookie"
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -472,16 +316,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("sessionId: String,"), "Expected camelCase cookie param in interface:\n$actual")
-        assertTrue(actual.contains("cookie(\"session_id\", sessionId)"), "Expected cookie() call in impl:\n$actual")
+        ).generateClient(goldenPackage("client/params/cookie"))
     }
 
-    test("parameter ordering - path then required query then required header then optional query then optional header") {
-        val root = Root(
+    verifyKotlinFiles(
+        name = "parameter ordering - path then required query then required header then optional query then optional header",
+        resourceDirectory = "client/params/ordering"
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -497,24 +339,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        // Extract parameter lines from the interface suspend fun
-        val paramSection = actual.substringAfter("suspend fun getResource(").substringBefore("): String")
-        val paramNames =
-            paramSection.lines().map { it.trim() }.filter { it.contains(":") }.map { it.substringBefore(":").trim() }
-
-        assertEquals(
-            listOf("id", "requiredQ", "xRequired", "optionalQ", "xOptional"),
-            paramNames,
-            "Parameters should be ordered: path, required query, required header, optional query, optional header.\nActual interface:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/params/ordering"))
     }
 
-    test("query parameter with non-null default value") {
-        val root = Root(
+    verifyKotlinFiles(
+        name = "query parameter with non-null default value",
+        resourceDirectory = "client/params/query-default-non-null"
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -536,20 +368,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("limit: Int = 20,"), "Expected default value in interface:\n$actual")
-        // Non-null default means always sent (no ?.let)
-        assertTrue(
-            actual.contains("parameter(\"limit\", limit)"),
-            "Expected direct parameter() call (no ?.let) for param with default:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/params/query-default-non-null"))
     }
 
-    test("required parameter with default renders default value without annotation") {
-        val root = Root(
+    verifyKotlinFiles(
+        name = "required parameter with default renders default value without annotation",
+        resourceDirectory = "client/params/required-with-default"
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -571,16 +397,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("limit: Int = 20,"), "Expected default value on required param:\n$actual")
-        assertTrue(!actual.contains("@Required"), "Function parameters should not have @Required annotation:\n$actual")
+        ).generateClient(goldenPackage("client/params/required-with-default"))
     }
 
-    test("@Deprecated annotation for deprecated operation") {
-        val root = Root(
+    verifyKotlinFiles(
+        name = "@Deprecated annotation for deprecated operation",
+        resourceDirectory = "client/operation/deprecated"
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -590,22 +414,14 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(
-            actual.contains("@Deprecated(\"Deprecated by the API provider\")\n    suspend fun legacyEndpoint(): String"),
-            "Expected @Deprecated annotation on interface function:\n$actual"
-        )
-        assertTrue(
-            actual.contains("@Deprecated(\"Deprecated by the API provider\")\n    override suspend fun legacyEndpoint(): String"),
-            "Expected @Deprecated annotation on impl function:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/operation/deprecated"))
     }
 
-    test("camelCase conversion for parameter names") {
-        val root = Root(
+    verifyKotlinFiles(
+        name = "camelCase conversion for parameter names",
+        resourceDirectory = "client/params/camel-case"
+    ) {
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -615,346 +431,82 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(
-            actual.contains("fineTuningJobId: String"),
-            "Expected camelCase param name 'fineTuningJobId':\n$actual"
-        )
-        assertTrue(actual.contains("\$fineTuningJobId"), "Expected camelCase interpolation in URL:\n$actual")
+        ).generateClient(goldenPackage("client/params/camel-case"))
     }
 
-    test("generateClient splits direct root children into separate files") {
-        val root = listOf(
+    verifyKotlinFiles(
+        name = "generateClient splits direct root children into separate files",
+        resourceDirectory = "client/splits-direct-root-children"
+    ) {
+        listOf(
             route("createChatCompletion", "/chat/completions", method = HttpMethod.Post),
             route("listModels", "/models"),
             route("retrieveModel", "/models/{model}", parameters = listOf(pathParam("model")))
-        ).sort("OpenAI")
-
-        val files = root.generateClient()
-        val actual = files.snapshot()
-        val expected = """
-            |// Chat.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.request.post
-            |import io.ktor.client.call.body
-            |
-            |interface Chat {
-            |    val completions: Completions
-            |
-            |    interface Completions {
-            |        suspend fun createChatCompletion(): String
-            |    }
-            |}
-            |
-            |internal class KtorChat(private val client: HttpClient) : Chat {
-            |    override val completions: Chat.Completions = KtorChatCompletions(client)
-            |}
-            |
-            |internal class KtorChatCompletions(private val client: HttpClient) : Chat.Completions {
-            |    override suspend fun createChatCompletion(): String =
-            |        client.post("/chat/completions").body()
-            |}
-            |
-            |// Models.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.request.get
-            |import io.ktor.client.call.body
-            |
-            |interface Models {
-            |    suspend fun listModels(): String
-            |
-            |    suspend fun retrieveModel(
-            |        model: String,
-            |    ): String
-            |}
-            |
-            |internal class KtorModels(private val client: HttpClient) : Models {
-            |    override suspend fun listModels(): String =
-            |        client.get("/models").body()
-            |
-            |    override suspend fun retrieveModel(model: String): String =
-            |        client.get("/models/${'$'}model").body()
-            |}
-            |
-            |// OpenAI.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.HttpClientConfig
-            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-            |import io.ktor.serialization.kotlinx.json.json
-            |import io.ktor.client.plugins.defaultRequest
-            |
-            |interface OpenAI {
-            |    val chat: Chat
-            |
-            |    val models: Models
-            |}
-            |
-            |internal class KtorOpenAI(private val client: HttpClient) : OpenAI {
-            |    override val chat: Chat = KtorChat(client)
-            |    override val models: Models = KtorModels(client)
-            |}
-            |
-            |fun OpenAIClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): OpenAI {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorOpenAI(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).sort("OpenAI").generateClient(goldenPackage("client/splits-direct-root-children"))
     }
 
-    test("deeper nesting is rendered as inner interfaces in the top-level child file") {
-        val root = listOf(
+    verifyKotlinFiles(
+        name = "deeper nesting is rendered as inner interfaces in the top-level child file",
+        resourceDirectory = "client/deeper-nesting"
+    ) {
+        listOf(
             route(
                 "listFineTuningEvents",
                 "/fine_tuning/jobs/{fine_tuning_job_id}/events",
                 parameters = listOf(pathParam("fine_tuning_job_id"))
             )
-        ).sort("OpenAI")
-
-        val files = root.generateClient()
-        val actual = files.snapshot()
-        val expected = """
-            |// FineTuning.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.request.get
-            |import io.ktor.client.call.body
-            |
-            |interface FineTuning {
-            |    val jobs: Jobs
-            |
-            |    interface Jobs {
-            |        val events: Events
-            |
-            |        interface Events {
-            |            suspend fun listFineTuningEvents(
-            |                fineTuningJobId: String,
-            |            ): String
-            |        }
-            |    }
-            |}
-            |
-            |internal class KtorFineTuning(private val client: HttpClient) : FineTuning {
-            |    override val jobs: FineTuning.Jobs = KtorFineTuningJobs(client)
-            |}
-            |
-            |internal class KtorFineTuningJobs(private val client: HttpClient) : FineTuning.Jobs {
-            |    override val events: FineTuning.Jobs.Events = KtorFineTuningJobsEvents(client)
-            |}
-            |
-            |internal class KtorFineTuningJobsEvents(private val client: HttpClient) : FineTuning.Jobs.Events {
-            |    override suspend fun listFineTuningEvents(fineTuningJobId: String): String =
-            |        client.get("/fine_tuning/jobs/${'$'}fineTuningJobId/events").body()
-            |}
-            |
-            |// OpenAI.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.HttpClientConfig
-            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-            |import io.ktor.serialization.kotlinx.json.json
-            |import io.ktor.client.plugins.defaultRequest
-            |
-            |interface OpenAI {
-            |    val fineTuning: FineTuning
-            |}
-            |
-            |internal class KtorOpenAI(private val client: HttpClient) : OpenAI {
-            |    override val fineTuning: FineTuning = KtorFineTuning(client)
-            |}
-            |
-            |fun OpenAIClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): OpenAI {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorOpenAI(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).sort("OpenAI").generateClient(goldenPackage("client/deeper-nesting"))
     }
 
-    test("operations at root path are generated on the root interface only") {
-        val root = listOf(
+    verifyKotlinFiles(
+        name = "operations at root path are generated on the root interface only",
+        resourceDirectory = "client/root-operations"
+    ) {
+        listOf(
             route("health", "/"),
             route("listModels", "/models")
-        ).sort("Api")
-
-        val files = root.generateClient()
-        val actual = files.snapshot()
-        val expected = """
-            |// Api.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.request.get
-            |import io.ktor.client.call.body
-            |import io.ktor.client.HttpClientConfig
-            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-            |import io.ktor.serialization.kotlinx.json.json
-            |import io.ktor.client.plugins.defaultRequest
-            |
-            |interface Api {
-            |    val models: Models
-            |
-            |    suspend fun health(): String
-            |}
-            |
-            |internal class KtorApi(private val client: HttpClient) : Api {
-            |    override val models: Models = KtorModels(client)
-            |
-            |    override suspend fun health(): String =
-            |        client.get("/").body()
-            |}
-            |
-            |fun ApiClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): Api {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorApi(client)
-            |}
-            |
-            |// Models.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.request.get
-            |import io.ktor.client.call.body
-            |
-            |interface Models {
-            |    suspend fun listModels(): String
-            |}
-            |
-            |internal class KtorModels(private val client: HttpClient) : Models {
-            |    override suspend fun listModels(): String =
-            |        client.get("/models").body()
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).sort("Api").generateClient(goldenPackage("client/root-operations"))
     }
 
-    test("interface names are PascalCase and child properties are camelCase") {
-        val root = listOf(
+    verifyKotlinFiles(
+        name = "interface names are PascalCase and child properties are camelCase",
+        resourceDirectory = "client/pascal-and-camel-case"
+    ) {
+        listOf(
             route("createFineTuningJob", "/fine_tuning/jobs", method = HttpMethod.Post)
-        ).sort("OpenAI")
-
-        val files = root.generateClient()
-        val actual = files.snapshot()
-        val expected = """
-            |// FineTuning.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.request.post
-            |import io.ktor.client.call.body
-            |
-            |interface FineTuning {
-            |    val jobs: Jobs
-            |
-            |    interface Jobs {
-            |        suspend fun createFineTuningJob(): String
-            |    }
-            |}
-            |
-            |internal class KtorFineTuning(private val client: HttpClient) : FineTuning {
-            |    override val jobs: FineTuning.Jobs = KtorFineTuningJobs(client)
-            |}
-            |
-            |internal class KtorFineTuningJobs(private val client: HttpClient) : FineTuning.Jobs {
-            |    override suspend fun createFineTuningJob(): String =
-            |        client.post("/fine_tuning/jobs").body()
-            |}
-            |
-            |// OpenAI.kt
-            |package io.github.nomisrev.api
-            |
-            |import io.ktor.client.HttpClient
-            |import io.ktor.client.HttpClientConfig
-            |import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-            |import io.ktor.serialization.kotlinx.json.json
-            |import io.ktor.client.plugins.defaultRequest
-            |
-            |interface OpenAI {
-            |    val fineTuning: FineTuning
-            |}
-            |
-            |internal class KtorOpenAI(private val client: HttpClient) : OpenAI {
-            |    override val fineTuning: FineTuning = KtorFineTuning(client)
-            |}
-            |
-            |fun OpenAIClient(
-            |    baseUrl: String,
-            |    block: HttpClientConfig<*>.() -> Unit = {},
-            |): OpenAI {
-            |    val client = HttpClient {
-            |        install(ContentNegotiation) { json() }
-            |        defaultRequest { url(baseUrl) }
-            |        block()
-            |    }
-            |    return KtorOpenAI(client)
-            |}
-        """.trimMargin()
-
-        assertEq(expected, actual)
+        ).sort("OpenAI").generateClient(goldenPackage("client/pascal-and-camel-case"))
     }
 
-    test("required JSON body is rendered as typed body parameter with placement in request block") {
-        val requestModel = Model.Reference(
+    verifyKotlinFiles(
+        name = "required JSON body is rendered as typed body parameter with placement in request block",
+        resourceDirectory = "client/body/required-json"
+    ) {
+        val requestModel1 = Model.Reference(
             context = NamingContext.reference("CreateChatCompletion", SchemaContext.Write),
             description = null,
             isNullable = false,
             title = null
         )
-        val requestBody = Route.Bodies(
+        val requestBody1 = Route.Bodies(
             required = true,
             types = mapOf(
                 ContentType.Application.Json to Route.Body.SetBody(
                     contentType = ContentType.Application.Json,
-                    type = requestModel,
+                    type = requestModel1,
                     description = null,
                     extensions = emptyMap()
                 )
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
                     operationId = "createChatCompletion",
                     path = "/chat/completions/{model}",
                     method = HttpMethod.Post,
-                    body = requestBody,
+                    body = requestBody1,
                     parameters = listOf(
                         pathParam("model"),
                         queryParam("limit", isRequired = true),
@@ -965,64 +517,50 @@ val clientRenderSpec by testSuite {
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("body: CreateChatCompletionRequest,"), "Expected typed body parameter:\n$actual")
-        assertTrue(actual.contains("openAIOrganization: String,"), "Expected required header param:\n$actual")
-        assertTrue(actual.contains("after: String? = null,"), "Expected optional query param:\n$actual")
-        assertTrue(actual.contains("xTraceId: String? = null,"), "Expected optional header param:\n$actual")
-        assertTrue(
-            actual.contains("contentType(ContentType.Application.Json)"),
-            "Expected JSON contentType in impl:\n$actual"
-        )
-        assertTrue(actual.contains("setBody(body)"), "Expected body placement in impl:\n$actual")
+        ).generateClient(goldenPackage("client/body/required-json"))
     }
 
-    test("optional JSON body is nullable and conditionally set") {
-        val requestModel = Model.Reference(
+    verifyKotlinFiles(
+        name = "optional JSON body is nullable and conditionally set",
+        resourceDirectory = "client/body/optional-json"
+    ) {
+        val requestModel1 = Model.Reference(
             context = NamingContext.reference("UpdateSettings", SchemaContext.Write),
             description = null,
             isNullable = false,
             title = null
         )
-        val requestBody = Route.Bodies(
+        val requestBody1 = Route.Bodies(
             required = false,
             types = mapOf(
                 ContentType.Application.Json to Route.Body.SetBody(
                     contentType = ContentType.Application.Json,
-                    type = requestModel,
+                    type = requestModel1,
                     description = null,
                     extensions = emptyMap()
                 )
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
                     operationId = "updateSettings",
                     path = "/settings",
                     method = HttpMethod.Patch,
-                    body = requestBody,
+                    body = requestBody1,
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("body: UpdateSettingsRequest? = null"), "Expected optional body parameter:\n$actual")
-        assertTrue(
-            actual.contains("body?.let { setBody(it) }"),
-            "Expected conditional setBody for optional body:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/body/optional-json"))
     }
 
-    test("multipart inline schema expands into parameters and uses MultiPartFormDataContent") {
-        val multipartBody = Route.Bodies(
+    verifyKotlinFiles(
+        name = "multipart inline schema expands into parameters and uses MultiPartFormDataContent",
+        resourceDirectory = "client/body/multipart-inline"
+    ) {
+        val multipartBody1 = Route.Bodies(
             required = true,
             types = mapOf(
                 ContentType.MultiPart.FormData to Route.Body.Multipart.Value(
@@ -1036,74 +574,60 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
                     operationId = "uploadFile",
                     path = "/files",
                     method = HttpMethod.Post,
-                    body = multipartBody,
+                    body = multipartBody1,
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("file: ByteArray,"), "Expected file parameter:\n$actual")
-        assertTrue(actual.contains("purpose: String,"), "Expected purpose parameter:\n$actual")
-        assertTrue(actual.contains("MultiPartFormDataContent("), "Expected multipart body content:\n$actual")
-        assertTrue(actual.contains("append(\"file\", file)"), "Expected binary multipart append:\n$actual")
-        assertTrue(
-            actual.contains("append(\"purpose\", purpose.toString())"),
-            "Expected multipart string append:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/body/multipart-inline"))
     }
 
-    test("multipart ref schema uses a single typed body parameter") {
-        val requestModel = Model.Reference(
+    verifyKotlinFiles(
+        name = "multipart ref schema uses a single typed body parameter",
+        resourceDirectory = "client/body/multipart-ref"
+    ) {
+        val requestModel1 = Model.Reference(
             context = NamingContext.reference("UploadFile", SchemaContext.Write),
             description = null,
             isNullable = false,
             title = null
         )
-        val multipartBody = Route.Bodies(
+        val multipartBody1 = Route.Bodies(
             required = true,
             types = mapOf(
                 ContentType.MultiPart.FormData to Route.Body.Multipart.Ref(
-                    value = requestModel,
+                    value = requestModel1,
                     description = null,
                     extensions = emptyMap()
                 )
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
                     operationId = "uploadFile",
                     path = "/files",
                     method = HttpMethod.Post,
-                    body = multipartBody,
+                    body = multipartBody1,
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("body: UploadFileRequest,"), "Expected single multipart body parameter:\n$actual")
-        assertTrue(
-            actual.contains("contentType(ContentType.MultiPart.FormData)"),
-            "Expected multipart contentType:\n$actual"
-        )
-        assertTrue(actual.contains("setBody(body)"), "Expected multipart setBody:\n$actual")
+        ).generateClient(goldenPackage("client/body/multipart-ref"))
     }
 
-    test("form-urlencoded schema expands properties and encodes Parameters") {
-        val formBody = Route.Bodies(
+    verifyKotlinFiles(
+        name = "form-urlencoded schema expands properties and encodes Parameters",
+        resourceDirectory = "client/body/form-urlencoded"
+    ) {
+        val formBody1 = Route.Bodies(
             required = true,
             types = mapOf(
                 ContentType.Application.FormUrlEncoded to Route.Body.FormUrlEncoded(
@@ -1124,36 +648,25 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
                     operationId = "createToken",
                     path = "/oauth/token",
                     method = HttpMethod.Post,
-                    body = formBody,
+                    body = formBody1,
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("grantType: String,"), "Expected camelCase form parameter:\n$actual")
-        assertTrue(
-            actual.contains("contentType(ContentType.Application.FormUrlEncoded)"),
-            "Expected form contentType:\n$actual"
-        )
-        assertTrue(actual.contains("Parameters.build {"), "Expected Parameters builder:\n$actual")
-        assertTrue(
-            actual.contains("append(\"grant_type\", grantType.toString())"),
-            "Expected grant_type append:\n$actual"
-        )
-        assertTrue(actual.contains("}.formUrlEncode()"), "Expected formUrlEncode call:\n$actual")
+        ).generateClient(goldenPackage("client/body/form-urlencoded"))
     }
 
-    test("body content type preference follows json over multipart and form-urlencoded") {
-        val jsonBody = Route.Body.SetBody(
+    verifyKotlinFiles(
+        name = "body content type preference follows json over multipart and form-urlencoded",
+        resourceDirectory = "client/body/content-type-preference"
+    ) {
+        val jsonBody1 = Route.Body.SetBody(
             contentType = ContentType.Application.Json,
             type = Model.Reference(
                 context = NamingContext.reference("CreateThing", SchemaContext.Write),
@@ -1164,12 +677,12 @@ val clientRenderSpec by testSuite {
             description = null,
             extensions = emptyMap()
         )
-        val multipartBody = Route.Body.Multipart.Value(
+        val multipartBody1 = Route.Body.Multipart.Value(
             parameters = listOf(Route.Body.Multipart.FormData("file", Model.ByteArray(null, false, null))),
             description = null,
             extensions = emptyMap()
         )
-        val formBody = Route.Body.FormUrlEncoded(
+        val formBody1 = Route.Body.FormUrlEncoded(
             parameters = listOf(
                 Route.Body.Multipart.FormData(
                     "grant_type",
@@ -1179,43 +692,34 @@ val clientRenderSpec by testSuite {
             description = null,
             extensions = emptyMap()
         )
-        val requestBody = Route.Bodies(
+        val requestBody1 = Route.Bodies(
             required = true,
             types = mapOf(
-                ContentType.MultiPart.FormData to multipartBody,
-                ContentType.Application.FormUrlEncoded to formBody,
-                ContentType.Application.Json to jsonBody,
+                ContentType.MultiPart.FormData to multipartBody1,
+                ContentType.Application.FormUrlEncoded to formBody1,
+                ContentType.Application.Json to jsonBody1,
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
                     operationId = "createThing",
                     path = "/things",
                     method = HttpMethod.Post,
-                    body = requestBody,
+                    body = requestBody1,
                 )
             ),
             endpoints = emptyList(),
-        )
-
-        val (actual, _) = renderer { root.renderRootFile() }
-
-        assertTrue(actual.contains("body: CreateThingRequest,"), "Expected JSON body param to win preference:\n$actual")
-        assertTrue(
-            actual.contains("contentType(ContentType.Application.Json)"),
-            "Expected JSON content type to win preference:\n$actual"
-        )
-        assertTrue(
-            !actual.contains("file: ByteArray"),
-            "Did not expect multipart parameters when JSON is present:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/body/content-type-preference"))
     }
 
-    test("multiple responses generate a sealed result and status dispatch in implementation") {
-        val returns = Route.Returns(
+    verifyKotlinFiles(
+        name = "multiple responses generate a sealed result and status dispatch in implementation",
+        resourceDirectory = "client/responses/multiple"
+    ) {
+        val returns1 = Route.Returns(
             default = null,
             responses = mapOf(
                 HttpStatusCode.OK to Route.ReturnType(
@@ -1245,7 +749,7 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -1253,47 +757,18 @@ val clientRenderSpec by testSuite {
                     path = "/models/{model}",
                     parameters = listOf(pathParam("model"))
                 ).copy(
-                    returns = returns
+                    returns = returns1
                 )
             ),
             endpoints = emptyList(),
-        )
-
-          val (actual, _) = renderer { root.renderRootFile() }
-          val expectedSnippet = """
-              |    sealed interface RetrieveModelResult {
-              |        data class OK(val value: String) : RetrieveModelResult
-              |
-              |        data class NotFound(val value: String) : RetrieveModelResult
-              |    }
-              |
-              |    suspend fun retrieveModel(
-              |        model: String,
-              |    ): RetrieveModelResult
-              |}
-              |
-              |internal class KtorApi(private val client: HttpClient) : Api {
-            |    override suspend fun retrieveModel(model: String): Api.RetrieveModelResult {
-            |        val response = client.get("/models/${'$'}model") {
-            |            expectSuccess = false
-            |        }
-            |        return when (response.status) {
-            |            HttpStatusCode.OK -> Api.RetrieveModelResult.OK(response.body())
-            |            HttpStatusCode.NotFound -> Api.RetrieveModelResult.NotFound(response.body())
-            |            else -> throw ResponseException(response, "Undocumented status code: ${'$'}{response.status}")
-            |        }
-            |    }
-            |}
-        """.trimMargin()
-
-        assertTrue(
-            actual.contains(expectedSnippet),
-            "Expected sealed result type and status dispatch snippet:\n$actual"
-        )
+        ).generateClient(goldenPackage("client/responses/multiple"))
     }
 
-    test("default response is rendered and used in else branch") {
-        val returns = Route.Returns(
+    verifyKotlinFiles(
+        name = "default response is rendered and used in else branch",
+        resourceDirectory = "client/responses/default"
+    ) {
+        val returns1 = Route.Returns(
             default = Route.ReturnType(
                 types = mapOf(ContentType.Application.Json to Model.Primitive.String(null, null, null, false, null)),
                 extensions = emptyMap()
@@ -1314,47 +789,22 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(operationId = "getModel", path = "/models/{model}", parameters = listOf(pathParam("model"))).copy(
-                    returns = returns
+                    returns = returns1
                 )
             ),
             endpoints = emptyList(),
-        )
-
-          val (actual, _) = renderer { root.renderRootFile() }
-          val expectedSnippet = """
-              |    sealed interface GetModelResult {
-              |        data class OK(val value: String) : GetModelResult
-              |
-              |        data class Default(val status: HttpStatusCode, val value: String) : GetModelResult
-              |    }
-              |
-              |    suspend fun getModel(
-              |        model: String,
-              |    ): GetModelResult
-              |}
-              |
-              |internal class KtorApi(private val client: HttpClient) : Api {
-              |    override suspend fun getModel(model: String): Api.GetModelResult {
-              |        val response = client.get("/models/${'$'}model") {
-              |            expectSuccess = false
-              |        }
-              |        return when (response.status) {
-              |            HttpStatusCode.OK -> Api.GetModelResult.OK(response.body())
-              |            else -> Api.GetModelResult.Default(response.status, response.body())
-              |        }
-              |    }
-              |}
-          """.trimMargin()
-
-        assertTrue(actual.contains(expectedSnippet), "Expected default-case snippet:\n$actual")
+        ).generateClient(goldenPackage("client/responses/default"))
     }
 
-    test("no-content response renders data object case") {
-        val returns = Route.Returns(
+    verifyKotlinFiles(
+        name = "no-content response renders data object case",
+        resourceDirectory = "client/responses/no-content"
+    ) {
+        val returns1 = Route.Returns(
             default = null,
             responses = mapOf(
                 HttpStatusCode.NoContent to Route.ReturnType(
@@ -1376,7 +826,7 @@ val clientRenderSpec by testSuite {
             ),
             extensions = emptyMap()
         )
-        val root = Root(
+        Root(
             name = "Api",
             operations = listOf(
                 route(
@@ -1385,48 +835,10 @@ val clientRenderSpec by testSuite {
                     method = HttpMethod.Delete,
                     parameters = listOf(pathParam("model"))
                 ).copy(
-                    returns = returns
+                    returns = returns1
                 )
             ),
             endpoints = emptyList(),
-        )
-
-          val (actual, _) = renderer { root.renderRootFile() }
-          val expectedSnippet = """
-              |    sealed interface DeleteModelResult {
-              |        data class OK(val value: String) : DeleteModelResult
-              |
-              |        data object NoContent : DeleteModelResult
-              |    }
-              |
-              |    suspend fun deleteModel(
-              |        model: String,
-              |    ): DeleteModelResult
-              |}
-              |
-              |internal class KtorApi(private val client: HttpClient) : Api {
-              |    override suspend fun deleteModel(model: String): Api.DeleteModelResult {
-              |        val response = client.delete("/models/${'$'}model") {
-              |            expectSuccess = false
-              |        }
-              |        return when (response.status) {
-              |            HttpStatusCode.OK -> Api.DeleteModelResult.OK(response.body())
-              |            HttpStatusCode.NoContent -> Api.DeleteModelResult.NoContent
-              |            else -> throw ResponseException(response, "Undocumented status code: ${'$'}{response.status}")
-              |        }
-              |    }
-              |}
-          """.trimMargin()
-
-        assertTrue(actual.contains(expectedSnippet), "Expected NoContent object-case snippet:\n$actual")
+        ).generateClient(goldenPackage("client/responses/no-content"))
     }
 }
-
-private fun assertEq(expected: String, actual: String) {
-    if (expected != actual) throw AssertionError(expected.diff(actual))
-}
-
-private fun List<io.github.nomisrev.openapi.KFile>.snapshot(): String =
-    sortedBy { it.name }.joinToString("\n\n") { file ->
-        "// ${file.name}\n${file.content.trimEnd()}"
-    }

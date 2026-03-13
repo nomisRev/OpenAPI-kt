@@ -1,0 +1,8 @@
+package io.github.nomisrev.model
+
+class ListPetsResponse
+class PetResponse
+class CreateChatCompletionRequest
+class UpdateSettingsRequest
+class UploadFileRequest
+class CreateThingRequest

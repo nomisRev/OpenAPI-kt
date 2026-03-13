@@ -3,7 +3,8 @@ package io.github.nomisrev.render
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.render.TypeName
+import io.github.nomisrev.openapi.generate
+import io.github.nomisrev.openapi.routes.ApiModel
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 val collectionRenderSpec by testSuite {
@@ -39,17 +40,15 @@ val collectionRenderSpec by testSuite {
         false,
         false
     )
-    verify(
-        """
-            |@Serializable
-            |@JvmInline
-            |value class Foo(val items: List<Item>) {
-            |    @Serializable
-            |    data class Item(val id: String, val name: String)
-            |}
-        """.trimMargin(),
-        collection,
-        TypeName.Serializable,
-        TypeName.JvmInline
-    )
+
+    verifyKotlinFiles(
+        name = "collection renders nested item",
+        resourceDirectory = "collection",
+    ) {
+        ApiModel(
+            routes = emptyList(),
+            models = listOf(collection),
+            servers = emptyList(),
+        ).generate()
+    }
 }
