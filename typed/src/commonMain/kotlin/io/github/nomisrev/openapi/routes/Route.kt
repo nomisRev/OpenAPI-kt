@@ -3,21 +3,17 @@ package io.github.nomisrev.openapi.routes
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
-import io.github.nomisrev.openapi.ApiTree
-import io.github.nomisrev.openapi.buildTree
 import io.github.nomisrev.openapi.parsePathSegments
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.ReferenceOr
-import io.github.nomisrev.openapi.parser.Server
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.Route.Bodies
 import io.github.nomisrev.openapi.routes.Route.Body
 import io.github.nomisrev.openapi.routes.Route.Input
 import io.github.nomisrev.openapi.routes.Route.Returns
 import io.github.nomisrev.openapi.transformers.nestedOrNull
-import io.github.nomisrev.openapi.transformers.topLevelNames
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -27,62 +23,6 @@ import kotlin.collections.component2
 import kotlin.collections.flatMapTo
 import kotlin.collections.mapNotNullTo
 import kotlin.collections.orEmpty
-
-class ApiModel(
-    val routes: List<Route>,
-    val models: List<Model>,
-    val servers: List<Server>,
-) {
-    fun tree(name: String): ApiTree = routes.buildTree(name, servers)
-
-    override fun toString(): String =
-        routes.joinToString { "${it.method.value} ${it.path}" } + "\n" + models.joinToString {
-            when (it) {
-                is Model.Reference -> it.context.toString()
-                is Model.DiscriminatedObject -> it.context.toString()
-                is Model.Enum -> it.context.toString()
-                is Model.Object -> it.context.toString()
-                is Model.Union -> it.context.toString()
-                is Model.ByteArray,
-                is Model.Collection,
-                is Model.Date,
-                is Model.DateTime,
-                is Model.FreeFormJson,
-                is Model.Uuid,
-                is Model.Primitive -> ""
-            }
-        }
-}
-
-private tailrec suspend fun Set<NamingContext.Reference>.topLevelModels(registry: Registry): List<Model> {
-    val models = with(registry) { map { it.toModel() } }
-    val newNames: Set<NamingContext.Reference> = models.flatMapTo(mutableSetOf()) { it.topLevelNames() }
-    return if (newNames == this@topLevelModels) models else newNames.topLevelModels(registry)
-}
-
-suspend fun OpenAPI.toApiModel(): ApiModel =
-    Registry(this).use { registry ->
-        val globalServers = servers.normalizeForClientGeneration()
-        val routes = with(registry) { toRoutes() }
-
-        val models = with(registry) {
-            routes.flatMapTo(mutableSetOf()) {
-                it.parameters.topLevelNames() + it.returns.topLevelNames() + it.body.topLevelNames()
-            }.topLevelModels(registry)
-        }
-
-        ApiModel(routes, models, globalServers)
-    }
-
-private fun List<Server>.normalizeForClientGeneration(): List<Server> {
-    if (size != 1) return this
-    val only = first()
-    val isImplicitDefault = only.url == "/" &&
-        only.description == null &&
-        only.variables.isNullOrEmpty() &&
-        only.extensions.isNullOrEmpty()
-    return if (isImplicitDefault) emptyList() else this
-}
 
 context(ctx: Registry)
 suspend fun OpenAPI.toRoutes(): List<Route> =
@@ -244,16 +184,6 @@ private fun Bodies?.nested(): Set<Model> =
         }
     }
 
-private fun Bodies?.topLevelNames(): Set<NamingContext.Reference> =
-    this?.types.orEmpty().flatMapTo(mutableSetOf()) { (_, body) ->
-        when (body) {
-            is Body.Multipart.Value -> body.parameters.flatMap { it.type.topLevelNames() }
-            is Body.Multipart.Ref -> body.value.topLevelNames()
-            is Body.FormUrlEncoded -> body.parameters.flatMap { it.type.topLevelNames() }
-            is Body.SetBody -> body.type.topLevelNames()
-        }
-    }
-
 private fun Returns.nested(): Set<Model> {
     val defaultNested = default?.types?.values.orEmpty().mapNotNullTo(mutableSetOf()) { it.nestedOrNull() }
     val responsesNested = responses.values.flatMapTo(mutableSetOf()) { returnType ->
@@ -262,15 +192,4 @@ private fun Returns.nested(): Set<Model> {
     return defaultNested + responsesNested
 }
 
-private fun Returns.topLevelNames(): Set<NamingContext.Reference> {
-    val defaultNested = default?.types?.values.orEmpty().flatMapTo(mutableSetOf()) { it.topLevelNames() }
-    val responsesNested = responses.values.flatMapTo(mutableSetOf()) { returnType ->
-        returnType.types.values.flatMap { it.topLevelNames() }
-    }
-    return defaultNested + responsesNested
-}
-
 private fun List<Input>.nested(): Set<Model> = mapNotNullTo(mutableSetOf()) { it.type.nestedOrNull() }
-
-private fun List<Input>.topLevelNames(): Set<NamingContext.Reference> =
-    flatMapTo(mutableSetOf()) { it.type.topLevelNames() }

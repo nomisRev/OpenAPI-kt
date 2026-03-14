@@ -2,14 +2,23 @@ package io.github.nomisrev.render
 
 import de.infix.testBalloon.framework.core.TestSuite
 import de.infix.testBalloon.framework.shared.TestRegistering
+import io.github.nomisrev.openapi.KmpTarget
+import io.github.nomisrev.openapi.RenderConfig
 import io.github.nomisrev.openapi.generate
 import io.github.nomisrev.openapi.parser.OpenAPI
 import org.intellij.lang.annotations.Language
+import kotlinx.coroutines.runBlocking
 import kotlin.jvm.java
 import kotlin.test.assertEquals
 
 private fun readResourceText(path: String): String =
     requireNotNull(TestSuite::class.java.classLoader.getResource(path)?.readText()) { "Resource not found: $path" }
+
+private val testRenderConfig = RenderConfig(
+    modelPackage = "io.github.nomisrev.render.test.model",
+    apiPackage = "io.github.nomisrev.render.test.api",
+    targets = setOf(KmpTarget.JVM, KmpTarget.JS),
+)
 
 @TestRegistering
 fun TestSuite.modelTest(json: String, dir: String) =
@@ -31,7 +40,7 @@ fun TestSuite.modelTest(json: String, dir: String) =
 
 @TestRegistering
 fun TestSuite.renderSpec(@Language("json") json: String, dir: String) = test(json) {
-    val files = OpenAPI.fromJson(json).generate().sortedBy { it.name }
+    val files = OpenAPI.fromJson(json).generate(testRenderConfig).sortedBy { it.name }
     val actual = files.associate({ file ->
         Pair(file.name, buildString { file.writeTo(this) })
     })
