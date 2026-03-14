@@ -28,8 +28,8 @@ client.repos.owner(owner).repo(repo).collaborators.get()
 ## Phases
 
 - [x] [Phase 1: Remove renderer module](./PHASE_1_PLAN.md)
-- [ ] [Phase 2: Introduce `PathSegment`](./PHASE_2_PLAN.md)
-- [ ] [Phase 3: Add `segments` to `Endpoint` and `Route`](./PHASE_3_PLAN.md)
+- [x] [Phase 2: Introduce `PathSegment`](./PHASE_2_PLAN.md)
+- [x] [Phase 3: Add `segments` to `Endpoint` and `Route`](./PHASE_3_PLAN.md)
 - [ ] [Phase 4: Inline `Endpoint` into `toRoute()`](./PHASE_4_PLAN.md)
 - [ ] [Phase 5: Remove `operationId` and update `NamingContext`](./PHASE_5_PLAN.md)
 - [ ] [Phase 6: Replace `Root`/`API`/`sort()` with `ApiTree`/`PathNode`/`buildTree()`](./PHASE_6_PLAN.md)

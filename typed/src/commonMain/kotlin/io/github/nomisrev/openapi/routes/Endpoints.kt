@@ -2,6 +2,8 @@ package io.github.nomisrev.openapi.routes
 
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.Path
+import io.github.nomisrev.openapi.PathSegment
+import io.github.nomisrev.openapi.parsePathSegments
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.ktor.http.HttpMethod
@@ -26,6 +28,7 @@ class Endpoint(val path: String, val method: HttpMethod, val operation: Operatio
     private val pathParamRegex = Regex("\\{.*?\\}")
     val pathSegments = path.replace(pathParamRegex, "").split("/").filter { it.isNotEmpty() }
     val pathParameters = pathParamRegex.findAll(path).map { it.value.removeSurrounding("{", "}") }.toList()
+    val segments: List<PathSegment> = parsePathSegments(path, emptyMap())
     val operationId = operation.operationId ?: generateSyntheticOperationId(path, method)
 
     fun context(context: NamingContext.Nested): NamingContext =

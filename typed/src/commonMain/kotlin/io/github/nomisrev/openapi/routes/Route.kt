@@ -2,7 +2,9 @@ package io.github.nomisrev.openapi.routes
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.Root
+import io.github.nomisrev.openapi.parsePathSegments
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.Server
@@ -80,22 +82,31 @@ private fun List<Server>.normalizeForClientGeneration(): List<Server> {
 }
 
 context(ctx: Registry)
-suspend fun Endpoint.toRoute(): Route = Route(
-    operationId = operationId,
-    summary = operation.summary,
-    path = path,
-    method = method,
-    parameters = parameters(),
-    body = bodies(),
-    returns = returns(),
-    extensions = operation.extensions,
-    deprecated = operation.deprecated
-)
+suspend fun Endpoint.toRoute(): Route {
+    val params = parameters()
+    val pathParamTypes = params
+        .filter { it.input == Parameter.Input.Path }
+        .associate { it.name to it.type }
+
+    return Route(
+        operationId = operationId,
+        summary = operation.summary,
+        path = path,
+        segments = parsePathSegments(path, pathParamTypes),
+        method = method,
+        parameters = params,
+        body = bodies(),
+        returns = returns(),
+        extensions = operation.extensions,
+        deprecated = operation.deprecated
+    )
+}
 
 data class Route(
     val operationId: String,
     val summary: String?,
     val path: String,
+    val segments: List<PathSegment>,
     val method: HttpMethod,
     val body: Bodies?,
     val parameters: List<Input>,
