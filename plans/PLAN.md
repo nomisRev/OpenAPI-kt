@@ -27,7 +27,7 @@ client.repos.owner(owner).repo(repo).collaborators.get()
 
 ## Phases
 
-- [ ] [Phase 1: Remove renderer module](./PHASE_1_PLAN.md)
+- [x] [Phase 1: Remove renderer module](./PHASE_1_PLAN.md)
 - [ ] [Phase 2: Introduce `PathSegment`](./PHASE_2_PLAN.md)
 - [ ] [Phase 3: Add `segments` to `Endpoint` and `Route`](./PHASE_3_PLAN.md)
 - [ ] [Phase 4: Inline `Endpoint` into `toRoute()`](./PHASE_4_PLAN.md)
