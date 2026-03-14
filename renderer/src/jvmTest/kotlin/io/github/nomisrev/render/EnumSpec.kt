@@ -2,7 +2,7 @@ package io.github.nomisrev.render
 
 import de.infix.testBalloon.framework.core.testSuite
 
-val primitiveSpec by testSuite {
+val enumSpec by testSuite {
     modelTest(
         """
         "Sort": {
@@ -38,4 +38,44 @@ val primitiveSpec by testSuite {
         "enum/singlevalue"
     )
 
+    modelTest(
+        """
+        |"Priority": {
+        |  "type": "integer",
+        |  "enum": ["1", "2", "3"]
+        |}
+        """.trimMargin(),
+        "enum/int"
+    )
+
+    modelTest(
+        """
+        |"SpecialValues": {
+        |  "type": "string",
+        |  "enum": ["*", "/", "+1", "-1"]
+        |}
+        """.trimMargin(),
+        "enum/special-chars"
+    )
+
+    modelTest(
+        """
+        |"NullableState": {
+        |  "type": "string",
+        |  "nullable": true,
+        |  "enum": ["on", null, "off"]
+        |}
+        """.trimMargin(),
+        "enum/nullable"
+    )
+
+    modelTest(
+        """
+        |"JsIdentifier": {
+        |  "type": "string",
+        |  "enum": ["1xx"]
+        |}
+        """.trimMargin(),
+        "enum/jsname"
+    )
 }
