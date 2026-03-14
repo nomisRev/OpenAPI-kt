@@ -31,7 +31,7 @@ Generate Kotlin source code from the typed OpenAPI model using KotlinPoet. Cover
 | Phase | Name | Plan | Status |
 |-------|------|------|--------|
 | 0 | Scaffolding | [PHASE_0.md](PHASE_0.md) | DONE |
-| 1 | Enums | [PHASE_1.md](PHASE_1.md) | TODO |
+| 1 | Enums | [PHASE_1.md](PHASE_1.md) | DONE |
 | 2 | Objects (basic) | [PHASE_2.md](PHASE_2.md) | TODO |
 | 3 | Objects (additionalProperties) | [PHASE_3.md](PHASE_3.md) | TODO |
 | 4 | Collections | [PHASE_4.md](PHASE_4.md) | TODO |
