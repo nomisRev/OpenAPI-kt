@@ -2,28 +2,39 @@ package io.github.nomisrev.openapi.routes
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.parser.MediaType
+import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.RequestBody
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.toModel
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import kotlin.collections.component1
 import kotlin.collections.component2
 
 context(ctx: Registry)
-suspend fun Endpoint.bodies(): Route.Bodies? =
-    operation.requestBody?.resolve()?.value?.toBodies()
+suspend fun resolveBodies(
+    path: String,
+    segments: List<PathSegment>,
+    method: HttpMethod,
+    operation: Operation,
+): Route.Bodies? = operation.requestBody?.resolve()?.value?.toBodies(path, segments, method)
 
-context(endpoint: Endpoint, scope: Registry)
-private suspend fun RequestBody.toBodies(): Route.Bodies? {
+context(ctx: Registry)
+private suspend fun RequestBody.toBodies(
+    path: String,
+    segments: List<PathSegment>,
+    method: HttpMethod,
+): Route.Bodies? {
     val typedBodies = content.entries.mapNotNull { (contentType, mediaType) ->
         val schema = mediaType.schema ?: return@mapNotNull null
         val body = when {
-            ContentType.MultiPart.FormData.match(contentType) -> formDataToBody(mediaType, schema)
-            ContentType.Application.FormUrlEncoded.match(contentType) -> formUrlEncoded(mediaType, schema)
-            else -> toBody(contentType, mediaType, schema)
+            ContentType.MultiPart.FormData.match(contentType) -> formDataToBody(segments, method, mediaType, schema)
+            ContentType.Application.FormUrlEncoded.match(contentType) -> formUrlEncoded(segments, method, mediaType, schema)
+            else -> toBody(segments, method, contentType, mediaType, schema)
         }
         Pair(ContentType.parse(contentType), body)
     }.toMap()
@@ -32,7 +43,7 @@ private suspend fun RequestBody.toBodies(): Route.Bodies? {
         if (!required) return null
         val renderedContentTypes = content.keys.sorted().ifEmpty { listOf("<none>") }.joinToString(", ")
         throw IllegalArgumentException(
-            "Required request body for ${endpoint.method.value} ${endpoint.path} (${endpoint.operationId}) " +
+            "Required request body for ${method.value} $path " +
                     "has no schema in any content type. Content types: $renderedContentTypes"
         )
     }
@@ -44,9 +55,14 @@ private suspend fun RequestBody.toBodies(): Route.Bodies? {
     )
 }
 
-context(endpoint: Endpoint, scope: Registry)
-private suspend fun RequestBody.formDataToBody(mediaType: MediaType, schema: ReferenceOr<Schema>): Route.Body {
-    val name = endpoint.context(NamingContext.RouteBody("body", endpoint.operationId))
+context(scope: Registry)
+private suspend fun RequestBody.formDataToBody(
+    segments: List<PathSegment>,
+    method: HttpMethod,
+    mediaType: MediaType,
+    schema: ReferenceOr<Schema>,
+): Route.Body {
+    val name = NamingContext.path(segments, method).nest(NamingContext.RouteBody)
     return when (val model = schema.toModel(name, SchemaContext.Write)) {
         is Model.Object -> {
             val params = model.properties.map { (baseName, prop) ->
@@ -59,9 +75,14 @@ private suspend fun RequestBody.formDataToBody(mediaType: MediaType, schema: Ref
     }
 }
 
-context(endpoint: Endpoint, scope: Registry)
-private suspend fun RequestBody.formUrlEncoded(mediaType: MediaType, schema: ReferenceOr<Schema>): Route.Body {
-    val name = endpoint.context(NamingContext.RouteBody("body", endpoint.operationId))
+context(scope: Registry)
+private suspend fun RequestBody.formUrlEncoded(
+    segments: List<PathSegment>,
+    method: HttpMethod,
+    mediaType: MediaType,
+    schema: ReferenceOr<Schema>,
+): Route.Body {
+    val name = NamingContext.path(segments, method).nest(NamingContext.RouteBody)
     val obj = requireNotNull(schema.toModel(name, SchemaContext.Write) as? Model.Object) {
         "Form URL encoded body must be an object. $this"
     }
@@ -69,9 +90,15 @@ private suspend fun RequestBody.formUrlEncoded(mediaType: MediaType, schema: Ref
     return Route.Body.FormUrlEncoded(params, description, mediaType.extensions)
 }
 
-context(endpoint: Endpoint, scope: Registry)
-private suspend fun RequestBody.toBody(contentType: String, mediaType: MediaType, schema: ReferenceOr<Schema>): Route.Body {
-    val name = endpoint.context(NamingContext.RouteBody("body", endpoint.operationId))
+context(scope: Registry)
+private suspend fun RequestBody.toBody(
+    segments: List<PathSegment>,
+    method: HttpMethod,
+    contentType: String,
+    mediaType: MediaType,
+    schema: ReferenceOr<Schema>,
+): Route.Body {
+    val name = NamingContext.path(segments, method).nest(NamingContext.RouteBody)
     return Route.Body.SetBody(
         contentType = ContentType.parse(contentType),
         type = schema.toModel(name, SchemaContext.Write),

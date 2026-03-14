@@ -2,33 +2,49 @@ package io.github.nomisrev.openapi.routes
 
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.RouteParam
+import io.github.nomisrev.openapi.PathSegment
+import io.github.nomisrev.openapi.parsePathSegments
+import io.github.nomisrev.openapi.requireUnique
+import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.toModel
+import io.ktor.http.HttpMethod
 
 enum class SchemaContext {
     Write, Read, Null;
 }
 
 context(ctx: Registry)
-suspend fun Endpoint.parameters(): List<Route.Input> {
-    val parameters = withMissingPathParameters()
+suspend fun resolveParameters(
+    path: String,
+    method: HttpMethod,
+    operation: Operation,
+): List<Route.Input> {
+    val pathParameters = extractPathParameters(path)
+    val parameters = withMissingPathParameters(operation.parameters, pathParameters)
+    val segments = parsePathSegments(path, emptyMap())
     // TODO: configure as part of Leniency mode
     requireUnique(
         parameters.map { it.name() },
         "Expected all parameters to have unique names. $parameters"
     )
     return parameters.map { parameter ->
-        parameter.toRouteInput(context(RouteParam(parameter.name(), operationId)))
+        parameter.toRouteInput(path, segments, method)
     }
 }
 
-context(ctx: Registry, endpoint: Endpoint)
-private suspend fun ResolvedParameter.toRouteInput(name: NamingContext): Route.Input {
+context(ctx: Registry)
+private suspend fun ResolvedParameter.toRouteInput(
+    path: String,
+    segments: List<PathSegment>,
+    method: HttpMethod,
+): Route.Input {
+    val name = NamingContext.path(segments, method).nest(RouteParam(name()))
     val refOrSchema = requireNotNull(value.schema) {
-        "Parameter ${name()} without schema for ${endpoint.path} ${endpoint.method}"
+        "Parameter ${name()} without schema for $path $method"
     }
     val type = refOrSchema.toModel(name, SchemaContext.Write)
     return Route.Input(name(), type, value.required, value.input, value.description)
@@ -45,12 +61,14 @@ private fun ResolvedParameter.name(): String = when (this) {
  *
  * TODO: configure as part of Leniency mode
  */
-context(ctx: Registry) // TODO horrible function
-private fun Endpoint.withMissingPathParameters(): List<ResolvedParameter> {
-    val parameters = operation.parameters.map { it.resolve() }
-    val parameterNames = parameters.map { it.name() }
-    val pathParameters = pathParameters
-    val missing = (this.pathParameters - parameterNames.toSet()).map { path ->
+context(ctx: Registry)
+private fun withMissingPathParameters(
+    parameters: List<ReferenceOr<Parameter>>,
+    pathParameters: List<String>,
+): List<ResolvedParameter> {
+    val resolvedParameters = parameters.map { it.resolve() }
+    val parameterNames = resolvedParameters.map { it.name() }
+    val missing = (pathParameters - parameterNames.toSet()).map { path ->
         ResolvedParameter.Value(
             Parameter(
                 name = path,
@@ -61,7 +79,7 @@ private fun Endpoint.withMissingPathParameters(): List<ResolvedParameter> {
     }
 
     val priorityOrder = pathParameters.withIndex().associate { it.value to it.index }
-    return (missing + parameters).sortedBy { priorityOrder[it.name()] ?: Int.MAX_VALUE }
+    return (missing + resolvedParameters).sortedBy { priorityOrder[it.name()] ?: Int.MAX_VALUE }
 }
 
 private sealed interface ResolvedParameter {
@@ -84,3 +102,8 @@ private fun ReferenceOr<Parameter>.resolve(): ResolvedParameter = when (this) {
         }
     }
 }
+
+private val pathParamRegex = Regex("\\{.*?\\}")
+
+private fun extractPathParameters(path: String): List<String> =
+    pathParamRegex.findAll(path).map { it.value.removeSurrounding("{", "}") }.toList()

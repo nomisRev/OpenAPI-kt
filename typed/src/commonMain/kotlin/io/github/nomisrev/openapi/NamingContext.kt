@@ -1,11 +1,15 @@
 package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.routes.SchemaContext
+import io.ktor.http.HttpMethod
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 // TODO refactor model so you can recognise NamingContext.Reference (isTopLevel) by type like before
 @Serializable
@@ -14,17 +18,21 @@ data class NamingContext(val head: Head, val nested: List<Nested>) {
 
     companion object {
         fun reference(name: String, context: SchemaContext) = NamingContext(Reference(name, context), emptyList())
-        fun path(parts: List<String>) = NamingContext(Path(parts), emptyList())
-        fun path(part: String) = NamingContext(Path(listOf(part)), emptyList())
+        fun path(segments: List<PathSegment>, method: HttpMethod) = NamingContext(Path(segments, method), emptyList())
+        fun path(parts: List<String>) = path(parts.map(PathSegment::Literal), HttpMethod.Get)
+        fun path(part: String) = path(listOf(part))
     }
 
     @Serializable
     sealed interface Head
 
     @Serializable
-    @JvmInline
     @SerialName("Path")
-    value class Path(val parts: List<String>) : Head
+    data class Path(
+        val segments: List<PathSegment>,
+        @Serializable(with = HttpMethodSerializer::class)
+        val method: HttpMethod,
+    ) : Head
 
     @Serializable
     @SerialName("Reference")
@@ -52,19 +60,24 @@ data class NamingContext(val head: Head, val nested: List<Nested>) {
 
     @Serializable
     @SerialName("RouteParam")
-    data class RouteParam(
-        val name: String,
-        val operationId: String
-    ) : Nested
+    data class RouteParam(val name: String) : Nested
 
     @Serializable
     @SerialName("RouteBody")
-    data class RouteBody(
-        val name: String,
-        val operationId: String
-    ) : Nested
+    data object RouteBody : Nested
 
     @Serializable
     @SerialName("Response")
-    data class Response(val operationId: String) : Nested
+    data object Response : Nested
+}
+
+private object HttpMethodSerializer : KSerializer<HttpMethod> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("HttpMethod", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: HttpMethod) {
+        encoder.encodeString(value.value)
+    }
+
+    override fun deserialize(decoder: Decoder): HttpMethod =
+        HttpMethod(decoder.decodeString())
 }

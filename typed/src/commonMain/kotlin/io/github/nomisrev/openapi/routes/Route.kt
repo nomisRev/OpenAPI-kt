@@ -3,17 +3,19 @@ package io.github.nomisrev.openapi.routes
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
-import io.github.nomisrev.openapi.Root
+import io.github.nomisrev.openapi.ApiTree
+import io.github.nomisrev.openapi.buildTree
 import io.github.nomisrev.openapi.parsePathSegments
 import io.github.nomisrev.openapi.parser.OpenAPI
+import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
+import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Server
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.Route.Bodies
 import io.github.nomisrev.openapi.routes.Route.Body
 import io.github.nomisrev.openapi.routes.Route.Input
 import io.github.nomisrev.openapi.routes.Route.Returns
-import io.github.nomisrev.openapi.sort
 import io.github.nomisrev.openapi.transformers.nestedOrNull
 import io.github.nomisrev.openapi.transformers.topLevelNames
 import io.ktor.http.ContentType
@@ -31,9 +33,9 @@ class ApiModel(
     val models: List<Model>,
     val servers: List<Server>,
 ) {
-    fun root(name: String): Root = routes.sort(name, servers)
+    fun tree(name: String): ApiTree = routes.buildTree(name, servers)
     override fun toString(): String =
-        routes.joinToString { it.operationId } + "\n" + models.joinToString {
+        routes.joinToString { "${it.method.value} ${it.path}" } + "\n" + models.joinToString {
             when (it) {
                 is Model.Reference -> it.context.toString()
                 is Model.DiscriminatedObject -> it.context.toString()
@@ -60,7 +62,7 @@ private tailrec suspend fun Set<NamingContext.Reference>.topLevelModels(registry
 suspend fun OpenAPI.toApiModel(): ApiModel =
     Registry(this).use { registry ->
         val globalServers = servers.normalizeForClientGeneration()
-        val routes = with(registry) { endpoints().map { it.toRoute() } }
+        val routes = with(registry) { toRoutes() }
 
         val models = with(registry) {
             routes.flatMapTo(mutableSetOf()) {
@@ -82,30 +84,46 @@ private fun List<Server>.normalizeForClientGeneration(): List<Server> {
 }
 
 context(ctx: Registry)
-suspend fun Endpoint.toRoute(): Route {
-    val params = parameters()
+suspend fun OpenAPI.toRoutes(): List<Route> =
+    paths.entries.flatMap { (path, pathItem) ->
+        val pathParams = pathItem.parameters
+        listOfNotNull(
+            pathItem.get?.let { toRoute(path, HttpMethod.Get, it.withParams(pathParams)) },
+            pathItem.put?.let { toRoute(path, HttpMethod.Put, it.withParams(pathParams)) },
+            pathItem.post?.let { toRoute(path, HttpMethod.Post, it.withParams(pathParams)) },
+            pathItem.delete?.let { toRoute(path, HttpMethod.Delete, it.withParams(pathParams)) },
+            pathItem.head?.let { toRoute(path, HttpMethod.Head, it.withParams(pathParams)) },
+            pathItem.options?.let { toRoute(path, HttpMethod.Options, it.withParams(pathParams)) },
+            pathItem.trace?.let { toRoute(path, HttpMethod("Trace"), it.withParams(pathParams)) },
+            pathItem.patch?.let { toRoute(path, HttpMethod.Patch, it.withParams(pathParams)) },
+        )
+    }
+
+private fun Operation.withParams(pathParams: List<ReferenceOr<io.github.nomisrev.openapi.parser.Parameter>>): Operation =
+    copy(parameters = pathParams + parameters)
+
+context(ctx: Registry)
+private suspend fun toRoute(path: String, method: HttpMethod, operation: Operation): Route {
+    val params = resolveParameters(path, method, operation)
     val pathParamTypes = params
         .filter { it.input == Parameter.Input.Path }
         .associate { it.name to it.type }
+    val segments = parsePathSegments(path, pathParamTypes)
 
     return Route(
-        operationId = operationId,
         summary = operation.summary,
-        path = path,
-        segments = parsePathSegments(path, pathParamTypes),
+        segments = segments,
         method = method,
         parameters = params,
-        body = bodies(),
-        returns = returns(),
+        body = resolveBodies(path, segments, method, operation),
+        returns = resolveReturns(path, segments, method, operation),
         extensions = operation.extensions,
         deprecated = operation.deprecated
     )
 }
 
 data class Route(
-    val operationId: String,
     val summary: String?,
-    val path: String,
     val segments: List<PathSegment>,
     val method: HttpMethod,
     val body: Bodies?,
@@ -114,8 +132,15 @@ data class Route(
     val extensions: Map<String, JsonElement>,
     val deprecated: Boolean,
 ) {
-    val nested: Set<Model> = body.nested() + parameters.nested() + returns.nested()
+    val path: String
+        get() = segments.joinToString(separator = "/", prefix = "/") { segment ->
+            when (segment) {
+                is PathSegment.Literal -> segment.name
+                is PathSegment.Parameter -> "{${segment.name}}"
+            }
+        }
 
+    val nested: Set<Model> = body.nested() + parameters.nested() + returns.nested()
 
     data class Bodies(
         /** Request bodies are optional by default! */

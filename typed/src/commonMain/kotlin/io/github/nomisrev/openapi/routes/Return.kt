@@ -2,34 +2,54 @@ package io.github.nomisrev.openapi.routes
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.PathSegment
+import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Response
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.toModel
 import io.ktor.http.ContentType
+import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 
 context(ctx: Registry)
-suspend fun Endpoint.returns(): Route.Returns =
+suspend fun resolveReturns(
+    path: String,
+    segments: List<PathSegment>,
+    method: HttpMethod,
+    operation: Operation,
+): Route.Returns =
     Route.Returns(
-        default = operation.responses.default?.resolve()?.returnType(),
+        default = operation.responses.default?.resolve()?.returnType(path, segments, method),
         responses = operation.responses.responses.entries.associate { (code, response) ->
-            Pair(HttpStatusCode.fromValue(code), response.resolve().returnType())
+            Pair(HttpStatusCode.fromValue(code), response.resolve().returnType(path, segments, method))
         },
         extensions = operation.responses.extensions
     )
 
-context(endpoint: Endpoint, ctx: Registry)
-private suspend fun ResolvedResponse.returnType(): Route.ReturnType =
-    Route.ReturnType(types = value.allContentModels(), extensions = value.extensions)
+context(ctx: Registry)
+private suspend fun ResolvedResponse.returnType(
+    path: String,
+    segments: List<PathSegment>,
+    method: HttpMethod,
+): Route.ReturnType = Route.ReturnType(
+    types = value.allContentModels(path, segments, method),
+    extensions = value.extensions
+)
 
-context(endpoint: Endpoint, ctx: Registry)
-private suspend fun Response.allContentModels(): Map<ContentType, Model> =
+context(ctx: Registry)
+private suspend fun Response.allContentModels(
+    path: String,
+    segments: List<PathSegment>,
+    method: HttpMethod,
+): Map<ContentType, Model> =
     content.entries.associate { (contentType, mediaType) ->
-        val schema = requireNotNull(mediaType.schema) { "Response without $mediaType schema. $this" }
+        val schema = requireNotNull(mediaType.schema) {
+            "Response without $mediaType schema for ${method.value} $path. $this"
+        }
         Pair(
             ContentType.parse(contentType),
-            schema.toModel(endpoint.context(NamingContext.Response(endpoint.operationId)), SchemaContext.Read)
+            schema.toModel(NamingContext.path(segments, method).nest(NamingContext.Response), SchemaContext.Read)
         )
     }
 

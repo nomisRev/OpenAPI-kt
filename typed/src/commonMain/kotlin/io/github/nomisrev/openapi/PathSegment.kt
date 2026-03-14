@@ -1,10 +1,18 @@
 package io.github.nomisrev.openapi
 
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+@Serializable
 sealed interface PathSegment {
     val name: String
 
+    @Serializable
+    @SerialName("Literal")
     data class Literal(override val name: String) : PathSegment
 
+    @Serializable
+    @SerialName("Parameter")
     data class Parameter(override val name: String, val type: Model) : PathSegment
 }
 
