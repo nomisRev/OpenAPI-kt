@@ -22,6 +22,7 @@ class Renderer(val config: Config, import: Importer) : Importer by import {
     val js: Boolean get() = config.js
     val packageName: String get() = config.packageName
     val indent: String get() = " ".repeat(indentSize)
+    internal var namePlan: NamePlan? = null
 }
 
 fun <A> renderer(

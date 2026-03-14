@@ -128,23 +128,31 @@ fun Class?.renderAsSuperclass(): String =
 context(ctx: Renderer)
 fun NamingContext.name(): Class {
     val headValue = head
+    val plan = ctx.namePlan
     val head = when (headValue) {
-        is NamingContext.Path -> Class("${ctx.packageName}.api", headValue.parts)
+        is NamingContext.Path -> Class(
+            "${ctx.packageName}.api",
+            plan?.mappedPathParts(headValue.parts) ?: headValue.parts
+        )
         is NamingContext.Reference -> Class(
             "${ctx.packageName}.model",
             "${headValue.name.toPascalCase()}${headValue.context.name()}"
         )
     }
+    var currentContext = NamingContext(headValue, emptyList())
     return nested.fold(head) { acc, context ->
-        val nestedName = when (context) {
-            NamingContext.AdditionalProperties -> "Additional"
-            is NamingContext.DiscriminatedObjectCase -> context.discriminator.toPascalCase()
-            is NamingContext.ObjectProperty -> context.name.toPascalCase()
-            is NamingContext.Response -> "${context.operationId.toPascalCase()}Response"
-            is NamingContext.RouteBody -> "${context.operationId.toPascalCase()}Body"
-            is NamingContext.RouteParam -> context.name.toPascalCase()
-            is NamingContext.UnionCase -> context.value.toPascalCase()
-        }
+        currentContext = currentContext.nest(context)
+        val nestedName = plan?.inlineSimpleName(currentContext) ?: context.defaultSimpleName()
         acc.nest(nestedName)
     }
+}
+
+private fun NamingContext.Nested.defaultSimpleName(): String = when (this) {
+    NamingContext.AdditionalProperties -> "Additional"
+    is NamingContext.DiscriminatedObjectCase -> discriminator.toPascalCase()
+    is NamingContext.ObjectProperty -> name.toPascalCase()
+    is NamingContext.Response -> "${operationId.toPascalCase()}Response"
+    is NamingContext.RouteBody -> "${operationId.toPascalCase()}Body"
+    is NamingContext.RouteParam -> name.toPascalCase()
+    is NamingContext.UnionCase -> value.toPascalCase()
 }

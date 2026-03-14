@@ -17,11 +17,13 @@ import io.ktor.http.HttpMethod
  */
 context(ctx: Renderer)
 fun Root.renderRootFile(): String = buildString {
+    val previousPlan = ctx.namePlan
+    ctx.namePlan = buildNamePlan()
     val interfaceName = name.toPascalCase()
     val implName = "Ktor${interfaceName}"
 
     // Root interface
-    renderRootInterface(interfaceName)
+    renderRootInterface(interfaceName, emptyList())
     if (servers.isNotEmpty()) {
         newLine()
         newLine()
@@ -31,24 +33,29 @@ fun Root.renderRootFile(): String = buildString {
     newLine()
 
     // Impl class
-    renderRootImpl(interfaceName, implName)
+    renderRootImpl(interfaceName, implName, emptyList())
     newLine()
     newLine()
 
     // Factory function
     renderFactory(interfaceName, implName)
+    ctx.namePlan = previousPlan
 }
 
 context(ctx: Renderer)
 fun API.renderApiFile(): String = buildString {
-    renderApiInterface()
+    val previousPlan = ctx.namePlan
+    ctx.namePlan = buildNamePlanForFile()
+    val scopePath = listOf(name)
+    renderApiInterface(scopePath)
     newLine()
     newLine()
-    renderApiImpls(listOf(name))
+    renderApiImpls(scopePath)
+    ctx.namePlan = previousPlan
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun Root.renderRootInterface(interfaceName: String) {
+private fun Root.renderRootInterface(interfaceName: String, scopePath: List<String>) {
     if (operations.isEmpty() && endpoints.isEmpty()) {
         append("interface $interfaceName")
         return
@@ -60,8 +67,9 @@ private fun Root.renderRootInterface(interfaceName: String) {
     indented {
         // Child interface properties
         endpoints.forEachIndexed { index, api ->
+            val childPath = scopePath + api.name
             val propName = api.name.toCamelCase()
-            val typeName = api.name.toPascalCase()
+            val typeName = childPath.interfaceName()
             +"val $propName: $typeName"
             if (index < endpoints.size - 1 || inlineModels.isNotEmpty() || operations.isNotEmpty()) newLine()
         }
@@ -73,15 +81,27 @@ private fun Root.renderRootInterface(interfaceName: String) {
 
         // Root-level operations
         operations.forEachIndexed { index, route ->
-            renderRouteSignature(route)
+            renderRouteSignature(route, scopePath)
             if (index < operations.size - 1) newLine()
+        }
+
+        if (endpoints.isNotEmpty()) {
+            newLine()
+        }
+
+        endpoints.forEachIndexed { index, child ->
+            child.renderApiInterface(scopePath + child.name)
+            if (index < endpoints.size - 1) {
+                newLine()
+                newLine()
+            }
         }
     }
     append("}")
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun Root.renderRootImpl(interfaceName: String, implName: String) {
+private fun Root.renderRootImpl(interfaceName: String, implName: String, scopePath: List<String>) {
     ctx.import(TypeName.Class("io.ktor.client", "HttpClient"))
 
     val hasBody = endpoints.isNotEmpty() || operations.isNotEmpty()
@@ -92,16 +112,17 @@ private fun Root.renderRootImpl(interfaceName: String, implName: String) {
         indented {
             // Child impl instantiation
             endpoints.forEach { api ->
+                val childPath = scopePath + api.name
                 val propName = api.name.toCamelCase()
-                val typeName = api.name.toPascalCase()
-                val implTypeName = "Ktor$typeName"
+                val typeName = childPath.interfaceName()
+                val implTypeName = childPath.implName()
                 +"override val $propName: $typeName = $implTypeName(client)"
             }
             if (endpoints.isNotEmpty() && operations.isNotEmpty()) newLine()
 
             // Root-level operation implementations
             operations.forEachIndexed { index, route ->
-                renderOperationImpl(route, interfaceName)
+                renderOperationImpl(route, interfaceName, scopePath)
                 if (index < operations.size - 1) newLine()
             }
         }
@@ -189,8 +210,8 @@ private fun renderServerCase(
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun API.renderApiInterface() {
-    val interfaceName = name.toPascalCase()
+private fun API.renderApiInterface(scopePath: List<String>) {
+    val interfaceName = scopePath.simpleInterfaceName()
     val children = nested
     val inlineModels = routes.inlineModels()
     val hasMembers = children.isNotEmpty() || routes.isNotEmpty()
@@ -202,8 +223,9 @@ private fun API.renderApiInterface() {
     +"interface $interfaceName {"
     indented {
         children.forEachIndexed { index, child ->
+            val childPath = scopePath + child.name
             val propName = child.name.toCamelCase()
-            val typeName = child.name.toPascalCase()
+            val typeName = childPath.interfaceName()
             +"val $propName: $typeName"
             if (index < children.size - 1 || inlineModels.isNotEmpty() || routes.isNotEmpty()) newLine()
         }
@@ -216,7 +238,7 @@ private fun API.renderApiInterface() {
         }
 
         routes.forEachIndexed { index, route ->
-            renderRouteSignature(route)
+            renderRouteSignature(route, scopePath)
             if (index < routes.size - 1) {
                 newLine()
             }
@@ -227,7 +249,7 @@ private fun API.renderApiInterface() {
         }
 
         children.forEachIndexed { index, child ->
-            child.renderApiInterface()
+            child.renderApiInterface(scopePath + child.name)
             if (index < children.size - 1) {
                 newLine()
                 newLine()
@@ -280,7 +302,7 @@ private fun API.renderApiImpl(path: List<String>) {
         }
 
         routes.forEachIndexed { index, route ->
-            renderOperationImpl(route, interfaceName)
+            renderOperationImpl(route, interfaceName, path)
             if (index < routes.size - 1) {
                 newLine()
             }
@@ -334,12 +356,12 @@ private fun Root.renderFactory(interfaceName: String, implName: String) {
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun renderRouteSignature(route: Route) {
+private fun renderRouteSignature(route: Route, scopePath: List<String>) {
     if (route.usesSealedReturnType()) {
-        route.renderSealedResultType()
+        route.renderSealedResultType(scopePath)
         newLine()
     }
-    +renderSuspendFun(route)
+    +renderSuspendFun(route, scopePath)
 }
 
 context(ctx: Renderer)
@@ -364,8 +386,8 @@ private fun renderInlineModels(models: List<Model>) {
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun Route.renderSealedResultType() {
-    val resultTypeName = sealedResultTypeName()
+private fun Route.renderSealedResultType(scopePath: List<String>) {
+    val resultTypeName = sealedResultTypeName(scopePath)
 
     +"sealed interface $resultTypeName {"
     indented {
@@ -409,8 +431,8 @@ private fun Route.renderStatusCase(
 }
 
 context(ctx: Renderer)
-private fun renderSuspendFun(route: Route): String = buildString {
-    val returnType = route.resolveReturnType()
+private fun renderSuspendFun(route: Route, scopePath: List<String>): String = buildString {
+    val returnType = route.resolveReturnType(scopePath)
     val body = route.preferredBodyOrNull()
     val params = route.signatureParameters(body)
 
@@ -451,8 +473,8 @@ private fun renderSuspendFun(route: Route): String = buildString {
 }
 
 context(ctx: Renderer, builder: StringBuilder)
-private fun renderOperationImpl(route: Route, interfaceName: String) {
-    val returnType = route.resolveReturnType(interfaceName)
+private fun renderOperationImpl(route: Route, interfaceName: String, scopePath: List<String>) {
+    val returnType = route.resolveReturnType(scopePath, interfaceName)
     val method = route.method.ktorFunction()
     if (method.matches(Regex("[A-Za-z_][A-Za-z0-9_]*"))) {
         ctx.import(TopLevelFunction("io.ktor.client.request", method))
@@ -614,9 +636,9 @@ private fun renderParamPlacement(input: Route.Input) {
 }
 
 context(ctx: Renderer)
-private fun Route.resolveReturnType(interfaceName: String? = null): String {
+private fun Route.resolveReturnType(scopePath: List<String>, interfaceName: String? = null): String {
     if (usesSealedReturnType()) {
-        val resultTypeName = sealedResultTypeName()
+        val resultTypeName = sealedResultTypeName(scopePath)
         return if (interfaceName == null) resultTypeName else "$interfaceName.$resultTypeName"
     }
 
@@ -1030,11 +1052,12 @@ private fun Route.ReturnType.preferredModel(): Model =
         ?: types.values.firstOrNull()
         ?: Model.Primitive.Unit(null, false, null)
 
-private fun Route.usesSealedReturnType(): Boolean =
+internal fun Route.usesSealedReturnType(): Boolean =
     returns.responses.size > 1 || returns.default != null
 
-private fun Route.sealedResultTypeName(): String =
-    "${operationId.toPascalCase()}Result"
+context(ctx: Renderer)
+private fun Route.sealedResultTypeName(scopePath: List<String>): String =
+    ctx.namePlan?.resultTypeName(scopePath, this) ?: sealedResultTypeNameDefault()
 
 private fun Route.ReturnType.isEmptyBody(): Boolean =
     types.isEmpty() || preferredModel() is Model.Primitive.Unit
@@ -1116,9 +1139,17 @@ private fun io.ktor.http.HttpStatusCode.asWhenCondition(): String =
 private fun Map<ContentType, Model>.firstModelFor(contentType: ContentType): Model? =
     entries.firstNotNullOfOrNull { (ct, model) -> if (contentType.match(ct)) model else null }
 
-private fun List<String>.implName(): String = "Ktor" + joinToString("") { it.toPascalCase() }
+context(ctx: Renderer)
+private fun List<String>.implName(): String =
+    ctx.namePlan?.implName(this) ?: "Ktor" + joinToString("") { it.toPascalCase() }
 
-private fun List<String>.interfaceName(): String = joinToString(".") { it.toPascalCase() }
+context(ctx: Renderer)
+private fun List<String>.interfaceName(): String =
+    ctx.namePlan?.apiQualifiedName(this) ?: joinToString(".") { it.toPascalCase() }
+
+context(ctx: Renderer)
+private fun List<String>.simpleInterfaceName(): String =
+    ctx.namePlan?.apiSimpleName(this) ?: last().toPascalCase()
 
 private fun HttpMethod.ktorFunction(): String = when (this) {
     HttpMethod.Get -> "get"
