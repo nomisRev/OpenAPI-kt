@@ -9,6 +9,7 @@ suspend fun OpenAPI.generate(config: RenderConfig = RenderConfig()): List<FileSp
 fun ApiTree.render(config: RenderConfig): List<FileSpec> =
     generateModels(config) + generateClient(config)
 
-fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> = emptyList()
+fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> =
+    models.filterIsInstance<Model.Enum>().map { it.toFileSpec(config) }
 
 fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> = emptyList()

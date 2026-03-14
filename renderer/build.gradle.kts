@@ -1,7 +1,8 @@
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
+import org.gradle.api.tasks.testing.Test
 
 plugins {
-    id(libs.plugins.jvm.get().pluginId)
+    id(libs.plugins.multiplatform.get().pluginId)
     alias(libs.plugins.serialization)
     id(libs.plugins.publish.get().pluginId)
     alias(libs.plugins.dokka)
@@ -10,6 +11,8 @@ plugins {
 }
 
 kotlin {
+    jvm()
+
     compilerOptions.freeCompilerArgs.addAll(
         listOfNotNull(
         "-Xcontext-sensitive-resolution",
@@ -18,31 +21,43 @@ kotlin {
         "-Xdebug".takeIf { System.getProperty("idea.active") == "true" }
     ))
 
-    sourceSets.test {
-        kotlin.srcDir("src/test/resources/kotlinTestData")
+    sourceSets {
+        jvmMain {
+            dependencies {
+                api(projects.typed)
+                api(libs.kotlinpoet)
+            }
+        }
+        jvmTest {
+            kotlin.srcDir("src/jvmTest/resources/kotlinTestData")
+
+            dependencies {
+                implementation(kotlin("test"))
+                implementation(libs.testballoon)
+                implementation(libs.kotlinxresources)
+                implementation(libs.datetime)
+                implementation(ktorLibs.client.contentNegotiation)
+                implementation(ktorLibs.serialization.kotlinx.json)
+            }
+        }
     }
 }
 
-dependencies {
-    api(projects.typed)
-    api(libs.kotlinpoet)
-    testImplementation(kotlin("test"))
-    testImplementation(libs.testballoon)
-    testImplementation(libs.kotlinxresources)
-    testImplementation(libs.datetime)
-    testImplementation(ktorLibs.client.contentNegotiation)
-    testImplementation(ktorLibs.serialization.kotlinx.json)
+tasks.withType<Test>().configureEach {
+    systemProperty("updateGolden", project.findProperty("updateGolden")?.toString() ?: "false")
 }
+
+
 
 tasks.withType<DokkaTaskPartial>().configureEach {
     moduleName.set("OpenAPI Kotlin Renderer")
     dokkaSourceSets {
-        named("main") {
+        named("commonMain") {
             includes.from("README.md")
             sourceLink {
-                localDirectory.set(file("src/main/kotlin"))
+                localDirectory.set(file("src/commonMain/kotlin"))
                 remoteUrl.set(
-                    uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/renderer/src/main").toURL()
+                    uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/renderer/src/commonMain").toURL()
                 )
                 remoteLineSuffix.set("#L")
             }

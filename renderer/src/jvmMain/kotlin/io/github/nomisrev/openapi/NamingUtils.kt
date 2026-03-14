@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi
 
 private val IdentifierRegex = Regex("^[A-Za-z_][A-Za-z0-9_]*$")
 private val InvalidIdentifierCharsRegex = Regex("[^A-Za-z0-9_]+")
+private val NegativeNumberRegex = Regex("^-\\d+(?:\\.\\d+)?$")
 
 val KOTLIN_KEYWORDS: Set<String> = setOf(
     "as",
@@ -55,21 +56,16 @@ fun String.toCamelCase(): String {
 }
 
 fun toEnumValueName(rawValue: String): String {
-    val normalized = when (rawValue) {
-        "*" -> "Star"
-        "/" -> "Slash"
-        else -> rawValue
-            .replace("+", " plus ")
-            .replace("-", " minus ")
-            .replace("*", " star ")
-            .replace("/", " slash ")
-    }
-    val baseName = normalized
-        .replace(InvalidIdentifierCharsRegex, " ")
-        .toPascalCase()
-        .ifBlank { "Value" }
-    val candidate = if (baseName.first().isDigit()) "_$baseName" else baseName
-    return if (candidate.isValidClassname() && candidate.lowercase() !in KOTLIN_KEYWORDS) candidate else "`$candidate`"
+    if (rawValue == "*") return "Star"
+    if (rawValue == "/") return "Slash"
+
+    val pascalCase = if (NegativeNumberRegex.matches(rawValue)) rawValue else rawValue.toPascalCase()
+    if (pascalCase.isValidClassname()) return pascalCase
+
+    val sanitized = pascalCase
+        .let { if (it.startsWith("[")) it.drop(1) else it }
+        .let { if (it.endsWith("]")) it.dropLast(1) else it }
+    return if (sanitized.isValidClassname()) sanitized else "`$sanitized`"
 }
 
 fun String.stringValue(): String = escapeKotlinString()
