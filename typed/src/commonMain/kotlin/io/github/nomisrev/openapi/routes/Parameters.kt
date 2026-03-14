@@ -28,7 +28,7 @@ suspend fun resolveParameters(
     val segments = parsePathSegments(path, emptyMap())
     // TODO: configure as part of Leniency mode
     requireUnique(
-        parameters.map { it.name() },
+        parameters.map { it.name },
         "Expected all parameters to have unique names. $parameters"
     )
     return parameters.map { parameter ->
@@ -37,22 +37,17 @@ suspend fun resolveParameters(
 }
 
 context(ctx: Registry)
-private suspend fun ResolvedParameter.toRouteInput(
+private suspend fun Parameter.toRouteInput(
     path: String,
     segments: List<PathSegment>,
     method: HttpMethod,
 ): Route.Input {
-    val name = NamingContext.path(segments, method).nest(RouteParam(name()))
-    val refOrSchema = requireNotNull(value.schema) {
-        "Parameter ${name()} without schema for $path $method"
+    val context = NamingContext.path(segments, method).nest(RouteParam(name))
+    val refOrSchema = requireNotNull(schema) {
+        "Parameter $name without schema for ${method.value} $path"
     }
-    val type = refOrSchema.toModel(name, SchemaContext.Write)
-    return Route.Input(name(), type, value.required, value.input, value.description)
-}
-
-private fun ResolvedParameter.name(): String = when (this) {
-    is ResolvedParameter.Reference -> value.name
-    is ResolvedParameter.Value -> value.name
+    val type = refOrSchema.toModel(context, SchemaContext.Write)
+    return Route.Input(name, type, required, input, description)
 }
 
 /**
@@ -65,39 +60,30 @@ context(ctx: Registry)
 private fun withMissingPathParameters(
     parameters: List<ReferenceOr<Parameter>>,
     pathParameters: List<String>,
-): List<ResolvedParameter> {
+): List<Parameter> {
     val resolvedParameters = parameters.map { it.resolve() }
-    val parameterNames = resolvedParameters.map { it.name() }
+    val parameterNames = resolvedParameters.map { it.name }
     val missing = (pathParameters - parameterNames.toSet()).map { path ->
-        ResolvedParameter.Value(
-            Parameter(
-                name = path,
-                input = Parameter.Input.Path,
-                schema = ReferenceOr.value(Schema(type = Schema.Type.Basic.String))
-            )
+        Parameter(
+            name = path,
+            input = Parameter.Input.Path,
+            schema = ReferenceOr.value(Schema(type = Schema.Type.Basic.String))
         )
     }
 
     val priorityOrder = pathParameters.withIndex().associate { it.value to it.index }
-    return (missing + resolvedParameters).sortedBy { priorityOrder[it.name()] ?: Int.MAX_VALUE }
-}
-
-private sealed interface ResolvedParameter {
-    val value: Parameter
-
-    data class Value(override val value: Parameter) : ResolvedParameter
-    data class Reference(val ref: String, override val value: Parameter) : ResolvedParameter
+    return (missing + resolvedParameters).sortedBy { priorityOrder[it.name] ?: Int.MAX_VALUE }
 }
 
 // TODO Move to Registry and support top-level schemas.
 context(ctx: Registry)
-private fun ReferenceOr<Parameter>.resolve(): ResolvedParameter = when (this) {
-    is ReferenceOr.Value -> ResolvedParameter.Value(value)
+private fun ReferenceOr<Parameter>.resolve(): Parameter = when (this) {
+    is ReferenceOr.Value -> value
     is ReferenceOr.Reference -> {
         val referenceName = ref.drop("#/components/parameters/".length)
         when (val parameter = ctx.openAPI.components.parameters[referenceName]) {
             is ReferenceOr.Reference -> TODO("Remote parameters not supported yet.")
-            is ReferenceOr.Value<Parameter> -> ResolvedParameter.Reference(referenceName, parameter.value)
+            is ReferenceOr.Value<Parameter> -> parameter.value
             null -> throw IllegalStateException("Parameter $referenceName could not be found in ${ctx.openAPI.components.parameters}.")
         }
     }

@@ -21,7 +21,7 @@ suspend fun resolveBodies(
     segments: List<PathSegment>,
     method: HttpMethod,
     operation: Operation,
-): Route.Bodies? = operation.requestBody?.resolve()?.value?.toBodies(path, segments, method)
+): Route.Bodies? = operation.requestBody?.resolve()?.toBodies(path, segments, method)
 
 context(ctx: Registry)
 private suspend fun RequestBody.toBodies(
@@ -107,23 +107,16 @@ private suspend fun RequestBody.toBody(
     )
 }
 
-private sealed interface ResolvedBody {
-    val value: RequestBody
-
-    data class Value(override val value: RequestBody) : ResolvedBody
-    data class Reference(val ref: String, override val value: RequestBody) : ResolvedBody
-}
-
 // TODO Move to Registry and support top-level schemas.
 context(ctx: Registry)
-private fun ReferenceOr<RequestBody>.resolve(): ResolvedBody = when (this) {
-    is ReferenceOr.Value -> ResolvedBody.Value(value)
+private fun ReferenceOr<RequestBody>.resolve(): RequestBody = when (this) {
+    is ReferenceOr.Value -> value
     is ReferenceOr.Reference -> {
         val referenceName = ref.drop("#/components/requestBodies/".length)
         when (val requestBodies = ctx.openAPI.components.requestBodies[referenceName]) {
             is ReferenceOr.Reference -> TODO("Remote parameters not supported yet.")
-            is ReferenceOr.Value<RequestBody> -> ResolvedBody.Reference(referenceName, requestBodies.value)
-            null -> throw IllegalStateException("Parameter $referenceName could not be found in ${ctx.openAPI.components.parameters}.")
+            is ReferenceOr.Value<RequestBody> -> requestBodies.value
+            null -> throw IllegalStateException("RequestBody $referenceName could not be found in ${ctx.openAPI.components.requestBodies}.")
         }
     }
 }

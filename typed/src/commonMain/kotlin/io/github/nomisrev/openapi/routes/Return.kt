@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi.routes
 
-import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.parser.Operation
@@ -20,30 +19,20 @@ suspend fun resolveReturns(
     operation: Operation,
 ): Route.Returns =
     Route.Returns(
-        default = operation.responses.default?.resolve()?.returnType(path, segments, method),
+        default = operation.responses.default?.resolve()?.toReturnType(path, segments, method),
         responses = operation.responses.responses.entries.associate { (code, response) ->
-            Pair(HttpStatusCode.fromValue(code), response.resolve().returnType(path, segments, method))
+            Pair(HttpStatusCode.fromValue(code), response.resolve().toReturnType(path, segments, method))
         },
         extensions = operation.responses.extensions
     )
 
 context(ctx: Registry)
-private suspend fun ResolvedResponse.returnType(
+private suspend fun Response.toReturnType(
     path: String,
     segments: List<PathSegment>,
     method: HttpMethod,
 ): Route.ReturnType = Route.ReturnType(
-    types = value.allContentModels(path, segments, method),
-    extensions = value.extensions
-)
-
-context(ctx: Registry)
-private suspend fun Response.allContentModels(
-    path: String,
-    segments: List<PathSegment>,
-    method: HttpMethod,
-): Map<ContentType, Model> =
-    content.entries.associate { (contentType, mediaType) ->
+    types = content.entries.associate { (contentType, mediaType) ->
         val schema = requireNotNull(mediaType.schema) {
             "Response without $mediaType schema for ${method.value} $path. $this"
         }
@@ -51,25 +40,20 @@ private suspend fun Response.allContentModels(
             ContentType.parse(contentType),
             schema.toModel(NamingContext.path(segments, method).nest(NamingContext.Response), SchemaContext.Read)
         )
-    }
-
-private sealed interface ResolvedResponse {
-    val value: Response
-
-    data class Value(override val value: Response) : ResolvedResponse
-    data class Reference(val ref: String, override val value: Response) : ResolvedResponse
-}
+    },
+    extensions = extensions
+)
 
 // TODO Move to Registry and support top-level schemas.
 context(ctx: Registry)
-private fun ReferenceOr<Response>.resolve(): ResolvedResponse = when (this) {
-    is ReferenceOr.Value -> ResolvedResponse.Value(value)
+private fun ReferenceOr<Response>.resolve(): Response = when (this) {
+    is ReferenceOr.Value -> value
     is ReferenceOr.Reference -> {
         val referenceName = ref.drop("#/components/responses/".length)
-        when (val requestBodies = ctx.openAPI.components.responses[referenceName]) {
+        when (val responses = ctx.openAPI.components.responses[referenceName]) {
             is ReferenceOr.Reference -> TODO("Remote parameters not supported yet.")
-            is ReferenceOr.Value<Response> -> ResolvedResponse.Reference(referenceName, requestBodies.value)
-            null -> throw IllegalStateException("Parameter $referenceName could not be found in ${ctx.openAPI.components.parameters}.")
+            is ReferenceOr.Value<Response> -> responses.value
+            null -> throw IllegalStateException("Response $referenceName could not be found in ${ctx.openAPI.components.responses}.")
         }
     }
 }
