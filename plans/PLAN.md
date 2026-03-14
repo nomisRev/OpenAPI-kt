@@ -1,35 +1,49 @@
-# Hierarchical Path-Based API Tree Refactor
+# Renderer Implementation Plan
 
-Refactor the typed module to produce a path-segment-aware API tree where static segments become property accesses and parameter segments become navigation functions, with HTTP methods as operation names.
-
-**Target API style:**
-```kotlin
-client.repos.owner(owner).repo(repo).collaborators.get()
-```
+Generate Kotlin source code from the typed OpenAPI model using KotlinPoet. Covers model types (enums, objects, unions, discriminated objects, collections) and a Ktor-based HTTP client with path-based navigation.
 
 ## Design Decisions
 
 | # | Decision | Choice |
 |---|----------|--------|
-| 1 | Operation function naming | HTTP method (`get()`, `post()`, etc.) |
-| 2 | Parameter segments | Always navigation functions |
-| 3 | Navigation function naming | Param name directly: `owner(owner: String)` |
-| 4 | Interface naming | Nested classes — renderer concern |
-| 5 | `operationId` | Remove entirely from typed module |
-| 6 | `PathSegment.Parameter` | Carries `Model` type |
-| 7 | `Endpoint` class | Inline into `toRoute()` |
-| 8 | NamingContext nested types | `RouteParam(name)`, `data object RouteBody`, `data object Response` |
-| 9 | `Route.path` | Replace with `segments: List<PathSegment>` |
-| 10 | `PathNode.operations` | `Map<HttpMethod, Route>` |
-| 11 | Root `/` operations | On `ApiTree.operations` |
-| 12 | `Route.parameters` | Keep all params, renderer filters path vs non-path |
-| 13 | `NamingContext.Head.Path` | `Path(segments: List<PathSegment>, method: HttpMethod)` |
+| 1 | Entry point | `ApiTree.render()` extension, `OpenAPI.generate()` convenience wrapper |
+| 2 | `ApiModel` | Remove — replaced by `ApiTree` with `models: List<Model>` |
+| 3 | Model vs client gen | Separate `generateModels()` and `generateClient()` functions |
+| 4 | Package config | Fully configurable — caller passes model and api packages separately |
+| 5 | Platform targeting | KMP from start — `Set<KmpTarget>` param controls @JvmInline / @JsName |
+| 6 | Custom serializers | Generate from start (unions without discriminator + additionalProperties) |
+| 7 | Model file organization | One file per top-level type, nested types inside parent |
+| 8 | Runtime utilities | Shared generated `SerializationUtils.kt` (attemptDeserialize, UnionSerializationException) |
+| 9 | Naming utilities | In renderer module (splitToWords/toPascalCase stay in typed) |
+| 10 | Imports | KotlinPoet automatic import management |
+| 11 | Renderer architecture | Extension functions on Model subtypes (e.g., `Model.Enum.toTypeSpec()`) |
+| 12 | Name resolution | On-the-fly NamingContext → ClassName resolution |
+| 13 | Test strategy | Full golden output including serializers |
+| 14 | Client scope | Both interface + Ktor implementation from start |
+| 15 | Response types | Nested in client interfaces, part of client gen |
+| 16 | Inline enums | Nested inside client interfaces |
+| 17 | Interface + impl files | Same file |
+| 18 | Read/Write context | Always suffix route-level schemas: `{Name}Request` / `{Name}Response` |
+| 19 | Nested inline unions | Attempt during implementation, fall back to wrapping |
 
 ## Phases
 
-- [x] [Phase 1: Remove renderer module](./PHASE_1_PLAN.md)
-- [x] [Phase 2: Introduce `PathSegment`](./PHASE_2_PLAN.md)
-- [x] [Phase 3: Add `segments` to `Endpoint` and `Route`](./PHASE_3_PLAN.md)
-- [x] [Phase 4: Inline `Endpoint` into `toRoute()`](./PHASE_4_PLAN.md)
-- [x] [Phase 5: Remove `operationId` and update `NamingContext`](./PHASE_5_PLAN.md)
-- [x] [Phase 6: Replace `Root`/`API`/`sort()` with `ApiTree`/`PathNode`/`buildTree()`](./PHASE_6_PLAN.md)
+| Phase | Name | Plan | Status |
+|-------|------|------|--------|
+| 0 | Scaffolding | [PHASE_0.md](PHASE_0.md) | TODO |
+| 1 | Enums | [PHASE_1.md](PHASE_1.md) | TODO |
+| 2 | Objects (basic) | [PHASE_2.md](PHASE_2.md) | TODO |
+| 3 | Objects (additionalProperties) | [PHASE_3.md](PHASE_3.md) | TODO |
+| 4 | Collections | [PHASE_4.md](PHASE_4.md) | TODO |
+| 5 | Unions (discriminated) | [PHASE_5.md](PHASE_5.md) | TODO |
+| 6 | Unions (non-discriminated) | [PHASE_6.md](PHASE_6.md) | TODO |
+| 7 | Discriminated Objects | [PHASE_7.md](PHASE_7.md) | TODO |
+| 8 | Client: Interface Tree + Navigation | [PHASE_8.md](PHASE_8.md) | TODO |
+| 9 | Client: Operations + Request Bodies | [PHASE_9.md](PHASE_9.md) | TODO |
+| 10 | Client: Response Handling | [PHASE_10.md](PHASE_10.md) | TODO |
+| 11 | Client: Ktor Impl + Server + Files | [PHASE_11.md](PHASE_11.md) | TODO |
+
+## Specs
+
+- [MODEL_SPEC.md](MODEL_SPEC.md) — How OpenAPI schemas map to Kotlin types
+- [CLIENT_SPEC.md](CLIENT_SPEC.md) — How the generated Ktor client should look

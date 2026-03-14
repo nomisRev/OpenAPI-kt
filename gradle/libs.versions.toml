@@ -16,6 +16,7 @@ serialization="1.10.0-RC"
 compile-testing = { module = "dev.zacsweers.kctfork:core", version.ref = "test-compile" }
 gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version="2.2.0" }
 test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 datetime =  { module="org.jetbrains.kotlinx:kotlinx-datetime", version="0.7.1" }

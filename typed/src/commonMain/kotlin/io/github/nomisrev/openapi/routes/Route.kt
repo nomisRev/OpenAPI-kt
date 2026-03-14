@@ -34,6 +34,7 @@ class ApiModel(
     val servers: List<Server>,
 ) {
     fun tree(name: String): ApiTree = routes.buildTree(name, servers)
+
     override fun toString(): String =
         routes.joinToString { "${it.method.value} ${it.path}" } + "\n" + models.joinToString {
             when (it) {
