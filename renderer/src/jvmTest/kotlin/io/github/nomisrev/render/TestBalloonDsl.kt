@@ -33,7 +33,8 @@ private val testRenderConfig = RenderConfig(
 @TestRegistering
 fun TestSuite.modelTest(json: String, dir: String): Unit {
     val schemaName = extractTopLevelSchemaName(json)
-    renderSpec($$"""
+    renderSpec(
+        $$"""
         {
           "openapi": "3.1.0",
           "info": {
@@ -49,7 +50,7 @@ fun TestSuite.modelTest(json: String, dir: String): Unit {
                     "content": {
                       "application/json": {
                         "schema": {
-                          "$ref": "#/components/schemas/$schemaName"
+                          "$ref": "#/components/schemas/$$schemaName"
                         }
                       }
                     }
@@ -60,11 +61,13 @@ fun TestSuite.modelTest(json: String, dir: String): Unit {
           },
           "components": {
             "schemas": {
-              $json
+              $$json
             }
           }
         }
-    """.trimIndent(), dir)
+    """.trimIndent(),
+        dir
+    )
 }
 
 
