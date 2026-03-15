@@ -16,8 +16,6 @@ kotlin {
         progressiveMode = true
     }
     explicitApi()
-    jvmToolchain(11)
-
     jvm()
     macosArm64()
     js(IR) { browser() }

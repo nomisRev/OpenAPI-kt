@@ -189,6 +189,7 @@ $RECYCLE.BIN/
 
 ### Gradle ###
 .gradle
+.gradle-local/
 **/build/
 !src/**/build/
 
