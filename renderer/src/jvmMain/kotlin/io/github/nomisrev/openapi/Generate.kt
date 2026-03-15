@@ -11,8 +11,6 @@ fun ApiTree.render(config: RenderConfig): List<FileSpec> =
 
 fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> =
     models.filterIsInstance<Model.Enum>().map { it.toFileSpec(config) } +
-        models.filterIsInstance<Model.Object>()
-            .filter { (it.additionalProperties as? Model.Object.AdditionalProperties.Allowed)?.value == false }
-            .map { it.toFileSpec(config) }
+        models.filterIsInstance<Model.Object>().map { it.toFileSpec(config) }
 
 fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> = emptyList()

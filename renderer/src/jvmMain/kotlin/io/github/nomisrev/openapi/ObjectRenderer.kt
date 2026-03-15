@@ -6,40 +6,60 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.joinToCode
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 private val UuidType = ClassName("kotlin.uuid", "Uuid")
+private val LocalDateType = ClassName("kotlinx.datetime", "LocalDate")
+private val LocalDateTimeType = ClassName("kotlinx.datetime", "LocalDateTime")
 private val ExperimentalUuidApiType = ClassName("kotlin.uuid", "ExperimentalUuidApi")
+private val JsonElementType = ClassName("kotlinx.serialization.json", "JsonElement")
+private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")
+private val JsonObjectType = ClassName("kotlinx.serialization.json", "JsonObject")
+private val JsonEncoderType = ClassName("kotlinx.serialization.json", "JsonEncoder")
+private val JsonDecoderType = ClassName("kotlinx.serialization.json", "JsonDecoder")
+private val KSerializerType = ClassName("kotlinx.serialization", "KSerializer")
+private val KeepGeneratedSerializerType = ClassName("kotlinx.serialization", "KeepGeneratedSerializer")
+private val SerialDescriptorType = ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
+private val DecoderType = ClassName("kotlinx.serialization.encoding", "Decoder")
+private val EncoderType = ClassName("kotlinx.serialization.encoding", "Encoder")
 private val OptInType = ClassName("kotlin", "OptIn")
+private val MapType = ClassName("kotlin.collections", "Map")
+private val SerializerMember = MemberName("kotlinx.serialization.builtins", "serializer")
+private val NullableMember = MemberName("kotlinx.serialization.builtins", "nullable")
+private val ListSerializerMember = MemberName("kotlinx.serialization.builtins", "ListSerializer")
+private val ByteArraySerializerMember = MemberName("kotlinx.serialization.builtins", "ByteArraySerializer")
 
 fun Model.Object.toTypeSpec(config: RenderConfig): TypeSpec {
-    require(hasNoAdditionalProperties()) {
-        "Phase 2 object rendering only supports additionalProperties=false. Context: $context"
-    }
-
     val className = context.toClassName(config)
     val renderedProperties = properties.map { (jsonName, prop) ->
         renderProperty(jsonName, prop, config)
     }
+    val additionalProperty = renderAdditionalProperty(config)
+    val allProperties = renderedProperties + listOfNotNull(additionalProperty?.rendered)
 
     val builder = when {
-        properties.isEmpty() -> TypeSpec.objectBuilder(className.simpleName).addModifiers(KModifier.DATA)
-        properties.size == 1 -> {
+        allProperties.isEmpty() -> TypeSpec.objectBuilder(className.simpleName).addModifiers(KModifier.DATA)
+        allProperties.size == 1 && additionalProperty == null -> {
             TypeSpec.classBuilder(className.simpleName)
                 .addModifiers(KModifier.VALUE)
                 .primaryConstructor(
                     FunSpec.constructorBuilder()
-                        .addParameter(renderedProperties.single().parameter)
+                        .addParameter(allProperties.single().parameter)
                         .build()
                 )
                 .apply {
@@ -54,26 +74,42 @@ fun Model.Object.toTypeSpec(config: RenderConfig): TypeSpec {
                 .addModifiers(KModifier.DATA)
                 .primaryConstructor(
                     FunSpec.constructorBuilder()
-                        .apply { renderedProperties.forEach { addParameter(it.parameter) } }
+                        .apply { allProperties.forEach { addParameter(it.parameter) } }
                         .build()
                 )
         }
     }
 
-    if (properties.isNotEmpty()) {
-        renderedProperties.forEach { builder.addProperty(it.property) }
+    if (allProperties.isNotEmpty()) {
+        allProperties.forEach { builder.addProperty(it.property) }
     }
 
     description
         ?.takeIf { it.isNotBlank() }
         ?.let { builder.addKdoc("%L\n", it.escapeForKdoc()) }
 
-    if (renderedProperties.any { it.usesUuid }) {
+    if (allProperties.any { it.usesUuid }) {
         builder.addAnnotation(
             AnnotationSpec.builder(OptInType)
                 .addMember("%T::class", ExperimentalUuidApiType)
                 .build()
         )
+    }
+
+    if (additionalProperty != null) {
+        builder.addAnnotation(
+            AnnotationSpec.builder(OptInType)
+                .addMember("%T::class", ExperimentalSerializationApi::class)
+                .build()
+        )
+        builder.addAnnotation(AnnotationSpec.builder(KeepGeneratedSerializerType).build())
+        builder.addAnnotation(
+            AnnotationSpec.builder(Serializable::class)
+                .addMember("with = %T.Serializer::class", className)
+                .build()
+        )
+    } else {
+        builder.addAnnotation(Serializable::class)
     }
 
     inline
@@ -82,15 +118,16 @@ fun Model.Object.toTypeSpec(config: RenderConfig): TypeSpec {
         .mapNotNull { model ->
             when (model) {
                 is Model.Enum -> model.toTypeSpec(config)
-                is Model.Object -> model.takeIf(Model.Object::hasNoAdditionalProperties)?.toTypeSpec(config)
+                is Model.Object -> model.toTypeSpec(config)
                 else -> null
             }
         }
         .forEach(builder::addType)
 
-    return builder
-        .addAnnotation(Serializable::class)
-        .build()
+    additionalProperty
+        ?.let { builder.addType(serializerTypeSpec(config, className, renderedProperties, it.kind)) }
+
+    return builder.build()
 }
 
 fun Model.Object.toFileSpec(config: RenderConfig): FileSpec {
@@ -101,9 +138,21 @@ fun Model.Object.toFileSpec(config: RenderConfig): FileSpec {
 }
 
 private data class RenderedProperty(
+    val jsonName: String,
     val parameter: ParameterSpec,
     val property: PropertySpec,
     val usesUuid: Boolean,
+)
+
+private sealed interface AdditionalPropertyKind {
+    data object Json : AdditionalPropertyKind
+
+    data class Typed(val valueType: Model) : AdditionalPropertyKind
+}
+
+private data class RenderedAdditionalProperty(
+    val rendered: RenderedProperty,
+    val kind: AdditionalPropertyKind,
 )
 
 private fun Model.Object.renderProperty(
@@ -144,8 +193,191 @@ private fun Model.Object.renderProperty(
         .initializer(paramName)
         .build()
 
-    return RenderedProperty(parameter, property, typeName.usesUuid())
+    return RenderedProperty(jsonName, parameter, property, typeName.usesUuid())
 }
+
+private fun Model.Object.renderAdditionalProperty(config: RenderConfig): RenderedAdditionalProperty? =
+    when (val ap = additionalProperties) {
+        is Model.Object.AdditionalProperties.Allowed ->
+            if (ap.value) {
+                val typeName = JsonObjectType.copy(nullable = true)
+                val parameter = ParameterSpec.builder("additional", typeName)
+                    .defaultValue(CodeBlock.of("null"))
+                    .build()
+                val property = PropertySpec.builder("additional", typeName)
+                    .initializer("additional")
+                    .build()
+                RenderedAdditionalProperty(
+                    RenderedProperty("additional", parameter, property, usesUuid = false),
+                    AdditionalPropertyKind.Json
+                )
+            } else {
+                null
+            }
+
+        is Model.Object.AdditionalProperties.Schema -> {
+            val valueType = ap.value.toTypeName(config)
+            val typeName = MapType.parameterizedBy(STRING, valueType).copy(nullable = true)
+            val parameter = ParameterSpec.builder("additional", typeName)
+                .defaultValue(CodeBlock.of("null"))
+                .build()
+            val property = PropertySpec.builder("additional", typeName)
+                .initializer("additional")
+                .build()
+            RenderedAdditionalProperty(
+                RenderedProperty("additional", parameter, property, typeName.usesUuid()),
+                AdditionalPropertyKind.Typed(ap.value)
+            )
+        }
+    }
+
+private fun Model.Object.serializerTypeSpec(
+    config: RenderConfig,
+    className: ClassName,
+    renderedProperties: List<RenderedProperty>,
+    additionalPropertyKind: AdditionalPropertyKind
+): TypeSpec =
+    TypeSpec.objectBuilder("Serializer")
+        .addSuperinterface(KSerializerType.parameterizedBy(className))
+        .addProperty(
+            PropertySpec.builder("descriptor", SerialDescriptorType)
+                .addModifiers(KModifier.OVERRIDE)
+                .initializer("generatedSerializer().descriptor")
+                .build()
+        )
+        .addFunction(
+            FunSpec.builder("serialize")
+                .addModifiers(KModifier.OVERRIDE)
+                .addParameter("encoder", EncoderType)
+                .addParameter("value", className)
+                .addCode(
+                    serializerSerializeCode(config, additionalPropertyKind)
+                )
+                .build()
+        )
+        .addFunction(
+            FunSpec.builder("deserialize")
+                .addModifiers(KModifier.OVERRIDE)
+                .returns(className)
+                .addParameter("decoder", DecoderType)
+                .addCode(
+                    serializerDeserializeCode(config, renderedProperties, additionalPropertyKind)
+                )
+                .build()
+        )
+        .build()
+
+private fun serializerSerializeCode(
+    config: RenderConfig,
+    additionalPropertyKind: AdditionalPropertyKind
+): CodeBlock =
+    CodeBlock.builder()
+        .addStatement("val json = (encoder as %T).json", JsonEncoderType)
+        .addStatement(
+            "val known = json.encodeToJsonElement(generatedSerializer(), value.copy(additional = null)) as %T",
+            JsonObjectType
+        )
+        .addStatement("val content = mutableMapOf<%T, %T>()", String::class, JsonElementType)
+        .beginControlFlow("known.forEach { (key, jsonElement) ->")
+        .beginControlFlow("if (key != %S)", "additional")
+        .addStatement("content[key] = jsonElement")
+        .endControlFlow()
+        .endControlFlow()
+        .apply {
+            when (additionalPropertyKind) {
+                AdditionalPropertyKind.Json -> {
+                    beginControlFlow("value.additional?.forEach { (key, jsonElement) ->")
+                    addStatement("content[key] = jsonElement")
+                    endControlFlow()
+                }
+
+                is AdditionalPropertyKind.Typed -> {
+                    beginControlFlow("value.additional?.forEach { (key, additionalValue) ->")
+                    addStatement(
+                        "content[key] = json.encodeToJsonElement(%L, additionalValue)",
+                        additionalPropertyKind.valueType.serializerCode(config)
+                    )
+                    endControlFlow()
+                }
+            }
+        }
+        .addStatement("encoder.encodeSerializableValue(%T.serializer(), %T(content))", JsonObjectType, JsonObjectType)
+        .build()
+
+private fun serializerDeserializeCode(
+    config: RenderConfig,
+    renderedProperties: List<RenderedProperty>,
+    additionalPropertyKind: AdditionalPropertyKind
+): CodeBlock =
+    CodeBlock.builder()
+        .addStatement("val json = (decoder as %T).json", JsonDecoderType)
+        .addStatement("val element = decoder.decodeSerializableValue(%T.serializer())", JsonObjectType)
+        .apply {
+            if (renderedProperties.isEmpty()) {
+                addStatement("val knownNames = emptySet<%T>()", String::class)
+            } else {
+                addStatement(
+                    "val knownNames = setOf(%L)",
+                    renderedProperties.joinToCode(separator = ", ") { CodeBlock.of("%S", it.jsonName) }
+                )
+            }
+        }
+        .addStatement("val known = json.decodeFromJsonElement(generatedSerializer(), %T(element.filterKeys { it in knownNames }))", JsonObjectType)
+        .apply {
+            when (additionalPropertyKind) {
+                AdditionalPropertyKind.Json ->
+                    addStatement("val additional = %T(element - knownNames).ifEmpty { null }", JsonObjectType)
+
+                is AdditionalPropertyKind.Typed -> add(
+                    "%L",
+                    CodeBlock.builder()
+                        .addStatement("val additional = (element - knownNames)")
+                        .indent()
+                        .addStatement(
+                            ".mapValues { (_, jsonElement) -> json.decodeFromJsonElement(%L, jsonElement) }",
+                            additionalPropertyKind.valueType.serializerCode(config)
+                        )
+                        .addStatement(".ifEmpty { null }")
+                        .unindent()
+                        .build()
+                )
+            }
+        }
+        .addStatement("return known.copy(additional = additional)")
+        .build()
+
+private fun Model.serializerCode(config: RenderConfig): CodeBlock {
+    val nonNullable = nonNullableSerializerCode(config)
+    return if (isNullable) CodeBlock.of("%L.%M", nonNullable, NullableMember) else nonNullable
+}
+
+private fun Model.nonNullableSerializerCode(config: RenderConfig): CodeBlock =
+    when (this) {
+        is Model.Primitive.String -> CodeBlock.of("%T.%M()", kotlin.String::class, SerializerMember)
+        is Model.Primitive.Int -> CodeBlock.of("%T.%M()", kotlin.Int::class, SerializerMember)
+        is Model.Primitive.Long -> CodeBlock.of("%T.%M()", kotlin.Long::class, SerializerMember)
+        is Model.Primitive.Float -> CodeBlock.of("%T.%M()", kotlin.Float::class, SerializerMember)
+        is Model.Primitive.Double -> CodeBlock.of("%T.%M()", kotlin.Double::class, SerializerMember)
+        is Model.Primitive.Boolean -> CodeBlock.of("%T.%M()", kotlin.Boolean::class, SerializerMember)
+        is Model.Primitive.Unit -> CodeBlock.of("%T.%M()", kotlin.Unit::class, SerializerMember)
+        is Model.ByteArray -> CodeBlock.of("%M()", ByteArraySerializerMember)
+        is Model.Uuid -> CodeBlock.of("%T.serializer()", UuidType)
+        is Model.Date -> CodeBlock.of("%T.serializer()", LocalDateType)
+        is Model.DateTime -> CodeBlock.of("%T.serializer()", LocalDateTimeType)
+        is Model.FreeFormJson -> CodeBlock.of("%T.serializer()", JsonElementType)
+        is Model.Collection ->
+            if (inner is Model.FreeFormJson) {
+                CodeBlock.of("%T.serializer()", JsonArrayType)
+            } else {
+                CodeBlock.of("%M(%L)", ListSerializerMember, inner.serializerCode(config))
+            }
+
+        is Model.Object -> CodeBlock.of("%T.serializer()", context.toClassName(config))
+        is Model.Enum -> CodeBlock.of("%T.serializer()", context.toClassName(config))
+        is Model.Reference -> CodeBlock.of("%T.serializer()", context.toClassName(config))
+        is Model.Union -> CodeBlock.of("%T.serializer()", context.toClassName(config))
+        is Model.DiscriminatedObject -> CodeBlock.of("%T.serializer()", context.toClassName(config))
+    }
 
 private fun Model.defaultLiteral(config: RenderConfig): CodeBlock? =
     when (this) {
@@ -206,9 +438,6 @@ private fun TypeName.usesUuid(): Boolean =
         is WildcardTypeName -> inTypes.any(TypeName::usesUuid) || outTypes.any(TypeName::usesUuid)
         else -> false
     }
-
-private fun Model.Object.hasNoAdditionalProperties(): Boolean =
-    (additionalProperties as? Model.Object.AdditionalProperties.Allowed)?.value == false
 
 private fun String.unescapeBackticks(): String =
     if (startsWith("`") && endsWith("`") && length >= 2) substring(1, length - 1) else this

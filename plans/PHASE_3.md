@@ -4,10 +4,10 @@ Extend Object rendering to handle `additionalProperties` with custom serializer 
 
 ## Tasks
 
-- [ ] Extend `Model.Object.toTypeSpec()` for additionalProperties:
+- [x] Extend `Model.Object.toTypeSpec()` for additionalProperties:
   - `additionalProperties: true` → add `val additional: JsonObject? = null` property
   - `additionalProperties: { schema }` → add `val additional: Map<String, T>? = null` property
-- [ ] Generate custom `object Serializer : KSerializer<Foo>` inside class body:
+- [x] Generate custom `object Serializer : KSerializer<Foo>` inside class body:
   - Add `@KeepGeneratedSerializer` annotation on the class
   - Add `@Serializable(with = Foo.Serializer::class)` annotation
   - Add `@OptIn(ExperimentalSerializationApi::class)` annotation
@@ -15,15 +15,15 @@ Extend Object rendering to handle `additionalProperties` with custom serializer 
     - `descriptor` from generated serializer
     - `serialize()`: encode known properties, merge additional properties into JSON object
     - `deserialize()`: extract known property keys, treat remaining as additional properties
-- [ ] Handle interaction with value class (1 prop + additionalProperties → data class, not value class)
-- [ ] Handle nested types inside additionalProperties schema
+- [x] Handle interaction with value class (1 prop + additionalProperties → data class, not value class)
+- [x] Handle nested types inside additionalProperties schema
 
 ## Golden Tests
 
-- [ ] `object/additional-boolean` — `additionalProperties: true` → `JsonObject?`
-- [ ] `object/additional-schema` — `additionalProperties: { type: string }` → `Map<String, String>?`
-- [ ] `object/additional-complex` — additionalProperties with complex inner schema
-- [ ] `object/additional-serializer` — full custom serializer output verification
+- [x] `object/additional-boolean` — `additionalProperties: true` → `JsonObject?`
+- [x] `object/additional-schema` — `additionalProperties: { type: string }` → `Map<String, String>?`
+- [x] `object/additional-complex` — additionalProperties with complex inner schema
+- [x] `object/additional-serializer` — full custom serializer output verification
 
 ## Files to Create/Modify
 

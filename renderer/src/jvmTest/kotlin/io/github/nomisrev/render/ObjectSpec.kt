@@ -204,4 +204,70 @@ val objectSpec by testSuite {
         """.trimMargin(),
         "object/primitive-imports"
     )
+
+    modelTest(
+        """
+        |"AdditionalBoolean": {
+        |  "type": "object",
+        |  "additionalProperties": true,
+        |  "properties": {
+        |    "name": { "type": "string" },
+        |    "age": { "type": "integer", "format": "int32" }
+        |  },
+        |  "required": ["name"]
+        |}
+        """.trimMargin(),
+        "object/additional-boolean"
+    )
+
+    modelTest(
+        """
+        |"AdditionalSchema": {
+        |  "type": "object",
+        |  "additionalProperties": { "type": "string" },
+        |  "properties": {
+        |    "name": { "type": "string" }
+        |  },
+        |  "required": ["name"]
+        |}
+        """.trimMargin(),
+        "object/additional-schema"
+    )
+
+    modelTest(
+        """
+        |"AdditionalComplex": {
+        |  "type": "object",
+        |  "additionalProperties": {
+        |    "type": "object",
+        |    "additionalProperties": false,
+        |    "properties": {
+        |      "enabled": { "type": "boolean" }
+        |    },
+        |    "required": ["enabled"]
+        |  },
+        |  "properties": {
+        |    "name": { "type": "string" }
+        |  },
+        |  "required": ["name"]
+        |}
+        """.trimMargin(),
+        "object/additional-complex"
+    )
+
+    modelTest(
+        """
+        |"AdditionalSerializer": {
+        |  "type": "object",
+        |  "additionalProperties": { "type": "integer", "format": "int32" },
+        |  "properties": {
+        |    "snake_case": { "type": "string" },
+        |    "optionalFlag": { "type": "boolean" },
+        |    "requiredNullable": { "type": "string", "nullable": true }
+        |  },
+        |  "required": ["snake_case", "requiredNullable"]
+        |}
+        """.trimMargin(),
+        "object/additional-serializer"
+    )
 }
