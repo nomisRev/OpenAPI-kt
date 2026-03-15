@@ -4,25 +4,25 @@ Generate `List<T>`, `JsonArray`, and value class wrappers for top-level named co
 
 ## Tasks
 
-- [ ] Collection type mapping (already partially in Phase 0 `toTypeName`):
+- [x] Collection type mapping (already partially in Phase 0 `toTypeName`):
   - `Collection` with typed inner → `List<inner.toTypeName()>`
   - `Collection` with `FreeFormJson` inner → `JsonArray`
-- [ ] Top-level named collection (component schema with `type: array`):
+- [x] Top-level named collection (component schema with `type: array`):
   - Generate `value class` wrapper: `@Serializable @JvmInline value class Tags(val items: List<String>)`
   - Property name is always `items`
   - `@JvmInline` when JVM target
-- [ ] Serializer for top-level collections:
-  - `ListSerializer(inner.serializer())` for typed items
-  - `JsonArray.serializer()` when items are free-form
-- [ ] Nullable collections: `List<T>?` when `isNullable`
-- [ ] Default values for collections: `Default.Value(list)` → generate list literal, `Default.Null` → `= null`
+- [x] Serializer behavior for top-level collections:
+  - Use compiler-generated serializer from `@Serializable` value classes
+  - Do not generate custom serializers for simple collections
+- [x] Nullable collections: `List<T>?` when `isNullable`
+- [x] Default values for collections: `Default.Value(list)` → generate list literal, `Default.Null` → `= null`
 
 ## Golden Tests
 
-- [ ] `collection/basic` — top-level `Tags` value class wrapping `List<String>`
-- [ ] `collection/complex-inner` — collection of objects: `List<Pet>`
-- [ ] `collection/freeform` — collection with FreeFormJson inner → `JsonArray`
-- [ ] `collection/nullable` — nullable collection
+- [x] `collection/basic` — top-level `Tags` value class wrapping `List<String>`
+- [x] `collection/complex-inner` — collection of objects: `List<Pet>`
+- [x] `collection/freeform` — collection with FreeFormJson inner → `JsonArray`
+- [x] `collection/nullable` — nullable collection
 
 ## Files to Create/Modify
 

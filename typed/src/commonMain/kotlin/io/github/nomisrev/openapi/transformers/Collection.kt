@@ -51,7 +51,7 @@ suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
                             collectionDefault(),
                             null,
                             Constraints.Collection(schema),
-                            false,
+                            isNullable,
                             null
                         ),
                         true

@@ -126,6 +126,48 @@ val collectionSpec by testSuite {
         }
     ) { schema -> ResolvedSchema.Reference(NamingContext.Reference("Collection", SchemaContext.Null), schema) }
 
+    verifyAll(
+        "Referenced Collection preserves nullable items",
+        listOf(
+            ExpectedApi(
+                schema = Schema(
+                    type = Type.Basic.Array,
+                    items = ReferenceOr.value(Schema(type = Type.Basic.String)),
+                    nullable = true
+                ),
+                model = Model.Object(
+                    context = NamingContext.reference("Collection", SchemaContext.Null),
+                    description = null,
+                    title = null,
+                    properties = mapOf(
+                        "items" to Model.Object.Property(
+                            Model.Collection(
+                                Model.Primitive.String(null, null, null, false, null),
+                                null,
+                                null,
+                                null,
+                                true,
+                                null
+                            ),
+                            true
+                        )
+                    ),
+                    additionalProperties = false,
+                    isNullable = true
+                ),
+                api = api.reference(
+                    "Collection",
+                    Schema(
+                        type = Type.Basic.Array,
+                        items = ReferenceOr.value(Schema(type = Type.Basic.String)),
+                        nullable = true
+                    )
+                ),
+                names = listOf(NamingContext.Reference("Collection", SchemaContext.Null))
+            )
+        )
+    ) { schema -> ResolvedSchema.Reference(NamingContext.Reference("Collection", SchemaContext.Null), schema) }
+
     verify(
         "Default - empty JS array",
         Schema(type = Type.Basic.Array, default = ExampleValue.Single("[]")),
