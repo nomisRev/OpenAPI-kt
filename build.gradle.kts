@@ -23,7 +23,11 @@ dependencies {
     kover(projects.parser)
 }
 
-configure(subprojects.filter { !it.path.startsWith(":integration-tests") }) {
+configure(subprojects.filter {
+    !it.path.startsWith(":integration-tests") &&
+    !it.path.startsWith(":gradle-plugin") &&
+    !it.path.startsWith(":gradle-tasks")
+}) {
     apply(plugin = publishId)
     configure<com.vanniktech.maven.publish.MavenPublishBaseExtension> {
         publishToMavenCentral()

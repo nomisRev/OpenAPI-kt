@@ -11,6 +11,8 @@ test-compile = "0.12.1"
 testballoon="0.7.1-K2.3.0"
 resources = "0.15.0"
 serialization="1.10.0-RC"
+gratatouille = "0.2.2"
+coroutines = "1.10.1"
 
 [libraries]
 compile-testing = { module = "dev.zacsweers.kctfork:core", version.ref = "test-compile" }
@@ -23,6 +25,9 @@ datetime =  { module="org.jetbrains.kotlinx:kotlinx-datetime", version="0.7.1" }
 kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.94.0" }
 testballoon = { module="de.infix.testBalloon:testBalloon-framework-core", version.ref="testballoon"  }
 kotlinxresources = { module = "com.goncalossilva:resources", version.ref = "resources" }
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+gratatouille-runtime = { module = "com.gradleup.gratatouille:gratatouille-runtime", version.ref = "gratatouille" }
+gratatouille-tasks-runtime = { module = "com.gradleup.gratatouille:gratatouille-tasks-runtime", version.ref = "gratatouille" }
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
@@ -36,3 +41,6 @@ spotless = { id = "com.diffplug.spotless", version = "7.2.1" }
 publish = { id = "com.vanniktech.maven.publish", version.ref="publish" }
 testballoon = { id = "de.infix.testBalloon", version.ref="testballoon" }
 kotlinxresources = { id = "com.goncalossilva.resources", version.ref = "resources" }
+gratatouille = { id = "com.gradleup.gratatouille", version.ref = "gratatouille" }
+gratatouille-tasks = { id = "com.gradleup.gratatouille.tasks", version.ref = "gratatouille" }
+ksp = { id = "com.google.devtools.ksp", version = "2.3.0" }

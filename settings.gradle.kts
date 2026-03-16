@@ -26,3 +26,5 @@ rootProject.name = "openapi-kt"
 include("parser")
 include("typed")
 include("renderer")
+include("gradle-tasks")
+include("gradle-plugin")
