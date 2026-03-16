@@ -39,7 +39,7 @@ Generate Kotlin source code from the typed OpenAPI model using KotlinPoet. Cover
 | 6 | Unions (non-discriminated) | [PHASE_6.md](PHASE_6.md) | DONE |
 | 7 | Discriminated Objects | [PHASE_7.md](PHASE_7.md) | DONE |
 | 8 | Client: Interface Tree + Navigation | [PHASE_8.md](PHASE_8.md) | DONE |
-| 9 | Client: Operations + Request Bodies | [PHASE_9.md](PHASE_9.md) | TODO |
+| 9 | Client: Operations + Request Bodies | [PHASE_9.md](PHASE_9.md) | DONE |
 | 10 | Client: Response Handling | [PHASE_10.md](PHASE_10.md) | TODO |
 | 11 | Client: Ktor Impl + Server + Files | [PHASE_11.md](PHASE_11.md) | TODO |
 

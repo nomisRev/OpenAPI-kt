@@ -414,7 +414,7 @@ private fun Model.nonNullableSerializerCode(config: RenderConfig): CodeBlock =
         is Model.DiscriminatedObject -> CodeBlock.of("%T.serializer()", context.toClassName(config))
     }
 
-private fun Model.defaultLiteral(config: RenderConfig): CodeBlock? =
+internal fun Model.defaultLiteral(config: RenderConfig): CodeBlock? =
     when (this) {
         is Model.Primitive.String -> default.toLiteral { value -> CodeBlock.of("%S", value) }
         is Model.Primitive.Int -> default.toLiteral { value -> CodeBlock.of("%L", value) }

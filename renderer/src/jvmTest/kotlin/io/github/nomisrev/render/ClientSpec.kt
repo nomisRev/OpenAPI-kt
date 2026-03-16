@@ -114,4 +114,279 @@ val clientSpec by testSuite {
         """.trimIndent(),
         "client/deep-nesting"
     )
+
+    // Phase 9 tests
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets": {
+              "get": {
+                "responses": { "200": { "description": "OK" } }
+              },
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "type": "string" }
+                    }
+                  }
+                },
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-basic"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/search": {
+              "get": {
+                "parameters": [
+                  { "name": "query", "in": "query", "required": true, "schema": { "type": "string" } },
+                  { "name": "X-Api-Key", "in": "header", "required": true, "schema": { "type": "string" } },
+                  { "name": "session", "in": "cookie", "required": true, "schema": { "type": "string" } },
+                  { "name": "owner", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-params"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/items": {
+              "get": {
+                "parameters": [
+                  { "name": "query", "in": "query", "required": true, "schema": { "type": "string" } },
+                  { "name": "X-Request-Id", "in": "header", "required": true, "schema": { "type": "string" } },
+                  { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32" } },
+                  { "name": "X-Trace-Id", "in": "header", "required": false, "schema": { "type": "string" } },
+                  { "name": "preference", "in": "cookie", "required": false, "schema": { "type": "string" } }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-optional"
+    )
+
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "$ref": "#/components/schemas/CreatePetRequest" }
+                    }
+                  }
+                },
+                "responses": { "200": { "description": "OK" } }
+              }
+            },
+            "/settings": {
+              "patch": {
+                "requestBody": {
+                  "required": false,
+                  "content": {
+                    "application/json": {
+                      "schema": { "$ref": "#/components/schemas/UpdateSettingsRequest" }
+                    }
+                  }
+                },
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "CreatePetRequest": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" }
+                },
+                "required": ["name"]
+              },
+              "UpdateSettingsRequest": {
+                "type": "object",
+                "properties": {
+                  "theme": { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-body-json"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/files": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "multipart/form-data": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "file": { "type": "string", "format": "binary" },
+                          "purpose": { "type": "string" }
+                        },
+                        "required": ["file", "purpose"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-body-multipart"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/oauth/token": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "grant_type": { "type": "string" },
+                          "code": { "type": "string" },
+                          "redirect_uri": { "type": "string" }
+                        },
+                        "required": ["grant_type", "code", "redirect_uri"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-body-form"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/legacy": {
+              "get": {
+                "deprecated": true,
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-deprecated"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/items": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "status",
+                    "in": "query",
+                    "required": false,
+                    "schema": {
+                      "type": "string",
+                      "enum": ["active", "archived", "all"],
+                      "default": "all"
+                    }
+                  }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-inline-enum"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/items": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "limit",
+                    "in": "query",
+                    "required": true,
+                    "schema": { "type": "integer", "format": "int32", "default": 20 }
+                  },
+                  {
+                    "name": "offset",
+                    "in": "query",
+                    "required": false,
+                    "schema": { "type": "integer", "format": "int32", "default": 0 }
+                  }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-defaults"
+    )
 }
