@@ -8,11 +8,14 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.transformers.nestedOrNull
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 
 fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
     if (children.isEmpty() && operations.isEmpty()) return emptyList()
@@ -28,6 +31,7 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
 
     // Root-level operation stubs
     for ((method, route) in operations.entries.sortedBy { it.key.value }) {
+        route.buildResultTypeSpec(method, config, rootClassName)?.let { rootInterface.addType(it) }
         rootInterface.addFunction(route.toOperationFunSpec(method, config, rootClassName))
     }
 
@@ -64,6 +68,7 @@ private fun PathNode.toTypeSpec(config: RenderConfig, className: ClassName): Typ
 
     // Operation stubs
     for ((method, route) in operations.entries.sortedBy { it.key.value }) {
+        route.buildResultTypeSpec(method, config, className)?.let { builder.addType(it) }
         builder.addFunction(route.toOperationFunSpec(method, config, className))
     }
 
@@ -159,6 +164,12 @@ private fun Route.toOperationFunSpec(
         bodyParams.forEach { builder.addParameter(it) }
     }
 
+    // Return type
+    val returnType = returns.resolveReturnTypeName(method, config, interfaceClassName)
+    if (returnType != null) {
+        builder.returns(returnType)
+    }
+
     return builder.build()
 }
 
@@ -243,4 +254,125 @@ private fun Route.Bodies.toParameterSpecs(config: RenderConfig): List<ParameterS
             )
         }
     }
+}
+
+private val HttpStatusCodeType = ClassName("io.ktor.http", "HttpStatusCode")
+
+/** Extract the preferred model from a ReturnType, preferring JSON content. */
+private fun Route.ReturnType.preferredModel(): Model? {
+    if (types.isEmpty()) return null
+    val jsonEntry = types.entries.firstOrNull { ContentType.Application.Json.match(it.key) }
+    return jsonEntry?.value ?: types.values.first()
+}
+
+/** Whether the returns need a sealed interface (multiple responses or has default + status). */
+private fun Route.Returns.needsSealedInterface(): Boolean {
+    val totalCases = responses.size + (if (default != null) 1 else 0)
+    return totalCases > 1
+}
+
+/** Convert HttpStatusCode description to PascalCase for sealed interface case names. */
+private fun HttpStatusCode.toCaseName(): String =
+    description.split(" ").joinToString("") { word ->
+        word.lowercase().replaceFirstChar { it.uppercase() }
+    }
+
+/** Resolve the return TypeName for an operation. Returns null for Unit return. */
+private fun Route.Returns.resolveReturnTypeName(
+    method: HttpMethod,
+    config: RenderConfig,
+    interfaceClassName: ClassName,
+): TypeName? {
+    if (needsSealedInterface()) {
+        val methodName = method.value.lowercase().replaceFirstChar { it.uppercase() }
+        return interfaceClassName.nestedClass("${methodName}Result")
+    }
+    // Single response
+    val singleResponse = responses.values.firstOrNull() ?: default ?: return null
+    val model = singleResponse.preferredModel() ?: return null
+    if (model is Model.Primitive.Unit) return null
+    return model.toTypeName(config)
+}
+
+/** Build a sealed result interface TypeSpec when multiple responses exist. */
+private fun Route.buildResultTypeSpec(
+    method: HttpMethod,
+    config: RenderConfig,
+    interfaceClassName: ClassName,
+): TypeSpec? {
+    if (!returns.needsSealedInterface()) return null
+
+    val methodName = method.value.lowercase().replaceFirstChar { it.uppercase() }
+    val resultName = "${methodName}Result"
+    val resultClassName = interfaceClassName.nestedClass(resultName)
+
+    val builder = TypeSpec.interfaceBuilder(resultName)
+        .addModifiers(KModifier.SEALED)
+
+    // Status code cases (ordered by status code value)
+    for ((statusCode, returnType) in returns.responses.entries.sortedBy { it.key.value }) {
+        val caseName = statusCode.toCaseName()
+        val model = returnType.preferredModel()
+
+        if (model == null || model is Model.Primitive.Unit) {
+            builder.addType(
+                TypeSpec.objectBuilder(caseName)
+                    .addModifiers(KModifier.DATA)
+                    .addSuperinterface(resultClassName)
+                    .build()
+            )
+        } else {
+            val typeName = model.toTypeName(config)
+            builder.addType(
+                TypeSpec.classBuilder(caseName)
+                    .addModifiers(KModifier.DATA)
+                    .primaryConstructor(
+                        FunSpec.constructorBuilder()
+                            .addParameter("value", typeName)
+                            .build()
+                    )
+                    .addProperty(
+                        PropertySpec.builder("value", typeName)
+                            .initializer("value")
+                            .build()
+                    )
+                    .addSuperinterface(resultClassName)
+                    .build()
+            )
+        }
+    }
+
+    // Default case
+    val defaultReturnType = returns.default
+    if (defaultReturnType != null) {
+        val model = defaultReturnType.preferredModel()
+        val defaultBuilder = TypeSpec.classBuilder("Default")
+            .addModifiers(KModifier.DATA)
+            .addSuperinterface(resultClassName)
+
+        val constructorBuilder = FunSpec.constructorBuilder()
+            .addParameter("status", HttpStatusCodeType)
+
+        val props = mutableListOf(
+            PropertySpec.builder("status", HttpStatusCodeType)
+                .initializer("status")
+                .build()
+        )
+
+        if (model != null && model !is Model.Primitive.Unit) {
+            val typeName = model.toTypeName(config)
+            constructorBuilder.addParameter("value", typeName)
+            props.add(
+                PropertySpec.builder("value", typeName)
+                    .initializer("value")
+                    .build()
+            )
+        }
+
+        defaultBuilder.primaryConstructor(constructorBuilder.build())
+        props.forEach { defaultBuilder.addProperty(it) }
+        builder.addType(defaultBuilder.build())
+    }
+
+    return builder.build()
 }

@@ -389,4 +389,176 @@ val clientSpec by testSuite {
         """.trimIndent(),
         "client/operations-defaults"
     )
+
+    // Phase 10 tests — Response Handling
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "array", "items": { "type": "string" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-single"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets/{petId}": {
+              "delete": {
+                "parameters": [
+                  { "name": "petId", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": {
+                  "204": { "description": "No Content" }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-unit"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets/{petId}": {
+              "get": {
+                "parameters": [
+                  { "name": "petId", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  },
+                  "404": {
+                    "description": "Not Found",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "integer", "format": "int32" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-multiple"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets/{petId}": {
+              "get": {
+                "parameters": [
+                  { "name": "petId", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  },
+                  "default": {
+                    "description": "Unexpected error",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-default"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets/{petId}": {
+              "get": {
+                "parameters": [
+                  { "name": "petId", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  },
+                  "204": {
+                    "description": "No Content"
+                  },
+                  "404": {
+                    "description": "Not Found",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "integer", "format": "int32" }
+                      }
+                    }
+                  },
+                  "default": {
+                    "description": "Unexpected error",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-mixed"
+    )
 }
