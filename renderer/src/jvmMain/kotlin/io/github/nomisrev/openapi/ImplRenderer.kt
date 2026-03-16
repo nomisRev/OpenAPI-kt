@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.FunSpec
@@ -215,6 +216,7 @@ private fun Route.toImplFunSpec(
     val methodName = method.value.lowercase()
     val builder = FunSpec.builder(methodName)
         .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
+        .addDeprecatedIfNeeded()
 
     // Add same parameters as the interface function (copy logic from ClientRenderer)
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }

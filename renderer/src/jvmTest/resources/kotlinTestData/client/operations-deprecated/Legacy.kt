@@ -12,6 +12,7 @@ public interface Legacy {
 internal class KtorLegacy(
   private val client: HttpClient,
 ) : Legacy {
+  @Deprecated("Deprecated by the API provider")
   override suspend fun `get`() {
     client.get("/legacy")
   }

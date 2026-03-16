@@ -4,7 +4,11 @@
       "Bash(find:*)",
       "Bash(ls:*)",
       "Bash(./gradlew:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "mcp__gradle__gradle",
+      "mcp__gradle__search_dependency_sources",
+      "mcp__gradle__read_dependency_sources",
+      "mcp__gradle__inspect_build"
     ]
   }
 }

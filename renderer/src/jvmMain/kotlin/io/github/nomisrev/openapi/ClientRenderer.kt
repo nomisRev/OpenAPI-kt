@@ -144,6 +144,15 @@ private fun Route.inlineEnums(): List<Pair<String, Model.Enum>> =
             } else null
         }
 
+context(route: Route)
+fun FunSpec.Builder.addDeprecatedIfNeeded() = apply {
+    if (route.deprecated) {
+        addAnnotation(
+            AnnotationSpec.builder(Deprecated::class).addMember("%S", "Deprecated by the API provider").build()
+        )
+    }
+}
+
 /** Build the operation suspend function with parameters and body. */
 private fun Route.toOperationFunSpec(
     method: HttpMethod,
@@ -152,14 +161,7 @@ private fun Route.toOperationFunSpec(
 ): FunSpec {
     val builder = FunSpec.builder(method.value.lowercase())
         .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND)
-
-    if (deprecated) {
-        builder.addAnnotation(
-            AnnotationSpec.builder(Deprecated::class)
-                .addMember("%S", "Deprecated by the API provider")
-                .build()
-        )
-    }
+        .addDeprecatedIfNeeded()
 
     // Collect non-path parameters, split into required/optional
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
