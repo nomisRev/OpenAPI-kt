@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.test.model
+package io.github.nomisrev.render.test.object_.nullability
 
 import kotlin.String
 import kotlinx.serialization.Required

@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.test.model
+package io.github.nomisrev.render.test.object_.multi.line
 
 import kotlin.Double
 import kotlin.Float

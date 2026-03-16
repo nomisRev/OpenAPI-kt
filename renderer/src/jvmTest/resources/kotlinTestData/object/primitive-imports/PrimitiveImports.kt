@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.test.model
+package io.github.nomisrev.render.test.object_.primitive.imports
 
 import kotlin.OptIn
 import kotlin.uuid.ExperimentalUuidApi

@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.test.model
+package io.github.nomisrev.render.test.object_.valueclass
 
 import kotlin.String
 import kotlin.jvm.JvmInline

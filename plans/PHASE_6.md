@@ -4,14 +4,14 @@ Generate `sealed interface` with custom serializer using `attemptDeserialize` fo
 
 ## Tasks
 
-- [ ] Generate `SerializationUtils.kt`:
+- [x] Generate `SerializationUtils.kt`:
   - `attemptDeserialize(json: JsonElement, vararg block: Pair<KClass<*>, (JsonElement) -> A>): A`
   - `UnionSerializationException` class
   - Only generated when at least one non-discriminated union exists
-- [ ] Extend `Model.Union.toTypeSpec()` for non-discriminated unions:
+- [x] Extend `Model.Union.toTypeSpec()` for non-discriminated unions:
   - `@Serializable(with = Union.Serializer::class)` annotation (instead of `@JsonClassDiscriminator`)
   - Same case rendering as Phase 5 (wrapped vs inlined)
-- [ ] Generate custom `object Serializer : KSerializer<Union>` inside sealed interface:
+- [x] Generate custom `object Serializer : KSerializer<Union>` inside sealed interface:
   - `override val descriptor: SerialDescriptor`
   - `override fun serialize(encoder: Encoder, value: Union)` — dispatch on `value` type:
     - Wrapped cases: `encoder.encodeSerializableValue(T.serializer(), value.value)` — unwrap `.value`
@@ -19,7 +19,7 @@ Generate `sealed interface` with custom serializer using `attemptDeserialize` fo
   - `override fun deserialize(decoder: Decoder): Union` — uses `attemptDeserialize`:
     - Decode `JsonElement` first
     - Try each case in specificity order, catching failures
-- [ ] Deserialization order (most specific first):
+- [x] Deserialization order (most specific first):
   1. Objects without additionalProperties (more properties → higher priority)
   2. Objects with typed additionalProperties schema
   3. Objects with additionalProperties allowed
@@ -32,31 +32,34 @@ Generate `sealed interface` with custom serializer using `attemptDeserialize` fo
   10. String-like: Uuid → Date → DateTime → ByteArray
   11. String (swallows other string types)
   12. FreeFormJson / JsonElement (last resort)
-- [ ] Open Enum Pattern:
+- [x] Open Enum Pattern:
   - Detect: exactly 2 cases, one `Enum` + one `String`
   - Generate specialized serializer: match known enum values first, fall back to string wrapper
-- [ ] Handle `is` keyword for `when` branches in serialize (KotlinPoet `CodeBlock`)
+- [x] Descriptor uses declaration order, deserialize uses priority order
+- [x] Inlined cases use nested type's own serializer (not the model's serializer)
+- [x] Package name sanitization for SerializationUtils matches model files
 
 ## Golden Tests
 
-- [ ] `union/nondiscriminated-basic` — union of primitives (String + Int)
-- [ ] `union/nondiscriminated-objects` — union of inline objects
-- [ ] `union/nondiscriminated-mixed` — mix of objects, primitives, references
-- [ ] `union/nondiscriminated-serializer` — full serializer output verification
-- [ ] `union/open-enum` — open enum pattern (Enum + String)
-- [ ] `union/nondiscriminated-ordering` — verify deserialization order in serializer
+- [x] `union/all-primitives` — union of all typed primitives (String, Int, Float, Double, Boolean, Date, DateTime, Binary, Uuid)
+- [x] `union/enum-and-primitive` — open enum pattern (Enum + String)
+- [x] `union/collection-and-primitive` — collection + primitive
+- [x] `union/inlined-object-and-primitives` — inlined object + primitives with deserialization ordering
+- [x] `union/references` — union of referenced types (Person, Company)
+- [x] `union/overlapping-objects` — overlapping objects (more-specific first)
+- [x] `union/additional-properties-last` — strict object + object with additionalProperties
+- [x] `union/discriminated-primitive` — non-discriminated union (String + ref, was misclassified as discriminated)
 
-## Files to Create/Modify
+## Known Limitations
 
-- **Modify**: `renderer/.../UnionRenderer.kt` — add non-discriminated serializer generation
-- **Create**: `renderer/.../SerializationUtilsRenderer.kt` — generates `SerializationUtils.kt`
-- **Modify**: `renderer/.../Generate.kt` — conditionally generate SerializationUtils.kt
-- **Create**: golden test resource files under `renderer/src/test/resources/kotlinTestData/union/`
-- **Modify**: `renderer/.../UnionSpec.kt` — add test cases
+- `{}` (empty/any-type schema) in union cases hits `TODO("Nested complex union case?")` in the typed module
+- FreeFormJson (`JsonElement`) as a union case is not yet supported for the same reason
 
-## Key Decisions
+## Files Modified
 
-- `SerializationUtils.kt` is generated alongside model files, not as a separate module dependency
-- The open enum serializer is a specialized path — not a generic union serializer
-- Deserialization order is critical for correctness — wider types must be tried after narrower ones
-- The serializer `when` block must handle all cases exhaustively
+- `renderer/.../UnionRenderer.kt` — non-discriminated serializer generation, descriptor ordering, type reference fixes
+- `renderer/.../SerializationUtilsRenderer.kt` — generates `AttemptDeserialize.kt` with package sanitization
+- `renderer/.../Generate.kt` — conditionally generates SerializationUtils
+- `renderer/src/jvmTest/.../UnionSpec.kt` — non-discriminated union test cases
+- `renderer/src/jvmTest/.../TestBalloonDsl.kt` — per-test package isolation
+- Golden test files under `renderer/src/jvmTest/resources/kotlinTestData/union/`

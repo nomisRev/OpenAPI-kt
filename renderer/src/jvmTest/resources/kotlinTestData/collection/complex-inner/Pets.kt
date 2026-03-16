@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.test.model
+package io.github.nomisrev.render.test.collection.complex.`inner`
 
 import kotlin.String
 import kotlin.collections.List

@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.test.model
+package io.github.nomisrev.render.test.`enum`.jsname
 
 import kotlinx.serialization.Serializable
 

@@ -44,7 +44,11 @@ private val NullableMember = MemberName("kotlinx.serialization.builtins", "nulla
 private val ListSerializerMember = MemberName("kotlinx.serialization.builtins", "ListSerializer")
 private val ByteArraySerializerMember = MemberName("kotlinx.serialization.builtins", "ByteArraySerializer")
 
-fun Model.Object.toTypeSpec(config: RenderConfig): TypeSpec {
+fun Model.Object.toTypeSpec(
+    config: RenderConfig,
+    parentInterface: ClassName? = null,
+    serialName: String? = null,
+): TypeSpec {
     val className = context.toClassName(config)
     val renderedProperties = properties.map { (jsonName, prop) ->
         renderProperty(jsonName, prop, config)
@@ -83,6 +87,15 @@ fun Model.Object.toTypeSpec(config: RenderConfig): TypeSpec {
     if (allProperties.isNotEmpty()) {
         allProperties.forEach { builder.addProperty(it.property) }
     }
+
+    serialName?.let { value ->
+        builder.addAnnotation(
+            AnnotationSpec.builder(SerialName::class)
+                .addMember("%S", value)
+                .build()
+        )
+    }
+    parentInterface?.let(builder::addSuperinterface)
 
     description
         ?.takeIf { it.isNotBlank() }

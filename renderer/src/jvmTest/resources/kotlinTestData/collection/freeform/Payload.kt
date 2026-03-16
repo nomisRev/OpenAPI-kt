@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.test.model
+package io.github.nomisrev.render.test.collection.freeform
 
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable

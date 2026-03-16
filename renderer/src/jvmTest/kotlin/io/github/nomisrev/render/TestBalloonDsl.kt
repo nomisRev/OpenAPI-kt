@@ -73,7 +73,10 @@ fun TestSuite.modelTest(json: String, dir: String): Unit {
 
 @TestRegistering
 fun TestSuite.renderSpec(@Language("json") json: String, dir: String) = test(json) {
-    val files = OpenAPI.fromJson(json).generate(testRenderConfig).sortedBy { it.name }
+    val config = testRenderConfig.copy(
+        modelPackage = "io.github.nomisrev.render.test.${dir.replace('/', '.').replace('-', '.')}",
+    )
+    val files = OpenAPI.fromJson(json).generate(config).sortedBy { it.name }
     assertTrue(files.isNotEmpty(), "Expected renderer to generate files, but it returned an empty result.")
     val actual = files.associate({ file ->
         Pair(file.name, buildString { file.writeTo(this) })

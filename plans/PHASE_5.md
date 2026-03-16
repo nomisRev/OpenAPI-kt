@@ -53,7 +53,7 @@ Generate `sealed interface` with `@JsonClassDiscriminator` for unions that have 
 
 ## Key Decisions
 
-- Kotlinx.serialization handles discriminated union (de)serialization natively — no custom serializer needed
+- Custom KotlinX.serialization KSerializer needed
 - The typed module determines case names via `NamingContext.UnionCase` — renderer reads them
 - Wrapped cases use `@SerialName` with the discriminator value on the value class
 - Inlined cases use `@SerialName` with the discriminator value on the data class/enum itself

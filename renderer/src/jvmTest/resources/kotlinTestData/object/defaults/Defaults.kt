@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.test.model
+package io.github.nomisrev.render.test.object_.defaults
 
 import kotlin.Boolean
 import kotlin.Double

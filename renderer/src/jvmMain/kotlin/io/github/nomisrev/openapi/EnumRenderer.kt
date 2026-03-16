@@ -10,11 +10,24 @@ import kotlinx.serialization.Serializable
 private val JsIdentifierRegex = Regex("^[A-Za-z_$][A-Za-z0-9_$]*$")
 private val InvalidJsIdentifierCharsRegex = Regex("[^A-Za-z0-9_$]+")
 
-fun Model.Enum.toTypeSpec(config: RenderConfig): TypeSpec {
+fun Model.Enum.toTypeSpec(
+    config: RenderConfig,
+    parentInterface: ClassName? = null,
+    serialName: String? = null,
+): TypeSpec {
     val className = context.toClassName(config)
     return TypeSpec.enumBuilder(className.simpleName)
         .addAnnotation(Serializable::class)
         .apply {
+            serialName?.let { value ->
+                addAnnotation(
+                    AnnotationSpec.builder(SerialName::class)
+                        .addMember("%S", value)
+                        .build()
+                )
+            }
+            parentInterface?.let(::addSuperinterface)
+
             values.forEach { value ->
                 val rawValue = value ?: "null"
                 val entryName = toEnumValueName(rawValue)

@@ -1,8 +1,11 @@
-package union.references.model
+package io.github.nomisrev.render.test.union.references
 
+import kotlin.Int
+import kotlin.String
 import kotlinx.serialization.Serializable
-import kotlin.jvm.JvmInline
 
 @Serializable
-@JvmInline
-value class Company(val name: String)
+public data class Company(
+  public val name: String,
+  public val employeeCount: Int,
+)
