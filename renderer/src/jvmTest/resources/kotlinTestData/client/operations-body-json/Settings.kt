@@ -7,17 +7,23 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
 public interface Settings {
-  public suspend fun patch(body: UpdateSettingsRequest? = null)
+  public val patch: Patch
+
+  public interface Patch {
+    public suspend operator fun invoke(body: UpdateSettingsRequest? = null)
+  }
 }
 
 internal class KtorSettings(
   private val client: HttpClient,
 ) : Settings {
-  override suspend fun patch(body: UpdateSettingsRequest?) {
-    client.patch("/settings") {
-      body?.let {
-        contentType(ContentType.Application.Json)
-        setBody(it)
+  override val patch: Settings.Patch = object : Settings.Patch {
+    override suspend operator fun invoke(body: UpdateSettingsRequest?) {
+      client.patch("/settings") {
+        body?.let {
+          contentType(ContentType.Application.Json)
+          setBody(it)
+        }
       }
     }
   }

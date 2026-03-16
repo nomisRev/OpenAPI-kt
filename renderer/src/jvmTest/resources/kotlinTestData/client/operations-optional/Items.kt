@@ -9,31 +9,37 @@ import kotlin.Int
 import kotlin.String
 
 public interface Items {
-  public suspend fun `get`(
-    query: String,
-    xRequestId: String,
-    limit: Int? = null,
-    xTraceId: String? = null,
-    preference: String? = null,
-  )
+  public val `get`: Get
+
+  public interface Get {
+    public suspend operator fun invoke(
+      query: String,
+      xRequestId: String,
+      limit: Int? = null,
+      xTraceId: String? = null,
+      preference: String? = null,
+    )
+  }
 }
 
 internal class KtorItems(
   private val client: HttpClient,
 ) : Items {
-  override suspend fun `get`(
-    query: String,
-    xRequestId: String,
-    limit: Int?,
-    xTraceId: String?,
-    preference: String?,
-  ) {
-    client.get("/items") {
-      parameter("query", query)
-      limit?.let { parameter("limit", it) }
-      `header`("X-Request-Id", xRequestId)
-      xTraceId?.let { `header`("X-Trace-Id", it) }
-      preference?.let { cookie("preference", it) }
+  override val `get`: Items.Get = object : Items.Get {
+    override suspend operator fun invoke(
+      query: String,
+      xRequestId: String,
+      limit: Int?,
+      xTraceId: String?,
+      preference: String?,
+    ) {
+      client.get("/items") {
+        parameter("query", query)
+        limit?.let { parameter("limit", it) }
+        `header`("X-Request-Id", xRequestId)
+        xTraceId?.let { `header`("X-Trace-Id", it) }
+        preference?.let { cookie("preference", it) }
+      }
     }
   }
 }

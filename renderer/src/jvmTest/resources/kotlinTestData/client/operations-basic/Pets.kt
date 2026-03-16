@@ -9,22 +9,34 @@ import io.ktor.http.contentType
 import kotlin.String
 
 public interface Pets {
-  public suspend fun `get`()
+  public val `get`: Get
 
-  public suspend fun post(body: String)
+  public val post: Post
+
+  public interface Get {
+    public suspend operator fun invoke()
+  }
+
+  public interface Post {
+    public suspend operator fun invoke(body: String)
+  }
 }
 
 internal class KtorPets(
   private val client: HttpClient,
 ) : Pets {
-  override suspend fun `get`() {
-    client.get("/pets")
+  override val `get`: Pets.Get = object : Pets.Get {
+    override suspend operator fun invoke() {
+      client.get("/pets")
+    }
   }
 
-  override suspend fun post(body: String) {
-    client.post("/pets") {
-      contentType(ContentType.Application.Json)
-      setBody(body)
+  override val post: Pets.Post = object : Pets.Post {
+    override suspend operator fun invoke(body: String) {
+      client.post("/pets") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
     }
   }
 }

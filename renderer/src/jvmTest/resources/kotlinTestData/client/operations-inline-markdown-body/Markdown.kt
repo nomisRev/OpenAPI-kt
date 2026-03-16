@@ -7,29 +7,46 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlin.String
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 public interface Markdown {
-  public suspend fun post(body: PostBody): String
+  public val post: Post
 
-  public data class PostBody(
-    public val text: String,
-    public val mode: Mode? = Mode.Markdown,
-    public val context: String? = null,
-  )
+  public interface Post {
+    public suspend operator fun invoke(body: Body): Response
 
-  public enum class Mode {
-    Markdown,
-    Gfm,
+    @Serializable
+    public data class Body(
+      public val text: String,
+      public val mode: Mode? = null,
+      public val context: String? = null,
+    ) {
+      @Serializable
+      public enum class Mode {
+        @SerialName("markdown")
+        Markdown,
+        @SerialName("gfm")
+        Gfm,
+      }
+    }
+
+    public data class Response(
+      public val `value`: String,
+    )
   }
 }
 
 internal class KtorMarkdown(
   private val client: HttpClient,
 ) : Markdown {
-  override suspend fun post(body: Markdown.PostBody): String {
-    return client.post("/markdown") {
-      contentType(ContentType.Application.Json)
-      setBody(body)
-    }.body()
+  override val post: Markdown.Post = object : Markdown.Post {
+    override suspend operator fun invoke(body: Markdown.Post.Body): Markdown.Post.Response {
+      val value: String = client.post("/markdown") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }.body()
+      return Markdown.Post.Response(value)
+    }
   }
 }

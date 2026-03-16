@@ -5,11 +5,11 @@ This document specifies how a Kotlin Ktor client should be generated from the `A
 ## Core Principle
 
 The generated API mirrors the URL path structure exactly. Each path segment becomes a navigation step:
-- **Static segments** → `val` property access
-- **Parameter segments** → function call capturing the value
-- **HTTP method** → terminal suspend function name
+- **Static segments** -> `val` property access
+- **Parameter segments** -> function call capturing the value
+- **HTTP method** -> method-node property with `invoke(...)`
 
-```
+```text
 Path:    /repos/{owner}/{repo}/collaborators
 Usage:   client.repos.owner("simon").repo("openapi").collaborators.get()
 ```
@@ -23,13 +23,17 @@ No dependency on `operationId`. The path structure and HTTP method fully determi
 ### Root Interface
 
 Name of top-level client is user provided `generate("GitHub", spec.json)`. Contains:
-- Suspend functions for operations at `/` (root-level operations)
+- Method nodes for operations at `/` (root-level operations)
 - `val` properties for top-level path segments
 
 ```kotlin
 interface GitHub {
     // Root-level operation: GET /
-    suspend fun get(): RootInfo
+    val get: Get
+
+    interface Get {
+        suspend operator fun invoke(): Unit
+    }
 
     // Navigation to /repos
     val repos: Repos
@@ -56,16 +60,35 @@ interface GitHub {
             fun repo(repo: String): Repo
 
             interface Repo {
-                // GET /repos/{owner}/{repo}
-                suspend fun get(): Repository
-                // DELETE /repos/{owner}/{repo}
-                suspend fun delete()
+                // HTTP method nodes for /repos/{owner}/{repo}
+                val get: Get
+                val delete: Delete
+                val patch: Patch
+
+                interface Get {
+                    suspend operator fun invoke(): Response
+                    data class Response(val value: Repository)
+                }
+
+                interface Delete {
+                    suspend operator fun invoke(): Unit
+                }
+
+                interface Patch {
+                    suspend operator fun invoke(body: UpdateRepoRequest): Response
+                    data class Response(val value: Repository)
+                }
 
                 val collaborators: Collaborators
 
                 interface Collaborators {
                     // GET /repos/{owner}/{repo}/collaborators
-                    suspend fun get(affiliation: String? = null): List<Collaborator>
+                    val get: Get
+
+                    interface Get {
+                        suspend operator fun invoke(affiliation: String? = null): Response
+                        data class Response(val value: List<Collaborator>)
+                    }
                 }
             }
         }
@@ -73,7 +96,7 @@ interface GitHub {
 }
 ```
 
-Full type path: `GitHub.Repos.Owner.Repo.Collaborators`
+Full type path: `GitHub.Repos.Owner.Repo.Collaborators.Get.Response`
 
 ### Parameter Segments (Navigation Functions)
 
@@ -91,42 +114,43 @@ The parameter type comes from the OpenAPI parameter definition (resolved to `Mod
 
 ### Interface Naming
 
-- Static segments: PascalCase of the segment name (e.g., `repos` → `Repos`, `fine_tuning` → `FineTuning`)
-- Parameter segments: PascalCase of the placeholder name (e.g., `{owner}` → `Owner`, `{pet_id}` → `PetId`)
+- Static segments: PascalCase of the segment name (e.g., `repos` -> `Repos`, `fine_tuning` -> `FineTuning`)
+- Parameter segments: PascalCase of the placeholder name (e.g., `{owner}` -> `Owner`, `{pet_id}` -> `PetId`)
+- Method nodes: PascalCase HTTP method (e.g., `get` -> `Get`, `post` -> `Post`)
 - All interfaces are nested inside their parent — no flat top-level interfaces
 - Name uniqueness is guaranteed by nesting
 
 ---
 
-## 2. Operation Functions
+## 2. Operation Nodes
 
-### Function Naming
+### Property Naming
 
-The function name is always the **HTTP method** in lowercase:
+The property name is always the **HTTP method** in lowercase:
 
-| HTTP Method | Function Name |
-|-------------|---------------|
-| GET         | `get()`       |
-| POST        | `post()`      |
-| PUT         | `put()`       |
-| DELETE      | `delete()`    |
-| PATCH       | `patch()`     |
-| HEAD        | `head()`      |
-| OPTIONS     | `options()`   |
+| HTTP Method | Property Name | Node Type |
+|-------------|---------------|-----------|
+| GET         | `get`         | `Get`     |
+| POST        | `post`        | `Post`    |
+| PUT         | `put`         | `Put`     |
+| DELETE      | `delete`      | `Delete`  |
+| PATCH       | `patch`       | `Patch`   |
+| HEAD        | `head`        | `Head`    |
+| OPTIONS     | `options`     | `Options` |
 
-Multiple methods at the same path produce multiple functions on the same interface:
+Multiple methods at the same path produce multiple properties on the same interface.
+
+### Invoke Signature
+
+Each method node exposes:
 
 ```kotlin
-interface Repo {
-    suspend fun get(): Repository      // GET /repos/{owner}/{repo}
-    suspend fun delete()               // DELETE /repos/{owner}/{repo}
-    suspend fun patch(body: UpdateRepoRequest): Repository  // PATCH /repos/{owner}/{repo}
-}
+suspend operator fun invoke(...): Response
 ```
 
 ### Parameter Ordering
 
-Function parameters follow this order:
+`invoke(...)` parameters follow this order:
 
 1. Required query parameters
 2. Required header parameters
@@ -137,16 +161,47 @@ Function parameters follow this order:
 7. Optional cookie parameters (nullable, `= null`)
 8. Request body (if optional, nullable, `= null`)
 
-Path parameters are **never** on operation functions — they are captured by navigation functions in the tree.
+Path parameters are **never** on `invoke(...)` — they are captured by navigation functions in the tree.
+
+### Request `Body` Type Rule
+
+For `application/json` request bodies (`Route.Body.SetBody`):
+
+- **Inline request schema that needs generated naming** -> generate nested `Body` type in method node
+- **Referenced schema** -> keep referenced model type directly on `invoke(...)`
+- **Form/multipart expanded parameter modes** keep expanded parameters (no nested `Body` wrapper)
+
+Example:
+
+```kotlin
+interface Markdown {
+    val post: Post
+
+    interface Post {
+        suspend operator fun invoke(body: Body): Response
+
+        @Serializable
+        data class Body(
+            val text: String,
+            val mode: Mode? = null,
+            val context: String? = null,
+        ) {
+            @Serializable
+            enum class Mode { Markdown, Gfm }
+        }
+
+        data class Response(val value: String)
+    }
+}
+```
 
 ### Deprecation
 
-Deprecated operations receive `@Deprecated` annotation on both interface and implementation:
-
-```kotlin
-@Deprecated("Deprecated by the API provider")
-suspend fun get(): LegacyResponse
-```
+Deprecated operations receive `@Deprecated("Deprecated by the API provider")` on:
+- Method-node property
+- Method-node interface
+- `invoke(...)` signature
+- Implementation overrides
 
 ---
 
@@ -154,58 +209,35 @@ suspend fun get(): LegacyResponse
 
 ### Internal Ktor Implementation
 
-Each interface with operations or children gets an internal implementation class. Parameter navigation functions create child implementation instances, threading the captured path values through.
+Each path interface gets an internal implementation class. Method-node properties are implemented as anonymous objects that implement the node interface.
 
 ```kotlin
-internal class KtorGitHub(private val client: HttpClient) : GitHub {
-    override val repos: GitHub.Repos = KtorRepos(client)
-}
-
-internal class KtorRepos(private val client: HttpClient) : GitHub.Repos {
-    override fun owner(owner: String): GitHub.Repos.Owner = KtorOwner(client, owner)
-}
-
-internal class KtorOwner(
-    private val client: HttpClient,
-    private val owner: String,
-) : GitHub.Repos.Owner {
-    override fun repo(repo: String): GitHub.Repos.Owner.Repo = KtorRepo(client, owner, repo)
-}
-
 internal class KtorRepo(
     private val client: HttpClient,
     private val owner: String,
     private val repo: String,
 ) : GitHub.Repos.Owner.Repo {
 
-    override suspend fun get(): Repository =
-        client.get("/repos/$owner/$repo").body()
-
-    override suspend fun delete() {
-        client.delete("/repos/$owner/$repo")
+    override val get: GitHub.Repos.Owner.Repo.Get = object : GitHub.Repos.Owner.Repo.Get {
+        override suspend operator fun invoke(): GitHub.Repos.Owner.Repo.Get.Response {
+            val value: Repository = client.get("/repos/$owner/$repo").body()
+            return GitHub.Repos.Owner.Repo.Get.Response(value)
+        }
     }
 
-    override val collaborators: GitHub.Repos.Owner.Repo.Collaborators =
-        KtorCollaborators(client, owner, repo)
-}
-
-internal class KtorCollaborators(
-    private val client: HttpClient,
-    private val owner: String,
-    private val repo: String,
-) : GitHub.Repos.Owner.Repo.Collaborators {
-
-    override suspend fun get(affiliation: String?): List<Collaborator> =
-        client.get("/repos/$owner/$repo/collaborators") {
-            affiliation?.let { parameter("affiliation", it) }
-        }.body()
+    override val delete: GitHub.Repos.Owner.Repo.Delete = object : GitHub.Repos.Owner.Repo.Delete {
+        override suspend operator fun invoke(): GitHub.Repos.Owner.Repo.Delete.Response {
+            client.delete("/repos/$owner/$repo")
+            return GitHub.Repos.Owner.Repo.Delete.Response
+        }
+    }
 }
 ```
 
 Key points:
-- Each implementation class stores `HttpClient` + all accumulated path parameters
-- Navigation functions (`owner()`, `repo()`) create new instances passing accumulated state
-- Static segment properties (`val collaborators`) create instances at construction time
+- Path implementation classes store `HttpClient` + accumulated path parameters
+- Parameter navigation functions create child impl instances with captured values
+- Method-node properties are per-path anonymous implementations
 - Path interpolation uses Kotlin string templates with captured parameter values
 
 ### Factory Function
@@ -231,59 +263,46 @@ fun GitHubClient(
 ### Required
 
 ```kotlin
-// OpenAPI: required query parameter "query" of type string
-suspend fun get(query: String): SearchResult =
-    client.get("/search") {
-        parameter("query", query)
-    }.body()
-```
+interface Search {
+    val get: Get
 
-#### Required with Default Value
-
-```kotlin
-// OpenAPI: query parameter "limit" with default: 20
-suspend fun get(@Required limit: Int = 20): List<Item> =
-    client.get("/items") {
-        parameter("limit", limit)
-    }.body()
+    interface Get {
+        suspend operator fun invoke(query: String): Response
+        data class Response(val value: SearchResult)
+    }
+}
 ```
 
 ### Optional
 
 ```kotlin
-// OpenAPI: optional query parameter "limit" of type integer
-suspend fun get(limit: Int? = null): List<Item> =
-    client.get("/items") {
-        limit?.let { parameter("limit", it) }
-    }.body()
+interface Items {
+    val get: Get
+
+    interface Get {
+        suspend operator fun invoke(limit: Int? = null): Response
+        data class Response(val value: List<Item>)
+    }
+}
 ```
-
-#### Optional with Default Value
-
-```kotlin
-// OpenAPI: query parameter "limit" with default: 20
-suspend fun get(limit: Int? = 20): List<Item> =
-    client.get("/items") {
-        parameter("limit", limit)
-    }.body()
-```
-
 
 ---
 
 ## 5. Header Parameters
 
 ```kotlin
-// Required header "X-Api-Key", optional header "X-Trace-Id"
-suspend fun get(xApiKey: String, xTraceId: String? = null): Data =
-    client.get("/data") {
-        header("X-Api-Key", xApiKey)
-        xTraceId?.let { header("X-Trace-Id", it) }
-    }.body()
+interface Data {
+    val get: Get
+
+    interface Get {
+        suspend operator fun invoke(xApiKey: String, xTraceId: String? = null): Response
+        data class Response(val value: DataModel)
+    }
+}
 ```
 
 - Original header name preserved in `header()` call
-- Parameter name is camelCase conversion (e.g., `X-Api-Key` → `xApiKey`)
+- Parameter name is camelCase conversion (e.g., `X-Api-Key` -> `xApiKey`)
 
 ---
 
@@ -292,67 +311,64 @@ suspend fun get(xApiKey: String, xTraceId: String? = null): Data =
 ### JSON Body (Required)
 
 ```kotlin
-suspend fun post(body: CreatePetRequest): Pet =
-    client.post("/pets") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-    }.body()
+interface Pets {
+    val post: Post
+
+    interface Post {
+        suspend operator fun invoke(body: CreatePetRequest): Unit
+    }
+}
 ```
 
 ### JSON Body (Optional)
 
 ```kotlin
-suspend fun patch(body: UpdateSettingsRequest? = null): Settings =
-    client.patch("/settings") {
-        contentType(ContentType.Application.Json)
-        body?.let { setBody(it) }
-    }.body()
+interface Settings {
+    val patch: Patch
+
+    interface Patch {
+        suspend operator fun invoke(body: UpdateSettingsRequest? = null): Unit
+    }
+}
 ```
 
 ### Multipart FormData (Inline Schema)
 
-When the multipart schema is defined inline, parameters are expanded:
-
 ```kotlin
-suspend fun post(file: ByteArray, purpose: String): FileObject =
-    client.post("/files") {
-        setBody(
-            MultiPartFormDataContent(
-                formData {
-                    append("file", file)
-                    append("purpose", purpose)
-                }
-            )
-        )
-    }.body()
+interface Files {
+    val post: Post
+
+    interface Post {
+        suspend operator fun invoke(file: ByteArray, purpose: String): Response
+        data class Response(val value: FileObject)
+    }
+}
 ```
 
 ### Multipart FormData (Referenced Schema)
 
-When the schema references a named type:
-
 ```kotlin
-suspend fun post(body: UploadFileRequest): FileObject =
-    client.post("/files") {
-        contentType(ContentType.MultiPart.FormData)
-        setBody(body)
-    }.body()
+interface Files {
+    val post: Post
+
+    interface Post {
+        suspend operator fun invoke(body: UploadFileRequest): Response
+        data class Response(val value: FileObject)
+    }
+}
 ```
 
 ### Form URL Encoded
 
 ```kotlin
-suspend fun post(grantType: String, code: String, redirectUri: String): TokenResponse =
-    client.post("/oauth/token") {
-        contentType(ContentType.Application.FormUrlEncoded)
-        setBody(
-            Parameters.build {
-                append("grant_type", grantType)
-                append("code", code)
-                append("redirect_uri", redirectUri)
-            }.formUrlEncode()
-        )
-    }.body()
+interface OAuth {
+    val post: Post
+
+    interface Post {
+        suspend operator fun invoke(grantType: String, code: String, redirectUri: String): Response
+        data class Response(val value: TokenResponse)
+    }
+}
 ```
 
 ### Content Type Preference
@@ -368,69 +384,35 @@ When multiple content types are available, preference order:
 
 ### Single Response
 
-Direct return type:
+Single-response operations return:
 
-```kotlin
-suspend fun get(): List<Pet> =
-    client.get("/pets").body()
-```
+- No body / unit -> `Unit`
+- Non-inline schema or primitive/collection -> nested `data class Response(val value: T)`
+- Inline object/enum schema -> nested concrete generated `Response` type
 
 ### Multiple Responses
 
-Sealed interface with status-specific cases. The sealed interface is nested inside the interface that owns the path node.
+`Response` becomes a sealed interface with status-specific cases.
 
 ```kotlin
-interface Repo {
-    sealed interface GetResult {
-        data class OK(val value: Repository) : GetResult
-        data class NotFound(val value: ErrorResponse) : GetResult
-    }
+interface PetId {
+    val get: Get
 
-    suspend fun get(): GetResult
-}
+    interface Get {
+        sealed interface Response {
+            data class OK(val value: Pet) : Response
+            data class NotFound(val value: ErrorResponse) : Response
+            data class Default(val status: HttpStatusCode, val value: ErrorResponse) : Response
+        }
 
-// Implementation:
-override suspend fun get(): GitHub.Repos.Owner.Repo.GetResult {
-    val response = client.get("/repos/$owner/$repo")
-    return when (response.status) {
-        HttpStatusCode.OK -> GitHub.Repos.Owner.Repo.GetResult.OK(response.body())
-        HttpStatusCode.NotFound -> GitHub.Repos.Owner.Repo.GetResult.NotFound(response.body())
-        else -> throw ResponseException(response, "Undocumented status code: ${response.status}")
+        suspend operator fun invoke(): Response
     }
 }
-```
-
-### Result Type Naming
-
-The result sealed interface is named `{Method}Result` (PascalCase HTTP method + "Result"):
-- `GET` → `GetResult`
-- `POST` → `PostResult`
-- `DELETE` → `DeleteResult`
-
-This is unambiguous because each interface only has one operation per HTTP method.
-
-### Default Response
-
-Fallback case with status code:
-
-```kotlin
-sealed interface GetResult {
-    data class OK(val value: Repository) : GetResult
-    data class Default(val status: HttpStatusCode, val value: ErrorResponse) : GetResult
-}
-
-// In when block:
-else -> GetResult.Default(response.status, response.body())
 ```
 
 ### No Content (204)
 
-```kotlin
-sealed interface DeleteResult {
-    data class OK(val value: String) : DeleteResult
-    data object NoContent : DeleteResult
-}
-```
+`204` without schema becomes `data object` case in sealed `Response`, or `Unit` for single-response operations.
 
 ---
 
@@ -495,7 +477,7 @@ sealed interface ExampleServer {
 
 ## 9. Inline Enum Types
 
-Query/header parameters with enum schemas generate a nested enum:
+Query/header parameter inline enums are generated on the **path node interface** (not method node).
 
 ```kotlin
 interface Collaborators {
@@ -506,7 +488,12 @@ interface Collaborators {
         @SerialName("all") All;
     }
 
-    suspend fun get(affiliation: Affiliation = Affiliation.All): List<Collaborator>
+    val get: Get
+
+    interface Get {
+        suspend operator fun invoke(affiliation: Affiliation = Affiliation.All): Response
+        data class Response(val value: List<Collaborator>)
+    }
 }
 ```
 
@@ -520,10 +507,10 @@ The root interface and its nested interfaces can be split across files. The spli
 - **Direct children** get their own files: `Repos.kt`, `Users.kt`, `Orgs.kt`
 - **Deeper nesting** stays as inner interfaces within the direct child file
 
-```
-GitHub.kt           → GitHub interface, factory, server
-Repos.kt            → GitHub.Repos + all nested (Owner, Repo, Collaborators, etc.)
-Users.kt            → GitHub.Users + all nested
+```text
+GitHub.kt           -> GitHub interface, factory, server
+Repos.kt            -> GitHub.Repos + all nested (Owner, Repo, Collaborators, etc.)
+Users.kt            -> GitHub.Users + all nested
 ```
 
 All files share the same package.
@@ -534,12 +521,14 @@ All files share the same package.
 
 | Source | Convention | Example |
 |--------|-----------|---------|
-| Interface names | PascalCase from segment | `repos` → `Repos`, `fine_tuning` → `FineTuning` |
-| Navigation function names | camelCase from placeholder | `{owner}` → `owner()`, `{pet_id}` → `petId()` |
-| Navigation function param names | camelCase from placeholder | `{owner}` → `owner: String`, `{pet_id}` → `petId: String` |
-| Operation function names | Lowercase HTTP method | `get()`, `post()`, `delete()` |
-| Query/header param names | camelCase | `per_page` → `perPage`, `X-Api-Key` → `xApiKey` |
-| Result type names | `{Method}Result` | `GetResult`, `PostResult` |
+| Interface names | PascalCase from segment | `repos` -> `Repos`, `fine_tuning` -> `FineTuning` |
+| Navigation function names | camelCase from placeholder | `{owner}` -> `owner()`, `{pet_id}` -> `petId()` |
+| Navigation function param names | camelCase from placeholder | `{owner}` -> `owner: String`, `{pet_id}` -> `petId: String` |
+| Method-node property names | Lowercase HTTP method | `get`, `post`, `delete` |
+| Method-node interface names | PascalCase HTTP method | `Get`, `Post`, `Delete` |
+| Invoke entrypoint | `operator fun invoke` | `get(limit = 10)` |
+| Query/header param names | camelCase | `per_page` -> `perPage`, `X-Api-Key` -> `xApiKey` |
+| Response wrapper name | `Response` | `Get.Response`, `Post.Response` |
 | Implementation class names | `Ktor{InterfaceName}` | `KtorRepos`, `KtorOwner` |
 | Factory function names | `{RootInterface}Client` | `GitHubClient()` |
 | Server sealed interface | `{RootInterface}Server` | `GitHubServer` |
@@ -549,7 +538,8 @@ All files share the same package.
 ## 12. Complete Example
 
 OpenAPI paths:
-```
+
+```text
 GET    /pets
 POST   /pets
 GET    /pets/{petId}
@@ -564,35 +554,57 @@ interface PetStore {
     val pets: Pets
 
     interface Pets {
-        // GET /pets
-        suspend fun get(limit: Int? = null): List<Pet>
-        // POST /pets
-        suspend fun post(body: CreatePetRequest): Pet
+        val get: Get
+        val post: Post
+
+        interface Get {
+            suspend operator fun invoke(limit: Int? = null): Response
+            data class Response(val value: List<Pet>)
+        }
+
+        interface Post {
+            suspend operator fun invoke(body: CreatePetRequest): Response
+            data class Response(val value: Pet)
+        }
 
         fun petId(petId: String): PetId
 
         interface PetId {
-            // GET /pets/{petId}
-            suspend fun get(): Pet
-            // DELETE /pets/{petId}
-            suspend fun delete()
+            val get: Get
+            val delete: Delete
+
+            interface Get {
+                suspend operator fun invoke(): Response
+                data class Response(val value: Pet)
+            }
+
+            interface Delete {
+                suspend operator fun invoke(): Unit
+            }
 
             val toys: Toys
 
             interface Toys {
-                // GET /pets/{petId}/toys
-                suspend fun get(): List<Toy>
+                val get: Get
+
+                interface Get {
+                    suspend operator fun invoke(): Response
+                    data class Response(val value: List<Toy>)
+                }
             }
         }
     }
 }
+```
 
-// Usage:
+Usage:
+
+```kotlin
 val store = PetStoreClient("https://api.example.com")
 
-store.pets.get(limit = 10)                  // GET /pets?limit=10
-store.pets.post(CreatePetRequest("Rex"))     // POST /pets
-store.pets.petId("123").get()               // GET /pets/123
-store.pets.petId("123").delete()            // DELETE /pets/123
-store.pets.petId("123").toys.get()          // GET /pets/123/toys
+store.pets.get(limit = 10)
+store.pets.post(CreatePetRequest("Rex"))
+store.pets.petId("123").get()
+store.pets.petId("123").delete()
+store.pets.petId("123").toys.get()
 ```

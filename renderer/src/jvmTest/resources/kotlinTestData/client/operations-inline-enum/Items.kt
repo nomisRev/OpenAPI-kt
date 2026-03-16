@@ -7,7 +7,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 public interface Items {
-  public suspend fun `get`(status: Status? = Status.All)
+  public val `get`: Get
 
   @Serializable
   public enum class Status {
@@ -18,14 +18,20 @@ public interface Items {
     @SerialName("all")
     All,
   }
+
+  public interface Get {
+    public suspend operator fun invoke(status: Status? = Status.All)
+  }
 }
 
 internal class KtorItems(
   private val client: HttpClient,
 ) : Items {
-  override suspend fun `get`(status: Items.Status?) {
-    client.get("/items") {
-      status?.let { parameter("status", it) }
+  override val `get`: Items.Get = object : Items.Get {
+    override suspend operator fun invoke(status: Items.Status?) {
+      client.get("/items") {
+        status?.let { parameter("status", it) }
+      }
     }
   }
 }

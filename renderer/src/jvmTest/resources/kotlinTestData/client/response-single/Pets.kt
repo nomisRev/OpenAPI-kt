@@ -7,11 +7,24 @@ import kotlin.String
 import kotlin.collections.List
 
 public interface Pets {
-  public suspend fun `get`(): List<String>
+  public val `get`: Get
+
+  public interface Get {
+    public suspend operator fun invoke(): Response
+
+    public data class Response(
+      public val `value`: List<String>,
+    )
+  }
 }
 
 internal class KtorPets(
   private val client: HttpClient,
 ) : Pets {
-  override suspend fun `get`(): List<String> = client.get("/pets").body()
+  override val `get`: Pets.Get = object : Pets.Get {
+    override suspend operator fun invoke(): Pets.Get.Response {
+      val value: List<String> = client.get("/pets").body()
+      return Pets.Get.Response(value)
+    }
+  }
 }

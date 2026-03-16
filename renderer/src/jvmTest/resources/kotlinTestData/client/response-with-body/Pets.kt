@@ -11,31 +11,37 @@ import kotlin.Int
 import kotlin.String
 
 public interface Pets {
-  public suspend fun post(body: String): PostResult
+  public val post: Post
 
-  public sealed interface PostResult {
-    public data class Created(
-      public val `value`: String,
-    ) : PostResult
+  public interface Post {
+    public suspend operator fun invoke(body: String): Response
 
-    public data class BadRequest(
-      public val `value`: Int,
-    ) : PostResult
+    public sealed interface Response {
+      public data class Created(
+        public val `value`: String,
+      ) : Response
+
+      public data class BadRequest(
+        public val `value`: Int,
+      ) : Response
+    }
   }
 }
 
 internal class KtorPets(
   private val client: HttpClient,
 ) : Pets {
-  override suspend fun post(body: String): Pets.PostResult {
-    val response = client.post("/pets") {
-      contentType(ContentType.Application.Json)
-      setBody(body)
-    }
-    return when (response.status.value) {
-      201 -> Pets.PostResult.Created(response.body())
-      400 -> Pets.PostResult.BadRequest(response.body())
-      else -> throw ResponseException(response, "")
+  override val post: Pets.Post = object : Pets.Post {
+    override suspend operator fun invoke(body: String): Pets.Post.Response {
+      val response = client.post("/pets") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
+      return when (response.status.value) {
+        201 -> Pets.Post.Response.Created(response.body())
+        400 -> Pets.Post.Response.BadRequest(response.body())
+        else -> throw ResponseException(response, "")
+      }
     }
   }
 }

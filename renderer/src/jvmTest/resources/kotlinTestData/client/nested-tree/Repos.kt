@@ -11,7 +11,11 @@ public interface Repos {
     public fun repo(repo: String): Repo
 
     public interface Repo {
-      public suspend fun `get`()
+      public val `get`: Get
+
+      public interface Get {
+        public suspend operator fun invoke()
+      }
     }
   }
 }
@@ -34,7 +38,9 @@ internal class KtorRepo(
   private val owner: String,
   private val repo: String,
 ) : Repos.Owner.Repo {
-  override suspend fun `get`() {
-    client.get("/repos/$owner/$repo")
+  override val `get`: Repos.Owner.Repo.Get = object : Repos.Owner.Repo.Get {
+    override suspend operator fun invoke() {
+      client.get("/repos/$owner/$repo")
+    }
   }
 }

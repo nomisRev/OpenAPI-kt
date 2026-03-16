@@ -18,30 +18,34 @@ public interface Uploads {
   public fun uploadId(uploadId: String): UploadId
 
   public interface UploadId {
-    public suspend fun post(
-      `file`: ByteArray,
-      checksum: String,
-      retries: Int,
-      tags: List<String>,
-    ): PostResult
+    public val post: Post
 
-    public sealed interface PostResult {
-      public data class Created(
-        public val `value`: String,
-      ) : PostResult
+    public interface Post {
+      public suspend operator fun invoke(
+        `file`: ByteArray,
+        checksum: String,
+        retries: Int,
+        tags: List<String>,
+      ): Response
 
-      public data class `Multi-status`(
-        public val `value`: List<String>,
-      ) : PostResult
+      public sealed interface Response {
+        public data class Created(
+          public val `value`: String,
+        ) : Response
 
-      public data class UnprocessableEntity(
-        public val `value`: Int,
-      ) : PostResult
+        public data class `Multi-status`(
+          public val `value`: List<String>,
+        ) : Response
 
-      public data class Default(
-        public val status: HttpStatusCode,
-        public val `value`: Boolean,
-      ) : PostResult
+        public data class UnprocessableEntity(
+          public val `value`: Int,
+        ) : Response
+
+        public data class Default(
+          public val status: HttpStatusCode,
+          public val `value`: Boolean,
+        ) : Response
+      }
     }
   }
 }
@@ -56,25 +60,27 @@ internal class KtorUploadId(
   private val client: HttpClient,
   private val uploadId: String,
 ) : Uploads.UploadId {
-  override suspend fun post(
-    `file`: ByteArray,
-    checksum: String,
-    retries: Int,
-    tags: List<String>,
-  ): Uploads.UploadId.PostResult {
-    val response = client.post("/uploads/$uploadId") {
-      setBody(MultiPartFormDataContent(formData {
-        append("file", file)
-        append("checksum", checksum)
-        append("retries", retries)
-        append("tags", tags)
-      }))
-    }
-    return when (response.status.value) {
-      201 -> Uploads.UploadId.PostResult.Created(response.body())
-      207 -> Uploads.UploadId.PostResult.`Multi-status`(response.body())
-      422 -> Uploads.UploadId.PostResult.UnprocessableEntity(response.body())
-      else -> Uploads.UploadId.PostResult.Default(response.status, response.body())
+  override val post: Uploads.UploadId.Post = object : Uploads.UploadId.Post {
+    override suspend operator fun invoke(
+      `file`: ByteArray,
+      checksum: String,
+      retries: Int,
+      tags: List<String>,
+    ): Uploads.UploadId.Post.Response {
+      val response = client.post("/uploads/$uploadId") {
+        setBody(MultiPartFormDataContent(formData {
+          append("file", file)
+          append("checksum", checksum)
+          append("retries", retries)
+          append("tags", tags)
+        }))
+      }
+      return when (response.status.value) {
+        201 -> Uploads.UploadId.Post.Response.Created(response.body())
+        207 -> Uploads.UploadId.Post.Response.`Multi-status`(response.body())
+        422 -> Uploads.UploadId.Post.Response.UnprocessableEntity(response.body())
+        else -> Uploads.UploadId.Post.Response.Default(response.status, response.body())
+      }
     }
   }
 }

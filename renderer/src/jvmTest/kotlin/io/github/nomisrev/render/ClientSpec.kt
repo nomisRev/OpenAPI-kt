@@ -312,6 +312,72 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/widgets": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string" },
+                            "version": { "type": "integer", "format": "int32" }
+                          },
+                          "required": ["id"]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "name": { "type": "string" }
+                        },
+                        "required": ["name"]
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Created",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string" },
+                            "name": { "type": "string" }
+                          },
+                          "required": ["id", "name"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-inline-method-uniqueness"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/uploads/{uploadId}": {
               "post": {
                 "parameters": [

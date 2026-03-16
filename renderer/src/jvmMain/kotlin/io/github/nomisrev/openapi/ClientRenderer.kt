@@ -8,8 +8,8 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.UNIT
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.transformers.nestedOrNull
@@ -29,10 +29,10 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
         rootInterface.addType(enum.toTypeSpec(config, nameOverride = name))
     }
 
-    // Root-level operation stubs
+    // Root-level operation nodes
     for ((method, route) in operations.entries.sortedBy { it.key.value }) {
-        route.buildResultTypeSpec(method, config, rootClassName)?.let { rootInterface.addType(it) }
-        rootInterface.addFunction(route.toOperationFunSpec(method, config, rootClassName))
+        rootInterface.addType(route.toOperationTypeSpec(method, config, rootClassName))
+        rootInterface.addProperty(route.toOperationPropertySpec(method, rootClassName))
     }
 
     // Direct children: separate files, top-level interfaces + impl classes
@@ -89,10 +89,10 @@ private fun PathNode.toTypeSpec(config: RenderConfig, className: ClassName): Typ
         builder.addType(enum.toTypeSpec(config, nameOverride = name))
     }
 
-    // Operation stubs
+    // Operation nodes
     for ((method, route) in operations.entries.sortedBy { it.key.value }) {
-        route.buildResultTypeSpec(method, config, className)?.let { builder.addType(it) }
-        builder.addFunction(route.toOperationFunSpec(method, config, className))
+        builder.addType(route.toOperationTypeSpec(method, config, className))
+        builder.addProperty(route.toOperationPropertySpec(method, className))
     }
 
     // Children
@@ -144,23 +144,75 @@ private fun Route.inlineEnums(): List<Pair<String, Model.Enum>> =
             } else null
         }
 
+private fun deprecatedAnnotation(): AnnotationSpec =
+    AnnotationSpec.builder(Deprecated::class)
+        .addMember("%S", "Deprecated by the API provider")
+        .build()
+
 context(route: Route)
-fun FunSpec.Builder.addDeprecatedIfNeeded() = apply {
-    if (route.deprecated) {
-        addAnnotation(
-            AnnotationSpec.builder(Deprecated::class).addMember("%S", "Deprecated by the API provider").build()
-        )
-    }
+private fun FunSpec.Builder.addDeprecatedIfNeeded() = apply {
+    if (route.deprecated) addAnnotation(deprecatedAnnotation())
 }
 
-/** Build the operation suspend function with parameters and body. */
-private fun Route.toOperationFunSpec(
+context(route: Route)
+private fun TypeSpec.Builder.addDeprecatedIfNeeded() = apply {
+    if (route.deprecated) addAnnotation(deprecatedAnnotation())
+}
+
+context(route: Route)
+private fun PropertySpec.Builder.addDeprecatedIfNeeded() = apply {
+    if (route.deprecated) addAnnotation(deprecatedAnnotation())
+}
+
+private fun methodTypeName(method: HttpMethod): String =
+    method.value.lowercase().replaceFirstChar { it.uppercase() }
+
+private fun Route.toOperationPropertySpec(
+    method: HttpMethod,
+    interfaceClassName: ClassName,
+): PropertySpec {
+    val methodName = method.value.lowercase()
+    return PropertySpec.builder(methodName, interfaceClassName.nestedClass(methodTypeName(method)))
+        .addDeprecatedIfNeeded()
+        .build()
+}
+
+private fun Route.toOperationTypeSpec(
     method: HttpMethod,
     config: RenderConfig,
     interfaceClassName: ClassName,
+): TypeSpec {
+    val methodClassName = interfaceClassName.nestedClass(methodTypeName(method))
+    val inlineBodyTypeSpec = body?.inlineBodyTypeSpec(config)
+
+    return TypeSpec.interfaceBuilder(methodTypeName(method))
+        .addDeprecatedIfNeeded()
+        .apply {
+            inlineBodyTypeSpec?.let(::addType)
+            if (!returns.isSingleUnitResponse()) {
+                addType(buildResponseTypeSpec(config, methodClassName))
+            }
+            addFunction(
+                toInvokeFunSpec(
+                    config = config,
+                    interfaceClassName = interfaceClassName,
+                    methodClassName = methodClassName,
+                    usesNestedBodyType = inlineBodyTypeSpec != null,
+                )
+            )
+        }
+        .build()
+}
+
+/** Build the operation invoke(...) signature with parameters and response wrapper. */
+private fun Route.toInvokeFunSpec(
+    config: RenderConfig,
+    interfaceClassName: ClassName,
+    methodClassName: ClassName,
+    usesNestedBodyType: Boolean,
 ): FunSpec {
-    val builder = FunSpec.builder(method.value.lowercase())
-        .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND)
+    val builder = FunSpec.builder("invoke")
+        .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND, KModifier.OPERATOR)
         .addDeprecatedIfNeeded()
 
     // Collect non-path parameters, split into required/optional
@@ -169,7 +221,7 @@ private fun Route.toOperationFunSpec(
     val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
 
     // Resolve body parameters
-    val bodyParams = body?.toParameterSpecs(config)
+    val bodyParams = body?.toInvokeParameterSpecs(config, methodClassName, usesNestedBodyType)
     val bodyRequired = body?.required == true
 
     // 1. Required params
@@ -189,12 +241,7 @@ private fun Route.toOperationFunSpec(
         bodyParams.forEach { builder.addParameter(it) }
     }
 
-    // Return type
-    val returnType = returns.resolveReturnTypeName(method, config, interfaceClassName)
-    if (returnType != null) {
-        builder.returns(returnType)
-    }
-
+    builder.returns(invokeReturnType(methodClassName))
     return builder.build()
 }
 
@@ -212,7 +259,7 @@ private fun Route.Input.toParameterSpec(
     val paramName = name.toParamName()
     val model = type
 
-    // For inline enums, use param name (PascalCase) as the nested enum type name
+    // Inline parameter enums stay on the path node interface.
     val baseTypeName = if (model is Model.Enum && model.nestedOrNull() != null) {
         interfaceClassName.nestedClass(name.toPascalCase())
     } else {
@@ -242,13 +289,20 @@ private fun Route.Input.toParameterSpec(
     }.build()
 }
 
-private fun Route.Bodies.toParameterSpecs(config: RenderConfig): List<ParameterSpec>? {
+private fun Route.Bodies.toInvokeParameterSpecs(
+    config: RenderConfig,
+    methodClassName: ClassName,
+    usesNestedBodyType: Boolean,
+): List<ParameterSpec>? {
     val body = defaultOrNull() ?: return null
     return when (body) {
         is Route.Body.SetBody -> {
-            val typeName = body.type.toTypeName(config).let {
-                if (!required) it.copy(nullable = true) else it
+            val bodyType = if (usesNestedBodyType) {
+                methodClassName.nestedClass("Body")
+            } else {
+                body.type.toTypeName(config)
             }
+            val typeName = if (!required) bodyType.copy(nullable = true) else bodyType
             listOf(
                 ParameterSpec.builder("body", typeName).apply {
                     if (!required) defaultValue(CodeBlock.of("null"))
@@ -290,48 +344,69 @@ private fun Route.ReturnType.preferredModel(): Model? {
     return jsonEntry?.value ?: types.values.first()
 }
 
-/** Whether the returns need a sealed interface (multiple responses or has default + status). */
+/** Whether the returns need a sealed response wrapper (multiple statuses/default). */
 private fun Route.Returns.needsSealedInterface(): Boolean {
     val totalCases = responses.size + (if (default != null) 1 else 0)
     return totalCases > 1
 }
 
-/** Convert HttpStatusCode description to PascalCase for sealed interface case names. */
+/** Convert HttpStatusCode description to PascalCase for sealed response case names. */
 private fun HttpStatusCode.toCaseName(): String =
     description.split(" ").joinToString("") { word ->
         word.lowercase().replaceFirstChar { it.uppercase() }
     }
 
-/** Resolve the return TypeName for an operation. Returns null for Unit return. */
-private fun Route.Returns.resolveReturnTypeName(
-    method: HttpMethod,
+private fun Route.buildResponseTypeSpec(
     config: RenderConfig,
-    interfaceClassName: ClassName,
-): TypeName? {
-    if (needsSealedInterface()) {
-        val methodName = method.value.lowercase().replaceFirstChar { it.uppercase() }
-        return interfaceClassName.nestedClass("${methodName}Result")
+    methodClassName: ClassName,
+): TypeSpec {
+    if (returns.needsSealedInterface()) {
+        return buildSealedResponseTypeSpec(config, methodClassName)
     }
-    // Single response
-    val singleResponse = responses.values.firstOrNull() ?: default ?: return null
-    val model = singleResponse.preferredModel() ?: return null
-    if (model is Model.Primitive.Unit) return null
-    return model.toTypeName(config)
+
+    val model = returns.singlePreferredModelOrNull()
+    if (model != null && model.isRouteInlineModel()) {
+        model.toInlineOperationTypeSpecOrNull(config, "Response")?.let { return it }
+    }
+
+    return if (model == null || model is Model.Primitive.Unit) {
+        TypeSpec.objectBuilder("Response")
+            .addModifiers(KModifier.DATA)
+            .build()
+    } else {
+        val typeName = model.toTypeName(config)
+        TypeSpec.classBuilder("Response")
+            .addModifiers(KModifier.DATA)
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter("value", typeName)
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder("value", typeName)
+                    .initializer("value")
+                    .build()
+            )
+            .build()
+    }
 }
 
-/** Build a sealed result interface TypeSpec when multiple responses exist. */
-private fun Route.buildResultTypeSpec(
-    method: HttpMethod,
+private fun Route.invokeReturnType(methodClassName: ClassName) =
+    if (returns.isSingleUnitResponse()) UNIT else methodClassName.nestedClass("Response")
+
+private fun Route.Returns.isSingleUnitResponse(): Boolean {
+    if (needsSealedInterface()) return false
+    val model = singlePreferredModelOrNull()
+    return model == null || model is Model.Primitive.Unit
+}
+
+private fun Route.buildSealedResponseTypeSpec(
     config: RenderConfig,
-    interfaceClassName: ClassName,
-): TypeSpec? {
-    if (!returns.needsSealedInterface()) return null
+    methodClassName: ClassName,
+): TypeSpec {
+    val responseClassName = methodClassName.nestedClass("Response")
 
-    val methodName = method.value.lowercase().replaceFirstChar { it.uppercase() }
-    val resultName = "${methodName}Result"
-    val resultClassName = interfaceClassName.nestedClass(resultName)
-
-    val builder = TypeSpec.interfaceBuilder(resultName)
+    val builder = TypeSpec.interfaceBuilder("Response")
         .addModifiers(KModifier.SEALED)
 
     // Status code cases (ordered by status code value)
@@ -343,7 +418,7 @@ private fun Route.buildResultTypeSpec(
             builder.addType(
                 TypeSpec.objectBuilder(caseName)
                     .addModifiers(KModifier.DATA)
-                    .addSuperinterface(resultClassName)
+                    .addSuperinterface(responseClassName)
                     .build()
             )
         } else {
@@ -361,7 +436,7 @@ private fun Route.buildResultTypeSpec(
                             .initializer("value")
                             .build()
                     )
-                    .addSuperinterface(resultClassName)
+                    .addSuperinterface(responseClassName)
                     .build()
             )
         }
@@ -373,7 +448,7 @@ private fun Route.buildResultTypeSpec(
         val model = defaultReturnType.preferredModel()
         val defaultBuilder = TypeSpec.classBuilder("Default")
             .addModifiers(KModifier.DATA)
-            .addSuperinterface(resultClassName)
+            .addSuperinterface(responseClassName)
 
         val constructorBuilder = FunSpec.constructorBuilder()
             .addParameter("status", HttpStatusCodeType)
@@ -400,4 +475,25 @@ private fun Route.buildResultTypeSpec(
     }
 
     return builder.build()
+}
+
+private fun Route.Returns.singlePreferredModelOrNull(): Model? {
+    val singleResponse = responses.values.firstOrNull() ?: default ?: return null
+    return singleResponse.preferredModel()
+}
+
+private fun Model.isRouteInlineModel(): Boolean =
+    this is Model.ContextHolder && context.head is NamingContext.Path
+
+private fun Model.toInlineOperationTypeSpecOrNull(config: RenderConfig, nameOverride: String): TypeSpec? =
+    when (this) {
+        is Model.Object -> toTypeSpec(config, nameOverride = nameOverride)
+        is Model.Enum -> toTypeSpec(config, nameOverride = nameOverride)
+        else -> null
+    }
+
+private fun Route.Bodies.inlineBodyTypeSpec(config: RenderConfig): TypeSpec? {
+    val setBody = defaultOrNull() as? Route.Body.SetBody ?: return null
+    if (!setBody.type.isRouteInlineModel()) return null
+    return setBody.type.toInlineOperationTypeSpecOrNull(config, "Body")
 }

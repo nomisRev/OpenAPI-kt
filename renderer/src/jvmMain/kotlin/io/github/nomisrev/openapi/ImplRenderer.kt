@@ -8,8 +8,8 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
-import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.UNIT
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.transformers.nestedOrNull
@@ -85,7 +85,7 @@ fun ApiTree.generateRootImpl(config: RenderConfig): TypeSpec? {
 
     // Operation overrides
     for ((method, route) in operations.entries.sortedBy { it.key.value }) {
-        builder.addFunction(route.toImplFunSpec(method, config, rootClassName))
+        builder.addProperty(route.toImplOperationPropertySpec(method, config, rootClassName))
     }
 
     return builder.build()
@@ -155,7 +155,7 @@ private fun PathNode.generateImplClassesInternal(
 
     // Operation overrides
     for ((method, route) in operations.entries.sortedBy { it.key.value }) {
-        builder.addFunction(route.toImplFunSpec(method, config, interfaceClassName))
+        builder.addProperty(route.toImplOperationPropertySpec(method, config, interfaceClassName))
     }
 
     // Collect this class + recursively all descendants
@@ -207,22 +207,70 @@ private fun PathSegment.addNavigationOverride(
     }
 }
 
-/** Build the implementation of an operation function. */
-private fun Route.toImplFunSpec(
+private fun deprecatedAnnotation(): AnnotationSpec =
+    AnnotationSpec.builder(Deprecated::class)
+        .addMember("%S", "Deprecated by the API provider")
+        .build()
+
+context(route: Route)
+private fun FunSpec.Builder.addDeprecatedIfNeeded() = apply {
+    if (route.deprecated) addAnnotation(deprecatedAnnotation())
+}
+
+context(route: Route)
+private fun PropertySpec.Builder.addDeprecatedIfNeeded() = apply {
+    if (route.deprecated) addAnnotation(deprecatedAnnotation())
+}
+
+private fun methodTypeName(method: HttpMethod): String =
+    method.value.lowercase().replaceFirstChar { it.uppercase() }
+
+private fun Route.toImplOperationPropertySpec(
     method: HttpMethod,
     config: RenderConfig,
     interfaceClassName: ClassName,
-): FunSpec {
+): PropertySpec {
     val methodName = method.value.lowercase()
-    val builder = FunSpec.builder(methodName)
-        .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND)
+    val methodClassName = interfaceClassName.nestedClass(methodTypeName(method))
+    val usesNestedBodyType = body?.usesNestedBodyType() == true
+
+    val anonymousImpl = TypeSpec.anonymousClassBuilder()
+        .addSuperinterface(methodClassName)
+        .addFunction(
+            toImplInvokeFunSpec(
+                method = method,
+                config = config,
+                interfaceClassName = interfaceClassName,
+                methodClassName = methodClassName,
+                usesNestedBodyType = usesNestedBodyType,
+            )
+        )
+        .build()
+
+    return PropertySpec.builder(methodName, methodClassName)
+        .addModifiers(KModifier.OVERRIDE)
+        .addDeprecatedIfNeeded()
+        .initializer("%L", anonymousImpl)
+        .build()
+}
+
+/** Build the implementation of operation invoke(...). */
+private fun Route.toImplInvokeFunSpec(
+    method: HttpMethod,
+    config: RenderConfig,
+    interfaceClassName: ClassName,
+    methodClassName: ClassName,
+    usesNestedBodyType: Boolean,
+): FunSpec {
+    val builder = FunSpec.builder("invoke")
+        .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND, KModifier.OPERATOR)
         .addDeprecatedIfNeeded()
 
-    // Add same parameters as the interface function (copy logic from ClientRenderer)
+    // Add same parameters as the interface invoke(...)
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
     val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
-    val bodyParams = body?.toImplParameterSpecs(config)
+    val bodyParams = body?.toImplInvokeParameterSpecs(config, methodClassName, usesNestedBodyType)
     val bodyRequired = body?.required == true
 
     // 1. Required params
@@ -242,23 +290,19 @@ private fun Route.toImplFunSpec(
         bodyParams.forEach { builder.addParameter(it) }
     }
 
-    // Return type
-    val returnType = returns.resolveImplReturnTypeName(method, config, interfaceClassName)
-    if (returnType != null) {
-        builder.returns(returnType)
-    }
+    builder.returns(invokeReturnType(methodClassName))
 
     // Build the function body
-    builder.addCode(buildOperationBody(method, config, interfaceClassName))
+    builder.addCode(buildOperationBody(method, config, methodClassName))
 
     return builder.build()
 }
 
-/** Build the CodeBlock for an operation body. */
+/** Build the CodeBlock for an invoke(...) body. */
 private fun Route.buildOperationBody(
     method: HttpMethod,
     config: RenderConfig,
-    interfaceClassName: ClassName,
+    methodClassName: ClassName,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
@@ -266,15 +310,10 @@ private fun Route.buildOperationBody(
 
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
     val hasRequestConfig = nonPathParams.isNotEmpty() || body != null
-    val needsSealed = returns.needsSealedInterface()
-    val returnType = returns.resolveImplReturnTypeName(method, config, interfaceClassName)
+    val responseClassName = methodClassName.nestedClass("Response")
 
-    if (needsSealed) {
-        // Sealed response: need to capture response and do when-expression
-        val resultClassName = interfaceClassName.nestedClass(
-            "${method.value.lowercase().replaceFirstChar { it.uppercase() }}Result"
-        )
-
+    if (returns.needsSealedInterface()) {
+        // Multi-response wrapper: decode status-specific cases.
         if (hasRequestConfig) {
             code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
             addRequestConfigCode(code, config)
@@ -286,7 +325,7 @@ private fun Route.buildOperationBody(
         code.beginControlFlow("return when (response.status.value)")
         for ((statusCode, returnTypeEntry) in returns.responses.entries.sortedBy { it.key.value }) {
             val caseName = statusCode.toCaseName()
-            val caseClassName = resultClassName.nestedClass(caseName)
+            val caseClassName = responseClassName.nestedClass(caseName)
             val model = returnTypeEntry.preferredModel()
 
             if (model == null || model is Model.Primitive.Unit) {
@@ -298,7 +337,7 @@ private fun Route.buildOperationBody(
 
         // Default or throw
         if (returns.default != null) {
-            val defaultClassName = resultClassName.nestedClass("Default")
+            val defaultClassName = responseClassName.nestedClass("Default")
             val defaultModel = returns.default!!.preferredModel()
             if (defaultModel != null && defaultModel !is Model.Primitive.Unit) {
                 code.addStatement("else -> %T(response.status, response.%M())", defaultClassName, BodyMember)
@@ -309,33 +348,66 @@ private fun Route.buildOperationBody(
             code.addStatement(
                 "else -> throw %T(response, %S)",
                 ResponseExceptionType,
-                ""
+                "",
             )
         }
         code.endControlFlow()
-    } else if (returnType != null) {
-        // Single return value: return client.method("/path") { ... }.body()
-        if (hasRequestConfig) {
-            code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
-            code.indent()
-            addRequestConfigCode(code, config)
-            code.unindent()
-            code.add("}.%M()\n", BodyMember)
-        } else {
-            code.addStatement("return client.%L(%L).%M()", httpMethodName, pathLiteral, BodyMember)
-        }
     } else {
-        // No return value (Unit)
-        if (hasRequestConfig) {
-            code.beginControlFlow("client.%L(%L)", httpMethodName, pathLiteral)
-            addRequestConfigCode(code, config)
-            code.endControlFlow()
+        val model = returns.singlePreferredModelOrNull()
+
+        if (model == null || model is Model.Primitive.Unit) {
+            if (hasRequestConfig) {
+                code.beginControlFlow("client.%L(%L)", httpMethodName, pathLiteral)
+                addRequestConfigCode(code, config)
+                code.endControlFlow()
+            } else {
+                code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
+            }
         } else {
-            code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
+            val usesInlineConcreteResponse = model.isRouteInlineModel() &&
+                (model is Model.Object || model is Model.Enum)
+            if (usesInlineConcreteResponse) {
+                if (hasRequestConfig) {
+                    code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
+                    code.indent()
+                    addRequestConfigCode(code, config)
+                    code.unindent()
+                    code.add("}.%M()\n", BodyMember)
+                } else {
+                    code.addStatement("return client.%L(%L).%M()", httpMethodName, pathLiteral, BodyMember)
+                }
+            } else {
+                val modelType = model.toTypeName(config)
+                if (hasRequestConfig) {
+                    code.add("val value: %T = client.%L(%L) {\n", modelType, httpMethodName, pathLiteral)
+                    code.indent()
+                    addRequestConfigCode(code, config)
+                    code.unindent()
+                    code.add("}.%M()\n", BodyMember)
+                } else {
+                    code.addStatement(
+                        "val value: %T = client.%L(%L).%M()",
+                        modelType,
+                        httpMethodName,
+                        pathLiteral,
+                        BodyMember,
+                    )
+                }
+                code.addStatement("return %T(value)", responseClassName)
+            }
         }
     }
 
     return code.build()
+}
+
+private fun Route.invokeReturnType(methodClassName: ClassName) =
+    if (returns.isSingleUnitResponse()) UNIT else methodClassName.nestedClass("Response")
+
+private fun Route.Returns.isSingleUnitResponse(): Boolean {
+    if (needsSealedInterface()) return false
+    val model = singlePreferredModelOrNull()
+    return model == null || model is Model.Primitive.Unit
 }
 
 /** Add request configuration code (parameters, headers, cookies, body). */
@@ -448,7 +520,6 @@ private fun List<PathSegment>.toPathLiteral(): String {
     return "\"$path\""
 }
 
-// Re-use resolution logic from ClientRenderer (made internal for sharing)
 private fun Route.Returns.needsSealedInterface(): Boolean {
     val totalCases = responses.size + (if (default != null) 1 else 0)
     return totalCases > 1
@@ -465,19 +536,9 @@ private fun Route.ReturnType.preferredModel(): Model? {
     return jsonEntry?.value ?: types.values.first()
 }
 
-private fun Route.Returns.resolveImplReturnTypeName(
-    method: HttpMethod,
-    config: RenderConfig,
-    interfaceClassName: ClassName,
-): TypeName? {
-    if (needsSealedInterface()) {
-        val methodName = method.value.lowercase().replaceFirstChar { it.uppercase() }
-        return interfaceClassName.nestedClass("${methodName}Result")
-    }
+private fun Route.Returns.singlePreferredModelOrNull(): Model? {
     val singleResponse = responses.values.firstOrNull() ?: default ?: return null
-    val model = singleResponse.preferredModel() ?: return null
-    if (model is Model.Primitive.Unit) return null
-    return model.toTypeName(config)
+    return singleResponse.preferredModel()
 }
 
 private fun Parameter.Input.sortOrder(): Int = when (this) {
@@ -487,7 +548,7 @@ private fun Parameter.Input.sortOrder(): Int = when (this) {
     Parameter.Input.Path -> 3
 }
 
-/** Build parameter spec for impl function — no default values (Kotlin disallows defaults on override). */
+/** Build parameter spec for impl invoke(...) — no default values (Kotlin disallows defaults on override). */
 private fun Route.Input.toImplParameterSpec(
     config: RenderConfig,
     interfaceClassName: ClassName,
@@ -503,13 +564,20 @@ private fun Route.Input.toImplParameterSpec(
     return ParameterSpec.builder(paramName, typeName).build()
 }
 
-private fun Route.Bodies.toImplParameterSpecs(config: RenderConfig): List<ParameterSpec>? {
+private fun Route.Bodies.toImplInvokeParameterSpecs(
+    config: RenderConfig,
+    methodClassName: ClassName,
+    usesNestedBodyType: Boolean,
+): List<ParameterSpec>? {
     val body = defaultOrNull() ?: return null
     return when (body) {
         is Route.Body.SetBody -> {
-            val typeName = body.type.toTypeName(config).let {
-                if (!required) it.copy(nullable = true) else it
+            val bodyType = if (usesNestedBodyType) {
+                methodClassName.nestedClass("Body")
+            } else {
+                body.type.toTypeName(config)
             }
+            val typeName = if (!required) bodyType.copy(nullable = true) else bodyType
             listOf(ParameterSpec.builder("body", typeName).build())
         }
 
@@ -538,3 +606,11 @@ private fun Route.Bodies.toImplParameterSpecs(config: RenderConfig): List<Parame
     }
 }
 
+private fun Model.isRouteInlineModel(): Boolean =
+    this is Model.ContextHolder && context.head is NamingContext.Path
+
+private fun Route.Bodies.usesNestedBodyType(): Boolean {
+    val setBody = defaultOrNull() as? Route.Body.SetBody ?: return false
+    return setBody.type.isRouteInlineModel() &&
+        (setBody.type is Model.Object || setBody.type is Model.Enum)
+}

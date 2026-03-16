@@ -14,7 +14,11 @@ public interface Repos {
       public val collaborators: Collaborators
 
       public interface Collaborators {
-        public suspend fun `get`()
+        public val `get`: Get
+
+        public interface Get {
+          public suspend operator fun invoke()
+        }
       }
     }
   }
@@ -47,7 +51,10 @@ internal class KtorCollaborators(
   private val owner: String,
   private val repo: String,
 ) : Repos.Owner.Repo.Collaborators {
-  override suspend fun `get`() {
-    client.get("/repos/$owner/$repo/collaborators")
+  override val `get`: Repos.Owner.Repo.Collaborators.Get =
+      object : Repos.Owner.Repo.Collaborators.Get {
+    override suspend operator fun invoke() {
+      client.get("/repos/$owner/$repo/collaborators")
+    }
   }
 }

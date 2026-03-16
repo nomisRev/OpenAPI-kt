@@ -11,11 +11,15 @@ public interface Oauth {
   public val token: Token
 
   public interface Token {
-    public suspend fun post(
-      grantType: String,
-      code: String,
-      redirectUri: String,
-    )
+    public val post: Post
+
+    public interface Post {
+      public suspend operator fun invoke(
+        grantType: String,
+        code: String,
+        redirectUri: String,
+      )
+    }
   }
 }
 
@@ -28,17 +32,19 @@ internal class KtorOauth(
 internal class KtorToken(
   private val client: HttpClient,
 ) : Oauth.Token {
-  override suspend fun post(
-    grantType: String,
-    code: String,
-    redirectUri: String,
-  ) {
-    client.post("/oauth/token") {
-      setBody(Parameters.build {
-        append("grant_type", grantType)
-        append("code", code)
-        append("redirect_uri", redirectUri)
-      }.formUrlEncode())
+  override val post: Oauth.Token.Post = object : Oauth.Token.Post {
+    override suspend operator fun invoke(
+      grantType: String,
+      code: String,
+      redirectUri: String,
+    ) {
+      client.post("/oauth/token") {
+        setBody(Parameters.build {
+          append("grant_type", grantType)
+          append("code", code)
+          append("redirect_uri", redirectUri)
+        }.formUrlEncode())
+      }
     }
   }
 }

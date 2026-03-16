@@ -21,7 +21,11 @@ public interface A {
           public val f: F
 
           public interface F {
-            public suspend fun `get`()
+            public val `get`: Get
+
+            public interface Get {
+              public suspend operator fun invoke()
+            }
           }
         }
       }
@@ -68,7 +72,9 @@ internal class KtorF(
   private val c: String,
   private val e: Long,
 ) : A.B.C.D.E.F {
-  override suspend fun `get`() {
-    client.get("/a/b/$c/d/$e/f")
+  override val `get`: A.B.C.D.E.F.Get = object : A.B.C.D.E.F.Get {
+    override suspend operator fun invoke() {
+      client.get("/a/b/$c/d/$e/f")
+    }
   }
 }

@@ -8,25 +8,31 @@ import io.ktor.client.request.parameter
 import kotlin.String
 
 public interface Search {
-  public suspend fun `get`(
-    query: String,
-    xApiKey: String,
-    session: String,
-  )
+  public val `get`: Get
+
+  public interface Get {
+    public suspend operator fun invoke(
+      query: String,
+      xApiKey: String,
+      session: String,
+    )
+  }
 }
 
 internal class KtorSearch(
   private val client: HttpClient,
 ) : Search {
-  override suspend fun `get`(
-    query: String,
-    xApiKey: String,
-    session: String,
-  ) {
-    client.get("/search") {
-      parameter("query", query)
-      `header`("X-Api-Key", xApiKey)
-      cookie("session", session)
+  override val `get`: Search.Get = object : Search.Get {
+    override suspend operator fun invoke(
+      query: String,
+      xApiKey: String,
+      session: String,
+    ) {
+      client.get("/search") {
+        parameter("query", query)
+        `header`("X-Api-Key", xApiKey)
+        cookie("session", session)
+      }
     }
   }
 }

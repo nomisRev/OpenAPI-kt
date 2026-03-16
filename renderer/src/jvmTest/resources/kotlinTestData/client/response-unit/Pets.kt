@@ -8,7 +8,11 @@ public interface Pets {
   public fun petId(petId: String): PetId
 
   public interface PetId {
-    public suspend fun delete()
+    public val delete: Delete
+
+    public interface Delete {
+      public suspend operator fun invoke()
+    }
   }
 }
 
@@ -22,7 +26,9 @@ internal class KtorPetId(
   private val client: HttpClient,
   private val petId: String,
 ) : Pets.PetId {
-  override suspend fun delete() {
-    client.delete("/pets/$petId")
+  override val delete: Pets.PetId.Delete = object : Pets.PetId.Delete {
+    override suspend operator fun invoke() {
+      client.delete("/pets/$petId")
+    }
   }
 }

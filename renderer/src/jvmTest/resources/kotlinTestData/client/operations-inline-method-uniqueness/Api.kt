@@ -1,22 +1,15 @@
-package io.github.nomisrev.render.test.client.root.operations
+package io.github.nomisrev.render.test.client.operations.`inline`.method.uniqueness
 
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
-import io.ktor.client.request.`get`
 import io.ktor.serialization.kotlinx.json.json
 import kotlin.String
 import kotlin.Unit
 
 public interface Api {
-  public val `get`: Get
-
-  public val health: Health
-
-  public interface Get {
-    public suspend operator fun invoke()
-  }
+  public val widgets: Widgets
 }
 
 public fun ApiClient(baseUrl: String, block: HttpClientConfig<*>.() -> Unit = {}): Api {
@@ -31,11 +24,5 @@ public fun ApiClient(baseUrl: String, block: HttpClientConfig<*>.() -> Unit = {}
 internal class KtorApi(
   private val client: HttpClient,
 ) : Api {
-  override val health: Health = KtorHealth(client)
-
-  override val `get`: Api.Get = object : Api.Get {
-    override suspend operator fun invoke() {
-      client.get("/")
-    }
-  }
+  override val widgets: Widgets = KtorWidgets(client)
 }

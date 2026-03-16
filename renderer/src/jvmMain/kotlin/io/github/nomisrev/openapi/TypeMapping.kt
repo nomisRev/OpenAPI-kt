@@ -56,11 +56,20 @@ fun NamingContext.toClassName(config: RenderConfig): ClassName =
 
         is NamingContext.Path -> {
             val rootName = root.segments.joinToString("") { it.name.toPascalCase() }.ifEmpty { "Root" }
+            val methodName = root.method.value.lowercase().replaceFirstChar { it.uppercase() }
             val simpleNames = mutableListOf(rootName)
             nested.forEach { nestedContext ->
                 when (nestedContext) {
-                    NamingContext.RouteBody -> simpleNames[0] = simpleNames[0] + "Request"
-                    NamingContext.Response -> simpleNames[0] = simpleNames[0] + "Response"
+                    NamingContext.RouteBody -> {
+                        simpleNames.add(methodName)
+                        simpleNames.add("Body")
+                    }
+
+                    NamingContext.Response -> {
+                        simpleNames.add(methodName)
+                        simpleNames.add("Response")
+                    }
+
                     else -> simpleNames.add(nestedContext.toSimpleName())
                 }
             }
@@ -75,7 +84,7 @@ private fun NamingContext.Nested.toSimpleName(): String =
         is NamingContext.DiscriminatedObjectCase -> discriminator.toPascalCase()
         NamingContext.AdditionalProperties -> "AdditionalProperties"
         is NamingContext.RouteParam -> "${name.toPascalCase()}Param"
-        NamingContext.RouteBody -> "Request"
+        NamingContext.RouteBody -> "Body"
         NamingContext.Response -> "Response"
     }
 

@@ -10,18 +10,24 @@ import kotlin.ByteArray
 import kotlin.String
 
 public interface Files {
-  public suspend fun post(`file`: ByteArray, purpose: String)
+  public val post: Post
+
+  public interface Post {
+    public suspend operator fun invoke(`file`: ByteArray, purpose: String)
+  }
 }
 
 internal class KtorFiles(
   private val client: HttpClient,
 ) : Files {
-  override suspend fun post(`file`: ByteArray, purpose: String) {
-    client.post("/files") {
-      setBody(MultiPartFormDataContent(formData {
-        append("file", file)
-        append("purpose", purpose)
-      }))
+  override val post: Files.Post = object : Files.Post {
+    override suspend operator fun invoke(`file`: ByteArray, purpose: String) {
+      client.post("/files") {
+        setBody(MultiPartFormDataContent(formData {
+          append("file", file)
+          append("purpose", purpose)
+        }))
+      }
     }
   }
 }

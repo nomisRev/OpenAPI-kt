@@ -4,13 +4,19 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.`get`
 
 public interface Pets {
-  public suspend fun `get`()
+  public val `get`: Get
+
+  public interface Get {
+    public suspend operator fun invoke()
+  }
 }
 
 internal class KtorPets(
   private val client: HttpClient,
 ) : Pets {
-  override suspend fun `get`() {
-    client.get("/pets")
+  override val `get`: Pets.Get = object : Pets.Get {
+    override suspend operator fun invoke() {
+      client.get("/pets")
+    }
   }
 }
