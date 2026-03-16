@@ -561,4 +561,46 @@ val clientSpec by testSuite {
         """.trimIndent(),
         "client/response-mixed"
     )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "type": "string" }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Created",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  },
+                  "400": {
+                    "description": "Bad Request",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "integer", "format": "int32" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-with-body"
+    )
 }
