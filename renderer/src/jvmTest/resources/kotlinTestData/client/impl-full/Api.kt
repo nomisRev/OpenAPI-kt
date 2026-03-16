@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.test.client.operations.params
+package io.github.nomisrev.render.test.client.`impl`.full
 
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
@@ -9,7 +9,7 @@ import kotlin.String
 import kotlin.Unit
 
 public interface Api {
-  public val search: Search
+  public val items: Items
 }
 
 public fun ApiClient(baseUrl: String, block: HttpClientConfig<*>.() -> Unit = {}): Api {
@@ -24,5 +24,5 @@ public fun ApiClient(baseUrl: String, block: HttpClientConfig<*>.() -> Unit = {}
 internal class KtorApi(
   private val client: HttpClient,
 ) : Api {
-  override val search: Search = KtorSearch(client)
+  override val items: Items = KtorItems(client)
 }

@@ -41,7 +41,7 @@ Generate Kotlin source code from the typed OpenAPI model using KotlinPoet. Cover
 | 8 | Client: Interface Tree + Navigation | [PHASE_8.md](PHASE_8.md) | DONE |
 | 9 | Client: Operations + Request Bodies | [PHASE_9.md](PHASE_9.md) | DONE |
 | 10 | Client: Response Handling | [PHASE_10.md](PHASE_10.md) | DONE |
-| 11 | Client: Ktor Impl + Server + Files | [PHASE_11.md](PHASE_11.md) | TODO |
+| 11 | Client: Ktor Impl + Server + Files | [PHASE_11.md](PHASE_11.md) | DONE |
 
 ## Specs
 

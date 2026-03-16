@@ -1,16 +1,21 @@
-package io.github.nomisrev.render.test.client.response.with.body
+package io.github.nomisrev.render.test.client.`impl`.full
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
+import io.ktor.client.request.`get`
+import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlin.Int
 import kotlin.String
+import kotlin.collections.List
 
-public interface Pets {
+public interface Items {
+  public suspend fun `get`(limit: Int? = null): List<String>
+
   public suspend fun post(body: String): PostResult
 
   public sealed interface PostResult {
@@ -24,17 +29,21 @@ public interface Pets {
   }
 }
 
-internal class KtorPets(
+internal class KtorItems(
   private val client: HttpClient,
-) : Pets {
-  override suspend fun post(body: String): Pets.PostResult {
-    val response = client.post("/pets") {
+) : Items {
+  override suspend fun `get`(limit: Int?): List<String> = client.get("/items") {
+    limit?.let { parameter("limit", it) }
+  }.body()
+
+  override suspend fun post(body: String): Items.PostResult {
+    val response = client.post("/items") {
       contentType(ContentType.Application.Json)
       setBody(body)
     }
     return when (response.status.value) {
-      201 -> Pets.PostResult.Created(response.body())
-      400 -> Pets.PostResult.BadRequest(response.body())
+      201 -> Items.PostResult.Created(response.body())
+      400 -> Items.PostResult.BadRequest(response.body())
       else -> throw ResponseException(response, "")
     }
   }

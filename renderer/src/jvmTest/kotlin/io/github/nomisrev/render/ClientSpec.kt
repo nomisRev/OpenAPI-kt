@@ -603,4 +603,122 @@ val clientSpec by testSuite {
         """.trimIndent(),
         "client/response-with-body"
     )
+
+    // Phase 11 tests — Ktor Implementation + Server + Factory
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "servers": [
+            {
+              "url": "https://api.example.com",
+              "description": "Production server"
+            },
+            {
+              "url": "https://staging-api.example.com",
+              "description": "Staging server"
+            }
+          ],
+          "paths": {
+            "/pets": {
+              "get": {
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/factory-servers"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "servers": [
+            {
+              "url": "https://{environment}.api.example.com/{version}",
+              "description": "Configurable server",
+              "variables": {
+                "environment": {
+                  "default": "prod",
+                  "enum": ["prod", "staging", "dev"]
+                },
+                "version": {
+                  "default": "v1"
+                }
+              }
+            }
+          ],
+          "paths": {
+            "/pets": {
+              "get": {
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/factory-server-variables"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/items": {
+              "get": {
+                "parameters": [
+                  { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "format": "int32" } }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "array", "items": { "type": "string" } }
+                      }
+                    }
+                  }
+                }
+              },
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "type": "string" }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Created",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  },
+                  "400": {
+                    "description": "Bad Request",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "integer", "format": "int32" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/impl-full"
+    )
 }

@@ -35,7 +35,7 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
         rootInterface.addFunction(route.toOperationFunSpec(method, config, rootClassName))
     }
 
-    // Direct children: separate files, top-level interfaces
+    // Direct children: separate files, top-level interfaces + impl classes
     val childFiles = mutableListOf<FileSpec>()
     for (child in children) {
         val childSimpleName = child.segment.name.toPascalCase()
@@ -44,18 +44,41 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
         child.segment.addNavigationMember(rootInterface, childClassName, config)
 
         val childTypeSpec = child.toTypeSpec(config, childClassName)
-        childFiles.add(
-            FileSpec.builder(config.apiPackage, childSimpleName)
-                .addType(childTypeSpec)
-                .build()
-        )
+        val childImplClasses = child.generateImplClasses(config, childClassName)
+
+        val fileBuilder = FileSpec.builder(config.apiPackage, childSimpleName)
+            .addType(childTypeSpec)
+        for (implClass in childImplClasses) {
+            fileBuilder.addType(implClass)
+        }
+        // Add HTTP method imports for generated impl code
+        for (method in child.collectHttpMethods()) {
+            fileBuilder.addImport("io.ktor.client.request", method)
+        }
+        childFiles.add(fileBuilder.build())
     }
 
-    val rootFile = FileSpec.builder(config.apiPackage, rootName)
+    // Root file: interface + server sealed interface + factory + root impl
+    val rootFileBuilder = FileSpec.builder(config.apiPackage, rootName)
         .addType(rootInterface.build())
-        .build()
 
-    return listOf(rootFile) + childFiles
+    // Server sealed interface (if any)
+    generateServerInterface(config)?.let { rootFileBuilder.addType(it) }
+
+    // Factory function(s)
+    for (factory in generateFactory(config)) {
+        rootFileBuilder.addFunction(factory)
+    }
+
+    // Root implementation class
+    generateRootImpl(config)?.let { rootFileBuilder.addType(it) }
+
+    // Add HTTP method imports for root operations
+    for (method in collectHttpMethods()) {
+        rootFileBuilder.addImport("io.ktor.client.request", method)
+    }
+
+    return listOf(rootFileBuilder.build()) + childFiles
 }
 
 private fun PathNode.toTypeSpec(config: RenderConfig, className: ClassName): TypeSpec {

@@ -1,16 +1,16 @@
-package io.github.nomisrev.render.test.client.mixed.segments
+package io.github.nomisrev.render.test.client.factory.servers
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.`get`
 
-public interface Users {
+public interface Pets {
   public suspend fun `get`()
 }
 
-internal class KtorUsers(
+internal class KtorPets(
   private val client: HttpClient,
-) : Users {
+) : Pets {
   override suspend fun `get`() {
-    client.get("/users")
+    client.get("/pets")
   }
 }

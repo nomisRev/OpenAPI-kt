@@ -1,5 +1,8 @@
 package io.github.nomisrev.render.test.client.response.default
 
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.`get`
 import io.ktor.http.HttpStatusCode
 import kotlin.String
 
@@ -18,6 +21,25 @@ public interface Pets {
         public val status: HttpStatusCode,
         public val `value`: String,
       ) : GetResult
+    }
+  }
+}
+
+internal class KtorPets(
+  private val client: HttpClient,
+) : Pets {
+  override fun petId(petId: String): Pets.PetId = KtorPetId(client, petId)
+}
+
+internal class KtorPetId(
+  private val client: HttpClient,
+  private val petId: String,
+) : Pets.PetId {
+  override suspend fun `get`(): Pets.PetId.GetResult {
+    val response = client.get("/pets/$petId")
+    return when (response.status.value) {
+      200 -> Pets.PetId.GetResult.Ok(response.body())
+      else -> Pets.PetId.GetResult.Default(response.status, response.body())
     }
   }
 }
