@@ -3,7 +3,8 @@
     "allow": [
       "Bash(find:*)",
       "Bash(ls:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(grep:*)"
     ]
   }
 }
