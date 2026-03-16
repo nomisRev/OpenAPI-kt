@@ -26,6 +26,7 @@ kotlin {
             dependencies {
                 api(projects.typed)
                 api(libs.kotlinpoet)
+                implementation(ktorLibs.http)
             }
         }
         jvmTest {

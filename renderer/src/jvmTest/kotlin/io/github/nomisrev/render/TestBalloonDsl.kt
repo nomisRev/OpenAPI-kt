@@ -1,11 +1,14 @@
 package io.github.nomisrev.render
 
+import com.squareup.kotlinpoet.FileSpec
 import de.infix.testBalloon.framework.core.TestSuite
 import de.infix.testBalloon.framework.shared.TestRegistering
 import io.github.nomisrev.openapi.KmpTarget
 import io.github.nomisrev.openapi.RenderConfig
-import io.github.nomisrev.openapi.generate
+import io.github.nomisrev.openapi.generateClient
+import io.github.nomisrev.openapi.generateModels
 import io.github.nomisrev.openapi.parser.OpenAPI
+import io.github.nomisrev.openapi.toApiTree
 import org.intellij.lang.annotations.Language
 import kotlinx.coroutines.runBlocking
 import java.nio.file.Files
@@ -67,16 +70,27 @@ fun TestSuite.modelTest(json: String, dir: String): Unit {
         }
     """.trimIndent(),
         dir
-    )
+    ) { apiTree, config -> apiTree.generateModels(config) }
 }
 
+@TestRegistering
+fun TestSuite.clientTest(@Language("json") json: String, dir: String): Unit =
+    renderSpec(json, dir) { apiTree, config -> apiTree.generateClient(config) }
 
 @TestRegistering
-fun TestSuite.renderSpec(@Language("json") json: String, dir: String) = test(json) {
+fun TestSuite.renderSpec(
+    @Language("json") json: String,
+    dir: String,
+    generate: suspend (io.github.nomisrev.openapi.ApiTree, RenderConfig) -> List<FileSpec> = { apiTree, config ->
+        apiTree.generateModels(config) + apiTree.generateClient(config)
+    },
+) = test(json) {
     val config = testRenderConfig.copy(
         modelPackage = "io.github.nomisrev.render.test.${dir.replace('/', '.').replace('-', '.')}",
+        apiPackage = "io.github.nomisrev.render.test.${dir.replace('/', '.').replace('-', '.')}",
     )
-    val files = OpenAPI.fromJson(json).generate(config).sortedBy { it.name }
+    val apiTree = OpenAPI.fromJson(json).toApiTree()
+    val files = generate(apiTree, config).sortedBy { it.name }
     assertTrue(files.isNotEmpty(), "Expected renderer to generate files, but it returned an empty result.")
     val actual = files.associate({ file ->
         Pair(file.name, buildString { file.writeTo(this) })

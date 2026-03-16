@@ -26,4 +26,3 @@ fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> {
         serializationUtils
 }
 
-fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> = emptyList()
