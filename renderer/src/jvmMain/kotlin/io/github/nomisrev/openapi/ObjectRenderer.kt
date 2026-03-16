@@ -49,6 +49,7 @@ fun Model.Object.toTypeSpec(
     parentInterface: ClassName? = null,
     serialName: String? = null,
     nameOverride: String? = null,
+    overridePropertyNames: Set<String> = emptySet(),
 ): TypeSpec {
     val className = context.toClassName(config)
     val simpleName = nameOverride ?: className.simpleName
@@ -59,7 +60,14 @@ fun Model.Object.toTypeSpec(
         enclosing?.nestedClass(nameOverride) ?: ClassName(className.packageName, nameOverride)
     } else className
     val renderedProperties = properties.map { (jsonName, prop) ->
-        renderProperty(jsonName, prop, config, className, effectiveClassName)
+        renderProperty(
+            jsonName = jsonName,
+            property = prop,
+            config = config,
+            originalClassName = className,
+            effectiveClassName = effectiveClassName,
+            isOverride = jsonName in overridePropertyNames,
+        )
     }
     val additionalProperty = renderAdditionalProperty(config)
     val allProperties = renderedProperties + listOfNotNull(additionalProperty?.rendered)
@@ -182,6 +190,7 @@ private fun Model.Object.renderProperty(
     config: RenderConfig,
     originalClassName: ClassName? = null,
     effectiveClassName: ClassName? = null,
+    isOverride: Boolean = false,
 ): RenderedProperty {
     val paramName = jsonName.toParamName()
     val unescapedParamName = paramName.unescapeBackticks()
@@ -215,6 +224,7 @@ private fun Model.Object.renderProperty(
         .build()
 
     val property = PropertySpec.builder(paramName, typeName)
+        .apply { if (isOverride) addModifiers(KModifier.OVERRIDE) }
         .initializer(paramName)
         .build()
 
