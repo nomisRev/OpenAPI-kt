@@ -8,6 +8,12 @@ import io.github.nomisrev.openapi.RenderConfig
 import io.github.nomisrev.openapi.generate
 import io.github.nomisrev.openapi.parser.OpenAPI
 import kotlinx.coroutines.runBlocking
+import kotlin.collections.forEach
+import kotlin.collections.mapTo
+import kotlin.io.extension
+import kotlin.io.readText
+import kotlin.text.lowercase
+import kotlin.text.uppercase
 
 @GTask(description = "Generates Kotlin source code from an OpenAPI specification", group = "openapi")
 fun generateOpenApi(

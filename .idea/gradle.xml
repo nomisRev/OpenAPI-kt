@@ -9,7 +9,6 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/gradle-plugin" />
-            <option value="$PROJECT_DIR$/gradle-tasks" />
             <option value="$PROJECT_DIR$/parser" />
             <option value="$PROJECT_DIR$/renderer" />
             <option value="$PROJECT_DIR$/typed" />

@@ -20,8 +20,9 @@ gratatouille {
 dependencies {
     compileOnly(gradleApi())
     implementation(libs.gratatouille.runtime)
-    gratatouille(projects.gradleTasks)
     compileOnly(libs.gradle)
+    implementation(project(":renderer"))
+    implementation(libs.coroutines.core)
 }
 
 configurations.matching { it.name == "gratatouille" }.configureEach {

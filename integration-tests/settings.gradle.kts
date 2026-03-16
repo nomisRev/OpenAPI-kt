@@ -15,4 +15,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "github-integration-test"
+rootProject.name = "integration-test"
+include("github")
