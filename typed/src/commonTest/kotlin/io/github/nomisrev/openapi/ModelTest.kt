@@ -7,6 +7,7 @@ import io.github.nomisrev.openapi.Schema.Type
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.assertThrows
+import kotlin.test.assertContains
 
 class ModelTest {
   @Test
@@ -34,13 +35,14 @@ class ModelTest {
         .models()
     val expected =
       setOf(
+        id,
         Model.obj(
           context = NamingContext.Named("Person"),
           properties =
             listOf(
               Object.property(
                 "id",
-                id,
+                Model.Reference(context = NamingContext.Named("Id"), description = "An explicit ID type"),
                 isRequired = true,
                 isNullable = false,
                 description = "An explicit ID type",
@@ -64,8 +66,8 @@ class ModelTest {
               Primitive.int(),
             ),
         ),
-        id,
       )
+    
     assertEquals(expected, actual)
   }
 
