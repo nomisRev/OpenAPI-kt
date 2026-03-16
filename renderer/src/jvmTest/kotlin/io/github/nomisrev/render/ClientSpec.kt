@@ -253,6 +253,138 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/markdown": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "properties": {
+                          "text": {
+                            "description": "The Markdown text to render in HTML.",
+                            "type": "string"
+                          },
+                          "mode": {
+                            "description": "The rendering mode.",
+                            "enum": [
+                              "markdown",
+                              "gfm"
+                            ],
+                            "default": "markdown",
+                            "example": "markdown",
+                            "type": "string"
+                          },
+                          "context": {
+                            "description": "The repository context to use when creating references in `gfm` mode. For example, setting `context` to `octo-org/octo-repo` will change the text `#42` into an HTML link to issue 42 in the `octo-org/octo-repo` repository.",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "text"
+                        ],
+                        "type": "object"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "text/html": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-inline-markdown-body"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/uploads/{uploadId}": {
+              "post": {
+                "parameters": [
+                  { "name": "uploadId", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "multipart/form-data": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "file": { "type": "string", "format": "binary" },
+                          "checksum": { "type": "string" },
+                          "retries": { "type": "integer", "format": "int32" },
+                          "tags": {
+                            "type": "array",
+                            "items": { "type": "string" }
+                          }
+                        },
+                        "required": ["file", "checksum", "tags"]
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Created",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  },
+                  "207": {
+                    "description": "Multi-Status",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "array", "items": { "type": "string" } }
+                      }
+                    }
+                  },
+                  "422": {
+                    "description": "Unprocessable Entity",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "integer", "format": "int32" }
+                      }
+                    }
+                  },
+                  "default": {
+                    "description": "Unexpected error",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "boolean" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-inline-complex-body-response"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/files": {
               "post": {
                 "requestBody": {
