@@ -93,23 +93,24 @@ private fun Model.Union.Case.renderDiscriminatedCase(
     discriminatorField: String,
 ): RenderedUnionCase {
     val serialName = serialNameOrNull(discriminatorField)
+    val caseName = serialName?.toPascalCase() ?: caseSimpleName(config)
     return when (val caseModel = model) {
         is Model.Object ->
             if (!caseModel.context.isTopLevel()) {
-                RenderedUnionCase(caseModel.toTypeSpec(config, parentInterface, serialName), usesUuid = false)
+                RenderedUnionCase(caseModel.toTypeSpec(config, parentInterface, serialName, nameOverride = caseName), usesUuid = false)
             } else {
-                renderWrappedTypeSpec(config, parentInterface, caseSimpleName(config), serialName)
+                renderWrappedTypeSpec(config, parentInterface, caseName, serialName)
             }
 
         is Model.Enum ->
             if (!caseModel.context.isTopLevel()) {
-                RenderedUnionCase(caseModel.toTypeSpec(config, parentInterface, serialName), usesUuid = false)
+                RenderedUnionCase(caseModel.toTypeSpec(config, parentInterface, serialName, nameOverride = caseName), usesUuid = false)
             } else {
-                renderWrappedTypeSpec(config, parentInterface, caseSimpleName(config), serialName)
+                renderWrappedTypeSpec(config, parentInterface, caseName, serialName)
             }
 
         is Model.Primitive.Unit -> {
-            val typeSpec = TypeSpec.objectBuilder(caseSimpleName(config))
+            val typeSpec = TypeSpec.objectBuilder(caseName)
                 .addModifiers(KModifier.DATA)
                 .addSuperinterface(parentInterface)
                 .addAnnotation(Serializable::class)
@@ -118,7 +119,7 @@ private fun Model.Union.Case.renderDiscriminatedCase(
             RenderedUnionCase(typeSpec, usesUuid = false)
         }
 
-        else -> renderWrappedTypeSpec(config, parentInterface, caseSimpleName(config), serialName)
+        else -> renderWrappedTypeSpec(config, parentInterface, caseName, serialName)
     }
 }
 

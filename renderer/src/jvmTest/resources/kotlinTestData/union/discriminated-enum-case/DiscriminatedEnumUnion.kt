@@ -23,7 +23,7 @@ public sealed interface DiscriminatedEnumUnion {
   @Serializable
   @JvmInline
   @SerialName("manual")
-  public value class CaseEnumManual(
+  public value class Manual(
     public val `value`: EnumManual,
   ) : DiscriminatedEnumUnion
 }

@@ -48,18 +48,26 @@ fun Model.Object.toTypeSpec(
     config: RenderConfig,
     parentInterface: ClassName? = null,
     serialName: String? = null,
+    nameOverride: String? = null,
 ): TypeSpec {
     val className = context.toClassName(config)
+    val simpleName = nameOverride ?: className.simpleName
+    // When the class is renamed, nested type references still use the old name.
+    // Build a corrected ClassName for the renamed class so nested types resolve correctly.
+    val effectiveClassName = if (nameOverride != null) {
+        val enclosing = className.enclosingClassName()
+        enclosing?.nestedClass(nameOverride) ?: ClassName(className.packageName, nameOverride)
+    } else className
     val renderedProperties = properties.map { (jsonName, prop) ->
-        renderProperty(jsonName, prop, config)
+        renderProperty(jsonName, prop, config, className, effectiveClassName)
     }
     val additionalProperty = renderAdditionalProperty(config)
     val allProperties = renderedProperties + listOfNotNull(additionalProperty?.rendered)
 
     val builder = when {
-        allProperties.isEmpty() -> TypeSpec.objectBuilder(className.simpleName).addModifiers(KModifier.DATA)
+        allProperties.isEmpty() -> TypeSpec.objectBuilder(simpleName).addModifiers(KModifier.DATA)
         allProperties.size == 1 && additionalProperty == null -> {
-            TypeSpec.classBuilder(className.simpleName)
+            TypeSpec.classBuilder(simpleName)
                 .addModifiers(KModifier.VALUE)
                 .primaryConstructor(
                     FunSpec.constructorBuilder()
@@ -74,7 +82,7 @@ fun Model.Object.toTypeSpec(
         }
 
         else -> {
-            TypeSpec.classBuilder(className.simpleName)
+            TypeSpec.classBuilder(simpleName)
                 .addModifiers(KModifier.DATA)
                 .primaryConstructor(
                     FunSpec.constructorBuilder()
@@ -118,7 +126,7 @@ fun Model.Object.toTypeSpec(
         builder.addAnnotation(AnnotationSpec.builder(KeepGeneratedSerializerType).build())
         builder.addAnnotation(
             AnnotationSpec.builder(Serializable::class)
-                .addMember("with = %T.Serializer::class", className)
+                .addMember("with = %T.Serializer::class", effectiveClassName)
                 .build()
         )
     } else {
@@ -138,7 +146,7 @@ fun Model.Object.toTypeSpec(
         .forEach(builder::addType)
 
     additionalProperty
-        ?.let { builder.addType(serializerTypeSpec(config, className, renderedProperties, it.kind)) }
+        ?.let { builder.addType(serializerTypeSpec(config, effectiveClassName, renderedProperties, it.kind)) }
 
     return builder.build()
 }
@@ -171,12 +179,16 @@ private data class RenderedAdditionalProperty(
 private fun Model.Object.renderProperty(
     jsonName: String,
     property: Model.Object.Property,
-    config: RenderConfig
+    config: RenderConfig,
+    originalClassName: ClassName? = null,
+    effectiveClassName: ClassName? = null,
 ): RenderedProperty {
     val paramName = jsonName.toParamName()
     val unescapedParamName = paramName.unescapeBackticks()
-    val typeName = property.model
-        .toTypeName(config)
+    val rawTypeName = property.model.toTypeName(config)
+    val typeName = (if (originalClassName != null && effectiveClassName != null && originalClassName != effectiveClassName)
+        rawTypeName.remapNestedClassName(originalClassName, effectiveClassName)
+    else rawTypeName)
         .copy(nullable = property.model.isNullable || !property.isRequired)
     val literalDefault = property.model.defaultLiteral(config)
 
@@ -450,6 +462,29 @@ private fun TypeName.usesUuid(): Boolean =
         is TypeVariableName -> bounds.any(TypeName::usesUuid)
         is WildcardTypeName -> inTypes.any(TypeName::usesUuid) || outTypes.any(TypeName::usesUuid)
         else -> false
+    }
+
+// When a class is renamed (nameOverride), nested type references still use the old class name path.
+// This replaces the old class name with the new one in nested ClassName references.
+private fun TypeName.remapNestedClassName(oldClassName: ClassName, newClassName: ClassName): TypeName =
+    when (this) {
+        is ClassName -> {
+            val oldPrefix = oldClassName.canonicalName + "."
+            val canonical = this.canonicalName
+            if (canonical.startsWith(oldPrefix)) {
+                val suffix = canonical.removePrefix(oldPrefix)
+                val parts = suffix.split(".")
+                var result: ClassName = newClassName
+                for (part in parts) result = result.nestedClass(part)
+                result.copy(nullable = isNullable)
+            } else this
+        }
+        is ParameterizedTypeName -> {
+            (rawType.remapNestedClassName(oldClassName, newClassName) as ClassName)
+                .parameterizedBy(typeArguments.map { it.remapNestedClassName(oldClassName, newClassName) })
+                .copy(nullable = isNullable)
+        }
+        else -> this
     }
 
 private fun String.unescapeBackticks(): String =

@@ -14,9 +14,10 @@ fun Model.Enum.toTypeSpec(
     config: RenderConfig,
     parentInterface: ClassName? = null,
     serialName: String? = null,
+    nameOverride: String? = null,
 ): TypeSpec {
     val className = context.toClassName(config)
-    return TypeSpec.enumBuilder(className.simpleName)
+    return TypeSpec.enumBuilder(nameOverride ?: className.simpleName)
         .addAnnotation(Serializable::class)
         .apply {
             serialName?.let { value ->
