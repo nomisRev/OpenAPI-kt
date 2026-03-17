@@ -39,9 +39,14 @@ private val ByteArraySerializerMember = MemberName("kotlinx.serialization.builti
 private val LocalDateType = ClassName("kotlinx.datetime", "LocalDate")
 private val LocalDateTimeType = ClassName("kotlinx.datetime", "LocalDateTime")
 private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")
-fun Model.Union.toTypeSpec(config: RenderConfig): TypeSpec =
-    if (discriminator != null) toDiscriminatedTypeSpec(config)
-    else toNonDiscriminatedTypeSpec(config)
+fun Model.Union.toTypeSpec(
+    config: RenderConfig,
+    classNameOverride: ClassName? = null,
+): TypeSpec {
+    val className = classNameOverride ?: context.toClassName(config)
+    return if (discriminator != null) toDiscriminatedTypeSpec(config, className)
+    else toNonDiscriminatedTypeSpec(config, className)
+}
 
 fun Model.Union.toFileSpec(config: RenderConfig): FileSpec {
     val className = context.toClassName(config)
@@ -52,9 +57,11 @@ fun Model.Union.toFileSpec(config: RenderConfig): FileSpec {
 
 // ── Discriminated unions ────────────────────────────────────────────────────
 
-private fun Model.Union.toDiscriminatedTypeSpec(config: RenderConfig): TypeSpec {
+private fun Model.Union.toDiscriminatedTypeSpec(
+    config: RenderConfig,
+    className: ClassName,
+): TypeSpec {
     val disc = requireNotNull(discriminator)
-    val className = context.toClassName(config)
     val renderedCases = cases.map { it.renderDiscriminatedCase(config, className, disc) }
 
     val builder = TypeSpec.interfaceBuilder(className.simpleName)
@@ -125,8 +132,10 @@ private fun Model.Union.Case.renderDiscriminatedCase(
 
 // ── Non-discriminated unions ────────────────────────────────────────────────
 
-private fun Model.Union.toNonDiscriminatedTypeSpec(config: RenderConfig): TypeSpec {
-    val className = context.toClassName(config)
+private fun Model.Union.toNonDiscriminatedTypeSpec(
+    config: RenderConfig,
+    className: ClassName,
+): TypeSpec {
 
     // Check for open enum pattern: exactly 2 cases, one Enum + one String
     val openEnum = detectOpenEnum()

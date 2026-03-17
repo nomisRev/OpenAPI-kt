@@ -19,14 +19,15 @@ import io.ktor.http.HttpStatusCode
 
 fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
     if (children.isEmpty() && operations.isEmpty()) return emptyList()
+    val needsSerializationUtils = hasInlineNonDiscriminatedParameterUnion()
 
     val rootName = name.toPascalCase()
     val rootClassName = ClassName(config.apiPackage, rootName)
     val rootInterface = TypeSpec.interfaceBuilder(rootName)
 
-    // Root-level inline enum types
-    operations.values.flatMap { it.inlineEnums() }.forEach { (name, enum) ->
-        rootInterface.addType(enum.toTypeSpec(config, nameOverride = name))
+    // Root-level inline parameter model types
+    operations.values.inlineParameterModels().forEach { (name, model) ->
+        model.toInlineParameterTypeSpec(config, rootClassName, name)?.let(rootInterface::addType)
     }
 
     // Root-level operation nodes
@@ -78,15 +79,19 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
         rootFileBuilder.addImport("io.ktor.client.request", method)
     }
 
-    return listOf(rootFileBuilder.build()) + childFiles
+    val files = listOf(rootFileBuilder.build()) + childFiles
+    val serializationUtils = if (needsSerializationUtils) {
+        listOf(generateSerializationUtils(config.copy(modelPackage = config.apiPackage)))
+    } else emptyList()
+    return files + serializationUtils
 }
 
 private fun PathNode.toTypeSpec(config: RenderConfig, className: ClassName): TypeSpec {
     val builder = TypeSpec.interfaceBuilder(className.simpleName)
 
-    // Inline enum types from operations
-    operations.values.flatMap { it.inlineEnums() }.forEach { (name, enum) ->
-        builder.addType(enum.toTypeSpec(config, nameOverride = name))
+    // Inline parameter model types from operations
+    operations.values.inlineParameterModels().forEach { (name, model) ->
+        model.toInlineParameterTypeSpec(config, className, name)?.let(builder::addType)
     }
 
     // Operation nodes
@@ -133,16 +138,45 @@ private fun PathSegment.addNavigationMember(
     }
 }
 
-/** Collect inline enum types from non-path parameters, paired with their simple name (PascalCase of param name). */
-private fun Route.inlineEnums(): List<Pair<String, Model.Enum>> =
+/** Collect inline parameter model types from non-path parameters, paired with their simple name (PascalCase of param name). */
+private fun Route.inlineParameterModels(): List<Pair<String, Model>> =
     parameters
         .filter { it.input != Parameter.Input.Path }
         .mapNotNull { input ->
-            val model = input.type
-            if (model is Model.Enum && model.nestedOrNull() != null) {
-                Pair(input.name.toPascalCase(), model)
-            } else null
+            input.type.nestedOrNull()?.let { input.name.toPascalCase() to it }
         }
+
+private fun Iterable<Route>.inlineParameterModels(): List<Pair<String, Model>> {
+    val byName = linkedMapOf<String, Model>()
+    for ((name, model) in flatMap(Route::inlineParameterModels)) {
+        byName.putIfAbsent(name, model)
+    }
+    return byName.entries.map { it.key to it.value }
+}
+
+private fun ApiTree.hasInlineNonDiscriminatedParameterUnion(): Boolean =
+    operations.values.hasInlineNonDiscriminatedParameterUnion() ||
+        children.any(PathNode::hasInlineNonDiscriminatedParameterUnion)
+
+private fun PathNode.hasInlineNonDiscriminatedParameterUnion(): Boolean =
+    operations.values.hasInlineNonDiscriminatedParameterUnion() ||
+        children.any(PathNode::hasInlineNonDiscriminatedParameterUnion)
+
+private fun Iterable<Route>.hasInlineNonDiscriminatedParameterUnion(): Boolean =
+    flatMap(Route::inlineParameterModels)
+        .any { (_, model) -> model is Model.Union && model.discriminator == null }
+
+private fun Model.toInlineParameterTypeSpec(
+    config: RenderConfig,
+    ownerClassName: ClassName,
+    nameOverride: String,
+): TypeSpec? = when (this) {
+    is Model.Enum -> toTypeSpec(config, nameOverride = nameOverride)
+    is Model.Object -> toTypeSpec(config, nameOverride = nameOverride)
+    is Model.Union -> toTypeSpec(config, classNameOverride = ownerClassName.nestedClass(nameOverride))
+    is Model.DiscriminatedObject -> toTypeSpec(config, classNameOverride = ownerClassName.nestedClass(nameOverride))
+    else -> null
+}
 
 private fun deprecatedAnnotation(): AnnotationSpec =
     AnnotationSpec.builder(Deprecated::class)
@@ -259,12 +293,7 @@ private fun Route.Input.toParameterSpec(
     val paramName = name.toParamName()
     val model = type
 
-    // Inline parameter enums stay on the path node interface.
-    val baseTypeName = if (model is Model.Enum && model.nestedOrNull() != null) {
-        interfaceClassName.nestedClass(name.toPascalCase())
-    } else {
-        model.toTypeName(config)
-    }
+    val baseTypeName = model.inlineParameterTypeName(interfaceClassName, name) ?: model.toTypeName(config)
 
     val typeName = if (!isRequired) baseTypeName.copy(nullable = true) else baseTypeName
 
@@ -288,6 +317,14 @@ private fun Route.Input.toParameterSpec(
         }
     }.build()
 }
+
+private fun Model.inlineParameterTypeName(
+    interfaceClassName: ClassName,
+    paramName: String,
+): ClassName? =
+    if (this is Model.ContextHolder && context.head is NamingContext.Path && nestedOrNull() != null) {
+        interfaceClassName.nestedClass(paramName.toPascalCase())
+    } else null
 
 private fun Route.Bodies.toInvokeParameterSpecs(
     config: RenderConfig,

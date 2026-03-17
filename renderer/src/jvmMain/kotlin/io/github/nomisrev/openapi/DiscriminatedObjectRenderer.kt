@@ -18,8 +18,11 @@ private val OptInType = ClassName("kotlin", "OptIn")
 private val UuidType = ClassName("kotlin.uuid", "Uuid")
 private val ExperimentalUuidApiType = ClassName("kotlin.uuid", "ExperimentalUuidApi")
 
-fun Model.DiscriminatedObject.toTypeSpec(config: RenderConfig): TypeSpec {
-    val className = context.toClassName(config)
+fun Model.DiscriminatedObject.toTypeSpec(
+    config: RenderConfig,
+    classNameOverride: ClassName? = null,
+): TypeSpec {
+    val className = classNameOverride ?: context.toClassName(config)
     val abstractProperties = consistentAbstractProperties(config)
     val renderedAbstractProperties = abstractProperties.map { (jsonName, property) ->
         renderAbstractProperty(jsonName, property, config)

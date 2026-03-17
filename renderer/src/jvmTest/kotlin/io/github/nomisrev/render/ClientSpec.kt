@@ -563,6 +563,51 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/advisories": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "ghsa_id",
+                    "in": "query",
+                    "required": false,
+                    "schema": { "type": "string" }
+                  },
+                  {
+                    "name": "cve_id",
+                    "in": "query",
+                    "required": false,
+                    "schema": { "type": "string" }
+                  },
+                  {
+                    "name": "cwes",
+                    "in": "query",
+                    "required": false,
+                    "schema": {
+                      "oneOf": [
+                        { "type": "string" },
+                        {
+                          "type": "array",
+                          "items": { "type": "string" }
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-inline-oneof-parameter"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/items": {
               "get": {
                 "parameters": [

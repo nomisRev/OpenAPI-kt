@@ -83,7 +83,7 @@ private fun NamingContext.Nested.toSimpleName(): String =
         is NamingContext.UnionCase -> value.toPascalCase()
         is NamingContext.DiscriminatedObjectCase -> discriminator.toPascalCase()
         NamingContext.AdditionalProperties -> "AdditionalProperties"
-        is NamingContext.RouteParam -> "${name.toPascalCase()}Param"
+        is NamingContext.RouteParam -> name.toPascalCase()
         NamingContext.RouteBody -> "Body"
         NamingContext.Response -> "Response"
     }

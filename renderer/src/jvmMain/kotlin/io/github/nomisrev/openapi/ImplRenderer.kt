@@ -555,14 +555,18 @@ private fun Route.Input.toImplParameterSpec(
 ): ParameterSpec {
     val paramName = name.toParamName()
     val model = type
-    val baseTypeName = if (model is Model.Enum && model.nestedOrNull() != null) {
-        interfaceClassName.nestedClass(name.toPascalCase())
-    } else {
-        model.toTypeName(config)
-    }
+    val baseTypeName = model.inlineParameterTypeName(interfaceClassName, name) ?: model.toTypeName(config)
     val typeName = if (!isRequired) baseTypeName.copy(nullable = true) else baseTypeName
     return ParameterSpec.builder(paramName, typeName).build()
 }
+
+private fun Model.inlineParameterTypeName(
+    interfaceClassName: ClassName,
+    paramName: String,
+): ClassName? =
+    if (this is Model.ContextHolder && context.head is NamingContext.Path && nestedOrNull() != null) {
+        interfaceClassName.nestedClass(paramName.toPascalCase())
+    } else null
 
 private fun Route.Bodies.toImplInvokeParameterSpecs(
     config: RenderConfig,
