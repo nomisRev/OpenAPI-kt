@@ -1,4 +1,9 @@
-includeBuild("../..")
+includeBuild("..") {
+    dependencySubstitution {
+        substitute(module("io.github.nomisrev:openapi-kt-gradle-plugin"))
+            .using(project(":gradle-plugin"))
+    }
+}
 
 pluginManagement {
     repositories {

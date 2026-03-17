@@ -14,12 +14,18 @@ kotlin {
     jvm()
 
     compilerOptions.freeCompilerArgs.addAll(
-        listOfNotNull(
-        "-Xcontext-sensitive-resolution",
-        "-Xcontext-parameters",
         "-Xreturn-value-checker=full",
-        "-Xdebug".takeIf { System.getProperty("idea.active") == "true" }
-    ))
+        "-Xname-based-destructuring=full",
+    )
+
+    compilerOptions.freeCompilerArgs.addAll(
+        listOfNotNull(
+            "-Xcontext-sensitive-resolution",
+            "-Xcontext-parameters",
+            "-Xreturn-value-checker=full",
+            "-Xname-based-destructuring=full",
+            "-Xdebug".takeIf { System.getProperty("idea.active") == "true" }
+        ))
 
     sourceSets {
         jvmMain {

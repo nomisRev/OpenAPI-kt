@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="JunieProject">
-    <option name="semanticIndexingAllowed" value="true" />
-    <option name="semanticIndexingSuggested" value="true" />
-  </component>
+  <component name="JunieProject"><![CDATA[{
+  "semanticIndexingDone": true,
+  "semanticIndexingAllowed": true
+}]]></component>
 </project>

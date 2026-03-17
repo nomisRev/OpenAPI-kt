@@ -20,12 +20,19 @@ fun openApiPlugin(project: Project) {
         apiPackage = extension.apiPackage,
         targets = extension.targets,
     )
-    val outputDirectory = project.layout.buildDirectory.dir("gtask/generateOpenApi/outputDirectory")
+
+    val outputDirectory = extension.specFile.flatMap { file ->
+        project.layout.buildDirectory.dir("generated/openapi/${file.asFile.nameWithoutExtension}")
+    }
+    generateTask.configure { task ->
+        task.outputDirectory.set(outputDirectory)
+    }
+    val generatedSources = generateTask.flatMap { it.outputDirectory }
 
     project.plugins.withId("org.jetbrains.kotlin.jvm") {
         project.extensions.configure(KotlinJvmProjectExtension::class.java) { kotlin ->
             kotlin.sourceSets.named("main").configure { sourceSet ->
-                sourceSet.kotlin.srcDir(outputDirectory)
+                sourceSet.kotlin.srcDir(generatedSources)
             }
         }
     }
@@ -33,7 +40,7 @@ fun openApiPlugin(project: Project) {
     project.plugins.withId("org.jetbrains.kotlin.multiplatform") {
         project.extensions.configure(KotlinMultiplatformExtension::class.java) { kotlin ->
             kotlin.sourceSets.named("commonMain").configure { sourceSet ->
-                sourceSet.kotlin.srcDir(outputDirectory)
+                sourceSet.kotlin.srcDir(generatedSources)
             }
         }
     }
