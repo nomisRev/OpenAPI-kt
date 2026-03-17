@@ -32,10 +32,10 @@ public interface Pets {
 internal class KtorPets(
   private val client: HttpClient,
 ) : Pets {
-  override fun petId(petId: String): Pets.PetId = KtorPetId(client, petId)
+  override fun petId(petId: String): Pets.PetId = KtorPetsPetId(client, petId)
 }
 
-internal class KtorPetId(
+internal class KtorPetsPetId(
   private val client: HttpClient,
   private val petId: String,
 ) : Pets.PetId {

@@ -23,17 +23,17 @@ public interface Repos {
 internal class KtorRepos(
   private val client: HttpClient,
 ) : Repos {
-  override fun owner(owner: String): Repos.Owner = KtorOwner(client, owner)
+  override fun owner(owner: String): Repos.Owner = KtorReposOwner(client, owner)
 }
 
-internal class KtorOwner(
+internal class KtorReposOwner(
   private val client: HttpClient,
   private val owner: String,
 ) : Repos.Owner {
-  override fun repo(repo: String): Repos.Owner.Repo = KtorRepo(client, owner, repo)
+  override fun repo(repo: String): Repos.Owner.Repo = KtorReposOwnerRepo(client, owner, repo)
 }
 
-internal class KtorRepo(
+internal class KtorReposOwnerRepo(
   private val client: HttpClient,
   private val owner: String,
   private val repo: String,

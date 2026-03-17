@@ -53,10 +53,10 @@ public interface Uploads {
 internal class KtorUploads(
   private val client: HttpClient,
 ) : Uploads {
-  override fun uploadId(uploadId: String): Uploads.UploadId = KtorUploadId(client, uploadId)
+  override fun uploadId(uploadId: String): Uploads.UploadId = KtorUploadsUploadId(client, uploadId)
 }
 
-internal class KtorUploadId(
+internal class KtorUploadsUploadId(
   private val client: HttpClient,
   private val uploadId: String,
 ) : Uploads.UploadId {

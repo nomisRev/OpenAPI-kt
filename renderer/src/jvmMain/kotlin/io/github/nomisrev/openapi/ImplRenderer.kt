@@ -112,8 +112,7 @@ private fun PathNode.generateImplClassesInternal(
         is PathSegment.Literal -> parentAccumulatedParams
     }
 
-    val simpleName = segment.name.toPascalCase()
-    val implName = "Ktor$simpleName"
+    val implName = "Ktor" + interfaceClassName.simpleNames.joinToString("")
 
     val builder = TypeSpec.classBuilder(implName)
         .addModifiers(KModifier.INTERNAL)
@@ -148,8 +147,9 @@ private fun PathNode.generateImplClassesInternal(
     for (child in children) {
         val childSimpleName = child.segment.name.toPascalCase()
         val childInterfaceClassName = interfaceClassName.nestedClass(childSimpleName)
+        val childImplName = "Ktor" + childInterfaceClassName.simpleNames.joinToString("")
         child.segment.addNavigationOverride(
-            builder, childInterfaceClassName, "Ktor$childSimpleName", currentParams, config
+            builder, childInterfaceClassName, childImplName, currentParams, config
         )
     }
 

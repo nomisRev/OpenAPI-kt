@@ -26,10 +26,10 @@ public interface Oauth {
 internal class KtorOauth(
   private val client: HttpClient,
 ) : Oauth {
-  override val token: Oauth.Token = KtorToken(client)
+  override val token: Oauth.Token = KtorOauthToken(client)
 }
 
-internal class KtorToken(
+internal class KtorOauthToken(
   private val client: HttpClient,
 ) : Oauth.Token {
   override val post: Oauth.Token.Post = object : Oauth.Token.Post {

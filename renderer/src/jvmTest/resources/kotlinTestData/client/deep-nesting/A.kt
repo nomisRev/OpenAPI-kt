@@ -36,38 +36,38 @@ public interface A {
 internal class KtorA(
   private val client: HttpClient,
 ) : A {
-  override val b: A.B = KtorB(client)
+  override val b: A.B = KtorAB(client)
 }
 
-internal class KtorB(
+internal class KtorAB(
   private val client: HttpClient,
 ) : A.B {
-  override fun c(c: String): A.B.C = KtorC(client, c)
+  override fun c(c: String): A.B.C = KtorABC(client, c)
 }
 
-internal class KtorC(
+internal class KtorABC(
   private val client: HttpClient,
   private val c: String,
 ) : A.B.C {
-  override val d: A.B.C.D = KtorD(client, c)
+  override val d: A.B.C.D = KtorABCD(client, c)
 }
 
-internal class KtorD(
+internal class KtorABCD(
   private val client: HttpClient,
   private val c: String,
 ) : A.B.C.D {
-  override fun e(e: Long): A.B.C.D.E = KtorE(client, c, e)
+  override fun e(e: Long): A.B.C.D.E = KtorABCDE(client, c, e)
 }
 
-internal class KtorE(
+internal class KtorABCDE(
   private val client: HttpClient,
   private val c: String,
   private val e: Long,
 ) : A.B.C.D.E {
-  override val f: A.B.C.D.E.F = KtorF(client, c, e)
+  override val f: A.B.C.D.E.F = KtorABCDEF(client, c, e)
 }
 
-internal class KtorF(
+internal class KtorABCDEF(
   private val client: HttpClient,
   private val c: String,
   private val e: Long,
