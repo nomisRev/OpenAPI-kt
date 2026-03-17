@@ -3,6 +3,7 @@ package io.github.nomisrev.render
 import com.squareup.kotlinpoet.FileSpec
 import de.infix.testBalloon.framework.core.TestSuite
 import de.infix.testBalloon.framework.shared.TestRegistering
+import io.github.nomisrev.openapi.ApiTree
 import io.github.nomisrev.openapi.KmpTarget
 import io.github.nomisrev.openapi.RenderConfig
 import io.github.nomisrev.openapi.generateClient
@@ -81,7 +82,7 @@ fun TestSuite.clientTest(@Language("json") json: String, dir: String): Unit =
 fun TestSuite.renderSpec(
     @Language("json") json: String,
     dir: String,
-    generate: suspend (io.github.nomisrev.openapi.ApiTree, RenderConfig) -> List<FileSpec> = { apiTree, config ->
+    generate: suspend (ApiTree, RenderConfig) -> List<FileSpec> = { apiTree, config ->
         apiTree.generateModels(config) + apiTree.generateClient(config)
     },
 ) = test(json) {

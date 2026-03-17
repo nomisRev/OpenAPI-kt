@@ -29,6 +29,7 @@ private val PairType = ClassName("kotlin", "Pair")
 fun generateSerializationUtils(config: RenderConfig): FileSpec {
     val packageName = config.modelPackage
         .split('.').filter(String::isNotBlank).joinToString(".") { it.sanitize() }
+
     return FileSpec.builder(packageName, "AttemptDeserialize")
         .addType(buildUnionSerializationException())
         .addFunction(buildAttemptDeserialize())

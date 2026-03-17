@@ -19,7 +19,6 @@ plugins {
 apply(plugin = "io.github.nomisrev.openapi")
 
 kotlin {
-    jvmToolchain(11)
     sourceSets.main {
         kotlin.srcDir("build/generated/openapi/github")
     }
@@ -30,7 +29,7 @@ dependencies {
     implementation("io.ktor:ktor-client-content-negotiation:3.3.3")
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.3.3")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0-RC")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
 }
 
 configure<OpenApiExtension> {

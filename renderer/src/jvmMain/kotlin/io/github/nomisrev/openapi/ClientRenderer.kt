@@ -19,7 +19,7 @@ import io.ktor.http.HttpStatusCode
 
 fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
     if (children.isEmpty() && operations.isEmpty()) return emptyList()
-    val needsSerializationUtils = hasInlineNonDiscriminatedParameterUnion()
+    val needsSerializationUtils = hasInlineNonDiscriminatedParameterUnion() || hasInlineNonDiscriminatedBodyUnion()
 
     val rootName = name.toPascalCase()
     val rootClassName = ClassName(config.apiPackage, rootName)
@@ -165,6 +165,21 @@ private fun PathNode.hasInlineNonDiscriminatedParameterUnion(): Boolean =
 private fun Iterable<Route>.hasInlineNonDiscriminatedParameterUnion(): Boolean =
     flatMap(Route::inlineParameterModels)
         .any { (_, model) -> model is Model.Union && model.discriminator == null }
+
+private fun ApiTree.hasInlineNonDiscriminatedBodyUnion(): Boolean =
+    operations.values.hasInlineNonDiscriminatedBodyUnion() ||
+        children.any(PathNode::hasInlineNonDiscriminatedBodyUnion)
+
+private fun PathNode.hasInlineNonDiscriminatedBodyUnion(): Boolean =
+    operations.values.hasInlineNonDiscriminatedBodyUnion() ||
+        children.any(PathNode::hasInlineNonDiscriminatedBodyUnion)
+
+private fun Iterable<Route>.hasInlineNonDiscriminatedBodyUnion(): Boolean =
+    any { route ->
+        val setBody = route.body?.defaultOrNull() as? Route.Body.SetBody ?: return@any false
+        setBody.type.isRouteInlineModel() && setBody.type is Model.Union &&
+            (setBody.type as Model.Union).discriminator == null
+    }
 
 private fun Model.toInlineParameterTypeSpec(
     config: RenderConfig,
