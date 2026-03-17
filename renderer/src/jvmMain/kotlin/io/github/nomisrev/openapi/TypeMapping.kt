@@ -55,9 +55,9 @@ fun NamingContext.toClassName(config: RenderConfig): ClassName =
         }
 
         is NamingContext.Path -> {
-            val rootName = root.segments.joinToString("") { it.name.toPascalCase() }.ifEmpty { "Root" }
+            val rootSegmentNames = root.segments.map { it.name.toPascalCase() }.ifEmpty { listOf("Root") }
             val methodName = root.method.value.lowercase().replaceFirstChar { it.uppercase() }
-            val simpleNames = mutableListOf(rootName)
+            val simpleNames = rootSegmentNames.toMutableList()
             nested.forEach { nestedContext ->
                 when (nestedContext) {
                     NamingContext.RouteBody -> {

@@ -217,7 +217,7 @@ private fun Route.toOperationTypeSpec(
     interfaceClassName: ClassName,
 ): TypeSpec {
     val methodClassName = interfaceClassName.nestedClass(methodTypeName(method))
-    val inlineBodyTypeSpec = body?.inlineBodyTypeSpec(config)
+    val inlineBodyTypeSpec = body?.inlineBodyTypeSpec(config, methodClassName)
 
     return TypeSpec.interfaceBuilder(methodTypeName(method))
         .addDeprecatedIfNeeded()
@@ -403,7 +403,7 @@ private fun Route.buildResponseTypeSpec(
 
     val model = returns.singlePreferredModelOrNull()
     if (model != null && model.isRouteInlineModel()) {
-        model.toInlineOperationTypeSpecOrNull(config, "Response")?.let { return it }
+        model.toInlineOperationTypeSpecOrNull(config, methodClassName, "Response")?.let { return it }
     }
 
     return if (model == null || model is Model.Primitive.Unit) {
@@ -522,15 +522,20 @@ private fun Route.Returns.singlePreferredModelOrNull(): Model? {
 private fun Model.isRouteInlineModel(): Boolean =
     this is Model.ContextHolder && context.head is NamingContext.Path
 
-private fun Model.toInlineOperationTypeSpecOrNull(config: RenderConfig, nameOverride: String): TypeSpec? =
+private fun Model.toInlineOperationTypeSpecOrNull(
+    config: RenderConfig,
+    ownerClassName: ClassName,
+    nameOverride: String,
+): TypeSpec? =
     when (this) {
         is Model.Object -> toTypeSpec(config, nameOverride = nameOverride)
         is Model.Enum -> toTypeSpec(config, nameOverride = nameOverride)
+        is Model.Union -> toTypeSpec(config, classNameOverride = ownerClassName.nestedClass(nameOverride))
         else -> null
     }
 
-private fun Route.Bodies.inlineBodyTypeSpec(config: RenderConfig): TypeSpec? {
+private fun Route.Bodies.inlineBodyTypeSpec(config: RenderConfig, ownerClassName: ClassName): TypeSpec? {
     val setBody = defaultOrNull() as? Route.Body.SetBody ?: return null
     if (!setBody.type.isRouteInlineModel()) return null
-    return setBody.type.toInlineOperationTypeSpecOrNull(config, "Body")
+    return setBody.type.toInlineOperationTypeSpecOrNull(config, ownerClassName, "Body")
 }

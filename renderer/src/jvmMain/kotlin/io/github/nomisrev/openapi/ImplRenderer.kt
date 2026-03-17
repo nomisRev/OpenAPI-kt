@@ -616,5 +616,5 @@ private fun Model.isRouteInlineModel(): Boolean =
 private fun Route.Bodies.usesNestedBodyType(): Boolean {
     val setBody = defaultOrNull() as? Route.Body.SetBody ?: return false
     return setBody.type.isRouteInlineModel() &&
-        (setBody.type is Model.Object || setBody.type is Model.Enum)
+        (setBody.type is Model.Object || setBody.type is Model.Enum || setBody.type is Model.Union)
 }

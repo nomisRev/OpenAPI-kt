@@ -964,4 +964,67 @@ val clientSpec by testSuite {
         """.trimIndent(),
         "client/impl-full"
     )
+
+    // Reproducer: inline oneOf requestBody on a nested path
+    // Bug 1: type reference uses `UserCodespaces.Post.Body` instead of `User.Codespaces.Post.Body`
+    // Bug 2: the `Body` sealed interface is never generated inside `fun interface Post { }`
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/user/codespaces": {
+              "post": {
+                "operationId": "codespaces/create-for-authenticated-user",
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "required": ["repository_id"],
+                            "properties": {
+                              "repository_id": { "type": "integer" },
+                              "ref": { "type": "string" }
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "required": ["pull_request"],
+                            "properties": {
+                              "pull_request": {
+                                "type": "object",
+                                "required": ["pull_request_number", "repository_id"],
+                                "properties": {
+                                  "pull_request_number": { "type": "integer" },
+                                  "repository_id": { "type": "integer" }
+                                }
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Created",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/inline-oneof-request-body-nested-path"
+    )
 }
