@@ -13,7 +13,7 @@ sealed interface PathSegment {
 
     @Serializable
     @SerialName("Parameter")
-    data class Parameter(override val name: String, val type: Model) : PathSegment
+    data class Parameter(override val name: String, val model: Model) : PathSegment
 }
 
 private val DefaultPathParameterType = Model.Primitive.String(

@@ -50,15 +50,16 @@ fun Model.Object.toTypeSpec(
     serialName: String? = null,
     nameOverride: String? = null,
     overridePropertyNames: Set<String> = emptySet(),
+    classNameOverride: ClassName? = null,
 ): TypeSpec {
     val className = context.toClassName(config)
-    val simpleName = nameOverride ?: className.simpleName
-    // When the class is renamed, nested type references still use the old name.
-    // Build a corrected ClassName for the renamed class so nested types resolve correctly.
-    val effectiveClassName = if (nameOverride != null) {
+    val effectiveClassName = classNameOverride ?: if (nameOverride != null) {
         val enclosing = className.enclosingClassName()
         enclosing?.nestedClass(nameOverride) ?: ClassName(className.packageName, nameOverride)
     } else className
+    val simpleName = classNameOverride?.simpleName ?: nameOverride ?: className.simpleName
+    // When the class is renamed or moved, nested type references still use the old name.
+    // Build a corrected ClassName so nested types resolve against the rendered owner.
     val renderedProperties = properties.map { (jsonName, prop) ->
         renderProperty(
             jsonName = jsonName,
@@ -145,9 +146,13 @@ fun Model.Object.toTypeSpec(
         .toList()
         .sortedBy { (it as Model.ContextHolder).context.toClassName(config).canonicalName }
         .mapNotNull { model ->
+            val childClassNameOverride = if (effectiveClassName != className) {
+                ((model as? Model.ContextHolder)?.context?.toClassName(config))
+                    ?.remapNestedClassName(className, effectiveClassName) as? ClassName
+            } else null
             when (model) {
-                is Model.Enum -> model.toTypeSpec(config)
-                is Model.Object -> model.toTypeSpec(config)
+                is Model.Enum -> model.toTypeSpec(config, nameOverride = childClassNameOverride?.simpleName)
+                is Model.Object -> model.toTypeSpec(config, classNameOverride = childClassNameOverride)
                 else -> null
             }
         }
@@ -476,12 +481,14 @@ private fun TypeName.usesUuid(): Boolean =
 
 // When a class is renamed (nameOverride), nested type references still use the old class name path.
 // This replaces the old class name with the new one in nested ClassName references.
-private fun TypeName.remapNestedClassName(oldClassName: ClassName, newClassName: ClassName): TypeName =
+internal fun TypeName.remapNestedClassName(oldClassName: ClassName, newClassName: ClassName): TypeName =
     when (this) {
         is ClassName -> {
             val oldPrefix = oldClassName.canonicalName + "."
             val canonical = this.canonicalName
-            if (canonical.startsWith(oldPrefix)) {
+            if (canonical == oldClassName.canonicalName) {
+                newClassName.copy(nullable = isNullable)
+            } else if (canonical.startsWith(oldPrefix)) {
                 val suffix = canonical.removePrefix(oldPrefix)
                 val parts = suffix.split(".")
                 var result: ClassName = newClassName

@@ -14,7 +14,6 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.UNIT
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
-import io.github.nomisrev.openapi.transformers.nestedOrNull
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -97,8 +96,21 @@ fun ApiTree.generateRootImpl(config: RenderConfig): TypeSpec? {
     }
 
     // Operation overrides
-    for ((method, route) in operations.entries.sortedBy { it.key.value }) {
-        builder.addProperty(route.toImplOperationPropertySpec(method, config, rootClassName))
+    val orderedOperations = operations.entries.sortedBy { it.key.value }
+    val sharedInlineParameterKeys = orderedOperations
+        .map { it.value }
+        .sharedInlineParameterModels()
+        .map(InlineParameterModel::sharingKey)
+        .toSet()
+    for ((method, route) in orderedOperations) {
+        builder.addProperty(
+            route.toImplOperationPropertySpec(
+                method = method,
+                config = config,
+                interfaceClassName = rootClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
     }
 
     return builder.build()
@@ -122,11 +134,11 @@ private fun PathNode.generateImplClassesInternal(
     val seg = segment
     val currentParams = when (seg) {
         is PathSegment.Parameter -> {
-            val unionType = seg.type as? Model.Union
+            val unionType = seg.model as? Model.Union
             unionType?.requireSupportedFlattenablePathUnion(seg.name)
             parentAccumulatedParams + AccumulatedParam(
                 name = seg.name,
-                type = seg.type,
+                type = seg.model,
                 storeAsString = unionType?.isFlattenablePathUnion() == true,
             )
         }
@@ -177,8 +189,21 @@ private fun PathNode.generateImplClassesInternal(
     }
 
     // Operation overrides
-    for ((method, route) in operations.entries.sortedBy { it.key.value }) {
-        builder.addProperty(route.toImplOperationPropertySpec(method, config, interfaceClassName))
+    val orderedOperations = operations.entries.sortedBy { it.key.value }
+    val sharedInlineParameterKeys = orderedOperations
+        .map { it.value }
+        .sharedInlineParameterModels()
+        .map(InlineParameterModel::sharingKey)
+        .toSet()
+    for ((method, route) in orderedOperations) {
+        builder.addProperty(
+            route.toImplOperationPropertySpec(
+                method = method,
+                config = config,
+                interfaceClassName = interfaceClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
     }
 
     // Collect this class + recursively all descendants
@@ -218,7 +243,7 @@ private fun PathSegment.addNavigationOverride(
 
         is PathSegment.Parameter -> {
             val paramName = name.toCamelCase()
-            val flattenableUnion = (type as? Model.Union)
+            val flattenableUnion = (model as? Model.Union)
                 ?.takeIf { it.isFlattenablePathUnion() }
                 ?.also { it.requireSupportedFlattenablePathUnion(name) }
             if (flattenableUnion != null) {
@@ -258,7 +283,7 @@ private fun PathSegment.addNavigationOverride(
                 builder.addFunction(
                     FunSpec.builder(paramName)
                         .addModifiers(KModifier.OVERRIDE)
-                        .addParameter(paramName, type.toTypeName(config))
+                        .addParameter(paramName, model.toTypeName(config))
                         .returns(childInterfaceClassName)
                         .addStatement("return $childImplName($allArgs)")
                         .build()
@@ -306,6 +331,7 @@ private fun Route.toImplOperationPropertySpec(
     method: HttpMethod,
     config: RenderConfig,
     interfaceClassName: ClassName,
+    sharedInlineParameterKeys: Set<String>,
 ): PropertySpec {
     val methodName = method.value.lowercase()
     val methodClassName = interfaceClassName.nestedClass(methodTypeName(method))
@@ -319,6 +345,7 @@ private fun Route.toImplOperationPropertySpec(
                 config = config,
                 interfaceClassName = interfaceClassName,
                 methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
                 usesNestedBodyType = usesNestedBodyType,
             )
         )
@@ -337,6 +364,7 @@ private fun Route.toImplInvokeFunSpec(
     config: RenderConfig,
     interfaceClassName: ClassName,
     methodClassName: ClassName,
+    sharedInlineParameterKeys: Set<String>,
     usesNestedBodyType: Boolean,
 ): FunSpec {
     val builder = FunSpec.builder("invoke")
@@ -352,7 +380,14 @@ private fun Route.toImplInvokeFunSpec(
 
     // 1. Required params
     for (input in requiredParams) {
-        builder.addParameter(input.toImplParameterSpec(config, interfaceClassName))
+        builder.addParameter(
+            input.toImplParameterSpec(
+                config = config,
+                interfaceClassName = interfaceClassName,
+                methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
     }
     // 2. Required body
     if (bodyRequired && bodyParams != null) {
@@ -360,7 +395,14 @@ private fun Route.toImplInvokeFunSpec(
     }
     // 3. Optional params
     for (input in optionalParams) {
-        builder.addParameter(input.toImplParameterSpec(config, interfaceClassName))
+        builder.addParameter(
+            input.toImplParameterSpec(
+                config = config,
+                interfaceClassName = interfaceClassName,
+                methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
     }
     // 4. Optional body
     if (!bodyRequired && bodyParams != null) {
@@ -629,21 +671,20 @@ private fun Parameter.Input.sortOrder(): Int = when (this) {
 private fun Route.Input.toImplParameterSpec(
     config: RenderConfig,
     interfaceClassName: ClassName,
+    methodClassName: ClassName,
+    sharedInlineParameterKeys: Set<String>,
 ): ParameterSpec {
     val paramName = name.toParamName()
     val model = type
-    val baseTypeName = model.inlineParameterTypeName(interfaceClassName, name) ?: model.toTypeName(config)
+    val baseTypeName = inlineParameterTypeName(
+        config = config,
+        pathClassName = interfaceClassName,
+        methodClassName = methodClassName,
+        sharedInlineParameterKeys = sharedInlineParameterKeys,
+    ) ?: model.toTypeName(config)
     val typeName = if (!isRequired) baseTypeName.copy(nullable = true) else baseTypeName
     return ParameterSpec.builder(paramName, typeName).build()
 }
-
-private fun Model.inlineParameterTypeName(
-    interfaceClassName: ClassName,
-    paramName: String,
-): ClassName? =
-    if (this is Model.ContextHolder && context.head is NamingContext.Path && nestedOrNull() != null) {
-        interfaceClassName.nestedClass(paramName.toPascalCase())
-    } else null
 
 private fun Route.Bodies.toImplInvokeParameterSpecs(
     config: RenderConfig,

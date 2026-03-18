@@ -595,6 +595,50 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/items": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "status",
+                    "in": "query",
+                    "required": false,
+                    "schema": {
+                      "type": "string",
+                      "enum": ["active", "archived", "all"],
+                      "default": "all"
+                    }
+                  }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              },
+              "post": {
+                "parameters": [
+                  {
+                    "name": "status",
+                    "in": "query",
+                    "required": false,
+                    "schema": {
+                      "type": "string",
+                      "enum": ["active", "archived", "all"],
+                      "default": "all"
+                    }
+                  }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-inline-shared-parameter"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/advisories": {
               "get": {
                 "parameters": [
