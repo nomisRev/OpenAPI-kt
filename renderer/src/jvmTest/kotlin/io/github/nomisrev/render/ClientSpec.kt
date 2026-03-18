@@ -1059,4 +1059,61 @@ val clientSpec by testSuite {
         """.trimIndent(),
         "client/inline-oneof-request-body-nested-path"
     )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/repos/{owner}/{repo}/interaction-limits": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "owner",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "string" }
+                  },
+                  {
+                    "name": "repo",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "string" }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "Response",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "required": ["limit", "origin"],
+                              "properties": {
+                                "limit": { "type": "string" },
+                                "origin": { "type": "string" }
+                              },
+                              "additionalProperties": false
+                            },
+                            {
+                              "type": "object",
+                              "properties": {},
+                              "additionalProperties": false
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/inline-anyof-response-nested-path"
+    )
 }

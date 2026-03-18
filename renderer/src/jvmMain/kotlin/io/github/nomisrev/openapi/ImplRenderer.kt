@@ -441,9 +441,9 @@ private fun Route.buildOperationBody(
                 code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
             }
         } else {
-            val usesInlineConcreteResponse = model.isRouteInlineModel() &&
-                (model is Model.Object || model is Model.Enum)
-            if (usesInlineConcreteResponse) {
+            val usesInlineResponseType = model.isRouteInlineModel() &&
+                (model is Model.Object || model is Model.Enum || model is Model.Union)
+            if (usesInlineResponseType) {
                 if (hasRequestConfig) {
                     code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
                     code.indent()
