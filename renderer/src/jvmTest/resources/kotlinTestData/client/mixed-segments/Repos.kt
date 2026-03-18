@@ -5,12 +5,12 @@ import io.ktor.client.request.`get`
 import kotlin.String
 
 public interface Repos {
-  public fun owner(owner: String): Owner
+  public fun owner(owner: String): OwnerPath
 
-  public interface Owner {
-    public fun repo(repo: String): Repo
+  public interface OwnerPath {
+    public fun repo(repo: String): RepoPath
 
-    public interface Repo {
+    public interface RepoPath {
       public val collaborators: Collaborators
 
       public interface Collaborators {
@@ -27,32 +27,32 @@ public interface Repos {
 internal class KtorRepos(
   private val client: HttpClient,
 ) : Repos {
-  override fun owner(owner: String): Repos.Owner = KtorReposOwner(client, owner)
+  override fun owner(owner: String): Repos.OwnerPath = KtorReposOwnerPath(client, owner)
 }
 
-internal class KtorReposOwner(
+internal class KtorReposOwnerPath(
   private val client: HttpClient,
   private val owner: String,
-) : Repos.Owner {
-  override fun repo(repo: String): Repos.Owner.Repo = KtorReposOwnerRepo(client, owner, repo)
+) : Repos.OwnerPath {
+  override fun repo(repo: String): Repos.OwnerPath.RepoPath = KtorReposOwnerPathRepoPath(client, owner, repo)
 }
 
-internal class KtorReposOwnerRepo(
-  private val client: HttpClient,
-  private val owner: String,
-  private val repo: String,
-) : Repos.Owner.Repo {
-  override val collaborators: Repos.Owner.Repo.Collaborators =
-      KtorReposOwnerRepoCollaborators(client, owner, repo)
-}
-
-internal class KtorReposOwnerRepoCollaborators(
+internal class KtorReposOwnerPathRepoPath(
   private val client: HttpClient,
   private val owner: String,
   private val repo: String,
-) : Repos.Owner.Repo.Collaborators {
-  override val `get`: Repos.Owner.Repo.Collaborators.Get =
-      object : Repos.Owner.Repo.Collaborators.Get {
+) : Repos.OwnerPath.RepoPath {
+  override val collaborators: Repos.OwnerPath.RepoPath.Collaborators =
+      KtorReposOwnerPathRepoPathCollaborators(client, owner, repo)
+}
+
+internal class KtorReposOwnerPathRepoPathCollaborators(
+  private val client: HttpClient,
+  private val owner: String,
+  private val repo: String,
+) : Repos.OwnerPath.RepoPath.Collaborators {
+  override val `get`: Repos.OwnerPath.RepoPath.Collaborators.Get =
+      object : Repos.OwnerPath.RepoPath.Collaborators.Get {
     override suspend operator fun invoke() {
       client.get("/repos/$owner/$repo/collaborators")
     }

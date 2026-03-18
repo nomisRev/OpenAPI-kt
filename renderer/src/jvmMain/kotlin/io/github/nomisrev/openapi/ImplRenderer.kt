@@ -8,6 +8,8 @@ import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STRING
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.UNIT
 import io.github.nomisrev.openapi.parser.Parameter
@@ -37,7 +39,11 @@ private val FormUrlEncodeMember = MemberName("io.ktor.http", "formUrlEncode")
 private val AppendMember = MemberName("io.ktor.client.request.forms", "append")
 
 /** Accumulated path parameter from tree traversal. */
-private data class AccumulatedParam(val name: String, val type: Model)
+private data class AccumulatedParam(
+    val name: String,
+    val type: Model,
+    val storeAsString: Boolean = false,
+)
 
 /** Collect all HTTP method names used in operations for this node and its descendants. */
 internal fun PathNode.collectHttpMethods(): Set<String> {
@@ -78,9 +84,16 @@ fun ApiTree.generateRootImpl(config: RenderConfig): TypeSpec? {
 
     // Child navigation overrides
     for (child in children) {
-        val childSimpleName = child.segment.name.toPascalCase()
+        val childSimpleName = child.childInterfaceSimpleName()
         val childClassName = ClassName(config.apiPackage, childSimpleName)
-        child.segment.addNavigationOverride(builder, childClassName, "Ktor$childSimpleName", emptyList(), config)
+        child.segment.addNavigationOverride(
+            builder,
+            childClassName,
+            "Ktor$childSimpleName",
+            emptyList(),
+            rootClassName,
+            config,
+        )
     }
 
     // Operation overrides
@@ -108,7 +121,15 @@ private fun PathNode.generateImplClassesInternal(
     // Compute accumulated params for this node
     val seg = segment
     val currentParams = when (seg) {
-        is PathSegment.Parameter -> parentAccumulatedParams + AccumulatedParam(seg.name, seg.type)
+        is PathSegment.Parameter -> {
+            val unionType = seg.type as? Model.Union
+            unionType?.requireSupportedFlattenablePathUnion(seg.name)
+            parentAccumulatedParams + AccumulatedParam(
+                name = seg.name,
+                type = seg.type,
+                storeAsString = unionType?.isFlattenablePathUnion() == true,
+            )
+        }
         is PathSegment.Literal -> parentAccumulatedParams
     }
 
@@ -122,7 +143,8 @@ private fun PathNode.generateImplClassesInternal(
     val ctorBuilder = FunSpec.constructorBuilder()
         .addParameter("client", HttpClientType)
     for (param in currentParams) {
-        ctorBuilder.addParameter(param.name.toCamelCase(), param.type.toTypeName(config))
+        val typeName = if (param.storeAsString) STRING else param.type.toTypeName(config)
+        ctorBuilder.addParameter(param.name.toCamelCase(), typeName)
     }
     builder.primaryConstructor(ctorBuilder.build())
 
@@ -135,8 +157,9 @@ private fun PathNode.generateImplClassesInternal(
     )
     for (param in currentParams) {
         val paramName = param.name.toCamelCase()
+        val typeName = if (param.storeAsString) STRING else param.type.toTypeName(config)
         builder.addProperty(
-            PropertySpec.builder(paramName, param.type.toTypeName(config))
+            PropertySpec.builder(paramName, typeName)
                 .addModifiers(KModifier.PRIVATE)
                 .initializer(paramName)
                 .build()
@@ -145,11 +168,11 @@ private fun PathNode.generateImplClassesInternal(
 
     // Child navigation overrides
     for (child in children) {
-        val childSimpleName = child.segment.name.toPascalCase()
+        val childSimpleName = child.childInterfaceSimpleName()
         val childInterfaceClassName = interfaceClassName.nestedClass(childSimpleName)
         val childImplName = "Ktor" + childInterfaceClassName.simpleNames.joinToString("")
         child.segment.addNavigationOverride(
-            builder, childInterfaceClassName, childImplName, currentParams, config
+            builder, childInterfaceClassName, childImplName, currentParams, interfaceClassName, config
         )
     }
 
@@ -161,7 +184,7 @@ private fun PathNode.generateImplClassesInternal(
     // Collect this class + recursively all descendants
     val result = mutableListOf(builder.build())
     for (child in children) {
-        val childSimpleName = child.segment.name.toPascalCase()
+        val childSimpleName = child.childInterfaceSimpleName()
         val childInterfaceClassName = interfaceClassName.nestedClass(childSimpleName)
         result.addAll(child.generateImplClassesInternal(config, childInterfaceClassName, currentParams))
     }
@@ -177,6 +200,7 @@ private fun PathSegment.addNavigationOverride(
     childInterfaceClassName: ClassName,
     childImplName: String,
     currentAccumulatedParams: List<AccumulatedParam>,
+    parentInterfaceClassName: ClassName,
     config: RenderConfig,
 ) {
     val paramArgs = currentAccumulatedParams.joinToString(", ") { it.name.toCamelCase() }
@@ -194,17 +218,70 @@ private fun PathSegment.addNavigationOverride(
 
         is PathSegment.Parameter -> {
             val paramName = name.toCamelCase()
-            val allArgs = if (paramArgs.isEmpty()) "client, $paramName" else "client, $paramArgs, $paramName"
-            builder.addFunction(
-                FunSpec.builder(paramName)
-                    .addModifiers(KModifier.OVERRIDE)
-                    .addParameter(paramName, type.toTypeName(config))
-                    .returns(childInterfaceClassName)
-                    .addStatement("return $childImplName($allArgs)")
-                    .build()
-            )
+            val flattenableUnion = (type as? Model.Union)
+                ?.takeIf { it.isFlattenablePathUnion() }
+                ?.also { it.requireSupportedFlattenablePathUnion(name) }
+            if (flattenableUnion != null) {
+                val enumClassName = parentInterfaceClassName.nestedClass(name.toPascalCase())
+                val emittedTypes = mutableSetOf<TypeName>()
+                for (case in flattenableUnion.cases) {
+                    val caseTypeName = when (case.model) {
+                        is Model.Enum -> enumClassName
+                        else -> case.model.toTypeName(config)
+                    }
+                    if (!emittedTypes.add(caseTypeName)) continue
+
+                    val functionBuilder = FunSpec.builder(paramName)
+                        .addModifiers(KModifier.OVERRIDE)
+                        .addParameter(paramName, caseTypeName)
+                        .returns(childInterfaceClassName)
+                    val encodedArg = when (val caseModel = case.model) {
+                        is Model.Enum -> {
+                            functionBuilder.addStatement(
+                                "val encoded = %L",
+                                caseModel.toPathParamValueExpression(paramName, enumClassName),
+                            )
+                            "encoded"
+                        }
+                        else -> if (caseTypeName == STRING) paramName else "$paramName.toString()"
+                    }
+                    val allArgs = if (paramArgs.isEmpty()) {
+                        "client, $encodedArg"
+                    } else {
+                        "client, $paramArgs, $encodedArg"
+                    }
+                    functionBuilder.addStatement("return $childImplName($allArgs)")
+                    builder.addFunction(functionBuilder.build())
+                }
+            } else {
+                val allArgs = if (paramArgs.isEmpty()) "client, $paramName" else "client, $paramArgs, $paramName"
+                builder.addFunction(
+                    FunSpec.builder(paramName)
+                        .addModifiers(KModifier.OVERRIDE)
+                        .addParameter(paramName, type.toTypeName(config))
+                        .returns(childInterfaceClassName)
+                        .addStatement("return $childImplName($allArgs)")
+                        .build()
+                )
+            }
         }
     }
+}
+
+private fun Model.Enum.toPathParamValueExpression(
+    paramName: String,
+    enumClassName: ClassName,
+): CodeBlock {
+    val code = CodeBlock.builder()
+    code.add("when (%L) {\n", paramName)
+    code.indent()
+    for (value in values) {
+        val rawValue = value ?: "null"
+        code.add("%T.%L -> %S\n", enumClassName, toEnumValueName(rawValue), rawValue)
+    }
+    code.unindent()
+    code.add("}")
+    return code.build()
 }
 
 private fun deprecatedAnnotation(): AnnotationSpec =

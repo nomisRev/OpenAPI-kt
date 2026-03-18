@@ -15,9 +15,9 @@ import kotlin.String
 import kotlin.collections.List
 
 public interface Uploads {
-  public fun uploadId(uploadId: String): UploadId
+  public fun uploadId(uploadId: String): UploadIdPath
 
-  public interface UploadId {
+  public interface UploadIdPath {
     public val post: Post
 
     public interface Post {
@@ -53,20 +53,20 @@ public interface Uploads {
 internal class KtorUploads(
   private val client: HttpClient,
 ) : Uploads {
-  override fun uploadId(uploadId: String): Uploads.UploadId = KtorUploadsUploadId(client, uploadId)
+  override fun uploadId(uploadId: String): Uploads.UploadIdPath = KtorUploadsUploadIdPath(client, uploadId)
 }
 
-internal class KtorUploadsUploadId(
+internal class KtorUploadsUploadIdPath(
   private val client: HttpClient,
   private val uploadId: String,
-) : Uploads.UploadId {
-  override val post: Uploads.UploadId.Post = object : Uploads.UploadId.Post {
+) : Uploads.UploadIdPath {
+  override val post: Uploads.UploadIdPath.Post = object : Uploads.UploadIdPath.Post {
     override suspend operator fun invoke(
       `file`: ByteArray,
       checksum: String,
       retries: Int,
       tags: List<String>,
-    ): Uploads.UploadId.Post.Response {
+    ): Uploads.UploadIdPath.Post.Response {
       val response = client.post("/uploads/$uploadId") {
         setBody(MultiPartFormDataContent(formData {
           append("file", file)
@@ -76,10 +76,10 @@ internal class KtorUploadsUploadId(
         }))
       }
       return when (response.status.value) {
-        201 -> Uploads.UploadId.Post.Response.Created(response.body())
-        207 -> Uploads.UploadId.Post.Response.`Multi-status`(response.body())
-        422 -> Uploads.UploadId.Post.Response.UnprocessableEntity(response.body())
-        else -> Uploads.UploadId.Post.Response.Default(response.status, response.body())
+        201 -> Uploads.UploadIdPath.Post.Response.Created(response.body())
+        207 -> Uploads.UploadIdPath.Post.Response.`Multi-status`(response.body())
+        422 -> Uploads.UploadIdPath.Post.Response.UnprocessableEntity(response.body())
+        else -> Uploads.UploadIdPath.Post.Response.Default(response.status, response.body())
       }
     }
   }

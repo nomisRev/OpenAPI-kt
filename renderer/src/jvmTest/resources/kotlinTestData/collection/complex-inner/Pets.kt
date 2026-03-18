@@ -5,8 +5,8 @@ import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
-@Serializable
 @JvmInline
+@Serializable
 public value class Pets(
   public val items: List<Item>,
 ) {

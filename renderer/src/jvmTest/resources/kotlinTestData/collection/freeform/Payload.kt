@@ -4,8 +4,8 @@ import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 
-@Serializable
 @JvmInline
+@Serializable
 public value class Payload(
   public val items: JsonArray,
 )

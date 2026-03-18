@@ -5,12 +5,12 @@ import io.ktor.client.request.`get`
 import kotlin.String
 
 public interface Repos {
-  public fun owner(owner: String): Owner
+  public fun owner(owner: String): OwnerPath
 
-  public interface Owner {
-    public fun repo(repo: String): Repo
+  public interface OwnerPath {
+    public fun repo(repo: String): RepoPath
 
-    public interface Repo {
+    public interface RepoPath {
       public val `get`: Get
 
       public interface Get {
@@ -23,22 +23,22 @@ public interface Repos {
 internal class KtorRepos(
   private val client: HttpClient,
 ) : Repos {
-  override fun owner(owner: String): Repos.Owner = KtorReposOwner(client, owner)
+  override fun owner(owner: String): Repos.OwnerPath = KtorReposOwnerPath(client, owner)
 }
 
-internal class KtorReposOwner(
+internal class KtorReposOwnerPath(
   private val client: HttpClient,
   private val owner: String,
-) : Repos.Owner {
-  override fun repo(repo: String): Repos.Owner.Repo = KtorReposOwnerRepo(client, owner, repo)
+) : Repos.OwnerPath {
+  override fun repo(repo: String): Repos.OwnerPath.RepoPath = KtorReposOwnerPathRepoPath(client, owner, repo)
 }
 
-internal class KtorReposOwnerRepo(
+internal class KtorReposOwnerPathRepoPath(
   private val client: HttpClient,
   private val owner: String,
   private val repo: String,
-) : Repos.Owner.Repo {
-  override val `get`: Repos.Owner.Repo.Get = object : Repos.Owner.Repo.Get {
+) : Repos.OwnerPath.RepoPath {
+  override val `get`: Repos.OwnerPath.RepoPath.Get = object : Repos.OwnerPath.RepoPath.Get {
     override suspend operator fun invoke() {
       client.get("/repos/$owner/$repo")
     }

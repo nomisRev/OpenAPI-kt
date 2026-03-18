@@ -5,9 +5,9 @@ import io.ktor.client.request.delete
 import kotlin.String
 
 public interface Pets {
-  public fun petId(petId: String): PetId
+  public fun petId(petId: String): PetIdPath
 
-  public interface PetId {
+  public interface PetIdPath {
     public val delete: Delete
 
     public interface Delete {
@@ -19,14 +19,14 @@ public interface Pets {
 internal class KtorPets(
   private val client: HttpClient,
 ) : Pets {
-  override fun petId(petId: String): Pets.PetId = KtorPetsPetId(client, petId)
+  override fun petId(petId: String): Pets.PetIdPath = KtorPetsPetIdPath(client, petId)
 }
 
-internal class KtorPetsPetId(
+internal class KtorPetsPetIdPath(
   private val client: HttpClient,
   private val petId: String,
-) : Pets.PetId {
-  override val delete: Pets.PetId.Delete = object : Pets.PetId.Delete {
+) : Pets.PetIdPath {
+  override val delete: Pets.PetIdPath.Delete = object : Pets.PetIdPath.Delete {
     override suspend operator fun invoke() {
       client.delete("/pets/$petId")
     }

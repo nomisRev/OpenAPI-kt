@@ -7,9 +7,9 @@ import io.ktor.http.HttpStatusCode
 import kotlin.String
 
 public interface Pets {
-  public fun petId(petId: String): PetId
+  public fun petId(petId: String): PetIdPath
 
-  public interface PetId {
+  public interface PetIdPath {
     public val `get`: Get
 
     public interface Get {
@@ -32,19 +32,19 @@ public interface Pets {
 internal class KtorPets(
   private val client: HttpClient,
 ) : Pets {
-  override fun petId(petId: String): Pets.PetId = KtorPetsPetId(client, petId)
+  override fun petId(petId: String): Pets.PetIdPath = KtorPetsPetIdPath(client, petId)
 }
 
-internal class KtorPetsPetId(
+internal class KtorPetsPetIdPath(
   private val client: HttpClient,
   private val petId: String,
-) : Pets.PetId {
-  override val `get`: Pets.PetId.Get = object : Pets.PetId.Get {
-    override suspend operator fun invoke(): Pets.PetId.Get.Response {
+) : Pets.PetIdPath {
+  override val `get`: Pets.PetIdPath.Get = object : Pets.PetIdPath.Get {
+    override suspend operator fun invoke(): Pets.PetIdPath.Get.Response {
       val response = client.get("/pets/$petId")
       return when (response.status.value) {
-        200 -> Pets.PetId.Get.Response.Ok(response.body())
-        else -> Pets.PetId.Get.Response.Default(response.status, response.body())
+        200 -> Pets.PetIdPath.Get.Response.Ok(response.body())
+        else -> Pets.PetIdPath.Get.Response.Default(response.status, response.body())
       }
     }
   }

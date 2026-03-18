@@ -9,15 +9,15 @@ public interface A {
   public val b: B
 
   public interface B {
-    public fun c(c: String): C
+    public fun c(c: String): CPath
 
-    public interface C {
+    public interface CPath {
       public val d: D
 
       public interface D {
-        public fun e(e: Long): E
+        public fun e(e: Long): EPath
 
-        public interface E {
+        public interface EPath {
           public val f: F
 
           public interface F {
@@ -42,37 +42,37 @@ internal class KtorA(
 internal class KtorAB(
   private val client: HttpClient,
 ) : A.B {
-  override fun c(c: String): A.B.C = KtorABC(client, c)
+  override fun c(c: String): A.B.CPath = KtorABCPath(client, c)
 }
 
-internal class KtorABC(
+internal class KtorABCPath(
   private val client: HttpClient,
   private val c: String,
-) : A.B.C {
-  override val d: A.B.C.D = KtorABCD(client, c)
+) : A.B.CPath {
+  override val d: A.B.CPath.D = KtorABCPathD(client, c)
 }
 
-internal class KtorABCD(
+internal class KtorABCPathD(
   private val client: HttpClient,
   private val c: String,
-) : A.B.C.D {
-  override fun e(e: Long): A.B.C.D.E = KtorABCDE(client, c, e)
+) : A.B.CPath.D {
+  override fun e(e: Long): A.B.CPath.D.EPath = KtorABCPathDEPath(client, c, e)
 }
 
-internal class KtorABCDE(
-  private val client: HttpClient,
-  private val c: String,
-  private val e: Long,
-) : A.B.C.D.E {
-  override val f: A.B.C.D.E.F = KtorABCDEF(client, c, e)
-}
-
-internal class KtorABCDEF(
+internal class KtorABCPathDEPath(
   private val client: HttpClient,
   private val c: String,
   private val e: Long,
-) : A.B.C.D.E.F {
-  override val `get`: A.B.C.D.E.F.Get = object : A.B.C.D.E.F.Get {
+) : A.B.CPath.D.EPath {
+  override val f: A.B.CPath.D.EPath.F = KtorABCPathDEPathF(client, c, e)
+}
+
+internal class KtorABCPathDEPathF(
+  private val client: HttpClient,
+  private val c: String,
+  private val e: Long,
+) : A.B.CPath.D.EPath.F {
+  override val `get`: A.B.CPath.D.EPath.F.Get = object : A.B.CPath.D.EPath.F.Get {
     override suspend operator fun invoke() {
       client.get("/a/b/$c/d/$e/f")
     }

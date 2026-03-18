@@ -8,6 +8,7 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.UNIT
 import io.github.nomisrev.openapi.parser.Parameter
@@ -25,24 +26,21 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
     val rootClassName = ClassName(config.apiPackage, rootName)
     val rootInterface = TypeSpec.interfaceBuilder(rootName)
 
-    // Root-level inline parameter model types
     operations.values.inlineParameterModels().forEach { (name, model) ->
         model.toInlineParameterTypeSpec(config, rootClassName, name)?.let(rootInterface::addType)
     }
 
-    // Root-level operation nodes
     for ((method, route) in operations.entries.sortedBy { it.key.value }) {
         rootInterface.addType(route.toOperationTypeSpec(method, config, rootClassName))
         rootInterface.addProperty(route.toOperationPropertySpec(method, rootClassName))
     }
 
-    // Direct children: separate files, top-level interfaces + impl classes
     val childFiles = mutableListOf<FileSpec>()
     for (child in children) {
-        val childSimpleName = child.segment.name.toPascalCase()
+        val childSimpleName = child.childInterfaceSimpleName()
         val childClassName = ClassName(config.apiPackage, childSimpleName)
 
-        child.segment.addNavigationMember(rootInterface, childClassName, config)
+        child.segment.addNavigationMember(rootInterface, childClassName, rootClassName, config)
 
         val childTypeSpec = child.toTypeSpec(config, childClassName)
         val childImplClasses = child.generateImplClasses(config, childClassName)
@@ -52,29 +50,23 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
         for (implClass in childImplClasses) {
             fileBuilder.addType(implClass)
         }
-        // Add HTTP method imports for generated impl code
         for (method in child.collectHttpMethods()) {
             fileBuilder.addImport("io.ktor.client.request", method)
         }
         childFiles.add(fileBuilder.build())
     }
 
-    // Root file: interface + server sealed interface + factory + root impl
     val rootFileBuilder = FileSpec.builder(config.apiPackage, rootName)
         .addType(rootInterface.build())
 
-    // Server sealed interface (if any)
     generateServerInterface(config)?.let { rootFileBuilder.addType(it) }
 
-    // Factory function(s)
     for (factory in generateFactory(config)) {
         rootFileBuilder.addFunction(factory)
     }
 
-    // Root implementation class
     generateRootImpl(config)?.let { rootFileBuilder.addType(it) }
 
-    // Add HTTP method imports for root operations
     for (method in collectHttpMethods()) {
         rootFileBuilder.addImport("io.ktor.client.request", method)
     }
@@ -83,6 +75,7 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
     val serializationUtils = if (needsSerializationUtils) {
         listOf(generateSerializationUtils(config.copy(modelPackage = config.apiPackage)))
     } else emptyList()
+
     return files + serializationUtils
 }
 
@@ -102,10 +95,10 @@ private fun PathNode.toTypeSpec(config: RenderConfig, className: ClassName): Typ
 
     // Children
     for (child in children) {
-        val childSimpleName = child.segment.name.toPascalCase()
+        val childSimpleName = child.childInterfaceSimpleName()
         val childClassName = className.nestedClass(childSimpleName)
 
-        child.segment.addNavigationMember(builder, childClassName, config)
+        child.segment.addNavigationMember(builder, childClassName, className, config)
         builder.addType(child.toTypeSpec(config, childClassName))
     }
 
@@ -115,6 +108,7 @@ private fun PathNode.toTypeSpec(config: RenderConfig, className: ClassName): Typ
 private fun PathSegment.addNavigationMember(
     builder: TypeSpec.Builder,
     childClassName: ClassName,
+    parentClassName: ClassName,
     config: RenderConfig,
 ) {
     when (this) {
@@ -128,15 +122,40 @@ private fun PathSegment.addNavigationMember(
         is PathSegment.Parameter -> {
             val paramName = name.toCamelCase()
 
-            // TODO: If type is oneOf then we should generate n functions for every possible path input type.
+            val flattenableUnion = (type as? Model.Union)
+                ?.takeIf { it.isFlattenablePathUnion() }
+                ?.also { it.requireSupportedFlattenablePathUnion(name) }
+            if (flattenableUnion != null) {
+                for (case in flattenableUnion.cases) {
+                    val enumModel = case.model as? Model.Enum ?: continue
+                    builder.addType(enumModel.toTypeSpec(config, nameOverride = name.toPascalCase()))
+                }
 
-            builder.addFunction(
-                FunSpec.builder(paramName)
-                    .addModifiers(KModifier.ABSTRACT)
-                    .addParameter(paramName, type.toTypeName(config))
-                    .returns(childClassName)
-                    .build()
-            )
+                val enumClassName = parentClassName.nestedClass(name.toPascalCase())
+                val emittedTypes = mutableSetOf<TypeName>()
+                for (case in flattenableUnion.cases) {
+                    val caseTypeName = when (case.model) {
+                        is Model.Enum -> enumClassName
+                        else -> case.model.toTypeName(config)
+                    }
+                    if (!emittedTypes.add(caseTypeName)) continue
+                    builder.addFunction(
+                        FunSpec.builder(paramName)
+                            .addModifiers(KModifier.ABSTRACT)
+                            .addParameter(paramName, caseTypeName)
+                            .returns(childClassName)
+                            .build()
+                    )
+                }
+            } else {
+                builder.addFunction(
+                    FunSpec.builder(paramName)
+                        .addModifiers(KModifier.ABSTRACT)
+                        .addParameter(paramName, type.toTypeName(config))
+                        .returns(childClassName)
+                        .build()
+                )
+            }
         }
     }
 }
