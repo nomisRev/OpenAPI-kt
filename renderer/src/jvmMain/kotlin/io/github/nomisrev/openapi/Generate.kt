@@ -9,20 +9,31 @@ suspend fun OpenAPI.generate(config: RenderConfig = RenderConfig()): List<FileSp
 fun ApiTree.render(config: RenderConfig): List<FileSpec> =
     generateModels(config) + generateClient(config)
 
-fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> {
-    val objects = models.filterIsInstance<Model.Object>()
-    val (collections, regularObjects) = objects.partition { it.isTopLevelCollectionWrapper() }
-    val unions = models.filterIsInstance<Model.Union>()
-    val discriminatedObjects = models.filterIsInstance<Model.DiscriminatedObject>()
-    val nonDiscriminatedUnions = unions.filter { it.discriminator == null }
-    val serializationUtils = if (nonDiscriminatedUnions.isNotEmpty()) {
+fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> =
+    models.mapNotNull { model -> model.toFileSpecOrNull(config) } + additionalFiles(config)
+
+private fun ApiTree.additionalFiles(config: RenderConfig): List<FileSpec> {
+    val hasCustomObjectSerializer = models.filterIsInstance<Model.Object>()
+        .any { it.additionalProperties != Model.Object.AdditionalProperties.Allowed(false) }
+    val hasCustomUnionSerializer =
+        models.filterIsInstance<Model.Union>().any { it.discriminator == null }
+    return if (hasCustomObjectSerializer || hasCustomUnionSerializer) {
         listOf(generateSerializationUtils(config))
     } else emptyList()
-    return models.filterIsInstance<Model.Enum>().map { it.toFileSpec(config) } +
-        unions.map { it.toFileSpec(config) } +
-        discriminatedObjects.map { it.toFileSpec(config) } +
-        collections.map { it.toCollectionFileSpec(config) } +
-        regularObjects.map { it.toFileSpec(config) } +
-        serializationUtils
+}
+
+private fun Model.toFileSpecOrNull(config: RenderConfig): FileSpec? = when (this) {
+    is Model.Collection -> inner.toFileSpecOrNull(config)
+    is Model.DiscriminatedObject -> toFileSpec(config)
+    is Model.Enum -> toFileSpec(config)
+    is Model.Object -> toFileSpec(config)
+    is Model.Union -> toFileSpec(config)
+    is Model.Reference,
+    is Model.ByteArray,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.FreeFormJson,
+    is Model.Uuid,
+    is Model.Primitive -> null
 }
 

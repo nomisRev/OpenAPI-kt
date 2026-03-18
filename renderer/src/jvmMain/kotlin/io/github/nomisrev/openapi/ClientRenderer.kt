@@ -127,6 +127,9 @@ private fun PathSegment.addNavigationMember(
 
         is PathSegment.Parameter -> {
             val paramName = name.toCamelCase()
+
+            // TODO: If type is oneOf then we should generate n functions for every possible path input type.
+
             builder.addFunction(
                 FunSpec.builder(paramName)
                     .addModifiers(KModifier.ABSTRACT)
@@ -190,7 +193,14 @@ private fun Model.toInlineParameterTypeSpec(
     is Model.Object -> toTypeSpec(config, nameOverride = nameOverride)
     is Model.Union -> toTypeSpec(config, classNameOverride = ownerClassName.nestedClass(nameOverride))
     is Model.DiscriminatedObject -> toTypeSpec(config, classNameOverride = ownerClassName.nestedClass(nameOverride))
-    else -> null
+    is Model.ByteArray,
+    is Model.Collection,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.FreeFormJson,
+    is Model.Reference,
+    is Model.Uuid,
+    is Model.Primitive -> null
 }
 
 private fun deprecatedAnnotation(): AnnotationSpec =
@@ -529,10 +539,8 @@ private fun Route.buildSealedResponseTypeSpec(
     return builder.build()
 }
 
-private fun Route.Returns.singlePreferredModelOrNull(): Model? {
-    val singleResponse = responses.values.firstOrNull() ?: default ?: return null
-    return singleResponse.preferredModel()
-}
+private fun Route.Returns.singlePreferredModelOrNull(): Model? =
+    (responses.values.firstOrNull() ?: default)?.preferredModel()
 
 private fun Model.isRouteInlineModel(): Boolean =
     this is Model.ContextHolder && context.head is NamingContext.Path
@@ -546,7 +554,16 @@ private fun Model.toInlineOperationTypeSpecOrNull(
         is Model.Object -> toTypeSpec(config, nameOverride = nameOverride)
         is Model.Enum -> toTypeSpec(config, nameOverride = nameOverride)
         is Model.Union -> toTypeSpec(config, classNameOverride = ownerClassName.nestedClass(nameOverride))
-        else -> null
+
+        is Model.DiscriminatedObject, // This is only supported as top-level components schema
+        is Model.ByteArray,
+        is Model.Collection,
+        is Model.Date,
+        is Model.DateTime,
+        is Model.FreeFormJson,
+        is Model.Uuid,
+        is Model.Reference,
+        is Model.Primitive -> null
     }
 
 private fun Route.Bodies.inlineBodyTypeSpec(config: RenderConfig, ownerClassName: ClassName): TypeSpec? {
