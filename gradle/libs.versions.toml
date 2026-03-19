@@ -13,6 +13,7 @@ resources = "0.15.0"
 serialization="1.10.0"
 gratatouille = "0.2.2"
 coroutines = "1.10.1"
+java-diff-utils = "4.15"
 
 [libraries]
 compile-testing = { module = "dev.zacsweers.kctfork:core", version.ref = "test-compile" }
@@ -28,6 +29,7 @@ kotlinxresources = { module = "com.goncalossilva:resources", version.ref = "reso
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 gratatouille-runtime = { module = "com.gradleup.gratatouille:gratatouille-runtime", version.ref = "gratatouille" }
 gratatouille-tasks-runtime = { module = "com.gradleup.gratatouille:gratatouille-tasks-runtime", version.ref = "gratatouille" }
+java-diff-utils = { module = "io.github.java-diff-utils:java-diff-utils", version.ref = "java-diff-utils" }
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }

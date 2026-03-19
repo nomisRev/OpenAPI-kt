@@ -1104,6 +1104,132 @@ val clientSpec by testSuite {
         "client/inline-oneof-request-body-nested-path"
     )
 
+    // Reproducer: inline oneOf requestBody with collection branches that contain inline object items
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/repos/{owner}/{repo}/issues/{issue_number}/labels": {
+              "put": {
+                "operationId": "issues/set-labels",
+                "parameters": [
+                  {
+                    "name": "owner",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "string" }
+                  },
+                  {
+                    "name": "repo",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "string" }
+                  },
+                  {
+                    "name": "issue_number",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "integer" }
+                  }
+                ],
+                "requestBody": {
+                  "required": false,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "labels": {
+                                "type": "array",
+                                "minItems": 1,
+                                "description": "The names of the labels to set for the issue.",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "labels": {
+                                "type": "array",
+                                "minItems": 1,
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "name": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "required": [
+                                    "name"
+                                  ]
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": "string"
+                                }
+                              },
+                              "required": [
+                                "name"
+                              ]
+                            }
+                          },
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "Response",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": { "type": "string" }
+                            },
+                            "required": ["name"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/inline-oneof-request-body-collection-inline-items"
+    )
+
     clientTest(
         """
         {

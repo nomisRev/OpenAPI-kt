@@ -1,5 +1,7 @@
 package io.github.nomisrev.render
 
+import com.github.difflib.DiffUtils
+import com.github.difflib.UnifiedDiffUtils
 import com.squareup.kotlinpoet.FileSpec
 import de.infix.testBalloon.framework.core.TestSuite
 import de.infix.testBalloon.framework.shared.TestRegistering
@@ -10,18 +12,15 @@ import io.github.nomisrev.openapi.generateClient
 import io.github.nomisrev.openapi.generateModels
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.toApiTree
-import org.intellij.lang.annotations.Language
-import kotlinx.coroutines.runBlocking
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.jvm.java
-import kotlin.test.assertEquals
+import org.intellij.lang.annotations.Language
 import kotlin.test.assertTrue
 
-private fun readResourceText(path: String): String =
-    requireNotNull(TestSuite::class.java.classLoader.getResource(path.removePrefix("/"))?.readText()) {
-        "Resource not found: $path"
-    }
+private const val unifiedDiffContextLines = 3
+private const val maxDiffLinesPerFile = 200
+private const val goldenUpdateHint =
+    "Re-run with -PupdateGolden=true or UPDATE_GOLDEN=true to update renderer golden files."
 
 private val updateGolden: Boolean = listOfNotNull(
     System.getProperty("updateGolden"),
@@ -33,6 +32,98 @@ private val testRenderConfig = RenderConfig(
     apiPackage = "io.github.nomisrev.render.test.api",
     targets = setOf(KmpTarget.JVM),
 )
+
+private fun readGoldenFiles(outputDir: Path, dir: String): Map<String, String> {
+    require(Files.isDirectory(outputDir)) {
+        "Golden directory not found for '$dir': $outputDir. $goldenUpdateHint"
+    }
+    return Files.newDirectoryStream(outputDir) { path ->
+        Files.isRegularFile(path) && path.fileName.toString().endsWith(".kt")
+    }.use { entries ->
+        entries.asSequence()
+            .sortedBy { it.fileName.toString() }
+            .associate { file ->
+                file.fileName.toString().removeSuffix(".kt") to Files.readString(file)
+            }
+    }
+}
+
+private fun String.toDiffInputLines(): List<String> {
+    if (isEmpty()) return emptyList()
+    val normalized = replace("\r\n", "\n").replace('\r', '\n')
+    val lines = mutableListOf<String>()
+    var start = 0
+    normalized.forEachIndexed { index, c ->
+        if (c == '\n') {
+            lines += normalized.substring(start, index)
+            start = index + 1
+        }
+    }
+    if (start <= normalized.length) {
+        lines += normalized.substring(start)
+    }
+    return lines
+}
+
+private fun renderUnifiedDiff(dir: String, fileName: String, expected: String, actual: String): List<String> {
+    val expectedPath = "expected/$dir/$fileName.kt"
+    val actualPath = "actual/$dir/$fileName.kt"
+    val expectedLines = expected.toDiffInputLines()
+    val actualLines = actual.toDiffInputLines()
+    val patch = DiffUtils.diff(expectedLines, actualLines)
+    val unifiedDiff = UnifiedDiffUtils.generateUnifiedDiff(
+        expectedPath,
+        actualPath,
+        expectedLines,
+        patch,
+        unifiedDiffContextLines
+    )
+    if (unifiedDiff.size <= maxDiffLinesPerFile) return unifiedDiff
+    val omitted = unifiedDiff.size - maxDiffLinesPerFile
+    return unifiedDiff.take(maxDiffLinesPerFile) +
+        "... (diff truncated: $omitted more lines, max $maxDiffLinesPerFile)"
+}
+
+private fun formatFileList(files: List<String>): String =
+    if (files.isEmpty()) "-" else files.joinToString(", ") { "$it.kt" }
+
+private fun assertGoldenMatches(
+    dir: String,
+    expected: Map<String, String>,
+    actual: Map<String, String>
+) {
+    val missing = (expected.keys - actual.keys).sorted()
+    val unexpected = (actual.keys - expected.keys).sorted()
+    val changed = (expected.keys intersect actual.keys)
+        .asSequence()
+        .filter { expected.getValue(it) != actual.getValue(it) }
+        .sorted()
+        .toList()
+
+    if (missing.isEmpty() && unexpected.isEmpty() && changed.isEmpty()) return
+
+    val message = buildString {
+        appendLine("[renderer golden mismatch] dir=$dir")
+        appendLine("missing expected files (${missing.size}): ${formatFileList(missing)}")
+        appendLine("unexpected generated files (${unexpected.size}): ${formatFileList(unexpected)}")
+        appendLine("changed files (${changed.size}): ${formatFileList(changed)}")
+        if (changed.isNotEmpty()) {
+            appendLine()
+            changed.forEachIndexed { index, fileName ->
+                renderUnifiedDiff(
+                    dir = dir,
+                    fileName = fileName,
+                    expected = expected.getValue(fileName),
+                    actual = actual.getValue(fileName)
+                ).forEach(::appendLine)
+                if (index != changed.lastIndex) appendLine()
+            }
+        }
+        appendLine()
+        appendLine(goldenUpdateHint)
+    }
+    throw AssertionError(message)
+}
 
 @TestRegistering
 fun TestSuite.modelTest(json: String, dir: String): Unit {
@@ -93,21 +184,19 @@ fun TestSuite.renderSpec(
     val apiTree = OpenAPI.fromJson(json).toApiTree()
     val files = generate(apiTree, config).sortedBy { it.name }
     assertTrue(files.isNotEmpty(), "Expected renderer to generate files, but it returned an empty result.")
-    val actual = files.associate({ file ->
-        Pair(file.name, buildString { file.writeTo(this) })
-    })
+    val actual = files.associate { file ->
+        file.name to buildString { file.writeTo(this) }
+    }
+    val outputDir = Path.of("src/jvmTest/resources/kotlinTestData", dir)
     if (updateGolden) {
-        val outputDir = Path.of("src/jvmTest/resources/kotlinTestData", dir)
         Files.createDirectories(outputDir)
         actual.forEach { (name, content) ->
             Files.writeString(outputDir.resolve("$name.kt"), content)
         }
         return@test
     }
-    val expected = files.associate {
-        Pair(it.name, readResourceText("/kotlinTestData/$dir/${it.name}.kt"))
-    }
-    assertEquals(expected, actual)
+    val expected = readGoldenFiles(outputDir, dir)
+    assertGoldenMatches(dir, expected, actual)
 }
 
 private fun extractTopLevelSchemaName(json: String): String =
