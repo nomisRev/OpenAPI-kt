@@ -23,6 +23,9 @@ import io.github.nomisrev.openapi.routes.Route
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 val apiTreeSpec by testSuite {
     val stringType = Model.Primitive.String(
@@ -32,9 +35,41 @@ val apiTreeSpec by testSuite {
         isNullable = false,
         title = null,
     )
+    val intType = Model.Primitive.Int(
+        default = null,
+        description = null,
+        constraint = null,
+        isNullable = false,
+        title = null,
+    )
 
     fun literal(name: String): PathSegment = PathSegment.Literal(name)
     fun param(name: String): PathSegment = PathSegment.Parameter(name, stringType)
+    fun intParam(name: String): PathSegment = PathSegment.Parameter(name, intType)
+    fun overloadedWorkflowParam(name: String, routeKey: String): PathSegment.OverloadedParameter {
+        val enumType = Model.Enum(
+            context = NamingContext.path(listOf("workflows", routeKey, "workflowId")),
+            inner = stringType,
+            values = listOf("queued", "in-progress"),
+            default = null,
+            description = null,
+            title = null,
+            isNullable = false,
+        )
+        val unionType = Model.Union(
+            context = NamingContext.path(listOf("workflows", routeKey)),
+            cases = listOf(
+                Model.Union.Case(intType, discriminator = null),
+                Model.Union.Case(enumType, discriminator = null),
+            ),
+            default = null,
+            description = null,
+            title = null,
+            discriminator = null,
+            isNullable = false,
+        )
+        return PathSegment.OverloadedParameter(name, unionType)
+    }
 
     fun route(method: HttpMethod, vararg segments: PathSegment): Route = Route(
         summary = null,
@@ -52,6 +87,40 @@ val apiTreeSpec by testSuite {
         operations: Map<HttpMethod, Route> = emptyMap(),
         children: List<PathNode> = emptyList(),
     ): PathNode = PathNode(segment, operations, children)
+
+    fun overloadedCaseSignatures(segment: PathSegment.OverloadedParameter): List<String> =
+        segment.cases.map { case ->
+            when (val model = case.model) {
+                is Model.Primitive.Int -> "Int"
+                is Model.Enum -> "Enum(values=${model.values.joinToString(prefix = "[", postfix = "]")})"
+                else -> error("Unexpected overloaded path segment model: $model")
+            }
+        }
+
+    fun sharedWorkflowNode(tree: ApiTree): PathNode =
+        tree.children.single().children.single()
+
+    fun assertSharedPathParameterConflict(
+        routes: List<Route>,
+        expectedNode: String,
+        vararg expectedFragments: String,
+    ) {
+        val messages = listOf(routes, routes.reversed()).map { ordered ->
+            val error = assertFailsWith<IllegalArgumentException> {
+                ordered.buildTree("Conflicts")
+            }
+            val message = requireNotNull(error.message)
+            assertTrue(
+                message.startsWith("Conflicting shared path parameter node '$expectedNode': "),
+                message
+            )
+            expectedFragments.forEach { fragment ->
+                assertTrue(message.contains(fragment), message)
+            }
+            message
+        }
+        assertEquals(messages.first(), messages.last())
+    }
 
     test("buildTree empty routes") {
         assertEquals(
@@ -219,6 +288,70 @@ val apiTreeSpec by testSuite {
                 servers = emptyList(),
             ),
             listOf(getPets, getUsers).buildTree("Branches"),
+        )
+    }
+
+    test("buildTree reuses shared overloaded parameter node for compatible sibling routes in any order") {
+        val getRuns = route(
+            HttpMethod.Get,
+            literal("workflows"),
+            overloadedWorkflowParam("workflowId", "runs"),
+            literal("runs"),
+        )
+        val getHistory = route(
+            HttpMethod.Get,
+            literal("workflows"),
+            overloadedWorkflowParam("workflowId", "history"),
+            literal("history"),
+        )
+
+        val forwardNode = sharedWorkflowNode(listOf(getRuns, getHistory).buildTree("Workflows"))
+        val reverseNode = sharedWorkflowNode(listOf(getHistory, getRuns).buildTree("Workflows"))
+        val forwardSegment = assertIs<PathSegment.OverloadedParameter>(forwardNode.segment)
+        val reverseSegment = assertIs<PathSegment.OverloadedParameter>(reverseNode.segment)
+
+        assertEquals("workflowId", forwardSegment.name)
+        assertEquals(listOf("Int", "Enum(values=[queued, in-progress])"), overloadedCaseSignatures(forwardSegment))
+        assertEquals(overloadedCaseSignatures(forwardSegment), overloadedCaseSignatures(reverseSegment))
+        assertEquals(setOf("runs", "history"), forwardNode.children.map { it.segment.name }.toSet())
+        assertEquals(setOf("runs", "history"), reverseNode.children.map { it.segment.name }.toSet())
+    }
+
+    test("buildTree rejects mixed parameter and overloaded parameter on shared node regardless of insertion order") {
+        val getRuns = route(
+            HttpMethod.Get,
+            literal("workflows"),
+            overloadedWorkflowParam("workflowId", "runs"),
+            literal("runs"),
+        )
+        val getHistory = route(
+            HttpMethod.Get,
+            literal("workflows"),
+            param("workflowId"),
+            literal("history"),
+        )
+
+        assertSharedPathParameterConflict(
+            routes = listOf(getRuns, getHistory),
+            expectedNode = "/workflows/{workflowId}",
+            "GET /workflows/{workflowId}/history",
+            "GET /workflows/{workflowId}/runs",
+            "Parameter(name=workflowId, model=String)",
+            "OverloadedParameter(name=workflowId, type=Union(cases=[Int, Enum(values=[queued, in-progress])]))",
+        )
+    }
+
+    test("buildTree rejects different plain parameter models on shared node regardless of insertion order") {
+        val getPet = route(HttpMethod.Get, literal("pets"), param("petId"))
+        val deletePet = route(HttpMethod.Delete, literal("pets"), intParam("petId"))
+
+        assertSharedPathParameterConflict(
+            routes = listOf(getPet, deletePet),
+            expectedNode = "/pets/{petId}",
+            "DELETE /pets/{petId}",
+            "GET /pets/{petId}",
+            "Parameter(name=petId, model=Int)",
+            "Parameter(name=petId, model=String)",
         )
     }
 

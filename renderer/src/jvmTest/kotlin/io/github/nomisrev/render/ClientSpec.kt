@@ -147,6 +147,58 @@ val clientSpec by testSuite {
         "client/path-param-oneof-flat"
     )
 
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/workflows/{workflow_id}/runs": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "workflow_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "oneOf": [
+                        { "type": "integer", "format": "int32" },
+                        { "type": "string", "enum": ["queued", "in-progress"] }
+                      ]
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": { "description": "No Content" }
+                }
+              }
+            },
+            "/workflows/{workflow_id}/history": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "workflow_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "oneOf": [
+                        { "type": "integer", "format": "int32" },
+                        { "type": "string", "enum": ["queued", "in-progress"] }
+                      ]
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": { "description": "No Content" }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/path-param-oneof-flat-shared"
+    )
+
     // Phase 9 tests
 
     clientTest(
