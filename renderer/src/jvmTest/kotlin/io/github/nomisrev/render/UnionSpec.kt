@@ -258,6 +258,19 @@ val unionSpec by testSuite {
         "union/collection-and-primitive"
     )
 
+    modelTest(
+        """
+        |"Union": {
+        |  "oneOf": [
+        |    { "type": "string", "nullable": true },
+        |    { "type": "integer", "format": "int32" },
+        |    { "type": "array", "nullable": true, "items": { "type": "string" } }
+        |  ]
+        |}
+        """.trimMargin(),
+        "union/nullable-cases"
+    )
+
     // Inlined object + primitives (deserialization order: object first, string last)
     modelTest(
         """

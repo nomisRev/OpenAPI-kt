@@ -39,10 +39,10 @@ private val DecoderType = ClassName("kotlinx.serialization.encoding", "Decoder")
 private val EncoderType = ClassName("kotlinx.serialization.encoding", "Encoder")
 private val OptInType = ClassName("kotlin", "OptIn")
 private val MapType = ClassName("kotlin.collections", "Map")
-private val SerializerMember = MemberName("kotlinx.serialization.builtins", "serializer")
-private val NullableMember = MemberName("kotlinx.serialization.builtins", "nullable")
-private val ListSerializerMember = MemberName("kotlinx.serialization.builtins", "ListSerializer")
-private val ByteArraySerializerMember = MemberName("kotlinx.serialization.builtins", "ByteArraySerializer")
+internal val SerializerMember = MemberName("kotlinx.serialization.builtins", "serializer")
+internal val NullableMember = MemberName("kotlinx.serialization.builtins", "nullable")
+internal val ListSerializerMember = MemberName("kotlinx.serialization.builtins", "ListSerializer")
+internal val ByteArraySerializerMember = MemberName("kotlinx.serialization.builtins", "ByteArraySerializer")
 
 fun Model.Object.toTypeSpec(
     config: RenderConfig,
@@ -405,12 +405,22 @@ private fun serializerDeserializeCode(
         .addStatement("return known.copy(additional = additional)")
         .build()
 
-private fun Model.serializerCode(config: RenderConfig): CodeBlock {
-    val nonNullable = nonNullableSerializerCode(config)
+internal fun Model.serializerCode(
+    config: RenderConfig,
+    originalClassName: ClassName? = null,
+    className: ClassName? = null,
+    externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
+): CodeBlock {
+    val nonNullable = nonNullableSerializerCode(config, originalClassName, className, externalTypeNames)
     return if (isNullable) CodeBlock.of("%L.%M", nonNullable, NullableMember) else nonNullable
 }
 
-private fun Model.nonNullableSerializerCode(config: RenderConfig): CodeBlock =
+internal fun Model.nonNullableSerializerCode(
+    config: RenderConfig,
+    originalClassName: ClassName? = null,
+    className: ClassName? = null,
+    externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
+): CodeBlock =
     when (this) {
         is Model.Primitive.String -> CodeBlock.of("%T.%M()", kotlin.String::class, SerializerMember)
         is Model.Primitive.Int -> CodeBlock.of("%T.%M()", kotlin.Int::class, SerializerMember)
@@ -428,15 +438,35 @@ private fun Model.nonNullableSerializerCode(config: RenderConfig): CodeBlock =
             if (inner is Model.FreeFormJson) {
                 CodeBlock.of("%T.serializer()", JsonArrayType)
             } else {
-                CodeBlock.of("%M(%L)", ListSerializerMember, inner.serializerCode(config))
+                CodeBlock.of(
+                    "%M(%L)",
+                    ListSerializerMember,
+                    inner.serializerCode(config, originalClassName, className, externalTypeNames)
+                )
             }
 
-        is Model.Object -> CodeBlock.of("%T.serializer()", context.toClassName(config))
-        is Model.Enum -> CodeBlock.of("%T.serializer()", context.toClassName(config))
-        is Model.Reference -> CodeBlock.of("%T.serializer()", context.toClassName(config))
-        is Model.Union -> CodeBlock.of("%T.serializer()", context.toClassName(config))
-        is Model.DiscriminatedObject -> CodeBlock.of("%T.serializer()", context.toClassName(config))
+        is Model.Object -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))
+        is Model.Enum -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))
+        is Model.Reference -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))
+        is Model.Union -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))
+        is Model.DiscriminatedObject -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))
     }
+
+private fun Model.ContextHolder.serializerClassName(
+    config: RenderConfig,
+    originalClassName: ClassName?,
+    className: ClassName?,
+    externalTypeNames: Map<ClassName, TypeName>,
+): TypeName =
+    context.toClassName(config)
+        .let { typeName ->
+            if (originalClassName != null && className != null) {
+                typeName.remapNestedClassName(originalClassName, className)
+            } else {
+                typeName
+            }
+        }
+        .remapTypeNames(externalTypeNames)
 
 internal fun Model.defaultLiteral(config: RenderConfig): CodeBlock? =
     when (this) {

@@ -34,12 +34,6 @@ private val JsonElementType = ClassName("kotlinx.serialization.json", "JsonEleme
 private val JsonDecoderType = ClassName("kotlinx.serialization.json", "JsonDecoder")
 private val PolymorphicKindType = ClassName("kotlinx.serialization.descriptors", "PolymorphicKind")
 private val BuildSerialDescriptorMember = MemberName("kotlinx.serialization.descriptors", "buildSerialDescriptor")
-private val SerializerMember = MemberName("kotlinx.serialization.builtins", "serializer")
-private val ListSerializerMember = MemberName("kotlinx.serialization.builtins", "ListSerializer")
-private val ByteArraySerializerMember = MemberName("kotlinx.serialization.builtins", "ByteArraySerializer")
-private val LocalDateType = ClassName("kotlinx.datetime", "LocalDate")
-private val LocalDateTimeType = ClassName("kotlinx.datetime", "LocalDateTime")
-private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")
 
 fun Model.Union.toTypeSpec(
     config: RenderConfig,
@@ -720,37 +714,6 @@ private fun caseSerializerCode(
 ): CodeBlock =
     if (rendered.isInlined) CodeBlock.of("%T.serializer()", className.nestedClass(rendered.caseSimpleName))
     else case.model.serializerCode(config, originalClassName, className, externalTypeNames)
-
-// Serializer code for union cases - generates the serializer expression for a model
-private fun Model.serializerCode(
-    config: RenderConfig,
-    originalClassName: ClassName,
-    className: ClassName,
-    externalTypeNames: Map<ClassName, TypeName>,
-): CodeBlock =
-    when (this) {
-        is Model.Primitive.String -> CodeBlock.of("%T.%M()", kotlin.String::class, SerializerMember)
-        is Model.Primitive.Int -> CodeBlock.of("%T.%M()", kotlin.Int::class, SerializerMember)
-        is Model.Primitive.Long -> CodeBlock.of("%T.%M()", kotlin.Long::class, SerializerMember)
-        is Model.Primitive.Float -> CodeBlock.of("%T.%M()", kotlin.Float::class, SerializerMember)
-        is Model.Primitive.Double -> CodeBlock.of("%T.%M()", kotlin.Double::class, SerializerMember)
-        is Model.Primitive.Boolean -> CodeBlock.of("%T.%M()", kotlin.Boolean::class, SerializerMember)
-        is Model.Primitive.Unit -> CodeBlock.of("%T.%M()", kotlin.Unit::class, SerializerMember)
-        is Model.ByteArray -> CodeBlock.of("%M()", ByteArraySerializerMember)
-        is Model.Uuid -> CodeBlock.of("%T.serializer()", UuidType)
-        is Model.Date -> CodeBlock.of("%T.serializer()", LocalDateType)
-        is Model.DateTime -> CodeBlock.of("%T.serializer()", LocalDateTimeType)
-        is Model.FreeFormJson -> CodeBlock.of("%T.serializer()", JsonElementType)
-        is Model.Collection ->
-            if (inner is Model.FreeFormJson) CodeBlock.of("%T.serializer()", JsonArrayType)
-            else CodeBlock.of("%M(%L)", ListSerializerMember, inner.serializerCode(config, originalClassName, className, externalTypeNames))
-
-        is Model.Object -> CodeBlock.of("%T.serializer()", context.toClassName(config).remapNestedClassName(originalClassName, className).remapTypeNames(externalTypeNames))
-        is Model.Enum -> CodeBlock.of("%T.serializer()", context.toClassName(config).remapNestedClassName(originalClassName, className).remapTypeNames(externalTypeNames))
-        is Model.Reference -> CodeBlock.of("%T.serializer()", context.toClassName(config).remapNestedClassName(originalClassName, className).remapTypeNames(externalTypeNames))
-        is Model.Union -> CodeBlock.of("%T.serializer()", context.toClassName(config).remapNestedClassName(originalClassName, className).remapTypeNames(externalTypeNames))
-        is Model.DiscriminatedObject -> CodeBlock.of("%T.serializer()", context.toClassName(config).remapNestedClassName(originalClassName, className).remapTypeNames(externalTypeNames))
-    }
 
 private fun TypeName.usesUuid(): Boolean =
     when (this) {
