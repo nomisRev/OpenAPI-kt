@@ -47,7 +47,7 @@ public class Alerts internal constructor(
       @Serializable
       @JvmInline
       public value class CasePatchList(
-        public val `value`: List<Alerts.Has.Patch>,
+        public val `value`: List<Patch>,
       ) : Has
 
       @Serializable
@@ -64,7 +64,7 @@ public class Alerts internal constructor(
         override val descriptor: SerialDescriptor =
             buildSerialDescriptor("io.github.nomisrev.render.test.client.inline.oneof.components.parameter.Alerts.Get.Has", PolymorphicKind.SEALED) {
           element("CaseString", String.serializer().descriptor)
-          element("CasePatchList", ListSerializer(Alerts.Has.Patch.serializer()).descriptor)
+          element("CasePatchList", ListSerializer(Patch.serializer()).descriptor)
         }
 
         override fun deserialize(decoder: Decoder): Has {
@@ -72,7 +72,7 @@ public class Alerts internal constructor(
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
           return json.attemptDeserialize(
             value,
-            CasePatchList::class to { CasePatchList(decodeFromJsonElement(ListSerializer(Alerts.Has.Patch.serializer()), it)) },
+            CasePatchList::class to { CasePatchList(decodeFromJsonElement(ListSerializer(Patch.serializer()), it)) },
             CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
           )
         }
@@ -80,7 +80,7 @@ public class Alerts internal constructor(
         override fun serialize(encoder: Encoder, `value`: Has) {
           when(value) {
             is CaseString -> encoder.encodeSerializableValue(String.serializer(), value.value)
-            is CasePatchList -> encoder.encodeSerializableValue(ListSerializer(Alerts.Has.Patch.serializer()), value.value)
+            is CasePatchList -> encoder.encodeSerializableValue(ListSerializer(Patch.serializer()), value.value)
           }
         }
       }

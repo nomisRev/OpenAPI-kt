@@ -804,7 +804,11 @@ private fun Model.toInlineOperationTypeSpecOrNull(
             externalTypeNames = externalTypeNames,
         )
         is Model.Enum -> toTypeSpec(config, nameOverride = nameOverride)
-        is Model.Union -> toTypeSpec(config, classNameOverride = ownerClassName.nestedClass(nameOverride))
+        is Model.Union -> toTypeSpec(
+            config,
+            classNameOverride = ownerClassName.nestedClass(nameOverride),
+            externalTypeNames = externalTypeNames,
+        )
 
         is Model.DiscriminatedObject, // This is only supported as top-level components schema
         is Model.ByteArray,

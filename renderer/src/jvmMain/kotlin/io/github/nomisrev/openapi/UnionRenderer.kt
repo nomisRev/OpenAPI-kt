@@ -40,13 +40,16 @@ private val ByteArraySerializerMember = MemberName("kotlinx.serialization.builti
 private val LocalDateType = ClassName("kotlinx.datetime", "LocalDate")
 private val LocalDateTimeType = ClassName("kotlinx.datetime", "LocalDateTime")
 private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")
+
 fun Model.Union.toTypeSpec(
     config: RenderConfig,
     classNameOverride: ClassName? = null,
+    externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
 ): TypeSpec {
-    val className = classNameOverride ?: context.toClassName(config)
-    return if (discriminator != null) toDiscriminatedTypeSpec(config, className)
-    else toNonDiscriminatedTypeSpec(config, className)
+    val originalClassName = context.toClassName(config)
+    val className = classNameOverride ?: originalClassName
+    return if (discriminator != null) toDiscriminatedTypeSpec(config, originalClassName, className, externalTypeNames)
+    else toNonDiscriminatedTypeSpec(config, originalClassName, className, externalTypeNames)
 }
 
 fun Model.Union.toFileSpec(config: RenderConfig): FileSpec {
@@ -60,10 +63,12 @@ fun Model.Union.toFileSpec(config: RenderConfig): FileSpec {
 
 private fun Model.Union.toDiscriminatedTypeSpec(
     config: RenderConfig,
+    originalClassName: ClassName,
     className: ClassName,
+    externalTypeNames: Map<ClassName, TypeName>,
 ): TypeSpec {
     val disc = requireNotNull(discriminator)
-    val renderedCases = cases.map { it.renderDiscriminatedCase(config, className, disc) }
+    val renderedCases = cases.map { it.renderDiscriminatedCase(config, originalClassName, className, disc, externalTypeNames) }
 
     val builder = TypeSpec.interfaceBuilder(className.simpleName)
         .addModifiers(KModifier.SEALED)
@@ -97,24 +102,35 @@ private fun Model.Union.toDiscriminatedTypeSpec(
 
 private fun Model.Union.Case.renderDiscriminatedCase(
     config: RenderConfig,
+    originalClassName: ClassName,
     parentInterface: ClassName,
     discriminatorField: String,
+    externalTypeNames: Map<ClassName, TypeName>,
 ): RenderedUnionCase {
     val serialName = serialNameOrNull(discriminatorField)
     val caseName = serialName?.toPascalCase() ?: caseSimpleName(config)
     return when (val caseModel = model) {
         is Model.Object ->
             if (!caseModel.context.isTopLevel()) {
-                RenderedUnionCase(caseModel.toTypeSpec(config, parentInterface, serialName, nameOverride = caseName), usesUuid = false)
+                RenderedUnionCase(
+                    caseModel.toTypeSpec(
+                        config,
+                        parentInterface,
+                        serialName,
+                        nameOverride = caseName,
+                        externalTypeNames = externalTypeNames,
+                    ),
+                    usesUuid = false,
+                )
             } else {
-                renderWrappedTypeSpec(config, parentInterface, caseName, serialName)
+                renderWrappedTypeSpec(config, originalClassName, parentInterface, caseName, serialName, externalTypeNames)
             }
 
         is Model.Enum ->
             if (!caseModel.context.isTopLevel()) {
                 RenderedUnionCase(caseModel.toTypeSpec(config, parentInterface, serialName, nameOverride = caseName), usesUuid = false)
             } else {
-                renderWrappedTypeSpec(config, parentInterface, caseName, serialName)
+                renderWrappedTypeSpec(config, originalClassName, parentInterface, caseName, serialName, externalTypeNames)
             }
 
         is Model.Primitive.Unit -> {
@@ -127,7 +143,7 @@ private fun Model.Union.Case.renderDiscriminatedCase(
             RenderedUnionCase(typeSpec, usesUuid = false)
         }
 
-        else -> renderWrappedTypeSpec(config, parentInterface, caseName, serialName)
+        else -> renderWrappedTypeSpec(config, originalClassName, parentInterface, caseName, serialName, externalTypeNames)
     }
 }
 
@@ -135,14 +151,16 @@ private fun Model.Union.Case.renderDiscriminatedCase(
 
 private fun Model.Union.toNonDiscriminatedTypeSpec(
     config: RenderConfig,
+    originalClassName: ClassName,
     className: ClassName,
+    externalTypeNames: Map<ClassName, TypeName>,
 ): TypeSpec {
 
     // Check for open enum pattern: exactly 2 cases, one Enum + one String
     val openEnum = detectOpenEnum()
     if (openEnum != null) return buildOpenEnumTypeSpec(config, className, openEnum)
 
-    val renderedCases = cases.map { it.renderNonDiscriminatedCase(config, className) }
+    val renderedCases = cases.map { it.renderNonDiscriminatedCase(config, originalClassName, className, externalTypeNames) }
 
     val builder = TypeSpec.interfaceBuilder(className.simpleName)
         .addModifiers(KModifier.SEALED)
@@ -165,12 +183,15 @@ private fun Model.Union.toNonDiscriminatedTypeSpec(
         ?.let { builder.addKdoc("%L\n", it.escapeForKdoc()) }
 
     renderedCases.forEach { builder.addType(it.typeSpec) }
-    collectionNestedTypeSpecs(config).forEach(builder::addType)
-    builder.addType(buildSerializerObject(config, className, renderedCases))
+    collectionNestedTypeSpecs(config, externalTypeNames).forEach(builder::addType)
+    builder.addType(buildSerializerObject(config, originalClassName, className, renderedCases, externalTypeNames))
     return builder.build()
 }
 
-private fun Model.Union.collectionNestedTypeSpecs(config: RenderConfig): List<TypeSpec> =
+private fun Model.Union.collectionNestedTypeSpecs(
+    config: RenderConfig,
+    externalTypeNames: Map<ClassName, TypeName>,
+): List<TypeSpec> =
     cases.asSequence()
         .mapNotNull { (it.model as? Model.Collection)?.inner?.nestedOrNull() }
         .filterIsInstance<Model.ContextHolder>()
@@ -178,7 +199,7 @@ private fun Model.Union.collectionNestedTypeSpecs(config: RenderConfig): List<Ty
         .mapNotNull { model ->
             when (model) {
                 is Model.Enum -> model.toTypeSpec(config)
-                is Model.Object -> model.toTypeSpec(config)
+                is Model.Object -> model.toTypeSpec(config, externalTypeNames = externalTypeNames)
                 else -> null
             }
         }
@@ -186,20 +207,22 @@ private fun Model.Union.collectionNestedTypeSpecs(config: RenderConfig): List<Ty
 
 private fun Model.Union.Case.renderNonDiscriminatedCase(
     config: RenderConfig,
+    originalClassName: ClassName,
     parentInterface: ClassName,
+    externalTypeNames: Map<ClassName, TypeName>,
 ): RenderedUnionCase {
     val simpleName = caseSimpleName(config)
     return when (val caseModel = model) {
         is Model.Object ->
             if (!caseModel.context.isTopLevel()) {
                 RenderedUnionCase(
-                    caseModel.toTypeSpec(config, parentInterface),
+                    caseModel.toTypeSpec(config, parentInterface, externalTypeNames = externalTypeNames),
                     usesUuid = false,
                     isInlined = true,
                     caseSimpleName = simpleName,
                 )
             } else {
-                renderWrappedTypeSpec(config, parentInterface, simpleName, null)
+                renderWrappedTypeSpec(config, originalClassName, parentInterface, simpleName, null, externalTypeNames)
             }
 
         is Model.Enum ->
@@ -211,7 +234,7 @@ private fun Model.Union.Case.renderNonDiscriminatedCase(
                     caseSimpleName = simpleName,
                 )
             } else {
-                renderWrappedTypeSpec(config, parentInterface, simpleName, null)
+                renderWrappedTypeSpec(config, originalClassName, parentInterface, simpleName, null, externalTypeNames)
             }
 
         is Model.Primitive.Unit -> {
@@ -227,26 +250,26 @@ private fun Model.Union.Case.renderNonDiscriminatedCase(
         is Model.Union ->
             if (!caseModel.context.isTopLevel()) {
                 RenderedUnionCase(
-                    caseModel.toTypeSpec(config),
+                    caseModel.toTypeSpec(config, externalTypeNames = externalTypeNames),
                     usesUuid = false,
                     isInlined = false,
                     caseSimpleName = simpleName,
                     isNestedUnion = true,
                 )
             } else {
-                renderWrappedTypeSpec(config, parentInterface, simpleName, null)
+                renderWrappedTypeSpec(config, originalClassName, parentInterface, simpleName, null, externalTypeNames)
             }
 
         // Nested discriminated object → inlined
         is Model.DiscriminatedObject ->
             if (!caseModel.context.isTopLevel()) {
                 // TODO: DiscriminatedObject rendering not yet implemented
-                renderWrappedTypeSpec(config, parentInterface, simpleName, null)
+                renderWrappedTypeSpec(config, originalClassName, parentInterface, simpleName, null, externalTypeNames)
             } else {
-                renderWrappedTypeSpec(config, parentInterface, simpleName, null)
+                renderWrappedTypeSpec(config, originalClassName, parentInterface, simpleName, null, externalTypeNames)
             }
 
-        else -> renderWrappedTypeSpec(config, parentInterface, simpleName, null)
+        else -> renderWrappedTypeSpec(config, originalClassName, parentInterface, simpleName, null, externalTypeNames)
     }
 }
 
@@ -254,24 +277,28 @@ private fun Model.Union.Case.renderNonDiscriminatedCase(
 
 private fun Model.Union.buildSerializerObject(
     config: RenderConfig,
+    originalClassName: ClassName,
     className: ClassName,
     renderedCases: List<RenderedUnionCase>,
+    externalTypeNames: Map<ClassName, TypeName>,
 ): TypeSpec {
     val declarationCases = cases.zip(renderedCases)
     val orderedCases = declarationCases.sortedByDeserializationOrder()
 
     return TypeSpec.objectBuilder("Serializer")
         .addSuperinterface(KSerializerType.parameterizedBy(className))
-        .addProperty(buildDescriptorProperty(config, className, declarationCases))
-        .addFunction(buildDeserializeFunction(config, className, orderedCases))
-        .addFunction(buildSerializeFunction(config, className, declarationCases))
+        .addProperty(buildDescriptorProperty(config, originalClassName, className, declarationCases, externalTypeNames))
+        .addFunction(buildDeserializeFunction(config, originalClassName, className, orderedCases, externalTypeNames))
+        .addFunction(buildSerializeFunction(config, originalClassName, className, declarationCases, externalTypeNames))
         .build()
 }
 
 private fun buildDescriptorProperty(
     config: RenderConfig,
+    originalClassName: ClassName,
     className: ClassName,
     cases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    externalTypeNames: Map<ClassName, TypeName>,
 ): PropertySpec {
     val descriptorCode = CodeBlock.builder()
         .beginControlFlow(
@@ -285,7 +312,7 @@ private fun buildDescriptorProperty(
                 addStatement(
                     "element(%S, %L.descriptor)",
                     rendered.caseSimpleName,
-                    caseSerializerCode(case, rendered, config, className)
+                    caseSerializerCode(case, rendered, config, originalClassName, className, externalTypeNames)
                 )
             }
         }
@@ -306,8 +333,10 @@ private fun buildDescriptorProperty(
 
 private fun buildDeserializeFunction(
     config: RenderConfig,
+    originalClassName: ClassName,
     className: ClassName,
     orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    externalTypeNames: Map<ClassName, TypeName>,
 ): FunSpec {
     val code = CodeBlock.builder()
         .addStatement("val value = decoder.decodeSerializableValue(%T.serializer())", JsonElementType)
@@ -322,7 +351,7 @@ private fun buildDeserializeFunction(
         .apply {
             orderedCases.forEach { (case, rendered) ->
                 val caseClassName = className.nestedClass(rendered.caseSimpleName)
-                val serializerCode = caseSerializerCode(case, rendered, config, className)
+                val serializerCode = caseSerializerCode(case, rendered, config, originalClassName, className, externalTypeNames)
                 if (rendered.isInlined || rendered.isNestedUnion) {
                     addStatement(
                         "%T::class to { decodeFromJsonElement(%L, it) },",
@@ -353,15 +382,17 @@ private fun buildDeserializeFunction(
 
 private fun buildSerializeFunction(
     config: RenderConfig,
+    originalClassName: ClassName,
     className: ClassName,
     allCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    externalTypeNames: Map<ClassName, TypeName>,
 ): FunSpec {
     val code = CodeBlock.builder()
         .beginControlFlow("when(value)")
         .apply {
             allCases.forEach { (case, rendered) ->
                 val caseClassName = className.nestedClass(rendered.caseSimpleName)
-                val serializerCode = caseSerializerCode(case, rendered, config, className)
+                val serializerCode = caseSerializerCode(case, rendered, config, originalClassName, className, externalTypeNames)
                 if (rendered.isInlined || rendered.isNestedUnion) {
                     addStatement(
                         "is %T -> encoder.encodeSerializableValue(%L, value)",
@@ -569,11 +600,15 @@ private data class RenderedUnionCase(
 
 private fun Model.Union.Case.renderWrappedTypeSpec(
     config: RenderConfig,
+    originalClassName: ClassName,
     parentInterface: ClassName,
     simpleName: String,
-    serialName: String?
+    serialName: String?,
+    externalTypeNames: Map<ClassName, TypeName>,
 ): RenderedUnionCase {
     val valueType = model.toTypeName(config)
+        .remapNestedClassName(originalClassName, parentInterface)
+        .remapTypeNames(externalTypeNames)
     val typeSpec = TypeSpec.classBuilder(simpleName)
         .addModifiers(KModifier.VALUE)
         .primaryConstructor(
@@ -679,13 +714,20 @@ private fun caseSerializerCode(
     case: Model.Union.Case,
     rendered: RenderedUnionCase,
     config: RenderConfig,
+    originalClassName: ClassName,
     className: ClassName,
+    externalTypeNames: Map<ClassName, TypeName>,
 ): CodeBlock =
     if (rendered.isInlined) CodeBlock.of("%T.serializer()", className.nestedClass(rendered.caseSimpleName))
-    else case.model.serializerCode(config)
+    else case.model.serializerCode(config, originalClassName, className, externalTypeNames)
 
 // Serializer code for union cases - generates the serializer expression for a model
-private fun Model.serializerCode(config: RenderConfig): CodeBlock =
+private fun Model.serializerCode(
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    externalTypeNames: Map<ClassName, TypeName>,
+): CodeBlock =
     when (this) {
         is Model.Primitive.String -> CodeBlock.of("%T.%M()", kotlin.String::class, SerializerMember)
         is Model.Primitive.Int -> CodeBlock.of("%T.%M()", kotlin.Int::class, SerializerMember)
@@ -701,13 +743,13 @@ private fun Model.serializerCode(config: RenderConfig): CodeBlock =
         is Model.FreeFormJson -> CodeBlock.of("%T.serializer()", JsonElementType)
         is Model.Collection ->
             if (inner is Model.FreeFormJson) CodeBlock.of("%T.serializer()", JsonArrayType)
-            else CodeBlock.of("%M(%L)", ListSerializerMember, inner.serializerCode(config))
+            else CodeBlock.of("%M(%L)", ListSerializerMember, inner.serializerCode(config, originalClassName, className, externalTypeNames))
 
-        is Model.Object -> CodeBlock.of("%T.serializer()", context.toClassName(config))
-        is Model.Enum -> CodeBlock.of("%T.serializer()", context.toClassName(config))
-        is Model.Reference -> CodeBlock.of("%T.serializer()", context.toClassName(config))
-        is Model.Union -> CodeBlock.of("%T.serializer()", context.toClassName(config))
-        is Model.DiscriminatedObject -> CodeBlock.of("%T.serializer()", context.toClassName(config))
+        is Model.Object -> CodeBlock.of("%T.serializer()", context.toClassName(config).remapNestedClassName(originalClassName, className).remapTypeNames(externalTypeNames))
+        is Model.Enum -> CodeBlock.of("%T.serializer()", context.toClassName(config).remapNestedClassName(originalClassName, className).remapTypeNames(externalTypeNames))
+        is Model.Reference -> CodeBlock.of("%T.serializer()", context.toClassName(config).remapNestedClassName(originalClassName, className).remapTypeNames(externalTypeNames))
+        is Model.Union -> CodeBlock.of("%T.serializer()", context.toClassName(config).remapNestedClassName(originalClassName, className).remapTypeNames(externalTypeNames))
+        is Model.DiscriminatedObject -> CodeBlock.of("%T.serializer()", context.toClassName(config).remapNestedClassName(originalClassName, className).remapTypeNames(externalTypeNames))
     }
 
 private fun TypeName.usesUuid(): Boolean =
