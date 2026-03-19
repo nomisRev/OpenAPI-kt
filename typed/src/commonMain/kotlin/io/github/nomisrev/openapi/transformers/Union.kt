@@ -153,12 +153,7 @@ private val primitives = setOf(Type.Basic.String, Type.Basic.Number, Type.Basic.
 private fun Schema.unionCaseName(index: Int): String {
     val fmt = format
     return when (type) {
-        Type.Basic.Object -> properties?.entries?.joinToString(
-            prefix = "",
-            separator = "And"
-        ) { (name, _) -> name.toPascalCase() }
-            .takeIf { (it?.length ?: 0) < 90 }
-            ?: caseIndex.getOrElse(index) { "Case$index" }
+        Type.Basic.Object -> objectUnionCaseName(index)
 
         Type.Basic.Number -> if (fmt == "float") "CaseFloat" else "CaseDouble"
         Type.Basic.Boolean -> "CaseBoolean"
@@ -188,6 +183,47 @@ private fun Schema.unionCaseName(index: Int): String {
         null -> caseIndex.getOrElse(index) { "Case$index" }
     }
 }
+
+private fun Schema.objectUnionCaseName(index: Int): String {
+    val props = properties?.entries.orEmpty()
+    if (props.size == 1) {
+        val (name, refOrSchema) = props.single()
+        val suffix = refOrSchema.valueOrNull()?.objectUnionPropertySuffix()
+        if (!suffix.isNullOrBlank()) {
+            return "${name.toPascalCase()}$suffix"
+        }
+    }
+    return props.joinToString(prefix = "", separator = "And") { (name, _) -> name.toPascalCase() }
+        .takeIf { it.isNotBlank() && it.length < 90 }
+        ?: caseIndex.getOrElse(index) { "Case$index" }
+}
+
+private fun Schema.objectUnionPropertySuffix(): String? = when (type) {
+    Schema.Type.Basic.Array -> items?.valueOrNull()?.collectionEntrySuffix()
+    else -> null
+}
+
+private fun Schema.collectionEntrySuffix(): String? = when (type) {
+    Schema.Type.Basic.String -> "Strings"
+    Schema.Type.Basic.Integer -> if (format == "int32") "Ints" else "Longs"
+    Schema.Type.Basic.Number -> if (format == "float") "Floats" else "Doubles"
+    Schema.Type.Basic.Boolean -> "Booleans"
+    Schema.Type.Basic.Object ->
+        properties?.keys
+            ?.joinToString(separator = "And") { it.toPascalCase() }
+            ?.takeIf(String::isNotBlank)
+            ?.pluralizeCaseName()
+    Schema.Type.Basic.Array -> items?.valueOrNull()?.collectionEntrySuffix()?.removeSuffix("s")?.plus("List")
+    else -> null
+}
+
+private fun String.pluralizeCaseName(): String =
+    when {
+        endsWith("s") -> this
+        endsWith("y") && length > 1 && this[length - 2].lowercaseChar() !in setOf('a', 'e', 'i', 'o', 'u') ->
+            dropLast(1) + "ies"
+        else -> this + "s"
+    }
 
 val caseIndex = listOf(
     "One",
@@ -245,19 +281,12 @@ private suspend fun NamingContext.unionCase(
         is ReferenceOr.Value<Schema> -> unionCase(index, refOrSchema, refOrSchema.peek(), context, context2)
     }
 
-    Type.Basic.Object -> {
+    Type.Basic.Object ->
         if ((context - refOrSchema).all { it.key is ReferenceOr.Reference }) {
             nest(NamingContext.UnionCase("CaseElse"))
-        } else nest(
-            NamingContext.UnionCase(
-                schema.properties?.entries?.joinToString(
-                    prefix = "",
-                    separator = "And"
-                ) { (name, _) ->
-                    name.replaceFirstChar(Char::uppercaseChar)
-                }.takeIf { (it?.length ?: 0) < 90 } ?: caseIndex[index])
-        )
-    }
+        } else {
+            nest(NamingContext.UnionCase(schema.objectUnionCaseName(index)))
+        }
 
     Type.Basic.Null -> TODO("$schema")
     Type.Basic.Number -> nest(NamingContext.UnionCase("CaseDouble"))

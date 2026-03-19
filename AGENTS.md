@@ -1,7 +1,5 @@
 # Repository Guidelines
 
-## Scope
-- This file applies to the entire repository unless a deeper `AGENTS.md` overrides it.
 - Keep changes focused on the task at hand. Do not refactor unrelated modules while touching shared code.
 
 ## Project Layout

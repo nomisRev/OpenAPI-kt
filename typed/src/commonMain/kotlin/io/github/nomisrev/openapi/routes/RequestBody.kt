@@ -99,12 +99,22 @@ private suspend fun RequestBody.toBody(
     schema: ReferenceOr<Schema>,
 ): Route.Body {
     val name = NamingContext.path(segments, method).nest(NamingContext.RouteBody)
-    return Route.Body.SetBody(
-        contentType = ContentType.parse(contentType),
-        type = schema.toModel(name, SchemaContext.Write),
-        description = description,
-        extensions = mediaType.extensions,
-    )
+    val model = schema.toModel(name, SchemaContext.Write)
+    return if (model is Model.Union && model.discriminator == null && model.context.head is NamingContext.Path) {
+        Route.Body.OverloadedBody(
+            contentType = ContentType.parse(contentType),
+            type = model,
+            description = description,
+            extensions = mediaType.extensions,
+        )
+    } else {
+        Route.Body.SetBody(
+            contentType = ContentType.parse(contentType),
+            type = model,
+            description = description,
+            extensions = mediaType.extensions,
+        )
+    }
 }
 
 // TODO Move to Registry and support top-level schemas.

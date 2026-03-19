@@ -585,6 +585,18 @@ private fun addBodyCode(code: CodeBlock.Builder, bodies: Route.Bodies, config: R
             }
         }
 
+        is Route.Body.OverloadedBody -> {
+            if (bodies.required) {
+                code.addStatement("%M(%T.Application.Json)", ContentTypeFunMember, ContentTypeType)
+                code.addStatement("%M(body)", SetBodyMember)
+            } else {
+                code.beginControlFlow("body?.let")
+                code.addStatement("%M(%T.Application.Json)", ContentTypeFunMember, ContentTypeType)
+                code.addStatement("%M(it)", SetBodyMember)
+                code.endControlFlow()
+            }
+        }
+
         is Route.Body.FormUrlEncoded -> {
             code.add("%M(%T.build {\n", SetBodyMember, ParametersType)
             code.indent()
@@ -703,6 +715,16 @@ private fun Route.Bodies.toImplInvokeParameterSpecs(
             listOf(ParameterSpec.builder("body", typeName).build())
         }
 
+        is Route.Body.OverloadedBody -> {
+            val bodyType = if (usesNestedBodyType) {
+                methodClassName.nestedClass("Body")
+            } else {
+                body.type.toTypeName(config)
+            }
+            val typeName = if (!required) bodyType.copy(nullable = true) else bodyType
+            listOf(ParameterSpec.builder("body", typeName).build())
+        }
+
         is Route.Body.FormUrlEncoded -> {
             body.parameters.map { formData ->
                 ParameterSpec.builder(
@@ -732,7 +754,15 @@ private fun Model.isRouteInlineModel(): Boolean =
     this is Model.ContextHolder && context.head is NamingContext.Path
 
 private fun Route.Bodies.usesNestedBodyType(): Boolean {
-    val setBody = defaultOrNull() as? Route.Body.SetBody ?: return false
-    return setBody.type.isRouteInlineModel() &&
-        (setBody.type is Model.Object || setBody.type is Model.Enum || setBody.type is Model.Union)
+    val model = defaultOrNull().bodyModelOrNull() ?: return false
+    return model.isRouteInlineModel() &&
+        (model is Model.Object || model is Model.Enum || model is Model.Union)
+}
+
+private fun Route.Body?.bodyModelOrNull(): Model? = when (this) {
+    is Route.Body.SetBody -> type
+    is Route.Body.OverloadedBody -> type
+    is Route.Body.FormUrlEncoded,
+    is Route.Body.Multipart,
+    null -> null
 }

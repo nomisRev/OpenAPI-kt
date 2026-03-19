@@ -90,16 +90,16 @@ data class Route(
         val extensions: Map<String, JsonElement>,
     ) {
         fun defaultOrNull(): Body? =
-            setBodyOrNull() ?: formUrlEncodedOrNull() ?: multipartOrNull()
+            defaultBodyOrNull() ?: formUrlEncodedOrNull() ?: multipartOrNull()
 
-        private fun setBodyOrNull(): Body.SetBody? =
+        private fun defaultBodyOrNull(): Body? =
             types.entries.firstNotNullOfOrNull { (key, value) ->
                 val isDefault =
                     ContentType.Application.Json.match(key) ||
                             ContentType.Application.Xml.match(key) ||
                             ContentType.Application.OctetStream.match(key) ||
                             ContentType.Text.Plain.match(key)
-                if (isDefault) value as? Body.SetBody else null
+                if (isDefault) value else null
             }
 
         fun formUrlEncodedOrNull(): Body.FormUrlEncoded? =
@@ -128,6 +128,20 @@ data class Route(
             override val description: String?,
             override val extensions: Map<String, JsonElement>,
         ) : Body
+
+        /**
+         * A request body whose inline non-discriminated union has been marked for future overload
+         * rendering while still carrying the underlying union model for phased renderer migration.
+         */
+        data class OverloadedBody(
+            val contentType: ContentType,
+            val type: Model.Union,
+            override val description: String?,
+            override val extensions: Map<String, JsonElement>,
+        ) : Body {
+            val cases: List<Model.Union.Case>
+                get() = type.cases
+        }
 
         /** application/x-www-form-urlencoded body. Represented as key/value pairs. */
         data class FormUrlEncoded(
@@ -181,6 +195,7 @@ private fun Bodies?.nested(): Set<Model> =
             is Body.Multipart.Ref -> listOfNotNull(body.value.nestedOrNull())
             is Body.FormUrlEncoded -> body.parameters.mapNotNull { it.type.nestedOrNull() }
             is Body.SetBody -> listOfNotNull(body.type.nestedOrNull())
+            is Body.OverloadedBody -> body.cases.mapNotNull { it.model.nestedOrNull() }
         }
     }
 

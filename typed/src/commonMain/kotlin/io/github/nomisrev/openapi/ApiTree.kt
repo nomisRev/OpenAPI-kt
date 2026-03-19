@@ -71,6 +71,7 @@ private fun Route.Bodies?.topLevelNames(): Set<NamingContext.Reference> =
             is Route.Body.Multipart.Ref -> body.value.topLevelNames()
             is Route.Body.FormUrlEncoded -> body.parameters.flatMap { it.type.topLevelNames() }
             is Route.Body.SetBody -> body.type.topLevelNames()
+            is Route.Body.OverloadedBody -> body.type.topLevelNames()
         }
     }
 

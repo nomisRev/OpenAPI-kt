@@ -6,18 +6,25 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.parser.Components
 import io.github.nomisrev.openapi.parser.Info
+import io.github.nomisrev.openapi.parser.MediaType
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.PathItem
 import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.RequestBody
 import io.github.nomisrev.openapi.parser.Response
 import io.github.nomisrev.openapi.parser.Responses
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.toRoutes
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
+import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 val routeSpec by testSuite {
     val stringType = Model.Primitive.String(
@@ -45,21 +52,40 @@ val routeSpec by testSuite {
 
     fun openAPI(
         path: String,
+        method: HttpMethod = HttpMethod.Get,
         parameters: List<ReferenceOr<Parameter>> = emptyList(),
         pathParameters: List<ReferenceOr<Parameter>> = emptyList(),
+        requestBody: ReferenceOr<RequestBody>? = null,
         components: Components = Components(),
-    ): OpenAPI = OpenAPI(
-        info = Info("Test", "1.0"),
-        paths = mapOf(
-            path to PathItem(
-                get = Operation(
-                    parameters = parameters,
-                    responses = Responses(200, Response())
-                ),
-                parameters = pathParameters,
+    ): OpenAPI {
+        val operation = Operation(
+            parameters = parameters,
+            requestBody = requestBody,
+            responses = Responses(200, Response())
+        )
+        val pathItem = when (method) {
+            HttpMethod.Get -> PathItem(get = operation, parameters = pathParameters)
+            HttpMethod.Post -> PathItem(post = operation, parameters = pathParameters)
+            else -> error("Unsupported test method: ${method.value}")
+        }
+
+        return OpenAPI(
+            info = Info("Test", "1.0"),
+            paths = mapOf(path to pathItem),
+            components = components,
+        )
+    }
+
+    fun jsonRequestBody(
+        schema: ReferenceOr<Schema>,
+        required: Boolean = true,
+    ): ReferenceOr<RequestBody> = ReferenceOr.value(
+        RequestBody(
+            required = required,
+            content = mapOf(
+                ContentType.Application.Json.toString() to MediaType(schema = schema)
             )
-        ),
-        components = components,
+        )
     )
 
     suspend fun routes(api: OpenAPI) =
@@ -164,5 +190,98 @@ val routeSpec by testSuite {
         ),
     ).verifyAll("toRoutes segments") { input ->
         Eq(input.expected, routes(input.api).single().segments)
+    }
+
+    test("inline non-discriminated request body union becomes overloaded body") {
+        val bodySchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        required = listOf("name"),
+                        properties = mapOf(
+                            "name" to ReferenceOr.value(Schema.string),
+                            "tag" to ReferenceOr.value(Schema.string)
+                        )
+                    )
+                ),
+                ReferenceOr.value(Schema.string),
+            )
+        )
+
+        val route = routes(
+            openAPI(
+                path = "/pets",
+                method = HttpMethod.Post,
+                requestBody = jsonRequestBody(ReferenceOr.value(bodySchema)),
+            )
+        ).single()
+
+        val body = assertIs<Route.Body.OverloadedBody>(route.body?.defaultOrNull())
+        assertEquals(ContentType.Application.Json, body.contentType)
+        assertEquals(2, body.cases.size)
+        assertTrue(body.type.context.head is NamingContext.Path)
+
+        val nestedObject = assertIs<Model.Object>(route.nested.single())
+        assertEquals(setOf("name", "tag"), nestedObject.properties.keys)
+    }
+
+    test("referenced request body union stays set body") {
+        val unionSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.value(Schema.string),
+                ReferenceOr.value(Schema.integer)
+            )
+        )
+
+        val route = routes(
+            openAPI(
+                path = "/pets",
+                method = HttpMethod.Post,
+                requestBody = jsonRequestBody(ReferenceOr.schema("PetBody")),
+                components = Components(
+                    schemas = mapOf("PetBody" to ReferenceOr.value(unionSchema))
+                ),
+            )
+        ).single()
+
+        val body = assertIs<Route.Body.SetBody>(route.body?.defaultOrNull())
+        val union = assertIs<Model.Union>(body.type)
+        assertTrue(union.context.head is NamingContext.Reference)
+    }
+
+    test("discriminated request body union stays set body") {
+        val bodySchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        required = listOf("type"),
+                        properties = mapOf("type" to ReferenceOr.value(Schema.string))
+                    )
+                ),
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        required = listOf("type"),
+                        properties = mapOf("type" to ReferenceOr.value(Schema.string))
+                    )
+                ),
+            ),
+            discriminator = Schema.Discriminator(propertyName = "type")
+        )
+
+        val route = routes(
+            openAPI(
+                path = "/pets",
+                method = HttpMethod.Post,
+                requestBody = jsonRequestBody(ReferenceOr.value(bodySchema)),
+            )
+        ).single()
+
+        val body = assertIs<Route.Body.SetBody>(route.body?.defaultOrNull())
+        val union = assertIs<Model.Union>(body.type)
+        assertEquals("type", union.discriminator)
+        assertTrue(union.context.head is NamingContext.Path)
     }
 }

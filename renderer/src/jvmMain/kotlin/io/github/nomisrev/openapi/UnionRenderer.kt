@@ -16,6 +16,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
 import io.github.nomisrev.openapi.transformers.isTopLevel
+import io.github.nomisrev.openapi.transformers.nestedOrNull
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -164,9 +165,24 @@ private fun Model.Union.toNonDiscriminatedTypeSpec(
         ?.let { builder.addKdoc("%L\n", it.escapeForKdoc()) }
 
     renderedCases.forEach { builder.addType(it.typeSpec) }
+    collectionNestedTypeSpecs(config).forEach(builder::addType)
     builder.addType(buildSerializerObject(config, className, renderedCases))
     return builder.build()
 }
+
+private fun Model.Union.collectionNestedTypeSpecs(config: RenderConfig): List<TypeSpec> =
+    cases.asSequence()
+        .mapNotNull { (it.model as? Model.Collection)?.inner?.nestedOrNull() }
+        .filterIsInstance<Model.ContextHolder>()
+        .distinctBy { it.context.toClassName(config).canonicalName }
+        .mapNotNull { model ->
+            when (model) {
+                is Model.Enum -> model.toTypeSpec(config)
+                is Model.Object -> model.toTypeSpec(config)
+                else -> null
+            }
+        }
+        .toList()
 
 private fun Model.Union.Case.renderNonDiscriminatedCase(
     config: RenderConfig,

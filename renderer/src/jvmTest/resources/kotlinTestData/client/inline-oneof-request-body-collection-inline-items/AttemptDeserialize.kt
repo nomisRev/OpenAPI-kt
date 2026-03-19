@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.test.client.path.`param`.oneof.flat
+package io.github.nomisrev.render.test.client.`inline`.oneof.request.body.collection.`inline`.items
 
 import java.lang.IllegalArgumentException
 import kotlin.Pair

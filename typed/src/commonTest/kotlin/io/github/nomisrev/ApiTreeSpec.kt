@@ -3,10 +3,24 @@ package io.github.nomisrev
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.ApiTree
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathNode
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.buildTree
+import io.github.nomisrev.openapi.parser.Components
+import io.github.nomisrev.openapi.parser.Info
+import io.github.nomisrev.openapi.parser.MediaType
+import io.github.nomisrev.openapi.parser.OpenAPI
+import io.github.nomisrev.openapi.parser.Operation
+import io.github.nomisrev.openapi.parser.PathItem
+import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.RequestBody
+import io.github.nomisrev.openapi.parser.Response
+import io.github.nomisrev.openapi.parser.Responses
+import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.toApiTree
 import io.github.nomisrev.openapi.routes.Route
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import kotlin.test.assertEquals
 
@@ -290,5 +304,53 @@ val apiTreeSpec by testSuite {
         for (case in cases) {
             assertEquals(case.expected, case.route.path)
         }
+    }
+
+    test("toApiTree keeps referenced models reachable from overloaded request body cases") {
+        val api = OpenAPI(
+            info = Info("Test", "1.0"),
+            paths = mapOf(
+                "/pets" to PathItem(
+                    post = Operation(
+                        requestBody = ReferenceOr.value(
+                            RequestBody(
+                                required = true,
+                                content = mapOf(
+                                    ContentType.Application.Json.toString() to MediaType(
+                                        schema = ReferenceOr.value(
+                                            Schema(
+                                                oneOf = listOf(
+                                                    ReferenceOr.schema("CreatePet"),
+                                                    ReferenceOr.value(Schema.string),
+                                                )
+                                            )
+                                        )
+                                    )
+                                )
+                            )
+                        ),
+                        responses = Responses(200, Response())
+                    )
+                )
+            ),
+            components = Components(
+                schemas = mapOf(
+                    "CreatePet" to ReferenceOr.value(
+                        Schema(
+                            type = Schema.Type.Basic.Object,
+                            required = listOf("name"),
+                            properties = mapOf("name" to ReferenceOr.value(Schema.string))
+                        )
+                    )
+                )
+            )
+        )
+
+        val models = api.toApiTree("Pets").models
+        assertEquals(
+            listOf("CreatePet"),
+            models.mapNotNull { (it as? Model.ContextHolder)?.context?.head as? NamingContext.Reference }
+                .map(NamingContext.Reference::name)
+        )
     }
 }

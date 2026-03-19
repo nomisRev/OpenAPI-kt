@@ -217,9 +217,8 @@ private fun PathNode.hasInlineNonDiscriminatedBodyUnion(): Boolean =
 
 private fun Iterable<Route>.hasInlineNonDiscriminatedBodyUnion(): Boolean =
     any { route ->
-        val setBody = route.body?.defaultOrNull() as? Route.Body.SetBody ?: return@any false
-        setBody.type.isRouteInlineModel() && setBody.type is Model.Union &&
-            (setBody.type as Model.Union).discriminator == null
+        val model = route.body?.defaultOrNull().bodyModelOrNull() as? Model.Union ?: return@any false
+        model.isRouteInlineModel() && model.discriminator == null
     }
 
 private fun ApiTree.hasInlineNonDiscriminatedResponseUnion(): Boolean =
@@ -451,6 +450,20 @@ private fun Route.Bodies.toInvokeParameterSpecs(
             )
         }
 
+        is Route.Body.OverloadedBody -> {
+            val bodyType = if (usesNestedBodyType) {
+                methodClassName.nestedClass("Body")
+            } else {
+                body.type.toTypeName(config)
+            }
+            val typeName = if (!required) bodyType.copy(nullable = true) else bodyType
+            listOf(
+                ParameterSpec.builder("body", typeName).apply {
+                    if (!required) defaultValue(CodeBlock.of("null"))
+                }.build()
+            )
+        }
+
         is Route.Body.FormUrlEncoded -> {
             body.parameters.map { formData ->
                 ParameterSpec.builder(formData.name.toParamName(), formData.type.toTypeName(config)).build()
@@ -646,7 +659,15 @@ private fun Model.toInlineOperationTypeSpecOrNull(
     }
 
 private fun Route.Bodies.inlineBodyTypeSpec(config: RenderConfig, ownerClassName: ClassName): TypeSpec? {
-    val setBody = defaultOrNull() as? Route.Body.SetBody ?: return null
-    if (!setBody.type.isRouteInlineModel()) return null
-    return setBody.type.toInlineOperationTypeSpecOrNull(config, ownerClassName, "Body")
+    val model = defaultOrNull().bodyModelOrNull() ?: return null
+    if (!model.isRouteInlineModel()) return null
+    return model.toInlineOperationTypeSpecOrNull(config, ownerClassName, "Body")
+}
+
+private fun Route.Body?.bodyModelOrNull(): Model? = when (this) {
+    is Route.Body.SetBody -> type
+    is Route.Body.OverloadedBody -> type
+    is Route.Body.FormUrlEncoded,
+    is Route.Body.Multipart,
+    null -> null
 }
