@@ -66,6 +66,7 @@ val routeSpec by testSuite {
         val pathItem = when (method) {
             HttpMethod.Get -> PathItem(get = operation, parameters = pathParameters)
             HttpMethod.Post -> PathItem(post = operation, parameters = pathParameters)
+            HttpMethod.Put -> PathItem(put = operation, parameters = pathParameters)
             else -> error("Unsupported test method: ${method.value}")
         }
 
@@ -267,6 +268,73 @@ val routeSpec by testSuite {
 
         val nestedObject = assertIs<Model.Object>(route.nested.single())
         assertEquals(setOf("name", "tag"), nestedObject.properties.keys)
+    }
+
+    test("inline additionalProperties request body preserves object body model") {
+        val bodySchema = Schema(
+            type = Schema.Type.Basic.Object,
+            additionalProperties = io.github.nomisrev.openapi.parser.AdditionalProperties.PSchema(
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Array,
+                        items = ReferenceOr.value(
+                            Schema(
+                                anyOf = listOf(
+                                    ReferenceOr.value(Schema.string),
+                                    ReferenceOr.value(
+                                        Schema(
+                                            type = Schema.Type.Basic.Object,
+                                            required = listOf("ifAnyMatch"),
+                                            additionalProperties = io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed(false),
+                                            properties = mapOf(
+                                                "ifAnyMatch" to ReferenceOr.value(
+                                                    Schema(
+                                                        type = Schema.Type.Basic.Array,
+                                                        items = ReferenceOr.value(Schema.string),
+                                                    )
+                                                )
+                                            ),
+                                        )
+                                    ),
+                                    ReferenceOr.value(
+                                        Schema(
+                                            type = Schema.Type.Basic.Object,
+                                            required = listOf("ifNoneMatch"),
+                                            additionalProperties = io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed(false),
+                                            properties = mapOf(
+                                                "ifNoneMatch" to ReferenceOr.value(
+                                                    Schema(
+                                                        type = Schema.Type.Basic.Array,
+                                                        items = ReferenceOr.value(Schema.string),
+                                                    )
+                                                )
+                                            ),
+                                        )
+                                    ),
+                                )
+                            )
+                        ),
+                    )
+                )
+            ),
+        )
+
+        val route = routes(
+            openAPI(
+                path = "/content-exclusions",
+                method = HttpMethod.Put,
+                requestBody = jsonRequestBody(ReferenceOr.value(bodySchema)),
+            )
+        ).single()
+
+        val body = assertIs<Route.Body.SetBody>(route.body?.defaultOrNull())
+        val bodyModel = assertIs<Model.Object>(body.type)
+        assertTrue(bodyModel.properties.isEmpty())
+        val additional = assertIs<Model.Object.AdditionalProperties.Schema>(bodyModel.additionalProperties)
+        val values = assertIs<Model.Collection>(additional.value)
+        val union = assertIs<Model.Union>(values.inner)
+        assertEquals(3, union.cases.size)
+        assertTrue(union.context.head is NamingContext.Path)
     }
 
     test("referenced request body union stays set body") {

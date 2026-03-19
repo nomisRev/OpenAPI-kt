@@ -1339,6 +1339,89 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/content-exclusions": {
+              "put": {
+                "requestBody": {
+                  "description": "The content exclusion rules to set",
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "additionalProperties": {
+                          "type": "array",
+                          "items": {
+                            "anyOf": [
+                              {
+                                "type": "string",
+                                "description": "The path to the file that will be excluded."
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "ifAnyMatch": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "ifAnyMatch"
+                                ],
+                                "additionalProperties": false
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "ifNoneMatch": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  }
+                                },
+                                "required": [
+                                  "ifNoneMatch"
+                                ],
+                                "additionalProperties": false
+                              }
+                            ]
+                          }
+                        }
+                      },
+                      "examples": {
+                        "default": {
+                          "summary": "Example of content exclusion paths",
+                          "value": {
+                            "octo-repo": [
+                              "/src/some-dir/kernel.rs"
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "204": {
+                    "description": "No Content"
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/inline-anyof-request-body-additional-properties"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/names": {
               "get": {
                 "responses": {

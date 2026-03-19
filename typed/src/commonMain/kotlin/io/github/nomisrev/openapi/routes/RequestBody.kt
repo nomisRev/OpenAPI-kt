@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi.routes
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
+import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.parser.MediaType
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.ReferenceOr
@@ -99,7 +100,7 @@ private suspend fun RequestBody.toBody(
     schema: ReferenceOr<Schema>,
 ): Route.Body {
     val name = NamingContext.path(segments, method).nest(NamingContext.RouteBody)
-    val model = schema.toModel(name, SchemaContext.Write)
+    val model = schema.toRequestBodyModel(name, SchemaContext.Write)
     return if (model is Model.Union && model.discriminator == null && model.context.head is NamingContext.Path) {
         Route.Body.OverloadedBody(
             contentType = ContentType.parse(contentType),
@@ -116,6 +117,33 @@ private suspend fun RequestBody.toBody(
         )
     }
 }
+
+context(ctx: Registry)
+private suspend fun ReferenceOr<Schema>.toRequestBodyModel(
+    name: NamingContext,
+    context: SchemaContext,
+): Model =
+    when (this) {
+        is ReferenceOr.Value<Schema> -> {
+            val additionalProperties = value.additionalProperties as? AdditionalProperties.PSchema
+            if (value.properties.isNullOrEmpty() && additionalProperties != null) {
+                Model.Object(
+                    context = name,
+                    description = value.description?.valueOrNull(),
+                    title = value.title,
+                    properties = emptyMap(),
+                    additionalProperties = Model.Object.AdditionalProperties.Schema(
+                        additionalProperties.value.toModel(name.nest(NamingContext.AdditionalProperties), context)
+                    ),
+                    isNullable = value.nullable == true,
+                )
+            } else {
+                toModel(name, context)
+            }
+        }
+
+        is ReferenceOr.Reference -> toModel(name, context)
+    }
 
 // TODO Move to Registry and support top-level schemas.
 context(ctx: Registry)

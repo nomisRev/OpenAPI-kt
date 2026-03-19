@@ -185,8 +185,7 @@ private fun PathNode.hasInlineNonDiscriminatedBodyUnion(): Boolean =
 
 private fun Iterable<Route>.hasInlineNonDiscriminatedBodyUnion(): Boolean =
     any { route ->
-        val model = (route.body?.defaultOrNull() as? Route.Body.SetBody)?.type as? Model.Union ?: return@any false
-        model.isRouteInlineModel() && model.discriminator == null
+        route.body?.types.orEmpty().values.any(Route.Body::containsInlineNonDiscriminatedUnion)
     }
 
 private fun ApiTree.hasInlineNonDiscriminatedResponseUnion(): Boolean =
@@ -199,8 +198,50 @@ private fun PathNode.hasInlineNonDiscriminatedResponseUnion(): Boolean =
 
 private fun Iterable<Route>.hasInlineNonDiscriminatedResponseUnion(): Boolean =
     any { route ->
-        val model = route.returns.singlePreferredModelOrNull() ?: return@any false
-        model.isRouteInlineModel() && model is Model.Union && model.discriminator == null
+        route.returns.responses.values.any { returnType ->
+            returnType.types.values.any(Model::containsInlineNonDiscriminatedUnion)
+        } || route.returns.default?.types.orEmpty().values.any(Model::containsInlineNonDiscriminatedUnion)
+    }
+
+private fun Route.Body.containsInlineNonDiscriminatedUnion(): Boolean =
+    when (this) {
+        is Route.Body.SetBody -> type.containsInlineNonDiscriminatedUnion()
+        is Route.Body.OverloadedBody -> cases.any { it.model.containsInlineNonDiscriminatedUnion() }
+        is Route.Body.FormUrlEncoded -> parameters.any { it.type.containsInlineNonDiscriminatedUnion() }
+        is Route.Body.Multipart.Value -> parameters.any { it.type.containsInlineNonDiscriminatedUnion() }
+        is Route.Body.Multipart.Ref -> value.containsInlineNonDiscriminatedUnion()
+    }
+
+private fun Model.containsInlineNonDiscriminatedUnion(): Boolean =
+    when (this) {
+        is Model.Union ->
+            (context.head is NamingContext.Path && discriminator == null) ||
+                cases.any { it.model.containsInlineNonDiscriminatedUnion() }
+
+        is Model.Object ->
+            properties.values.any { it.model.containsInlineNonDiscriminatedUnion() } ||
+                ((additionalProperties as? Model.Object.AdditionalProperties.Schema)
+                    ?.value
+                    ?.containsInlineNonDiscriminatedUnion() == true)
+
+        is Model.Collection -> inner.containsInlineNonDiscriminatedUnion()
+        is Model.DiscriminatedObject ->
+            abstractProperties.values.any { it.model.containsInlineNonDiscriminatedUnion() } ||
+                subtypes.any { subtype ->
+                    subtype.properties.values.any { it.model.containsInlineNonDiscriminatedUnion() } ||
+                        ((subtype.additionalProperties as? Model.Object.AdditionalProperties.Schema)
+                            ?.value
+                            ?.containsInlineNonDiscriminatedUnion() == true)
+                }
+
+        is Model.ByteArray,
+        is Model.Date,
+        is Model.DateTime,
+        is Model.Enum,
+        is Model.FreeFormJson,
+        is Model.Primitive,
+        is Model.Reference,
+        is Model.Uuid -> false
     }
 
 private fun Model.toInlineParameterTypeSpec(

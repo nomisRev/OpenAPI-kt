@@ -170,6 +170,7 @@ fun Model.Object.toTypeSpec(
                     classNameOverride = childClassNameOverride,
                     externalTypeNames = externalTypeNames,
                 )
+                is Model.Union -> model.toTypeSpec(config, classNameOverride = childClassNameOverride)
                 else -> null
             }
         }
