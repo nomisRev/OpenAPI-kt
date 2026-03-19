@@ -58,7 +58,6 @@ private fun Model.toPathSegment(paramName: String): PathSegment = when (this) {
 
 private fun Model.Union.toPathSegmentOrOverload(paramName: String): PathSegment {
     if (!isFlattenablePathUnion()) return PathSegment.Parameter(paramName, this)
-    requireSupportedFlattenablePathUnion(paramName)
     return PathSegment.OverloadedParameter(paramName, this)
 }
 
@@ -70,10 +69,3 @@ private fun Model.Union.isFlattenablePathUnion(): Boolean =
             case.model is Model.Date ||
             case.model is Model.DateTime
     }
-
-private fun Model.Union.requireSupportedFlattenablePathUnion(paramName: String) {
-    val enumCaseCount = cases.count { it.model is Model.Enum }
-    require(enumCaseCount <= 1) {
-        "Path parameter '$paramName' uses a oneOf union with multiple enum cases, which is not supported yet."
-    }
-}

@@ -42,6 +42,36 @@ val PathSegmentSpec by testSuite {
         discriminator = null,
         isNullable = false,
     )
+    val queuedEnumType = Model.Enum(
+        context = NamingContext.path(listOf("workflowId", "queued")),
+        inner = stringType,
+        values = listOf("queued"),
+        default = null,
+        description = null,
+        title = null,
+        isNullable = false,
+    )
+    val inProgressEnumType = Model.Enum(
+        context = NamingContext.path(listOf("workflowId", "inProgress")),
+        inner = stringType,
+        values = listOf("in-progress"),
+        default = null,
+        description = null,
+        title = null,
+        isNullable = false,
+    )
+    val multiEnumUnionType = Model.Union(
+        context = NamingContext.path("workflowId"),
+        cases = listOf(
+            Model.Union.Case(queuedEnumType, discriminator = null),
+            Model.Union.Case(inProgressEnumType, discriminator = null),
+        ),
+        default = null,
+        description = null,
+        title = null,
+        discriminator = null,
+        isNullable = false,
+    )
     val objectType = Model.Object(
         context = NamingContext.path("payload"),
         description = null,
@@ -122,6 +152,14 @@ val PathSegmentSpec by testSuite {
             listOf(
                 PathSegment.Literal("workflows"),
                 PathSegment.OverloadedParameter("workflowId", flattenableUnionType)
+            )
+        ),
+        Input(
+            "/workflows/{workflowId}",
+            mapOf("workflowId" to multiEnumUnionType),
+            listOf(
+                PathSegment.Literal("workflows"),
+                PathSegment.OverloadedParameter("workflowId", multiEnumUnionType)
             )
         ),
         Input(

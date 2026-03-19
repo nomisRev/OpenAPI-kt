@@ -199,6 +199,58 @@ val clientSpec by testSuite {
         "client/path-param-oneof-flat-shared"
     )
 
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/workflows/{workflow_id}/runs": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "workflow_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "oneOf": [
+                        { "type": "string", "enum": ["queued", "dlq"] },
+                        { "type": "string", "enum": ["in-progress"] }
+                      ]
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": { "description": "No Content" }
+                }
+              }
+            },
+            "/workflows/{workflow_id}/history": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "workflow_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "oneOf": [
+                        { "type": "string", "enum": ["queued", "dlq"] },
+                        { "type": "string", "enum": ["in-progress"] }
+                      ]
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": { "description": "No Content" }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/path-param-oneof-multi-enum-shared"
+    )
+
     // Phase 9 tests
 
     clientTest(
@@ -1156,7 +1208,6 @@ val clientSpec by testSuite {
         "client/inline-oneof-request-body-nested-path"
     )
 
-    // TODO Reproducer
     clientTest(
         """
         {

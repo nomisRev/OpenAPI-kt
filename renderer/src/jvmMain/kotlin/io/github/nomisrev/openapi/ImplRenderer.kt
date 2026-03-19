@@ -116,16 +116,16 @@ internal fun PathSegment.addConcreteNavigationMember(
 
         is PathSegment.OverloadedParameter -> {
             val paramName = name.toCamelCase()
-            for (case in cases) {
-                val enumModel = case.model as? Model.Enum ?: continue
-                builder.addType(enumModel.toTypeSpec(config, nameOverride = name.toPascalCase()))
+            val enumClassNames = enumClassNames(parentClassName, config)
+            enumClassNames.forEach { (case, enumClassName) ->
+                val enumModel = case.model as Model.Enum
+                builder.addType(enumModel.toTypeSpec(config, nameOverride = enumClassName.simpleName))
             }
 
-            val enumClassName = parentClassName.nestedClass(name.toPascalCase())
             val emittedTypes = mutableSetOf<TypeName>()
             for (case in cases) {
                 val caseTypeName = when (case.model) {
-                    is Model.Enum -> enumClassName
+                    is Model.Enum -> requireNotNull(enumClassNames[case])
                     else -> case.model.toTypeName(config)
                 }
                 if (!emittedTypes.add(caseTypeName)) continue
@@ -135,6 +135,7 @@ internal fun PathSegment.addConcreteNavigationMember(
                     .returns(childClassName)
                 val encodedArg = when (val caseModel = case.model) {
                     is Model.Enum -> {
+                        val enumClassName = requireNotNull(enumClassNames[case])
                         functionBuilder.addStatement(
                             "val encoded = %L",
                             caseModel.toPathParamValueExpression(paramName, enumClassName),
@@ -167,6 +168,24 @@ internal fun PathSegment.addConcreteNavigationMember(
                     .build()
             )
         }
+    }
+}
+
+private fun PathSegment.OverloadedParameter.enumClassNames(
+    parentClassName: ClassName,
+    config: RenderConfig,
+): Map<Model.Union.Case, ClassName> {
+    val enumCases = cases.filter { it.model is Model.Enum }
+    if (enumCases.isEmpty()) return emptyMap()
+
+    val baseName = name.toPascalCase()
+    if (enumCases.size == 1) {
+        return mapOf(enumCases.single() to parentClassName.nestedClass(baseName))
+    }
+
+    return enumCases.associateWith { case ->
+        val enumModel = case.model as Model.Enum
+        parentClassName.nestedClass(enumModel.context.toClassName(config).simpleName)
     }
 }
 
