@@ -65,15 +65,15 @@ suspend operator fun invoke(body: String): Response
   `ClientRenderer.kt` now flattens `OverloadedBody` into interface overloads, emits inline case types directly in the operation interface, suppresses the nested sealed `Body` wrapper, and stops generating `AttemptDeserialize` support for flattened request bodies.
 - [x] Phase 3 completed on 2026-03-19.
   `ImplRenderer.kt` now emits matching overload implementations for flattened request bodies and keeps `setBody(body)` on the concrete overload parameter type.
-- [ ] Phase 4 pending.
-  Blocked by the JVM overload conflict documented in [ISSUE.md](./ISSUE.md).
+- [x] Phase 4 completed on 2026-03-19.
+  Optional flattened request bodies now emit per-case overloads plus a no-body overload, conflicting erased collection overloads are disambiguated with `@JvmName`, referenced and discriminated unions still keep `SetBody`, and the client goldens were updated so overloaded request bodies no longer emit `AttemptDeserialize.kt`.
 - [ ] Phase 5 deferred.
 
 ## Notes
 
-- Phase 4 still owns the remaining optional-body/no-body overload shape and broader edge-case cleanup, but the renderer now produces coherent interface+impl overloads for required and nullable-body flattened unions.
-- The temporary workaround that dropped `invoke(body: List<Name>)` to avoid the JVM clash with `invoke(body: List<String>)` has been reverted because it changes the generated API surface. The branch is intentionally back in the conflicting state until a better fix lands.
-- The concrete blocker is the GitHub labels example: flattened collection overloads are distinct in Kotlin source but erase to the same JVM signature. See [ISSUE.md](./ISSUE.md) for the reproducer and constraints.
+- The JVM clash from the GitHub labels example is resolved by keeping the full source-level overload set and assigning distinct JVM names to erased collection overloads.
+- Optional overloaded request bodies now model omission explicitly with an extra `invoke()` overload instead of nullable-body defaults.
+- Phase 5 remains deferred; path-parameter flattening is still renderer-only and is not required for the request-body work.
 
 ## Key files reference
 
@@ -90,8 +90,8 @@ suspend operator fun invoke(body: String): Response
 
 ## Verification
 
-1. `./gradlew :typed:allTests` — typed layer changes don't break parsing
-2. `./gradlew :renderer:compileTestKotlinJvm` — currently fails with a platform declaration clash for `List<String>` vs `List<Name>` overloads
-3. `./gradlew :renderer:jvmTest` — blocked until [ISSUE.md](./ISSUE.md) is resolved
-4. `UPDATE_GOLDEN=true ./gradlew :renderer:jvmTest` — use only after the overload conflict has a proper fix
-5. Manually inspect generated code for the GitHub labels example to confirm overloads remain source-level complete once the issue is resolved
+1. `./gradlew :typed:allTests` — passes
+2. `./gradlew :renderer:jvmTest` — passes
+3. `./gradlew build` — passes
+4. `UPDATE_GOLDEN=true ./gradlew :renderer:jvmTest` — use when regenerating the renderer goldens
+5. Manually inspect generated code for the GitHub labels example when adjusting the overload naming strategy
