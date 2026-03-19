@@ -27,48 +27,15 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
 
     val rootName = name.toPascalCase()
     val rootClassName = ClassName(config.apiPackage, rootName)
-    val rootInterface = TypeSpec.interfaceBuilder(rootName)
-    val orderedOperations = operations.entries.sortedBy { it.key.value }
-    val sharedInlineParameterModels = orderedOperations
-        .map { it.value }
-        .sharedInlineParameterModels()
-    val sharedInlineParameterKeys = sharedInlineParameterModels
-        .map(InlineParameterModel::sharingKey)
-        .toSet()
-
-    sharedInlineParameterModels.forEach { inline ->
-        inline.model
-            .toInlineParameterTypeSpec(config, rootClassName, inline.simpleName)
-            ?.let(rootInterface::addType)
-    }
-
-    for ((method, route) in orderedOperations) {
-        rootInterface.addType(
-            route.toOperationTypeSpec(
-                method = method,
-                config = config,
-                interfaceClassName = rootClassName,
-                sharedInlineParameterKeys = sharedInlineParameterKeys,
-            )
-        )
-        rootInterface.addProperty(route.toOperationPropertySpec(method, rootClassName))
-    }
 
     val childFiles = mutableListOf<FileSpec>()
     for (child in children) {
         val childSimpleName = child.childInterfaceSimpleName()
         val childClassName = ClassName(config.apiPackage, childSimpleName)
-
-        child.segment.addNavigationMember(rootInterface, childClassName, rootClassName, config)
-
-        val childTypeSpec = child.toTypeSpec(config, childClassName)
-        val childImplClasses = child.generateImplClasses(config, childClassName)
+        val childTypeSpec = child.toTypeSpec(config, childClassName, emptyList())
 
         val fileBuilder = FileSpec.builder(config.apiPackage, childSimpleName)
             .addType(childTypeSpec)
-        for (implClass in childImplClasses) {
-            fileBuilder.addType(implClass)
-        }
         for (method in child.collectHttpMethods()) {
             fileBuilder.addImport("io.ktor.client.request", method)
         }
@@ -76,15 +43,13 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
     }
 
     val rootFileBuilder = FileSpec.builder(config.apiPackage, rootName)
-        .addType(rootInterface.build())
+        .addType(toRootTypeSpec(config, rootClassName))
 
     generateServerInterface(config)?.let { rootFileBuilder.addType(it) }
 
     for (factory in generateFactory(config)) {
         rootFileBuilder.addFunction(factory)
     }
-
-    generateRootImpl(config)?.let { rootFileBuilder.addType(it) }
 
     for (method in collectHttpMethods()) {
         rootFileBuilder.addImport("io.ktor.client.request", method)
@@ -98,8 +63,9 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
     return files + serializationUtils
 }
 
-private fun PathNode.toTypeSpec(config: RenderConfig, className: ClassName): TypeSpec {
-    val builder = TypeSpec.interfaceBuilder(className.simpleName)
+private fun ApiTree.toRootTypeSpec(config: RenderConfig, className: ClassName): TypeSpec {
+    val builder = TypeSpec.classBuilder(className.simpleName)
+    builder.addClientConstructorAndState(config, emptyList())
     val orderedOperations = operations.entries.sortedBy { it.key.value }
     val sharedInlineParameterModels = orderedOperations
         .map { it.value }
@@ -115,84 +81,84 @@ private fun PathNode.toTypeSpec(config: RenderConfig, className: ClassName): Typ
             ?.let(builder::addType)
     }
 
-    // Operation nodes
     for ((method, route) in orderedOperations) {
+        builder.addProperty(route.toOperationPropertySpec(method, className, emptyList()))
         builder.addType(
             route.toOperationTypeSpec(
                 method = method,
                 config = config,
-                interfaceClassName = className,
+                pathClassName = className,
                 sharedInlineParameterKeys = sharedInlineParameterKeys,
+                accumulatedParams = emptyList(),
             )
         )
-        builder.addProperty(route.toOperationPropertySpec(method, className))
     }
 
-    // Children
     for (child in children) {
         val childSimpleName = child.childInterfaceSimpleName()
-        val childClassName = className.nestedClass(childSimpleName)
-
-        child.segment.addNavigationMember(builder, childClassName, className, config)
-        builder.addType(child.toTypeSpec(config, childClassName))
+        val childClassName = ClassName(config.apiPackage, childSimpleName)
+        child.segment.addConcreteNavigationMember(
+            builder = builder,
+            childClassName = childClassName,
+            currentAccumulatedParams = emptyList(),
+            parentClassName = className,
+            config = config,
+        )
     }
 
     return builder.build()
 }
 
-private fun PathSegment.addNavigationMember(
-    builder: TypeSpec.Builder,
-    childClassName: ClassName,
-    parentClassName: ClassName,
+private fun PathNode.toTypeSpec(
     config: RenderConfig,
-) {
-    when (this) {
-        is PathSegment.Literal -> {
-            builder.addProperty(
-                PropertySpec.builder(name.toCamelCase(), childClassName)
-                    .build()
-            )
-        }
+    className: ClassName,
+    parentAccumulatedParams: List<AccumulatedParam>,
+): TypeSpec {
+    val currentAccumulatedParams = accumulatedParams(parentAccumulatedParams)
+    val builder = TypeSpec.classBuilder(className.simpleName)
+    builder.addClientConstructorAndState(config, currentAccumulatedParams)
+    val orderedOperations = operations.entries.sortedBy { it.key.value }
+    val sharedInlineParameterModels = orderedOperations
+        .map { it.value }
+        .sharedInlineParameterModels()
+    val sharedInlineParameterKeys = sharedInlineParameterModels
+        .map(InlineParameterModel::sharingKey)
+        .toSet()
 
-        is PathSegment.Parameter -> {
-            val paramName = name.toCamelCase()
-
-            val flattenableUnion = (model as? Model.Union)
-                ?.takeIf { it.isFlattenablePathUnion() }
-                ?.also { it.requireSupportedFlattenablePathUnion(name) }
-            if (flattenableUnion != null) {
-                for (case in flattenableUnion.cases) {
-                    val enumModel = case.model as? Model.Enum ?: continue
-                    builder.addType(enumModel.toTypeSpec(config, nameOverride = name.toPascalCase()))
-                }
-
-                val enumClassName = parentClassName.nestedClass(name.toPascalCase())
-                val emittedTypes = mutableSetOf<TypeName>()
-                for (case in flattenableUnion.cases) {
-                    val caseTypeName = when (case.model) {
-                        is Model.Enum -> enumClassName
-                        else -> case.model.toTypeName(config)
-                    }
-                    if (!emittedTypes.add(caseTypeName)) continue
-                    builder.addFunction(
-                        FunSpec.builder(paramName)
-                            .addModifiers(KModifier.ABSTRACT)
-                            .addParameter(paramName, caseTypeName)
-                            .returns(childClassName)
-                            .build()
-                    )
-                }
-            } else {
-                builder.addFunction(
-                    FunSpec.builder(paramName)
-                        .addModifiers(KModifier.ABSTRACT)
-                        .addParameter(paramName, model.toTypeName(config))
-                        .returns(childClassName)
-                        .build()
-                )
-            }
-        }
+    sharedInlineParameterModels.forEach { inline ->
+        inline.model
+            .toInlineParameterTypeSpec(config, className, inline.simpleName)
+            ?.let(builder::addType)
     }
+
+    for ((method, route) in orderedOperations) {
+        builder.addProperty(route.toOperationPropertySpec(method, className, currentAccumulatedParams))
+        builder.addType(
+            route.toOperationTypeSpec(
+                method = method,
+                config = config,
+                pathClassName = className,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+                accumulatedParams = currentAccumulatedParams,
+            )
+        )
+    }
+
+    for (child in children) {
+        val childSimpleName = child.childInterfaceSimpleName()
+        val childClassName = className.nestedClass(childSimpleName)
+
+        child.segment.addConcreteNavigationMember(
+            builder = builder,
+            childClassName = childClassName,
+            currentAccumulatedParams = currentAccumulatedParams,
+            parentClassName = className,
+            config = config,
+        )
+        builder.addType(child.toTypeSpec(config, childClassName, currentAccumulatedParams))
+    }
+
+    return builder.build()
 }
 
 private fun ApiTree.hasInlineNonDiscriminatedParameterUnion(): Boolean =
@@ -279,29 +245,34 @@ private fun methodTypeName(method: HttpMethod): String =
 
 private fun Route.toOperationPropertySpec(
     method: HttpMethod,
-    interfaceClassName: ClassName,
+    pathClassName: ClassName,
+    accumulatedParams: List<AccumulatedParam>,
 ): PropertySpec {
     val methodName = method.value.lowercase()
-    return PropertySpec.builder(methodName, interfaceClassName.nestedClass(methodTypeName(method)))
+    val methodClassName = pathClassName.nestedClass(methodTypeName(method))
+    return PropertySpec.builder(methodName, methodClassName)
         .addDeprecatedIfNeeded()
+        .initializer("%T(%L)", methodClassName, operationConstructorArgs(accumulatedParams))
         .build()
 }
 
 private fun Route.toOperationTypeSpec(
     method: HttpMethod,
     config: RenderConfig,
-    interfaceClassName: ClassName,
+    pathClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
+    accumulatedParams: List<AccumulatedParam>,
 ): TypeSpec {
-    val methodClassName = interfaceClassName.nestedClass(methodTypeName(method))
+    val methodClassName = pathClassName.nestedClass(methodTypeName(method))
     val overloadedBody = body?.defaultOrNull() as? Route.Body.OverloadedBody
     val inlineModelScope = operationInlineModelScope(config, methodClassName)
     val inlineBodyTypeSpec = body?.inlineBodyTypeSpec(config, methodClassName)
     val routeInlineParameterModels = routeSpecificInlineParameterModels(sharedInlineParameterKeys)
 
-    return TypeSpec.interfaceBuilder(methodTypeName(method))
+    return TypeSpec.classBuilder(methodTypeName(method))
         .addDeprecatedIfNeeded()
         .apply {
+            addClientConstructorAndState(config, accumulatedParams)
             routeInlineParameterModels.forEach { inline ->
                 inline.model
                     .toInlineParameterTypeSpec(config, methodClassName, inline.simpleName)
@@ -320,9 +291,10 @@ private fun Route.toOperationTypeSpec(
                     addFunction(
                         toInvokeFunSpecForOptionalOverloadedBodyNoBody(
                             config = config,
-                            interfaceClassName = interfaceClassName,
+                            pathClassName = pathClassName,
                             methodClassName = methodClassName,
                             sharedInlineParameterKeys = sharedInlineParameterKeys,
+                            inlineModelScope = inlineModelScope,
                         )
                     )
                 }
@@ -332,10 +304,11 @@ private fun Route.toOperationTypeSpec(
                         addFunction(
                             toInvokeFunSpecForOverloadedBodyCase(
                                 config = config,
-                                interfaceClassName = interfaceClassName,
+                                pathClassName = pathClassName,
                                 methodClassName = methodClassName,
                                 sharedInlineParameterKeys = sharedInlineParameterKeys,
                                 bodyTypeName = caseTypeName,
+                                inlineModelScope = inlineModelScope,
                             )
                         )
                     }
@@ -343,10 +316,11 @@ private fun Route.toOperationTypeSpec(
                 addFunction(
                     toInvokeFunSpec(
                         config = config,
-                        interfaceClassName = interfaceClassName,
+                        pathClassName = pathClassName,
                         methodClassName = methodClassName,
                         sharedInlineParameterKeys = sharedInlineParameterKeys,
                         usesNestedBodyType = inlineBodyTypeSpec != null,
+                        inlineModelScope = inlineModelScope,
                     )
                 )
             }
@@ -354,71 +328,74 @@ private fun Route.toOperationTypeSpec(
         .build()
 }
 
+private fun operationConstructorArgs(accumulatedParams: List<AccumulatedParam>): String =
+    buildList {
+        add("client")
+        addAll(accumulatedParams.map { it.name.toCamelCase() })
+    }.joinToString(", ")
+
 /** Build the operation invoke(...) signature with parameters and response wrapper. */
 private fun Route.toInvokeFunSpec(
     config: RenderConfig,
-    interfaceClassName: ClassName,
+    pathClassName: ClassName,
     methodClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
     usesNestedBodyType: Boolean,
+    inlineModelScope: OperationInlineModelScope,
 ): FunSpec {
     val builder = FunSpec.builder("invoke")
-        .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND, KModifier.OPERATOR)
+        .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
         .addDeprecatedIfNeeded()
 
-    // Collect non-path parameters, split into required/optional
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
     val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
 
-    // Resolve body parameters
     val bodyParams = body?.toInvokeParameterSpecs(config, methodClassName, usesNestedBodyType)
     val bodyRequired = body?.required == true
 
-    // 1. Required params
     for (input in requiredParams) {
         builder.addParameter(
             input.toParameterSpec(
                 config = config,
-                interfaceClassName = interfaceClassName,
+                pathClassName = pathClassName,
                 methodClassName = methodClassName,
                 sharedInlineParameterKeys = sharedInlineParameterKeys,
             )
         )
     }
-    // 2. Required body
     if (bodyRequired && bodyParams != null) {
         bodyParams.forEach { builder.addParameter(it) }
     }
-    // 3. Optional params
     for (input in optionalParams) {
         builder.addParameter(
             input.toParameterSpec(
                 config = config,
-                interfaceClassName = interfaceClassName,
+                pathClassName = pathClassName,
                 methodClassName = methodClassName,
                 sharedInlineParameterKeys = sharedInlineParameterKeys,
             )
         )
     }
-    // 4. Optional body
     if (!bodyRequired && bodyParams != null) {
         bodyParams.forEach { builder.addParameter(it) }
     }
 
     builder.returns(invokeReturnType(methodClassName))
+    builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
     return builder.build()
 }
 
 private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     config: RenderConfig,
-    interfaceClassName: ClassName,
+    pathClassName: ClassName,
     methodClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
     bodyTypeName: TypeName,
+    inlineModelScope: OperationInlineModelScope,
 ): FunSpec {
     val builder = FunSpec.builder("invoke")
-        .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND, KModifier.OPERATOR)
+        .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
         .addDeprecatedIfNeeded()
 
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
@@ -430,7 +407,7 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
         builder.addParameter(
             input.toParameterSpec(
                 config = config,
-                interfaceClassName = interfaceClassName,
+                pathClassName = pathClassName,
                 methodClassName = methodClassName,
                 sharedInlineParameterKeys = sharedInlineParameterKeys,
             )
@@ -441,7 +418,7 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
         builder.addParameter(
             input.toParameterSpec(
                 config = config,
-                interfaceClassName = interfaceClassName,
+                pathClassName = pathClassName,
                 methodClassName = methodClassName,
                 sharedInlineParameterKeys = sharedInlineParameterKeys,
             )
@@ -449,17 +426,19 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     }
 
     builder.returns(invokeReturnType(methodClassName))
+    builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
     return builder.build()
 }
 
 private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
     config: RenderConfig,
-    interfaceClassName: ClassName,
+    pathClassName: ClassName,
     methodClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
+    inlineModelScope: OperationInlineModelScope,
 ): FunSpec {
     val builder = FunSpec.builder("invoke")
-        .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND, KModifier.OPERATOR)
+        .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
         .addDeprecatedIfNeeded()
 
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
@@ -470,7 +449,7 @@ private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
         builder.addParameter(
             input.toParameterSpec(
                 config = config,
-                interfaceClassName = interfaceClassName,
+                pathClassName = pathClassName,
                 methodClassName = methodClassName,
                 sharedInlineParameterKeys = sharedInlineParameterKeys,
             )
@@ -480,7 +459,7 @@ private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
         builder.addParameter(
             input.toParameterSpec(
                 config = config,
-                interfaceClassName = interfaceClassName,
+                pathClassName = pathClassName,
                 methodClassName = methodClassName,
                 sharedInlineParameterKeys = sharedInlineParameterKeys,
             )
@@ -488,6 +467,7 @@ private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
     }
 
     builder.returns(invokeReturnType(methodClassName))
+    builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope, includeBody = false))
     return builder.build()
 }
 
@@ -500,21 +480,21 @@ private fun Parameter.Input.sortOrder(): Int = when (this) {
 
 private fun Route.Input.toParameterSpec(
     config: RenderConfig,
-    interfaceClassName: ClassName,
+    pathClassName: ClassName,
     methodClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
 ): ParameterSpec {
     val paramName = name.toParamName()
     val model = type
     val resolvedInlineParameterClassName = inlineParameterClassName(
-        pathClassName = interfaceClassName,
+        pathClassName = pathClassName,
         methodClassName = methodClassName,
         sharedInlineParameterKeys = sharedInlineParameterKeys,
     )
 
     val baseTypeName = inlineParameterTypeName(
         config = config,
-        pathClassName = interfaceClassName,
+        pathClassName = pathClassName,
         methodClassName = methodClassName,
         sharedInlineParameterKeys = sharedInlineParameterKeys,
     ) ?: model.toTypeName(config)

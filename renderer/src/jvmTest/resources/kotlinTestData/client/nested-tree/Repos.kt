@@ -4,43 +4,33 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.`get`
 import kotlin.String
 
-public interface Repos {
-  public fun owner(owner: String): OwnerPath
+public class Repos internal constructor(
+  private val client: HttpClient,
+) {
+  public fun owner(owner: String): OwnerPath = OwnerPath(client, owner)
 
-  public interface OwnerPath {
-    public fun repo(repo: String): RepoPath
+  public class OwnerPath internal constructor(
+    private val client: HttpClient,
+    private val owner: String,
+  ) {
+    public fun repo(repo: String): RepoPath = RepoPath(client, owner, repo)
 
-    public interface RepoPath {
-      public val `get`: Get
+    public class RepoPath internal constructor(
+      private val client: HttpClient,
+      private val owner: String,
+      private val repo: String,
+    ) {
+      public val `get`: Get = Get(client, owner, repo)
 
-      public interface Get {
-        public suspend operator fun invoke()
+      public class Get internal constructor(
+        private val client: HttpClient,
+        private val owner: String,
+        private val repo: String,
+      ) {
+        public suspend operator fun invoke() {
+          client.get("/repos/$owner/$repo")
+        }
       }
-    }
-  }
-}
-
-internal class KtorRepos(
-  private val client: HttpClient,
-) : Repos {
-  override fun owner(owner: String): Repos.OwnerPath = KtorReposOwnerPath(client, owner)
-}
-
-internal class KtorReposOwnerPath(
-  private val client: HttpClient,
-  private val owner: String,
-) : Repos.OwnerPath {
-  override fun repo(repo: String): Repos.OwnerPath.RepoPath = KtorReposOwnerPathRepoPath(client, owner, repo)
-}
-
-internal class KtorReposOwnerPathRepoPath(
-  private val client: HttpClient,
-  private val owner: String,
-  private val repo: String,
-) : Repos.OwnerPath.RepoPath {
-  override val `get`: Repos.OwnerPath.RepoPath.Get = object : Repos.OwnerPath.RepoPath.Get {
-    override suspend operator fun invoke() {
-      client.get("/repos/$owner/$repo")
     }
   }
 }

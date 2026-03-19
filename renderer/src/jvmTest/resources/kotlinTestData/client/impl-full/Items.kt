@@ -13,21 +13,42 @@ import kotlin.Int
 import kotlin.String
 import kotlin.collections.List
 
-public interface Items {
-  public val `get`: Get
+public class Items internal constructor(
+  private val client: HttpClient,
+) {
+  public val `get`: Get = Get(client)
 
-  public val post: Post
+  public val post: Post = Post(client)
 
-  public interface Get {
-    public suspend operator fun invoke(limit: Int? = null): Response
+  public class Get internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(limit: Int? = null): Response {
+      val value: List<String> = client.get("/items") {
+        limit?.let { parameter("limit", it) }
+      }.body()
+      return Response(value)
+    }
 
     public data class Response(
       public val `value`: List<String>,
     )
   }
 
-  public interface Post {
-    public suspend operator fun invoke(body: String): Response
+  public class Post internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(body: String): Response {
+      val response = client.post("/items") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
+      return when (response.status.value) {
+        201 -> Response.Created(response.body())
+        400 -> Response.BadRequest(response.body())
+        else -> throw ResponseException(response, "")
+      }
+    }
 
     public sealed interface Response {
       public data class Created(
@@ -37,33 +58,6 @@ public interface Items {
       public data class BadRequest(
         public val `value`: Int,
       ) : Response
-    }
-  }
-}
-
-internal class KtorItems(
-  private val client: HttpClient,
-) : Items {
-  override val `get`: Items.Get = object : Items.Get {
-    override suspend operator fun invoke(limit: Int?): Items.Get.Response {
-      val value: List<String> = client.get("/items") {
-        limit?.let { parameter("limit", it) }
-      }.body()
-      return Items.Get.Response(value)
-    }
-  }
-
-  override val post: Items.Post = object : Items.Post {
-    override suspend operator fun invoke(body: String): Items.Post.Response {
-      val response = client.post("/items") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }
-      return when (response.status.value) {
-        201 -> Items.Post.Response.Created(response.body())
-        400 -> Items.Post.Response.BadRequest(response.body())
-        else -> throw ResponseException(response, "")
-      }
     }
   }
 }

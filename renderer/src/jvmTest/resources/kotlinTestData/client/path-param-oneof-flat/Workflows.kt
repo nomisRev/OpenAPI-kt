@@ -7,10 +7,18 @@ import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-public interface Workflows {
-  public fun workflowId(workflowId: Int): WorkflowIdPath
+public class Workflows internal constructor(
+  private val client: HttpClient,
+) {
+  public fun workflowId(workflowId: Int): WorkflowIdPath = WorkflowIdPath(client, workflowId.toString())
 
-  public fun workflowId(workflowId: WorkflowId): WorkflowIdPath
+  public fun workflowId(workflowId: WorkflowId): WorkflowIdPath {
+    val encoded = when (workflowId) {
+          WorkflowId.Queued -> "queued"
+          WorkflowId.InProgress -> "in-progress"
+        }
+    return WorkflowIdPath(client, encoded)
+  }
 
   @Serializable
   public enum class WorkflowId {
@@ -20,49 +28,26 @@ public interface Workflows {
     InProgress,
   }
 
-  public interface WorkflowIdPath {
-    public val runs: Runs
+  public class WorkflowIdPath internal constructor(
+    private val client: HttpClient,
+    private val workflowId: String,
+  ) {
+    public val runs: Runs = Runs(client, workflowId)
 
-    public interface Runs {
-      public val `get`: Get
+    public class Runs internal constructor(
+      private val client: HttpClient,
+      private val workflowId: String,
+    ) {
+      public val `get`: Get = Get(client, workflowId)
 
-      public interface Get {
-        public suspend operator fun invoke()
-      }
-    }
-  }
-}
-
-internal class KtorWorkflows(
-  private val client: HttpClient,
-) : Workflows {
-  override fun workflowId(workflowId: Int): Workflows.WorkflowIdPath = KtorWorkflowsWorkflowIdPath(client, workflowId.toString())
-
-  override fun workflowId(workflowId: Workflows.WorkflowId): Workflows.WorkflowIdPath {
-    val encoded = when (workflowId) {
-          Workflows.WorkflowId.Queued -> "queued"
-          Workflows.WorkflowId.InProgress -> "in-progress"
+      public class Get internal constructor(
+        private val client: HttpClient,
+        private val workflowId: String,
+      ) {
+        public suspend operator fun invoke() {
+          client.get("/workflows/$workflowId/runs")
         }
-    return KtorWorkflowsWorkflowIdPath(client, encoded)
-  }
-}
-
-internal class KtorWorkflowsWorkflowIdPath(
-  private val client: HttpClient,
-  private val workflowId: String,
-) : Workflows.WorkflowIdPath {
-  override val runs: Workflows.WorkflowIdPath.Runs =
-      KtorWorkflowsWorkflowIdPathRuns(client, workflowId)
-}
-
-internal class KtorWorkflowsWorkflowIdPathRuns(
-  private val client: HttpClient,
-  private val workflowId: String,
-) : Workflows.WorkflowIdPath.Runs {
-  override val `get`: Workflows.WorkflowIdPath.Runs.Get =
-      object : Workflows.WorkflowIdPath.Runs.Get {
-    override suspend operator fun invoke() {
-      client.get("/workflows/$workflowId/runs")
+      }
     }
   }
 }

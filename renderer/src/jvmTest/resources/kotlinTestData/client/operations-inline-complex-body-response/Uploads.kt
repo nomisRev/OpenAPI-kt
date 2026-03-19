@@ -14,19 +14,42 @@ import kotlin.Int
 import kotlin.String
 import kotlin.collections.List
 
-public interface Uploads {
-  public fun uploadId(uploadId: String): UploadIdPath
+public class Uploads internal constructor(
+  private val client: HttpClient,
+) {
+  public fun uploadId(uploadId: String): UploadIdPath = UploadIdPath(client, uploadId)
 
-  public interface UploadIdPath {
-    public val post: Post
+  public class UploadIdPath internal constructor(
+    private val client: HttpClient,
+    private val uploadId: String,
+  ) {
+    public val post: Post = Post(client, uploadId)
 
-    public interface Post {
+    public class Post internal constructor(
+      private val client: HttpClient,
+      private val uploadId: String,
+    ) {
       public suspend operator fun invoke(
         `file`: ByteArray,
         checksum: String,
         retries: Int,
         tags: List<String>,
-      ): Response
+      ): Response {
+        val response = client.post("/uploads/$uploadId") {
+          setBody(MultiPartFormDataContent(formData {
+            append("file", file)
+            append("checksum", checksum)
+            append("retries", retries)
+            append("tags", tags)
+          }))
+        }
+        return when (response.status.value) {
+          201 -> Response.Created(response.body())
+          207 -> Response.`Multi-status`(response.body())
+          422 -> Response.UnprocessableEntity(response.body())
+          else -> Response.Default(response.status, response.body())
+        }
+      }
 
       public sealed interface Response {
         public data class Created(
@@ -45,41 +68,6 @@ public interface Uploads {
           public val status: HttpStatusCode,
           public val `value`: Boolean,
         ) : Response
-      }
-    }
-  }
-}
-
-internal class KtorUploads(
-  private val client: HttpClient,
-) : Uploads {
-  override fun uploadId(uploadId: String): Uploads.UploadIdPath = KtorUploadsUploadIdPath(client, uploadId)
-}
-
-internal class KtorUploadsUploadIdPath(
-  private val client: HttpClient,
-  private val uploadId: String,
-) : Uploads.UploadIdPath {
-  override val post: Uploads.UploadIdPath.Post = object : Uploads.UploadIdPath.Post {
-    override suspend operator fun invoke(
-      `file`: ByteArray,
-      checksum: String,
-      retries: Int,
-      tags: List<String>,
-    ): Uploads.UploadIdPath.Post.Response {
-      val response = client.post("/uploads/$uploadId") {
-        setBody(MultiPartFormDataContent(formData {
-          append("file", file)
-          append("checksum", checksum)
-          append("retries", retries)
-          append("tags", tags)
-        }))
-      }
-      return when (response.status.value) {
-        201 -> Uploads.UploadIdPath.Post.Response.Created(response.body())
-        207 -> Uploads.UploadIdPath.Post.Response.`Multi-status`(response.body())
-        422 -> Uploads.UploadIdPath.Post.Response.UnprocessableEntity(response.body())
-        else -> Uploads.UploadIdPath.Post.Response.Default(response.status, response.body())
       }
     }
   }

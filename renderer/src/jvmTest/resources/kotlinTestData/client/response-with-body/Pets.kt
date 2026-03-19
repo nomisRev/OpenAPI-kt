@@ -10,11 +10,25 @@ import io.ktor.http.contentType
 import kotlin.Int
 import kotlin.String
 
-public interface Pets {
-  public val post: Post
+public class Pets internal constructor(
+  private val client: HttpClient,
+) {
+  public val post: Post = Post(client)
 
-  public interface Post {
-    public suspend operator fun invoke(body: String): Response
+  public class Post internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(body: String): Response {
+      val response = client.post("/pets") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
+      return when (response.status.value) {
+        201 -> Response.Created(response.body())
+        400 -> Response.BadRequest(response.body())
+        else -> throw ResponseException(response, "")
+      }
+    }
 
     public sealed interface Response {
       public data class Created(
@@ -24,24 +38,6 @@ public interface Pets {
       public data class BadRequest(
         public val `value`: Int,
       ) : Response
-    }
-  }
-}
-
-internal class KtorPets(
-  private val client: HttpClient,
-) : Pets {
-  override val post: Pets.Post = object : Pets.Post {
-    override suspend operator fun invoke(body: String): Pets.Post.Response {
-      val response = client.post("/pets") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }
-      return when (response.status.value) {
-        201 -> Pets.Post.Response.Created(response.body())
-        400 -> Pets.Post.Response.BadRequest(response.body())
-        else -> throw ResponseException(response, "")
-      }
     }
   }
 }

@@ -8,11 +8,18 @@ import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
-public interface Names {
-  public val `get`: Get
+public class Names internal constructor(
+  private val client: HttpClient,
+) {
+  public val `get`: Get = Get(client)
 
-  public interface Get {
-    public suspend operator fun invoke(): Response
+  public class Get internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(): Response {
+      val value: List<Response.Name> = client.get("/names").body()
+      return Response(value)
+    }
 
     public data class Response(
       public val `value`: List<Name>,
@@ -22,17 +29,6 @@ public interface Names {
       public value class Name(
         public val name: String,
       )
-    }
-  }
-}
-
-internal class KtorNames(
-  private val client: HttpClient,
-) : Names {
-  override val `get`: Names.Get = object : Names.Get {
-    override suspend operator fun invoke(): Names.Get.Response {
-      val value: List<Names.Get.Response.Name> = client.get("/names").body()
-      return Names.Get.Response(value)
     }
   }
 }

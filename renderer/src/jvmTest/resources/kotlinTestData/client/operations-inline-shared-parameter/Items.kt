@@ -7,10 +7,12 @@ import io.ktor.client.request.post
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-public interface Items {
-  public val `get`: Get
+public class Items internal constructor(
+  private val client: HttpClient,
+) {
+  public val `get`: Get = Get(client)
 
-  public val post: Post
+  public val post: Post = Post(client)
 
   @Serializable
   public enum class Status {
@@ -22,28 +24,20 @@ public interface Items {
     All,
   }
 
-  public interface Get {
-    public suspend operator fun invoke(status: Status? = Status.All)
-  }
-
-  public interface Post {
-    public suspend operator fun invoke(status: Status? = Status.All)
-  }
-}
-
-internal class KtorItems(
-  private val client: HttpClient,
-) : Items {
-  override val `get`: Items.Get = object : Items.Get {
-    override suspend operator fun invoke(status: Items.Status?) {
+  public class Get internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(status: Status? = Status.All) {
       client.get("/items") {
         status?.let { parameter("status", it) }
       }
     }
   }
 
-  override val post: Items.Post = object : Items.Post {
-    override suspend operator fun invoke(status: Items.Status?) {
+  public class Post internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(status: Status? = Status.All) {
       client.post("/items") {
         status?.let { parameter("status", it) }
       }

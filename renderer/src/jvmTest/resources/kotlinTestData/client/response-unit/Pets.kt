@@ -4,31 +4,24 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.delete
 import kotlin.String
 
-public interface Pets {
-  public fun petId(petId: String): PetIdPath
-
-  public interface PetIdPath {
-    public val delete: Delete
-
-    public interface Delete {
-      public suspend operator fun invoke()
-    }
-  }
-}
-
-internal class KtorPets(
+public class Pets internal constructor(
   private val client: HttpClient,
-) : Pets {
-  override fun petId(petId: String): Pets.PetIdPath = KtorPetsPetIdPath(client, petId)
-}
+) {
+  public fun petId(petId: String): PetIdPath = PetIdPath(client, petId)
 
-internal class KtorPetsPetIdPath(
-  private val client: HttpClient,
-  private val petId: String,
-) : Pets.PetIdPath {
-  override val delete: Pets.PetIdPath.Delete = object : Pets.PetIdPath.Delete {
-    override suspend operator fun invoke() {
-      client.delete("/pets/$petId")
+  public class PetIdPath internal constructor(
+    private val client: HttpClient,
+    private val petId: String,
+  ) {
+    public val delete: Delete = Delete(client, petId)
+
+    public class Delete internal constructor(
+      private val client: HttpClient,
+      private val petId: String,
+    ) {
+      public suspend operator fun invoke() {
+        client.delete("/pets/$petId")
+      }
     }
   }
 }

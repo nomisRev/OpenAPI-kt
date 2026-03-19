@@ -9,13 +9,19 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlin.String
 import kotlin.Unit
 
-public interface Api {
-  public val `get`: Get
+public class Api internal constructor(
+  private val client: HttpClient,
+) {
+  public val `get`: Get = Get(client)
 
-  public val health: Health
+  public val health: Health = Health(client)
 
-  public interface Get {
-    public suspend operator fun invoke()
+  public class Get internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke() {
+      client.get("/")
+    }
   }
 }
 
@@ -25,17 +31,5 @@ public fun ApiClient(baseUrl: String, block: HttpClientConfig<*>.() -> Unit = {}
     defaultRequest { url(baseUrl) }
     block()
   }
-  return KtorApi(client)
-}
-
-internal class KtorApi(
-  private val client: HttpClient,
-) : Api {
-  override val health: Health = KtorHealth(client)
-
-  override val `get`: Api.Get = object : Api.Get {
-    override suspend operator fun invoke() {
-      client.get("/")
-    }
-  }
+  return Api(client)
 }

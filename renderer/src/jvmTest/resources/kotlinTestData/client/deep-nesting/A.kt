@@ -5,76 +5,54 @@ import io.ktor.client.request.`get`
 import kotlin.Long
 import kotlin.String
 
-public interface A {
-  public val b: B
+public class A internal constructor(
+  private val client: HttpClient,
+) {
+  public val b: B = B(client)
 
-  public interface B {
-    public fun c(c: String): CPath
+  public class B internal constructor(
+    private val client: HttpClient,
+  ) {
+    public fun c(c: String): CPath = CPath(client, c)
 
-    public interface CPath {
-      public val d: D
+    public class CPath internal constructor(
+      private val client: HttpClient,
+      private val c: String,
+    ) {
+      public val d: D = D(client, c)
 
-      public interface D {
-        public fun e(e: Long): EPath
+      public class D internal constructor(
+        private val client: HttpClient,
+        private val c: String,
+      ) {
+        public fun e(e: Long): EPath = EPath(client, c, e)
 
-        public interface EPath {
-          public val f: F
+        public class EPath internal constructor(
+          private val client: HttpClient,
+          private val c: String,
+          private val e: Long,
+        ) {
+          public val f: F = F(client, c, e)
 
-          public interface F {
-            public val `get`: Get
+          public class F internal constructor(
+            private val client: HttpClient,
+            private val c: String,
+            private val e: Long,
+          ) {
+            public val `get`: Get = Get(client, c, e)
 
-            public interface Get {
-              public suspend operator fun invoke()
+            public class Get internal constructor(
+              private val client: HttpClient,
+              private val c: String,
+              private val e: Long,
+            ) {
+              public suspend operator fun invoke() {
+                client.get("/a/b/$c/d/$e/f")
+              }
             }
           }
         }
       }
-    }
-  }
-}
-
-internal class KtorA(
-  private val client: HttpClient,
-) : A {
-  override val b: A.B = KtorAB(client)
-}
-
-internal class KtorAB(
-  private val client: HttpClient,
-) : A.B {
-  override fun c(c: String): A.B.CPath = KtorABCPath(client, c)
-}
-
-internal class KtorABCPath(
-  private val client: HttpClient,
-  private val c: String,
-) : A.B.CPath {
-  override val d: A.B.CPath.D = KtorABCPathD(client, c)
-}
-
-internal class KtorABCPathD(
-  private val client: HttpClient,
-  private val c: String,
-) : A.B.CPath.D {
-  override fun e(e: Long): A.B.CPath.D.EPath = KtorABCPathDEPath(client, c, e)
-}
-
-internal class KtorABCPathDEPath(
-  private val client: HttpClient,
-  private val c: String,
-  private val e: Long,
-) : A.B.CPath.D.EPath {
-  override val f: A.B.CPath.D.EPath.F = KtorABCPathDEPathF(client, c, e)
-}
-
-internal class KtorABCPathDEPathF(
-  private val client: HttpClient,
-  private val c: String,
-  private val e: Long,
-) : A.B.CPath.D.EPath.F {
-  override val `get`: A.B.CPath.D.EPath.F.Get = object : A.B.CPath.D.EPath.F.Get {
-    override suspend operator fun invoke() {
-      client.get("/a/b/$c/d/$e/f")
     }
   }
 }

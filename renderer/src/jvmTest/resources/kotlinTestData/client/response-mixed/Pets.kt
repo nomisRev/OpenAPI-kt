@@ -7,14 +7,30 @@ import io.ktor.http.HttpStatusCode
 import kotlin.Int
 import kotlin.String
 
-public interface Pets {
-  public fun petId(petId: String): PetIdPath
+public class Pets internal constructor(
+  private val client: HttpClient,
+) {
+  public fun petId(petId: String): PetIdPath = PetIdPath(client, petId)
 
-  public interface PetIdPath {
-    public val `get`: Get
+  public class PetIdPath internal constructor(
+    private val client: HttpClient,
+    private val petId: String,
+  ) {
+    public val `get`: Get = Get(client, petId)
 
-    public interface Get {
-      public suspend operator fun invoke(): Response
+    public class Get internal constructor(
+      private val client: HttpClient,
+      private val petId: String,
+    ) {
+      public suspend operator fun invoke(): Response {
+        val response = client.get("/pets/$petId")
+        return when (response.status.value) {
+          200 -> Response.Ok(response.body())
+          204 -> Response.NoContent
+          404 -> Response.NotFound(response.body())
+          else -> Response.Default(response.status, response.body())
+        }
+      }
 
       public sealed interface Response {
         public data class Ok(
@@ -31,29 +47,6 @@ public interface Pets {
           public val status: HttpStatusCode,
           public val `value`: String,
         ) : Response
-      }
-    }
-  }
-}
-
-internal class KtorPets(
-  private val client: HttpClient,
-) : Pets {
-  override fun petId(petId: String): Pets.PetIdPath = KtorPetsPetIdPath(client, petId)
-}
-
-internal class KtorPetsPetIdPath(
-  private val client: HttpClient,
-  private val petId: String,
-) : Pets.PetIdPath {
-  override val `get`: Pets.PetIdPath.Get = object : Pets.PetIdPath.Get {
-    override suspend operator fun invoke(): Pets.PetIdPath.Get.Response {
-      val response = client.get("/pets/$petId")
-      return when (response.status.value) {
-        200 -> Pets.PetIdPath.Get.Response.Ok(response.body())
-        204 -> Pets.PetIdPath.Get.Response.NoContent
-        404 -> Pets.PetIdPath.Get.Response.NotFound(response.body())
-        else -> Pets.PetIdPath.Get.Response.Default(response.status, response.body())
       }
     }
   }

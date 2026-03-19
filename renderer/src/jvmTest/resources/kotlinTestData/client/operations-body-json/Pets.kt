@@ -6,19 +6,15 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
-public interface Pets {
-  public val post: Post
-
-  public interface Post {
-    public suspend operator fun invoke(body: CreatePetRequest)
-  }
-}
-
-internal class KtorPets(
+public class Pets internal constructor(
   private val client: HttpClient,
-) : Pets {
-  override val post: Pets.Post = object : Pets.Post {
-    override suspend operator fun invoke(body: CreatePetRequest) {
+) {
+  public val post: Post = Post(client)
+
+  public class Post internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(body: CreatePetRequest) {
       client.post("/pets") {
         contentType(ContentType.Application.Json)
         setBody(body)

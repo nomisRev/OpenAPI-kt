@@ -7,23 +7,15 @@ import io.ktor.client.request.cookie
 import io.ktor.client.request.parameter
 import kotlin.String
 
-public interface Search {
-  public val `get`: Get
-
-  public interface Get {
-    public suspend operator fun invoke(
-      query: String,
-      xApiKey: String,
-      session: String,
-    )
-  }
-}
-
-internal class KtorSearch(
+public class Search internal constructor(
   private val client: HttpClient,
-) : Search {
-  override val `get`: Search.Get = object : Search.Get {
-    override suspend operator fun invoke(
+) {
+  public val `get`: Get = Get(client)
+
+  public class Get internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(
       query: String,
       xApiKey: String,
       session: String,

@@ -28,7 +28,6 @@ fun ApiTree.generateFactory(config: RenderConfig): List<FunSpec> {
     val rootName = name.toPascalCase()
     val rootClassName = ClassName(config.apiPackage, rootName)
     val factoryName = "${rootName}Client"
-    val implName = "Ktor$rootName"
     val configLambdaType = LambdaTypeName.get(
         receiver = HttpClientConfigType.parameterizedBy(STAR),
         returnType = UNIT,
@@ -47,7 +46,7 @@ fun ApiTree.generateFactory(config: RenderConfig): List<FunSpec> {
                         .build()
                 )
                 .returns(rootClassName)
-                .addCode(buildFactoryBody(implName))
+                .addCode(buildFactoryBody(rootClassName))
                 .build()
         )
     } else {
@@ -72,7 +71,7 @@ fun ApiTree.generateFactory(config: RenderConfig): List<FunSpec> {
                         .build()
                 )
                 .returns(rootClassName)
-                .addCode(buildFactoryBodyWithServer(implName))
+                .addCode(buildFactoryBodyWithServer(rootClassName))
                 .build()
         )
 
@@ -86,7 +85,7 @@ fun ApiTree.generateFactory(config: RenderConfig): List<FunSpec> {
                         .build()
                 )
                 .returns(rootClassName)
-                .addCode(buildFactoryBody(implName))
+                .addCode(buildFactoryBody(rootClassName))
                 .build()
         )
     }
@@ -282,25 +281,25 @@ private fun Server.toServerCaseName(): String {
 }
 
 /** Build factory function body with baseUrl parameter. */
-private fun buildFactoryBody(implName: String): CodeBlock {
+private fun buildFactoryBody(rootClassName: ClassName): CodeBlock {
     val code = CodeBlock.builder()
     code.beginControlFlow("val client = %T", HttpClientType)
     code.addStatement("install(%T) { %M() }", ContentNegotiationType, JsonMember)
     code.addStatement("%M { url(baseUrl) }", DefaultRequestMember)
     code.addStatement("block()")
     code.endControlFlow()
-    code.addStatement("return %L(client)", implName)
+    code.addStatement("return %T(client)", rootClassName)
     return code.build()
 }
 
 /** Build factory function body with server parameter. */
-private fun buildFactoryBodyWithServer(implName: String): CodeBlock {
+private fun buildFactoryBodyWithServer(rootClassName: ClassName): CodeBlock {
     val code = CodeBlock.builder()
     code.beginControlFlow("val client = %T", HttpClientType)
     code.addStatement("install(%T) { %M() }", ContentNegotiationType, JsonMember)
     code.addStatement("%M { url(server.url) }", DefaultRequestMember)
     code.addStatement("block()")
     code.endControlFlow()
-    code.addStatement("return %L(client)", implName)
+    code.addStatement("return %T(client)", rootClassName)
     return code.build()
 }

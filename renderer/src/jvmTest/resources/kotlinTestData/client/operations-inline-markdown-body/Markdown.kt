@@ -10,11 +10,21 @@ import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-public interface Markdown {
-  public val post: Post
+public class Markdown internal constructor(
+  private val client: HttpClient,
+) {
+  public val post: Post = Post(client)
 
-  public interface Post {
-    public suspend operator fun invoke(body: Body): Response
+  public class Post internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(body: Body): Response {
+      val value: String = client.post("/markdown") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }.body()
+      return Response(value)
+    }
 
     @Serializable
     public data class Body(
@@ -34,19 +44,5 @@ public interface Markdown {
     public data class Response(
       public val `value`: String,
     )
-  }
-}
-
-internal class KtorMarkdown(
-  private val client: HttpClient,
-) : Markdown {
-  override val post: Markdown.Post = object : Markdown.Post {
-    override suspend operator fun invoke(body: Markdown.Post.Body): Markdown.Post.Response {
-      val value: String = client.post("/markdown") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
-      return Markdown.Post.Response(value)
-    }
   }
 }

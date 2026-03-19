@@ -7,43 +7,31 @@ import io.ktor.http.Parameters
 import io.ktor.http.formUrlEncode
 import kotlin.String
 
-public interface Oauth {
-  public val token: Token
+public class Oauth internal constructor(
+  private val client: HttpClient,
+) {
+  public val token: Token = Token(client)
 
-  public interface Token {
-    public val post: Post
+  public class Token internal constructor(
+    private val client: HttpClient,
+  ) {
+    public val post: Post = Post(client)
 
-    public interface Post {
+    public class Post internal constructor(
+      private val client: HttpClient,
+    ) {
       public suspend operator fun invoke(
         grantType: String,
         code: String,
         redirectUri: String,
-      )
-    }
-  }
-}
-
-internal class KtorOauth(
-  private val client: HttpClient,
-) : Oauth {
-  override val token: Oauth.Token = KtorOauthToken(client)
-}
-
-internal class KtorOauthToken(
-  private val client: HttpClient,
-) : Oauth.Token {
-  override val post: Oauth.Token.Post = object : Oauth.Token.Post {
-    override suspend operator fun invoke(
-      grantType: String,
-      code: String,
-      redirectUri: String,
-    ) {
-      client.post("/oauth/token") {
-        setBody(Parameters.build {
-          append("grant_type", grantType)
-          append("code", code)
-          append("redirect_uri", redirectUri)
-        }.formUrlEncode())
+      ) {
+        client.post("/oauth/token") {
+          setBody(Parameters.build {
+            append("grant_type", grantType)
+            append("code", code)
+            append("redirect_uri", redirectUri)
+          }.formUrlEncode())
+        }
       }
     }
   }

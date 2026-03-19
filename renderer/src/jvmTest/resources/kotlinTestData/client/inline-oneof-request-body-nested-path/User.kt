@@ -12,16 +12,34 @@ import kotlin.jvm.JvmInline
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-public interface User {
-  public val codespaces: Codespaces
+public class User internal constructor(
+  private val client: HttpClient,
+) {
+  public val codespaces: Codespaces = Codespaces(client)
 
-  public interface Codespaces {
-    public val post: Post
+  public class Codespaces internal constructor(
+    private val client: HttpClient,
+  ) {
+    public val post: Post = Post(client)
 
-    public interface Post {
-      public suspend operator fun invoke(body: RepositoryIdAndRef): Response
+    public class Post internal constructor(
+      private val client: HttpClient,
+    ) {
+      public suspend operator fun invoke(body: RepositoryIdAndRef): Response {
+        val value: String = client.post("/user/codespaces") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }.body()
+        return Response(value)
+      }
 
-      public suspend operator fun invoke(body: PullRequest): Response
+      public suspend operator fun invoke(body: PullRequest): Response {
+        val value: String = client.post("/user/codespaces") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }.body()
+        return Response(value)
+      }
 
       @Serializable
       public data class RepositoryIdAndRef(
@@ -48,34 +66,6 @@ public interface User {
       public data class Response(
         public val `value`: String,
       )
-    }
-  }
-}
-
-internal class KtorUser(
-  private val client: HttpClient,
-) : User {
-  override val codespaces: User.Codespaces = KtorUserCodespaces(client)
-}
-
-internal class KtorUserCodespaces(
-  private val client: HttpClient,
-) : User.Codespaces {
-  override val post: User.Codespaces.Post = object : User.Codespaces.Post {
-    override suspend operator fun invoke(body: User.Codespaces.Post.RepositoryIdAndRef): User.Codespaces.Post.Response {
-      val value: String = client.post("/user/codespaces") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
-      return User.Codespaces.Post.Response(value)
-    }
-
-    override suspend operator fun invoke(body: User.Codespaces.Post.PullRequest): User.Codespaces.Post.Response {
-      val value: String = client.post("/user/codespaces") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
-      return User.Codespaces.Post.Response(value)
     }
   }
 }

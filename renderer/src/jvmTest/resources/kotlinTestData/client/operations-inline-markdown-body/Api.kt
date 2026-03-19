@@ -8,8 +8,10 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlin.String
 import kotlin.Unit
 
-public interface Api {
-  public val markdown: Markdown
+public class Api internal constructor(
+  private val client: HttpClient,
+) {
+  public val markdown: Markdown = Markdown(client)
 }
 
 public fun ApiClient(baseUrl: String, block: HttpClientConfig<*>.() -> Unit = {}): Api {
@@ -18,11 +20,5 @@ public fun ApiClient(baseUrl: String, block: HttpClientConfig<*>.() -> Unit = {}
     defaultRequest { url(baseUrl) }
     block()
   }
-  return KtorApi(client)
-}
-
-internal class KtorApi(
-  private val client: HttpClient,
-) : Api {
-  override val markdown: Markdown = KtorMarkdown(client)
+  return Api(client)
 }

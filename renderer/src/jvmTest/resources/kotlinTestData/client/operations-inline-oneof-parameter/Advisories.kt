@@ -21,15 +21,25 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 
-public interface Advisories {
-  public val `get`: Get
+public class Advisories internal constructor(
+  private val client: HttpClient,
+) {
+  public val `get`: Get = Get(client)
 
-  public interface Get {
+  public class Get internal constructor(
+    private val client: HttpClient,
+  ) {
     public suspend operator fun invoke(
       ghsaId: String? = null,
       cveId: String? = null,
       cwes: Cwes? = null,
-    )
+    ) {
+      client.get("/advisories") {
+        ghsaId?.let { parameter("ghsa_id", it) }
+        cveId?.let { parameter("cve_id", it) }
+        cwes?.let { parameter("cwes", it) }
+      }
+    }
 
     @Serializable(with = Cwes.Serializer::class)
     public sealed interface Cwes {
@@ -72,24 +82,6 @@ public interface Advisories {
             is CaseStrings -> encoder.encodeSerializableValue(ListSerializer(String.serializer()), value.value)
           }
         }
-      }
-    }
-  }
-}
-
-internal class KtorAdvisories(
-  private val client: HttpClient,
-) : Advisories {
-  override val `get`: Advisories.Get = object : Advisories.Get {
-    override suspend operator fun invoke(
-      ghsaId: String?,
-      cveId: String?,
-      cwes: Advisories.Get.Cwes?,
-    ) {
-      client.get("/advisories") {
-        ghsaId?.let { parameter("ghsa_id", it) }
-        cveId?.let { parameter("cve_id", it) }
-        cwes?.let { parameter("cwes", it) }
       }
     }
   }

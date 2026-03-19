@@ -4,24 +4,18 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.`get`
 import kotlin.Deprecated
 
-public interface Legacy {
-  @Deprecated("Deprecated by the API provider")
-  public val `get`: Get
-
-  @Deprecated("Deprecated by the API provider")
-  public interface Get {
-    @Deprecated("Deprecated by the API provider")
-    public suspend operator fun invoke()
-  }
-}
-
-internal class KtorLegacy(
+public class Legacy internal constructor(
   private val client: HttpClient,
-) : Legacy {
+) {
   @Deprecated("Deprecated by the API provider")
-  override val `get`: Legacy.Get = object : Legacy.Get {
+  public val `get`: Get = Get(client)
+
+  @Deprecated("Deprecated by the API provider")
+  public class Get internal constructor(
+    private val client: HttpClient,
+  ) {
     @Deprecated("Deprecated by the API provider")
-    override suspend operator fun invoke() {
+    public suspend operator fun invoke() {
       client.get("/legacy")
     }
   }

@@ -9,19 +9,15 @@ import io.ktor.client.request.setBody
 import kotlin.ByteArray
 import kotlin.String
 
-public interface Files {
-  public val post: Post
-
-  public interface Post {
-    public suspend operator fun invoke(`file`: ByteArray, purpose: String)
-  }
-}
-
-internal class KtorFiles(
+public class Files internal constructor(
   private val client: HttpClient,
-) : Files {
-  override val post: Files.Post = object : Files.Post {
-    override suspend operator fun invoke(`file`: ByteArray, purpose: String) {
+) {
+  public val post: Post = Post(client)
+
+  public class Post internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(`file`: ByteArray, purpose: String) {
       client.post("/files") {
         setBody(MultiPartFormDataContent(formData {
           append("file", file)

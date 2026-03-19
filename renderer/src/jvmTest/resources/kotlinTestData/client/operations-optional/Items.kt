@@ -8,30 +8,20 @@ import io.ktor.client.request.parameter
 import kotlin.Int
 import kotlin.String
 
-public interface Items {
-  public val `get`: Get
+public class Items internal constructor(
+  private val client: HttpClient,
+) {
+  public val `get`: Get = Get(client)
 
-  public interface Get {
+  public class Get internal constructor(
+    private val client: HttpClient,
+  ) {
     public suspend operator fun invoke(
       query: String,
       xRequestId: String,
       limit: Int? = null,
       xTraceId: String? = null,
       preference: String? = null,
-    )
-  }
-}
-
-internal class KtorItems(
-  private val client: HttpClient,
-) : Items {
-  override val `get`: Items.Get = object : Items.Get {
-    override suspend operator fun invoke(
-      query: String,
-      xRequestId: String,
-      limit: Int?,
-      xTraceId: String?,
-      preference: String?,
     ) {
       client.get("/items") {
         parameter("query", query)

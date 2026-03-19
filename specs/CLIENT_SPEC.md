@@ -18,74 +18,107 @@ No dependency on `operationId`. The path structure and HTTP method fully determi
 
 ---
 
-## 1. Interface Structure
+## 1. Class Structure
 
-### Root Interface
+### Root Class
 
-Name of top-level client is user provided `generate("GitHub", spec.json)`. Contains:
+Name of top-level client is user provided `generate("GitHub", spec.json)`. It is emitted as a public class with an `internal` constructor. It contains:
 - Method nodes for operations at `/` (root-level operations)
 - `val` properties for top-level path segments
 
 ```kotlin
-interface GitHub {
+class GitHub internal constructor(
+    private val client: HttpClient,
+) {
     // Root-level operation: GET /
-    val get: Get
+    val get: Get = Get(client)
 
-    interface Get {
+    class Get internal constructor(
+        private val client: HttpClient,
+    ) {
         suspend operator fun invoke(): Unit
     }
 
     // Navigation to /repos
-    val repos: Repos
+    val repos: Repos = Repos(client)
 
     // Navigation to /users
-    val users: Users
+    val users: Users = Users(client)
 }
 ```
 
-### Nested Interfaces (Static Segments)
+### Nested Classes (Static Segments)
 
-Each static path segment generates a nested interface inside its parent. Accessed via `val` property.
+Each static path segment generates a nested class inside its parent. Accessed via `val` property.
 
 ```kotlin
-interface GitHub {
-    val repos: Repos
+class GitHub internal constructor(
+    private val client: HttpClient,
+) {
+    val repos: Repos = Repos(client)
 
-    interface Repos {
+    class Repos internal constructor(
+        private val client: HttpClient,
+    ) {
         // Navigation to /repos/{owner}
-        fun owner(owner: String): Owner
+        fun owner(owner: String): Owner = Owner(client, owner)
 
-        interface Owner {
+        class Owner internal constructor(
+            private val client: HttpClient,
+            private val owner: String,
+        ) {
             // Navigation to /repos/{owner}/{repo}
-            fun repo(repo: String): Repo
+            fun repo(repo: String): Repo = Repo(client, owner, repo)
 
-            interface Repo {
-                // HTTP method nodes for /repos/{owner}/{repo}
-                val get: Get
-                val delete: Delete
-                val patch: Patch
+            class Repo internal constructor(
+                private val client: HttpClient,
+                private val owner: String,
+                private val repo: String,
+            ) {
+                val get: Get = Get(client, owner, repo)
+                val delete: Delete = Delete(client, owner, repo)
+                val patch: Patch = Patch(client, owner, repo)
 
-                interface Get {
+                class Get internal constructor(
+                    private val client: HttpClient,
+                    private val owner: String,
+                    private val repo: String,
+                ) {
                     suspend operator fun invoke(): Response
                     data class Response(val value: Repository)
                 }
 
-                interface Delete {
+                class Delete internal constructor(
+                    private val client: HttpClient,
+                    private val owner: String,
+                    private val repo: String,
+                ) {
                     suspend operator fun invoke(): Unit
                 }
 
-                interface Patch {
+                class Patch internal constructor(
+                    private val client: HttpClient,
+                    private val owner: String,
+                    private val repo: String,
+                ) {
                     suspend operator fun invoke(body: UpdateRepoRequest): Response
                     data class Response(val value: Repository)
                 }
 
-                val collaborators: Collaborators
+                val collaborators: Collaborators = Collaborators(client, owner, repo)
 
-                interface Collaborators {
-                    // GET /repos/{owner}/{repo}/collaborators
-                    val get: Get
+                class Collaborators internal constructor(
+                    private val client: HttpClient,
+                    private val owner: String,
+                    private val repo: String,
+                ) {
+                    val get: Get = Get(client, owner, repo)
 
-                    interface Get {
+                    class Get internal constructor(
+                        private val client: HttpClient,
+                        private val owner: String,
+                        private val repo: String,
+                    ) {
                         suspend operator fun invoke(affiliation: String? = null): Response
                         data class Response(val value: List<Collaborator>)
                     }
@@ -100,7 +133,7 @@ Full type path: `GitHub.Repos.Owner.Repo.Collaborators.Get.Response`
 
 ### Parameter Segments (Navigation Functions)
 
-Parameter segments generate **non-suspend** functions that return the next interface. The function name and parameter name both use the OpenAPI placeholder name directly.
+Parameter segments generate **non-suspend** functions that return the next class. The function name and parameter name both use the OpenAPI placeholder name directly.
 
 ```kotlin
 // For path segment {owner}
@@ -112,12 +145,12 @@ fun petId(petId: String): PetId
 
 The parameter type comes from the OpenAPI parameter definition (resolved to `Model`).
 
-### Interface Naming
+### Type Naming
 
 - Static segments: PascalCase of the segment name (e.g., `repos` -> `Repos`, `fine_tuning` -> `FineTuning`)
 - Parameter segments: PascalCase of the placeholder name (e.g., `{owner}` -> `Owner`, `{pet_id}` -> `PetId`)
 - Method nodes: PascalCase HTTP method (e.g., `get` -> `Get`, `post` -> `Post`)
-- All interfaces are nested inside their parent — no flat top-level interfaces
+- Generated client classes stay nested inside their parent, except for the root class and direct child files
 - Name uniqueness is guaranteed by nesting
 
 ---
@@ -138,7 +171,7 @@ The property name is always the **HTTP method** in lowercase:
 | HEAD        | `head`        | `Head`    |
 | OPTIONS     | `options`     | `Options` |
 
-Multiple methods at the same path produce multiple properties on the same interface.
+Multiple methods at the same path produce multiple properties on the same path class.
 
 ### Invoke Signature
 
@@ -199,45 +232,56 @@ interface Markdown {
 
 Deprecated operations receive `@Deprecated("Deprecated by the API provider")` on:
 - Method-node property
-- Method-node interface
+- Method-node class
 - `invoke(...)` signature
-- Implementation overrides
+- The generated method implementation
 
 ---
 
 ## 3. Implementation Pattern
 
-### Internal Ktor Implementation
+### Concrete Client Tree
 
-Each path interface gets an internal implementation class. Method-node properties are implemented as anonymous objects that implement the node interface.
+Each path node is emitted directly as a concrete class. Constructors are `internal`, store `HttpClient` plus accumulated path parameters, and method-node properties instantiate nested method classes directly.
 
 ```kotlin
-internal class KtorRepo(
+class Repo internal constructor(
     private val client: HttpClient,
     private val owner: String,
     private val repo: String,
-) : GitHub.Repos.Owner.Repo {
+) {
+    val get: Get = Get(client, owner, repo)
+    val delete: Delete = Delete(client, owner, repo)
 
-    override val get: GitHub.Repos.Owner.Repo.Get = object : GitHub.Repos.Owner.Repo.Get {
-        override suspend operator fun invoke(): GitHub.Repos.Owner.Repo.Get.Response {
+    class Get internal constructor(
+        private val client: HttpClient,
+        private val owner: String,
+        private val repo: String,
+    ) {
+        suspend operator fun invoke(): Response {
             val value: Repository = client.get("/repos/$owner/$repo").body()
-            return GitHub.Repos.Owner.Repo.Get.Response(value)
+            return Response(value)
         }
+
+        data class Response(val value: Repository)
     }
 
-    override val delete: GitHub.Repos.Owner.Repo.Delete = object : GitHub.Repos.Owner.Repo.Delete {
-        override suspend operator fun invoke(): GitHub.Repos.Owner.Repo.Delete.Response {
+    class Delete internal constructor(
+        private val client: HttpClient,
+        private val owner: String,
+        private val repo: String,
+    ) {
+        suspend operator fun invoke() {
             client.delete("/repos/$owner/$repo")
-            return GitHub.Repos.Owner.Repo.Delete.Response
         }
     }
 }
 ```
 
 Key points:
-- Path implementation classes store `HttpClient` + accumulated path parameters
-- Parameter navigation functions create child impl instances with captured values
-- Method-node properties are per-path anonymous implementations
+- Client tree classes store `HttpClient` + accumulated path parameters
+- Parameter navigation functions create child class instances with captured values
+- Method-node properties instantiate nested method classes directly
 - Path interpolation uses Kotlin string templates with captured parameter values
 
 ### Factory Function
@@ -252,13 +296,15 @@ fun GitHubClient(
         defaultRequest { url(baseUrl) }
         block()
     }
-    return KtorGitHub(client)
+    return GitHub(client)
 }
 ```
 
 ---
 
 ## 4. Query Parameters
+
+The following snippets focus on method signatures and inline types. In generated output, the enclosing client tree nodes are concrete classes with `internal` constructors, even when the abbreviated examples below omit that constructor boilerplate.
 
 ### Required
 
@@ -477,10 +523,12 @@ sealed interface ExampleServer {
 
 ## 9. Inline Enum Types
 
-Query/header parameter inline enums are generated on the **path node interface** (not method node).
+Query/header parameter inline enums are generated on the **path node class** (not method node).
 
 ```kotlin
-interface Collaborators {
+class Collaborators internal constructor(
+    private val client: HttpClient,
+) {
     @Serializable
     enum class Affiliation {
         @SerialName("outside") Outside,
@@ -488,9 +536,11 @@ interface Collaborators {
         @SerialName("all") All;
     }
 
-    val get: Get
+    val get: Get = Get(client)
 
-    interface Get {
+    class Get internal constructor(
+        private val client: HttpClient,
+    ) {
         suspend operator fun invoke(affiliation: Affiliation = Affiliation.All): Response
         data class Response(val value: List<Collaborator>)
     }
@@ -501,16 +551,16 @@ interface Collaborators {
 
 ## 10. File Organization
 
-The root interface and its nested interfaces can be split across files. The splitting strategy:
+The root class and its nested classes can be split across files. The splitting strategy:
 
-- **Root file** (`GitHub.kt`): root interface + factory + server sealed interface + root implementation
+- **Root file** (`GitHub.kt`): root class + factory + server sealed interface
 - **Direct children** get their own files: `Repos.kt`, `Users.kt`, `Orgs.kt`
-- **Deeper nesting** stays as inner interfaces within the direct child file
+- **Deeper nesting** stays as nested classes within the direct child file
 
 ```text
-GitHub.kt           -> GitHub interface, factory, server
-Repos.kt            -> GitHub.Repos + all nested (Owner, Repo, Collaborators, etc.)
-Users.kt            -> GitHub.Users + all nested
+GitHub.kt           -> GitHub class, factory, server
+Repos.kt            -> Repos + all nested (Owner, Repo, Collaborators, etc.)
+Users.kt            -> Users + all nested
 ```
 
 All files share the same package.
@@ -521,17 +571,16 @@ All files share the same package.
 
 | Source | Convention | Example |
 |--------|-----------|---------|
-| Interface names | PascalCase from segment | `repos` -> `Repos`, `fine_tuning` -> `FineTuning` |
+| Client class names | PascalCase from segment | `repos` -> `Repos`, `fine_tuning` -> `FineTuning` |
 | Navigation function names | camelCase from placeholder | `{owner}` -> `owner()`, `{pet_id}` -> `petId()` |
 | Navigation function param names | camelCase from placeholder | `{owner}` -> `owner: String`, `{pet_id}` -> `petId: String` |
 | Method-node property names | Lowercase HTTP method | `get`, `post`, `delete` |
-| Method-node interface names | PascalCase HTTP method | `Get`, `Post`, `Delete` |
+| Method-node class names | PascalCase HTTP method | `Get`, `Post`, `Delete` |
 | Invoke entrypoint | `operator fun invoke` | `get(limit = 10)` |
 | Query/header param names | camelCase | `per_page` -> `perPage`, `X-Api-Key` -> `xApiKey` |
 | Response wrapper name | `Response` | `Get.Response`, `Post.Response` |
-| Implementation class names | `Ktor{InterfaceName}` | `KtorRepos`, `KtorOwner` |
-| Factory function names | `{RootInterface}Client` | `GitHubClient()` |
-| Server sealed interface | `{RootInterface}Server` | `GitHubServer` |
+| Factory function names | `{RootClass}Client` | `GitHubClient()` |
+| Server sealed interface | `{RootClass}Server` | `GitHubServer` |
 
 ---
 
@@ -550,44 +599,67 @@ GET    /pets/{petId}/toys
 Generated:
 
 ```kotlin
-interface PetStore {
-    val pets: Pets
+class PetStore internal constructor(
+    private val client: HttpClient,
+) {
+    val pets: Pets = Pets(client)
 
-    interface Pets {
-        val get: Get
-        val post: Post
+    class Pets internal constructor(
+        private val client: HttpClient,
+    ) {
+        val get: Get = Get(client)
+        val post: Post = Post(client)
 
-        interface Get {
+        class Get internal constructor(
+            private val client: HttpClient,
+        ) {
             suspend operator fun invoke(limit: Int? = null): Response
             data class Response(val value: List<Pet>)
         }
 
-        interface Post {
+        class Post internal constructor(
+            private val client: HttpClient,
+        ) {
             suspend operator fun invoke(body: CreatePetRequest): Response
             data class Response(val value: Pet)
         }
 
-        fun petId(petId: String): PetId
+        fun petId(petId: String): PetId = PetId(client, petId)
 
-        interface PetId {
-            val get: Get
-            val delete: Delete
+        class PetId internal constructor(
+            private val client: HttpClient,
+            private val petId: String,
+        ) {
+            val get: Get = Get(client, petId)
+            val delete: Delete = Delete(client, petId)
 
-            interface Get {
+            class Get internal constructor(
+                private val client: HttpClient,
+                private val petId: String,
+            ) {
                 suspend operator fun invoke(): Response
                 data class Response(val value: Pet)
             }
 
-            interface Delete {
+            class Delete internal constructor(
+                private val client: HttpClient,
+                private val petId: String,
+            ) {
                 suspend operator fun invoke(): Unit
             }
 
-            val toys: Toys
+            val toys: Toys = Toys(client, petId)
 
-            interface Toys {
-                val get: Get
+            class Toys internal constructor(
+                private val client: HttpClient,
+                private val petId: String,
+            ) {
+                val get: Get = Get(client, petId)
 
-                interface Get {
+                class Get internal constructor(
+                    private val client: HttpClient,
+                    private val petId: String,
+                ) {
                     suspend operator fun invoke(): Response
                     data class Response(val value: List<Toy>)
                 }

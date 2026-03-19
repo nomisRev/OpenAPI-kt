@@ -12,13 +12,17 @@ import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
-public interface Widgets {
-  public val `get`: Get
+public class Widgets internal constructor(
+  private val client: HttpClient,
+) {
+  public val `get`: Get = Get(client)
 
-  public val post: Post
+  public val post: Post = Post(client)
 
-  public interface Get {
-    public suspend operator fun invoke(): Response
+  public class Get internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(): Response = client.get("/widgets").body()
 
     @Serializable
     public data class Response(
@@ -27,8 +31,13 @@ public interface Widgets {
     )
   }
 
-  public interface Post {
-    public suspend operator fun invoke(body: Body): Response
+  public class Post internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(body: Body): Response = client.post("/widgets") {
+      contentType(ContentType.Application.Json)
+      setBody(body)
+    }.body()
 
     @JvmInline
     @Serializable
@@ -41,20 +50,5 @@ public interface Widgets {
       public val id: String,
       public val name: String,
     )
-  }
-}
-
-internal class KtorWidgets(
-  private val client: HttpClient,
-) : Widgets {
-  override val `get`: Widgets.Get = object : Widgets.Get {
-    override suspend operator fun invoke(): Widgets.Get.Response = client.get("/widgets").body()
-  }
-
-  override val post: Widgets.Post = object : Widgets.Post {
-    override suspend operator fun invoke(body: Widgets.Post.Body): Widgets.Post.Response = client.post("/widgets") {
-      contentType(ContentType.Application.Json)
-      setBody(body)
-    }.body()
   }
 }

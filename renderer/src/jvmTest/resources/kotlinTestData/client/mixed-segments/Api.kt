@@ -8,10 +8,12 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlin.String
 import kotlin.Unit
 
-public interface Api {
-  public val repos: Repos
+public class Api internal constructor(
+  private val client: HttpClient,
+) {
+  public val repos: Repos = Repos(client)
 
-  public val users: Users
+  public val users: Users = Users(client)
 }
 
 public fun ApiClient(baseUrl: String, block: HttpClientConfig<*>.() -> Unit = {}): Api {
@@ -20,13 +22,5 @@ public fun ApiClient(baseUrl: String, block: HttpClientConfig<*>.() -> Unit = {}
     defaultRequest { url(baseUrl) }
     block()
   }
-  return KtorApi(client)
-}
-
-internal class KtorApi(
-  private val client: HttpClient,
-) : Api {
-  override val repos: Repos = KtorRepos(client)
-
-  override val users: Users = KtorUsers(client)
+  return Api(client)
 }
