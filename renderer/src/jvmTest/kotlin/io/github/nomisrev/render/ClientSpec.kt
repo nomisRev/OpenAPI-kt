@@ -1,6 +1,12 @@
 package io.github.nomisrev.render
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.nomisrev.openapi.KmpTarget
+import io.github.nomisrev.openapi.RenderConfig
+import io.github.nomisrev.openapi.generateClient
+import io.github.nomisrev.openapi.parser.OpenAPI
+import io.github.nomisrev.openapi.toApiTree
+import kotlin.test.assertTrue
 
 val clientSpec by testSuite {
     clientTest(
@@ -780,6 +786,47 @@ val clientSpec by testSuite {
         }
         """.trimIndent(),
         "client/operations-inline-oneof-parameter"
+    )
+
+    clientTest(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/alerts": {
+              "get": {
+                "parameters": [
+                  { "$ref": "#/components/parameters/has" }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          },
+          "components": {
+            "parameters": {
+              "has": {
+                "name": "has",
+                "in": "query",
+                "required": false,
+                "schema": {
+                  "oneOf": [
+                    { "type": "string" },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "enum": ["patch"]
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/inline-oneof-components-parameter"
     )
 
     clientTest(
