@@ -11,7 +11,7 @@
 - Ignore generated output under any `build/` directory unless the task is explicitly about generated artifacts.
 
 ## Build And Test Workflow
-- Always use the Gradle wrapper: `./gradlew`.
+- Always use the Gradle MCP server, if not available fallback to `gradlew`
 - Prefer targeted validation before broad validation.
 - Typical targeted commands:
   - `./gradlew :parser:allTests`

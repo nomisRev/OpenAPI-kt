@@ -7,6 +7,7 @@ import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
@@ -17,6 +18,7 @@ import io.github.nomisrev.openapi.transformers.nestedOrNull
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
+import kotlin.jvm.JvmName
 
 fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
     if (children.isEmpty() && operations.isEmpty()) return emptyList()
@@ -299,15 +301,16 @@ private fun Route.toOperationTypeSpec(
                     )
                 }
                 overloadedBody
-                    .distinctCaseTypeNames(config, inlineModelScope)
-                    .forEach { caseTypeName ->
+                    .distinctCaseSignatures(config, inlineModelScope)
+                    .forEach { caseSignature ->
                         addFunction(
                             toInvokeFunSpecForOverloadedBodyCase(
                                 config = config,
                                 pathClassName = pathClassName,
                                 methodClassName = methodClassName,
                                 sharedInlineParameterKeys = sharedInlineParameterKeys,
-                                bodyTypeName = caseTypeName,
+                                bodyTypeName = caseSignature.typeName,
+                                bodyJvmName = caseSignature.jvmName,
                                 inlineModelScope = inlineModelScope,
                             )
                         )
@@ -392,11 +395,19 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     methodClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
     bodyTypeName: TypeName,
+    bodyJvmName: String?,
     inlineModelScope: OperationInlineModelScope,
 ): FunSpec {
     val builder = FunSpec.builder("invoke")
         .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
         .addDeprecatedIfNeeded()
+    bodyJvmName?.let { jvmName ->
+        builder.addAnnotation(
+            AnnotationSpec.builder(JvmName::class)
+                .addMember("%S", jvmName)
+                .build()
+        )
+    }
 
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
@@ -792,15 +803,65 @@ private fun Route.Body.OverloadedBody.directInlineTypeSpecs(
     }
 }
 
-private fun Route.Body.OverloadedBody.distinctCaseTypeNames(
+private data class OverloadedBodyCaseSignature(
+    val typeName: TypeName,
+    val jvmName: String?,
+)
+
+private val KotlinListType = ClassName("kotlin.collections", "List")
+
+private fun Route.Body.OverloadedBody.distinctCaseSignatures(
     config: RenderConfig,
     inlineModelScope: OperationInlineModelScope,
-): List<TypeName> {
+): List<OverloadedBodyCaseSignature> {
     val emittedTypes = mutableSetOf<TypeName>()
-    return cases.mapNotNull { case ->
+    val typeNames = cases.mapNotNull { case ->
         inlineModelScope
             .remap(case.model.toTypeName(config))
             .takeIf { emittedTypes.add(it) }
+    }
+    val conflictingListTypes = typeNames
+        .filterIsInstance<ParameterizedTypeName>()
+        .filter { it.rawType == KotlinListType }
+        .takeIf { it.size > 1 }
+        .orEmpty()
+        .toSet()
+    val emittedJvmNames = mutableSetOf<String>()
+    return typeNames.map { typeName ->
+        val jvmName = (typeName as? ParameterizedTypeName)
+            ?.takeIf { it in conflictingListTypes }
+            ?.listJvmName()
+            ?.uniqueJvmName(emittedJvmNames)
+        OverloadedBodyCaseSignature(typeName, jvmName)
+    }
+}
+
+private fun ParameterizedTypeName.listJvmName(): String =
+    "${typeArguments.single().jvmSimpleName()}List"
+
+private fun TypeName.jvmSimpleName(): String =
+    when (val type = copy(nullable = false)) {
+        is ClassName -> type.simpleName
+        is ParameterizedTypeName ->
+            when {
+                type.rawType == KotlinListType && type.typeArguments.size == 1 -> type.listJvmName()
+                else -> type.rawType.simpleName
+            }
+
+        else -> type.toString()
+            .substringAfterLast('.')
+            .substringBefore('<')
+            .replace("?", "")
+            .toPascalCase()
+    }
+
+private fun String.uniqueJvmName(emitted: MutableSet<String>): String {
+    if (emitted.add(this)) return this
+    var index = 2
+    while (true) {
+        val candidate = "$this$index"
+        if (emitted.add(candidate)) return candidate
+        index++
     }
 }
 
