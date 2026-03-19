@@ -238,4 +238,34 @@ val unionSpec by testSuite {
             assertEquals(listOf("dir", "file"), result.cases.map { it.discriminator })
         }
     }
+
+    test("Union preserves nullable case models") {
+        val unionSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.value(Schema.string.copy(nullable = true)),
+                ReferenceOr.value(Schema.integer.copy(format = "int32")),
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Array,
+                        nullable = true,
+                        items = ReferenceOr.value(Schema.string)
+                    )
+                )
+            )
+        )
+        val testApi = api.reference("Union", unionSchema)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("Union")
+                .toModel(NamingContext.reference("Union", SchemaContext.Null), SchemaContext.Write) as Union
+
+            assertEquals(false, result.isNullable)
+            assertEquals(true, (result.cases[0].model as Model.Primitive.String).isNullable)
+            assertEquals(false, (result.cases[1].model as Model.Primitive.Int).isNullable)
+
+            val nullableCollection = result.cases[2].model as Model.Collection
+            assertEquals(true, nullableCollection.isNullable)
+            assertEquals(false, nullableCollection.inner.isNullable)
+        }
+    }
 }

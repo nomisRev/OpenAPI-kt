@@ -317,6 +317,66 @@ val apiTreeSpec by testSuite {
         assertEquals(setOf("runs", "history"), reverseNode.children.map { it.segment.name }.toSet())
     }
 
+    test("reproducer: shared multi-enum overloaded path node conflicts when case order differs") {
+        fun overloadedMultiEnumWorkflowParam(
+            name: String,
+            routeKey: String,
+            enumCases: List<List<String>>,
+        ): PathSegment.OverloadedParameter {
+            val unionType = Model.Union(
+                context = NamingContext.path(listOf("workflows", routeKey)),
+                cases = enumCases.mapIndexed { index, values ->
+                    val enumType = Model.Enum(
+                        context = NamingContext.path(listOf("workflows", routeKey, "workflowId", "case$index")),
+                        inner = stringType,
+                        values = values,
+                        default = null,
+                        description = null,
+                        title = null,
+                        isNullable = false,
+                    )
+                    Model.Union.Case(enumType, discriminator = null)
+                },
+                default = null,
+                description = null,
+                title = null,
+                discriminator = null,
+                isNullable = false,
+            )
+            return PathSegment.OverloadedParameter(name, unionType)
+        }
+
+        val getRuns = route(
+            HttpMethod.Get,
+            literal("workflows"),
+            overloadedMultiEnumWorkflowParam(
+                name = "workflowId",
+                routeKey = "runs",
+                enumCases = listOf(listOf("queued"), listOf("in-progress")),
+            ),
+            literal("runs"),
+        )
+        val getHistory = route(
+            HttpMethod.Get,
+            literal("workflows"),
+            overloadedMultiEnumWorkflowParam(
+                name = "workflowId",
+                routeKey = "history",
+                enumCases = listOf(listOf("in-progress"), listOf("queued")),
+            ),
+            literal("history"),
+        )
+
+        assertSharedPathParameterConflict(
+            routes = listOf(getRuns, getHistory),
+            expectedNode = "/workflows/{workflowId}",
+            "GET /workflows/{workflowId}/history",
+            "GET /workflows/{workflowId}/runs",
+            "OverloadedParameter(name=workflowId, type=Union(cases=[Enum(values=[in-progress]), Enum(values=[queued])]))",
+            "OverloadedParameter(name=workflowId, type=Union(cases=[Enum(values=[queued]), Enum(values=[in-progress])]))",
+        )
+    }
+
     test("buildTree rejects mixed parameter and overloaded parameter on shared node regardless of insertion order") {
         val getRuns = route(
             HttpMethod.Get,
