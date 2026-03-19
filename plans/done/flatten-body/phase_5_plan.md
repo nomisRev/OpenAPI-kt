@@ -17,7 +17,7 @@ This inconsistency means the renderer still contains domain logic about when to 
 
 ## Status
 
-**Deferred**. The path param flattening already works correctly. This is a refactor for architectural consistency, not a bug fix or feature. It should only be attempted after Phases 1-4 are stable and tested.
+**Completed on 2026-03-19**. The typed layer now emits `PathSegment.OverloadedParameter` for supported inline simple path unions, enforces the multiple-enum guard during route construction, and the renderer only consumes the typed variant.
 
 ## Sketch
 
@@ -54,8 +54,8 @@ Low risk refactor since path param behavior is well-tested with golden files. Ma
 
 ## Acceptance criteria
 
-- [ ] `PathParamUtils.isFlattenablePathUnion()` logic moved to typed layer
-- [ ] `requireSupportedFlattenablePathUnion()` guard moved to typed layer
-- [ ] Renderer only pattern-matches on typed variants, no domain logic
-- [ ] All existing path param golden file tests pass unchanged
-- [ ] `./gradlew :renderer:jvmTest` passes
+- [x] `PathParamUtils.isFlattenablePathUnion()` logic moved to typed layer
+- [x] `requireSupportedFlattenablePathUnion()` guard moved to typed layer
+- [x] Renderer only pattern-matches on typed variants, no domain logic
+- [x] All existing path param golden file tests pass unchanged
+- [x] `./gradlew :renderer:jvmTest` passes

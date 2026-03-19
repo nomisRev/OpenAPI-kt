@@ -22,6 +22,7 @@ import io.github.nomisrev.openapi.routes.toRoutes
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
@@ -190,6 +191,49 @@ val routeSpec by testSuite {
         ),
     ).verifyAll("toRoutes segments") { input ->
         Eq(input.expected, routes(input.api).single().segments)
+    }
+
+    test("inline simple path parameter union becomes overloaded segment") {
+        val pathUnionSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.value(Schema.integer.copy(format = "int32")),
+                ReferenceOr.value(Schema.string.copy(enum = listOf("queued", "in-progress"))),
+            )
+        )
+
+        val route = routes(
+            openAPI(
+                path = "/workflows/{workflowId}",
+                parameters = listOf(pathParameter("workflowId", pathUnionSchema)),
+            )
+        ).single()
+
+        val segment = assertIs<PathSegment.OverloadedParameter>(route.segments.last())
+        assertEquals("workflowId", segment.name)
+        assertEquals(2, segment.cases.size)
+    }
+
+    test("unsupported path parameter union with multiple enum cases fails during route resolution") {
+        val pathUnionSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.value(Schema.string.copy(enum = listOf("queued"))),
+                ReferenceOr.value(Schema.string.copy(enum = listOf("in-progress"))),
+            )
+        )
+
+        val error = assertFailsWith<IllegalArgumentException> {
+            routes(
+                openAPI(
+                    path = "/workflows/{workflowId}",
+                    parameters = listOf(pathParameter("workflowId", pathUnionSchema)),
+                )
+            )
+        }
+
+        assertEquals(
+            "Path parameter 'workflowId' uses a oneOf union with multiple enum cases, which is not supported yet.",
+            error.message,
+        )
     }
 
     test("inline non-discriminated request body union becomes overloaded body") {

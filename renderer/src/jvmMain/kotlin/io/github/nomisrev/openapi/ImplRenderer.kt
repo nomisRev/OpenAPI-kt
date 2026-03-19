@@ -51,13 +51,16 @@ internal fun ApiTree.collectHttpMethods(): Set<String> =
 
 internal fun PathNode.accumulatedParams(parentAccumulatedParams: List<AccumulatedParam>): List<AccumulatedParam> =
     when (val segment = segment) {
+        is PathSegment.OverloadedParameter -> parentAccumulatedParams + AccumulatedParam(
+            name = segment.name,
+            type = segment.type,
+            storeAsString = true,
+        )
+
         is PathSegment.Parameter -> {
-            val unionType = segment.model as? Model.Union
-            unionType?.requireSupportedFlattenablePathUnion(segment.name)
             parentAccumulatedParams + AccumulatedParam(
                 name = segment.name,
                 type = segment.model,
-                storeAsString = unionType?.isFlattenablePathUnion() == true,
             )
         }
 
@@ -111,60 +114,58 @@ internal fun PathSegment.addConcreteNavigationMember(
             )
         }
 
+        is PathSegment.OverloadedParameter -> {
+            val paramName = name.toCamelCase()
+            for (case in cases) {
+                val enumModel = case.model as? Model.Enum ?: continue
+                builder.addType(enumModel.toTypeSpec(config, nameOverride = name.toPascalCase()))
+            }
+
+            val enumClassName = parentClassName.nestedClass(name.toPascalCase())
+            val emittedTypes = mutableSetOf<TypeName>()
+            for (case in cases) {
+                val caseTypeName = when (case.model) {
+                    is Model.Enum -> enumClassName
+                    else -> case.model.toTypeName(config)
+                }
+                if (!emittedTypes.add(caseTypeName)) continue
+
+                val functionBuilder = FunSpec.builder(paramName)
+                    .addParameter(paramName, caseTypeName)
+                    .returns(childClassName)
+                val encodedArg = when (val caseModel = case.model) {
+                    is Model.Enum -> {
+                        functionBuilder.addStatement(
+                            "val encoded = %L",
+                            caseModel.toPathParamValueExpression(paramName, enumClassName),
+                        )
+                        "encoded"
+                    }
+
+                    else -> if (caseTypeName == STRING) paramName else "$paramName.toString()"
+                }
+                functionBuilder.addStatement(
+                    "return %T(%L)",
+                    childClassName,
+                    currentAccumulatedParams.constructorArgs(encodedArg),
+                )
+                builder.addFunction(functionBuilder.build())
+            }
+        }
+
         is PathSegment.Parameter -> {
             val paramName = name.toCamelCase()
-            val flattenableUnion = (model as? Model.Union)
-                ?.takeIf { it.isFlattenablePathUnion() }
-                ?.also { it.requireSupportedFlattenablePathUnion(name) }
-            if (flattenableUnion != null) {
-                for (case in flattenableUnion.cases) {
-                    val enumModel = case.model as? Model.Enum ?: continue
-                    builder.addType(enumModel.toTypeSpec(config, nameOverride = name.toPascalCase()))
-                }
-
-                val enumClassName = parentClassName.nestedClass(name.toPascalCase())
-                val emittedTypes = mutableSetOf<TypeName>()
-                for (case in flattenableUnion.cases) {
-                    val caseTypeName = when (case.model) {
-                        is Model.Enum -> enumClassName
-                        else -> case.model.toTypeName(config)
-                    }
-                    if (!emittedTypes.add(caseTypeName)) continue
-
-                    val functionBuilder = FunSpec.builder(paramName)
-                        .addParameter(paramName, caseTypeName)
-                        .returns(childClassName)
-                    val encodedArg = when (val caseModel = case.model) {
-                        is Model.Enum -> {
-                            functionBuilder.addStatement(
-                                "val encoded = %L",
-                                caseModel.toPathParamValueExpression(paramName, enumClassName),
-                            )
-                            "encoded"
-                        }
-
-                        else -> if (caseTypeName == STRING) paramName else "$paramName.toString()"
-                    }
-                    functionBuilder.addStatement(
+            builder.addFunction(
+                FunSpec.builder(paramName)
+                    .addParameter(paramName, model.toTypeName(config))
+                    .returns(childClassName)
+                    .addStatement(
                         "return %T(%L)",
                         childClassName,
-                        currentAccumulatedParams.constructorArgs(encodedArg),
+                        currentAccumulatedParams.constructorArgs(paramName),
                     )
-                    builder.addFunction(functionBuilder.build())
-                }
-            } else {
-                builder.addFunction(
-                    FunSpec.builder(paramName)
-                        .addParameter(paramName, model.toTypeName(config))
-                        .returns(childClassName)
-                        .addStatement(
-                            "return %T(%L)",
-                            childClassName,
-                            currentAccumulatedParams.constructorArgs(paramName),
-                        )
-                        .build()
-                )
-            }
+                    .build()
+            )
         }
     }
 }
@@ -415,6 +416,7 @@ private fun List<PathSegment>.toPathLiteral(): String {
         when (segment) {
             is PathSegment.Literal -> segment.name
             is PathSegment.Parameter -> "\$${segment.name.toCamelCase()}"
+            is PathSegment.OverloadedParameter -> "\$${segment.name.toCamelCase()}"
         }
     }
     val path = if (inner.isEmpty()) "/" else "/$inner"

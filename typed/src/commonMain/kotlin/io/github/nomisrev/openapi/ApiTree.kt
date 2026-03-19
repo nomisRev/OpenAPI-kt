@@ -129,5 +129,8 @@ private class PathNodeBuilder(
 private fun PathSegment?.matches(other: PathSegment): Boolean = when {
     this is PathSegment.Literal && other is PathSegment.Literal -> name == other.name
     this is PathSegment.Parameter && other is PathSegment.Parameter -> name == other.name
+    this is PathSegment.Parameter && other is PathSegment.OverloadedParameter -> name == other.name
+    this is PathSegment.OverloadedParameter && other is PathSegment.Parameter -> name == other.name
+    this is PathSegment.OverloadedParameter && other is PathSegment.OverloadedParameter -> name == other.name
     else -> false
 }

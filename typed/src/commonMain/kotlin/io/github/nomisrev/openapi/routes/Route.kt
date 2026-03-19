@@ -78,6 +78,7 @@ data class Route(
             when (segment) {
                 is PathSegment.Literal -> segment.name
                 is PathSegment.Parameter -> "{${segment.name}}"
+                is PathSegment.OverloadedParameter -> "{${segment.name}}"
             }
         }
 

@@ -51,11 +51,11 @@ suspend operator fun invoke(body: String): Response
 
 | Phase | Description | Key files |
 |-------|-------------|-----------|
-| [Phase 1](./phase_1_plan.md) | Introduce `Route.Body.OverloadedBody` in the typed layer | `Route.kt`, `RequestBody.kt` |
-| [Phase 2](./phase_2_plan.md) | Render interface overloads in `ClientRenderer.kt` | `ClientRenderer.kt` |
-| [Phase 3](./phase_3_plan.md) | Render implementation overloads in `ImplRenderer.kt` | `ImplRenderer.kt` |
-| [Phase 4](./phase_4_plan.md) | Edge cases, optional bodies, update existing tests | Multiple |
-| [Phase 5](./phase_5_plan.md) | (Optional) Back-port path param flattening to typed layer | `PathParamUtils.kt`, `Route.kt` |
+| [Phase 1](phase_1_plan.md) | Introduce `Route.Body.OverloadedBody` in the typed layer | `Route.kt`, `RequestBody.kt` |
+| [Phase 2](phase_2_plan.md) | Render interface overloads in `ClientRenderer.kt` | `ClientRenderer.kt` |
+| [Phase 3](phase_3_plan.md) | Render implementation overloads in `ImplRenderer.kt` | `ImplRenderer.kt` |
+| [Phase 4](phase_4_plan.md) | Edge cases, optional bodies, update existing tests | Multiple |
+| [Phase 5](phase_5_plan.md) | (Optional) Back-port path param flattening to typed layer | `PathParamUtils.kt`, `Route.kt` |
 
 ## Status
 
@@ -67,13 +67,14 @@ suspend operator fun invoke(body: String): Response
   `ImplRenderer.kt` now emits matching overload implementations for flattened request bodies and keeps `setBody(body)` on the concrete overload parameter type.
 - [x] Phase 4 completed on 2026-03-19.
   Optional flattened request bodies now emit per-case overloads plus a no-body overload, conflicting erased collection overloads are disambiguated with `@JvmName`, referenced and discriminated unions still keep `SetBody`, and the client goldens were updated so overloaded request bodies no longer emit `AttemptDeserialize.kt`.
-- [ ] Phase 5 deferred.
+- [x] Phase 5 completed on 2026-03-19.
+  Path-parameter flattening now originates in the typed layer via `PathSegment.OverloadedParameter`, renderer-only eligibility checks were removed, and the existing renderer goldens still pass unchanged.
 
 ## Notes
 
 - The JVM clash from the GitHub labels example is resolved by keeping the full source-level overload set and assigning distinct JVM names to erased collection overloads.
 - Optional overloaded request bodies now model omission explicitly with an extra `invoke()` overload instead of nullable-body defaults.
-- Phase 5 remains deferred; path-parameter flattening is still renderer-only and is not required for the request-body work.
+- Path-parameter flattening now follows the same typed-layer-first pattern as request bodies, with the renderer consuming `PathSegment.OverloadedParameter` mechanically.
 
 ## Key files reference
 
