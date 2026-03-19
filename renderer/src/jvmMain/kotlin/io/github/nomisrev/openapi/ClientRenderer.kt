@@ -217,7 +217,7 @@ private fun PathNode.hasInlineNonDiscriminatedBodyUnion(): Boolean =
 
 private fun Iterable<Route>.hasInlineNonDiscriminatedBodyUnion(): Boolean =
     any { route ->
-        val model = route.body?.defaultOrNull().bodyModelOrNull() as? Model.Union ?: return@any false
+        val model = (route.body?.defaultOrNull() as? Route.Body.SetBody)?.type as? Model.Union ?: return@any false
         model.isRouteInlineModel() && model.discriminator == null
     }
 
@@ -294,6 +294,8 @@ private fun Route.toOperationTypeSpec(
     sharedInlineParameterKeys: Set<String>,
 ): TypeSpec {
     val methodClassName = interfaceClassName.nestedClass(methodTypeName(method))
+    val overloadedBody = body?.defaultOrNull() as? Route.Body.OverloadedBody
+    val inlineModelScope = operationInlineModelScope(config, methodClassName)
     val inlineBodyTypeSpec = body?.inlineBodyTypeSpec(config, methodClassName)
     val routeInlineParameterModels = routeSpecificInlineParameterModels(sharedInlineParameterKeys)
 
@@ -305,19 +307,49 @@ private fun Route.toOperationTypeSpec(
                     .toInlineParameterTypeSpec(config, methodClassName, inline.simpleName)
                     ?.let(::addType)
             }
+            overloadedBody
+                ?.directInlineTypeSpecs(config, methodClassName, inlineModelScope)
+                ?.forEach(::addType)
+            inlineModelScope.methodTypeSpecs(config).forEach(::addType)
             inlineBodyTypeSpec?.let(::addType)
             if (!returns.isSingleUnitResponse()) {
-                addType(buildResponseTypeSpec(config, methodClassName))
+                addType(buildResponseTypeSpec(config, methodClassName, inlineModelScope))
             }
-            addFunction(
-                toInvokeFunSpec(
-                    config = config,
-                    interfaceClassName = interfaceClassName,
-                    methodClassName = methodClassName,
-                    sharedInlineParameterKeys = sharedInlineParameterKeys,
-                    usesNestedBodyType = inlineBodyTypeSpec != null,
+            if (overloadedBody != null) {
+                if (body?.required != true) {
+                    addFunction(
+                        toInvokeFunSpecForOptionalOverloadedBodyNoBody(
+                            config = config,
+                            interfaceClassName = interfaceClassName,
+                            methodClassName = methodClassName,
+                            sharedInlineParameterKeys = sharedInlineParameterKeys,
+                        )
+                    )
+                }
+                overloadedBody
+                    .distinctCaseTypeNames(config, inlineModelScope)
+                    .forEach { caseTypeName ->
+                        addFunction(
+                            toInvokeFunSpecForOverloadedBodyCase(
+                                config = config,
+                                interfaceClassName = interfaceClassName,
+                                methodClassName = methodClassName,
+                                sharedInlineParameterKeys = sharedInlineParameterKeys,
+                                bodyTypeName = caseTypeName,
+                            )
+                        )
+                    }
+            } else {
+                addFunction(
+                    toInvokeFunSpec(
+                        config = config,
+                        interfaceClassName = interfaceClassName,
+                        methodClassName = methodClassName,
+                        sharedInlineParameterKeys = sharedInlineParameterKeys,
+                        usesNestedBodyType = inlineBodyTypeSpec != null,
+                    )
                 )
-            )
+            }
         }
         .build()
 }
@@ -372,6 +404,87 @@ private fun Route.toInvokeFunSpec(
     // 4. Optional body
     if (!bodyRequired && bodyParams != null) {
         bodyParams.forEach { builder.addParameter(it) }
+    }
+
+    builder.returns(invokeReturnType(methodClassName))
+    return builder.build()
+}
+
+private fun Route.toInvokeFunSpecForOverloadedBodyCase(
+    config: RenderConfig,
+    interfaceClassName: ClassName,
+    methodClassName: ClassName,
+    sharedInlineParameterKeys: Set<String>,
+    bodyTypeName: TypeName,
+): FunSpec {
+    val builder = FunSpec.builder("invoke")
+        .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND, KModifier.OPERATOR)
+        .addDeprecatedIfNeeded()
+
+    val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
+    val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
+    val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
+    val bodyParameter = ParameterSpec.builder("body", bodyTypeName).build()
+
+    for (input in requiredParams) {
+        builder.addParameter(
+            input.toParameterSpec(
+                config = config,
+                interfaceClassName = interfaceClassName,
+                methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
+    }
+    builder.addParameter(bodyParameter)
+    for (input in optionalParams) {
+        builder.addParameter(
+            input.toParameterSpec(
+                config = config,
+                interfaceClassName = interfaceClassName,
+                methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
+    }
+
+    builder.returns(invokeReturnType(methodClassName))
+    return builder.build()
+}
+
+private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
+    config: RenderConfig,
+    interfaceClassName: ClassName,
+    methodClassName: ClassName,
+    sharedInlineParameterKeys: Set<String>,
+): FunSpec {
+    val builder = FunSpec.builder("invoke")
+        .addModifiers(KModifier.ABSTRACT, KModifier.SUSPEND, KModifier.OPERATOR)
+        .addDeprecatedIfNeeded()
+
+    val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
+    val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
+    val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
+
+    for (input in requiredParams) {
+        builder.addParameter(
+            input.toParameterSpec(
+                config = config,
+                interfaceClassName = interfaceClassName,
+                methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
+    }
+    for (input in optionalParams) {
+        builder.addParameter(
+            input.toParameterSpec(
+                config = config,
+                interfaceClassName = interfaceClassName,
+                methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
     }
 
     builder.returns(invokeReturnType(methodClassName))
@@ -513,6 +626,7 @@ private fun HttpStatusCode.toCaseName(): String =
 private fun Route.buildResponseTypeSpec(
     config: RenderConfig,
     methodClassName: ClassName,
+    inlineModelScope: OperationInlineModelScope,
 ): TypeSpec {
     if (returns.needsSealedInterface()) {
         return buildSealedResponseTypeSpec(config, methodClassName)
@@ -520,7 +634,12 @@ private fun Route.buildResponseTypeSpec(
 
     val model = returns.singlePreferredModelOrNull()
     if (model != null && model.isRouteInlineModel()) {
-        model.toInlineOperationTypeSpecOrNull(config, methodClassName, "Response")?.let { return it }
+        model.toInlineOperationTypeSpecOrNull(
+            config = config,
+            ownerClassName = methodClassName,
+            nameOverride = "Response",
+            externalTypeNames = inlineModelScope.externalTypeNames(),
+        )?.let { return it }
     }
 
     return if (model == null || model is Model.Primitive.Unit) {
@@ -528,7 +647,7 @@ private fun Route.buildResponseTypeSpec(
             .addModifiers(KModifier.DATA)
             .build()
     } else {
-        val typeName = model.toTypeName(config)
+        val typeName = inlineModelScope.remap(model.toTypeName(config))
         TypeSpec.classBuilder("Response")
             .addModifiers(KModifier.DATA)
             .primaryConstructor(
@@ -541,6 +660,9 @@ private fun Route.buildResponseTypeSpec(
                     .initializer("value")
                     .build()
             )
+            .apply {
+                inlineModelScope.responseTypeSpecs(config).forEach(::addType)
+            }
             .build()
     }
 }
@@ -641,9 +763,14 @@ private fun Model.toInlineOperationTypeSpecOrNull(
     config: RenderConfig,
     ownerClassName: ClassName,
     nameOverride: String,
+    externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
 ): TypeSpec? =
     when (this) {
-        is Model.Object -> toTypeSpec(config, classNameOverride = ownerClassName.nestedClass(nameOverride))
+        is Model.Object -> toTypeSpec(
+            config,
+            classNameOverride = ownerClassName.nestedClass(nameOverride),
+            externalTypeNames = externalTypeNames,
+        )
         is Model.Enum -> toTypeSpec(config, nameOverride = nameOverride)
         is Model.Union -> toTypeSpec(config, classNameOverride = ownerClassName.nestedClass(nameOverride))
 
@@ -659,9 +786,42 @@ private fun Model.toInlineOperationTypeSpecOrNull(
     }
 
 private fun Route.Bodies.inlineBodyTypeSpec(config: RenderConfig, ownerClassName: ClassName): TypeSpec? {
+    if (defaultOrNull() is Route.Body.OverloadedBody) return null
     val model = defaultOrNull().bodyModelOrNull() ?: return null
     if (!model.isRouteInlineModel()) return null
     return model.toInlineOperationTypeSpecOrNull(config, ownerClassName, "Body")
+}
+
+private fun Route.Body.OverloadedBody.directInlineTypeSpecs(
+    config: RenderConfig,
+    ownerClassName: ClassName,
+    inlineModelScope: OperationInlineModelScope,
+): List<TypeSpec> {
+    val emitted = mutableSetOf<String>()
+    return cases.mapNotNull { case ->
+        val directTypeName = (case.model as? Model.ContextHolder)?.context?.toClassName(config)?.simpleName
+            ?: return@mapNotNull null
+        case.model.toInlineOperationTypeSpecOrNull(
+            config = config,
+            ownerClassName = ownerClassName,
+            nameOverride = directTypeName,
+            externalTypeNames = inlineModelScope.externalTypeNames(),
+        )
+    }.filter { spec ->
+        emitted.add(spec.name ?: return@filter false)
+    }
+}
+
+private fun Route.Body.OverloadedBody.distinctCaseTypeNames(
+    config: RenderConfig,
+    inlineModelScope: OperationInlineModelScope,
+): List<TypeName> {
+    val emittedTypes = mutableSetOf<TypeName>()
+    return cases.mapNotNull { case ->
+        inlineModelScope
+            .remap(case.model.toTypeName(config))
+            .takeIf { emittedTypes.add(it) }
+    }
 }
 
 private fun Route.Body?.bodyModelOrNull(): Model? = when (this) {

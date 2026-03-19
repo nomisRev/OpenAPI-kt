@@ -51,6 +51,7 @@ fun Model.Object.toTypeSpec(
     nameOverride: String? = null,
     overridePropertyNames: Set<String> = emptySet(),
     classNameOverride: ClassName? = null,
+    externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
 ): TypeSpec {
     val className = context.toClassName(config)
     val effectiveClassName = classNameOverride ?: if (nameOverride != null) {
@@ -68,6 +69,7 @@ fun Model.Object.toTypeSpec(
             originalClassName = className,
             effectiveClassName = effectiveClassName,
             isOverride = jsonName in overridePropertyNames,
+            externalTypeNames = externalTypeNames,
         )
     }
     val additionalProperty = renderAdditionalProperty(config)
@@ -146,13 +148,28 @@ fun Model.Object.toTypeSpec(
         .toList()
         .sortedBy { (it as Model.ContextHolder).context.toClassName(config).canonicalName }
         .mapNotNull { model ->
-            val childClassNameOverride = if (effectiveClassName != className) {
-                ((model as? Model.ContextHolder)?.context?.toClassName(config))
-                    ?.remapNestedClassName(className, effectiveClassName) as? ClassName
-            } else null
+            val modelClassName = (model as? Model.ContextHolder)?.context?.toClassName(config)
+            val externalTargetClassName = modelClassName?.let { externalTypeNames[it.copy(nullable = false)] } as? ClassName
+            if (externalTargetClassName != null && externalTargetClassName.enclosingClassName() != effectiveClassName) {
+                return@mapNotNull null
+            }
+            val childClassNameOverride = when {
+                externalTargetClassName != null && externalTargetClassName.enclosingClassName() == effectiveClassName ->
+                    externalTargetClassName
+
+                effectiveClassName != className ->
+                    ((model as? Model.ContextHolder)?.context?.toClassName(config))
+                        ?.remapNestedClassName(className, effectiveClassName) as? ClassName
+
+                else -> null
+            }
             when (model) {
                 is Model.Enum -> model.toTypeSpec(config, nameOverride = childClassNameOverride?.simpleName)
-                is Model.Object -> model.toTypeSpec(config, classNameOverride = childClassNameOverride)
+                is Model.Object -> model.toTypeSpec(
+                    config,
+                    classNameOverride = childClassNameOverride,
+                    externalTypeNames = externalTypeNames,
+                )
                 else -> null
             }
         }
@@ -196,10 +213,11 @@ private fun Model.Object.renderProperty(
     originalClassName: ClassName? = null,
     effectiveClassName: ClassName? = null,
     isOverride: Boolean = false,
+    externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
 ): RenderedProperty {
     val paramName = jsonName.toParamName()
     val unescapedParamName = paramName.unescapeBackticks()
-    val rawTypeName = property.model.toTypeName(config)
+    val rawTypeName = property.model.toTypeName(config).remapTypeNames(externalTypeNames)
     val typeName = (if (originalClassName != null && effectiveClassName != null && originalClassName != effectiveClassName)
         rawTypeName.remapNestedClassName(originalClassName, effectiveClassName)
     else rawTypeName)
@@ -500,6 +518,24 @@ internal fun TypeName.remapNestedClassName(oldClassName: ClassName, newClassName
             (rawType.remapNestedClassName(oldClassName, newClassName) as ClassName)
                 .parameterizedBy(typeArguments.map { it.remapNestedClassName(oldClassName, newClassName) })
                 .copy(nullable = isNullable)
+        }
+        else -> this
+    }
+
+internal fun TypeName.remapTypeNames(typeRemaps: Map<ClassName, TypeName>): TypeName =
+    when (this) {
+        is ClassName -> {
+            val key = copy(nullable = false)
+            val remapped = typeRemaps[key] ?: return this
+            remapped.copy(nullable = remapped.isNullable || isNullable)
+        }
+        is ParameterizedTypeName -> {
+            val remappedRaw = rawType.remapTypeNames(typeRemaps)
+            val remappedArgs = typeArguments.map { it.remapTypeNames(typeRemaps) }
+            when (remappedRaw) {
+                is ClassName -> remappedRaw.parameterizedBy(remappedArgs).copy(nullable = isNullable)
+                else -> remappedRaw.copy(nullable = isNullable)
+            }
         }
         else -> this
     }

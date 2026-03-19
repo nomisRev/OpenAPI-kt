@@ -1236,6 +1236,41 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/names": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "Response",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": { "type": "string" }
+                            },
+                            "required": ["name"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-inline-collection-items"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/repos/{owner}/{repo}/interaction-limits": {
               "get": {
                 "parameters": [

@@ -335,20 +335,55 @@ private fun Route.toImplOperationPropertySpec(
 ): PropertySpec {
     val methodName = method.value.lowercase()
     val methodClassName = interfaceClassName.nestedClass(methodTypeName(method))
+    val inlineModelScope = operationInlineModelScope(config, methodClassName)
     val usesNestedBodyType = body?.usesNestedBodyType() == true
+    val overloadedBody = body?.defaultOrNull() as? Route.Body.OverloadedBody
 
     val anonymousImpl = TypeSpec.anonymousClassBuilder()
         .addSuperinterface(methodClassName)
-        .addFunction(
-            toImplInvokeFunSpec(
-                method = method,
-                config = config,
-                interfaceClassName = interfaceClassName,
-                methodClassName = methodClassName,
-                sharedInlineParameterKeys = sharedInlineParameterKeys,
-                usesNestedBodyType = usesNestedBodyType,
-            )
-        )
+        .apply {
+            if (overloadedBody != null) {
+                if (body?.required != true) {
+                    addFunction(
+                        toImplInvokeFunSpecForOptionalOverloadedBodyNoBody(
+                            method = method,
+                            config = config,
+                            interfaceClassName = interfaceClassName,
+                            methodClassName = methodClassName,
+                            sharedInlineParameterKeys = sharedInlineParameterKeys,
+                            inlineModelScope = inlineModelScope,
+                        )
+                    )
+                }
+                overloadedBody
+                    .distinctCaseTypeNames(config, inlineModelScope)
+                    .forEach { caseTypeName ->
+                        addFunction(
+                            toImplInvokeFunSpecForOverloadedBodyCase(
+                                method = method,
+                                config = config,
+                                interfaceClassName = interfaceClassName,
+                                methodClassName = methodClassName,
+                                sharedInlineParameterKeys = sharedInlineParameterKeys,
+                                bodyTypeName = caseTypeName,
+                                inlineModelScope = inlineModelScope,
+                            )
+                        )
+                    }
+            } else {
+                addFunction(
+                    toImplInvokeFunSpec(
+                        method = method,
+                        config = config,
+                        interfaceClassName = interfaceClassName,
+                        methodClassName = methodClassName,
+                        sharedInlineParameterKeys = sharedInlineParameterKeys,
+                        usesNestedBodyType = usesNestedBodyType,
+                        inlineModelScope = inlineModelScope,
+                    )
+                )
+            }
+        }
         .build()
 
     return PropertySpec.builder(methodName, methodClassName)
@@ -366,6 +401,7 @@ private fun Route.toImplInvokeFunSpec(
     methodClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
     usesNestedBodyType: Boolean,
+    inlineModelScope: OperationInlineModelScope,
 ): FunSpec {
     val builder = FunSpec.builder("invoke")
         .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND, KModifier.OPERATOR)
@@ -412,8 +448,95 @@ private fun Route.toImplInvokeFunSpec(
     builder.returns(invokeReturnType(methodClassName))
 
     // Build the function body
-    builder.addCode(buildOperationBody(method, config, methodClassName))
+    builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
 
+    return builder.build()
+}
+
+private fun Route.toImplInvokeFunSpecForOverloadedBodyCase(
+    method: HttpMethod,
+    config: RenderConfig,
+    interfaceClassName: ClassName,
+    methodClassName: ClassName,
+    sharedInlineParameterKeys: Set<String>,
+    bodyTypeName: TypeName,
+    inlineModelScope: OperationInlineModelScope,
+): FunSpec {
+    val builder = FunSpec.builder("invoke")
+        .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND, KModifier.OPERATOR)
+        .addDeprecatedIfNeeded()
+
+    val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
+    val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
+    val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
+    val bodyParameter = ParameterSpec.builder("body", bodyTypeName).build()
+
+    for (input in requiredParams) {
+        builder.addParameter(
+            input.toImplParameterSpec(
+                config = config,
+                interfaceClassName = interfaceClassName,
+                methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
+    }
+    builder.addParameter(bodyParameter)
+    for (input in optionalParams) {
+        builder.addParameter(
+            input.toImplParameterSpec(
+                config = config,
+                interfaceClassName = interfaceClassName,
+                methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
+    }
+
+    builder.returns(invokeReturnType(methodClassName))
+    builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
+    return builder.build()
+}
+
+private fun Route.toImplInvokeFunSpecForOptionalOverloadedBodyNoBody(
+    method: HttpMethod,
+    config: RenderConfig,
+    interfaceClassName: ClassName,
+    methodClassName: ClassName,
+    sharedInlineParameterKeys: Set<String>,
+    inlineModelScope: OperationInlineModelScope,
+): FunSpec {
+    val builder = FunSpec.builder("invoke")
+        .addModifiers(KModifier.OVERRIDE, KModifier.SUSPEND, KModifier.OPERATOR)
+        .addDeprecatedIfNeeded()
+
+    val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
+    val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
+    val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
+
+    for (input in requiredParams) {
+        builder.addParameter(
+            input.toImplParameterSpec(
+                config = config,
+                interfaceClassName = interfaceClassName,
+                methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
+    }
+    for (input in optionalParams) {
+        builder.addParameter(
+            input.toImplParameterSpec(
+                config = config,
+                interfaceClassName = interfaceClassName,
+                methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )
+        )
+    }
+
+    builder.returns(invokeReturnType(methodClassName))
+    builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope, includeBody = false))
     return builder.build()
 }
 
@@ -422,20 +545,26 @@ private fun Route.buildOperationBody(
     method: HttpMethod,
     config: RenderConfig,
     methodClassName: ClassName,
+    inlineModelScope: OperationInlineModelScope,
+    includeBody: Boolean = true,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
     val pathLiteral = segments.toPathLiteral()
 
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
-    val hasRequestConfig = nonPathParams.isNotEmpty() || body != null
+    val hasRequestConfig = nonPathParams.isNotEmpty() || (body != null && includeBody)
+    val bodyMayBeNull = includeBody && when (body?.defaultOrNull()) {
+        is Route.Body.OverloadedBody -> false
+        else -> body?.required != true
+    }
     val responseClassName = methodClassName.nestedClass("Response")
 
     if (returns.needsSealedInterface()) {
         // Multi-response wrapper: decode status-specific cases.
         if (hasRequestConfig) {
             code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
-            addRequestConfigCode(code, config)
+            addRequestConfigCode(code, config, includeBody, bodyMayBeNull)
             code.endControlFlow()
         } else {
             code.addStatement("val response = client.%L(%L)", httpMethodName, pathLiteral)
@@ -477,7 +606,7 @@ private fun Route.buildOperationBody(
         if (model == null || model is Model.Primitive.Unit) {
             if (hasRequestConfig) {
                 code.beginControlFlow("client.%L(%L)", httpMethodName, pathLiteral)
-                addRequestConfigCode(code, config)
+                addRequestConfigCode(code, config, includeBody, bodyMayBeNull)
                 code.endControlFlow()
             } else {
                 code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
@@ -489,18 +618,18 @@ private fun Route.buildOperationBody(
                 if (hasRequestConfig) {
                     code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
                     code.indent()
-                    addRequestConfigCode(code, config)
+                    addRequestConfigCode(code, config, includeBody, bodyMayBeNull)
                     code.unindent()
                     code.add("}.%M()\n", BodyMember)
                 } else {
                     code.addStatement("return client.%L(%L).%M()", httpMethodName, pathLiteral, BodyMember)
                 }
             } else {
-                val modelType = model.toTypeName(config)
+                val modelType = inlineModelScope.remap(model.toTypeName(config))
                 if (hasRequestConfig) {
                     code.add("val value: %T = client.%L(%L) {\n", modelType, httpMethodName, pathLiteral)
                     code.indent()
-                    addRequestConfigCode(code, config)
+                    addRequestConfigCode(code, config, includeBody, bodyMayBeNull)
                     code.unindent()
                     code.add("}.%M()\n", BodyMember)
                 } else {
@@ -530,7 +659,12 @@ private fun Route.Returns.isSingleUnitResponse(): Boolean {
 }
 
 /** Add request configuration code (parameters, headers, cookies, body). */
-private fun Route.addRequestConfigCode(code: CodeBlock.Builder, config: RenderConfig) {
+private fun Route.addRequestConfigCode(
+    code: CodeBlock.Builder,
+    config: RenderConfig,
+    includeBody: Boolean = true,
+    bodyMayBeNull: Boolean = includeBody && body?.required != true,
+) {
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
 
     // Query parameters
@@ -564,17 +698,22 @@ private fun Route.addRequestConfigCode(code: CodeBlock.Builder, config: RenderCo
     }
 
     // Request body
-    if (body != null) {
-        addBodyCode(code, body!!, config)
+    if (includeBody && body != null) {
+        addBodyCode(code, body!!, config, bodyMayBeNull)
     }
 }
 
 /** Add request body code. */
-private fun addBodyCode(code: CodeBlock.Builder, bodies: Route.Bodies, config: RenderConfig) {
+private fun addBodyCode(
+    code: CodeBlock.Builder,
+    bodies: Route.Bodies,
+    config: RenderConfig,
+    bodyMayBeNull: Boolean,
+) {
     val body = bodies.defaultOrNull() ?: return
     when (body) {
         is Route.Body.SetBody -> {
-            if (bodies.required) {
+            if (!bodyMayBeNull) {
                 code.addStatement("%M(%T.Application.Json)", ContentTypeFunMember, ContentTypeType)
                 code.addStatement("%M(body)", SetBodyMember)
             } else {
@@ -586,7 +725,7 @@ private fun addBodyCode(code: CodeBlock.Builder, bodies: Route.Bodies, config: R
         }
 
         is Route.Body.OverloadedBody -> {
-            if (bodies.required) {
+            if (!bodyMayBeNull) {
                 code.addStatement("%M(%T.Application.Json)", ContentTypeFunMember, ContentTypeType)
                 code.addStatement("%M(body)", SetBodyMember)
             } else {
@@ -618,7 +757,7 @@ private fun addBodyCode(code: CodeBlock.Builder, bodies: Route.Bodies, config: R
         }
 
         is Route.Body.Multipart.Ref -> {
-            if (bodies.required) {
+            if (!bodyMayBeNull) {
                 code.addStatement(
                     "%M(%T.MultiPart.FormData)",
                     ContentTypeFunMember,
@@ -715,15 +854,7 @@ private fun Route.Bodies.toImplInvokeParameterSpecs(
             listOf(ParameterSpec.builder("body", typeName).build())
         }
 
-        is Route.Body.OverloadedBody -> {
-            val bodyType = if (usesNestedBodyType) {
-                methodClassName.nestedClass("Body")
-            } else {
-                body.type.toTypeName(config)
-            }
-            val typeName = if (!required) bodyType.copy(nullable = true) else bodyType
-            listOf(ParameterSpec.builder("body", typeName).build())
-        }
+        is Route.Body.OverloadedBody -> null
 
         is Route.Body.FormUrlEncoded -> {
             body.parameters.map { formData ->
@@ -754,9 +885,22 @@ private fun Model.isRouteInlineModel(): Boolean =
     this is Model.ContextHolder && context.head is NamingContext.Path
 
 private fun Route.Bodies.usesNestedBodyType(): Boolean {
+    if (defaultOrNull() is Route.Body.OverloadedBody) return false
     val model = defaultOrNull().bodyModelOrNull() ?: return false
     return model.isRouteInlineModel() &&
         (model is Model.Object || model is Model.Enum || model is Model.Union)
+}
+
+private fun Route.Body.OverloadedBody.distinctCaseTypeNames(
+    config: RenderConfig,
+    inlineModelScope: OperationInlineModelScope,
+): List<TypeName> {
+    val emittedTypes = mutableSetOf<TypeName>()
+    return cases.mapNotNull { case ->
+        inlineModelScope
+            .remap(case.model.toTypeName(config))
+            .takeIf { emittedTypes.add(it) }
+    }
 }
 
 private fun Route.Body?.bodyModelOrNull(): Model? = when (this) {

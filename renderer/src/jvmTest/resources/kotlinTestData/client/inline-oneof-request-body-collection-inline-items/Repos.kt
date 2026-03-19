@@ -1,5 +1,9 @@
 package io.github.nomisrev.render.test.client.`inline`.oneof.request.body.collection.`inline`.items
 
+import io.github.nomisrev.render.test.client.inline.oneof.request.body.collection.inline.items.Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.LabelsNames
+import io.github.nomisrev.render.test.client.inline.oneof.request.body.collection.inline.items.Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.LabelsStrings
+import io.github.nomisrev.render.test.client.inline.oneof.request.body.collection.inline.items.Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Name
+import io.github.nomisrev.render.test.client.inline.oneof.request.body.collection.inline.items.Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.put
@@ -33,7 +37,7 @@ public interface Repos {
                         public interface Put {
                             public suspend operator fun invoke(): Response
 
-                            public suspend operator fun invoke(body: Labels): Response
+                            public suspend operator fun invoke(body: LabelsStrings): Response
 
                             public suspend operator fun invoke(body: List<String>): Response
 
@@ -45,19 +49,15 @@ public interface Repos {
 
                             @JvmInline
                             @Serializable
-                            public value class Labels(public val labels: List<String>)
+                            public value class LabelsStrings(
+                                public val labels: List<String>,
+                            )
 
                             @JvmInline
                             @Serializable
                             public value class LabelsNames(
-                                public val labels: List<Name>? = null,
-                            ) {
-                                @JvmInline
-                                @Serializable
-                                public value class Name(
-                                    public val name: String,
-                                )
-                            }
+                                public val labels: List<Name>
+                            )
 
                             @JvmInline
                             @Serializable
@@ -66,14 +66,8 @@ public interface Repos {
                             )
 
                             public data class Response(
-                                public val `value`: List<Response>,
-                            ) {
-                                @JvmInline
-                                @Serializable
-                                public value class Name(
-                                    public val name: String,
-                                )
-                            }
+                                public val `value`: List<Name>,
+                            )
                         }
                     }
                 }
@@ -131,33 +125,55 @@ internal class KtorReposOwnerPathRepoPathIssuesIssueNumberPathLabels(
 ) : Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels {
     override val put: Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put =
         object : Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put {
-            private suspend inline fun <reified A> request(body: A): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response {
-                val value: List<Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response> =
+            override suspend operator fun invoke(): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response {
+                val value: List<Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Name> =
+                    client.put("/repos/$owner/$repo/issues/$issueNumber/labels").body()
+                return Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response(value)
+            }
+
+            override suspend operator fun invoke(body: Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.LabelsStrings): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response {
+                val value: List<Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Name> =
                     client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
-                        body?.let {
-                            contentType(ContentType.Application.Json)
-                            setBody(body)
-                        }
+                        contentType(ContentType.Application.Json)
+                        setBody(body)
                     }.body()
                 return Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response(value)
             }
 
-            override suspend fun invoke(): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response =
-                request(null)
+            override suspend operator fun invoke(body: List<String>): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response {
+                val value: List<Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Name> =
+                    client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                        contentType(ContentType.Application.Json)
+                        setBody(body)
+                    }.body()
+                return Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response(value)
+            }
 
-            override suspend operator fun invoke(body: Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Labels): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response =
-                request(body)
+            override suspend operator fun invoke(body: Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.LabelsNames): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response {
+                val value: List<Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Name> =
+                    client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                        contentType(ContentType.Application.Json)
+                        setBody(body)
+                    }.body()
+                return Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response(value)
+            }
 
-            override suspend operator fun invoke(body: List<String>): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response =
-                request(body)
+            override suspend operator fun invoke(body: List<Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Name>): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response {
+                val value: List<Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Name> =
+                    client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                        contentType(ContentType.Application.Json)
+                        setBody(body)
+                    }.body()
+                return Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response(value)
+            }
 
-            override suspend operator fun invoke(body: Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.LabelsNames): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response =
-                request(body)
-
-            override suspend fun invoke(body: List<Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Name>): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response =
-                request(body)
-
-            override suspend operator fun invoke(body: String): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response =
-                request(body)
+            override suspend operator fun invoke(body: String): Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response {
+                val value: List<Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Name> =
+                    client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                        contentType(ContentType.Application.Json)
+                        setBody(body)
+                    }.body()
+                return Repos.OwnerPath.RepoPath.Issues.IssueNumberPath.Labels.Put.Response(value)
+            }
         }
 }

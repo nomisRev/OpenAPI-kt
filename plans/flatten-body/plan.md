@@ -61,15 +61,19 @@ suspend operator fun invoke(body: String): Response
 
 - [x] Phase 1 completed on 2026-03-19.
   The typed layer now produces `Route.Body.OverloadedBody` for inline non-discriminated request-body unions, `Route.Bodies.defaultOrNull()` recognizes it, route nesting/top-level model discovery account for it, and typed tests cover inline, `$ref`, and discriminated cases.
-- [ ] Phase 2 pending.
-- [ ] Phase 3 pending.
+- [x] Phase 2 completed on 2026-03-19.
+  `ClientRenderer.kt` now flattens `OverloadedBody` into interface overloads, emits inline case types directly in the operation interface, suppresses the nested sealed `Body` wrapper, and stops generating `AttemptDeserialize` support for flattened request bodies.
+- [x] Phase 3 completed on 2026-03-19.
+  `ImplRenderer.kt` now emits matching overload implementations for flattened request bodies and keeps `setBody(body)` on the concrete overload parameter type.
 - [ ] Phase 4 pending.
+  Blocked by the JVM overload conflict documented in [ISSUE.md](./ISSUE.md).
 - [ ] Phase 5 deferred.
 
 ## Notes
 
-- Renderer compatibility remains on the pre-overload code path for `OverloadedBody` until Phases 2-4 land, so existing client generation stays stable while the typed-layer decision is now explicit.
-- While validating this phase, renderer golden data was refreshed for the existing inline oneOf request-body coverage and a latent union-rendering naming bug was fixed so the current codegen remains buildable.
+- Phase 4 still owns the remaining optional-body/no-body overload shape and broader edge-case cleanup, but the renderer now produces coherent interface+impl overloads for required and nullable-body flattened unions.
+- The temporary workaround that dropped `invoke(body: List<Name>)` to avoid the JVM clash with `invoke(body: List<String>)` has been reverted because it changes the generated API surface. The branch is intentionally back in the conflicting state until a better fix lands.
+- The concrete blocker is the GitHub labels example: flattened collection overloads are distinct in Kotlin source but erase to the same JVM signature. See [ISSUE.md](./ISSUE.md) for the reproducer and constraints.
 
 ## Key files reference
 
@@ -87,6 +91,7 @@ suspend operator fun invoke(body: String): Response
 ## Verification
 
 1. `./gradlew :typed:allTests` — typed layer changes don't break parsing
-2. `./gradlew :renderer:jvmTest` — all golden file tests pass
-3. `UPDATE_GOLDEN=true ./gradlew :renderer:jvmTest` — regenerate golden files when needed
-4. Manually inspect generated code for the GitHub labels example to confirm overloads are clean and idiomatic
+2. `./gradlew :renderer:compileTestKotlinJvm` — currently fails with a platform declaration clash for `List<String>` vs `List<Name>` overloads
+3. `./gradlew :renderer:jvmTest` — blocked until [ISSUE.md](./ISSUE.md) is resolved
+4. `UPDATE_GOLDEN=true ./gradlew :renderer:jvmTest` — use only after the overload conflict has a proper fix
+5. Manually inspect generated code for the GitHub labels example to confirm overloads remain source-level complete once the issue is resolved
