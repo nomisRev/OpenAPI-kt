@@ -8,10 +8,11 @@ import kotlin.Int
 import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
+import kotlin.time.ExperimentalTime
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
+import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.LocalDateTime
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -27,7 +28,10 @@ import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 
 @Serializable(with = Union.Serializer::class)
-@OptIn(ExperimentalUuidApi::class)
+@OptIn(
+  ExperimentalUuidApi::class,
+  ExperimentalTime::class,
+)
 public sealed interface Union {
   @Serializable
   @JvmInline
@@ -68,7 +72,7 @@ public sealed interface Union {
   @Serializable
   @JvmInline
   public value class CaseDateTime(
-    public val `value`: LocalDateTime,
+    public val `value`: Instant,
   ) : Union
 
   @Serializable
@@ -96,7 +100,7 @@ public sealed interface Union {
       element("CaseDouble", Double.serializer().descriptor)
       element("CaseBoolean", Boolean.serializer().descriptor)
       element("CaseDate", LocalDate.serializer().descriptor)
-      element("CaseDateTime", LocalDateTime.serializer().descriptor)
+      element("CaseDateTime", Instant.serializer().descriptor)
       element("CaseBinary", ByteArraySerializer().descriptor)
       element("CaseUuid", Uuid.serializer().descriptor)
     }
@@ -112,7 +116,7 @@ public sealed interface Union {
         CaseBoolean::class to { CaseBoolean(decodeFromJsonElement(Boolean.serializer(), it)) },
         CaseUuid::class to { CaseUuid(decodeFromJsonElement(Uuid.serializer(), it)) },
         CaseDate::class to { CaseDate(decodeFromJsonElement(LocalDate.serializer(), it)) },
-        CaseDateTime::class to { CaseDateTime(decodeFromJsonElement(LocalDateTime.serializer(), it)) },
+        CaseDateTime::class to { CaseDateTime(decodeFromJsonElement(Instant.serializer(), it)) },
         CaseBinary::class to { CaseBinary(decodeFromJsonElement(ByteArraySerializer(), it)) },
         CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
       )
@@ -126,7 +130,7 @@ public sealed interface Union {
         is CaseDouble -> encoder.encodeSerializableValue(Double.serializer(), value.value)
         is CaseBoolean -> encoder.encodeSerializableValue(Boolean.serializer(), value.value)
         is CaseDate -> encoder.encodeSerializableValue(LocalDate.serializer(), value.value)
-        is CaseDateTime -> encoder.encodeSerializableValue(LocalDateTime.serializer(), value.value)
+        is CaseDateTime -> encoder.encodeSerializableValue(Instant.serializer(), value.value)
         is CaseBinary -> encoder.encodeSerializableValue(ByteArraySerializer(), value.value)
         is CaseUuid -> encoder.encodeSerializableValue(Uuid.serializer(), value.value)
       }

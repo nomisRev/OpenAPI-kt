@@ -63,7 +63,10 @@ fun Model.Enum.toTypeSpec(
 
                 if (rawValue != entryName.unescapeBackticks()) {
                     entry.addAnnotation(AnnotationSpec.builder(SerialName::class).addMember("%S", rawValue).build())
-                    // Pass the raw wire value as the constructor argument
+                }
+                // When the enum has a value constructor, every entry must supply the wire value,
+                // even those whose rawValue matches their Kotlin entry name.
+                if (withValue) {
                     entry.addSuperclassConstructorParameter("%S", rawValue)
                 }
 

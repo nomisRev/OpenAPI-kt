@@ -12,7 +12,7 @@ public enum class SpecialValues(
   Star("*"),
   @SerialName("/")
   Slash("/"),
-  `+1`,
-  `-1`,
+  `+1`("+1"),
+  `-1`("-1"),
   ;
 }

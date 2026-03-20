@@ -14,7 +14,7 @@ import com.squareup.kotlinpoet.UNIT
 
 private val UuidType = ClassName("kotlin.uuid", "Uuid")
 private val LocalDateType = ClassName("kotlinx.datetime", "LocalDate")
-private val LocalDateTimeType = ClassName("kotlinx.datetime", "LocalDateTime")
+private val InstantType = ClassName("kotlinx.datetime", "Instant")
 private val JsonElementType = ClassName("kotlinx.serialization.json", "JsonElement")
 private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")
 private val ListType = ClassName("kotlin.collections", "List")
@@ -28,7 +28,7 @@ fun Model.toTypeName(config: RenderConfig): TypeName {
         }
 
         is Model.Date -> LocalDateType
-        is Model.DateTime -> LocalDateTimeType
+        is Model.DateTime -> InstantType
         is Model.DiscriminatedObject -> context.toClassName(config)
         is Model.Enum -> context.toClassName(config)
         is Model.FreeFormJson -> JsonElementType

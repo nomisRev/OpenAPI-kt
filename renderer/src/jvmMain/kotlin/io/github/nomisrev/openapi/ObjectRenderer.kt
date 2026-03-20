@@ -25,7 +25,7 @@ import kotlin.jvm.JvmInline
 
 private val UuidType = ClassName("kotlin.uuid", "Uuid")
 private val LocalDateType = ClassName("kotlinx.datetime", "LocalDate")
-private val LocalDateTimeType = ClassName("kotlinx.datetime", "LocalDateTime")
+private val InstantType = ClassName("kotlinx.datetime", "Instant")
 private val ExperimentalUuidApiType = ClassName("kotlin.uuid", "ExperimentalUuidApi")
 private val JsonElementType = ClassName("kotlinx.serialization.json", "JsonElement")
 private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")
@@ -439,7 +439,7 @@ internal fun Model.nonNullableSerializerCode(
         is Model.ByteArray -> CodeBlock.of("%M()", ByteArraySerializerMember)
         is Model.Uuid -> CodeBlock.of("%T.serializer()", UuidType)
         is Model.Date -> CodeBlock.of("%T.serializer()", LocalDateType)
-        is Model.DateTime -> CodeBlock.of("%T.serializer()", LocalDateTimeType)
+        is Model.DateTime -> CodeBlock.of("%T.serializer()", InstantType)
         is Model.FreeFormJson -> CodeBlock.of("%T.serializer()", JsonElementType)
         is Model.Collection ->
             if (inner is Model.FreeFormJson) {

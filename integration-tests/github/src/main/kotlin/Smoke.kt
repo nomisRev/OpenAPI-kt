@@ -1,8 +1,6 @@
 package github.integration
 
 import io.github.api.GitHubV3RESTAPI
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.apache5.Apache5
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.DEFAULT
 import io.ktor.client.plugins.logging.LogLevel

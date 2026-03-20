@@ -8,7 +8,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -22,5 +22,5 @@ public data class MultiLine(
   public val longername2: Float? = null,
   @SerialName("longer_name_3")
   public val longerName3: Uuid? = null,
-  public val longername4: LocalDateTime? = null,
+  public val longername4: Instant? = null,
 )

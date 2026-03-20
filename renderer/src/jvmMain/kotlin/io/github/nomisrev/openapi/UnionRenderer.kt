@@ -26,6 +26,8 @@ private val JsonClassDiscriminatorType = ClassName("kotlinx.serialization.json",
 private val OptInType = ClassName("kotlin", "OptIn")
 private val UuidType = ClassName("kotlin.uuid", "Uuid")
 private val ExperimentalUuidApiType = ClassName("kotlin.uuid", "ExperimentalUuidApi")
+private val InstantType = ClassName("kotlinx.datetime", "Instant")
+private val ExperimentalTimeType = ClassName("kotlin.time", "ExperimentalTime")
 private val KSerializerType = ClassName("kotlinx.serialization", "KSerializer")
 private val SerialDescriptorType = ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
 private val DecoderType = ClassName("kotlinx.serialization.encoding", "Decoder")
@@ -78,10 +80,14 @@ private fun Model.Union.toDiscriminatedTypeSpec(
         )
         .addAnnotation(Serializable::class)
 
-    if (renderedCases.any { it.usesUuid }) {
+    val optInClasses = buildList {
+        if (renderedCases.any { it.usesUuid }) add(ExperimentalUuidApiType)
+        if (renderedCases.any { it.usesInstant }) add(ExperimentalTimeType)
+    }
+    if (optInClasses.isNotEmpty()) {
         builder.addAnnotation(
             AnnotationSpec.builder(OptInType)
-                .addMember("%T::class", ExperimentalUuidApiType)
+                .apply { optInClasses.forEach { addMember("%T::class", it) } }
                 .build()
         )
     }
@@ -164,10 +170,14 @@ private fun Model.Union.toNonDiscriminatedTypeSpec(
                 .build()
         )
 
-    if (renderedCases.any { it.usesUuid }) {
+    val optInClasses = buildList {
+        if (renderedCases.any { it.usesUuid }) add(ExperimentalUuidApiType)
+        if (renderedCases.any { it.usesInstant }) add(ExperimentalTimeType)
+    }
+    if (optInClasses.isNotEmpty()) {
         builder.addAnnotation(
             AnnotationSpec.builder(OptInType)
-                .addMember("%T::class", ExperimentalUuidApiType)
+                .apply { optInClasses.forEach { addMember("%T::class", it) } }
                 .build()
         )
     }
@@ -587,6 +597,7 @@ private fun Model.deserializationPriority(): Int = when (this) {
 private data class RenderedUnionCase(
     val typeSpec: TypeSpec,
     val usesUuid: Boolean,
+    val usesInstant: Boolean = false,
     val isInlined: Boolean = false,
     val caseSimpleName: String = typeSpec.name ?: "",
     val isNestedUnion: Boolean = false,
@@ -624,7 +635,7 @@ private fun Model.Union.Case.renderWrappedTypeSpec(
             serialName?.let(::addSerialNameAnnotation)
         }
         .build()
-    return RenderedUnionCase(typeSpec, valueType.usesUuid(), caseSimpleName = simpleName)
+    return RenderedUnionCase(typeSpec, valueType.usesUuid(), usesInstant = valueType.usesInstant(), caseSimpleName = simpleName)
 }
 
 private fun Model.Union.Case.caseSimpleName(config: RenderConfig): String =
@@ -721,6 +732,15 @@ private fun TypeName.usesUuid(): Boolean =
         is ParameterizedTypeName -> rawType == UuidType || typeArguments.any(TypeName::usesUuid)
         is TypeVariableName -> bounds.any(TypeName::usesUuid)
         is WildcardTypeName -> inTypes.any(TypeName::usesUuid) || outTypes.any(TypeName::usesUuid)
+        else -> false
+    }
+
+private fun TypeName.usesInstant(): Boolean =
+    when (this) {
+        is ClassName -> copy(nullable = false) == InstantType
+        is ParameterizedTypeName -> rawType == InstantType || typeArguments.any(TypeName::usesInstant)
+        is TypeVariableName -> bounds.any(TypeName::usesInstant)
+        is WildcardTypeName -> inTypes.any(TypeName::usesInstant) || outTypes.any(TypeName::usesInstant)
         else -> false
     }
 
