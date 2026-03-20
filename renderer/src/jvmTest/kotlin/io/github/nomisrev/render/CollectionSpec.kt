@@ -72,4 +72,36 @@ val collectionSpec by testSuite {
         """.trimMargin(),
         "collection/item-with-inline-enum"
     )
+
+    modelTest(
+        """
+        |"SearchResultTextMatches": {
+        |  "title": "Search Result Text Matches",
+        |  "type": "array",
+        |  "items": {
+        |    "type": "object",
+        |    "properties": {
+        |      "object_url": { "type": "string" },
+        |      "object_type": { "nullable": true, "type": "string" },
+        |      "property": { "type": "string" },
+        |      "fragment": { "type": "string" },
+        |      "matches": {
+        |        "type": "array",
+        |        "items": {
+        |          "type": "object",
+        |          "properties": {
+        |            "text": { "type": "string" },
+        |            "indices": {
+        |              "type": "array",
+        |              "items": { "type": "integer" }
+        |            }
+        |          }
+        |        }
+        |      }
+        |    }
+        |  }
+        |}
+        """.trimMargin(),
+        "collection/item-with-nested-object"
+    )
 }

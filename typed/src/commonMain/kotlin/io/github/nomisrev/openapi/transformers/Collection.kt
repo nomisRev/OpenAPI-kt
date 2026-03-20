@@ -98,6 +98,7 @@ private fun Model.prependContextIfInline(prefix: NamingContext.Nested): Model = 
     is Model.Enum if !context.isTopLevel() -> copy(context = context.prepend(prefix))
     is Model.Object if !context.isTopLevel() -> nestContext(prefix)
     is Model.Union if !context.isTopLevel() -> copy(context = context.prepend(prefix))
+    is Model.Collection -> copy(inner = inner.prependContextIfInline(prefix))
     else -> this
 }
 
