@@ -32,6 +32,8 @@ dependencies {
     implementation("io.ktor:ktor-serialization-kotlinx-json:3.3.3")
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.7.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
+    implementation("io.ktor:ktor-client-logging:3.3.3")
+    implementation("ch.qos.logback:logback-classic:1.5.32")
 }
 
 configure<OpenApiExtension> {
