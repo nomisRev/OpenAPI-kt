@@ -53,7 +53,7 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
         rootFileBuilder.addFunction(factory)
     }
 
-    for (method in collectHttpMethods()) {
+    for (method in operations.keys.mapTo(mutableSetOf()) { it.value.lowercase() }) {
         rootFileBuilder.addImport("io.ktor.client.request", method)
     }
 

@@ -243,8 +243,6 @@ private suspend fun Route.expandFiniteEnumPathSegmentAt(index: Int): List<Route>
     val model = pathInput?.type ?: when (segment) {
         is PathSegment.Parameter -> segment.model
         is PathSegment.OverloadedParameter -> segment.type
-        is PathSegment.Literal,
-        is PathSegment.FixedValue -> return null
     }
 
     val fixedEnum = model.closedEnumOrNull()

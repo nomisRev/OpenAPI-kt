@@ -241,7 +241,7 @@ fun Schema.mergeTextConstraints(other: Schema): Schema =
     copy(
         minLength = let(minLength, other.minLength, ::maxOf),
         maxLength = let(maxLength, other.maxLength, ::minOf),
-        pattern = pattern ?: pattern // TODO
+        pattern = pattern ?: other.pattern // TODO: intersection of multiple patterns is non-trivial
     )
 
 fun Schema.mergeObjectConstraints(other: Schema): Schema =

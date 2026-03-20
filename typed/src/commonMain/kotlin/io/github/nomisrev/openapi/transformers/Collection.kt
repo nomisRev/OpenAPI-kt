@@ -24,7 +24,7 @@ suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
                     is Model.DiscriminatedObject -> throw IllegalStateException("Discriminated objects are not supported inline")
                     is Model.Reference -> throw IllegalStateException("References are not supported inline")
                     is Model.Enum -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
-                    is Model.Object -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
+                    is Model.Object -> inner.nestContext(NamingContext.ObjectProperty("item"))
                     is Model.Union -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
                 }
 
@@ -75,6 +75,30 @@ private suspend fun ResolvedSchema.toCollection(context: SchemaContext): Model.C
         isNullable,
         schema.title
     )
+}
+
+/**
+ * Inserts [prefix] as the first element of the nested list in the context of this object and all
+ * nested inline models within its properties, so that the full naming path is consistent after the
+ * item wrapping in [collection].
+ */
+private fun Model.Object.nestContext(prefix: NamingContext.Nested): Model.Object {
+    val nestedProperties = properties.mapValues { (_, prop) ->
+        prop.copy(model = prop.model.prependContextIfInline(prefix))
+    }
+    return copy(
+        context = context.prepend(prefix),
+        properties = nestedProperties
+    )
+}
+
+private fun NamingContext.prepend(prefix: NamingContext.Nested) = copy(nested = listOf(prefix) + nested)
+
+private fun Model.prependContextIfInline(prefix: NamingContext.Nested): Model = when (this) {
+    is Model.Enum if !context.isTopLevel() -> copy(context = context.prepend(prefix))
+    is Model.Object if !context.isTopLevel() -> nestContext(prefix)
+    is Model.Union if !context.isTopLevel() -> copy(context = context.prepend(prefix))
+    else -> this
 }
 
 private fun ResolvedSchema.collectionDefault() = when (val example = schema.default) {

@@ -46,9 +46,6 @@ internal fun PathNode.collectHttpMethods(): Set<String> {
     return methods
 }
 
-internal fun ApiTree.collectHttpMethods(): Set<String> =
-    operations.keys.mapTo(mutableSetOf()) { it.value.lowercase() }
-
 internal fun PathNode.accumulatedParams(parentAccumulatedParams: List<AccumulatedParam>): List<AccumulatedParam> =
     when (val segment = segment) {
         is PathSegment.OverloadedParameter -> parentAccumulatedParams + AccumulatedParam(
@@ -114,7 +111,7 @@ internal fun PathSegment.addConcreteNavigationMember(
         )
 
         is PathSegment.Literal -> builder.addProperty(
-            PropertySpec.builder(name.toCamelCase(), childClassName)
+            PropertySpec.builder(name.toParamName(), childClassName)
                 .initializer("%T(%L)", childClassName, currentAccumulatedParams.constructorArgs())
                 .build()
         )
@@ -339,6 +336,39 @@ private fun Route.addRequestConfigCode(
     }
 }
 
+/**
+ * Emits a KotlinPoet [CodeBlock] for `contentType(…)` matching the given [ContentType].
+ *
+ * Well-known Ktor named constants are preferred so the generated code is idiomatic.
+ * Unknown types fall back to the `ContentType(contentType, subtype)` constructor.
+ */
+private fun ContentType.toContentTypeCodeBlock(): CodeBlock {
+    // Map to well-known Ktor ContentType named constants where possible.
+    val namedSuffix: String? = when (this) {
+        ContentType.Application.Json -> "Application.Json"
+        ContentType.Application.OctetStream -> "Application.OctetStream"
+        ContentType.Application.Xml -> "Application.Xml"
+        ContentType.Application.FormUrlEncoded -> "Application.FormUrlEncoded"
+        ContentType.Application.Pdf -> "Application.Pdf"
+        ContentType.Application.Zip -> "Application.Zip"
+        ContentType.Text.Plain -> "Text.Plain"
+        ContentType.Text.Html -> "Text.Html"
+        ContentType.Text.Xml -> "Text.Xml"
+        ContentType.Text.CSS -> "Text.CSS"
+        ContentType.Text.JavaScript -> "Text.JavaScript"
+        ContentType.Image.PNG -> "Image.PNG"
+        ContentType.Image.JPEG -> "Image.JPEG"
+        ContentType.Image.GIF -> "Image.GIF"
+        ContentType.Image.SVG -> "Image.SVG"
+        else -> null
+    }
+    return if (namedSuffix != null) {
+        CodeBlock.of("%T.$namedSuffix", ContentTypeType)
+    } else {
+        CodeBlock.of("%T(%S, %S)", ContentTypeType, contentType, contentSubtype)
+    }
+}
+
 private fun addBodyCode(
     code: CodeBlock.Builder,
     bodies: Route.Bodies,
@@ -347,24 +377,26 @@ private fun addBodyCode(
     val body = bodies.defaultOrNull() ?: return
     when (body) {
         is Route.Body.SetBody -> {
+            val ctCode = body.contentType.toContentTypeCodeBlock()
             if (!bodyMayBeNull) {
-                code.addStatement("%M(%T.Application.Json)", ContentTypeFunMember, ContentTypeType)
+                code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
                 code.addStatement("%M(body)", SetBodyMember)
             } else {
                 code.beginControlFlow("body?.let")
-                code.addStatement("%M(%T.Application.Json)", ContentTypeFunMember, ContentTypeType)
+                code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
                 code.addStatement("%M(it)", SetBodyMember)
                 code.endControlFlow()
             }
         }
 
         is Route.Body.OverloadedBody -> {
+            val ctCode = body.contentType.toContentTypeCodeBlock()
             if (!bodyMayBeNull) {
-                code.addStatement("%M(%T.Application.Json)", ContentTypeFunMember, ContentTypeType)
+                code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
                 code.addStatement("%M(body)", SetBodyMember)
             } else {
                 code.beginControlFlow("body?.let")
-                code.addStatement("%M(%T.Application.Json)", ContentTypeFunMember, ContentTypeType)
+                code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
                 code.addStatement("%M(it)", SetBodyMember)
                 code.endControlFlow()
             }

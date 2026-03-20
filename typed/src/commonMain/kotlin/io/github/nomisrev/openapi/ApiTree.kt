@@ -141,15 +141,26 @@ private class PathNodeBuilder(
     )
 }
 
+/**
+ * Normalizes a raw path segment string so that hyphen-separated names (used in literal URL
+ * segments like "secret-scanning") and underscore-separated names (used in OpenAPI enum values
+ * like "secret_scanning") are treated as equivalent for identity and compatibility purposes.
+ */
+private fun String.normalizeSegmentSeparators(): String = replace('-', '_')
+
 private fun PathSegment?.sameIdentityAs(other: PathSegment): Boolean = when {
-    this is PathSegment.Literal && other is PathSegment.Literal -> name == other.name
-    this is PathSegment.Literal && other is PathSegment.FixedValue -> name == other.wireValue
+    this is PathSegment.Literal && other is PathSegment.Literal ->
+        name.normalizeSegmentSeparators() == other.name.normalizeSegmentSeparators()
+    this is PathSegment.Literal && other is PathSegment.FixedValue ->
+        name.normalizeSegmentSeparators() == other.wireValue.normalizeSegmentSeparators()
     this is PathSegment.Parameter && other is PathSegment.Parameter -> name == other.name
     this is PathSegment.Parameter && other is PathSegment.OverloadedParameter -> name == other.name
     this is PathSegment.OverloadedParameter && other is PathSegment.Parameter -> name == other.name
     this is PathSegment.OverloadedParameter && other is PathSegment.OverloadedParameter -> name == other.name
-    this is PathSegment.FixedValue && other is PathSegment.Literal -> wireValue == other.name
-    this is PathSegment.FixedValue && other is PathSegment.FixedValue -> wireValue == other.wireValue
+    this is PathSegment.FixedValue && other is PathSegment.Literal ->
+        wireValue.normalizeSegmentSeparators() == other.name.normalizeSegmentSeparators()
+    this is PathSegment.FixedValue && other is PathSegment.FixedValue ->
+        wireValue.normalizeSegmentSeparators() == other.wireValue.normalizeSegmentSeparators()
     else -> false
 }
 
@@ -225,8 +236,8 @@ private fun List<PathSegment>.toPathTemplate(): String {
 }
 
 private fun PathSegment.normalizedForCompatibility(): PathSegment = when (this) {
-    is PathSegment.FixedValue -> PathSegment.Literal(wireValue)
-    is PathSegment.Literal -> this
+    is PathSegment.FixedValue -> PathSegment.Literal(wireValue.normalizeSegmentSeparators())
+    is PathSegment.Literal -> PathSegment.Literal(name.normalizeSegmentSeparators())
     is PathSegment.Parameter -> copy(model = model.normalizedForCompatibility())
     is PathSegment.OverloadedParameter -> copy(type = type.normalizedForCompatibility() as Model.Union)
 }

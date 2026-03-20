@@ -51,4 +51,25 @@ val collectionSpec by testSuite {
         """.trimMargin(),
         "collection/nullable"
     )
+
+    modelTest(
+        """
+        |"CodeSecurityDefaultConfigurations": {
+        |  "type": "array",
+        |  "description": "A list of default code security configurations",
+        |  "items": {
+        |    "type": "object",
+        |    "additionalProperties": false,
+        |    "properties": {
+        |      "default_for_new_repos": {
+        |        "type": "string",
+        |        "enum": ["public", "private_and_internal", "all"]
+        |      },
+        |      "name": { "type": "string" }
+        |    }
+        |  }
+        |}
+        """.trimMargin(),
+        "collection/item-with-inline-enum"
+    )
 }

@@ -294,6 +294,37 @@ val apiTreeSpec by testSuite {
         )
     }
 
+    test("buildTree merges FixedValue with hyphen-underscore equivalent Literal into one node") {
+        // Simulates the GitHub case where `/orgs/{org}/{security_product}/{enablement}` is expanded
+        // into FixedValue("secret_scanning") but `/orgs/{org}/secret-scanning/alerts` produces
+        // Literal("secret-scanning"). The two names are separator-equivalent and must share one node.
+        val getAlerts = route(
+            HttpMethod.Get,
+            literal("orgs"),
+            param("org"),
+            literal("secret-scanning"),
+            literal("alerts"),
+        )
+        val postEnableAll = route(
+            HttpMethod.Post,
+            literal("orgs"),
+            param("org"),
+            fixed("secret_scanning", "security_product"),
+            fixed("enable_all", "enablement"),
+        )
+
+        val tree = listOf(getAlerts, postEnableAll).buildTree("GitHub")
+        val orgsNode = tree.children.single()
+        val orgParamNode = orgsNode.children.single()
+        // Both routes must share a single "secret-scanning / secret_scanning" node.
+        assertEquals(1, orgParamNode.children.size, "Expected one merged secret-scanning node")
+        val secretScanningNode = orgParamNode.children.single()
+        val fixedSegment = assertIs<PathSegment.FixedValue>(secretScanningNode.segment)
+        assertEquals("secret_scanning", fixedSegment.wireValue)
+        val childNames = secretScanningNode.children.map { it.segment.name }.toSet()
+        assertEquals(setOf("alerts", "enable_all"), childNames)
+    }
+
     test("buildTree prefers fixed-value representation when merged with a literal sibling node") {
         val getRuns = route(HttpMethod.Get, literal("workflows"), fixed("queued"), literal("runs"))
         val getSummary = route(HttpMethod.Get, literal("workflows"), literal("queued"), literal("summary"))
