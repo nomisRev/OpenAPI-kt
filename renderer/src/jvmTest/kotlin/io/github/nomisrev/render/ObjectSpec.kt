@@ -1,6 +1,8 @@
 package io.github.nomisrev.render
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.nomisrev.openapi.generateModels
+import io.github.nomisrev.openapi.render
 
 val objectSpec by testSuite {
     modelTest(
@@ -287,4 +289,94 @@ val objectSpec by testSuite {
         """.trimMargin(),
         "object/signed-names"
     )
+
+    // Read/Write variant: schema used as both request body (Write) and response (Read)
+    // Both contexts exist → Read/Write suffixes are applied
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Test API", "version": "0.0.1" },
+          "paths": {
+            "/users": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "${'$'}ref": "#/components/schemas/User" }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "${'$'}ref": "#/components/schemas/User" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "User": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id":        { "type": "integer", "readOnly": true },
+                  "name":      { "type": "string" },
+                  "createdAt": { "type": "string", "format": "date-time", "readOnly": true }
+                },
+                "required": ["id", "name", "createdAt"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "object/read-write-variants"
+    ) { apiTree, config -> apiTree.render(config) }
+
+    // Single-context: schema only used as a response → no suffix applied
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Test API", "version": "0.0.1" },
+          "paths": {
+            "/tags": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "${'$'}ref": "#/components/schemas/Tag" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Tag": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id":   { "type": "integer", "readOnly": true },
+                  "name": { "type": "string" }
+                },
+                "required": ["id", "name"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "object/read-only-single-context"
+    ) { apiTree, config -> apiTree.generateModels(config) }
 }

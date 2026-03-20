@@ -11,6 +11,7 @@ import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.UNIT
+import io.github.nomisrev.openapi.routes.SchemaContext
 
 private val UuidType = ClassName("kotlin.uuid", "Uuid")
 private val LocalDateType = ClassName("kotlinx.datetime", "LocalDate")
@@ -50,7 +51,15 @@ fun Model.toTypeName(config: RenderConfig): TypeName {
 fun NamingContext.toClassName(config: RenderConfig): ClassName =
     when (val root = head) {
         is NamingContext.Reference -> {
-            val simpleNames = listOf(root.name.toPascalCase()) + nested.map { it.toSimpleName() }
+            val suffix = if (root.name in config.contextSpecificNames && root.context != SchemaContext.Null) {
+                when (root.context) {
+                    SchemaContext.Read -> "Read"
+                    SchemaContext.Write -> "Write"
+                    SchemaContext.Null -> ""
+                }
+            } else ""
+            val baseName = root.name.toPascalCase() + suffix
+            val simpleNames = listOf(baseName) + nested.map { it.toSimpleName() }
             className(config.modelPackage.toPackageName(), simpleNames)
         }
 

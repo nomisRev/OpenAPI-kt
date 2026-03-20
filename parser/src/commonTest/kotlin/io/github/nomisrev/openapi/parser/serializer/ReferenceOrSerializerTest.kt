@@ -7,6 +7,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
 class ReferenceOrSerializerTest {
@@ -93,6 +95,44 @@ class ReferenceOrSerializerTest {
         assertFalse(json.contains("\$ref"))
     }
 
+    @Test
+    fun `json ref with readOnly sibling preserves readOnly true`() {
+        val json = """{"${"$"}ref":"#/components/schemas/Foo","readOnly":true}"""
+        val result = OpenAPI.Json.decodeFromString(
+            ReferenceOr.serializer(Schema.serializer()),
+            json,
+        )
+        val ref = assertIs<ReferenceOr.Reference>(result)
+        assertEquals("#/components/schemas/Foo", ref.ref)
+        assertEquals(true, ref.readOnly)
+        assertNull(ref.writeOnly)
+    }
+
+    @Test
+    fun `json ref with writeOnly sibling preserves writeOnly true`() {
+        val json = """{"${"$"}ref":"#/components/schemas/Foo","writeOnly":true}"""
+        val result = OpenAPI.Json.decodeFromString(
+            ReferenceOr.serializer(Schema.serializer()),
+            json,
+        )
+        val ref = assertIs<ReferenceOr.Reference>(result)
+        assertEquals("#/components/schemas/Foo", ref.ref)
+        assertNull(ref.readOnly)
+        assertEquals(true, ref.writeOnly)
+    }
+
+    @Test
+    fun `json ref without readOnly or writeOnly siblings has null flags`() {
+        val json = """{"${"$"}ref":"#/components/schemas/Foo"}"""
+        val result = OpenAPI.Json.decodeFromString(
+            ReferenceOr.serializer(Schema.serializer()),
+            json,
+        )
+        val ref = assertIs<ReferenceOr.Reference>(result)
+        assertNull(ref.readOnly)
+        assertNull(ref.writeOnly)
+    }
+
     // ── YAML ──────────────────────────────────────────────────────────────────
 
     @Test
@@ -141,5 +181,49 @@ class ReferenceOrSerializerTest {
         val value = assertIs<ReferenceOr.Value<Schema>>(result)
         assertEquals(Schema.Type.Basic.Object, value.value.type)
         assertEquals("Pet", value.value.title)
+    }
+
+    @Test
+    fun `yaml ref with readOnly sibling preserves readOnly true`() {
+        val yaml = """
+            ${'$'}ref: "#/components/schemas/Foo"
+            readOnly: true
+        """.trimIndent()
+        val result = OpenAPI.Yaml.decodeFromString(
+            ReferenceOr.serializer(Schema.serializer()),
+            yaml,
+        )
+        val ref = assertIs<ReferenceOr.Reference>(result)
+        assertEquals("#/components/schemas/Foo", ref.ref)
+        assertEquals(true, ref.readOnly)
+        assertNull(ref.writeOnly)
+    }
+
+    @Test
+    fun `yaml ref with writeOnly sibling preserves writeOnly true`() {
+        val yaml = """
+            ${'$'}ref: "#/components/schemas/Foo"
+            writeOnly: true
+        """.trimIndent()
+        val result = OpenAPI.Yaml.decodeFromString(
+            ReferenceOr.serializer(Schema.serializer()),
+            yaml,
+        )
+        val ref = assertIs<ReferenceOr.Reference>(result)
+        assertEquals("#/components/schemas/Foo", ref.ref)
+        assertNull(ref.readOnly)
+        assertEquals(true, ref.writeOnly)
+    }
+
+    @Test
+    fun `yaml ref without readOnly or writeOnly siblings has null flags`() {
+        val yaml = "${'$'}ref: \"#/components/schemas/Foo\""
+        val result = OpenAPI.Yaml.decodeFromString(
+            ReferenceOr.serializer(Schema.serializer()),
+            yaml,
+        )
+        val ref = assertIs<ReferenceOr.Reference>(result)
+        assertNull(ref.readOnly)
+        assertNull(ref.writeOnly)
     }
 }

@@ -109,6 +109,9 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
             }
 
             suspend fun Collection<ReferenceOr<Schema>>?.readOrWriteOnly(): Boolean = orEmpty().any { refOrSchema ->
+                if (refOrSchema is ReferenceOr.Reference &&
+                    (refOrSchema.readOnly == true || refOrSchema.writeOnly == true)
+                ) return@any true
                 val schema = refOrSchema.schema()
                 schema != null && (schema.writeOnly == true || schema.readOnly == true || schema.readOrWriteOnly(
                     visited
@@ -142,7 +145,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
                 is ReferenceOr.Value<Schema> -> nested.value
                 null -> throw IllegalStateException("Schema $name could not be found in ${openAPI.components.schemas.keys}.")
             }
-            val contextSpecific = schema.readOrWriteOnly()
+            val contextSpecific = this.readOnly == true || this.writeOnly == true || schema.readOrWriteOnly()
             val schemaContext = if (contextSpecific) context else SchemaContext.Null
             val reference = NamingContext.Reference(name, schemaContext)
             val context = NamingContext(reference, emptyList())

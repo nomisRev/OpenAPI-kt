@@ -15,10 +15,10 @@ import kotlinx.serialization.descriptors.SerialKind
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 private const val RefKey = "\$ref"
@@ -31,7 +31,11 @@ private const val RecursiveRefKey = "\$recursiveRef"
 @Serializable(with = ReferenceOr.Companion.Serializer::class)
 public sealed interface ReferenceOr<out A> {
   @Serializable
-  public data class Reference(@SerialName(RefKey) public val ref: String) : ReferenceOr<Nothing>
+  public data class Reference(
+    @SerialName(RefKey) public val ref: String,
+    public val readOnly: Boolean? = null,
+    public val writeOnly: Boolean? = null,
+  ) : ReferenceOr<Nothing>
 
   @JvmInline public value class Value<A>(public val value: A) : ReferenceOr<A>
 
@@ -74,10 +78,18 @@ public sealed interface ReferenceOr<out A> {
             val jsobObject = json as? JsonObject
             when {
               jsobObject != null && jsobObject.contains(RefKey) ->
-                Reference(json[RefKey]!!.jsonPrimitive.content)
+                Reference(
+                  ref = json[RefKey]!!.jsonPrimitive.content,
+                  readOnly = jsobObject["readOnly"]?.jsonPrimitive?.booleanOrNull,
+                  writeOnly = jsobObject["writeOnly"]?.jsonPrimitive?.booleanOrNull,
+                )
 
               jsobObject != null && jsobObject.contains(RecursiveRefKey) ->
-                Reference(json[RecursiveRefKey]!!.jsonPrimitive.content)
+                Reference(
+                  ref = json[RecursiveRefKey]!!.jsonPrimitive.content,
+                  readOnly = jsobObject["readOnly"]?.jsonPrimitive?.booleanOrNull,
+                  writeOnly = jsobObject["writeOnly"]?.jsonPrimitive?.booleanOrNull,
+                )
 
               else -> Value(decoder.json.decodeFromJsonElement(dataSerializer, json))
             }
@@ -92,7 +104,11 @@ public sealed interface ReferenceOr<out A> {
                 ?: map?.getOrNull(RecursiveRefKey)?.yamlScalar?.content
 
             when {
-              refContentOrNull != null -> Reference(refContentOrNull)
+              refContentOrNull != null -> Reference(
+                ref = refContentOrNull,
+                readOnly = map?.getOrNull("readOnly")?.yamlScalar?.content?.toBooleanStrictOrNull(),
+                writeOnly = map?.getOrNull("writeOnly")?.yamlScalar?.content?.toBooleanStrictOrNull(),
+              )
               else -> Value(decoder.yaml.decodeFromYamlNode(dataSerializer, node))
             }
           }

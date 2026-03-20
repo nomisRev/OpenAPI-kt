@@ -10,10 +10,16 @@ import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.contract
 
 context(ctx: Registry.Scope)
-suspend fun ReferenceOr<Schema>.readOnly(): Boolean? = with(ctx) { peek().readOnly }
+suspend fun ReferenceOr<Schema>.readOnly(): Boolean? = when (this) {
+    is ReferenceOr.Reference -> readOnly ?: with(ctx) { peek().readOnly }
+    is ReferenceOr.Value -> value.readOnly
+}
 
 context(ctx: Registry.Scope)
-suspend fun ReferenceOr<Schema>.writeOnly(): Boolean? = with(ctx) { peek().writeOnly }
+suspend fun ReferenceOr<Schema>.writeOnly(): Boolean? = when (this) {
+    is ReferenceOr.Reference -> writeOnly ?: with(ctx) { peek().writeOnly }
+    is ReferenceOr.Value -> value.writeOnly
+}
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.isOpenEnumeration(): Boolean = with(ctx) {
