@@ -14,7 +14,8 @@
       "mcp__gradle__search_maven_central",
       "WebFetch(domain:api.github.com)",
       "Bash(gh api:*)",
-      "Bash(xargs basename:*)"
+      "Bash(xargs basename:*)",
+      "Bash(jq:*)"
     ]
   }
 }

@@ -16,19 +16,12 @@ public class Names internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(): Response {
-      val value: List<Response.Name> = client.get("/names").body()
-      return Response(value)
-    }
+    public suspend operator fun invoke(): List<Name> = client.get("/names").body()
 
-    public data class Response(
-      public val `value`: List<Name>,
-    ) {
-      @JvmInline
-      @Serializable
-      public value class Name(
-        public val name: String,
-      )
-    }
+    @JvmInline
+    @Serializable
+    public value class Name(
+      public val name: String,
+    )
   }
 }

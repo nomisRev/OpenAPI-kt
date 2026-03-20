@@ -4,7 +4,6 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.RouteParam
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.parsePathSegments
-import io.github.nomisrev.openapi.requireUnique
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.ReferenceOr
@@ -26,12 +25,15 @@ suspend fun resolveParameters(
     val pathParameters = extractPathParameters(path)
     val parameters = withMissingPathParameters(operation.parameters, pathParameters)
     val segments = parsePathSegments(path, emptyMap())
-    // TODO: configure as part of Leniency mode
-    requireUnique(
-        parameters.map { it.name },
-        "Expected all parameters to have unique names. $parameters"
-    )
-    return parameters.map { parameter ->
+    // Per OpenAPI spec, a unique parameter is identified by (name, in).
+    // Path-level parameters are prepended before operation-level ones (see withParams).
+    // When both declare the same (name, in), the operation-level definition takes precedence.
+    // We deduplicate by keeping the last occurrence (operation-level wins).
+    val deduplicated = parameters
+        .reversed()
+        .distinctBy { it.name to it.input }
+        .reversed()
+    return deduplicated.map { parameter ->
         parameter.toRouteInput(path, segments, method)
     }
 }

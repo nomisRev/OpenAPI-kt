@@ -18,13 +18,10 @@ public class Markdown internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(body: Body): Response {
-      val value: String = client.post("/markdown") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
-      return Response(value)
-    }
+    public suspend operator fun invoke(body: Body): String = client.post("/markdown") {
+      contentType(ContentType.Application.Json)
+      setBody(body)
+    }.body()
 
     @Serializable
     public data class Body(
@@ -43,9 +40,5 @@ public class Markdown internal constructor(
         ;
       }
     }
-
-    public data class Response(
-      public val `value`: String,
-    )
   }
 }

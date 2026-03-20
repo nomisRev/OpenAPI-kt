@@ -23,16 +23,9 @@ public class Items internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(limit: Int? = null): Response {
-      val value: List<String> = client.get("/items") {
-        limit?.let { parameter("limit", it) }
-      }.body()
-      return Response(value)
-    }
-
-    public data class Response(
-      public val `value`: List<String>,
-    )
+    public suspend operator fun invoke(limit: Int? = null): List<String> = client.get("/items") {
+      limit?.let { parameter("limit", it) }
+    }.body()
   }
 
   public class Post internal constructor(

@@ -332,7 +332,7 @@ private fun Route.toOperationTypeSpec(
                 ?.forEach(::addType)
             inlineModelScope.methodTypeSpecs(config).forEach(::addType)
             inlineBodyTypeSpec?.let(::addType)
-            if (!returns.isSingleUnitResponse()) {
+            if (!returns.isSingleUnitResponse() && !returns.isSingleDirectModelResponse()) {
                 addType(buildResponseTypeSpec(config, methodClassName, inlineModelScope))
             }
             if (overloadedBody != null) {
@@ -431,7 +431,7 @@ private fun Route.toInvokeFunSpec(
         bodyParams.forEach { builder.addParameter(it) }
     }
 
-    builder.returns(invokeReturnType(methodClassName))
+    builder.returns(invokeReturnType(config, methodClassName, inlineModelScope))
     builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
     return builder.build()
 }
@@ -483,7 +483,7 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
         )
     }
 
-    builder.returns(invokeReturnType(methodClassName))
+    builder.returns(invokeReturnType(config, methodClassName, inlineModelScope))
     builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
     return builder.build()
 }
@@ -524,7 +524,7 @@ private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
         )
     }
 
-    builder.returns(invokeReturnType(methodClassName))
+    builder.returns(invokeReturnType(config, methodClassName, inlineModelScope))
     builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope, includeBody = false))
     return builder.build()
 }
@@ -650,7 +650,7 @@ private fun Route.ReturnType.preferredModel(): Model? {
 }
 
 /** Whether the returns need a sealed response wrapper (multiple statuses/default). */
-private fun Route.Returns.needsSealedInterface(): Boolean {
+internal fun Route.Returns.needsSealedInterface(): Boolean {
     val totalCases = responses.size + (if (default != null) 1 else 0)
     return totalCases > 1
 }
@@ -705,13 +705,31 @@ private fun Route.buildResponseTypeSpec(
     }
 }
 
-private fun Route.invokeReturnType(methodClassName: ClassName) =
-    if (returns.isSingleUnitResponse()) UNIT else methodClassName.nestedClass("Response")
+private fun Route.invokeReturnType(
+    config: RenderConfig,
+    methodClassName: ClassName,
+    inlineModelScope: OperationInlineModelScope,
+): TypeName {
+    if (returns.isSingleUnitResponse()) return UNIT
+    if (returns.isSingleDirectModelResponse()) {
+        // Single concrete external model — return it directly, no Response wrapper needed.
+        val model = returns.singlePreferredModelOrNull()!!
+        return inlineModelScope.remap(model.toTypeName(config))
+    }
+    return methodClassName.nestedClass("Response")
+}
 
 private fun Route.Returns.isSingleUnitResponse(): Boolean {
     if (needsSealedInterface()) return false
     val model = singlePreferredModelOrNull()
     return model == null || model is Model.Primitive.Unit
+}
+
+/** True when there is exactly one response with a non-unit, non-inline model (no wrapper needed). */
+internal fun Route.Returns.isSingleDirectModelResponse(): Boolean {
+    if (needsSealedInterface()) return false
+    val model = singlePreferredModelOrNull()
+    return model != null && model !is Model.Primitive.Unit && !model.isRouteInlineModel()
 }
 
 private fun Route.buildSealedResponseTypeSpec(
@@ -791,10 +809,10 @@ private fun Route.buildSealedResponseTypeSpec(
     return builder.build()
 }
 
-private fun Route.Returns.singlePreferredModelOrNull(): Model? =
+internal fun Route.Returns.singlePreferredModelOrNull(): Model? =
     (responses.values.firstOrNull() ?: default)?.preferredModel()
 
-private fun Model.isRouteInlineModel(): Boolean =
+internal fun Model.isRouteInlineModel(): Boolean =
     this is Model.ContextHolder && context.head is NamingContext.Path
 
 private fun Model.toInlineOperationTypeSpecOrNull(

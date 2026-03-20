@@ -22,3 +22,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "integration-test"
 include("github")
+include("youtrack")

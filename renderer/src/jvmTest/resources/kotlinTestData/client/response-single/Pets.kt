@@ -14,13 +14,6 @@ public class Pets internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(): Response {
-      val value: List<String> = client.get("/pets").body()
-      return Response(value)
-    }
-
-    public data class Response(
-      public val `value`: List<String>,
-    )
+    public suspend operator fun invoke(): List<String> = client.get("/pets").body()
   }
 }

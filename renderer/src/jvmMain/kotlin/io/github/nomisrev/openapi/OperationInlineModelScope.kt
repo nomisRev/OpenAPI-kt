@@ -67,11 +67,17 @@ internal fun Route.operationInlineModelScope(
     config: RenderConfig,
     methodClassName: ClassName,
 ): OperationInlineModelScope {
+    // When the response has no wrapper class (single direct model), inline response types
+    // must be placed on the method class itself instead of a nested Response class.
+    val responseOwnerClassName =
+        if (returns.isSingleDirectModelResponse()) methodClassName
+        else methodClassName.nestedClass("Response")
+
     val overloadedBody = body?.defaultOrNull() as? Route.Body.OverloadedBody ?: return responseInlineModelScopeOnly(
         config = config,
         methodClassName = methodClassName,
+        responseOwnerClassName = responseOwnerClassName,
     )
-    val responseClassName = methodClassName.nestedClass("Response")
     var sourceOrder = 0
     val candidates = buildList {
         overloadedBody.cases.forEach { case ->
@@ -85,29 +91,29 @@ internal fun Route.operationInlineModelScope(
         returns.singlePreferredModelOrNull()
             ?.collectionItemCandidateOrNull(
                 config = config,
-                ownerClassName = responseClassName,
+                ownerClassName = responseOwnerClassName,
                 kind = InlineCandidateKind.ResponseCollectionItem,
                 sourceOrder = sourceOrder++,
             )
             ?.let(::add)
     }
-    return candidates.toOperationInlineModelScope(methodClassName, responseClassName)
+    return candidates.toOperationInlineModelScope(methodClassName, responseOwnerClassName)
 }
 
 private fun Route.responseInlineModelScopeOnly(
     config: RenderConfig,
     methodClassName: ClassName,
+    responseOwnerClassName: ClassName = methodClassName.nestedClass("Response"),
 ): OperationInlineModelScope {
-    val responseClassName = methodClassName.nestedClass("Response")
     val candidate = returns.singlePreferredModelOrNull()
         ?.collectionItemCandidateOrNull(
             config = config,
-            ownerClassName = responseClassName,
+            ownerClassName = responseOwnerClassName,
             kind = InlineCandidateKind.ResponseCollectionItem,
             sourceOrder = 0,
         )
         ?: return OperationInlineModelScope.empty()
-    return listOf(candidate).toOperationInlineModelScope(methodClassName, responseClassName)
+    return listOf(candidate).toOperationInlineModelScope(methodClassName, responseOwnerClassName)
 }
 
 private fun List<OperationInlineModelCandidate>.toOperationInlineModelScope(
@@ -367,9 +373,6 @@ private fun Model.normalizedForSharingKey(): Model =
         )
         is Model.Uuid -> copy(description = null, title = null)
     }
-
-private fun Route.Returns.singlePreferredModelOrNull(): Model? =
-    (responses.values.firstOrNull() ?: default)?.preferredModel()
 
 private fun Route.ReturnType.preferredModel(): Model? {
     if (types.isEmpty()) return null

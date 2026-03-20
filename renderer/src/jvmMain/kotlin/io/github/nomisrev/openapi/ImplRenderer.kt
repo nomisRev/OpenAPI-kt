@@ -259,36 +259,15 @@ internal fun Route.buildOperationBody(
                 code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
             }
         } else {
-            val usesInlineResponseType = model.isRouteInlineModel() &&
-                    (model is Model.Object || model is Model.Enum || model is Model.Union)
-            if (usesInlineResponseType) {
-                if (hasRequestConfig) {
-                    code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
-                    code.indent()
-                    addRequestConfigCode(code, includeBody, bodyMayBeNull)
-                    code.unindent()
-                    code.add("}.%M()\n", BodyMember)
-                } else {
-                    code.addStatement("return client.%L(%L).%M()", httpMethodName, pathLiteral, BodyMember)
-                }
+            // Both inline-response and direct-model paths now return the value directly.
+            if (hasRequestConfig) {
+                code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
+                code.indent()
+                addRequestConfigCode(code, includeBody, bodyMayBeNull)
+                code.unindent()
+                code.add("}.%M()\n", BodyMember)
             } else {
-                val modelType = inlineModelScope.remap(model.toTypeName(config))
-                if (hasRequestConfig) {
-                    code.add("val value: %T = client.%L(%L) {\n", modelType, httpMethodName, pathLiteral)
-                    code.indent()
-                    addRequestConfigCode(code, includeBody, bodyMayBeNull)
-                    code.unindent()
-                    code.add("}.%M()\n", BodyMember)
-                } else {
-                    code.addStatement(
-                        "val value: %T = client.%L(%L).%M()",
-                        modelType,
-                        httpMethodName,
-                        pathLiteral,
-                        BodyMember,
-                    )
-                }
-                code.addStatement("return %T(value)", responseClassName)
+                code.addStatement("return client.%L(%L).%M()", httpMethodName, pathLiteral, BodyMember)
             }
         }
     }
@@ -489,11 +468,6 @@ private fun List<PathSegment>.toPathLiteral(): String {
     return "\"$path\""
 }
 
-private fun Route.Returns.needsSealedInterface(): Boolean {
-    val totalCases = responses.size + (if (default != null) 1 else 0)
-    return totalCases > 1
-}
-
 private fun HttpStatusCode.toCaseName(): String =
     description.split(" ").joinToString("") { word ->
         word.lowercase().replaceFirstChar { it.uppercase() }
@@ -504,14 +478,6 @@ private fun Route.ReturnType.preferredModel(): Model? {
     val jsonEntry = types.entries.firstOrNull { ContentType.Application.Json.match(it.key) }
     return jsonEntry?.value ?: types.values.first()
 }
-
-private fun Route.Returns.singlePreferredModelOrNull(): Model? {
-    val singleResponse = responses.values.firstOrNull() ?: default ?: return null
-    return singleResponse.preferredModel()
-}
-
-private fun Model.isRouteInlineModel(): Boolean =
-    this is Model.ContextHolder && context.head is NamingContext.Path
 
 /**
  * Returns the expression that produces the wire string for a named parameter.

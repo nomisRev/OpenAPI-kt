@@ -25,21 +25,15 @@ public class User internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: RepositoryIdAndRef): Response {
-        val value: String = client.post("/user/codespaces") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
-        return Response(value)
-      }
+      public suspend operator fun invoke(body: RepositoryIdAndRef): String = client.post("/user/codespaces") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }.body()
 
-      public suspend operator fun invoke(body: PullRequest): Response {
-        val value: String = client.post("/user/codespaces") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
-        return Response(value)
-      }
+      public suspend operator fun invoke(body: PullRequest): String = client.post("/user/codespaces") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }.body()
 
       @Serializable
       public data class RepositoryIdAndRef(
@@ -62,10 +56,6 @@ public class User internal constructor(
           public val repositoryId: Long,
         )
       }
-
-      public data class Response(
-        public val `value`: String,
-      )
     }
   }
 }

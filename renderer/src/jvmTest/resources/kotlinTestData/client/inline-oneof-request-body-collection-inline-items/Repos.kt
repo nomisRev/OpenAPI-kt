@@ -60,52 +60,34 @@ public class Repos internal constructor(
               private val repo: String,
               private val issueNumber: Long,
             ) {
-              public suspend operator fun invoke(): Response {
-                val value: List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels").body()
-                return Response(value)
-              }
+              public suspend operator fun invoke(): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels").body()
 
-              public suspend operator fun invoke(body: LabelsStrings): Response {
-                val value: List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
-                  contentType(ContentType.Application.Json)
-                  setBody(body)
-                }.body()
-                return Response(value)
-              }
+              public suspend operator fun invoke(body: LabelsStrings): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+              }.body()
 
               @JvmName("StringList")
-              public suspend operator fun invoke(body: List<String>): Response {
-                val value: List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
-                  contentType(ContentType.Application.Json)
-                  setBody(body)
-                }.body()
-                return Response(value)
-              }
+              public suspend operator fun invoke(body: List<String>): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+              }.body()
 
-              public suspend operator fun invoke(body: LabelsNames): Response {
-                val value: List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
-                  contentType(ContentType.Application.Json)
-                  setBody(body)
-                }.body()
-                return Response(value)
-              }
+              public suspend operator fun invoke(body: LabelsNames): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+              }.body()
 
               @JvmName("NameList")
-              public suspend operator fun invoke(body: List<Name>): Response {
-                val value: List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
-                  contentType(ContentType.Application.Json)
-                  setBody(body)
-                }.body()
-                return Response(value)
-              }
+              public suspend operator fun invoke(body: List<Name>): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+              }.body()
 
-              public suspend operator fun invoke(body: String): Response {
-                val value: List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
-                  contentType(ContentType.Application.Json)
-                  setBody(body)
-                }.body()
-                return Response(value)
-              }
+              public suspend operator fun invoke(body: String): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+              }.body()
 
               @JvmInline
               @Serializable
@@ -123,10 +105,6 @@ public class Repos internal constructor(
               @Serializable
               public value class Name(
                 public val name: String,
-              )
-
-              public data class Response(
-                public val `value`: List<Name>,
               )
             }
           }
