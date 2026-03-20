@@ -19,9 +19,12 @@ public sealed interface DiscriminatedBasicUnion {
     public val name: String,
   ) : DiscriminatedBasicUnion {
     @Serializable
-    public enum class Type {
+    public enum class Type(
+      public val `value`: String,
+    ) {
       @SerialName("employee")
-      Employee,
+      Employee("employee"),
+      ;
     }
   }
 
@@ -32,9 +35,12 @@ public sealed interface DiscriminatedBasicUnion {
     public val level: Int,
   ) : DiscriminatedBasicUnion {
     @Serializable
-    public enum class Type {
+    public enum class Type(
+      public val `value`: String,
+    ) {
       @SerialName("manager")
-      Manager,
+      Manager("manager"),
+      ;
     }
   }
 }

@@ -33,11 +33,14 @@ public class Markdown internal constructor(
       public val context: String? = null,
     ) {
       @Serializable
-      public enum class Mode {
+      public enum class Mode(
+        public val `value`: String,
+      ) {
         @SerialName("markdown")
-        Markdown,
+        Markdown("markdown"),
         @SerialName("gfm")
-        Gfm,
+        Gfm("gfm"),
+        ;
       }
     }
 

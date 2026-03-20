@@ -19,9 +19,12 @@ public sealed interface DiscriminatedValueClassUnion {
     public val kind: Kind,
   ) : DiscriminatedValueClassUnion {
     @Serializable
-    public enum class Kind {
+    public enum class Kind(
+      public val `value`: String,
+    ) {
       @SerialName("inline")
-      Inline,
+      Inline("inline"),
+      ;
     }
   }
 
@@ -32,9 +35,12 @@ public sealed interface DiscriminatedValueClassUnion {
     public val id: String,
   ) : DiscriminatedValueClassUnion {
     @Serializable
-    public enum class Kind {
+    public enum class Kind(
+      public val `value`: String,
+    ) {
       @SerialName("remote")
-      Remote,
+      Remote("remote"),
+      ;
     }
   }
 }

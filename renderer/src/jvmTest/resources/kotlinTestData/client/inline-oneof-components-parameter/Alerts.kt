@@ -51,9 +51,12 @@ public class Alerts internal constructor(
       ) : Has
 
       @Serializable
-      public enum class Patch {
+      public enum class Patch(
+        public val `value`: String,
+      ) {
         @SerialName("patch")
-        Patch,
+        Patch("patch"),
+        ;
       }
 
       public object Serializer : KSerializer<Has> {

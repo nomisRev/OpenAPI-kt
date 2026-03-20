@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.union.discriminated.mixed
 
 import kotlin.Int
 import kotlin.OptIn
+import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -26,9 +27,12 @@ public sealed interface DiscriminatedMixedUnion {
     public val id: Int,
   ) : DiscriminatedMixedUnion {
     @Serializable
-    public enum class Kind {
+    public enum class Kind(
+      public val `value`: String,
+    ) {
       @SerialName("guest")
-      Guest,
+      Guest("guest"),
+      ;
     }
   }
 }

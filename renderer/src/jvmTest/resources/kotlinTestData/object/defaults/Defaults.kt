@@ -31,10 +31,13 @@ public data class Defaults(
   public val tags: List<String> = listOf("a", "b"),
 ) {
   @Serializable
-  public enum class State {
+  public enum class State(
+    public val `value`: String,
+  ) {
     @SerialName("on")
-    On,
+    On("on"),
     @SerialName("off")
-    Off,
+    Off("off"),
+    ;
   }
 }

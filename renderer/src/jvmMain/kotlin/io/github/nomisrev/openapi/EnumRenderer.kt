@@ -3,11 +3,25 @@ package io.github.nomisrev.openapi
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.ParameterSpec
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeSpec
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-
+/**
+ * Returns true if this enum has at least one entry whose raw wire value differs from its
+ * Kotlin entry name, meaning we need a `value: String` constructor parameter so that the
+ * wire value can be retrieved without relying on `@SerialName` (which is only respected by
+ * kotlinx.serialization, not by Ktor's `parameter()` / form-data `append()`).
+ */
+fun Model.Enum.needsValueProperty(): Boolean =
+    values.any { rawValue ->
+        val v = rawValue ?: "null"
+        v != toEnumValueName(v).unescapeBackticks()
+    }
 
 fun Model.Enum.toTypeSpec(
     config: RenderConfig,
@@ -16,9 +30,23 @@ fun Model.Enum.toTypeSpec(
     nameOverride: String? = null,
 ): TypeSpec {
     val className = context.toClassName(config)
+    val withValue = needsValueProperty()
     return TypeSpec.enumBuilder(nameOverride ?: className.simpleName)
         .addAnnotation(Serializable::class)
         .apply {
+            if (withValue) {
+                primaryConstructor(
+                    FunSpec.constructorBuilder()
+                        .addParameter(ParameterSpec.builder("value", STRING).build())
+                        .build()
+                )
+                addProperty(
+                    PropertySpec.builder("value", STRING)
+                        .initializer("value")
+                        .build()
+                )
+            }
+
             serialName?.let { value ->
                 addAnnotation(
                     AnnotationSpec.builder(SerialName::class)
@@ -35,6 +63,8 @@ fun Model.Enum.toTypeSpec(
 
                 if (rawValue != entryName.unescapeBackticks()) {
                     entry.addAnnotation(AnnotationSpec.builder(SerialName::class).addMember("%S", rawValue).build())
+                    // Pass the raw wire value as the constructor argument
+                    entry.addSuperclassConstructorParameter("%S", rawValue)
                 }
 
                 if (KmpTarget.JS in config.targets && entryName.needsJsName()) {

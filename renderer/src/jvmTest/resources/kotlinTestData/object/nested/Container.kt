@@ -25,10 +25,13 @@ public data class Container(
   )
 
   @Serializable
-  public enum class Sort {
+  public enum class Sort(
+    public val `value`: String,
+  ) {
     @SerialName("asc")
-    Asc,
+    Asc("asc"),
     @SerialName("desc")
-    Desc,
+    Desc("desc"),
+    ;
   }
 }

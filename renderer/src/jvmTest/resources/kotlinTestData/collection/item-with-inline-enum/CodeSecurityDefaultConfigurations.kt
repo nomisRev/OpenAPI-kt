@@ -21,13 +21,16 @@ public value class CodeSecurityDefaultConfigurations(
     public val name: String? = null,
   ) {
     @Serializable
-    public enum class DefaultForNewRepos {
+    public enum class DefaultForNewRepos(
+      public val `value`: String,
+    ) {
       @SerialName("public")
-      Public,
+      Public("public"),
       @SerialName("private_and_internal")
-      PrivateAndInternal,
+      PrivateAndInternal("private_and_internal"),
       @SerialName("all")
-      All,
+      All("all"),
+      ;
     }
   }
 }

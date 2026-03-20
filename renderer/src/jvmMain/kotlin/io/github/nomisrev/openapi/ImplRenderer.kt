@@ -305,28 +305,34 @@ private fun Route.addRequestConfigCode(
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Query }) {
         val paramName = param.name.toParamName()
+        val valueExpr = param.type.wireValueExpr(paramName)
         if (param.isRequired) {
-            code.addStatement("%M(%S, %L)", ParameterMember, param.name, paramName)
+            code.addStatement("%M(%S, %L)", ParameterMember, param.name, valueExpr)
         } else {
-            code.addStatement("%L?.let·{ %M(%S, it) }", paramName, ParameterMember, param.name)
+            val itExpr = param.type.wireItExpr()
+            code.addStatement("%L?.let·{ %M(%S, %L) }", paramName, ParameterMember, param.name, itExpr)
         }
     }
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Header }) {
         val paramName = param.name.toParamName()
+        val valueExpr = param.type.wireValueExpr(paramName)
         if (param.isRequired) {
-            code.addStatement("%M(%S, %L)", HeaderMember, param.name, paramName)
+            code.addStatement("%M(%S, %L)", HeaderMember, param.name, valueExpr)
         } else {
-            code.addStatement("%L?.let·{ %M(%S, it) }", paramName, HeaderMember, param.name)
+            val itExpr = param.type.wireItExpr()
+            code.addStatement("%L?.let·{ %M(%S, %L) }", paramName, HeaderMember, param.name, itExpr)
         }
     }
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Cookie }) {
         val paramName = param.name.toParamName()
+        val valueExpr = param.type.wireValueExpr(paramName)
         if (param.isRequired) {
-            code.addStatement("%M(%S, %L)", CookieMember, param.name, paramName)
+            code.addStatement("%M(%S, %L)", CookieMember, param.name, valueExpr)
         } else {
-            code.addStatement("%L?.let·{ %M(%S, it) }", paramName, CookieMember, param.name)
+            val itExpr = param.type.wireItExpr()
+            code.addStatement("%L?.let·{ %M(%S, %L) }", paramName, CookieMember, param.name, itExpr)
         }
     }
 
@@ -405,7 +411,9 @@ private fun addBodyCode(
             code.add("%M(%T.build {\n", SetBodyMember, ParametersType)
             code.indent()
             for (formData in body.parameters) {
-                code.addStatement("append(%S, %L)", formData.name, formData.name.toParamName())
+                val paramName = formData.name.toParamName()
+                val valueExpr = formData.type.wireValueExpr(paramName)
+                code.addStatement("append(%S, %L)", formData.name, valueExpr)
             }
             code.unindent()
             code.add("}.%M())\n", FormUrlEncodeMember)
@@ -415,7 +423,9 @@ private fun addBodyCode(
             code.add("%M(%T(%M {\n", SetBodyMember, MultiPartFormDataContentType, FormDataMember)
             code.indent()
             for (formData in body.parameters) {
-                code.addStatement("%M(%S, %L)", AppendMember, formData.name, formData.name.toParamName())
+                val paramName = formData.name.toParamName()
+                val valueExpr = formData.type.wireValueExpr(paramName)
+                code.addStatement("%M(%S, %L)", AppendMember, formData.name, valueExpr)
             }
             code.unindent()
             code.add("}))\n")
@@ -502,3 +512,17 @@ private fun Route.Returns.singlePreferredModelOrNull(): Model? {
 
 private fun Model.isRouteInlineModel(): Boolean =
     this is Model.ContextHolder && context.head is NamingContext.Path
+
+/**
+ * Returns the expression that produces the wire string for a named parameter.
+ * For enums with a `value` property, appends `.value`. Otherwise returns the name as-is.
+ */
+private fun Model.wireValueExpr(paramName: String): String =
+    if (this is Model.Enum && needsValueProperty()) "$paramName.value" else paramName
+
+/**
+ * Returns the expression to use inside `?.let { ... }` lambdas when accessing the wire value.
+ * For enums with a `value` property, returns `"it.value"`. Otherwise returns `"it"`.
+ */
+private fun Model.wireItExpr(): String =
+    if (this is Model.Enum && needsValueProperty()) "it.value" else "it"

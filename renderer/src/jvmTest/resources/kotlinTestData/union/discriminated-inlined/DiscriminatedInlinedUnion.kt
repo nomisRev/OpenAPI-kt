@@ -19,9 +19,12 @@ public sealed interface DiscriminatedInlinedUnion {
     public val id: String,
   ) : DiscriminatedInlinedUnion {
     @Serializable
-    public enum class Event {
+    public enum class Event(
+      public val `value`: String,
+    ) {
       @SerialName("created")
-      Created,
+      Created("created"),
+      ;
     }
   }
 
@@ -32,9 +35,12 @@ public sealed interface DiscriminatedInlinedUnion {
     public val hard: Boolean,
   ) : DiscriminatedInlinedUnion {
     @Serializable
-    public enum class Event {
+    public enum class Event(
+      public val `value`: String,
+    ) {
       @SerialName("deleted")
-      Deleted,
+      Deleted("deleted"),
+      ;
     }
   }
 }

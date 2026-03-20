@@ -19,11 +19,14 @@ public sealed interface Union {
   ) : Union
 
   @Serializable
-  public enum class AscOrDesc : Union {
+  public enum class AscOrDesc(
+    public val `value`: String,
+  ) : Union {
     @SerialName("asc")
-    Asc,
+    Asc("asc"),
     @SerialName("desc")
-    Desc,
+    Desc("desc"),
+    ;
   }
 
   public object Serializer : KSerializer<Union> {
