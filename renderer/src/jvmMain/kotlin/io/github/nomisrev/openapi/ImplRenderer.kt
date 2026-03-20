@@ -15,7 +15,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 
-private val HttpClientType = ClassName("io.ktor.client", "HttpClient")
 private val ContentTypeType = ClassName("io.ktor.http", "ContentType")
 private val MultiPartFormDataContentType =
     ClassName("io.ktor.client.request.forms", "MultiPartFormDataContent")

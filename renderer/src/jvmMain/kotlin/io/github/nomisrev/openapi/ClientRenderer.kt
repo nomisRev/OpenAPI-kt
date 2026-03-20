@@ -47,11 +47,7 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
     val rootFileBuilder = FileSpec.builder(config.apiPackage, rootName)
         .addType(toRootTypeSpec(config, rootClassName))
 
-    generateServerInterface(config)?.let { rootFileBuilder.addType(it) }
-
-    for (factory in generateFactory(config)) {
-        rootFileBuilder.addFunction(factory)
-    }
+    generateServerType(config)?.let { rootFileBuilder.addType(it) }
 
     for (method in operations.keys.mapTo(mutableSetOf()) { it.value.lowercase() }) {
         rootFileBuilder.addImport("io.ktor.client.request", method)
@@ -67,7 +63,17 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
 
 private fun ApiTree.toRootTypeSpec(config: RenderConfig, className: ClassName): TypeSpec {
     val builder = TypeSpec.classBuilder(className.simpleName)
+        .addSuperinterface(ClassName("kotlin", "AutoCloseable"))
     builder.addClientConstructorAndState(config, emptyList())
+    for (ctor in generateSecondaryConstructors(config)) {
+        builder.addFunction(ctor)
+    }
+    builder.addFunction(
+        FunSpec.builder("close")
+            .addModifiers(KModifier.OVERRIDE)
+            .addStatement("client.close()")
+            .build()
+    )
     val orderedOperations = operations.entries.sortedBy { it.key.value }
     val sharedInlineParameterModels = orderedOperations
         .map { it.value }

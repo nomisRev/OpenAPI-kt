@@ -5,13 +5,30 @@ import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.serialization.kotlinx.json.json
+import kotlin.AutoCloseable
 import kotlin.String
 import kotlin.Unit
 
 public class Api internal constructor(
   private val client: HttpClient,
-) {
+) : AutoCloseable {
   public val pets: Pets = Pets(client)
+
+  public constructor(server: ApiServer = ApiServer.Production, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
+    defaultRequest { url(server.url) }
+    block()
+  }
+  )
+
+  public constructor(server: ApiServer = ApiServer.Production) : this(HttpClient {
+    defaultRequest { url(server.url) }
+    install(ContentNegotiation) { json() }
+  }
+  )
+
+  override fun close() {
+    client.close()
+  }
 }
 
 public sealed interface ApiServer {
@@ -28,22 +45,4 @@ public sealed interface ApiServer {
   public data class Custom(
     override val url: String,
   ) : ApiServer
-}
-
-public fun ApiClient(server: ApiServer = ApiServer.Production, block: HttpClientConfig<*>.() -> Unit = {}): Api {
-  val client = HttpClient {
-    install(ContentNegotiation) { json() }
-    defaultRequest { url(server.url) }
-    block()
-  }
-  return Api(client)
-}
-
-public fun ApiClient(baseUrl: String, block: HttpClientConfig<*>.() -> Unit = {}): Api {
-  val client = HttpClient {
-    install(ContentNegotiation) { json() }
-    defaultRequest { url(baseUrl) }
-    block()
-  }
-  return Api(client)
 }
