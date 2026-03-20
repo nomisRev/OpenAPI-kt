@@ -3,6 +3,8 @@ package io.github.nomisrev.openapi
 private val IdentifierRegex = Regex("^[A-Za-z_][A-Za-z0-9_]*$")
 private val InvalidIdentifierCharsRegex = Regex("[^A-Za-z0-9_]+")
 private val NegativeNumberRegex = Regex("^-\\d+(?:\\.\\d+)?$")
+internal val JsIdentifierRegex = Regex("^[A-Za-z_$][A-Za-z0-9_$]*$")
+private val InvalidJsIdentifierCharsRegex = Regex("[^A-Za-z0-9_$]+")
 
 val KOTLIN_KEYWORDS: Set<String> = setOf(
     "as",
@@ -35,12 +37,35 @@ val KOTLIN_KEYWORDS: Set<String> = setOf(
 )
 
 fun String.toParamName(): String {
+    // Sign-prefixed names (+1, -1, +count, -offset) must be backtick-escaped to preserve the
+    // sign distinction. The generic sanitization pipeline would collapse both "+1" and "-1" to
+    // the same identifier ("_1"), causing duplicate property names.
+    if (startsWith("+") || startsWith("-")) return "`$this`"
     val sanitized = toCamelCase()
         .replace(InvalidIdentifierCharsRegex, "_")
         .trim('_')
         .ifEmpty { "_" }
         .let { if (it.first().isDigit()) "_$it" else it }
     return if (sanitized.isValidParamName()) sanitized else "`$sanitized`"
+}
+
+fun String.unescapeBackticks(): String =
+    if (startsWith("`") && endsWith("`") && length >= 2) substring(1, length - 1) else this
+
+fun String.needsJsName(): Boolean {
+    val candidate = unescapeBackticks()
+    return candidate.firstOrNull()?.isDigit() == true || !JsIdentifierRegex.matches(candidate)
+}
+
+fun String.toJsNameValue(): String {
+    val candidate = unescapeBackticks()
+    val symbolic = candidate
+        .replace("*", "star")
+        .replace("/", "slash")
+        .replace("+", "plus")
+        .replace("-", "minus")
+    val sanitized = symbolic.replace(InvalidJsIdentifierCharsRegex, "").ifEmpty { "unnamed" }
+    return if (sanitized.firstOrNull()?.isDigit() == true) "_$sanitized" else sanitized
 }
 
 fun String.toCamelCase(): String {

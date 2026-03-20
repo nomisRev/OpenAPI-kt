@@ -7,8 +7,7 @@ import com.squareup.kotlinpoet.TypeSpec
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-private val JsIdentifierRegex = Regex("^[A-Za-z_$][A-Za-z0-9_$]*$")
-private val InvalidJsIdentifierCharsRegex = Regex("[^A-Za-z0-9_$]+")
+
 
 fun Model.Enum.toTypeSpec(
     config: RenderConfig,
@@ -59,19 +58,4 @@ fun Model.Enum.toFileSpec(config: RenderConfig): FileSpec {
         .build()
 }
 
-private fun String.unescapeBackticks(): String =
-    if (startsWith("`") && endsWith("`") && length >= 2) substring(1, length - 1) else this
 
-private fun String.needsJsName(): Boolean {
-    val candidate = unescapeBackticks()
-    return candidate.firstOrNull()?.isDigit() == true || !JsIdentifierRegex.matches(candidate)
-}
-
-private fun String.toJsNameValue(): String {
-    val candidate = unescapeBackticks()
-    val symbolic = candidate
-        .replace("*", "star")
-        .replace("/", "slash")
-    val sanitized = symbolic.replace(InvalidJsIdentifierCharsRegex, "").ifEmpty { "unnamed" }
-    return if (sanitized.firstOrNull()?.isDigit() == true) "_$sanitized" else sanitized
-}

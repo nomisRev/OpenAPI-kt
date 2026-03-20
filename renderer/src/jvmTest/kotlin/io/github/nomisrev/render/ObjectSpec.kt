@@ -270,4 +270,21 @@ val objectSpec by testSuite {
         """.trimMargin(),
         "object/additional-serializer"
     )
+
+    modelTest(
+        """
+        |"SignedNames": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "+1":     { "type": "integer" },
+        |    "-1":     { "type": "integer" },
+        |    "+count": { "type": "integer" },
+        |    "-offset":{ "type": "integer" }
+        |  },
+        |  "required": ["+1", "-1", "+count", "-offset"]
+        |}
+        """.trimMargin(),
+        "object/signed-names"
+    )
 }

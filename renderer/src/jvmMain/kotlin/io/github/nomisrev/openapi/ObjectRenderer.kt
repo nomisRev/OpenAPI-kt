@@ -234,6 +234,13 @@ private fun Model.Object.renderProperty(
                         .build()
                 )
             }
+            if (KmpTarget.JS in config.targets && paramName.needsJsName()) {
+                addAnnotation(
+                    AnnotationSpec.builder(ClassName("kotlin.js", "JsName"))
+                        .addMember("%S", paramName.toJsNameValue())
+                        .build()
+                )
+            }
             if (property.isRequired && literalDefault != null) {
                 addAnnotation(Required::class)
             }
@@ -570,9 +577,6 @@ internal fun TypeName.remapTypeNames(typeRemaps: Map<ClassName, TypeName>): Type
         }
         else -> this
     }
-
-private fun String.unescapeBackticks(): String =
-    if (startsWith("`") && endsWith("`") && length >= 2) substring(1, length - 1) else this
 
 private fun String.escapeForKdoc(): String =
     replace("%", "%%")
