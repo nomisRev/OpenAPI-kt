@@ -1,8 +1,7 @@
-package io.github.nomisrev.render.test.client.path.`param`.oneof.flat
+package io.github.nomisrev.render.test.client.path.`param`.`enum`.`inline`
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.`get`
-import kotlin.Int
 
 public class Workflows internal constructor(
   private val client: HttpClient,
@@ -10,8 +9,6 @@ public class Workflows internal constructor(
   public val queued: Queued = Queued(client)
 
   public val inProgress: InProgress = InProgress(client)
-
-  public fun workflowId(workflowId: Int): WorkflowIdPath = WorkflowIdPath(client, workflowId)
 
   public class Queued internal constructor(
     private val client: HttpClient,
@@ -48,29 +45,6 @@ public class Workflows internal constructor(
       ) {
         public suspend operator fun invoke() {
           client.get("/workflows/in-progress/runs")
-        }
-      }
-    }
-  }
-
-  public class WorkflowIdPath internal constructor(
-    private val client: HttpClient,
-    private val workflowId: Int,
-  ) {
-    public val runs: Runs = Runs(client, workflowId)
-
-    public class Runs internal constructor(
-      private val client: HttpClient,
-      private val workflowId: Int,
-    ) {
-      public val `get`: Get = Get(client, workflowId)
-
-      public class Get internal constructor(
-        private val client: HttpClient,
-        private val workflowId: Int,
-      ) {
-        public suspend operator fun invoke() {
-          client.get("/workflows/$workflowId/runs")
         }
       }
     }

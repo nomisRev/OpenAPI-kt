@@ -193,7 +193,7 @@ val routeSpec by testSuite {
         Eq(input.expected, routes(input.api).single().segments)
     }
 
-    test("inline simple path parameter union becomes overloaded segment") {
+    test("inline simple path parameter union expands enum cases and keeps one residual path segment") {
         val pathUnionSchema = Schema(
             oneOf = listOf(
                 ReferenceOr.value(Schema.integer.copy(format = "int32")),
@@ -201,19 +201,25 @@ val routeSpec by testSuite {
             )
         )
 
-        val route = routes(
+        val routeEntries = routes(
             openAPI(
                 path = "/workflows/{workflowId}",
                 parameters = listOf(pathParameter("workflowId", pathUnionSchema)),
             )
-        ).single()
+        )
 
-        val segment = assertIs<PathSegment.OverloadedParameter>(route.segments.last())
+        assertEquals(
+            listOf("/workflows/queued", "/workflows/in-progress", "/workflows/{workflowId}"),
+            routeEntries.map(Route::path),
+        )
+        val dynamicRoute = routeEntries.single { it.segments.last() is PathSegment.Parameter }
+        val segment = assertIs<PathSegment.Parameter>(dynamicRoute.segments.last())
         assertEquals("workflowId", segment.name)
-        assertEquals(2, segment.cases.size)
+        val dynamicModel = assertIs<Model.Primitive.Int>(segment.model)
+        assertEquals(false, dynamicModel.isNullable)
     }
 
-    test("inline path parameter union with multiple enum cases becomes overloaded segment") {
+    test("inline path parameter union with multiple enum cases expands only fixed routes") {
         val pathUnionSchema = Schema(
             oneOf = listOf(
                 ReferenceOr.value(Schema.string.copy(enum = listOf("queued"))),
@@ -221,19 +227,153 @@ val routeSpec by testSuite {
             )
         )
 
-        val route = routes(
+        val routeEntries = routes(
             openAPI(
                 path = "/workflows/{workflowId}",
                 parameters = listOf(pathParameter("workflowId", pathUnionSchema)),
             )
-        ).single()
-
-        val segment = assertIs<PathSegment.OverloadedParameter>(route.segments.last())
-        assertEquals("workflowId", segment.name)
-        assertEquals(
-            listOf(listOf("queued"), listOf("in-progress")),
-            segment.cases.map { case -> assertIs<Model.Enum>(case.model).values },
         )
+
+        assertEquals(
+            listOf("/workflows/queued", "/workflows/in-progress"),
+            routeEntries.map(Route::path),
+        )
+        routeEntries.forEach { route ->
+            assertTrue(route.parameters.isEmpty())
+            val segment = assertIs<PathSegment.FixedValue>(route.segments.last())
+            assertEquals("workflowId", segment.sourceName)
+        }
+    }
+
+    test("inline closed enum path parameter expands into fixed routes") {
+        val routeEntries = routes(
+            openAPI(
+                path = "/workflows/{workflowId}",
+                parameters = listOf(
+                    pathParameter("workflowId", Schema.string.copy(enum = listOf("queued", "in-progress"))),
+                ),
+            )
+        )
+
+        assertEquals(
+            listOf("/workflows/queued", "/workflows/in-progress"),
+            routeEntries.map(Route::path),
+        )
+        routeEntries.forEach { route ->
+            assertTrue(route.parameters.isEmpty())
+            val segment = assertIs<PathSegment.FixedValue>(route.segments.last())
+            assertEquals("workflowId", segment.sourceName)
+        }
+    }
+
+    test("referenced closed enum path parameter expands into fixed routes") {
+        val routeEntries = routes(
+            openAPI(
+                path = "/workflows/{workflowId}",
+                parameters = listOf(
+                    ReferenceOr.value(
+                        Parameter(
+                            name = "workflowId",
+                            input = Parameter.Input.Path,
+                            schema = ReferenceOr.schema("WorkflowState"),
+                        )
+                    )
+                ),
+                components = Components(
+                    schemas = mapOf(
+                        "WorkflowState" to ReferenceOr.value(
+                            Schema.string.copy(enum = listOf("queued", "in-progress"))
+                        )
+                    )
+                ),
+            )
+        )
+
+        assertEquals(
+            listOf("/workflows/queued", "/workflows/in-progress"),
+            routeEntries.map(Route::path),
+        )
+        routeEntries.forEach { route ->
+            assertTrue(route.parameters.isEmpty())
+            val segment = assertIs<PathSegment.FixedValue>(route.segments.last())
+            assertEquals("workflowId", segment.sourceName)
+        }
+    }
+
+    test("mixed path parameter union expands enum cases and keeps residual dynamic route") {
+        val pathUnionSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.value(Schema.integer.copy(format = "int32")),
+                ReferenceOr.value(Schema.string.copy(enum = listOf("queued", "in-progress"))),
+            )
+        )
+
+        val routeEntries = routes(
+            openAPI(
+                path = "/workflows/{workflowId}/runs",
+                parameters = listOf(pathParameter("workflowId", pathUnionSchema)),
+            )
+        )
+
+        assertEquals(
+            listOf(
+                "/workflows/queued/runs",
+                "/workflows/in-progress/runs",
+                "/workflows/{workflowId}/runs",
+            ),
+            routeEntries.map(Route::path),
+        )
+
+        val fixedRoutes = routeEntries.filter { it.segments[1] is PathSegment.FixedValue }
+        assertEquals(listOf("queued", "in-progress"), fixedRoutes.map { route ->
+            assertIs<PathSegment.FixedValue>(route.segments[1]).wireValue
+        })
+        fixedRoutes.forEach { route -> assertTrue(route.parameters.isEmpty()) }
+
+        val dynamicRoute = routeEntries.single { it.segments[1] is PathSegment.Parameter }
+        val dynamicSegment = assertIs<PathSegment.Parameter>(dynamicRoute.segments[1])
+        val dynamicModel = assertIs<Model.Primitive.Int>(dynamicSegment.model)
+        assertEquals(listOf("workflowId"), dynamicRoute.parameters.map(Route.Input::name))
+        val dynamicInputType = assertIs<Model.Primitive.Int>(dynamicRoute.parameters.single().type)
+        assertEquals(dynamicModel, dynamicInputType)
+    }
+
+    test("multiple enum path parameters expand as a cartesian product and keep remaining dynamic inputs") {
+        val routeEntries = routes(
+            openAPI(
+                path = "/orgs/{org}/{securityProduct}/{enablement}",
+                parameters = listOf(
+                    pathParameter("org", Schema.string),
+                    pathParameter(
+                        "securityProduct",
+                        Schema.string.copy(enum = listOf("dependency-graph", "dependency-submission"))
+                    ),
+                    pathParameter(
+                        "enablement",
+                        Schema.string.copy(enum = listOf("enable-all", "disable-all"))
+                    ),
+                ),
+            )
+        )
+
+        assertEquals(
+            listOf(
+                "/orgs/{org}/dependency-graph/enable-all",
+                "/orgs/{org}/dependency-graph/disable-all",
+                "/orgs/{org}/dependency-submission/enable-all",
+                "/orgs/{org}/dependency-submission/disable-all",
+            ),
+            routeEntries.map(Route::path),
+        )
+        routeEntries.forEach { route ->
+            assertEquals(listOf("org"), route.parameters.map(Route.Input::name))
+            val orgSegment = assertIs<PathSegment.Parameter>(route.segments[1])
+            val securityProductSegment = assertIs<PathSegment.FixedValue>(route.segments[2])
+            val enablementSegment = assertIs<PathSegment.FixedValue>(route.segments[3])
+            assertEquals("org", orgSegment.name)
+            assertEquals("securityProduct", securityProductSegment.sourceName)
+            assertEquals("enablement", enablementSegment.sourceName)
+        }
     }
 
     test("inline non-discriminated request body union becomes overloaded body") {

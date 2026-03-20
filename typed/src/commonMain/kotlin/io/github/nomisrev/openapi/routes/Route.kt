@@ -3,7 +3,9 @@ package io.github.nomisrev.openapi.routes
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
+import io.github.nomisrev.openapi.isFlattenablePathUnion
 import io.github.nomisrev.openapi.parsePathSegments
+import io.github.nomisrev.openapi.toPathSegment
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
@@ -38,6 +40,8 @@ suspend fun OpenAPI.toRoutes(): List<Route> =
             pathItem.trace?.let { toRoute(path, HttpMethod("Trace"), it.withParams(pathParams)) },
             pathItem.patch?.let { toRoute(path, HttpMethod.Patch, it.withParams(pathParams)) },
         )
+    }.flatMap { route ->
+        route.expandFiniteEnumPathSegments()
     }
 
 private fun Operation.withParams(pathParams: List<ReferenceOr<io.github.nomisrev.openapi.parser.Parameter>>): Operation =
@@ -76,6 +80,7 @@ data class Route(
     val path: String
         get() = segments.joinToString(separator = "/", prefix = "/") { segment ->
             when (segment) {
+                is PathSegment.FixedValue -> segment.wireValue
                 is PathSegment.Literal -> segment.name
                 is PathSegment.Parameter -> "{${segment.name}}"
                 is PathSegment.OverloadedParameter -> "{${segment.name}}"
@@ -209,3 +214,151 @@ private fun Returns.nested(): Set<Model> {
 }
 
 private fun List<Input>.nested(): Set<Model> = mapNotNullTo(mutableSetOf()) { it.type.nestedOrNull() }
+
+private data class ResolvedPathEnumCase(
+    val original: Model.Union.Case,
+    val enumModel: Model.Enum?,
+)
+
+context(ctx: Registry)
+private suspend fun Route.expandFiniteEnumPathSegments(index: Int = 0): List<Route> {
+    if (index >= segments.size) return listOf(this)
+
+    val expanded = expandFiniteEnumPathSegmentAt(index)
+    return if (expanded == null) {
+        expandFiniteEnumPathSegments(index + 1)
+    } else {
+        expanded.flatMap { route ->
+            route.expandFiniteEnumPathSegments(index + 1)
+        }
+    }
+}
+
+context(ctx: Registry)
+private suspend fun Route.expandFiniteEnumPathSegmentAt(index: Int): List<Route>? {
+    val segment = segments[index]
+    if (segment is PathSegment.Literal || segment is PathSegment.FixedValue) return null
+
+    val pathInput = parameters.firstOrNull { it.input == Parameter.Input.Path && it.name == segment.name }
+    val model = pathInput?.type ?: when (segment) {
+        is PathSegment.Parameter -> segment.model
+        is PathSegment.OverloadedParameter -> segment.type
+        is PathSegment.Literal,
+        is PathSegment.FixedValue -> return null
+    }
+
+    val fixedEnum = model.closedEnumOrNull()
+    if (fixedEnum != null) {
+        return fixedEnum.values
+            .map { it ?: "null" }
+            .distinct()
+            .map { wireValue ->
+                replacePathSegment(
+                    index = index,
+                    paramName = segment.name,
+                    segment = PathSegment.FixedValue(wireValue = wireValue, sourceName = segment.name),
+                    replacementType = null,
+                )
+            }
+    }
+
+    val union = model as? Model.Union ?: return null
+    val cases = union.resolvedPathEnumCases()
+    if (cases.none { it.enumModel != null }) return null
+
+    val fixedRoutes = cases
+        .flatMap { case ->
+            case.enumModel
+                ?.values
+                .orEmpty()
+                .map { it ?: "null" }
+                .map { wireValue ->
+                    replacePathSegment(
+                        index = index,
+                        paramName = segment.name,
+                        segment = PathSegment.FixedValue(wireValue = wireValue, sourceName = segment.name),
+                        replacementType = null,
+                    )
+                }
+        }
+        .distinctBy { route -> "${route.method.value} ${route.path}" }
+
+    val dynamicCases = cases
+        .filter { it.enumModel == null }
+        .map(ResolvedPathEnumCase::original)
+
+    val dynamicRoute = union.rebuildDynamicPathSegment(segment.name, dynamicCases)?.let { (replacementSegment, replacementType) ->
+        replacePathSegment(
+            index = index,
+            paramName = segment.name,
+            segment = replacementSegment,
+            replacementType = replacementType,
+        )
+    }
+
+    return fixedRoutes + listOfNotNull(dynamicRoute)
+}
+
+private fun Route.replacePathSegment(
+    index: Int,
+    paramName: String,
+    segment: PathSegment,
+    replacementType: Model?,
+): Route =
+    copy(
+        segments = segments.replaceAt(index, segment),
+        parameters = parameters.mapNotNull { input ->
+            if (input.input != Parameter.Input.Path || input.name != paramName) {
+                input
+            } else {
+                replacementType?.let { type -> input.copy(type = type) }
+            }
+        }
+    )
+
+private fun List<PathSegment>.replaceAt(index: Int, segment: PathSegment): List<PathSegment> =
+    mapIndexed { currentIndex, current ->
+        if (currentIndex == index) segment else current
+    }
+
+context(ctx: Registry)
+private suspend fun Model.closedEnumOrNull(): Model.Enum? = when (this) {
+    is Model.Enum -> this
+    is Model.Reference -> {
+        val reference = context.head as? NamingContext.Reference ?: return null
+        with(ctx) { reference.toModel() as? Model.Enum }
+    }
+    else -> null
+}
+
+context(ctx: Registry)
+private suspend fun Model.Union.resolvedPathEnumCases(): List<ResolvedPathEnumCase> =
+    cases.map { case ->
+        ResolvedPathEnumCase(case, case.model.closedEnumOrNull())
+    }
+
+private fun Model.Union.rebuildDynamicPathSegment(
+    paramName: String,
+    dynamicCases: List<Model.Union.Case>,
+): Pair<PathSegment, Model>? {
+    if (dynamicCases.isEmpty()) return null
+    val dynamicModel = if (dynamicCases.size == 1) {
+        dynamicCases.single().model
+    } else {
+        copy(cases = dynamicCases)
+    }
+
+    val dynamicSegment = when (dynamicModel) {
+        is Model.Union -> {
+            if (dynamicModel.isFlattenablePathUnion()) {
+                PathSegment.OverloadedParameter(paramName, dynamicModel)
+            } else {
+                PathSegment.Parameter(paramName, dynamicModel)
+            }
+        }
+
+        else -> dynamicModel.toPathSegment(paramName)
+    }
+
+    return dynamicSegment to dynamicModel
+}

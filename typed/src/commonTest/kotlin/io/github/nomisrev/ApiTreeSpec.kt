@@ -12,6 +12,7 @@ import io.github.nomisrev.openapi.parser.Info
 import io.github.nomisrev.openapi.parser.MediaType
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
+import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.PathItem
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.RequestBody
@@ -44,6 +45,8 @@ val apiTreeSpec by testSuite {
     )
 
     fun literal(name: String): PathSegment = PathSegment.Literal(name)
+    fun fixed(wireValue: String, sourceName: String = "workflowId"): PathSegment =
+        PathSegment.FixedValue(wireValue, sourceName)
     fun param(name: String): PathSegment = PathSegment.Parameter(name, stringType)
     fun intParam(name: String): PathSegment = PathSegment.Parameter(name, intType)
     fun overloadedWorkflowParam(name: String, routeKey: String): PathSegment.OverloadedParameter {
@@ -291,6 +294,22 @@ val apiTreeSpec by testSuite {
         )
     }
 
+    test("buildTree prefers fixed-value representation when merged with a literal sibling node") {
+        val getRuns = route(HttpMethod.Get, literal("workflows"), fixed("queued"), literal("runs"))
+        val getSummary = route(HttpMethod.Get, literal("workflows"), literal("queued"), literal("summary"))
+
+        val mergedNode = listOf(getRuns, getSummary)
+            .buildTree("Workflows")
+            .children
+            .single()
+            .children
+            .single()
+
+        val segment = assertIs<PathSegment.FixedValue>(mergedNode.segment)
+        assertEquals("queued", segment.wireValue)
+        assertEquals(setOf("runs", "summary"), mergedNode.children.map { it.segment.name }.toSet())
+    }
+
     test("buildTree reuses shared overloaded parameter node for compatible sibling routes in any order") {
         val getRuns = route(
             HttpMethod.Get,
@@ -413,6 +432,43 @@ val apiTreeSpec by testSuite {
             "Parameter(name=petId, model=Int)",
             "Parameter(name=petId, model=String)",
         )
+    }
+
+    test("toApiTree rejects conflicting explicit literal and unrolled enum literal routes") {
+        val enumPathParameter = ReferenceOr.value(
+            Parameter(
+                name = "workflowId",
+                input = Parameter.Input.Path,
+                schema = ReferenceOr.value(Schema.string.copy(enum = listOf("queued", "in-progress"))),
+            )
+        )
+        val api = OpenAPI(
+            info = Info("Workflows", "1.0"),
+            paths = mapOf(
+                "/workflows/{workflowId}/runs" to PathItem(
+                    get = Operation(
+                        parameters = listOf(enumPathParameter),
+                        responses = Responses(200, Response())
+                    )
+                ),
+                "/workflows/queued/runs" to PathItem(
+                    get = Operation(
+                        responses = Responses(204, Response())
+                    )
+                ),
+            ),
+        )
+
+        val error = assertFailsWith<IllegalArgumentException> {
+            api.toApiTree("Workflows")
+        }
+        val message = requireNotNull(error.message)
+        assertTrue(
+            message.startsWith("Conflicting concrete route 'GET /workflows/queued/runs': "),
+            message,
+        )
+        assertTrue(message.contains("200:[]"), message)
+        assertTrue(message.contains("204:[]"), message)
     }
 
     test("buildTree realistic mixed API fragment") {
@@ -545,5 +601,36 @@ val apiTreeSpec by testSuite {
             models.mapNotNull { (it as? Model.ContextHolder)?.context?.head as? NamingContext.Reference }
                 .map(NamingContext.Reference::name)
         )
+    }
+
+    test("toApiTree does not keep referenced enum models that are fully unrolled from path params") {
+        val api = OpenAPI(
+            info = Info("Test", "1.0"),
+            paths = mapOf(
+                "/workflows/{workflowId}" to PathItem(
+                    get = Operation(
+                        parameters = listOf(
+                            ReferenceOr.value(
+                                Parameter(
+                                    name = "workflowId",
+                                    input = Parameter.Input.Path,
+                                    schema = ReferenceOr.schema("WorkflowState"),
+                                )
+                            )
+                        ),
+                        responses = Responses(200, Response())
+                    )
+                )
+            ),
+            components = Components(
+                schemas = mapOf(
+                    "WorkflowState" to ReferenceOr.value(
+                        Schema.string.copy(enum = listOf("queued", "in-progress"))
+                    )
+                )
+            )
+        )
+
+        assertTrue(api.toApiTree("Workflows").models.isEmpty())
     }
 }

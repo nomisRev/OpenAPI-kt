@@ -29,9 +29,10 @@ fun Iterable<Route>.buildTree(
     models: List<Model> = emptyList(),
     servers: List<Server> = emptyList(),
 ): ApiTree {
+    val routes = validatedConcreteRoutes()
     val rootBuilder = PathNodeBuilder(segment = null)
 
-    for (route in this) {
+    for (route in routes) {
         rootBuilder.insert(route.segments, route)
     }
 
@@ -98,7 +99,7 @@ private fun List<Server>.normalizeForClientGeneration(): List<Server> {
 }
 
 private class PathNodeBuilder(
-    val segment: PathSegment?,
+    var segment: PathSegment?,
     val sourceRoute: Route? = null,
     val operations: MutableMap<HttpMethod, Route> = mutableMapOf(),
     val children: MutableList<PathNodeBuilder> = mutableListOf(),
@@ -124,6 +125,7 @@ private class PathNodeBuilder(
                 existingRoute = requireNotNull(existing.sourceRoute),
                 incomingRoute = route,
             )
+            existing.segment = existingSegment.preferredRepresentation(head)
             existing.insert(tail, route, parentSegments + existingSegment)
         } else {
             val child = PathNodeBuilder(head, sourceRoute = route)
@@ -141,11 +143,20 @@ private class PathNodeBuilder(
 
 private fun PathSegment?.sameIdentityAs(other: PathSegment): Boolean = when {
     this is PathSegment.Literal && other is PathSegment.Literal -> name == other.name
+    this is PathSegment.Literal && other is PathSegment.FixedValue -> name == other.wireValue
     this is PathSegment.Parameter && other is PathSegment.Parameter -> name == other.name
     this is PathSegment.Parameter && other is PathSegment.OverloadedParameter -> name == other.name
     this is PathSegment.OverloadedParameter && other is PathSegment.Parameter -> name == other.name
     this is PathSegment.OverloadedParameter && other is PathSegment.OverloadedParameter -> name == other.name
+    this is PathSegment.FixedValue && other is PathSegment.Literal -> wireValue == other.name
+    this is PathSegment.FixedValue && other is PathSegment.FixedValue -> wireValue == other.wireValue
     else -> false
+}
+
+private fun PathSegment.preferredRepresentation(other: PathSegment): PathSegment = when {
+    this is PathSegment.FixedValue -> this
+    other is PathSegment.FixedValue -> other
+    else -> this
 }
 
 private val SharedPathNodeNamingContext = NamingContext.reference("Shared", SchemaContext.Null)
@@ -174,9 +185,37 @@ private fun PathSegment.requireCompatibleWith(
 
 private fun Route.descriptor(): String = "${method.value} $path"
 
+private fun Iterable<Route>.validatedConcreteRoutes(): List<Route> {
+    val routes = toList()
+    if (routes.isEmpty()) return routes
+
+    val duplicatesByDescriptor = routes.groupBy { route -> route.descriptor() }
+    for (descriptor in duplicatesByDescriptor.keys.sorted()) {
+        val duplicates = duplicatesByDescriptor.getValue(descriptor)
+        val variants = duplicates
+            .map(Route::normalizedForConcreteCollision)
+            .distinct()
+        if (variants.size > 1) {
+            val details = variants
+                .map(Route::concreteCollisionDescription)
+                .sorted()
+                .joinToString(separator = "; ")
+            throw IllegalArgumentException(
+                "Conflicting concrete route '$descriptor': $details"
+            )
+        }
+    }
+
+    val seen = mutableSetOf<String>()
+    return routes.filter { route ->
+        seen.add(route.descriptor())
+    }
+}
+
 private fun List<PathSegment>.toPathTemplate(): String {
     val path = joinToString(separator = "/") { segment ->
         when (segment) {
+            is PathSegment.FixedValue -> segment.wireValue
             is PathSegment.Literal -> segment.name
             is PathSegment.Parameter -> "{${segment.name}}"
             is PathSegment.OverloadedParameter -> "{${segment.name}}"
@@ -186,10 +225,119 @@ private fun List<PathSegment>.toPathTemplate(): String {
 }
 
 private fun PathSegment.normalizedForCompatibility(): PathSegment = when (this) {
+    is PathSegment.FixedValue -> PathSegment.Literal(wireValue)
     is PathSegment.Literal -> this
     is PathSegment.Parameter -> copy(model = model.normalizedForCompatibility())
     is PathSegment.OverloadedParameter -> copy(type = type.normalizedForCompatibility() as Model.Union)
 }
+
+private fun Route.normalizedForConcreteCollision(): Route = copy(
+    summary = null,
+    segments = segments.map(PathSegment::normalizedForCompatibility),
+    body = body.normalizedForConcreteCollision(),
+    parameters = parameters.map(Route.Input::normalizedForConcreteCollision),
+    returns = returns.normalizedForConcreteCollision(),
+    extensions = emptyMap(),
+)
+
+private fun Route.Input.normalizedForConcreteCollision(): Route.Input =
+    copy(type = type.normalizedForCompatibility(), description = null)
+
+private fun Route.Bodies?.normalizedForConcreteCollision(): Route.Bodies? =
+    this?.copy(
+        types = types.mapValues { (_, body) -> body.normalizedForConcreteCollision() },
+        extensions = emptyMap(),
+    )
+
+private fun Route.Body.normalizedForConcreteCollision(): Route.Body = when (this) {
+    is Route.Body.SetBody -> copy(
+        type = type.normalizedForCompatibility(),
+        description = null,
+        extensions = emptyMap(),
+    )
+
+    is Route.Body.OverloadedBody -> copy(
+        type = type.normalizedForCompatibility() as Model.Union,
+        description = null,
+        extensions = emptyMap(),
+    )
+
+    is Route.Body.FormUrlEncoded -> copy(
+        parameters = parameters.map { it.copy(type = it.type.normalizedForCompatibility()) },
+        description = null,
+        extensions = emptyMap(),
+    )
+
+    is Route.Body.Multipart.Value -> copy(
+        parameters = parameters.map { it.copy(type = it.type.normalizedForCompatibility()) },
+        description = null,
+        extensions = emptyMap(),
+    )
+
+    is Route.Body.Multipart.Ref -> copy(
+        value = value.normalizedForCompatibility(),
+        description = null,
+        extensions = emptyMap(),
+    )
+}
+
+private fun Route.Returns.normalizedForConcreteCollision(): Route.Returns = copy(
+    default = default?.normalizedForConcreteCollision(),
+    responses = responses.mapValues { (_, value) -> value.normalizedForConcreteCollision() },
+    extensions = emptyMap(),
+)
+
+private fun Route.ReturnType.normalizedForConcreteCollision(): Route.ReturnType = copy(
+    types = types.mapValues { (_, model) -> model.normalizedForCompatibility() },
+    extensions = emptyMap(),
+)
+
+private fun Route.concreteCollisionDescription(): String = buildString {
+    append("parameters=")
+    append(parameters.joinToString(prefix = "[", postfix = "]") { input ->
+        "${input.input.name.lowercase()}:${input.name}:${input.type.compatibilityDescription()}"
+    })
+    append(", body=")
+    append(body?.types?.entries?.joinToString(prefix = "[", postfix = "]") { (contentType, body) ->
+        "$contentType:${body.concreteCollisionDescription()}"
+    } ?: "null")
+    append(", returns=")
+    append(returns.concreteCollisionDescription())
+    append(", deprecated=")
+    append(deprecated)
+}
+
+private fun Route.Body.concreteCollisionDescription(): String = when (this) {
+    is Route.Body.SetBody -> "SetBody(${type.compatibilityDescription()})"
+    is Route.Body.OverloadedBody -> "OverloadedBody(${type.compatibilityDescription()})"
+    is Route.Body.FormUrlEncoded ->
+        "FormUrlEncoded(${parameters.joinToString { "${it.name}:${it.type.compatibilityDescription()}" }})"
+
+    is Route.Body.Multipart.Value ->
+        "MultipartValue(${parameters.joinToString { "${it.name}:${it.type.compatibilityDescription()}" }})"
+
+    is Route.Body.Multipart.Ref -> "MultipartRef(${value.compatibilityDescription()})"
+}
+
+private fun Route.Returns.concreteCollisionDescription(): String = buildString {
+    append("default=")
+    append(default?.concreteCollisionDescription() ?: "null")
+    append(", responses=")
+    append(
+        responses.entries
+            .sortedBy { it.key.value }
+            .joinToString(prefix = "[", postfix = "]") { (status, response) ->
+                "${status.value}:${response.concreteCollisionDescription()}"
+            }
+    )
+}
+
+private fun Route.ReturnType.concreteCollisionDescription(): String =
+    types.entries
+        .sortedBy { it.key.toString() }
+        .joinToString(prefix = "[", postfix = "]") { (contentType, model) ->
+            "$contentType:${model.compatibilityDescription()}"
+        }
 
 private fun Model.normalizedForCompatibility(): Model = when (this) {
     is Model.ByteArray -> copy(description = null, title = null)
@@ -266,6 +414,7 @@ private fun Model.Object.AdditionalProperties.normalizedForCompatibility(): Mode
     }
 
 private fun PathSegment.compatibilityDescription(): String = when (val segment = normalizedForCompatibility()) {
+    is PathSegment.FixedValue -> "FixedValue(wireValue=${segment.wireValue})"
     is PathSegment.Literal -> "Literal(name=${segment.name})"
     is PathSegment.Parameter -> "Parameter(name=${segment.name}, model=${segment.model.compatibilityDescription()})"
     is PathSegment.OverloadedParameter ->

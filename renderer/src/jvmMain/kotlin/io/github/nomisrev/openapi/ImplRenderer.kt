@@ -64,6 +64,7 @@ internal fun PathNode.accumulatedParams(parentAccumulatedParams: List<Accumulate
             )
         }
 
+        is PathSegment.FixedValue,
         is PathSegment.Literal -> parentAccumulatedParams
     }
 
@@ -106,13 +107,17 @@ internal fun PathSegment.addConcreteNavigationMember(
     config: RenderConfig,
 ) {
     when (this) {
-        is PathSegment.Literal -> {
-            builder.addProperty(
-                PropertySpec.builder(name.toCamelCase(), childClassName)
-                    .initializer("%T(%L)", childClassName, currentAccumulatedParams.constructorArgs())
-                    .build()
-            )
-        }
+        is PathSegment.FixedValue -> builder.addProperty(
+            PropertySpec.builder(name.toParamName(), childClassName)
+                .initializer("%T(%L)", childClassName, currentAccumulatedParams.constructorArgs())
+                .build()
+        )
+
+        is PathSegment.Literal -> builder.addProperty(
+            PropertySpec.builder(name.toCamelCase(), childClassName)
+                .initializer("%T(%L)", childClassName, currentAccumulatedParams.constructorArgs())
+                .build()
+        )
 
         is PathSegment.OverloadedParameter -> {
             val paramName = name.toCamelCase()
@@ -259,7 +264,7 @@ internal fun Route.buildOperationBody(
             }
         } else {
             val usesInlineResponseType = model.isRouteInlineModel() &&
-                (model is Model.Object || model is Model.Enum || model is Model.Union)
+                    (model is Model.Object || model is Model.Enum || model is Model.Union)
             if (usesInlineResponseType) {
                 if (hasRequestConfig) {
                     code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
@@ -433,6 +438,7 @@ private fun Model.Enum.toPathParamValueExpression(
 private fun List<PathSegment>.toPathLiteral(): String {
     val inner = joinToString("/") { segment ->
         when (segment) {
+            is PathSegment.FixedValue -> segment.wireValue
             is PathSegment.Literal -> segment.name
             is PathSegment.Parameter -> "\$${segment.name.toCamelCase()}"
             is PathSegment.OverloadedParameter -> "\$${segment.name.toCamelCase()}"

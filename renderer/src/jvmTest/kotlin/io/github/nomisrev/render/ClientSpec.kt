@@ -135,6 +135,73 @@ val clientSpec by testSuite {
                     "in": "path",
                     "required": true,
                     "schema": {
+                      "type": "string",
+                      "enum": ["queued", "in-progress"]
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": { "description": "No Content" }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/path-param-enum-inline"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/workflows/{workflow_id}/runs": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "workflow_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
+                      "${'$'}ref": "#/components/schemas/WorkflowId"
+                    }
+                  }
+                ],
+                "responses": {
+                  "204": { "description": "No Content" }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "WorkflowId": {
+                "type": "string",
+                "enum": ["queued", "in-progress"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/path-param-enum-ref"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/workflows/{workflow_id}/runs": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "workflow_id",
+                    "in": "path",
+                    "required": true,
+                    "schema": {
                       "oneOf": [
                         { "type": "integer", "format": "int32" },
                         { "type": "string", "enum": ["queued", "in-progress"] }

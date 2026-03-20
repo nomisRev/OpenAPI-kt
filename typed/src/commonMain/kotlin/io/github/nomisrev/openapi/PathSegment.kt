@@ -16,6 +16,16 @@ sealed interface PathSegment {
     data class Parameter(override val name: String, val model: Model) : PathSegment
 
     @Serializable
+    @SerialName("FixedValue")
+    data class FixedValue(
+        val wireValue: String,
+        val sourceName: String,
+    ) : PathSegment {
+        override val name: String
+            get() = wireValue
+    }
+
+    @Serializable
     @SerialName("OverloadedParameter")
     data class OverloadedParameter(
         override val name: String,
@@ -51,17 +61,17 @@ fun parsePathSegments(
         }
     }
 
-private fun Model.toPathSegment(paramName: String): PathSegment = when (this) {
+internal fun Model.toPathSegment(paramName: String): PathSegment = when (this) {
     is Model.Union -> toPathSegmentOrOverload(paramName)
     else -> PathSegment.Parameter(paramName, this)
 }
 
-private fun Model.Union.toPathSegmentOrOverload(paramName: String): PathSegment {
+internal fun Model.Union.toPathSegmentOrOverload(paramName: String): PathSegment {
     if (!isFlattenablePathUnion()) return PathSegment.Parameter(paramName, this)
     return PathSegment.OverloadedParameter(paramName, this)
 }
 
-private fun Model.Union.isFlattenablePathUnion(): Boolean =
+internal fun Model.Union.isFlattenablePathUnion(): Boolean =
     cases.all { case ->
         case.model is Model.Primitive ||
             case.model is Model.Enum ||

@@ -7,6 +7,7 @@ package io.github.nomisrev.openapi
 internal fun PathSegment.routeSegmentSimpleName(): String = when (this) {
     is PathSegment.Parameter -> name.toPascalCase() + "Path"
     is PathSegment.OverloadedParameter -> name.toPascalCase() + "Path"
+    is PathSegment.FixedValue -> wireValue.toPascalCase()
     is PathSegment.Literal -> name.toPascalCase()
 }
 
