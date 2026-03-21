@@ -1812,4 +1812,60 @@ val clientSpec by testSuite {
         """.trimIndent(),
         "client/inline-anyof-response-nested-path"
     )
+
+    // Reproducer: union case with inline enum property gets wrong ClassName
+    // Bug: path property type is `Body.Source.BranchAndPath.Path` instead of `Source.BranchAndPath.Path`
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/repos/{owner}/{repo}/pages": {
+              "put": {
+                "parameters": [
+                  { "name": "owner", "in": "path", "required": true, "schema": { "type": "string" } },
+                  { "name": "repo", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "source": {
+                            "oneOf": [
+                              {
+                                "type": "string",
+                                "enum": ["gh-pages", "master", "master /docs"]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "branch": { "type": "string" },
+                                  "path": {
+                                    "type": "string",
+                                    "enum": ["/", "/docs"]
+                                  }
+                                },
+                                "required": ["branch", "path"]
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "204": { "description": "No Content" }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/inline-union-case-with-nested-enum"
+    )
 }

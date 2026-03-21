@@ -118,6 +118,7 @@ private fun Model.Union.Case.renderDiscriminatedCase(
                         parentInterface,
                         serialName,
                         nameOverride = caseName,
+                        classNameOverride = parentInterface.nestedClass(caseName),
                         externalTypeNames = externalTypeNames,
                     ),
                     usesUuid = false,
@@ -220,7 +221,12 @@ private fun Model.Union.Case.renderNonDiscriminatedCase(
         is Model.Object ->
             if (!caseModel.context.isTopLevel()) {
                 RenderedUnionCase(
-                    caseModel.toTypeSpec(config, parentInterface, externalTypeNames = externalTypeNames),
+                    caseModel.toTypeSpec(
+                        config,
+                        parentInterface,
+                        classNameOverride = parentInterface.nestedClass(simpleName),
+                        externalTypeNames = externalTypeNames,
+                    ),
                     usesUuid = false,
                     isInlined = true,
                     caseSimpleName = simpleName,
