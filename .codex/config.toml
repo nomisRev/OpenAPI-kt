@@ -1,0 +1,3 @@
+[mcp_servers.gradle]
+command = "jbang"
+args = ["run", "--quiet", "--fresh", "gradle-mcp@rnett"]

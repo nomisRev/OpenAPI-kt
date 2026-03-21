@@ -15,7 +15,15 @@
       "WebFetch(domain:api.github.com)",
       "Bash(gh api:*)",
       "Bash(xargs basename:*)",
-      "Bash(jq:*)"
+      "Bash(jq:*)",
+      "Bash(grep -n \"List<DurationValueWrite\" *.kt)",
+      "Bash(for f:*)",
+      "Bash(do if:*)",
+      "Bash(then echo:*)",
+      "Read(//Users/simonvergauwen/Developer/refactor-api/**)",
+      "Bash(fi)",
+      "Bash(python3:*)",
+      "mcp__gradle__inspect_dependencies"
     ]
   }
 }

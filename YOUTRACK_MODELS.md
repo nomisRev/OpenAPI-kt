@@ -32,16 +32,16 @@ ActivityItem
     TextCustomFieldActivityItem     -- added/removed: string, +markup
   MultiValueActivityItem            -- added/removed: object
     CommentAttachmentsActivityItem  -- added/removed: IssueAttachment[]
-    LinksActivityItem               -- added/removed: IssueLink[]
+    LinksActivityItem               -- added/removed: Issue[]
     SprintActivityItem              -- added/removed: Sprint[]
-    TagsActivityItem                -- added/removed: IssueTag[]
+    TagsActivityItem                -- added/removed: Tag[]
     VisibilityActivityItem          -- added/removed: object
       VisibilityGroupActivityItem   -- added/removed: UserGroup[]
       VisibilityUserActivityItem    -- added/removed: User[]
     VotersActivityItem              -- added/removed: User[]
     WorkItemTypeActivityItem        -- added/removed: WorkItemType[]
   SingleValueActivityItem           -- added/removed: object
-    ProjectActivityItem             -- added/removed: Project
+    ProjectActivityItem             -- added/removed: IssueKey
     SimpleValueActivityItem         -- added/removed: object
       IssueResolvedActivityItem     -- added/removed: int64
       TextMarkupActivityItem        -- added/removed: string, +markup
