@@ -665,6 +665,53 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/repos/{owner}/{repo}/issues": {
+              "post": {
+                "parameters": [
+                  { "name": "owner", "in": "path", "required": true, "schema": { "type": "string" } },
+                  { "name": "repo", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "title": {
+                            "oneOf": [
+                              { "type": "string" },
+                              { "type": "integer", "format": "int64" }
+                            ]
+                          },
+                          "body": { "type": "string" },
+                          "milestone": {
+                            "oneOf": [
+                              { "type": "string" },
+                              { "type": "integer", "format": "int64" }
+                            ]
+                          }
+                        },
+                        "required": ["title"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-inline-body-unions"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/widgets": {
               "get": {
                 "responses": {

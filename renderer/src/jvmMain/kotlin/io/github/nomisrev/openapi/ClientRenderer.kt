@@ -8,10 +8,13 @@ import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.UNIT
+import com.squareup.kotlinpoet.joinToCode
+import io.github.nomisrev.openapi.buildOperationBody
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.transformers.nestedOrNull
@@ -24,8 +27,8 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
     if (children.isEmpty() && operations.isEmpty()) return emptyList()
     val needsSerializationUtils =
         hasInlineNonDiscriminatedParameterUnion() ||
-            hasInlineNonDiscriminatedBodyUnion() ||
-            hasInlineNonDiscriminatedResponseUnion()
+                hasInlineNonDiscriminatedBodyUnion() ||
+                hasInlineNonDiscriminatedResponseUnion()
 
     val rootName = name.toPascalCase()
     val rootClassName = ClassName(config.apiPackage, rootName)
@@ -171,11 +174,11 @@ private fun PathNode.toTypeSpec(
 
 private fun ApiTree.hasInlineNonDiscriminatedParameterUnion(): Boolean =
     operations.values.hasInlineNonDiscriminatedParameterUnion() ||
-        children.any(PathNode::hasInlineNonDiscriminatedParameterUnion)
+            children.any(PathNode::hasInlineNonDiscriminatedParameterUnion)
 
 private fun PathNode.hasInlineNonDiscriminatedParameterUnion(): Boolean =
     operations.values.hasInlineNonDiscriminatedParameterUnion() ||
-        children.any(PathNode::hasInlineNonDiscriminatedParameterUnion)
+            children.any(PathNode::hasInlineNonDiscriminatedParameterUnion)
 
 private fun Iterable<Route>.hasInlineNonDiscriminatedParameterUnion(): Boolean =
     flatMap(Route::inlineParameterModels)
@@ -183,11 +186,11 @@ private fun Iterable<Route>.hasInlineNonDiscriminatedParameterUnion(): Boolean =
 
 private fun ApiTree.hasInlineNonDiscriminatedBodyUnion(): Boolean =
     operations.values.hasInlineNonDiscriminatedBodyUnion() ||
-        children.any(PathNode::hasInlineNonDiscriminatedBodyUnion)
+            children.any(PathNode::hasInlineNonDiscriminatedBodyUnion)
 
 private fun PathNode.hasInlineNonDiscriminatedBodyUnion(): Boolean =
     operations.values.hasInlineNonDiscriminatedBodyUnion() ||
-        children.any(PathNode::hasInlineNonDiscriminatedBodyUnion)
+            children.any(PathNode::hasInlineNonDiscriminatedBodyUnion)
 
 private fun Iterable<Route>.hasInlineNonDiscriminatedBodyUnion(): Boolean =
     any { route ->
@@ -196,11 +199,11 @@ private fun Iterable<Route>.hasInlineNonDiscriminatedBodyUnion(): Boolean =
 
 private fun ApiTree.hasInlineNonDiscriminatedResponseUnion(): Boolean =
     operations.values.hasInlineNonDiscriminatedResponseUnion() ||
-        children.any(PathNode::hasInlineNonDiscriminatedResponseUnion)
+            children.any(PathNode::hasInlineNonDiscriminatedResponseUnion)
 
 private fun PathNode.hasInlineNonDiscriminatedResponseUnion(): Boolean =
     operations.values.hasInlineNonDiscriminatedResponseUnion() ||
-        children.any(PathNode::hasInlineNonDiscriminatedResponseUnion)
+            children.any(PathNode::hasInlineNonDiscriminatedResponseUnion)
 
 private fun Iterable<Route>.hasInlineNonDiscriminatedResponseUnion(): Boolean =
     any { route ->
@@ -222,23 +225,23 @@ private fun Model.containsInlineNonDiscriminatedUnion(): Boolean =
     when (this) {
         is Model.Union ->
             (context.head is NamingContext.Path && discriminator == null) ||
-                cases.any { it.model.containsInlineNonDiscriminatedUnion() }
+                    cases.any { it.model.containsInlineNonDiscriminatedUnion() }
 
         is Model.Object ->
             properties.values.any { it.model.containsInlineNonDiscriminatedUnion() } ||
-                ((additionalProperties as? Model.Object.AdditionalProperties.Schema)
-                    ?.value
-                    ?.containsInlineNonDiscriminatedUnion() == true)
+                    ((additionalProperties as? Model.Object.AdditionalProperties.Schema)
+                        ?.value
+                        ?.containsInlineNonDiscriminatedUnion() == true)
 
         is Model.Collection -> inner.containsInlineNonDiscriminatedUnion()
         is Model.DiscriminatedObject ->
             abstractProperties.values.any { it.model.containsInlineNonDiscriminatedUnion() } ||
-                subtypes.any { subtype ->
-                    subtype.properties.values.any { it.model.containsInlineNonDiscriminatedUnion() } ||
-                        ((subtype.additionalProperties as? Model.Object.AdditionalProperties.Schema)
-                            ?.value
-                            ?.containsInlineNonDiscriminatedUnion() == true)
-                }
+                    subtypes.any { subtype ->
+                        subtype.properties.values.any { it.model.containsInlineNonDiscriminatedUnion() } ||
+                                ((subtype.additionalProperties as? Model.Object.AdditionalProperties.Schema)
+                                    ?.value
+                                    ?.containsInlineNonDiscriminatedUnion() == true)
+                    }
 
         is Model.ByteArray,
         is Model.Date,
@@ -315,7 +318,13 @@ private fun Route.toOperationTypeSpec(
     val methodClassName = pathClassName.nestedClass(methodTypeName(method))
     val overloadedBody = body?.defaultOrNull() as? Route.Body.OverloadedBody
     val inlineModelScope = operationInlineModelScope(config, methodClassName)
-    val inlineBodyTypeSpec = body?.inlineBodyTypeSpec(config, methodClassName)
+    val flattenedBody = body?.flattenedBodyRendering(config, methodClassName)
+    val inlineBodyTypeSpec = body?.inlineBodyTypeSpec(
+        config = config,
+        ownerClassName = methodClassName,
+        externalTypeNames = flattenedBody?.externalTypeNames.orEmpty(),
+        internal = flattenedBody != null,
+    )
     val routeInlineParameterModels = routeSpecificInlineParameterModels(sharedInlineParameterKeys)
 
     return TypeSpec.classBuilder(methodTypeName(method))
@@ -330,12 +339,27 @@ private fun Route.toOperationTypeSpec(
             overloadedBody
                 ?.directInlineTypeSpecs(config, methodClassName, inlineModelScope)
                 ?.forEach(::addType)
+            flattenedBody?.publicTypeSpecs?.forEach(::addType)
             inlineModelScope.methodTypeSpecs(config).forEach(::addType)
             inlineBodyTypeSpec?.let(::addType)
             if (!returns.isSingleUnitResponse() && !returns.isSingleDirectModelResponse()) {
                 addType(buildResponseTypeSpec(config, methodClassName, inlineModelScope))
             }
-            if (overloadedBody != null) {
+            if (flattenedBody != null) {
+                flattenedBody.overloads.forEach { overload ->
+                    addFunction(
+                        toInvokeFunSpecForFlattenedBody(
+                            config = config,
+                            pathClassName = pathClassName,
+                            methodClassName = methodClassName,
+                            sharedInlineParameterKeys = sharedInlineParameterKeys,
+                            flattenedBody = flattenedBody,
+                            overload = overload,
+                            inlineModelScope = inlineModelScope,
+                        )
+                    )
+                }
+            } else if (overloadedBody != null) {
                 if (body?.required != true) {
                     addFunction(
                         toInvokeFunSpecForOptionalOverloadedBodyNoBody(
@@ -439,9 +463,79 @@ private fun Route.toInvokeFunSpec(
     }
 
     val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
+    return builder.returns(returnType)
+        .addExperimentalUuidOptInIfNeeded(*(signatureTypes + returnType).toTypedArray())
+        .addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
+        .build()
+}
+
+private fun Route.toInvokeFunSpecForFlattenedBody(
+    config: RenderConfig,
+    pathClassName: ClassName,
+    methodClassName: ClassName,
+    sharedInlineParameterKeys: Set<String>,
+    flattenedBody: FlattenedBodyRendering,
+    overload: FlattenedBodyOverload,
+    inlineModelScope: OperationInlineModelScope,
+): FunSpec {
+    val builder = FunSpec.builder("invoke")
+        .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
+        .addDeprecatedIfNeeded()
+    val signatureTypes = mutableListOf<TypeName>()
+
+    val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
+    val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
+    val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
+
+    for (input in requiredParams) {
+        val parameter = input.toParameterSpec(
+            config = config,
+            pathClassName = pathClassName,
+            methodClassName = methodClassName,
+            sharedInlineParameterKeys = sharedInlineParameterKeys,
+        )
+        builder.addParameter(parameter)
+        signatureTypes += parameter.type
+    }
+
+    if (overload.bodyParamsBeforeOptionalParams) {
+        overload.parameters.forEach { parameter ->
+            builder.addParameter(parameter)
+            signatureTypes += parameter.type
+        }
+    }
+
+    for (input in optionalParams) {
+        val parameter = input.toParameterSpec(
+            config = config,
+            pathClassName = pathClassName,
+            methodClassName = methodClassName,
+            sharedInlineParameterKeys = sharedInlineParameterKeys,
+        )
+        builder.addParameter(parameter)
+        signatureTypes += parameter.type
+    }
+
+    if (!overload.bodyParamsBeforeOptionalParams) {
+        overload.parameters.forEach { parameter ->
+            builder.addParameter(parameter)
+            signatureTypes += parameter.type
+        }
+    }
+
+    val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
     builder.returns(returnType)
     builder.addExperimentalUuidOptInIfNeeded(*(signatureTypes + returnType).toTypedArray())
-    builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
+    builder.addCode(
+        buildFlattenedBodyOperationBody(
+            method = method,
+            config = config,
+            methodClassName = methodClassName,
+            inlineModelScope = inlineModelScope,
+            flattenedBody = flattenedBody,
+            overload = overload,
+        )
+    )
     return builder.build()
 }
 
@@ -657,7 +751,311 @@ private fun Route.Bodies.toInvokeParameterSpecs(
     }
 }
 
+private fun Route.Bodies.flattenedBodyRendering(
+    config: RenderConfig,
+    methodClassName: ClassName,
+): FlattenedBodyRendering? {
+    val body = defaultOrNull() as? Route.Body.SetBody ?: return null
+    val model = body.type.nestedOrNull() as? Model.Object ?: return null
+    if (!model.isRouteInlineModel()) return null
+    if (model.additionalProperties is Model.Object.AdditionalProperties.Schema) return null
+
+    val publicTypes = buildFlattenedBodyPublicTypes(
+        config = config,
+        methodClassName = methodClassName,
+        bodyModel = model,
+        requiredPrimitiveUnionFieldNames = model.properties.entries
+            .filter { (_, property) -> property.isRequired && property.model.isFlattenablePrimitiveUnion() }
+            .mapTo(mutableSetOf()) { it.key },
+    )
+
+    val publicTypeSpecs = publicTypes.map(FlattenedBodyPublicType::typeSpec)
+    val publicTypeRemaps = publicTypes.associate { publicType ->
+        val contextHolder = publicType.model as? Model.ContextHolder
+            ?: error("Public body type must be context-aware: ${publicType.model}")
+        val nestedClassName = contextHolder.context.toClassName(config)
+        nestedClassName to methodClassName.nestedClass(
+            requireNotNull(publicType.typeSpec.name)
+        )
+    }
+
+    val overloads = buildFlattenedBodyOverloads(
+        config = config,
+        methodClassName = methodClassName,
+        bodyModel = model,
+        bodyRequired = required,
+        typeNameRemaps = publicTypeRemaps,
+    ) ?: return null
+
+    val bodyTypeSpec = bodyTypeSpec(
+        config = config,
+        methodClassName = methodClassName,
+        bodyModel = model,
+        externalTypeNames = publicTypeRemaps,
+    )
+
+    return FlattenedBodyRendering(
+        bodyTypeSpec = bodyTypeSpec,
+        publicTypeSpecs = publicTypeSpecs,
+        overloads = overloads,
+        externalTypeNames = publicTypeRemaps,
+        bodyHasConstructorArgs = model.properties.isNotEmpty() ||
+                model.additionalProperties is Model.Object.AdditionalProperties.Schema,
+    )
+}
+
+private data class FlattenedBodyRendering(
+    val bodyTypeSpec: TypeSpec,
+    val publicTypeSpecs: List<TypeSpec>,
+    val overloads: List<FlattenedBodyOverload>,
+    val externalTypeNames: Map<ClassName, TypeName>,
+    val bodyHasConstructorArgs: Boolean,
+)
+
+private data class FlattenedBodyPublicType(
+    val model: Model,
+    val typeSpec: TypeSpec,
+)
+
+private data class FlattenedBodyOverload(
+    val parameters: List<ParameterSpec>,
+    val bodyConstructorArgs: CodeBlock,
+    val bodyHasConstructorArgs: Boolean,
+    val bodyParamsBeforeOptionalParams: Boolean,
+    val bodyMayBeNull: Boolean,
+)
+
+private fun buildFlattenedBodyOverloads(
+    config: RenderConfig,
+    methodClassName: ClassName,
+    bodyModel: Model.Object,
+    bodyRequired: Boolean,
+    typeNameRemaps: Map<ClassName, TypeName>,
+): List<FlattenedBodyOverload>? {
+    val propertyOptions = bodyModel.properties.entries.map { (name, property) ->
+        val modelOptions = if (property.isRequired && property.model.isFlattenablePrimitiveUnion()) {
+            val union = property.model as Model.Union
+            union.cases.map { case -> case.model }
+        } else {
+            listOf(property.model)
+        }
+        name to modelOptions
+    }
+    val additionalProperty = bodyModel.additionalProperties as? Model.Object.AdditionalProperties.Schema
+
+    val overloadCount = propertyOptions.fold(1) { acc, (_, options) ->
+        acc * options.size
+    }
+    if (overloadCount > 4) return null
+
+    val bodyParamsBeforeOptionalParams = bodyModel.properties.values.any { it.isRequired }
+    val bodyMayBeNull = !bodyRequired && bodyModel.properties.values.none { it.isRequired }
+    val parameterGroups = propertyOptions.fold(listOf(emptyMap<String, Model>())) { acc, (name, options) ->
+        acc.flatMap { current ->
+            options.map { option -> current + (name to option) }
+        }
+    }
+
+    return parameterGroups.map { selectedModels ->
+        val parameters = mutableListOf<ParameterSpec>()
+        val constructorArgPieces = mutableListOf<CodeBlock>()
+
+        bodyModel.properties.entries.forEach { (propertyName, property) ->
+            val paramName = propertyName.toParamName()
+            val selectedCase = if (property.isRequired && property.model.isFlattenablePrimitiveUnion()) {
+                selectedModels.getValue(propertyName)
+            } else {
+                null
+            }
+            val typeName = flattenedBodyParameterTypeName(
+                config = config,
+                propertyModel = property.model,
+                typeNameRemaps = typeNameRemaps,
+                selectedCase = selectedCase,
+            ).copy(nullable = property.model.isNullable || !property.isRequired)
+            val parameter = ParameterSpec.builder(paramName, typeName).apply {
+                if (!property.isRequired) {
+                    defaultValue(CodeBlock.of("null"))
+                }
+            }.build()
+            parameters += parameter
+            constructorArgPieces += CodeBlock.of(
+                "%L = %L",
+                paramName,
+                flattenedBodyValueExpression(
+                    propertyName = propertyName,
+                    selectedCase = selectedCase,
+                    paramName = paramName,
+                    methodClassName = methodClassName,
+                ),
+            )
+        }
+
+        if (additionalProperty != null) {
+            val additionalTypeName = MapType.parameterizedBy(
+                ClassName("kotlin", "String"),
+                additionalProperty.value.publicInputTypeName(config).remapTypeNames(typeNameRemaps),
+            ).copy(nullable = true)
+            parameters += ParameterSpec.builder("additional", additionalTypeName)
+                .defaultValue(CodeBlock.of("null"))
+                .build()
+            constructorArgPieces += CodeBlock.of("additional = additional")
+        }
+
+        FlattenedBodyOverload(
+            parameters = parameters,
+            bodyConstructorArgs = constructorArgPieces.joinToCode(separator = ", "),
+            bodyHasConstructorArgs = constructorArgPieces.isNotEmpty(),
+            bodyParamsBeforeOptionalParams = bodyParamsBeforeOptionalParams,
+            bodyMayBeNull = bodyMayBeNull,
+        )
+    }
+}
+
+private fun buildFlattenedBodyPublicTypes(
+    config: RenderConfig,
+    methodClassName: ClassName,
+    bodyModel: Model.Object,
+    requiredPrimitiveUnionFieldNames: Set<String>,
+): List<FlattenedBodyPublicType> {
+    val regularTypes = bodyModel.properties.entries.mapNotNull { (propertyName, property) ->
+        if (propertyName in requiredPrimitiveUnionFieldNames) return@mapNotNull null
+        val nestedModel = property.model.nestedOrNull() ?: return@mapNotNull null
+        if (nestedModel is Model.Object && nestedModel.isScalarWrapper) return@mapNotNull null
+        val nestedContext = nestedModel as? Model.ContextHolder ?: return@mapNotNull null
+        val nestedClassName = nestedContext.context.toClassName(config)
+        val typeSpec = nestedModel.toInlineOperationTypeSpecOrNull(
+            config = config,
+            ownerClassName = methodClassName,
+            nameOverride = nestedClassName.simpleName,
+        ) ?: return@mapNotNull null
+        FlattenedBodyPublicType(nestedModel, typeSpec)
+    }
+    val additionalTypes = (bodyModel.additionalProperties as? Model.Object.AdditionalProperties.Schema)
+        ?.value
+        ?.nestedOrNull()
+        ?.takeIf { it !is Model.Object || !it.isScalarWrapper }
+        ?.let { nestedModel ->
+            val nestedContext = nestedModel as? Model.ContextHolder ?: return@let null
+            val nestedClassName = nestedContext.context.toClassName(config)
+            val typeSpec = nestedModel.toInlineOperationTypeSpecOrNull(
+                config = config,
+                ownerClassName = methodClassName,
+                nameOverride = nestedClassName.simpleName,
+            ) ?: return@let null
+            listOf(FlattenedBodyPublicType(nestedModel, typeSpec))
+        }.orEmpty()
+    return (regularTypes + additionalTypes).distinctBy { it.typeSpec.name }
+}
+
+private fun bodyTypeSpec(
+    config: RenderConfig,
+    methodClassName: ClassName,
+    bodyModel: Model.Object,
+    externalTypeNames: Map<ClassName, TypeName>,
+): TypeSpec {
+    val bodyClassName = methodClassName.nestedClass("Body")
+    return bodyModel.toTypeSpec(
+        config = config,
+        classNameOverride = bodyClassName,
+        externalTypeNames = externalTypeNames,
+    ).toBuilder()
+        .addModifiers(KModifier.INTERNAL)
+        .build()
+}
+
+private fun flattenedBodyParameterTypeName(
+    config: RenderConfig,
+    propertyModel: Model,
+    typeNameRemaps: Map<ClassName, TypeName>,
+    selectedCase: Model?,
+): TypeName {
+    val typeName = when {
+        selectedCase != null -> selectedCase.publicInputTypeName(config)
+        else -> propertyModel.publicInputTypeName(config)
+    }
+    return typeName.remapTypeNames(typeNameRemaps)
+}
+
+private fun Route.buildFlattenedBodyOperationBody(
+    method: HttpMethod,
+    config: RenderConfig,
+    methodClassName: ClassName,
+    inlineModelScope: OperationInlineModelScope,
+    flattenedBody: FlattenedBodyRendering,
+    overload: FlattenedBodyOverload,
+): CodeBlock {
+    val bodyClassName = methodClassName.nestedClass("Body")
+    val bodyExpr = if (!overload.bodyHasConstructorArgs) {
+        CodeBlock.of("%T", bodyClassName)
+    } else {
+        CodeBlock.of("%T(%L)", bodyClassName, overload.bodyConstructorArgs)
+    }
+    val bodyGuard = if (overload.bodyMayBeNull) {
+        overload.parameters.joinToString(" || ") { parameter -> "${parameter.name} != null" }
+            .takeIf(String::isNotBlank)
+    } else {
+        null
+    }
+    if (overload.bodyMayBeNull && bodyGuard == null) {
+        return buildOperationBody(
+            method = method,
+            config = config,
+            methodClassName = methodClassName,
+            inlineModelScope = inlineModelScope,
+            includeBody = false,
+        )
+    }
+    return buildOperationBody(
+        method = method,
+        config = config,
+        methodClassName = methodClassName,
+        inlineModelScope = inlineModelScope,
+        bodyExpr = bodyExpr,
+        bodyGuard = bodyGuard,
+    )
+}
+
+private fun flattenedBodyValueExpression(
+    propertyName: String,
+    selectedCase: Model?,
+    paramName: String,
+    methodClassName: ClassName,
+): CodeBlock {
+    if (selectedCase == null) return CodeBlock.of(paramName)
+    val caseClassName = methodClassName.nestedClass("Body")
+        .nestedClass(propertyName.toPascalCase())
+        .nestedClass(selectedCase.flattenedPrimitiveUnionCaseName())
+    return CodeBlock.of("%T(%L)", caseClassName, paramName)
+}
+
+private fun Model.isFlattenablePrimitiveUnion(): Boolean =
+    this is Model.Union && cases.all { case ->
+        case.model is Model.Primitive ||
+                case.model is Model.Uuid ||
+                case.model is Model.Date ||
+                case.model is Model.DateTime ||
+                case.model is Model.ByteArray
+    }
+
+private fun Model.flattenedPrimitiveUnionCaseName(): String = when (this) {
+    is Model.Primitive.String -> "CaseString"
+    is Model.Primitive.Int -> "CaseInt"
+    is Model.Primitive.Long -> "CaseLong"
+    is Model.Primitive.Float -> "CaseFloat"
+    is Model.Primitive.Double -> "CaseDouble"
+    is Model.Primitive.Boolean -> "CaseBoolean"
+    is Model.Primitive.Unit -> "Empty"
+    is Model.ByteArray -> "CaseBinary"
+    is Model.Date -> "CaseDate"
+    is Model.DateTime -> "CaseDateTime"
+    is Model.Uuid -> "CaseUuid"
+    else -> "Case"
+}
+
 private val HttpStatusCodeType = ClassName("io.ktor.http", "HttpStatusCode")
+private val JsonObjectType = ClassName("kotlinx.serialization.json", "JsonObject")
+private val MapType = ClassName("kotlin.collections", "Map")
 
 /** Extract the preferred model from a ReturnType, preferring JSON content. */
 private fun Route.ReturnType.preferredModel(): Model? {
@@ -844,6 +1242,7 @@ private fun Model.toInlineOperationTypeSpecOrNull(
             classNameOverride = ownerClassName.nestedClass(nameOverride),
             externalTypeNames = externalTypeNames,
         )
+
         is Model.Enum -> toTypeSpec(config, nameOverride = nameOverride)
         is Model.Union -> toTypeSpec(
             config,
@@ -862,11 +1261,22 @@ private fun Model.toInlineOperationTypeSpecOrNull(
         is Model.Primitive -> null
     }
 
-private fun Route.Bodies.inlineBodyTypeSpec(config: RenderConfig, ownerClassName: ClassName): TypeSpec? {
+private fun Route.Bodies.inlineBodyTypeSpec(
+    config: RenderConfig,
+    ownerClassName: ClassName,
+    externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
+    internal: Boolean = false,
+): TypeSpec? {
     if (defaultOrNull() is Route.Body.OverloadedBody) return null
     val model = defaultOrNull().bodyModelOrNull() ?: return null
     if (!model.isRouteInlineModel()) return null
-    return model.toInlineOperationTypeSpecOrNull(config, ownerClassName, "Body")
+    val typeSpec = model.toInlineOperationTypeSpecOrNull(
+        config = config,
+        ownerClassName = ownerClassName,
+        nameOverride = "Body",
+        externalTypeNames = externalTypeNames,
+    ) ?: return null
+    return if (internal) typeSpec.toBuilder().addModifiers(KModifier.INTERNAL).build() else typeSpec
 }
 
 private fun Route.Body.OverloadedBody.directInlineTypeSpecs(

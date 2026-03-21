@@ -13,18 +13,17 @@ import kotlinx.coroutines.runBlocking
 
 suspend fun GitHubV3RESTAPI.example() {
     val issues = repos.owner("ktorio").repo("ktor").issues.get()
-    repos.owner("ktorio").repo("ktor").issues.post(
-        Issues.Post.Body(
-            title = Issues.Post.Body.Title.CaseString("My new title!")
-        )
-    )
 
     val titles = when (issues) {
-        is Repos.OwnerPath.RepoPath.Issues.Get.Response.Ok -> issues.value.map { it.title }
-        is Repos.OwnerPath.RepoPath.Issues.Get.Response.MovedPermanently,
-        is Repos.OwnerPath.RepoPath.Issues.Get.Response.NotFound,
-        is Repos.OwnerPath.RepoPath.Issues.Get.Response.UnprocessableEntity -> null
+        is Issues.Get.Response.Ok -> issues.value.map { it.title }
+        is Issues.Get.Response.MovedPermanently,
+        is Issues.Get.Response.NotFound,
+        is Issues.Get.Response.UnprocessableEntity -> null
     }
+
+    repos.owner("ktorio").repo("ktor").issues.post(title = "My new title!")
+    repos.owner("ktorio").repo("ktor").issues.post(title = 5)
+
     println(titles.orEmpty().joinToString("\n") { " - $it" })
 }
 

@@ -34,14 +34,14 @@ public class Widgets internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(body: Body): Response = client.post("/widgets") {
+    public suspend operator fun invoke(name: String): Response = client.post("/widgets") {
       contentType(ContentType.Application.Json)
-      setBody(body)
+      setBody(Body(name = name))
     }.body()
 
     @JvmInline
     @Serializable
-    public value class Body(
+    internal value class Body(
       public val name: String,
     )
 

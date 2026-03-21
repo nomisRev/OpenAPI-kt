@@ -18,27 +18,31 @@ public class Markdown internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(body: Body): String = client.post("/markdown") {
+    public suspend operator fun invoke(
+      text: String,
+      mode: Mode? = null,
+      context: String? = null,
+    ): String = client.post("/markdown") {
       contentType(ContentType.Application.Json)
-      setBody(body)
+      setBody(Body(text = text, mode = mode, context = context))
     }.body()
 
     @Serializable
-    public data class Body(
+    public enum class Mode(
+      public val `value`: String,
+    ) {
+      @SerialName("markdown")
+      Markdown("markdown"),
+      @SerialName("gfm")
+      Gfm("gfm"),
+      ;
+    }
+
+    @Serializable
+    internal data class Body(
       public val text: String,
       public val mode: Mode? = null,
       public val context: String? = null,
-    ) {
-      @Serializable
-      public enum class Mode(
-        public val `value`: String,
-      ) {
-        @SerialName("markdown")
-        Markdown("markdown"),
-        @SerialName("gfm")
-        Gfm("gfm"),
-        ;
-      }
-    }
+    )
   }
 }

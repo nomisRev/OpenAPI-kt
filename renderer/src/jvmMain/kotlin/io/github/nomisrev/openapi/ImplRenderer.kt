@@ -204,6 +204,8 @@ internal fun Route.buildOperationBody(
     methodClassName: ClassName,
     inlineModelScope: OperationInlineModelScope,
     includeBody: Boolean = true,
+    bodyExpr: CodeBlock? = null,
+    bodyGuard: String? = null,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
@@ -220,7 +222,7 @@ internal fun Route.buildOperationBody(
     if (returns.needsSealedInterface()) {
         if (hasRequestConfig) {
             code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
-            addRequestConfigCode(code, includeBody, bodyMayBeNull)
+            addRequestConfigCode(code, includeBody, bodyMayBeNull, bodyExpr, bodyGuard)
             code.endControlFlow()
         } else {
             code.addStatement("val response = client.%L(%L)", httpMethodName, pathLiteral)
@@ -261,7 +263,7 @@ internal fun Route.buildOperationBody(
         if (model == null || model is Model.Primitive.Unit) {
             if (hasRequestConfig) {
                 code.beginControlFlow("client.%L(%L)", httpMethodName, pathLiteral)
-                addRequestConfigCode(code, includeBody, bodyMayBeNull)
+                addRequestConfigCode(code, includeBody, bodyMayBeNull, bodyExpr, bodyGuard)
                 code.endControlFlow()
             } else {
                 code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
@@ -271,7 +273,7 @@ internal fun Route.buildOperationBody(
             if (hasRequestConfig) {
                 code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
                 code.indent()
-                addRequestConfigCode(code, includeBody, bodyMayBeNull)
+                addRequestConfigCode(code, includeBody, bodyMayBeNull, bodyExpr, bodyGuard)
                 code.unindent()
                 code.add("}.%M()\n", BodyMember)
             } else {
@@ -287,6 +289,8 @@ private fun Route.addRequestConfigCode(
     code: CodeBlock.Builder,
     includeBody: Boolean = true,
     bodyMayBeNull: Boolean = includeBody && body?.required != true,
+    bodyExpr: CodeBlock? = null,
+    bodyGuard: String? = null,
 ) {
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
 
@@ -327,7 +331,7 @@ private fun Route.addRequestConfigCode(
     }
 
     if (includeBody && body != null) {
-        addBodyCode(code, body!!, bodyMayBeNull)
+        addBodyCode(code, body!!, bodyMayBeNull, bodyExpr, bodyGuard)
     }
 }
 
@@ -368,11 +372,25 @@ private fun addBodyCode(
     code: CodeBlock.Builder,
     bodies: Route.Bodies,
     bodyMayBeNull: Boolean,
+    bodyExpr: CodeBlock? = null,
+    bodyGuard: String? = null,
 ) {
     val body = bodies.defaultOrNull() ?: return
     when (body) {
         is Route.Body.SetBody -> {
             val ctCode = body.contentType.toContentTypeCodeBlock()
+            if (bodyExpr != null) {
+                if (bodyMayBeNull && bodyGuard != null) {
+                    code.beginControlFlow("if (%L)", bodyGuard)
+                    code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
+                    code.addStatement("%M(%L)", SetBodyMember, bodyExpr)
+                    code.endControlFlow()
+                } else {
+                    code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
+                    code.addStatement("%M(%L)", SetBodyMember, bodyExpr)
+                }
+                return
+            }
             if (!bodyMayBeNull) {
                 code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
                 code.addStatement("%M(body)", SetBodyMember)
@@ -386,6 +404,18 @@ private fun addBodyCode(
 
         is Route.Body.OverloadedBody -> {
             val ctCode = body.contentType.toContentTypeCodeBlock()
+            if (bodyExpr != null) {
+                if (bodyMayBeNull && bodyGuard != null) {
+                    code.beginControlFlow("if (%L)", bodyGuard)
+                    code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
+                    code.addStatement("%M(%L)", SetBodyMember, bodyExpr)
+                    code.endControlFlow()
+                } else {
+                    code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
+                    code.addStatement("%M(%L)", SetBodyMember, bodyExpr)
+                }
+                return
+            }
             if (!bodyMayBeNull) {
                 code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
                 code.addStatement("%M(body)", SetBodyMember)
