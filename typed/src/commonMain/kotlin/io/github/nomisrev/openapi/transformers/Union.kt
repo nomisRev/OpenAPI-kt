@@ -22,6 +22,48 @@ suspend fun ResolvedSchema.union(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
 ): Model {
+    return buildOneOf(context, subtypes)
+}
+
+context(ctx: Registry.Scope)
+suspend fun ResolvedSchema.buildOneOf(
+    context: SchemaContext,
+    subtypes: List<ReferenceOr<Schema>>,
+): Model.OneOf {
+    val cases = buildUnionCases(context, subtypes)
+    return Model.OneOf(
+        name,
+        cases,
+        default(),
+        description(),
+        schema.title,
+        schema.discriminator?.propertyName,
+        isNullable
+    )
+}
+
+context(ctx: Registry.Scope)
+suspend fun ResolvedSchema.buildAnyOf(
+    context: SchemaContext,
+    subtypes: List<ReferenceOr<Schema>>,
+): Model.AnyOf {
+    val cases = buildUnionCases(context, subtypes)
+    return Model.AnyOf(
+        name,
+        cases,
+        default(),
+        description(),
+        schema.title,
+        schema.discriminator?.propertyName,
+        isNullable
+    )
+}
+
+context(ctx: Registry.Scope)
+private suspend fun ResolvedSchema.buildUnionCases(
+    context: SchemaContext,
+    subtypes: List<ReferenceOr<Schema>>,
+): List<Model.Union.Case> {
     val uniqueSubtypes = subtypes.distinct()
     val peekedSubtypes = uniqueSubtypes.associateWith { it.peek() }
     val unionContexts = peekedSubtypes.entries.mapIndexed { index, (refOrSchema, schema) ->
@@ -39,23 +81,14 @@ suspend fun ResolvedSchema.union(
      *    => sealed interface Event with 3 subtypes EventA, EventB, and CaseEvent
      *
      *  So in this case whenever there are n casses, and n-1 cases are references than the non-referenced case should inherit the outer name.
-     */
+    */
     val cases = uniqueSubtypes.mapIndexed { index, subtype ->
         subtype.resolve(unionContexts[index], context) {
             val discriminatorValue = schema.discriminator.discriminatorValueForSubtype(subtype)
             Model.Union.Case(it.toModel(context, false), discriminatorValue)
         }
     }
-
-    return Model.Union(
-        name,
-        cases,
-        default(),
-        description(),
-        schema.title,
-        schema.discriminator?.propertyName,
-        isNullable
-    )
+    return cases
 }
 
 context(ctx: Registry.Scope)

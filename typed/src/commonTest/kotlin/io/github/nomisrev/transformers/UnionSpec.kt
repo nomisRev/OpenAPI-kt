@@ -8,6 +8,8 @@ import io.github.nomisrev.expect
 import io.github.nomisrev.reference
 import io.github.nomisrev.zip
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.Model.AnyOf
+import io.github.nomisrev.openapi.Model.OneOf
 import io.github.nomisrev.openapi.Model.Union
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
@@ -47,7 +49,7 @@ val unionSpec by testSuite {
                 description = description.actual,
                 nullable = isNullable
             )
-            val expected = Model.Union(
+            val expected = Model.OneOf(
                 NamingContext.path("test"),
                 oneOf.expected,
                 null,
@@ -75,7 +77,7 @@ val unionSpec by testSuite {
         registry(testApi) {
             val result = ReferenceOr.schema("Model")
                 .toModel(NamingContext.reference("Model", SchemaContext.Null), SchemaContext.Write)
-            val expected = Union(
+            val expected = AnyOf(
                 NamingContext.reference("Model", SchemaContext.Null),
                 listOf(
                     Union.Case(Model.Primitive.String(null, null, null, false, null), null),
@@ -131,7 +133,7 @@ val unionSpec by testSuite {
             val result = ReferenceOr.schema("Event")
                 .toModel(NamingContext.reference("Event", SchemaContext.Null), SchemaContext.Write)
 
-            val expected = Union(
+            val expected = OneOf(
                 NamingContext.reference("Event", SchemaContext.Null),
                 listOf(
                     Union.Case(
@@ -193,7 +195,7 @@ val unionSpec by testSuite {
 
         registry(testApi) {
             val result = ReferenceOr.schema("content")
-                .toModel(NamingContext.reference("content", SchemaContext.Null), SchemaContext.Write) as Union
+                .toModel(NamingContext.reference("content", SchemaContext.Null), SchemaContext.Write) as OneOf
 
             assertEquals("type", result.discriminator)
             assertEquals(
@@ -232,7 +234,7 @@ val unionSpec by testSuite {
 
         registry(testApi) {
             val result = ReferenceOr.schema("content")
-                .toModel(NamingContext.reference("content", SchemaContext.Null), SchemaContext.Write) as Union
+                .toModel(NamingContext.reference("content", SchemaContext.Null), SchemaContext.Write) as OneOf
 
             assertEquals("type", result.discriminator)
             assertEquals(listOf("dir", "file"), result.cases.map { it.discriminator })

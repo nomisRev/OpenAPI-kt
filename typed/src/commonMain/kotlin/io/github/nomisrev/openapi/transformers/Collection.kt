@@ -25,7 +25,8 @@ suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
                     is Model.Reference -> throw IllegalStateException("References are not supported inline")
                     is Model.Enum -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
                     is Model.Object -> inner.nestContext(NamingContext.ObjectProperty("item"))
-                    is Model.Union -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
+                    is Model.OneOf -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
+                    is Model.AnyOf -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
                 }
 
                 is Model.ByteArray,
@@ -97,7 +98,8 @@ private fun NamingContext.prepend(prefix: NamingContext.Nested) = copy(nested = 
 private fun Model.prependContextIfInline(prefix: NamingContext.Nested): Model = when (this) {
     is Model.Enum if !context.isTopLevel() -> copy(context = context.prepend(prefix))
     is Model.Object if !context.isTopLevel() -> nestContext(prefix)
-    is Model.Union if !context.isTopLevel() -> copy(context = context.prepend(prefix))
+    is Model.OneOf if !context.isTopLevel() -> copy(context = context.prepend(prefix))
+    is Model.AnyOf if !context.isTopLevel() -> copy(context = context.prepend(prefix))
     is Model.Collection -> copy(inner = inner.prependContextIfInline(prefix))
     else -> this
 }

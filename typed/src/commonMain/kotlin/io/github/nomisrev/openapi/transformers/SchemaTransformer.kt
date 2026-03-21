@@ -77,11 +77,11 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
 
     isOneOfNullableType() -> flattenNull(context, schema.oneOf!!)
     schema.oneOf?.size == 1 -> schema.oneOf!!.single().toModel(name, context)
-    schema.oneOf?.isNotEmpty() == true -> union(context, schema.oneOf!!)
+    schema.oneOf?.isNotEmpty() == true -> buildOneOf(context, schema.oneOf!!)
 
     isAnyOfNullableType() -> flattenNull(context, schema.anyOf!!)
     schema.anyOf?.size == 1 -> schema.anyOf!!.single().toModel(name, context)
-    schema.anyOf?.isNotEmpty() == true -> union(context, schema.anyOf!!)
+    schema.anyOf?.isNotEmpty() == true -> buildAnyOf(context, schema.anyOf!!)
 
     schema.properties?.isNotEmpty() == true -> toObject(context, schema.properties!!)
     schema.additionalProperties != null -> objectWithoutProperties(context)

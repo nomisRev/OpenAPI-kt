@@ -73,7 +73,7 @@ val apiTreeSpec by testSuite {
             title = null,
             isNullable = false,
         )
-        val unionType = Model.Union(
+        val unionType = Model.OneOf(
             context = NamingContext.path(listOf("workflows", routeKey)),
             cases = listOf(
                 Model.Union.Case(intType, discriminator = null),
@@ -387,7 +387,7 @@ val apiTreeSpec by testSuite {
             routeKey: String,
             enumCases: List<List<String>>,
         ): PathSegment.OverloadedParameter {
-            val unionType = Model.Union(
+            val unionType = Model.OneOf(
                 context = NamingContext.path(listOf("workflows", routeKey)),
                 cases = enumCases.mapIndexed { index, values ->
                     val enumType = Model.Enum(
@@ -436,8 +436,8 @@ val apiTreeSpec by testSuite {
             expectedNode = "/workflows/{workflowId}",
             "GET /workflows/{workflowId}/history",
             "GET /workflows/{workflowId}/runs",
-            "OverloadedParameter(name=workflowId, type=Union(cases=[Enum(values=[in-progress]), Enum(values=[queued])]))",
-            "OverloadedParameter(name=workflowId, type=Union(cases=[Enum(values=[queued]), Enum(values=[in-progress])]))",
+            "OverloadedParameter(name=workflowId, type=OneOf(cases=[Enum(values=[in-progress]), Enum(values=[queued])]))",
+            "OverloadedParameter(name=workflowId, type=OneOf(cases=[Enum(values=[queued]), Enum(values=[in-progress])]))",
         )
     }
 
@@ -461,7 +461,7 @@ val apiTreeSpec by testSuite {
             "GET /workflows/{workflowId}/history",
             "GET /workflows/{workflowId}/runs",
             "Parameter(name=workflowId, model=String)",
-            "OverloadedParameter(name=workflowId, type=Union(cases=[Int, Enum(values=[queued, in-progress])]))",
+            "OverloadedParameter(name=workflowId, type=OneOf(cases=[Int, Enum(values=[queued, in-progress])]))",
         )
     }
 

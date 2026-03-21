@@ -30,7 +30,7 @@ val PathSegmentSpec by testSuite {
         title = null,
         isNullable = false,
     )
-    val flattenableUnionType = Model.Union(
+    val flattenableUnionType = Model.OneOf(
         context = NamingContext.path("workflowId"),
         cases = listOf(
             Model.Union.Case(intType, discriminator = null),
@@ -60,7 +60,7 @@ val PathSegmentSpec by testSuite {
         title = null,
         isNullable = false,
     )
-    val multiEnumUnionType = Model.Union(
+    val multiEnumUnionType = Model.OneOf(
         context = NamingContext.path("workflowId"),
         cases = listOf(
             Model.Union.Case(queuedEnumType, discriminator = null),
@@ -80,7 +80,7 @@ val PathSegmentSpec by testSuite {
         additionalProperties = false,
         isNullable = false,
     )
-    val nonFlattenableUnionType = Model.Union(
+    val nonFlattenableUnionType = Model.OneOf(
         context = NamingContext.path("payload"),
         cases = listOf(
             Model.Union.Case(stringType, discriminator = null),

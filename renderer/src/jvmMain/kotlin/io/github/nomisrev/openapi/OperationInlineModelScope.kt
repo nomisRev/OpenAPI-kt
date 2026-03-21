@@ -237,7 +237,8 @@ private fun Model.nestedOverloadedBodyCandidates(
 
                 is Model.DiscriminatedObject,
                 is Model.Reference,
-                is Model.Union -> null
+                is Model.OneOf,
+                is Model.AnyOf -> null
             }
         }
         .toList()
@@ -276,7 +277,8 @@ private fun Model.collectionItemCandidateOrNull(
 
         is Model.DiscriminatedObject,
         is Model.Reference,
-        is Model.Union -> null
+        is Model.OneOf,
+        is Model.AnyOf -> null
     }
 }
 
@@ -363,7 +365,15 @@ private fun Model.normalizedForSharingKey(): Model =
             description = null,
             title = null,
         )
-        is Model.Union -> copy(
+        is Model.OneOf -> copy(
+            context = SharedNamingContext,
+            cases = cases.map { case ->
+                case.copy(model = case.model.normalizedForSharingKey())
+            },
+            description = null,
+            title = null,
+        )
+        is Model.AnyOf -> copy(
             context = SharedNamingContext,
             cases = cases.map { case ->
                 case.copy(model = case.model.normalizedForSharingKey())

@@ -406,7 +406,15 @@ private fun Model.normalizedForCompatibility(): Model = when (this) {
         description = null,
         title = null,
     )
-    is Model.Union -> copy(
+    is Model.OneOf -> copy(
+        context = SharedPathNodeNamingContext,
+        cases = cases.map { case ->
+            case.copy(model = case.model.normalizedForCompatibility())
+        },
+        description = null,
+        title = null,
+    )
+    is Model.AnyOf -> copy(
         context = SharedPathNodeNamingContext,
         cases = cases.map { case ->
             case.copy(model = case.model.normalizedForCompatibility())
@@ -459,7 +467,8 @@ private fun Model.compatibilityDescription(): String {
         is Model.Primitive.String -> "String$suffix"
         is Model.Primitive.Unit -> "Unit$suffix"
         is Model.Reference -> "Reference$suffix"
-        is Model.Union -> "Union(cases=${cases.map { it.model.compatibilityDescription() }})$suffix"
+        is Model.OneOf -> "OneOf(cases=${cases.map { it.model.compatibilityDescription() }})$suffix"
+        is Model.AnyOf -> "AnyOf(cases=${cases.map { it.model.compatibilityDescription() }})$suffix"
         is Model.Uuid -> "Uuid$suffix"
     }
 }

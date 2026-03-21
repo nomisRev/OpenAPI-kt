@@ -126,7 +126,7 @@ val closedEnumSpec by testSuite {
             false
         )
 
-        anyOf expect Model.Union(
+        anyOf expect Model.AnyOf(
             context = name,
             description = description.expected,
             title = null,

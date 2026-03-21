@@ -343,7 +343,10 @@ private fun Model.Union.rebuildDynamicPathSegment(
     val dynamicModel = if (dynamicCases.size == 1) {
         dynamicCases.single().model
     } else {
-        copy(cases = dynamicCases)
+        when (this) {
+            is Model.OneOf -> copy(cases = dynamicCases)
+            is Model.AnyOf -> copy(cases = dynamicCases)
+        }
     }
 
     val dynamicSegment = when (dynamicModel) {

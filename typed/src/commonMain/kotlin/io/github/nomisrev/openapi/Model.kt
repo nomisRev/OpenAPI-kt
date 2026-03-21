@@ -36,7 +36,10 @@ sealed interface Model {
         is Primitive.String -> copy(description = description, isNullable = isNullable, title = title)
         is Primitive.Unit -> copy(description = description, isNullable = isNullable, title = title)
         is Reference -> copy(description = description, isNullable = isNullable, title = title)
-        is Union -> copy(description = description, isNullable = isNullable, title = title)
+        is Union -> when (this) {
+            is OneOf -> copy(description = description, isNullable = isNullable, title = title)
+            is AnyOf -> copy(description = description, isNullable = isNullable, title = title)
+        }
         is Uuid -> copy(description = description, isNullable = isNullable, title = title)
     }
 
@@ -284,27 +287,48 @@ sealed interface Model {
         }
     }
 
-    @SerialName("Union")
-    @Serializable
-    data class Union(
-        override val context: NamingContext,
-        val cases: List<Case>,
-        val default: Default<String>?,
-        override val description: String?,
-        override val title: String?,
-        val discriminator: String?,
+    sealed interface Union : Model, ContextHolder {
+        override val context: NamingContext
+        val cases: List<Case>
+        val default: Default<String>?
+        override val description: String?
+        override val title: String?
+        val discriminator: String?
         override val isNullable: Boolean
-    ) : Model, ContextHolder {
-        val inline: Set<Model> = cases.mapNotNullTo(mutableSetOf()) { it.model.nestedOrNull() }
 
-        // Introduce NamingContext?? Duplicated with inner NamingContext?
-        // Alternative: compute naming
+        val inline: Set<Model>
+            get() = cases.mapNotNullTo(mutableSetOf()) { it.model.nestedOrNull() }
+
         @Serializable
         data class Case(
             val model: Model,
             val discriminator: String?
         )
     }
+
+    @SerialName("OneOf")
+    @Serializable
+    data class OneOf(
+        override val context: NamingContext,
+        override val cases: List<Union.Case>,
+        override val default: Default<String>?,
+        override val description: String?,
+        override val title: String?,
+        override val discriminator: String?,
+        override val isNullable: Boolean
+    ) : Union
+
+    @SerialName("AnyOf")
+    @Serializable
+    data class AnyOf(
+        override val context: NamingContext,
+        override val cases: List<Union.Case>,
+        override val default: Default<String>?,
+        override val description: String?,
+        override val title: String?,
+        override val discriminator: String?,
+        override val isNullable: Boolean
+    ) : Union
 
     /**
      * Represents a discriminated object pattern - an inheritance-based type system where:

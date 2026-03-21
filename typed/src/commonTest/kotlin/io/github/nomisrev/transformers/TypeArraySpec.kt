@@ -25,7 +25,7 @@ val typeArraySpec by testSuite {
 private fun values(
     name: NamingContext = NamingContext.path("test"),
     nullable: Boolean? = null
-): List<Expect<Schema, Model.Union>> =
+): List<Expect<Schema, Model.OneOf>> =
     description.product(listOf(true, false, null)) { description, isNullable ->
         val actual = Schema(
             type = Type.Array(
@@ -40,7 +40,7 @@ private fun values(
             description = description.actual,
             nullable = isNullable
         )
-        val expect = Model.Union(
+        val expect = Model.OneOf(
             name,
             listOf(
                 Model.Union.Case(Model.Primitive.Boolean(null, null, false, null), null),

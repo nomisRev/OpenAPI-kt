@@ -25,7 +25,8 @@ fun Model.default(default: Model.Default<*>?): Model = when (this) {
     is Model.Primitive.Int -> copy(default = default as Model.Default<Int>?)
     is Model.Primitive.Long -> copy(default = default as Model.Default<Long>?)
     is Model.Primitive.String -> copy(default = default as Model.Default<String>?)
-    is Model.Union -> copy(default = default as Model.Default<String>?)
+    is Model.OneOf -> copy(default = default as Model.Default<String>?)
+    is Model.AnyOf -> copy(default = default as Model.Default<String>?)
     is Model.Reference,
     is Model.Uuid,
     is Model.Primitive.Unit,
@@ -43,7 +44,8 @@ fun Model.context(block: (NamingContext) -> NamingContext): Model = when (this) 
         is Model.Enum -> copy(context = block(context))
         is Model.Object -> copy(context = block(context))
         is Model.Reference -> copy(context = block(context))
-        is Model.Union -> copy(context = block(context))
+        is Model.OneOf -> copy(context = block(context))
+        is Model.AnyOf -> copy(context = block(context))
     }
 
     else -> this

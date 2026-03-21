@@ -22,6 +22,7 @@ suspend fun GitHubV3RESTAPI.example() {
     }
 
     repos.owner("ktorio").repo("ktor").issues.post(title = "My new title!")
+
     repos.owner("ktorio").repo("ktor").issues.post(title = 5)
 
     println(titles.orEmpty().joinToString("\n") { " - $it" })

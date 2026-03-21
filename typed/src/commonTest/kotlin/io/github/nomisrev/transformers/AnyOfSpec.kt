@@ -6,6 +6,7 @@ import io.github.nomisrev.description
 import io.github.nomisrev.verifyAll
 import io.github.nomisrev.expect
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.Model.AnyOf
 import io.github.nomisrev.openapi.Model.Union
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
@@ -63,7 +64,7 @@ val anyOfSpec by testSuite {
                 description = description.actual,
                 nullable = isNullable
             )
-            val expected = Model.Union(
+            val expected = Model.AnyOf(
                 NamingContext.path("test"),
                 anyOf.expected,
                 null,
