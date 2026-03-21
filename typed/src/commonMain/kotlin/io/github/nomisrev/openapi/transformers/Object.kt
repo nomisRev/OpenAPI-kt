@@ -21,17 +21,24 @@ suspend fun ResolvedSchema.toObject(
     context: SchemaContext,
     properties: Map<String, ReferenceOr<Schema>>
 ): Model.Object {
-    val properties = properties(properties, context)
+    val filteredProperties = properties(properties, context)
 
     val additionalProperties = additionalProperties(context)
+
+    // If the spec had properties but the context-specific stripping removed some or all of them,
+    // we need to flag this so the renderer can emit a `data class` rather than a `data object`
+    // (zero properties) or a `value class` (single property), since those would be semantically
+    // wrong for schemas that were designed to have multiple fields.
+    val hadPropertiesBeforeStripping = properties.isNotEmpty() && filteredProperties.size < properties.size
 
     return Model.Object(
         context = name,
         description = description(),
         title = schema.title,
-        properties = properties,
+        properties = filteredProperties,
         additionalProperties = additionalProperties,
-        isNullable = isNullable
+        isNullable = isNullable,
+        hadPropertiesBeforeStripping = hadPropertiesBeforeStripping,
     )
 }
 

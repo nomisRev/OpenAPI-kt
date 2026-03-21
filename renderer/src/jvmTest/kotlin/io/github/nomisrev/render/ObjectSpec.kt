@@ -290,6 +290,219 @@ val objectSpec by testSuite {
         "object/signed-names"
     )
 
+    // ISSUE_DO_EMPTY_DATA_OBJECT_ALL_READONLY + ISSUE_DO_WRITE_VARIANT_ZERO_WRITABLE_FIELDS:
+    // Schema whose ALL properties are readOnly.
+    //   - Plain/Write variant must render as `data class()` (zero params), NOT `data object`
+    //   - Read variant must render normally as a data class with all fields
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Test API", "version": "0.0.1" },
+          "paths": {
+            "/items": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "${'$'}ref": "#/components/schemas/AllReadOnly" }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "${'$'}ref": "#/components/schemas/AllReadOnly" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "AllReadOnly": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id":           { "type": "string", "readOnly": true },
+                  "presentation": { "type": "string", "readOnly": true },
+                  "pattern":      { "type": "string", "readOnly": true }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "object/all-readonly-variants"
+    ) { apiTree, config -> apiTree.render(config) }
+
+    // ISSUE_DO_VALUE_CLASS_FROM_READONLY_STRIPPING:
+    // Schema with multiple properties but only one is writable.
+    //   - Write variant must render as `data class` (NOT `@JvmInline value class`), since
+    //     the schema had multiple properties before stripping.
+    //   - Read variant includes all fields and renders normally.
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Test API", "version": "0.0.1" },
+          "paths": {
+            "/locales": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "${'$'}ref": "#/components/schemas/LocaleDescriptor" }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "${'$'}ref": "#/components/schemas/LocaleDescriptor" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "LocaleDescriptor": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id":        { "type": "string",  "readOnly": true },
+                  "locale":    { "type": "string",  "readOnly": true },
+                  "language":  { "type": "string",  "readOnly": true },
+                  "community": { "type": "boolean", "readOnly": true },
+                  "name":      { "type": "string" }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "object/single-writable-field-variants"
+    ) { apiTree, config -> apiTree.render(config) }
+
+    // ISSUE_DO_PLAIN_MODEL_LEAKS_READ_NESTED_TYPE:
+    // A plain (non-suffixed) schema that references a discriminated type which has both
+    // Read and Write variants. The plain schema's property should resolve to the Write variant
+    // (or the non-suffixed variant), NOT leak the Read suffix.
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Test API", "version": "0.0.1" },
+          "paths": {
+            "/issues/{id}": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "string" }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "${'$'}ref": "#/components/schemas/IssueKey" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/folders/{id}": {
+              "post": {
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "schema": { "type": "string" }
+                  }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "${'$'}ref": "#/components/schemas/IssueFolder" }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "${'$'}ref": "#/components/schemas/IssueFolder" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "IssueKey": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id":              { "type": "string" },
+                  "project":         { "${'$'}ref": "#/components/schemas/IssueFolder" },
+                  "numberInProject": { "type": "integer" }
+                }
+              },
+              "IssueFolder": {
+                "type": "object",
+                "additionalProperties": false,
+                "discriminator": {
+                  "propertyName": "${'$'}type",
+                  "mapping": {
+                    "Project":     "#/components/schemas/Project",
+                    "IssueFolder": "#/components/schemas/IssueFolder"
+                  }
+                },
+                "properties": {
+                  "id":     { "type": "string", "readOnly": true },
+                  "${'$'}type": { "type": "string" }
+                }
+              },
+              "Project": {
+                "allOf": [
+                  { "${'$'}ref": "#/components/schemas/IssueFolder" },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "shortName": { "type": "string" }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "object/plain-model-no-read-suffix"
+    ) { apiTree, config -> apiTree.render(config) }
+
     // Read/Write variant: schema used as both request body (Write) and response (Read)
     // Both contexts exist → Read/Write suffixes are applied
     renderSpec(

@@ -206,7 +206,15 @@ sealed interface Model {
         override val title: String?,
         val properties: Map<String, Property>,
         val additionalProperties: AdditionalProperties,
-        override val isNullable: Boolean
+        override val isNullable: Boolean,
+        /**
+         * `true` when the schema had properties in the spec but they were all stripped away by the
+         * Read/Write context split (readOnly / writeOnly stripping). This flag distinguishes a
+         * "schema with no properties by design" (should render as `data object`) from a "schema
+         * whose properties were stripped" (must render as `data class`, possibly with zero
+         * constructor parameters, to preserve correct serialization semantics).
+         */
+        val hadPropertiesBeforeStripping: Boolean = false,
     ) : Model, ContextHolder {
         val inline: Set<Model> =
             properties.mapNotNullTo(mutableSetOf()) { (_, prop) -> prop.model.nestedOrNull() } +
@@ -218,14 +226,16 @@ sealed interface Model {
             title: String?,
             properties: Map<String, Property>,
             additionalProperties: Boolean,
-            isNullable: Boolean
+            isNullable: Boolean,
+            hadPropertiesBeforeStripping: Boolean = false,
         ) : this(
             context,
             description,
             title,
             properties,
             AdditionalProperties.Allowed(additionalProperties),
-            isNullable
+            isNullable,
+            hadPropertiesBeforeStripping,
         )
 
         @Serializable

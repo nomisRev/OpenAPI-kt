@@ -54,7 +54,17 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
     private inner class ScopeImpl(
         private val currentAnchor: Pair<NamingContext, Schema>?,
         // TODO: this probably isn't right... ? What about duplicate inline Value Schema's?
-        private val expanding: Set<NamingContext>
+        private val expanding: Set<NamingContext>,
+        /**
+         * When non-null, overrides the `context` argument passed to [resolve] for
+         * `$ref` resolutions within this scope. This is used to propagate a Null
+         * [SchemaContext] into schemas that are not themselves context-specific: a
+         * schema that has no readOnly / writeOnly properties (and therefore gets a
+         * Null context) should not cause the context-specific schemas it references
+         * to pick up the outer Read / Write context — they should also resolve as
+         * Null (no suffix).
+         */
+        private val forceContext: SchemaContext? = null,
     ) : Scope {
         override suspend fun ReferenceOr<Schema>.peek(): Schema = when (this) {
             is ReferenceOr.Value<Schema> -> value
@@ -84,10 +94,10 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
             context: SchemaContext,
             block: suspend context(Scope) (ResolvedSchema) -> A
         ): A = when (this) {
-            is ReferenceOr.Reference -> resolve(context, block)
+            is ReferenceOr.Reference -> resolve(forceContext ?: context, block)
             is ReferenceOr.Value<Schema> -> {
                 if (value.recursiveAnchor == true) block(
-                    ScopeImpl(Pair(name, value), expanding),
+                    ScopeImpl(Pair(name, value), expanding, forceContext),
                     ResolvedSchema.Value(name, value)
                 )
                 else block(this@ScopeImpl, ResolvedSchema.Value(name, value))
@@ -108,20 +118,44 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
                 }
             }
 
-            suspend fun Collection<ReferenceOr<Schema>>?.readOrWriteOnly(): Boolean = orEmpty().any { refOrSchema ->
-                if (refOrSchema is ReferenceOr.Reference &&
-                    (refOrSchema.readOnly == true || refOrSchema.writeOnly == true)
-                ) return@any true
-                val schema = refOrSchema.schema()
-                schema != null && (schema.writeOnly == true || schema.readOnly == true || schema.readOrWriteOnly(
-                    visited
-                ))
-            }
+            // For property-level refs ($ref), context-specificity is NOT inherited: only a readOnly
+            // or writeOnly annotation on the *reference itself* counts. If the referenced schema
+            // happens to have readOnly fields internally, that is that schema's own concern and does
+            // not make the *parent* schema context-specific. Recursion into $ref schemas would
+            // incorrectly mark schemas as context-specific just because they reference schemas that
+            // have readOnly fields (e.g. IssueKey referencing IssueFolder which has readOnly id).
+            //
+            // For inline schemas (allOf / oneOf / anyOf / items / Value properties) we DO recurse
+            // because those schemas are effectively part of the parent's own definition.
+            suspend fun Collection<ReferenceOr<Schema>>?.readOrWriteOnlyProperties(): Boolean =
+                orEmpty().any { refOrSchema ->
+                    when (refOrSchema) {
+                        // A $ref property: only count if the reference annotation itself is readOnly/writeOnly
+                        is ReferenceOr.Reference ->
+                            refOrSchema.readOnly == true || refOrSchema.writeOnly == true
+                        // An inline schema: recurse fully
+                        is ReferenceOr.Value<Schema> ->
+                            refOrSchema.value.writeOnly == true ||
+                                    refOrSchema.value.readOnly == true ||
+                                    refOrSchema.value.readOrWriteOnly(visited)
+                    }
+                }
+
+            suspend fun Collection<ReferenceOr<Schema>>?.readOrWriteOnlyComposite(): Boolean =
+                orEmpty().any { refOrSchema ->
+                    if (refOrSchema is ReferenceOr.Reference &&
+                        (refOrSchema.readOnly == true || refOrSchema.writeOnly == true)
+                    ) return@any true
+                    val schema = refOrSchema.schema()
+                    schema != null && (schema.writeOnly == true || schema.readOnly == true || schema.readOrWriteOnly(
+                        visited
+                    ))
+                }
 
             return writeOnly == true || readOnly == true ||
-                    allOf.readOrWriteOnly() || oneOf.readOrWriteOnly() ||
-                    properties?.values.readOrWriteOnly() ||
-                    anyOf.readOrWriteOnly() || listOfNotNull(items).readOrWriteOnly()
+                    allOf.readOrWriteOnlyComposite() || oneOf.readOrWriteOnlyComposite() ||
+                    properties?.values.readOrWriteOnlyProperties() ||
+                    anyOf.readOrWriteOnlyComposite() || listOfNotNull(items).readOrWriteOnlyComposite()
         }
 
         /**
@@ -157,7 +191,13 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
 //            cache.add(reference)
 
             val currentAnchor = if (schema.recursiveAnchor == true) Pair(context, schema) else null
-            block.invoke(ScopeImpl(currentAnchor, expanding + context), resolved)
+            // When the schema is not context-specific (schemaContext = Null), propagate Write as the
+            // forced context into nested scopes. This prevents the caller's Read context from
+            // "bleeding" into a schema that doesn't distinguish Read from Write — nested references
+            // to context-specific schemas should resolve as Write (the plain/neutral variant) rather
+            // than picking up the outer Read context and producing leaked "Read"-suffixed types.
+            val nextForceContext = if (!contextSpecific) SchemaContext.Write else null
+            block.invoke(ScopeImpl(currentAnchor, expanding + context, nextForceContext), resolved)
         }
     }
 }

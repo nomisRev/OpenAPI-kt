@@ -76,8 +76,20 @@ fun Model.Object.toTypeSpec(
     val allProperties = renderedProperties + listOfNotNull(additionalProperty?.rendered)
 
     val builder = when {
+        // A schema that had properties in the spec but all were stripped by the Read/Write context
+        // split must render as a plain `class` (zero constructor parameters), not a `data object`.
+        // A `data object` is a singleton which is semantically wrong for a schema with fields.
+        // Note: `data class` with zero parameters is not valid Kotlin, so a plain class is used.
+        allProperties.isEmpty() && hadPropertiesBeforeStripping ->
+            TypeSpec.classBuilder(simpleName)
+                .primaryConstructor(FunSpec.constructorBuilder().build())
+
         allProperties.isEmpty() -> TypeSpec.objectBuilder(simpleName).addModifiers(KModifier.DATA)
-        allProperties.size == 1 && additionalProperty == null -> {
+
+        // A schema that originally had multiple properties but had all-but-one stripped by the
+        // Read/Write context split must render as a `data class`, not a `@JvmInline value class`.
+        // The `value class` optimisation only applies to schemas that are single-field *by design*.
+        allProperties.size == 1 && additionalProperty == null && !hadPropertiesBeforeStripping -> {
             TypeSpec.classBuilder(simpleName)
                 .addModifiers(KModifier.VALUE)
                 .primaryConstructor(

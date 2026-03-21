@@ -21,6 +21,7 @@ import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.ResolvedSchema
+import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.registry
 import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.product
@@ -246,7 +247,8 @@ val objectSpec by testSuite {
             title = null,
             properties = props.expected,
             additionalProperties = additionalProperties.expected,
-            isNullable = isNullable
+            isNullable = isNullable,
+            hadPropertiesBeforeStripping = props.actual.first.size > props.expected.size,
         )
         schema expect obj
     }
@@ -294,7 +296,8 @@ val objectSpec by testSuite {
             title = null,
             properties = props.expected,
             additionalProperties = additionalProperties.expected,
-            isNullable = isNullable
+            isNullable = isNullable,
+            hadPropertiesBeforeStripping = props.actual.first.size > props.expected.size,
         )
         schema expect obj
     }
@@ -464,6 +467,141 @@ val objectSpec by testSuite {
                 expected,
                 ReferenceOr.value(s).toModel(NamingContext.reference("test", SchemaContext.Null), SchemaContext.Null)
             )
+        }
+    }
+
+    // ─── hadPropertiesBeforeStripping tests ───────────────────────────────────────
+
+    test("hadPropertiesBeforeStripping is false when schema has no properties") {
+        val schema = Schema(
+            type = Type.Basic.Object,
+            additionalProperties = Allowed(false),
+            properties = emptyMap()
+        )
+        val apiWithSchema = api.reference("Foo", schema)
+        Registry(apiWithSchema).use { registry ->
+            val actual = with(registry) {
+                ReferenceOr.schema("Foo")
+                    .toModel(NamingContext.reference("Foo", SchemaContext.Null), SchemaContext.Write)
+            }
+            val obj = actual as Model.Object
+            assertEquals(false, obj.hadPropertiesBeforeStripping,
+                "Schema with no properties should not have hadPropertiesBeforeStripping=true")
+        }
+    }
+
+    test("hadPropertiesBeforeStripping is false when no properties are stripped") {
+        // All properties are writable (no readOnly) — nothing to strip in Write context
+        val schema = Schema(
+            type = Type.Basic.Object,
+            additionalProperties = Allowed(false),
+            properties = mapOf(
+                "name" to ReferenceOr.value(Schema.string),
+                "age" to ReferenceOr.value(Schema.integer)
+            )
+        )
+        val apiWithSchema = api.reference("Foo", schema)
+        Registry(apiWithSchema).use { registry ->
+            val actual = with(registry) {
+                ReferenceOr.schema("Foo")
+                    .toModel(NamingContext.reference("Foo", SchemaContext.Null), SchemaContext.Write)
+            }
+            val obj = actual as Model.Object
+            assertEquals(false, obj.hadPropertiesBeforeStripping,
+                "Schema with no readOnly properties should not have hadPropertiesBeforeStripping=true")
+        }
+    }
+
+    test("hadPropertiesBeforeStripping is true when all properties are stripped (all readOnly, Write context)") {
+        // All properties are readOnly — Write context strips all of them
+        val schema = Schema(
+            type = Type.Basic.Object,
+            additionalProperties = Allowed(false),
+            properties = mapOf(
+                "id" to ReferenceOr.value(Schema.string.copy(readOnly = true)),
+                "createdAt" to ReferenceOr.value(Schema.string.copy(readOnly = true))
+            )
+        )
+        val apiWithSchema = api.reference("AllReadOnly", schema)
+        Registry(apiWithSchema).use { registry ->
+            val actual = with(registry) {
+                ReferenceOr.schema("AllReadOnly")
+                    .toModel(NamingContext.reference("AllReadOnly", SchemaContext.Write), SchemaContext.Write)
+            }
+            val obj = actual as Model.Object
+            assertEquals(true, obj.hadPropertiesBeforeStripping,
+                "Schema with all readOnly properties should have hadPropertiesBeforeStripping=true in Write context")
+            assertEquals(emptyMap(), obj.properties,
+                "All properties should be stripped in Write context")
+        }
+    }
+
+    test("hadPropertiesBeforeStripping is true when some but not all properties are stripped (Write context)") {
+        // Some readOnly, some writable — Write context strips readOnly ones
+        val schema = Schema(
+            type = Type.Basic.Object,
+            additionalProperties = Allowed(false),
+            properties = mapOf(
+                "id" to ReferenceOr.value(Schema.string.copy(readOnly = true)),
+                "name" to ReferenceOr.value(Schema.string)
+            )
+        )
+        val apiWithSchema = api.reference("PartialReadOnly", schema)
+        Registry(apiWithSchema).use { registry ->
+            val actual = with(registry) {
+                ReferenceOr.schema("PartialReadOnly")
+                    .toModel(NamingContext.reference("PartialReadOnly", SchemaContext.Write), SchemaContext.Write)
+            }
+            val obj = actual as Model.Object
+            assertEquals(true, obj.hadPropertiesBeforeStripping,
+                "Schema with some readOnly properties should have hadPropertiesBeforeStripping=true in Write context")
+            assertEquals(setOf("name"), obj.properties.keys,
+                "Only the writable property should survive")
+        }
+    }
+
+    test("hadPropertiesBeforeStripping is false when schema has single property by design (value class case)") {
+        // Exactly one property, no readOnly — should remain value class candidate
+        val schema = Schema(
+            type = Type.Basic.Object,
+            additionalProperties = Allowed(false),
+            properties = mapOf(
+                "value" to ReferenceOr.value(Schema.string)
+            )
+        )
+        val apiWithSchema = api.reference("Tag", schema)
+        Registry(apiWithSchema).use { registry ->
+            val actual = with(registry) {
+                ReferenceOr.schema("Tag")
+                    .toModel(NamingContext.reference("Tag", SchemaContext.Null), SchemaContext.Write)
+            }
+            val obj = actual as Model.Object
+            assertEquals(false, obj.hadPropertiesBeforeStripping,
+                "Single-property schema with no stripping should have hadPropertiesBeforeStripping=false")
+        }
+    }
+
+    test("Read context: hadPropertiesBeforeStripping is true when writeOnly properties are stripped") {
+        // Some writeOnly, some readable — Read context strips writeOnly ones
+        val schema = Schema(
+            type = Type.Basic.Object,
+            additionalProperties = Allowed(false),
+            properties = mapOf(
+                "id" to ReferenceOr.value(Schema.string),
+                "password" to ReferenceOr.value(Schema.string.copy(writeOnly = true))
+            )
+        )
+        val apiWithSchema = api.reference("WithWriteOnly", schema)
+        Registry(apiWithSchema).use { registry ->
+            val actual = with(registry) {
+                ReferenceOr.schema("WithWriteOnly")
+                    .toModel(NamingContext.reference("WithWriteOnly", SchemaContext.Read), SchemaContext.Read)
+            }
+            val obj = actual as Model.Object
+            assertEquals(true, obj.hadPropertiesBeforeStripping,
+                "Schema with writeOnly properties should have hadPropertiesBeforeStripping=true in Read context")
+            assertEquals(setOf("id"), obj.properties.keys,
+                "Only the readable property should survive")
         }
     }
 }
