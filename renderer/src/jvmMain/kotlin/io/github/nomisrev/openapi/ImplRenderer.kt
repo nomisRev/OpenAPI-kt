@@ -68,11 +68,16 @@ internal fun TypeSpec.Builder.addClientConstructorAndState(
     config: RenderConfig,
     accumulatedParams: List<AccumulatedParam>,
 ) {
+    val accumulatedTypeNames = accumulatedParams.map { param ->
+        if (param.storeAsString) STRING else param.type.publicInputTypeName(config)
+    }
+    addExperimentalUuidOptInIfNeeded(*accumulatedTypeNames.toTypedArray())
+
     val constructor = FunSpec.constructorBuilder()
         .addModifiers(KModifier.INTERNAL)
         .addParameter("client", HttpClientType)
-    for (param in accumulatedParams) {
-        val typeName = if (param.storeAsString) STRING else param.type.toTypeName(config)
+    for ((index, param) in accumulatedParams.withIndex()) {
+        val typeName = accumulatedTypeNames[index]
         constructor.addParameter(param.name.toCamelCase(), typeName)
     }
     primaryConstructor(constructor.build())
@@ -83,9 +88,9 @@ internal fun TypeSpec.Builder.addClientConstructorAndState(
             .initializer("client")
             .build()
     )
-    for (param in accumulatedParams) {
+    for ((index, param) in accumulatedParams.withIndex()) {
         val paramName = param.name.toCamelCase()
-        val typeName = if (param.storeAsString) STRING else param.type.toTypeName(config)
+        val typeName = accumulatedTypeNames[index]
         addProperty(
             PropertySpec.builder(paramName, typeName)
                 .addModifiers(KModifier.PRIVATE)
@@ -133,6 +138,7 @@ internal fun PathSegment.addConcreteNavigationMember(
 
                 val functionBuilder = FunSpec.builder(paramName)
                     .addParameter(paramName, caseTypeName)
+                    .addExperimentalUuidOptInIfNeeded(caseTypeName)
                     .returns(childClassName)
                 val encodedArg = when (val caseModel = case.model) {
                     is Model.Enum -> {
@@ -157,9 +163,11 @@ internal fun PathSegment.addConcreteNavigationMember(
 
         is PathSegment.Parameter -> {
             val paramName = name.toCamelCase()
+            val typeName = model.publicInputTypeName(config)
             builder.addFunction(
                 FunSpec.builder(paramName)
-                    .addParameter(paramName, model.toTypeName(config))
+                    .addParameter(paramName, typeName)
+                    .addExperimentalUuidOptInIfNeeded(typeName)
                     .returns(childClassName)
                     .addStatement(
                         "return %T(%L)",
@@ -284,33 +292,36 @@ private fun Route.addRequestConfigCode(
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Query }) {
         val paramName = param.name.toParamName()
-        val valueExpr = param.type.wireValueExpr(paramName)
+        val publicModel = param.type.publicInputModelOrSelf()
+        val valueExpr = publicModel.wireValueExpr(paramName)
         if (param.isRequired) {
             code.addStatement("%M(%S, %L)", ParameterMember, param.name, valueExpr)
         } else {
-            val itExpr = param.type.wireItExpr()
+            val itExpr = publicModel.wireItExpr()
             code.addStatement("%L?.let·{ %M(%S, %L) }", paramName, ParameterMember, param.name, itExpr)
         }
     }
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Header }) {
         val paramName = param.name.toParamName()
-        val valueExpr = param.type.wireValueExpr(paramName)
+        val publicModel = param.type.publicInputModelOrSelf()
+        val valueExpr = publicModel.wireValueExpr(paramName)
         if (param.isRequired) {
             code.addStatement("%M(%S, %L)", HeaderMember, param.name, valueExpr)
         } else {
-            val itExpr = param.type.wireItExpr()
+            val itExpr = publicModel.wireItExpr()
             code.addStatement("%L?.let·{ %M(%S, %L) }", paramName, HeaderMember, param.name, itExpr)
         }
     }
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Cookie }) {
         val paramName = param.name.toParamName()
-        val valueExpr = param.type.wireValueExpr(paramName)
+        val publicModel = param.type.publicInputModelOrSelf()
+        val valueExpr = publicModel.wireValueExpr(paramName)
         if (param.isRequired) {
             code.addStatement("%M(%S, %L)", CookieMember, param.name, valueExpr)
         } else {
-            val itExpr = param.type.wireItExpr()
+            val itExpr = publicModel.wireItExpr()
             code.addStatement("%L?.let·{ %M(%S, %L) }", paramName, CookieMember, param.name, itExpr)
         }
     }
@@ -484,11 +495,19 @@ private fun Route.ReturnType.preferredModel(): Model? {
  * For enums with a `value` property, appends `.value`. Otherwise returns the name as-is.
  */
 private fun Model.wireValueExpr(paramName: String): String =
-    if (this is Model.Enum && needsValueProperty()) "$paramName.value" else paramName
+    when {
+        this is Model.Enum && needsValueProperty() -> "$paramName.value"
+        this is Model.Date || this is Model.DateTime || this is Model.Uuid -> "$paramName.toString()"
+        else -> paramName
+    }
 
 /**
  * Returns the expression to use inside `?.let { ... }` lambdas when accessing the wire value.
  * For enums with a `value` property, returns `"it.value"`. Otherwise returns `"it"`.
  */
 private fun Model.wireItExpr(): String =
-    if (this is Model.Enum && needsValueProperty()) "it.value" else "it"
+    when {
+        this is Model.Enum && needsValueProperty() -> "it.value"
+        this is Model.Date || this is Model.DateTime || this is Model.Uuid -> "it.toString()"
+        else -> "it"
+    }

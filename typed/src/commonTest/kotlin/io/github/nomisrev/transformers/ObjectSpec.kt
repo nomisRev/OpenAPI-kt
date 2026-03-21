@@ -114,7 +114,11 @@ val objectSpec by testSuite {
             val api = api.reference("Top", schema)
             val actualSchema = Schema(type = Type.Basic.Object, additionalProperties = PSchema(schema("Top")))
             val expectedModel = Model.Collection(
-                Model.Object.value(NamingContext.Reference("Top", SchemaContext.Null), model),
+                Model.Object.value(
+                    NamingContext.Reference("Top", SchemaContext.Null),
+                    model,
+                    isScalarWrapper = true,
+                ),
                 Model.Default.Value(emptyList()),
                 null,
                 null,

@@ -24,6 +24,13 @@ import kotlin.collections.emptyList
 import kotlin.test.assertEquals
 
 val collectionSpec by testSuite {
+    fun Model.isScalarWrapperCandidate(): Boolean =
+        this is Model.ByteArray ||
+            this is Model.Date ||
+            this is Model.DateTime ||
+            this is Model.Primitive ||
+            this is Model.Uuid
+
     val primitives = (Model.Primitive.all() + Model.FreeFormJson.all()).map { (schema, model) ->
         val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.Value(schema))
         val expected = Model.Collection(model, null, null, null, false, null)
@@ -42,7 +49,11 @@ val collectionSpec by testSuite {
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.schema("CollectionItem"))
             val expected = Model.Collection(
-                Model.Object.value(NamingContext.Reference("CollectionItem", SchemaContext.Null), model),
+                Model.Object.value(
+                    NamingContext.Reference("CollectionItem", SchemaContext.Null),
+                    model,
+                    isScalarWrapper = model.isScalarWrapperCandidate(),
+                ),
                 null,
                 null,
                 null,
@@ -62,7 +73,11 @@ val collectionSpec by testSuite {
         "Collection with referenced primitive without type: Array",
         (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
             val schema = Schema(items = ReferenceOr.schema("CollectionItem"))
-            val wrapped = Model.Object.value(NamingContext.Reference("CollectionItem", SchemaContext.Null), model)
+            val wrapped = Model.Object.value(
+                NamingContext.Reference("CollectionItem", SchemaContext.Null),
+                model,
+                isScalarWrapper = model.isScalarWrapperCandidate(),
+            )
             val expected = Model.Collection(wrapped, null, null, null, false, null)
             ExpectedApi(
                 schema,

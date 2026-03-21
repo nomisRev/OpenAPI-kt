@@ -396,6 +396,7 @@ private fun Route.toInvokeFunSpec(
     val builder = FunSpec.builder("invoke")
         .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
         .addDeprecatedIfNeeded()
+    val signatureTypes = mutableListOf<TypeName>()
 
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
@@ -405,33 +406,41 @@ private fun Route.toInvokeFunSpec(
     val bodyRequired = body?.required == true
 
     for (input in requiredParams) {
-        builder.addParameter(
-            input.toParameterSpec(
-                config = config,
-                pathClassName = pathClassName,
-                methodClassName = methodClassName,
-                sharedInlineParameterKeys = sharedInlineParameterKeys,
-            )
+        val parameter = input.toParameterSpec(
+            config = config,
+            pathClassName = pathClassName,
+            methodClassName = methodClassName,
+            sharedInlineParameterKeys = sharedInlineParameterKeys,
         )
+        builder.addParameter(parameter)
+        signatureTypes += parameter.type
     }
     if (bodyRequired && bodyParams != null) {
-        bodyParams.forEach { builder.addParameter(it) }
+        bodyParams.forEach { parameter ->
+            builder.addParameter(parameter)
+            signatureTypes += parameter.type
+        }
     }
     for (input in optionalParams) {
-        builder.addParameter(
-            input.toParameterSpec(
-                config = config,
-                pathClassName = pathClassName,
-                methodClassName = methodClassName,
-                sharedInlineParameterKeys = sharedInlineParameterKeys,
-            )
+        val parameter = input.toParameterSpec(
+            config = config,
+            pathClassName = pathClassName,
+            methodClassName = methodClassName,
+            sharedInlineParameterKeys = sharedInlineParameterKeys,
         )
+        builder.addParameter(parameter)
+        signatureTypes += parameter.type
     }
     if (!bodyRequired && bodyParams != null) {
-        bodyParams.forEach { builder.addParameter(it) }
+        bodyParams.forEach { parameter ->
+            builder.addParameter(parameter)
+            signatureTypes += parameter.type
+        }
     }
 
-    builder.returns(invokeReturnType(config, methodClassName, inlineModelScope))
+    val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
+    builder.returns(returnType)
+    builder.addExperimentalUuidOptInIfNeeded(*(signatureTypes + returnType).toTypedArray())
     builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
     return builder.build()
 }
@@ -448,6 +457,7 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     val builder = FunSpec.builder("invoke")
         .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
         .addDeprecatedIfNeeded()
+    val signatureTypes = mutableListOf<TypeName>()
     bodyJvmName?.let { jvmName ->
         builder.addAnnotation(
             AnnotationSpec.builder(JvmName::class)
@@ -462,28 +472,31 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     val bodyParameter = ParameterSpec.builder("body", bodyTypeName).build()
 
     for (input in requiredParams) {
-        builder.addParameter(
-            input.toParameterSpec(
-                config = config,
-                pathClassName = pathClassName,
-                methodClassName = methodClassName,
-                sharedInlineParameterKeys = sharedInlineParameterKeys,
-            )
+        val parameter = input.toParameterSpec(
+            config = config,
+            pathClassName = pathClassName,
+            methodClassName = methodClassName,
+            sharedInlineParameterKeys = sharedInlineParameterKeys,
         )
+        builder.addParameter(parameter)
+        signatureTypes += parameter.type
     }
     builder.addParameter(bodyParameter)
+    signatureTypes += bodyParameter.type
     for (input in optionalParams) {
-        builder.addParameter(
-            input.toParameterSpec(
-                config = config,
-                pathClassName = pathClassName,
-                methodClassName = methodClassName,
-                sharedInlineParameterKeys = sharedInlineParameterKeys,
-            )
+        val parameter = input.toParameterSpec(
+            config = config,
+            pathClassName = pathClassName,
+            methodClassName = methodClassName,
+            sharedInlineParameterKeys = sharedInlineParameterKeys,
         )
+        builder.addParameter(parameter)
+        signatureTypes += parameter.type
     }
 
-    builder.returns(invokeReturnType(config, methodClassName, inlineModelScope))
+    val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
+    builder.returns(returnType)
+    builder.addExperimentalUuidOptInIfNeeded(*(signatureTypes + returnType).toTypedArray())
     builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
     return builder.build()
 }
@@ -498,33 +511,36 @@ private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
     val builder = FunSpec.builder("invoke")
         .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
         .addDeprecatedIfNeeded()
+    val signatureTypes = mutableListOf<TypeName>()
 
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
     val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
 
     for (input in requiredParams) {
-        builder.addParameter(
-            input.toParameterSpec(
-                config = config,
-                pathClassName = pathClassName,
-                methodClassName = methodClassName,
-                sharedInlineParameterKeys = sharedInlineParameterKeys,
-            )
+        val parameter = input.toParameterSpec(
+            config = config,
+            pathClassName = pathClassName,
+            methodClassName = methodClassName,
+            sharedInlineParameterKeys = sharedInlineParameterKeys,
         )
+        builder.addParameter(parameter)
+        signatureTypes += parameter.type
     }
     for (input in optionalParams) {
-        builder.addParameter(
-            input.toParameterSpec(
-                config = config,
-                pathClassName = pathClassName,
-                methodClassName = methodClassName,
-                sharedInlineParameterKeys = sharedInlineParameterKeys,
-            )
+        val parameter = input.toParameterSpec(
+            config = config,
+            pathClassName = pathClassName,
+            methodClassName = methodClassName,
+            sharedInlineParameterKeys = sharedInlineParameterKeys,
         )
+        builder.addParameter(parameter)
+        signatureTypes += parameter.type
     }
 
-    builder.returns(invokeReturnType(config, methodClassName, inlineModelScope))
+    val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
+    builder.returns(returnType)
+    builder.addExperimentalUuidOptInIfNeeded(*(signatureTypes + returnType).toTypedArray())
     builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope, includeBody = false))
     return builder.build()
 }
@@ -544,6 +560,7 @@ private fun Route.Input.toParameterSpec(
 ): ParameterSpec {
     val paramName = name.toParamName()
     val model = type
+    val publicModel = model.publicInputModelOrSelf()
     val resolvedInlineParameterClassName = inlineParameterClassName(
         pathClassName = pathClassName,
         methodClassName = methodClassName,
@@ -555,20 +572,20 @@ private fun Route.Input.toParameterSpec(
         pathClassName = pathClassName,
         methodClassName = methodClassName,
         sharedInlineParameterKeys = sharedInlineParameterKeys,
-    ) ?: model.toTypeName(config)
+    ) ?: publicModel.toTypeName(config)
 
     val typeName = if (!isRequired) baseTypeName.copy(nullable = true) else baseTypeName
 
     // For inline enums, compute default using the overridden type name (not NamingContext)
-    val literalDefault = if (model is Model.Enum && model.nestedOrNull() != null) {
-        val enumClassName = resolvedInlineParameterClassName ?: model.context.toClassName(config)
-        when (val d = model.default) {
+    val literalDefault = if (publicModel is Model.Enum && publicModel.nestedOrNull() != null) {
+        val enumClassName = resolvedInlineParameterClassName ?: publicModel.context.toClassName(config)
+        when (val d = publicModel.default) {
             null -> null
             Model.Default.Null -> CodeBlock.of("null")
             is Model.Default.Value -> CodeBlock.of("%T.%L", enumClassName, toEnumValueName(d.value))
         }
     } else {
-        model.defaultLiteral(config)
+        publicModel.defaultLiteral(config)
     }
 
     return ParameterSpec.builder(paramName, typeName).apply {

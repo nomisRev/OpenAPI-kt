@@ -28,7 +28,11 @@ val PrimitiveSpec by testSuite {
             ReferenceOr.schema(schema.toString())
                 .toModel(NamingContext.reference(schema.toString(), SchemaContext.Null), SchemaContext.Write)
         }
-        val expected = Model.Object.value(NamingContext.Reference(schema.toString(), SchemaContext.Null), inner)
+        val expected = Model.Object.value(
+            NamingContext.Reference(schema.toString(), SchemaContext.Null),
+            inner,
+            isScalarWrapper = true,
+        )
         Eq(expected, actual)
     }
 

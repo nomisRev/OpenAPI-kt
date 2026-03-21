@@ -14,13 +14,11 @@ suspend fun ResolvedSchema.primitive(): Model = when (this) {
     is ResolvedSchema.Value -> toPrimitive()
     is ResolvedSchema.Reference -> {
         val inner = toPrimitive()
-        Model.Object(
-            name,
-            inner.description,
-            inner.title,
-            mapOf("value" to Model.Object.Property(inner.with(description = null, isNullable = false), true)),
-            false,
-            inner.isNullable
+        Model.Object.value(
+            context = reference,
+            property = inner,
+            title = schema.title,
+            isScalarWrapper = true,
         )
     }
 }

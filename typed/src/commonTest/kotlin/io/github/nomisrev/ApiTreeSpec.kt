@@ -21,6 +21,7 @@ import io.github.nomisrev.openapi.parser.Responses
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.toApiTree
 import io.github.nomisrev.openapi.routes.Route
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import kotlin.test.assertEquals
@@ -49,6 +50,19 @@ val apiTreeSpec by testSuite {
         PathSegment.FixedValue(wireValue, sourceName)
     fun param(name: String): PathSegment = PathSegment.Parameter(name, stringType)
     fun intParam(name: String): PathSegment = PathSegment.Parameter(name, intType)
+    fun scalarWrapper(name: String, model: Model): Model.Object =
+        Model.Object.value(
+            context = NamingContext.Reference(name, SchemaContext.Null),
+            property = model,
+            isScalarWrapper = true,
+        )
+
+    fun objectWrapper(name: String, model: Model): Model.Object =
+        Model.Object.value(
+            context = NamingContext.Reference(name, SchemaContext.Null),
+            property = model,
+        )
+
     fun overloadedWorkflowParam(name: String, routeKey: String): PathSegment.OverloadedParameter {
         val enumType = Model.Enum(
             context = NamingContext.path(listOf("workflows", routeKey, "workflowId")),
@@ -462,6 +476,28 @@ val apiTreeSpec by testSuite {
             "GET /pets/{petId}",
             "Parameter(name=petId, model=Int)",
             "Parameter(name=petId, model=String)",
+        )
+    }
+
+    test("buildTree rejects different shared path parameter flattening shapes") {
+        val flattenedPet = route(
+            HttpMethod.Get,
+            literal("pets"),
+            PathSegment.Parameter("petId", scalarWrapper("PetId", intType)),
+        )
+        val wrappedPet = route(
+            HttpMethod.Delete,
+            literal("pets"),
+            PathSegment.Parameter("petId", objectWrapper("PetIdObject", intType)),
+        )
+
+        assertSharedPathParameterConflict(
+            routes = listOf(flattenedPet, wrappedPet),
+            expectedNode = "/pets/{petId}",
+            "DELETE /pets/{petId}",
+            "GET /pets/{petId}",
+            "Parameter(name=petId, model=Object(properties=[value:Int]))",
+            "Parameter(name=petId, model=ScalarWrapper(properties=[value:Int]))",
         )
     }
 

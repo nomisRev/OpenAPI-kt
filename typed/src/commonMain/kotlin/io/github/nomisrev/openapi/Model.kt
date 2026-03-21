@@ -215,6 +215,12 @@ sealed interface Model {
          * constructor parameters, to preserve correct serialization semantics).
          */
         val hadPropertiesBeforeStripping: Boolean = false,
+        /**
+         * `true` when this object is a generated wrapper around a referenced scalar schema.
+         * The renderer keeps the wrapper model for request/response bodies, but may flatten it
+         * at public input boundaries such as path/query/header/cookie parameters.
+         */
+        val isScalarWrapper: Boolean = false,
     ) : Model, ContextHolder {
         val inline: Set<Model> =
             properties.mapNotNullTo(mutableSetOf()) { (_, prop) -> prop.model.nestedOrNull() } +
@@ -227,6 +233,7 @@ sealed interface Model {
             properties: Map<String, Property>,
             additionalProperties: Boolean,
             isNullable: Boolean,
+            isScalarWrapper: Boolean = false,
             hadPropertiesBeforeStripping: Boolean = false,
         ) : this(
             context,
@@ -236,6 +243,7 @@ sealed interface Model {
             AdditionalProperties.Allowed(additionalProperties),
             isNullable,
             hadPropertiesBeforeStripping,
+            isScalarWrapper,
         )
 
         @Serializable
@@ -262,14 +270,16 @@ sealed interface Model {
             fun value(
                 context: NamingContext.Reference,
                 property: Model,
-                title: String? = null
+                title: String? = null,
+                isScalarWrapper: Boolean = false,
             ) = Object(
                 NamingContext(context, emptyList()),
                 property.description,
                 title,
                 mapOf("value" to Property(property.with(description = null, isNullable = false), true)),
                 additionalProperties = AdditionalProperties.Allowed(false),
-                property.isNullable
+                property.isNullable,
+                isScalarWrapper = isScalarWrapper,
             )
         }
     }

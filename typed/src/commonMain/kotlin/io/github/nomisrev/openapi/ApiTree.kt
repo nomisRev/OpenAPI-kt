@@ -448,7 +448,8 @@ private fun Model.compatibilityDescription(): String {
                 .joinToString(prefix = "[", postfix = "]") { (name, property) ->
                     "$name:${property.model.compatibilityDescription()}"
                 }
-            "Object(properties=$propertiesDescription)$suffix"
+            val kind = if (isScalarWrapper) "ScalarWrapper" else "Object"
+            "$kind(properties=$propertiesDescription)$suffix"
         }
         is Model.Primitive.Boolean -> "Boolean$suffix"
         is Model.Primitive.Double -> "Double$suffix"

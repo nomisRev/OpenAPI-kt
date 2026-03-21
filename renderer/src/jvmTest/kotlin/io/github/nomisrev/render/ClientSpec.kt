@@ -407,6 +407,150 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/items": {
+              "get": {
+                "parameters": [
+                  { "name": "limit", "in": "query", "required": true, "schema": { "$ref": "#/components/schemas/Limit" } },
+                  { "name": "offset", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/Offset" } }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Limit": {
+                "type": "integer",
+                "format": "int32",
+                "default": 20
+              },
+              "Offset": {
+                "type": "integer",
+                "format": "int32",
+                "default": 0
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/primitive-input-flatten"
+    )
+
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/repos/{alert_number}": {
+              "get": {
+                "parameters": [
+                  { "name": "alert_number", "in": "path", "required": true, "schema": { "$ref": "#/components/schemas/AlertNumber" } },
+                  { "name": "tool_name", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/ToolName" } },
+                  { "name": "X-Request-Id", "in": "header", "required": true, "schema": { "$ref": "#/components/schemas/RequestId" } },
+                  { "name": "session", "in": "cookie", "required": false, "schema": { "$ref": "#/components/schemas/SessionAt" } }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "AlertNumber": {
+                "type": "integer",
+                "format": "int64",
+                "description": "The security alert number."
+              },
+              "ToolName": {
+                "type": "string"
+              },
+              "RequestId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "SessionAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/primitive-input-flattened"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/tags": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "filter",
+                    "in": "query",
+                    "required": false,
+                    "schema": {
+                      "type": "object",
+                      "properties": {
+                        "value": { "type": "string" }
+                      },
+                      "required": ["value"]
+                    }
+                  }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/primitive-input-object-guard"
+    )
+
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/filters": {
+              "get": {
+                "parameters": [
+                  { "name": "state", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/State" } },
+                  { "name": "selector", "in": "query", "required": false, "schema": { "$ref": "#/components/schemas/Selector" } }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "State": {
+                "type": "string",
+                "enum": ["open", "closed"]
+              },
+              "Selector": {
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "integer", "format": "int32" }
+                ]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/primitive-input-wrapped"
+    )
+
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/pets": {
               "post": {
                 "requestBody": {
