@@ -40,18 +40,18 @@ public value class CreateModerationRequest(
 
     @Serializable
     @JvmInline
-    public value class CaseImageUrlOrTextList(
-      public val `value`: List<ImageUrlOrText>,
+    public value class CaseThreeList(
+      public val `value`: List<Three>,
     ) : Input
 
-    @Serializable(with = ImageUrlOrText.Serializer::class)
-    public sealed interface ImageUrlOrText {
+    @Serializable(with = Three.Serializer::class)
+    public sealed interface Three {
       @Serializable
       public data class ImageUrl(
         public val type: Type,
         @SerialName("image_url")
         public val imageUrl: ImageUrl,
-      ) : ImageUrlOrText {
+      ) : Three {
         @JvmInline
         @Serializable
         public value class ImageUrl(
@@ -72,7 +72,7 @@ public value class CreateModerationRequest(
       public data class Text(
         public val type: Type,
         public val text: String,
-      ) : ImageUrlOrText {
+      ) : Three {
         @Serializable
         public enum class Type(
           public val `value`: String,
@@ -83,18 +83,18 @@ public value class CreateModerationRequest(
         }
       }
 
-      public object Serializer : KSerializer<ImageUrlOrText> {
+      public object Serializer : KSerializer<Three> {
         @OptIn(
           InternalSerializationApi::class,
           ExperimentalSerializationApi::class,
         )
         override val descriptor: SerialDescriptor =
-            buildSerialDescriptor("io.github.nomisrev.render.test.union.collection.item.union.CreateModerationRequest.Input.ImageUrlOrText", PolymorphicKind.SEALED) {
+            buildSerialDescriptor("io.github.nomisrev.render.test.union.collection.item.union.CreateModerationRequest.Input.Three", PolymorphicKind.SEALED) {
           element("ImageUrl", ImageUrl.serializer().descriptor)
           element("Text", Text.serializer().descriptor)
         }
 
-        override fun deserialize(decoder: Decoder): ImageUrlOrText {
+        override fun deserialize(decoder: Decoder): Three {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
           return json.attemptDeserialize(
@@ -104,7 +104,7 @@ public value class CreateModerationRequest(
           )
         }
 
-        override fun serialize(encoder: Encoder, `value`: ImageUrlOrText) {
+        override fun serialize(encoder: Encoder, `value`: Three) {
           when(value) {
             is ImageUrl -> encoder.encodeSerializableValue(ImageUrl.serializer(), value)
             is Text -> encoder.encodeSerializableValue(Text.serializer(), value)
@@ -122,7 +122,7 @@ public value class CreateModerationRequest(
           buildSerialDescriptor("io.github.nomisrev.render.test.union.collection.item.union.CreateModerationRequest.Input", PolymorphicKind.SEALED) {
         element("CaseString", String.serializer().descriptor)
         element("CaseStrings", ListSerializer(String.serializer()).descriptor)
-        element("CaseImageUrlOrTextList", ListSerializer(ImageUrlOrText.serializer()).descriptor)
+        element("CaseThreeList", ListSerializer(Three.serializer()).descriptor)
       }
 
       override fun deserialize(decoder: Decoder): Input {
@@ -131,7 +131,7 @@ public value class CreateModerationRequest(
         return json.attemptDeserialize(
           value,
           CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-          CaseImageUrlOrTextList::class to { CaseImageUrlOrTextList(decodeFromJsonElement(ListSerializer(ImageUrlOrText.serializer()), it)) },
+          CaseThreeList::class to { CaseThreeList(decodeFromJsonElement(ListSerializer(Three.serializer()), it)) },
           CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
         )
       }
@@ -140,7 +140,7 @@ public value class CreateModerationRequest(
         when(value) {
           is CaseString -> encoder.encodeSerializableValue(String.serializer(), value.value)
           is CaseStrings -> encoder.encodeSerializableValue(ListSerializer(String.serializer()), value.value)
-          is CaseImageUrlOrTextList -> encoder.encodeSerializableValue(ListSerializer(ImageUrlOrText.serializer()), value.value)
+          is CaseThreeList -> encoder.encodeSerializableValue(ListSerializer(Three.serializer()), value.value)
         }
       }
     }

@@ -3,7 +3,7 @@ package io.github.nomisrev.render.test.discriminated.multiple.`abstract`
 import kotlin.Int
 import kotlin.OptIn
 import kotlin.String
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

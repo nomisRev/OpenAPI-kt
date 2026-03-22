@@ -9,9 +9,9 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi

@@ -1,9 +1,9 @@
 package io.github.nomisrev.render.test.object_.primitive.imports
 
 import kotlin.OptIn
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray

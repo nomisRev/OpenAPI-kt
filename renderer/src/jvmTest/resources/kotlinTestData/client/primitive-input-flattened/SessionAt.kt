@@ -1,7 +1,7 @@
 package io.github.nomisrev.render.test.client.primitive.input.flattened
 
 import kotlin.jvm.JvmInline
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 
 @JvmInline

@@ -25,7 +25,7 @@ import kotlin.jvm.JvmInline
 
 private val UuidType = ClassName("kotlin.uuid", "Uuid")
 private val LocalDateType = ClassName("kotlinx.datetime", "LocalDate")
-private val InstantType = ClassName("kotlinx.datetime", "Instant")
+private val InstantType = ClassName("kotlin.time", "Instant")
 private val ExperimentalUuidApiType = ClassName("kotlin.uuid", "ExperimentalUuidApi")
 private val JsonElementType = ClassName("kotlinx.serialization.json", "JsonElement")
 private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")

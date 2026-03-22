@@ -6,9 +6,9 @@ import kotlin.Int
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
+import kotlin.time.Instant
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
-import kotlinx.datetime.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

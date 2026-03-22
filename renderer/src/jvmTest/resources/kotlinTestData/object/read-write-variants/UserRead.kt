@@ -2,7 +2,7 @@ package io.github.nomisrev.render.test.object_.read.write.variants
 
 import kotlin.Long
 import kotlin.String
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 import kotlinx.serialization.Serializable
 
 @Serializable
