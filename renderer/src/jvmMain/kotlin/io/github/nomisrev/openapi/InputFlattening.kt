@@ -52,7 +52,11 @@ private val ExperimentalUuidApiType = ClassName("kotlin.uuid", "ExperimentalUuid
 private val OptInType = ClassName("kotlin", "OptIn")
 
 @IgnorableReturnValue
-internal fun FunSpec.Builder.addExperimentalUuidOptInIfNeeded(vararg types: TypeName): FunSpec.Builder = apply {
+internal fun FunSpec.Builder.addExperimentalUuidOptInIfNeeded(type: TypeName) =
+    addExperimentalUuidOptInIfNeeded(listOf(type))
+
+@IgnorableReturnValue
+internal fun FunSpec.Builder.addExperimentalUuidOptInIfNeeded(types: List<TypeName>): FunSpec.Builder = apply {
     if (types.any(TypeName::usesExperimentalUuid)) {
         addAnnotation(
             AnnotationSpec.builder(OptInType)
@@ -63,7 +67,7 @@ internal fun FunSpec.Builder.addExperimentalUuidOptInIfNeeded(vararg types: Type
 }
 
 @IgnorableReturnValue
-internal fun TypeSpec.Builder.addExperimentalUuidOptInIfNeeded(vararg types: TypeName): TypeSpec.Builder = apply {
+internal fun TypeSpec.Builder.addExperimentalUuidOptInIfNeeded(types: List<TypeName>): TypeSpec.Builder = apply {
     if (types.any(TypeName::usesExperimentalUuid)) {
         addAnnotation(
             AnnotationSpec.builder(OptInType)

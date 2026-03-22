@@ -72,7 +72,7 @@ internal fun TypeSpec.Builder.addClientConstructorAndState(
     val accumulatedTypeNames = accumulatedParams.map { param ->
         if (param.storeAsString) STRING else param.type.publicInputTypeName(config)
     }
-    addExperimentalUuidOptInIfNeeded(*accumulatedTypeNames.toTypedArray())
+    addExperimentalUuidOptInIfNeeded(accumulatedTypeNames)
 
     val constructor = FunSpec.constructorBuilder()
         .addModifiers(KModifier.INTERNAL)
