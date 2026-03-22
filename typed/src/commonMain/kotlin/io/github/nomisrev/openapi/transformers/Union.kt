@@ -65,9 +65,8 @@ private suspend fun ResolvedSchema.buildUnionCases(
     subtypes: List<ReferenceOr<Schema>>,
 ): List<Model.Union.Case> {
     val uniqueSubtypes = subtypes.distinct()
-    val peekedSubtypes = uniqueSubtypes.associateWith { it.peek() }
-    val unionContexts = peekedSubtypes.entries.mapIndexed { index, (refOrSchema, schema) ->
-        name.unionCase(index, refOrSchema, schema, peekedSubtypes, context)
+    val unionContexts = uniqueSubtypes.mapIndexed { index, refOrSchema ->
+        name.unionCase(index, refOrSchema, uniqueSubtypes, context)
     }
 
     /**
@@ -103,7 +102,12 @@ suspend fun NamingContext.unionCase(
     if (schema.type == Type.Basic.Array && schema.items != null) {
         return when (val refOrSchema = schema.items!!) {
             is ReferenceOr.Reference -> NamingContext.reference(refOrSchema.ref.schemaName(), context)
-            is ReferenceOr.Value<Schema> -> unionCase(index, refOrSchema, allSubtypes, context)
+            is ReferenceOr.Value<Schema> ->
+                if (refOrSchema.value.isComplexCompositeUnionCase()) {
+                    nest(NamingContext.UnionCase(refOrSchema.value.unionCaseName(index)))
+                } else {
+                    unionCase(index, refOrSchema, allSubtypes, context)
+                }
         }
     }
 
@@ -148,7 +152,8 @@ suspend fun NamingContext.unionCase(
         val valueCount = allSubtypes.count { it is ReferenceOr.Value }
         return referenceCount == allSubtypes.size - 1 &&
                 valueCount == 1 &&
-                subtype is ReferenceOr.Value
+                subtype is ReferenceOr.Value &&
+        schema.type == Type.Basic.Object
     }
 
     /**
@@ -168,7 +173,7 @@ suspend fun NamingContext.unionCase(
         discriminatorValue != null -> discriminatorValue
         specialName != null -> specialName
         isOpenEnumCase() -> enumName ?: "CaseEnum"
-        isNonReferenceCaseInRefPattern() -> "Else"
+        isNonReferenceCaseInRefPattern() -> "CaseElse"
         else -> schema.unionCaseName(index)
     }
 
@@ -184,9 +189,13 @@ private val primitives = setOf(Type.Basic.String, Type.Basic.Number, Type.Basic.
  * For enums: joins enum values with "Or" (e.g., `AscOrDesc`)
  */
 private fun Schema.unionCaseName(index: Int): String {
+    title?.toPascalCase()?.takeIf { it.isNotBlank() }?.let { return it }
+
+    compositeUnionCaseName(index)?.let { return it }
+
     val fmt = format
     return when (type) {
-        Type.Basic.Object -> objectUnionCaseName(index)
+        Type.Basic.Object -> specialUnionCaseName() ?: objectUnionCaseName(index)
 
         Type.Basic.Number -> if (fmt == "float") "CaseFloat" else "CaseDouble"
         Type.Basic.Boolean -> "CaseBoolean"
@@ -216,6 +225,33 @@ private fun Schema.unionCaseName(index: Int): String {
         null -> caseIndex.getOrElse(index) { "Case$index" }
     }
 }
+
+private fun Schema.compositeUnionCaseName(index: Int): String? {
+    val branches = oneOf.orEmpty().ifEmpty { anyOf.orEmpty() }.ifEmpty { allOf.orEmpty() }
+    if (branches.size < 2) return null
+
+    val names = branches.mapIndexedNotNull { branchIndex, refOrSchema ->
+        val schema = refOrSchema.valueOrNull() ?: return@mapIndexedNotNull when (refOrSchema) {
+            is ReferenceOr.Reference -> refOrSchema.ref.schemaName().toPascalCase().takeIf { it.isNotBlank() }
+            is ReferenceOr.Value -> null
+        }
+
+        schema.unionCaseName(branchIndex).removePrefix("Case").takeIf { it.isNotBlank() }
+    }
+
+    return names.distinct()
+        .takeIf { it.size >= 2 }
+        ?.joinToString(separator = "Or")
+        ?.takeIf { it.length < 90 }
+        ?: caseIndex.getOrElse(index) { "Case$index" }
+}
+
+private fun Schema.specialUnionCaseName(): String? =
+    properties
+        ?.entries
+        ?.firstOrNull { (key, _) -> key in setOf("type", "event", "\$type") }
+        ?.let { (_, refOrSchema) -> refOrSchema.valueOrNull()?.enum?.singleOrNull()?.toPascalCase() }
+        ?.takeIf { it.isNotBlank() }
 
 private fun Schema.objectUnionCaseName(index: Int): String {
     val props = properties?.entries.orEmpty()
@@ -258,6 +294,15 @@ private fun String.pluralizeCaseName(): String =
         else -> this + "s"
     }
 
+private fun Schema.isComplexCompositeUnionCase(): Boolean =
+    type == null &&
+            enum == null &&
+            (
+                    oneOf.orEmpty().isNotEmpty() ||
+                            anyOf.orEmpty().isNotEmpty() ||
+                            allOf.orEmpty().isNotEmpty()
+                    )
+
 val caseIndex = listOf(
     "One",
     "Two",
@@ -299,66 +344,4 @@ private fun Schema.Discriminator?.discriminatorValueForSubtype(
     }
 
     is ReferenceOr.Value<Schema> -> null
-}
-
-context(ctx: Registry.Scope)
-private suspend fun NamingContext.unionCase(
-    index: Int,
-    refOrSchema: ReferenceOr<Schema>,
-    schema: Schema,
-    context: Map<ReferenceOr<Schema>, Schema>,
-    context2: SchemaContext
-): NamingContext = when (schema.type) {
-    Type.Basic.Array -> when (val refOrSchema = schema.items!!) {
-        is ReferenceOr.Reference -> NamingContext.reference(refOrSchema.ref.schemaName(), context2)
-        is ReferenceOr.Value<Schema> -> unionCase(index, refOrSchema, refOrSchema.peek(), context, context2)
-    }
-
-    Type.Basic.Object ->
-        if ((context - refOrSchema).all { it.key is ReferenceOr.Reference }) {
-            nest(NamingContext.UnionCase("CaseElse"))
-        } else {
-            nest(NamingContext.UnionCase(schema.objectUnionCaseName(index)))
-        }
-
-    Type.Basic.Null -> TODO("$schema")
-    Type.Basic.Number -> nest(NamingContext.UnionCase("CaseDouble"))
-    Type.Basic.Number if schema.format == "float" -> nest(NamingContext.UnionCase("CaseFloat"))
-    Type.Basic.Boolean -> nest(NamingContext.UnionCase("CaseBoolean"))
-    Type.Basic.Integer if schema.format == "int32" -> nest(NamingContext.UnionCase("CaseInt"))
-    Type.Basic.Integer -> nest(NamingContext.UnionCase("CaseLong"))
-    Type.Basic.String if schema.enum != null -> nest(
-        NamingContext.UnionCase(
-            requireNotNull(schema.enum) { "Enum requires at least 1 possible value. {\"enum\":[]}" }
-                .joinToString(separator = "Or") { it?.replaceFirstChar(Char::uppercase) ?: "" }
-        )
-    )
-
-    Type.Basic.String -> when (schema.format) {
-        "binary" -> nest(NamingContext.UnionCase("CaseBinary"))
-        "uuid" -> nest(NamingContext.UnionCase("CaseUuid"))
-        "date" -> nest(NamingContext.UnionCase("CaseDate"))
-        "date-time" -> nest(NamingContext.UnionCase("CaseDateTime"))
-        else if !schema.format.isNullOrBlank() -> nest(NamingContext.UnionCase("Case${schema.format}"))
-        else -> nest(NamingContext.UnionCase("CaseString"))
-    }
-
-    is Type.Array -> nest(
-        NamingContext.UnionCase(
-            (schema.type as Type.Array).types.joinToString(
-                prefix = "Case",
-                separator = "Or"
-            ) { _ ->
-                TODO()
-            })
-    )
-
-    else if schema.enum != null -> nest(
-        NamingContext.UnionCase(
-            requireNotNull(schema.enum) { "Enum requires at least 1 possible value. {\"enum\":[]}" }
-                .joinToString(prefix = "Case", separator = "Or") { it!! }
-        )
-    )
-
-    null -> TODO("Nested complex union case?")
 }

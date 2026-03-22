@@ -4,6 +4,7 @@ import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.STRING
@@ -28,9 +29,10 @@ fun Model.Enum.toTypeSpec(
     parentInterface: ClassName? = null,
     serialName: String? = null,
     nameOverride: String? = null,
+    overrideValueProperty: Boolean = false,
 ): TypeSpec {
     val className = context.toClassName(config)
-    val withValue = needsValueProperty()
+    val withValue = needsValueProperty() || overrideValueProperty
     return TypeSpec.enumBuilder(nameOverride ?: className.simpleName)
         .addAnnotation(Serializable::class)
         .apply {
@@ -42,6 +44,11 @@ fun Model.Enum.toTypeSpec(
                 )
                 addProperty(
                     PropertySpec.builder("value", STRING)
+                        .apply {
+                            if (overrideValueProperty) {
+                                addModifiers(KModifier.OVERRIDE)
+                            }
+                        }
                         .initializer("value")
                         .build()
                 )
@@ -90,5 +97,4 @@ fun Model.Enum.toFileSpec(config: RenderConfig): FileSpec {
         .addType(toTypeSpec(config))
         .build()
 }
-
 

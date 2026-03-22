@@ -75,6 +75,11 @@ fun Model.DiscriminatedObject.toFileSpec(config: RenderConfig): FileSpec {
     val className = context.toClassName(config)
     return FileSpec.builder(className.packageName, className.simpleName)
         .addType(toTypeSpec(config))
+        .apply {
+            if (needsJsonObjectImport()) {
+                addImport("kotlinx.serialization.json", "jsonObject")
+            }
+        }
         .build()
 }
 

@@ -12,15 +12,17 @@ import kotlinx.serialization.encoding.Encoder
 
 @Serializable(with = Union.Serializer::class)
 public sealed interface Union {
+  public val `value`: String
+
   @Serializable
   @JvmInline
   public value class CaseString(
-    public val `value`: String,
+    override val `value`: String,
   ) : Union
 
   @Serializable
   public enum class AscOrDesc(
-    public val `value`: String,
+    override val `value`: String,
   ) : Union {
     @SerialName("asc")
     Asc("asc"),

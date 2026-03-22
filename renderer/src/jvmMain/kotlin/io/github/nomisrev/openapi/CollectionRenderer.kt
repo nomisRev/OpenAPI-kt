@@ -69,6 +69,8 @@ private fun Model.Object.toCollectionTypeSpec(config: RenderConfig): TypeSpec {
             when (model) {
                 is Model.Enum -> builder.addType(model.toTypeSpec(config))
                 is Model.Object -> builder.addType(model.toTypeSpec(config))
+                is Model.Union -> builder.addType(model.toTypeSpec(config))
+                is Model.DiscriminatedObject -> builder.addType(model.toTypeSpec(config))
                 else -> {}
             }
         }

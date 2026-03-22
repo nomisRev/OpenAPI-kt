@@ -16,11 +16,8 @@ fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> =
     models.mapNotNull { model -> model.toFileSpecOrNull(config) } + additionalFiles(config)
 
 private fun ApiTree.additionalFiles(config: RenderConfig): List<FileSpec> {
-    val hasCustomObjectSerializer = models.filterIsInstance<Model.Object>()
-        .any { it.additionalProperties != Model.Object.AdditionalProperties.Allowed(false) }
-    val hasCustomUnionSerializer =
-        models.filterIsInstance<Model.Union>().any { it.discriminator == null }
-    return if (hasCustomObjectSerializer || hasCustomUnionSerializer) {
+    val needsSerializationUtils = models.any(Model::requiresSerializationUtils)
+    return if (needsSerializationUtils) {
         listOf(generateSerializationUtils(config))
     } else emptyList()
 }
@@ -58,3 +55,23 @@ private fun Model.toFileSpecOrNull(config: RenderConfig): FileSpec? = when (this
     is Model.Primitive -> null
 }
 
+private fun Model.requiresSerializationUtils(): Boolean = when (this) {
+    is Model.Collection -> inner.requiresSerializationUtils()
+    is Model.DiscriminatedObject ->
+        abstractProperties.values.any { it.model.requiresSerializationUtils() } ||
+                subtypes.any(Model.Object::requiresSerializationUtils)
+    is Model.Enum,
+    is Model.Reference,
+    is Model.ByteArray,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.FreeFormJson,
+    is Model.Uuid,
+    is Model.Primitive -> false
+    is Model.Object ->
+        additionalProperties != Model.Object.AdditionalProperties.Allowed(false) ||
+                properties.values.any { it.model.requiresSerializationUtils() } ||
+                ((additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.requiresSerializationUtils() == true)
+    is Model.Union ->
+        discriminator == null || cases.any { it.model.requiresSerializationUtils() }
+}

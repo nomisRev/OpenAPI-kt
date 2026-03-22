@@ -104,4 +104,42 @@ val collectionSpec by testSuite {
         """.trimMargin(),
         "collection/item-with-nested-object"
     )
+
+    modelTest(
+        """
+        |"ModerationInputs": {
+        |  "type": "array",
+        |  "items": {
+        |    "oneOf": [
+        |      {
+        |        "type": "object",
+        |        "additionalProperties": false,
+        |        "properties": {
+        |          "type": { "type": "string", "enum": ["image_url"] },
+        |          "image_url": {
+        |            "type": "object",
+        |            "additionalProperties": false,
+        |            "properties": {
+        |              "url": { "type": "string" }
+        |            },
+        |            "required": ["url"]
+        |          }
+        |        },
+        |        "required": ["type", "image_url"]
+        |      },
+        |      {
+        |        "type": "object",
+        |        "additionalProperties": false,
+        |        "properties": {
+        |          "type": { "type": "string", "enum": ["text"] },
+        |          "text": { "type": "string" }
+        |        },
+        |        "required": ["type", "text"]
+        |      }
+        |    ]
+        |  }
+        |}
+        """.trimMargin(),
+        "collection/item-with-nested-union"
+    )
 }

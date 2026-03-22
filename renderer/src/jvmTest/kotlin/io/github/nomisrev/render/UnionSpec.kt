@@ -260,6 +260,59 @@ val unionSpec by testSuite {
 
     modelTest(
         """
+        |"CreateModerationRequest": {
+        |  "type": "object",
+        |  "properties": {
+        |    "input": {
+        |      "oneOf": [
+        |        { "type": "string" },
+        |        {
+        |          "type": "array",
+        |          "items": { "type": "string" }
+        |        },
+        |        {
+        |          "type": "array",
+        |          "items": {
+        |            "oneOf": [
+        |              {
+        |                "type": "object",
+        |                "additionalProperties": false,
+        |                "properties": {
+        |                  "type": { "type": "string", "enum": ["image_url"] },
+        |                  "image_url": {
+        |                    "type": "object",
+        |                    "additionalProperties": false,
+        |                    "properties": {
+        |                      "url": { "type": "string" }
+        |                    },
+        |                    "required": ["url"]
+        |                  }
+        |                },
+        |                "required": ["type", "image_url"]
+        |              },
+        |              {
+        |                "type": "object",
+        |                "additionalProperties": false,
+        |                "properties": {
+        |                  "type": { "type": "string", "enum": ["text"] },
+        |                  "text": { "type": "string" }
+        |                },
+        |                "required": ["type", "text"]
+        |              }
+        |            ]
+        |          }
+        |        }
+        |      ]
+        |    }
+        |  },
+        |  "required": ["input"]
+        |}
+        """.trimMargin(),
+        "union/collection-item-union"
+    )
+
+    modelTest(
+        """
         |"Union": {
         |  "oneOf": [
         |    { "type": "string", "nullable": true },
@@ -350,6 +403,52 @@ val unionSpec by testSuite {
         |}
         """.trimMargin(),
         "union/overlapping-objects"
+    )
+
+    modelTest(
+        """
+        |"ProtectionRules": {
+        |  "anyOf": [
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "id": { "type": "integer", "format": "int32" },
+        |        "node_id": { "type": "string" },
+        |        "type": { "type": "string", "example": "wait_timer" },
+        |        "wait_timer": { "type": "integer", "format": "int32" }
+        |      },
+        |      "required": ["id", "node_id", "type"]
+        |    },
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "id": { "type": "integer", "format": "int32" },
+        |        "node_id": { "type": "string" },
+        |        "type": { "type": "string", "example": "required_reviewers" },
+        |        "prevent_self_review": { "type": "boolean" },
+        |        "reviewers": {
+        |          "type": "array",
+        |          "items": { "type": "string" }
+        |        }
+        |      },
+        |      "required": ["id", "node_id", "type"]
+        |    },
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "id": { "type": "integer", "format": "int32" },
+        |        "node_id": { "type": "string" },
+        |        "type": { "type": "string", "example": "branch_policy" }
+        |      },
+        |      "required": ["id", "node_id", "type"]
+        |    }
+        |  ]
+        |}
+        """.trimMargin(),
+        "union/protection-rules"
     )
 
     modelTest(

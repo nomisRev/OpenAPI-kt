@@ -20,8 +20,71 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.product
 import io.github.nomisrev.verifyAll
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 val unionSpec by testSuite {
+    fun moderationInputUnionSchema(): Schema =
+        Schema(
+            oneOf = listOf(
+                ReferenceOr.value(Schema.string),
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Array,
+                        items = ReferenceOr.value(Schema.string)
+                    )
+                ),
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Array,
+                        items = ReferenceOr.value(
+                            Schema(
+                                oneOf = listOf(
+                                    ReferenceOr.value(
+                                        Schema(
+                                            type = Schema.Type.Basic.Object,
+                                            properties = mapOf(
+                                                "type" to ReferenceOr.value(
+                                                    Schema(
+                                                        type = Schema.Type.Basic.String,
+                                                        enum = listOf("image_url")
+                                                    )
+                                                ),
+                                                "image_url" to ReferenceOr.value(
+                                                    Schema(
+                                                        type = Schema.Type.Basic.Object,
+                                                        properties = mapOf(
+                                                            "url" to ReferenceOr.value(Schema.string)
+                                                        ),
+                                                        required = listOf("url")
+                                                    )
+                                                )
+                                            ),
+                                            required = listOf("type", "image_url")
+                                        )
+                                    ),
+                                    ReferenceOr.value(
+                                        Schema(
+                                            type = Schema.Type.Basic.Object,
+                                            properties = mapOf(
+                                                "type" to ReferenceOr.value(
+                                                    Schema(
+                                                        type = Schema.Type.Basic.String,
+                                                        enum = listOf("text")
+                                                    )
+                                                ),
+                                                "text" to ReferenceOr.value(Schema.string)
+                                            ),
+                                            required = listOf("type", "text")
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
     val unions =
         Model.Primitive.String.all().zip(
             Model.Primitive.Long.all(),
@@ -268,6 +331,62 @@ val unionSpec by testSuite {
             val nullableCollection = result.cases[2].model as Model.Collection
             assertEquals(true, nullableCollection.isNullable)
             assertEquals(false, nullableCollection.inner.isNullable)
+        }
+    }
+
+    test("Object property union preserves nested composite collection items") {
+        val createModerationRequest = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf("input" to ReferenceOr.value(moderationInputUnionSchema())),
+            required = listOf("input")
+        )
+        val testApi = api.reference("CreateModerationRequest", createModerationRequest)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("CreateModerationRequest")
+                .toModel(NamingContext.reference("CreateModerationRequest", SchemaContext.Null), SchemaContext.Write)
+            val request = assertIs<Model.Object>(result)
+            val inputUnion = assertIs<Model.OneOf>(request.properties.getValue("input").model)
+
+            assertEquals(
+                NamingContext.reference("CreateModerationRequest", SchemaContext.Null)
+                    .nest(NamingContext.ObjectProperty("input")),
+                inputUnion.context
+            )
+            assertEquals(3, inputUnion.cases.size)
+
+            val textInput = assertIs<Model.Primitive.String>(inputUnion.cases[0].model)
+            val stringArrayInput = assertIs<Model.Collection>(inputUnion.cases[1].model)
+            assertEquals(false, textInput.isNullable)
+            val stringArrayItem = assertIs<Model.Primitive.String>(stringArrayInput.inner)
+            assertEquals(false, stringArrayItem.isNullable)
+
+            val multimodal = assertIs<Model.Collection>(inputUnion.cases[2].model)
+            val itemUnion = assertIs<Model.OneOf>(multimodal.inner)
+
+            assertEquals(
+                NamingContext.reference("CreateModerationRequest", SchemaContext.Null)
+                    .nest(NamingContext.ObjectProperty("input"))
+                    .nest(NamingContext.UnionCase("ImageUrlOrText")),
+                itemUnion.context
+            )
+            assertEquals(
+                listOf("image_url", "text"),
+                itemUnion.cases.map {
+                    val model = assertIs<Model.Object>(it.model)
+                    model.context.nested.last().let { nested ->
+                        assertIs<NamingContext.UnionCase>(nested).value
+                    }
+                }
+            )
+            assertEquals(
+                setOf("type", "image_url"),
+                assertIs<Model.Object>(itemUnion.cases[0].model).properties.keys
+            )
+            assertEquals(
+                setOf("type", "text"),
+                assertIs<Model.Object>(itemUnion.cases[1].model).properties.keys
+            )
         }
     }
 }

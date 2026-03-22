@@ -11,6 +11,7 @@ import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.STRING
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
@@ -52,6 +53,11 @@ fun Model.Union.toFileSpec(config: RenderConfig): FileSpec {
     val className = context.toClassName(config)
     return FileSpec.builder(className.packageName, className.simpleName)
         .addType(toTypeSpec(config))
+        .apply {
+            if (this@toFileSpec.needsJsonObjectImport()) {
+                addImport("kotlinx.serialization.json", "jsonObject")
+            }
+        }
         .build()
 }
 
@@ -205,6 +211,8 @@ private fun Model.Union.collectionNestedTypeSpecs(
             when (model) {
                 is Model.Enum -> model.toTypeSpec(config)
                 is Model.Object -> model.toTypeSpec(config, externalTypeNames = externalTypeNames)
+                is Model.Union -> model.toTypeSpec(config, externalTypeNames = externalTypeNames)
+                is Model.DiscriminatedObject -> model.toTypeSpec(config)
                 else -> null
             }
         }
@@ -582,6 +590,7 @@ private fun Model.Union.buildOpenEnumTypeSpec(
                 .addMember("with = %T.Serializer::class", className)
                 .build()
         )
+        .addProperty(PropertySpec.builder("value", STRING).build())
 
     // String wrapper case
     val stringTypeSpec = TypeSpec.classBuilder(stringSimpleName)
@@ -593,6 +602,7 @@ private fun Model.Union.buildOpenEnumTypeSpec(
         )
         .addProperty(
             PropertySpec.builder("value", com.squareup.kotlinpoet.STRING)
+                .addModifiers(KModifier.OVERRIDE)
                 .initializer("value")
                 .build()
         )
@@ -604,7 +614,7 @@ private fun Model.Union.buildOpenEnumTypeSpec(
         .build()
 
     // Enum case (inlined — implements union directly)
-    val enumTypeSpec = parts.enumModel.toTypeSpec(config, className)
+    val enumTypeSpec = parts.enumModel.toTypeSpec(config, className, overrideValueProperty = true)
 
     builder.addType(stringTypeSpec)
     builder.addType(enumTypeSpec)
