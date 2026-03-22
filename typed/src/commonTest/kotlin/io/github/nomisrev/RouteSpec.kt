@@ -90,6 +90,24 @@ val routeSpec by testSuite {
         )
     )
 
+    fun realtimeCallRequestBody(): ReferenceOr<RequestBody> = ReferenceOr.value(
+        RequestBody(
+            required = true,
+            content = mapOf(
+                ContentType.MultiPart.FormData.toString() to MediaType(
+                    schema = ReferenceOr.schema("RealtimeCallCreateRequest"),
+                    encoding = mapOf(
+                        "sdp" to io.github.nomisrev.openapi.parser.Encoding(contentType = "application/sdp"),
+                        "session" to io.github.nomisrev.openapi.parser.Encoding(contentType = "application/json"),
+                    ),
+                ),
+                "application/sdp" to MediaType(
+                    schema = ReferenceOr.value(Schema.string),
+                ),
+            ),
+        )
+    )
+
     suspend fun routes(api: OpenAPI) =
         Registry(api).use { registry -> with(registry) { api.toRoutes() } }
 
@@ -535,5 +553,51 @@ val routeSpec by testSuite {
         val union = assertIs<Model.Union>(body.type)
         assertEquals("type", union.discriminator)
         assertTrue(union.context.head is NamingContext.Path)
+    }
+
+    test("multipart request body with encodings flattens referenced schema and preserves part content types") {
+        val route = routes(
+            openAPI(
+                path = "/realtime/calls",
+                method = HttpMethod.Post,
+                requestBody = realtimeCallRequestBody(),
+                components = Components(
+                    schemas = mapOf(
+                        "RealtimeCallCreateRequest" to ReferenceOr.value(
+                            Schema(
+                                type = Schema.Type.Basic.Object,
+                                required = listOf("sdp", "session"),
+                                properties = mapOf(
+                                    "sdp" to ReferenceOr.value(Schema.string),
+                                    "session" to ReferenceOr.value(
+                                        Schema(
+                                            type = Schema.Type.Basic.Object,
+                                            required = listOf("type", "model"),
+                                            properties = mapOf(
+                                                "type" to ReferenceOr.value(Schema.string),
+                                                "model" to ReferenceOr.value(Schema.string),
+                                            ),
+                                        )
+                                    ),
+                                ),
+                            )
+                        )
+                    )
+                ),
+            )
+        ).single()
+
+        val bodies = requireNotNull(route.body)
+        assertEquals(2, bodies.types.size)
+
+        val multipart = assertIs<Route.Body.Multipart.Value>(bodies.types.getValue(ContentType.MultiPart.FormData))
+        assertEquals(2, multipart.parameters.size)
+        val sdp = assertIs<Route.Body.Multipart.FormData>(multipart.parameters.first { it.name == "sdp" })
+        val session = assertIs<Route.Body.Multipart.FormData>(multipart.parameters.first { it.name == "session" })
+        assertEquals(ContentType.parse("application/sdp"), sdp.contentType)
+        assertEquals(ContentType.Application.Json, session.contentType)
+
+        val sdpOnly = assertIs<Route.Body.SetBody>(bodies.types.getValue(ContentType.parse("application/sdp")))
+        assertTrue(sdpOnly.type is Model.Primitive.String)
     }
 }

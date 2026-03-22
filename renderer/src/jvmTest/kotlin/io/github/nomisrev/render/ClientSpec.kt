@@ -877,6 +877,83 @@ val clientSpec by testSuite {
         "client/operations-body-multipart"
     )
 
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/realtime/calls": {
+              "post": {
+                "summary": "Create a new Realtime API call",
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "multipart/form-data": {
+                      "schema": {
+                        "${'$'}ref": "#/components/schemas/RealtimeCallCreateRequest"
+                      },
+                      "encoding": {
+                        "sdp": {
+                          "contentType": "application/sdp"
+                        },
+                        "session": {
+                          "contentType": "application/json"
+                        }
+                      }
+                    },
+                    "application/sdp": {
+                      "schema": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Realtime call created successfully.",
+                    "headers": {
+                      "Location": {
+                        "description": "Relative URL containing the call ID.",
+                        "schema": { "type": "string" }
+                      }
+                    },
+                    "content": {
+                      "application/sdp": {
+                        "schema": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "RealtimeCallCreateRequest": {
+                "type": "object",
+                "required": ["sdp"],
+                "properties": {
+                  "sdp": { "type": "string" },
+                  "session": {
+                    "type": "object",
+                    "required": ["type", "model"],
+                    "properties": {
+                      "type": { "type": "string" },
+                      "model": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-body-realtime"
+    )
+
     clientTest(
         """
         {

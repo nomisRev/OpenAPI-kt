@@ -13,6 +13,8 @@ import kotlin.ByteArray
 import kotlin.Int
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 public class Uploads internal constructor(
   private val client: HttpClient,
@@ -40,7 +42,7 @@ public class Uploads internal constructor(
             append("file", file)
             append("checksum", checksum)
             append("retries", retries)
-            append("tags", tags)
+            append("tags", Json.encodeToString(tags))
           }))
         }
         return when (response.status.value) {

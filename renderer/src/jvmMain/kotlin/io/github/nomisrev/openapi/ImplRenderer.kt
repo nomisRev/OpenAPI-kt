@@ -17,9 +17,11 @@ import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
 
 private val ContentTypeType = ClassName("io.ktor.http", "ContentType")
+private val HttpHeadersType = ClassName("io.ktor.http", "HttpHeaders")
 private val MultiPartFormDataContentType =
     ClassName("io.ktor.client.request.forms", "MultiPartFormDataContent")
 private val ParametersType = ClassName("io.ktor.http", "Parameters")
+private val JsonType = ClassName("kotlinx.serialization.json", "Json")
 private val ResponseExceptionType = ClassName("io.ktor.client.plugins", "ResponseException")
 
 private val BodyMember = MemberName("io.ktor.client.call", "body")
@@ -28,9 +30,11 @@ private val HeaderMember = MemberName("io.ktor.client.request", "header")
 private val CookieMember = MemberName("io.ktor.client.request", "cookie")
 private val SetBodyMember = MemberName("io.ktor.client.request", "setBody")
 private val ContentTypeFunMember = MemberName("io.ktor.http", "contentType")
+private val HeadersOfMember = MemberName("io.ktor.http", "headersOf")
 private val FormDataMember = MemberName("io.ktor.client.request.forms", "formData")
 private val FormUrlEncodeMember = MemberName("io.ktor.http", "formUrlEncode")
 private val AppendMember = MemberName("io.ktor.client.request.forms", "append")
+private val EncodeToStringMember = MemberName("kotlinx.serialization", "encodeToString")
 
 internal data class AccumulatedParam(
     val name: String,
@@ -241,13 +245,14 @@ internal fun Route.buildOperationBody(
     method: HttpMethod,
     methodClassName: ClassName,
     includeBody: Boolean = true,
+    selectedBody: Route.Body? = body?.defaultOrNull(),
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
 ): CodeBlock {
     return if (returns.needsSealedInterface()) {
-        buildSealedOperationBody(method, methodClassName, includeBody, bodyExpr, bodyGuard)
+        buildSealedOperationBody(method, methodClassName, includeBody, selectedBody, bodyExpr, bodyGuard)
     } else {
-        buildDirectOperationBody(method, includeBody, bodyExpr, bodyGuard)
+        buildDirectOperationBody(method, includeBody, selectedBody, bodyExpr, bodyGuard)
     }
 }
 
@@ -255,13 +260,14 @@ private fun Route.buildSealedOperationBody(
     method: HttpMethod,
     methodClassName: ClassName,
     includeBody: Boolean,
+    selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
     bodyGuard: String?,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
     val pathLiteral = segments.toPathLiteral()
-    val bodyMayBeNull = includeBody && when (body?.defaultOrNull()) {
+    val bodyMayBeNull = includeBody && when (selectedBody) {
         is Route.Body.OverloadedBody -> false
         is Route.Body.FormUrlEncoded,
         is Route.Body.Multipart.Ref,
@@ -272,7 +278,7 @@ private fun Route.buildSealedOperationBody(
 
     if (hasRequestConfig(includeBody)) {
         code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
-        addRequestConfigCode(code, includeBody, bodyMayBeNull, bodyExpr, bodyGuard)
+        addRequestConfigCode(code, includeBody, selectedBody, bodyMayBeNull, bodyExpr, bodyGuard)
         code.endControlFlow()
     } else {
         code.addStatement("val response = client.%L(%L)", httpMethodName, pathLiteral)
@@ -288,13 +294,14 @@ private fun Route.buildSealedOperationBody(
 private fun Route.buildDirectOperationBody(
     method: HttpMethod,
     includeBody: Boolean,
+    selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
     bodyGuard: String?,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
     val pathLiteral = segments.toPathLiteral()
-    val bodyMayBeNull = includeBody && when (body?.defaultOrNull()) {
+    val bodyMayBeNull = includeBody && when (selectedBody) {
         is Route.Body.OverloadedBody -> false
         is Route.Body.FormUrlEncoded,
         is Route.Body.Multipart.Ref,
@@ -307,7 +314,7 @@ private fun Route.buildDirectOperationBody(
     if (model == null || model is Model.Primitive.Unit) {
         if (hasRequestConfig(includeBody)) {
             code.beginControlFlow("client.%L(%L)", httpMethodName, pathLiteral)
-            addRequestConfigCode(code, includeBody, bodyMayBeNull, bodyExpr, bodyGuard)
+            addRequestConfigCode(code, includeBody, selectedBody, bodyMayBeNull, bodyExpr, bodyGuard)
             code.endControlFlow()
         } else {
             code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
@@ -316,7 +323,7 @@ private fun Route.buildDirectOperationBody(
         if (hasRequestConfig(includeBody)) {
             code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
             code.indent()
-            addRequestConfigCode(code, includeBody, bodyMayBeNull, bodyExpr, bodyGuard)
+            addRequestConfigCode(code, includeBody, selectedBody, bodyMayBeNull, bodyExpr, bodyGuard)
             code.unindent()
             code.add("}.%M()\n", BodyMember)
         } else {
@@ -369,6 +376,7 @@ private fun Route.hasRequestConfig(includeBody: Boolean): Boolean {
 private fun Route.addRequestConfigCode(
     code: CodeBlock.Builder,
     includeBody: Boolean = true,
+    selectedBody: Route.Body? = body?.defaultOrNull(),
     bodyMayBeNull: Boolean = includeBody && body?.required != true,
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
@@ -411,8 +419,8 @@ private fun Route.addRequestConfigCode(
         }
     }
 
-    if (includeBody && body != null) {
-        addBodyCode(code, body!!, bodyMayBeNull, bodyExpr, bodyGuard)
+    if (includeBody && selectedBody != null) {
+        addBodyCode(code, selectedBody, bodyMayBeNull, bodyExpr, bodyGuard)
     }
 }
 
@@ -452,12 +460,11 @@ private fun ContentType.toContentTypeCodeBlock(): CodeBlock {
 
 private fun addBodyCode(
     code: CodeBlock.Builder,
-    bodies: Route.Bodies,
+    body: Route.Body,
     bodyMayBeNull: Boolean,
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
 ) {
-    val body = bodies.defaultOrNull() ?: return
     when (body) {
         is Route.Body.SetBody ->
             code.addSetLikeBodyCode(body.contentType.toContentTypeCodeBlock(), bodyExpr, bodyMayBeNull, bodyGuard)
@@ -516,8 +523,15 @@ private fun CodeBlock.Builder.addMultipartValueBodyCode(body: Route.Body.Multipa
     indent()
     for (formData in body.parameters) {
         val paramName = formData.name.toParamName()
-        val valueExpr = formData.type.wireValueExpr(paramName)
-        addStatement("%M(%S, %L)", AppendMember, formData.name, valueExpr)
+        val valueExpr = formData.multipartValueExpr(paramName)
+        val headersExpr = formData.contentType?.let { contentType ->
+            CodeBlock.of("%M(%T.ContentType, %S)", HeadersOfMember, HttpHeadersType, contentType.toString())
+        }
+        if (headersExpr != null) {
+            addStatement("%M(%S, %L, %L)", AppendMember, formData.name, valueExpr, headersExpr)
+        } else {
+            addStatement("%M(%S, %L)", AppendMember, formData.name, valueExpr)
+        }
     }
     unindent()
     add("}))\n")
@@ -549,6 +563,36 @@ private fun List<AccumulatedParam>.constructorArgs(extraArg: String? = null): St
         addAll(this@constructorArgs.map { it.name.toCamelCase() })
         extraArg?.let(::add)
     }.joinToString(", ")
+
+private fun Route.Body.Multipart.FormData.multipartValueExpr(paramName: String): CodeBlock =
+    when {
+        contentType?.isJsonLike() == true ->
+            CodeBlock.of("%T.%M(%L)", JsonType, EncodeToStringMember, paramName)
+
+        type.isJsonLikeMultipartModel() ->
+            CodeBlock.of("%T.%M(%L)", JsonType, EncodeToStringMember, paramName)
+
+        else -> CodeBlock.of("%L", type.wireValueExpr(paramName))
+    }
+
+private fun ContentType.isJsonLike(): Boolean =
+    ContentType.Application.Json.match(this) || contentSubtype.endsWith("+json")
+
+private fun Model.isJsonLikeMultipartModel(): Boolean = when (this) {
+    is Model.ByteArray,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.Enum,
+    is Model.Primitive,
+    is Model.Uuid -> false
+
+    is Model.Collection,
+    is Model.DiscriminatedObject,
+    is Model.FreeFormJson,
+    is Model.Object,
+    is Model.Reference,
+    is Model.Union -> true
+}
 
 private fun Model.Enum.toPathParamValueExpression(
     paramName: String,

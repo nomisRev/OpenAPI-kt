@@ -65,17 +65,23 @@ private suspend fun RequestBody.formDataToBody(
     mediaType: MediaType,
     schema: ReferenceOr<Schema>,
 ): Route.Body {
-    val name = NamingContext.path(segments, method).nest(NamingContext.RouteBody)
-    return when (val model = schema.toModel(name, SchemaContext.Write)) {
+    val name = when (schema) {
+        is ReferenceOr.Reference ->
+            NamingContext.reference(schema.ref.drop("#/components/schemas/".length), SchemaContext.Write)
+        is ReferenceOr.Value -> NamingContext.path(segments, method).nest(NamingContext.RouteBody)
+    }
+    val resolvedSchema = schema.resolveSchema()
+    return with(scope) { when (val model = ReferenceOr.value(resolvedSchema).toModel(name, SchemaContext.Write)) {
         is Model.Object -> {
             val params = model.properties.map { (baseName, prop) ->
-                Route.Body.Multipart.FormData(baseName, prop.model)
+                val contentType = mediaType.encoding[baseName]?.contentType?.let(ContentType::parse)
+                Route.Body.Multipart.FormData(baseName, prop.model, contentType)
             }
             Route.Body.Multipart.Value(params, description, mediaType.extensions)
         }
 
         else -> Route.Body.Multipart.Ref(model, description, mediaType.extensions)
-    }
+    } }
 }
 
 context(scope: Registry)
@@ -86,8 +92,11 @@ private suspend fun RequestBody.formUrlEncoded(
     schema: ReferenceOr<Schema>,
 ): Route.Body {
     val name = NamingContext.path(segments, method).nest(NamingContext.RouteBody)
-    val obj = requireNotNull(schema.toModel(name, SchemaContext.Write) as? Model.Object) {
-        "Form URL encoded body must be an object. $this"
+    val resolvedSchema = schema.resolveSchema()
+    val obj = with(scope) {
+        requireNotNull(ReferenceOr.value(resolvedSchema).toModel(name, SchemaContext.Write) as? Model.Object) {
+            "Form URL encoded body must be an object. $this"
+        }
     }
     val params = obj.properties.map { (baseName, prop) -> Route.Body.Multipart.FormData(baseName, prop.model) }
     return Route.Body.FormUrlEncoded(params, description, mediaType.extensions)
@@ -157,6 +166,19 @@ private fun ReferenceOr<RequestBody>.resolve(): RequestBody = when (this) {
             is ReferenceOr.Reference -> TODO("Remote parameters not supported yet.")
             is ReferenceOr.Value<RequestBody> -> requestBodies.value
             null -> error("RequestBody $referenceName could not be found in ${ctx.openAPI.components.requestBodies}.")
+        }
+    }
+}
+
+context(ctx: Registry)
+private suspend fun ReferenceOr<Schema>.resolveSchema(): Schema = when (this) {
+    is ReferenceOr.Value -> value
+    is ReferenceOr.Reference -> {
+        val referenceName = ref.drop("#/components/schemas/".length)
+        when (val schemas = ctx.openAPI.components.schemas[referenceName]) {
+            is ReferenceOr.Reference -> TODO("Remote schemas not supported yet.")
+            is ReferenceOr.Value<Schema> -> schemas.value
+            null -> error("Schema $referenceName could not be found in ${ctx.openAPI.components.schemas}.")
         }
     }
 }

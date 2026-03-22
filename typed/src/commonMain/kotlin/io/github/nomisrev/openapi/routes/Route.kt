@@ -96,6 +96,15 @@ data class Route(
         val types: Map<ContentType, Body>,
         val extensions: Map<String, JsonElement>,
     ) {
+        data class Variant(
+            val contentType: ContentType,
+            val body: Body,
+        )
+
+        fun variants(): List<Variant> = types.entries.map { (contentType, body) ->
+            Variant(contentType, body)
+        }
+
         fun defaultOrNull(): Body? =
             defaultBodyOrNull() ?: formUrlEncodedOrNull() ?: multipartOrNull()
 
@@ -158,7 +167,11 @@ data class Route(
         ) : Body, List<Multipart.FormData> by parameters
 
         sealed interface Multipart : Body {
-            data class FormData(val name: String, val type: Model)
+            data class FormData(
+                val name: String,
+                val type: Model,
+                val contentType: ContentType? = null,
+            )
 
             // Inline schemas for multipart bodies do not generate a type,
             // they should be defined as functions parameters.

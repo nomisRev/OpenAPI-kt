@@ -144,6 +144,24 @@ private fun TypeSpec.Builder.addOperationResponseType(context: OperationTypeSpec
 }
 
 private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeSpecContext) {
+    val bodyVariants = context.route.body?.variants().orEmpty()
+    if (bodyVariants.size > 1) {
+        bodyVariants.forEach { variant ->
+            addFunction(
+                context.route.toInvokeFunSpec(
+                    config = context.config,
+                    pathClassName = context.pathClassName,
+                    methodClassName = context.methodClassName,
+                    sharedInlineParameterKeys = context.sharedInlineParameterKeys,
+                    usesNestedBodyType = false,
+                    inlineModelScope = context.inlineModelScope,
+                    selectedBody = variant.body,
+                )
+            )
+        }
+        return
+    }
+
     if (context.flattenedBody != null) {
         context.flattenedBody.overloads.forEach { overload ->
             addFunction(
@@ -212,6 +230,7 @@ private fun Route.toInvokeFunSpec(
     sharedInlineParameterKeys: Set<String>,
     usesNestedBodyType: Boolean,
     inlineModelScope: OperationInlineModelScope,
+    selectedBody: Route.Body? = body?.defaultOrNull(),
 ): FunSpec {
     val builder = FunSpec.builder("invoke")
         .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
@@ -222,7 +241,12 @@ private fun Route.toInvokeFunSpec(
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
     val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
 
-    val bodyParams = body?.toInvokeParameterSpecs(config, methodClassName, usesNestedBodyType)
+    val bodyParams = selectedBody?.toInvokeParameterSpecs(
+        config = config,
+        methodClassName = methodClassName,
+        usesNestedBodyType = usesNestedBodyType,
+        required = body?.required == true,
+    )
     val bodyRequired = body?.required == true
 
     for (input in requiredParams) {
@@ -262,7 +286,7 @@ private fun Route.toInvokeFunSpec(
     @Suppress("SpreadOperator")
     return builder.returns(returnType)
         .addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
-        .addCode(buildOperationBody(method, methodClassName))
+        .addCode(buildOperationBody(method, methodClassName, selectedBody = selectedBody))
         .build()
 }
 
@@ -487,17 +511,17 @@ private fun Route.Input.toParameterSpec(
     }.build()
 }
 
-private fun Route.Bodies.toInvokeParameterSpecs(
+private fun Route.Body.toInvokeParameterSpecs(
     config: RenderConfig,
     methodClassName: ClassName,
     usesNestedBodyType: Boolean,
-): List<ParameterSpec>? = when (val body = defaultOrNull()) {
-    null -> null
+    required: Boolean,
+): List<ParameterSpec>? = when (this) {
     is Route.Body.SetBody -> {
         val bodyType = if (usesNestedBodyType) {
             methodClassName.nestedClass("Body")
         } else {
-            body.type.toTypeName(config)
+            type.toTypeName(config)
         }
         val typeName = if (!required) bodyType.copy(nullable = true) else bodyType
         listOf(
@@ -511,7 +535,7 @@ private fun Route.Bodies.toInvokeParameterSpecs(
         val bodyType = if (usesNestedBodyType) {
             methodClassName.nestedClass("Body")
         } else {
-            body.type.toTypeName(config)
+            type.toTypeName(config)
         }
         val typeName = if (!required) bodyType.copy(nullable = true) else bodyType
         listOf(
@@ -522,19 +546,19 @@ private fun Route.Bodies.toInvokeParameterSpecs(
     }
 
     is Route.Body.FormUrlEncoded -> {
-        body.parameters.map { formData ->
+        parameters.map { formData ->
             ParameterSpec.builder(formData.name.toParamName(), formData.type.toTypeName(config)).build()
         }
     }
 
     is Route.Body.Multipart.Value -> {
-        body.parameters.map { formData ->
+        parameters.map { formData ->
             ParameterSpec.builder(formData.name.toParamName(), formData.type.toTypeName(config)).build()
         }
     }
 
     is Route.Body.Multipart.Ref -> {
-        val typeName = body.value.toTypeName(config).let {
+        val typeName = value.toTypeName(config).let {
             if (!required) it.copy(nullable = true) else it
         }
         listOf(
