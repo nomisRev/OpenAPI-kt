@@ -15,7 +15,7 @@ import io.github.nomisrev.openapi.registry.isAnyOfNullableType
 import io.github.nomisrev.openapi.registry.isNull
 import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.isOneOfNullableType
-import io.github.nomisrev.openapi.registry.resolve
+import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.parser.AdditionalProperties.PSchema
 import io.github.nomisrev.openapi.routes.SchemaContext
@@ -74,14 +74,32 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
 
     schema.enum != null -> toClosedEnum(context, schema.enum!!)
 
-    isAllOfNullableType() -> flattenNull(context, schema.allOf!!)
+    isAllOfNullableType() -> flattenNull(schema.allOf!!) { nonNullSchemas ->
+        if (nonNullSchemas.size == 1) {
+            nonNullSchemas.single().toModel(name, context)
+        } else {
+            allOf(context, nonNullSchemas)
+        }
+    }
     schema.allOf != null -> allOf(context, schema.allOf!!)
 
-    isOneOfNullableType() -> flattenNull(context, schema.oneOf!!)
+    isOneOfNullableType() -> flattenNull(schema.oneOf!!) { nonNullSchemas ->
+        if (nonNullSchemas.size == 1) {
+            nonNullSchemas.single().toModel(name, context)
+        } else {
+            buildOneOf(context, nonNullSchemas)
+        }
+    }
     schema.oneOf?.size == 1 -> schema.oneOf!!.single().toModel(name, context)
     schema.oneOf?.isNotEmpty() == true -> buildOneOf(context, schema.oneOf!!)
 
-    isAnyOfNullableType() -> flattenNull(context, schema.anyOf!!)
+    isAnyOfNullableType() -> flattenNull(schema.anyOf!!) { nonNullSchemas ->
+        if (nonNullSchemas.size == 1) {
+            nonNullSchemas.single().toModel(name, context)
+        } else {
+            buildAnyOf(context, nonNullSchemas)
+        }
+    }
     schema.anyOf?.size == 1 -> schema.anyOf!!.single().toModel(name, context)
     schema.anyOf?.isNotEmpty() == true -> buildAnyOf(context, schema.anyOf!!)
 
@@ -172,9 +190,18 @@ private suspend fun ResolvedSchema.fallback(): Model = when (this) {
  * }
  */
 context(ctx: Registry.Scope)
-private suspend fun ResolvedSchema.flattenNull(context: SchemaContext, schemas: List<ReferenceOr<Schema>>): Model =
-    schemas.firstNotNullOf { refOrSchema ->
-        refOrSchema.resolve(name, context) { resolved ->
-            if (resolved.schema.isNull()) null else resolved.toModel(context, true)
-        }
-    }.with(isNullable = true)
+private suspend fun ResolvedSchema.flattenNull(
+    schemas: List<ReferenceOr<Schema>>,
+    build: suspend (List<ReferenceOr<Schema>>) -> Model,
+): Model {
+    val nonNullSchemas = schemas.filterNot { it.peek().isNull() }
+    require(nonNullSchemas.isNotEmpty()) {
+        "Null should always be resolved to result in nullable types. Please report this bug. $schema"
+    }
+    val model = build(nonNullSchemas)
+    return model.with(
+        description = description() ?: model.description,
+        isNullable = true,
+        title = schema.title ?: model.title
+    )
+}

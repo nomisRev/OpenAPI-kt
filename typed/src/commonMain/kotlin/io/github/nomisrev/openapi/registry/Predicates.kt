@@ -34,7 +34,7 @@ suspend fun ResolvedSchema.isOpenEnumeration(): Boolean = with(ctx) {
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.isAnyOfNullableType(): Boolean = with(ctx) {
     val anyOf = schema.anyOf ?: return false
-    return anyOf.size == 2 && anyOf.singleOrNull { it.peek().isNull() } != null
+    return anyOf.any { it.peek().isNull() }
 }
 
 private val nullableSchema = Schema(nullable = true)
@@ -45,13 +45,13 @@ fun Schema.isNull(): Boolean =
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.isOneOfNullableType(): Boolean = with(ctx) {
     val oneOf = schema.oneOf ?: return false
-    oneOf.size == 2 && oneOf.singleOrNull { it.peek().isNull() } != null
+    oneOf.any { it.peek().isNull() }
 }
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.isAllOfNullableType(): Boolean = with(ctx) {
     val allOf = schema.allOf ?: return false
-    allOf.size == 2 && allOf.singleOrNull { it.peek().isNull() } != null
+    allOf.any { it.peek().isNull() }
 }
 
 context(ctx: Registry.Scope)
