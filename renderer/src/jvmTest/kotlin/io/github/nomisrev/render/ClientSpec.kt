@@ -1398,6 +1398,42 @@ val clientSpec by testSuite {
         {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
+          "servers": [
+            {
+              "url": "https://{environment}.api.example.com/{version}",
+              "description": "Production server",
+              "variables": {
+                "environment": {
+                  "default": "prod",
+                  "enum": ["prod", "staging", "dev"]
+                },
+                "version": {
+                  "default": "v1"
+                }
+              }
+            },
+            {
+              "url": "https://backup-api.example.com",
+              "description": "Backup server"
+            }
+          ],
+          "paths": {
+            "/pets": {
+              "get": {
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/factory-servers-variable-default"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
             "/items": {
               "get": {

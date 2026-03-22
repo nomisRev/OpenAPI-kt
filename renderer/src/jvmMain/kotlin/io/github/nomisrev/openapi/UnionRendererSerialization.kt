@@ -1,0 +1,391 @@
+@file:Suppress("TooManyFunctions")
+package io.github.nomisrev.openapi
+
+import com.squareup.kotlinpoet.AnnotationSpec
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.Dynamic
+import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LambdaTypeName
+import com.squareup.kotlinpoet.MemberName
+import com.squareup.kotlinpoet.ParameterizedTypeName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeName
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.TypeVariableName
+import com.squareup.kotlinpoet.WildcardTypeName
+import kotlinx.serialization.ExperimentalSerializationApi
+
+internal val UnionKSerializerType = ClassName("kotlinx.serialization", "KSerializer")
+internal val UnionSerialDescriptorType = ClassName("kotlinx.serialization.descriptors", "SerialDescriptor")
+internal val UnionDecoderType = ClassName("kotlinx.serialization.encoding", "Decoder")
+internal val UnionEncoderType = ClassName("kotlinx.serialization.encoding", "Encoder")
+private val UnionJsonElementType = ClassName("kotlinx.serialization.json", "JsonElement")
+private val UnionJsonDecoderType = ClassName("kotlinx.serialization.json", "JsonDecoder")
+private val UnionPolymorphicKindType = ClassName("kotlinx.serialization.descriptors", "PolymorphicKind")
+private val UnionBuildSerialDescriptorMember = MemberName("kotlinx.serialization.descriptors", "buildSerialDescriptor")
+
+private const val OBJECT_WITH_ADDITIONAL_PROPERTIES_ALLOWED_PRIORITY = 200
+private const val OBJECT_WITHOUT_ADDITIONAL_PROPERTIES_BASE_PRIORITY = 100
+private const val OBJECT_WITHOUT_ADDITIONAL_PROPERTIES_MAX_PROPERTY_COUNT = 99
+private const val OBJECT_WITH_TYPED_ADDITIONAL_PROPERTIES_PRIORITY = 150
+private const val DISCRIMINATED_OBJECT_PRIORITY = 300
+private const val UNION_PRIORITY = 400
+private const val ENUM_PRIORITY = 500
+private const val COLLECTION_PRIORITY = 600
+private const val REFERENCE_PRIORITY = 700
+private const val PRIMITIVE_INT_PRIORITY = 800
+private const val PRIMITIVE_LONG_PRIORITY = 801
+private const val PRIMITIVE_FLOAT_PRIORITY = 802
+private const val PRIMITIVE_DOUBLE_PRIORITY = 803
+private const val PRIMITIVE_BOOLEAN_PRIORITY = 804
+private const val PRIMITIVE_UNIT_PRIORITY = 805
+private const val UUID_PRIORITY = 900
+private const val DATE_PRIORITY = 901
+private const val DATE_TIME_PRIORITY = 902
+private const val BYTE_ARRAY_PRIORITY = 903
+private const val STRING_PRIORITY = 1000
+private const val FREE_FORM_JSON_PRIORITY = 1100
+
+internal fun Model.Union.buildSerializerObject(
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    renderedCases: List<RenderedUnionCase>,
+    externalTypeNames: Map<ClassName, TypeName>,
+): TypeSpec {
+    val declarationCases = cases.zip(renderedCases)
+    val orderedCases = declarationCases.sortedByDeserializationOrder()
+    val isAnyOf = this is Model.AnyOf
+
+    return TypeSpec.objectBuilder("Serializer")
+        .addSuperinterface(UnionKSerializerType.parameterizedBy(className))
+        .addProperty(buildDescriptorProperty(config, originalClassName, className, declarationCases, externalTypeNames))
+        .addFunction(buildDeserializeFunction(config, originalClassName, className, orderedCases, isAnyOf, externalTypeNames))
+        .addFunction(buildSerializeFunction(config, originalClassName, className, declarationCases, externalTypeNames))
+        .build()
+}
+
+private fun buildDescriptorProperty(
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    cases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    externalTypeNames: Map<ClassName, TypeName>,
+): PropertySpec {
+    val descriptorCode = CodeBlock.builder()
+        .beginControlFlow(
+            "%M(%S, %T.SEALED)",
+            UnionBuildSerialDescriptorMember,
+            className.canonicalName,
+            UnionPolymorphicKindType,
+        )
+        .apply {
+            cases.forEach { (case, rendered) ->
+                addStatement(
+                    "element(%S, %L.descriptor)",
+                    rendered.caseSimpleName,
+                    caseSerializerCode(case, rendered, config, originalClassName, className, externalTypeNames)
+                )
+            }
+        }
+        .endControlFlow()
+        .build()
+
+    return PropertySpec.builder("descriptor", UnionSerialDescriptorType)
+        .addModifiers(KModifier.OVERRIDE)
+        .addAnnotation(
+            AnnotationSpec.builder(UnionOptInType)
+                .addMember("%T::class", ClassName("kotlinx.serialization", "InternalSerializationApi"))
+                .addMember("%T::class", ExperimentalSerializationApi::class)
+                .build()
+        )
+        .initializer(descriptorCode)
+        .build()
+}
+
+@Suppress("LongParameterList")
+private fun buildDeserializeFunction(
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    isAnyOf: Boolean,
+    externalTypeNames: Map<ClassName, TypeName>,
+): FunSpec {
+    val code = if (isAnyOf) {
+        buildAnyOfDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
+    } else {
+        buildAttemptDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
+    }
+
+    return FunSpec.builder("deserialize")
+        .addModifiers(KModifier.OVERRIDE)
+        .returns(className)
+        .addParameter("decoder", UnionDecoderType)
+        .addCode(code)
+        .build()
+}
+
+private fun buildAttemptDeserializeCode(
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    externalTypeNames: Map<ClassName, TypeName>,
+): CodeBlock = CodeBlock.builder()
+    .addStatement("val value = decoder.decodeSerializableValue(%T.serializer())", UnionJsonElementType)
+    .addStatement(
+        "val json = requireNotNull(decoder as? %T) { %S }.json",
+        UnionJsonDecoderType,
+        "Complex unions currently only supported for Json"
+    )
+    .add(buildAttemptDeserializeBody(config, originalClassName, className, orderedCases, externalTypeNames))
+    .build()
+
+private fun buildAttemptDeserializeBody(
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    externalTypeNames: Map<ClassName, TypeName>,
+): CodeBlock = CodeBlock.builder()
+    .add("return json.attemptDeserialize(\n")
+    .indent()
+    .addStatement("value,")
+    .apply {
+        orderedCases.forEach { (case, rendered) ->
+            val caseClassName = className.nestedClass(rendered.caseSimpleName)
+            val serializerCode = caseSerializerCode(case, rendered, config, originalClassName, className, externalTypeNames)
+            if (rendered.isInlined || rendered.isNestedUnion) {
+                addStatement(
+                    "%T::class to { decodeFromJsonElement(%L, it) },",
+                    caseClassName,
+                    serializerCode,
+                )
+            } else {
+                addStatement(
+                    "%T::class to { %T(decodeFromJsonElement(%L, it)) },",
+                    caseClassName,
+                    caseClassName,
+                    serializerCode,
+                )
+            }
+        }
+    }
+    .unindent()
+    .addStatement(")")
+    .build()
+
+private fun buildAnyOfDeserializeCode(
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    externalTypeNames: Map<ClassName, TypeName>,
+): CodeBlock {
+    val objectCases = orderedCases.mapNotNull { (case, rendered) ->
+        (case.model as? Model.Object)?.let { model ->
+            AnyOfDispatchCase(case, rendered, model, emptySet())
+        }
+    }
+    val uniqueKeysByCase = objectCases.map { dispatchCase ->
+        val keys = dispatchCase.model.properties.keys
+        val otherKeys = objectCases
+            .asSequence()
+            .filterNot { it.case == dispatchCase.case }
+            .flatMapTo(mutableSetOf()) { it.model.properties.keys }
+        dispatchCase.copy(uniqueKeys = keys - otherKeys)
+    }
+    return if (objectCases.size != orderedCases.size || uniqueKeysByCase.count { it.uniqueKeys.isEmpty() } > 1) {
+        buildAttemptDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
+    } else {
+        buildAnyOfUniqueKeyDispatchCode(
+            AnyOfUniqueKeyDispatchContext(
+                config = config,
+                originalClassName = originalClassName,
+                className = className,
+                orderedCases = orderedCases,
+                uniqueKeysByCase = uniqueKeysByCase,
+                externalTypeNames = externalTypeNames,
+            )
+        )
+    }
+}
+
+private data class AnyOfUniqueKeyDispatchContext(
+    val config: RenderConfig,
+    val originalClassName: ClassName,
+    val className: ClassName,
+    val orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    val uniqueKeysByCase: List<AnyOfDispatchCase>,
+    val externalTypeNames: Map<ClassName, TypeName>,
+)
+
+private fun buildAnyOfUniqueKeyDispatchCode(
+    context: AnyOfUniqueKeyDispatchContext,
+): CodeBlock {
+    val fallbackCase = context.uniqueKeysByCase.singleOrNull { it.uniqueKeys.isEmpty() }
+    return CodeBlock.builder()
+        .addStatement("val value = decoder.decodeSerializableValue(%T.serializer())", UnionJsonElementType)
+    .addStatement(
+        "val json = requireNotNull(decoder as? %T) { %S }.json",
+        UnionJsonDecoderType,
+        "Complex unions currently only supported for Json"
+    )
+        .addStatement("val keys = value.jsonObject.keys")
+        .apply {
+            context.uniqueKeysByCase.filter { it.uniqueKeys.isNotEmpty() }.forEach { dispatchCase ->
+                val caseClassName = context.className.nestedClass(dispatchCase.rendered.caseSimpleName)
+                val serializerCode = caseSerializerCode(
+                    dispatchCase.case,
+                    dispatchCase.rendered,
+                    context.config,
+                    context.originalClassName,
+                    context.className,
+                    context.externalTypeNames
+                )
+                val condition = dispatchCase.uniqueKeys.joinToString(separator = " || ") { "\"${it.ktStringLiteral()}\" in keys" }
+                beginControlFlow("if ($condition)")
+                if (dispatchCase.rendered.isInlined || dispatchCase.rendered.isNestedUnion) {
+                    addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
+                } else {
+                    addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
+                }
+                endControlFlow()
+            }
+
+            if (fallbackCase != null) {
+                val serializerCode = caseSerializerCode(
+                    fallbackCase.case,
+                    fallbackCase.rendered,
+                    context.config,
+                    context.originalClassName,
+                    context.className,
+                    context.externalTypeNames
+                )
+                if (fallbackCase.rendered.isInlined || fallbackCase.rendered.isNestedUnion) {
+                    addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
+                } else {
+                    val caseClassName = context.className.nestedClass(fallbackCase.rendered.caseSimpleName)
+                    addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
+                }
+            } else {
+                add(
+                    buildAttemptDeserializeBody(
+                        context.config,
+                        context.originalClassName,
+                        context.className,
+                        context.orderedCases,
+                        context.externalTypeNames,
+                    )
+                )
+            }
+        }
+        .build()
+}
+
+private data class AnyOfDispatchCase(
+    val case: Model.Union.Case,
+    val rendered: RenderedUnionCase,
+    val model: Model.Object,
+    val uniqueKeys: Set<String>,
+)
+
+private fun buildSerializeFunction(
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    allCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    externalTypeNames: Map<ClassName, TypeName>,
+): FunSpec {
+    val code = CodeBlock.builder()
+        .beginControlFlow("when(value)")
+        .apply {
+            allCases.forEach { (case, rendered) ->
+                val caseClassName = className.nestedClass(rendered.caseSimpleName)
+                val serializerCode = caseSerializerCode(case, rendered, config, originalClassName, className, externalTypeNames)
+                if (rendered.isInlined || rendered.isNestedUnion) {
+                    addStatement(
+                        "is %T -> encoder.encodeSerializableValue(%L, value)",
+                        caseClassName,
+                        serializerCode,
+                    )
+                } else {
+                    addStatement(
+                        "is %T -> encoder.encodeSerializableValue(%L, value.value)",
+                        caseClassName,
+                        serializerCode,
+                    )
+                }
+            }
+        }
+        .endControlFlow()
+        .build()
+
+    return FunSpec.builder("serialize")
+        .addModifiers(KModifier.OVERRIDE)
+        .addParameter("encoder", UnionEncoderType)
+        .addParameter("value", className)
+        .addCode(code)
+        .build()
+}
+
+internal fun List<Pair<Model.Union.Case, RenderedUnionCase>>.sortedByDeserializationOrder():
+    List<Pair<Model.Union.Case, RenderedUnionCase>> = sortedBy { (case, _) ->
+    case.model.deserializationPriority()
+}
+
+internal fun Model.deserializationPriority(): Int = when (this) {
+    is Model.Object -> when (val ap = additionalProperties) {
+        is Model.Object.AdditionalProperties.Allowed ->
+            if (ap.value) OBJECT_WITH_ADDITIONAL_PROPERTIES_ALLOWED_PRIORITY
+            else {
+                val propertyCountPriority = properties.size.coerceAtMost(
+                    OBJECT_WITHOUT_ADDITIONAL_PROPERTIES_MAX_PROPERTY_COUNT,
+                )
+                OBJECT_WITHOUT_ADDITIONAL_PROPERTIES_BASE_PRIORITY - propertyCountPriority
+            }
+        is Model.Object.AdditionalProperties.Schema -> OBJECT_WITH_TYPED_ADDITIONAL_PROPERTIES_PRIORITY
+    }
+    is Model.DiscriminatedObject -> DISCRIMINATED_OBJECT_PRIORITY
+    is Model.Union -> UNION_PRIORITY
+    is Model.Enum -> ENUM_PRIORITY
+    is Model.Collection -> COLLECTION_PRIORITY
+    is Model.Reference -> REFERENCE_PRIORITY
+    is Model.Primitive.Int -> PRIMITIVE_INT_PRIORITY
+    is Model.Primitive.Long -> PRIMITIVE_LONG_PRIORITY
+    is Model.Primitive.Float -> PRIMITIVE_FLOAT_PRIORITY
+    is Model.Primitive.Double -> PRIMITIVE_DOUBLE_PRIORITY
+    is Model.Primitive.Boolean -> PRIMITIVE_BOOLEAN_PRIORITY
+    is Model.Primitive.Unit -> PRIMITIVE_UNIT_PRIORITY
+    is Model.Uuid -> UUID_PRIORITY
+    is Model.Date -> DATE_PRIORITY
+    is Model.DateTime -> DATE_TIME_PRIORITY
+    is Model.ByteArray -> BYTE_ARRAY_PRIORITY
+    is Model.Primitive.String -> STRING_PRIORITY
+    is Model.FreeFormJson -> FREE_FORM_JSON_PRIORITY
+}
+
+internal fun caseSerializerCode(
+    case: Model.Union.Case,
+    rendered: RenderedUnionCase,
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    externalTypeNames: Map<ClassName, TypeName>,
+): CodeBlock =
+    if (rendered.isInlined) CodeBlock.of("%T.serializer()", className.nestedClass(rendered.caseSimpleName))
+    else case.model.serializerCode(config, originalClassName, className, externalTypeNames)
+
+internal fun TypeName.usesInstant(): Boolean =
+    when (this) {
+        is ClassName -> copy(nullable = false) == UnionInstantType
+        is ParameterizedTypeName -> rawType == UnionInstantType || typeArguments.any(TypeName::usesInstant)
+        is TypeVariableName -> bounds.any(TypeName::usesInstant)
+        is WildcardTypeName -> inTypes.any(TypeName::usesInstant) || outTypes.any(TypeName::usesInstant)
+        Dynamic,
+        is LambdaTypeName -> false
+    }
