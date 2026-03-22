@@ -28,7 +28,6 @@ import kotlin.jvm.JvmInline
 
 private val JsonClassDiscriminatorType = ClassName("kotlinx.serialization.json", "JsonClassDiscriminator")
 private val OptInType = ClassName("kotlin", "OptIn")
-private val UuidType = ClassName("kotlin.uuid", "Uuid")
 private val ExperimentalUuidApiType = ClassName("kotlin.uuid", "ExperimentalUuidApi")
 private val InstantType = ClassName("kotlin.time", "Instant")
 private val ExperimentalTimeType = ClassName("kotlin.time", "ExperimentalTime")
@@ -448,7 +447,6 @@ private fun buildAttemptDeserializeBody(
     .addStatement(")")
     .build()
 
-@Suppress("LongMethod")
 private fun buildAnyOfDeserializeCode(
     config: RenderConfig,
     originalClassName: ClassName,
@@ -456,16 +454,9 @@ private fun buildAnyOfDeserializeCode(
     orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
     externalTypeNames: Map<ClassName, TypeName>,
 ): CodeBlock {
-    data class DispatchCase(
-        val case: Model.Union.Case,
-        val rendered: RenderedUnionCase,
-        val model: Model.Object,
-        val uniqueKeys: Set<String>,
-    )
-
     val objectCases = orderedCases.mapNotNull { (case, rendered) ->
         (case.model as? Model.Object)?.let { model ->
-            DispatchCase(case, rendered, model, emptySet())
+            AnyOfDispatchCase(case, rendered, model, emptySet())
         }
     }
     val uniqueKeysByCase = objectCases.map { dispatchCase ->
@@ -479,58 +470,97 @@ private fun buildAnyOfDeserializeCode(
     return if (objectCases.size != orderedCases.size || uniqueKeysByCase.count { it.uniqueKeys.isEmpty() } > 1) {
         buildAttemptDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
     } else {
-        val fallbackCase = uniqueKeysByCase.singleOrNull { it.uniqueKeys.isEmpty() }
-        CodeBlock.builder()
-            .addStatement("val value = decoder.decodeSerializableValue(%T.serializer())", JsonElementType)
-            .addStatement(
-                "val json = requireNotNull(decoder as? %T) { %S }.json",
-                JsonDecoderType,
-                "Complex unions currently only supported for Json"
+        buildAnyOfUniqueKeyDispatchCode(
+            AnyOfUniqueKeyDispatchContext(
+                config = config,
+                originalClassName = originalClassName,
+                className = className,
+                orderedCases = orderedCases,
+                uniqueKeysByCase = uniqueKeysByCase,
+                externalTypeNames = externalTypeNames,
             )
-            .addStatement("val keys = value.jsonObject.keys")
-            .apply {
-                uniqueKeysByCase.filter { it.uniqueKeys.isNotEmpty() }.forEach { dispatchCase ->
-                    val caseClassName = className.nestedClass(dispatchCase.rendered.caseSimpleName)
-                    val serializerCode = caseSerializerCode(
-                        dispatchCase.case,
-                        dispatchCase.rendered,
-                        config,
-                        originalClassName,
-                        className,
-                        externalTypeNames
-                    )
-                    val condition = dispatchCase.uniqueKeys.joinToString(separator = " || ") { "\"${it.ktStringLiteral()}\" in keys" }
-                    beginControlFlow("if ($condition)")
-                    if (dispatchCase.rendered.isInlined || dispatchCase.rendered.isNestedUnion) {
-                        addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
-                    } else {
-                        addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
-                    }
-                    endControlFlow()
-                }
-
-                if (fallbackCase != null) {
-                    val serializerCode = caseSerializerCode(
-                        fallbackCase.case,
-                        fallbackCase.rendered,
-                        config,
-                        originalClassName,
-                        className,
-                        externalTypeNames
-                    )
-                    if (fallbackCase.rendered.isInlined || fallbackCase.rendered.isNestedUnion) {
-                        addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
-                    } else {
-                        val caseClassName = className.nestedClass(fallbackCase.rendered.caseSimpleName)
-                        addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
-                    }
-                } else {
-                    add(buildAttemptDeserializeBody(config, originalClassName, className, orderedCases, externalTypeNames))
-                }
-            }
-            .build()
+        )
     }
 }
+
+private data class AnyOfUniqueKeyDispatchContext(
+    val config: RenderConfig,
+    val originalClassName: ClassName,
+    val className: ClassName,
+    val orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    val uniqueKeysByCase: List<AnyOfDispatchCase>,
+    val externalTypeNames: Map<ClassName, TypeName>,
+)
+
+private fun buildAnyOfUniqueKeyDispatchCode(
+    context: AnyOfUniqueKeyDispatchContext,
+): CodeBlock {
+    val fallbackCase = context.uniqueKeysByCase.singleOrNull { it.uniqueKeys.isEmpty() }
+    return CodeBlock.builder()
+        .addStatement("val value = decoder.decodeSerializableValue(%T.serializer())", JsonElementType)
+        .addStatement(
+            "val json = requireNotNull(decoder as? %T) { %S }.json",
+            JsonDecoderType,
+            "Complex unions currently only supported for Json"
+        )
+        .addStatement("val keys = value.jsonObject.keys")
+        .apply {
+            context.uniqueKeysByCase.filter { it.uniqueKeys.isNotEmpty() }.forEach { dispatchCase ->
+                val caseClassName = context.className.nestedClass(dispatchCase.rendered.caseSimpleName)
+                val serializerCode = caseSerializerCode(
+                    dispatchCase.case,
+                    dispatchCase.rendered,
+                    context.config,
+                    context.originalClassName,
+                    context.className,
+                    context.externalTypeNames
+                )
+                val condition = dispatchCase.uniqueKeys.joinToString(separator = " || ") { "\"${it.ktStringLiteral()}\" in keys" }
+                beginControlFlow("if ($condition)")
+                if (dispatchCase.rendered.isInlined || dispatchCase.rendered.isNestedUnion) {
+                    addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
+                } else {
+                    addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
+                }
+                endControlFlow()
+            }
+
+            if (fallbackCase != null) {
+                val serializerCode = caseSerializerCode(
+                    fallbackCase.case,
+                    fallbackCase.rendered,
+                    context.config,
+                    context.originalClassName,
+                    context.className,
+                    context.externalTypeNames
+                )
+                if (fallbackCase.rendered.isInlined || fallbackCase.rendered.isNestedUnion) {
+                    addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
+                } else {
+                    val caseClassName = context.className.nestedClass(fallbackCase.rendered.caseSimpleName)
+                    addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
+                }
+            } else {
+                add(
+                    buildAttemptDeserializeBody(
+                        context.config,
+                        context.originalClassName,
+                        context.className,
+                        context.orderedCases,
+                        context.externalTypeNames,
+                    )
+                )
+            }
+        }
+        .build()
+}
+
+private data class AnyOfDispatchCase(
+    val case: Model.Union.Case,
+    val rendered: RenderedUnionCase,
+    val model: Model.Object,
+    val uniqueKeys: Set<String>,
+)
 
 private fun buildSerializeFunction(
     config: RenderConfig,
@@ -714,7 +744,6 @@ private fun List<Pair<Model.Union.Case, RenderedUnionCase>>.sortedByDeserializat
     case.model.deserializationPriority()
 }
 
-@Suppress("CyclomaticComplexMethod")
 private fun Model.deserializationPriority(): Int = when (this) {
     // Objects without additionalProperties (more properties → higher priority)
     is Model.Object -> when (val ap = additionalProperties) {
@@ -844,7 +873,6 @@ private fun Model.unionCaseValueOrNull(): String? =
 private fun Model.Collection.collectionCaseSimpleName(config: RenderConfig): String =
     "Case${inner.collectionEntryName(config)}"
 
-@Suppress("CyclomaticComplexMethod")
 private fun Model.collectionEntryName(config: RenderConfig): String =
     when (this) {
         is Model.Primitive.String -> "Strings"

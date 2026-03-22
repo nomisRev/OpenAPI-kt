@@ -23,7 +23,7 @@ suspend fun ResolvedSchema.primitive(): Model = when (this) {
     }
 }
 
-@Suppress("CyclomaticComplexMethod", "NullableToStringCall")
+@Suppress("NullableToStringCall")
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.toPrimitive(): Model =
     when (schema.type) {

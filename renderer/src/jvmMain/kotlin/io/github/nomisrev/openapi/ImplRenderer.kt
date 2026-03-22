@@ -101,7 +101,6 @@ internal fun TypeSpec.Builder.addClientConstructorAndState(
     }
 }
 
-@Suppress("LongMethod")
 internal fun PathSegment.addConcreteNavigationMember(
     builder: TypeSpec.Builder,
     childClassName: ClassName,
@@ -110,87 +109,115 @@ internal fun PathSegment.addConcreteNavigationMember(
     config: RenderConfig,
 ) {
     when (this) {
-        is PathSegment.FixedValue -> builder.addProperty(
-            PropertySpec.builder(name.toParamName(), childClassName)
-                .initializer("%T(%L)", childClassName, currentAccumulatedParams.constructorArgs())
-                .build()
-        )
+        is PathSegment.FixedValue, is PathSegment.Literal ->
+            builder.addConcreteNavigationProperty(name.toParamName(), childClassName, currentAccumulatedParams)
 
-        is PathSegment.Literal -> builder.addProperty(
-            PropertySpec.builder(name.toParamName(), childClassName)
-                .initializer("%T(%L)", childClassName, currentAccumulatedParams.constructorArgs())
-                .build()
-        )
-
-        is PathSegment.OverloadedParameter -> {
-            val paramName = name.toCamelCase()
-            val enumClassNames = enumClassNames(parentClassName, config)
-            enumClassNames.forEach { (case, enumClassName) ->
-                val enumModel = case.model as Model.Enum
-                builder.addType(enumModel.toTypeSpec(config, nameOverride = enumClassName.simpleName))
-            }
-
-            val emittedTypes = mutableSetOf<TypeName>()
-            for (case in cases) {
-                val caseTypeName = when (case.model) {
-                    is Model.Enum -> requireNotNull(enumClassNames[case])
-
-                    is Model.ByteArray,
-                    is Model.Collection,
-                    is Model.Date,
-                    is Model.DateTime,
-                    is Model.DiscriminatedObject,
-                    is Model.FreeFormJson,
-                    is Model.Object,
-                    is Model.Primitive,
-                    is Model.Reference,
-                    is Model.AnyOf,
-                    is Model.OneOf,
-                    is Model.Uuid -> case.model.toTypeName(config)
-                }
-                if (!emittedTypes.add(caseTypeName)) continue
-
-                val functionBuilder = FunSpec.builder(paramName)
-                    .addParameter(paramName, caseTypeName)
-                    .addExperimentalUuidOptInIfNeeded(caseTypeName)
-                    .returns(childClassName)
-                val encodedArg = when (val caseModel = case.model) {
-                    is Model.Enum -> {
-                        val enumClassName = requireNotNull(enumClassNames[case])
-                        functionBuilder.addStatement(
-                            "val encoded = %L",
-                            caseModel.toPathParamValueExpression(paramName, enumClassName),
-                        )
-                        "encoded"
-                    }
-
-                    else -> if (caseTypeName == STRING) paramName else "$paramName.toString()"
-                }
-                functionBuilder.addStatement(
-                    "return %T(%L)",
-                    childClassName,
-                    currentAccumulatedParams.constructorArgs(encodedArg),
-                )
-                builder.addFunction(functionBuilder.build())
-            }
-        }
-
-        is PathSegment.Parameter -> {
-            val paramName = name.toCamelCase()
-            val typeName = model.publicInputTypeName(config)
-            builder.addFunction(
-                FunSpec.builder(paramName)
-                    .addParameter(paramName, typeName)
-                    .addExperimentalUuidOptInIfNeeded(typeName)
-                    .returns(childClassName)
-                    .addStatement(
-                        "return %T(%L)",
-                        childClassName,
-                        currentAccumulatedParams.constructorArgs(paramName),
-                    )
-                    .build()
+        is PathSegment.OverloadedParameter ->
+            builder.addOverloadedNavigationMembers(
+                segment = this,
+                childClassName = childClassName,
+                currentAccumulatedParams = currentAccumulatedParams,
+                parentClassName = parentClassName,
+                config = config,
             )
+
+        is PathSegment.Parameter ->
+            builder.addConcreteParameterNavigationMember(
+                paramName = name.toCamelCase(),
+                typeName = model.publicInputTypeName(config),
+                childClassName = childClassName,
+                currentAccumulatedParams = currentAccumulatedParams,
+            )
+    }
+}
+
+private fun TypeSpec.Builder.addConcreteNavigationProperty(
+    paramName: String,
+    childClassName: ClassName,
+    currentAccumulatedParams: List<AccumulatedParam>,
+) {
+    addProperty(
+        PropertySpec.builder(paramName, childClassName)
+            .initializer("%T(%L)", childClassName, currentAccumulatedParams.constructorArgs())
+            .build()
+    )
+}
+
+private fun TypeSpec.Builder.addConcreteParameterNavigationMember(
+    paramName: String,
+    typeName: TypeName,
+    childClassName: ClassName,
+    currentAccumulatedParams: List<AccumulatedParam>,
+) {
+    addFunction(
+        FunSpec.builder(paramName)
+            .addParameter(paramName, typeName)
+            .addExperimentalUuidOptInIfNeeded(typeName)
+            .returns(childClassName)
+            .addStatement(
+                "return %T(%L)",
+                childClassName,
+                currentAccumulatedParams.constructorArgs(paramName),
+            )
+            .build()
+    )
+}
+
+private fun TypeSpec.Builder.addOverloadedNavigationMembers(
+    segment: PathSegment.OverloadedParameter,
+    childClassName: ClassName,
+    currentAccumulatedParams: List<AccumulatedParam>,
+    parentClassName: ClassName,
+    config: RenderConfig,
+) {
+    val paramName = segment.name.toCamelCase()
+    val enumClassNames = segment.enumClassNames(parentClassName, config)
+    enumClassNames.forEach { (case, enumClassName) ->
+        val enumModel = case.model as Model.Enum
+        addType(enumModel.toTypeSpec(config, nameOverride = enumClassName.simpleName))
+    }
+
+    val emittedTypes = mutableSetOf<TypeName>()
+    for (case in segment.cases) {
+        val caseTypeName = when (case.model) {
+            is Model.Enum -> requireNotNull(enumClassNames[case])
+            is Model.ByteArray,
+            is Model.Collection,
+            is Model.Date,
+            is Model.DateTime,
+            is Model.DiscriminatedObject,
+            is Model.FreeFormJson,
+            is Model.Object,
+            is Model.Primitive,
+            is Model.Reference,
+            is Model.AnyOf,
+            is Model.OneOf,
+            is Model.Uuid -> case.model.toTypeName(config)
         }
+        if (!emittedTypes.add(caseTypeName)) continue
+
+        val functionBuilder = FunSpec.builder(paramName)
+            .addParameter(paramName, caseTypeName)
+            .addExperimentalUuidOptInIfNeeded(caseTypeName)
+            .returns(childClassName)
+        val encodedArg = when (val caseModel = case.model) {
+            is Model.Enum -> {
+                val enumClassName = requireNotNull(enumClassNames[case])
+                functionBuilder.addStatement(
+                    "val encoded = %L",
+                    caseModel.toPathParamValueExpression(paramName, enumClassName),
+                )
+                "encoded"
+            }
+
+            else -> if (caseTypeName == STRING) paramName else "$paramName.toString()"
+        }
+        functionBuilder.addStatement(
+            "return %T(%L)",
+            childClassName,
+            currentAccumulatedParams.constructorArgs(encodedArg),
+        )
+        addFunction(functionBuilder.build())
     }
 }
 
@@ -210,7 +237,6 @@ private fun PathSegment.OverloadedParameter.enumClassNames(
     }
 }
 
-@Suppress("CyclomaticComplexMethod", "LongMethod", "LongParameterList")
 internal fun Route.buildOperationBody(
     method: HttpMethod,
     methodClassName: ClassName,
@@ -218,12 +244,23 @@ internal fun Route.buildOperationBody(
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
 ): CodeBlock {
+    return if (returns.needsSealedInterface()) {
+        buildSealedOperationBody(method, methodClassName, includeBody, bodyExpr, bodyGuard)
+    } else {
+        buildDirectOperationBody(method, includeBody, bodyExpr, bodyGuard)
+    }
+}
+
+private fun Route.buildSealedOperationBody(
+    method: HttpMethod,
+    methodClassName: ClassName,
+    includeBody: Boolean,
+    bodyExpr: CodeBlock?,
+    bodyGuard: String?,
+): CodeBlock {
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
     val pathLiteral = segments.toPathLiteral()
-
-    val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
-    val hasRequestConfig = nonPathParams.isNotEmpty() || (body != null && includeBody)
     val bodyMayBeNull = includeBody && when (body?.defaultOrNull()) {
         is Route.Body.OverloadedBody -> false
         is Route.Body.FormUrlEncoded,
@@ -232,74 +269,103 @@ internal fun Route.buildOperationBody(
         is Route.Body.SetBody,
         null -> body?.required != true
     }
-    val responseClassName = methodClassName.nestedClass("Response")
 
-    if (returns.needsSealedInterface()) {
-        if (hasRequestConfig) {
-            code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
+    if (hasRequestConfig(includeBody)) {
+        code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
+        addRequestConfigCode(code, includeBody, bodyMayBeNull, bodyExpr, bodyGuard)
+        code.endControlFlow()
+    } else {
+        code.addStatement("val response = client.%L(%L)", httpMethodName, pathLiteral)
+    }
+
+    code.beginControlFlow("return when (response.status.value)")
+    addSealedResponseStatusCases(code, methodClassName)
+    addSealedResponseDefaultCase(code, methodClassName)
+    code.endControlFlow()
+    return code.build()
+}
+
+private fun Route.buildDirectOperationBody(
+    method: HttpMethod,
+    includeBody: Boolean,
+    bodyExpr: CodeBlock?,
+    bodyGuard: String?,
+): CodeBlock {
+    val code = CodeBlock.builder()
+    val httpMethodName = method.value.lowercase()
+    val pathLiteral = segments.toPathLiteral()
+    val bodyMayBeNull = includeBody && when (body?.defaultOrNull()) {
+        is Route.Body.OverloadedBody -> false
+        is Route.Body.FormUrlEncoded,
+        is Route.Body.Multipart.Ref,
+        is Route.Body.Multipart.Value,
+        is Route.Body.SetBody,
+        null -> body?.required != true
+    }
+
+    val model = returns.singlePreferredModelOrNull()
+    if (model == null || model is Model.Primitive.Unit) {
+        if (hasRequestConfig(includeBody)) {
+            code.beginControlFlow("client.%L(%L)", httpMethodName, pathLiteral)
             addRequestConfigCode(code, includeBody, bodyMayBeNull, bodyExpr, bodyGuard)
             code.endControlFlow()
         } else {
-            code.addStatement("val response = client.%L(%L)", httpMethodName, pathLiteral)
+            code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
         }
-
-        code.beginControlFlow("return when (response.status.value)")
-        for ((statusCode, returnTypeEntry) in returns.responses.entries.sortedBy { it.key.value }) {
-            val caseName = statusCode.toCaseName()
-            val caseClassName = responseClassName.nestedClass(caseName)
-            val model = returnTypeEntry.preferredModel()
-
-            if (model == null || model is Model.Primitive.Unit) {
-                code.addStatement("%L -> %T", statusCode.value, caseClassName)
-            } else {
-                code.addStatement("%L -> %T(response.%M())", statusCode.value, caseClassName, BodyMember)
-            }
-        }
-
-        if (returns.default != null) {
-            val defaultClassName = responseClassName.nestedClass("Default")
-            val defaultModel = returns.default!!.preferredModel()
-            if (defaultModel != null && defaultModel !is Model.Primitive.Unit) {
-                code.addStatement("else -> %T(response.status, response.%M())", defaultClassName, BodyMember)
-            } else {
-                code.addStatement("else -> %T(response.status)", defaultClassName)
-            }
-        } else {
-            code.addStatement(
-                "else -> throw %T(response, %S)",
-                ResponseExceptionType,
-                "",
-            )
-        }
-        code.endControlFlow()
     } else {
-        val model = returns.singlePreferredModelOrNull()
-
-        if (model == null || model is Model.Primitive.Unit) {
-            if (hasRequestConfig) {
-                code.beginControlFlow("client.%L(%L)", httpMethodName, pathLiteral)
-                addRequestConfigCode(code, includeBody, bodyMayBeNull, bodyExpr, bodyGuard)
-                code.endControlFlow()
-            } else {
-                code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
-            }
+        if (hasRequestConfig(includeBody)) {
+            code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
+            code.indent()
+            addRequestConfigCode(code, includeBody, bodyMayBeNull, bodyExpr, bodyGuard)
+            code.unindent()
+            code.add("}.%M()\n", BodyMember)
         } else {
-            // Both inline-response and direct-model paths now return the value directly.
-            if (hasRequestConfig) {
-                code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
-                code.indent()
-                addRequestConfigCode(code, includeBody, bodyMayBeNull, bodyExpr, bodyGuard)
-                code.unindent()
-                code.add("}.%M()\n", BodyMember)
-            } else {
-                code.addStatement("return client.%L(%L).%M()", httpMethodName, pathLiteral, BodyMember)
-            }
+            code.addStatement("return client.%L(%L).%M()", httpMethodName, pathLiteral, BodyMember)
         }
     }
 
     return code.build()
 }
 
+private fun Route.addSealedResponseStatusCases(code: CodeBlock.Builder, methodClassName: ClassName) {
+    val responseClassName = methodClassName.nestedClass("Response")
+    for ((statusCode, returnTypeEntry) in returns.responses.entries.sortedBy { it.key.value }) {
+        val caseName = statusCode.toCaseName()
+        val caseClassName = responseClassName.nestedClass(caseName)
+        val model = returnTypeEntry.preferredModel()
+        if (model == null || model is Model.Primitive.Unit) {
+            code.addStatement("%L -> %T", statusCode.value, caseClassName)
+        } else {
+            code.addStatement("%L -> %T(response.%M())", statusCode.value, caseClassName, BodyMember)
+        }
+    }
+}
+
+private fun Route.addSealedResponseDefaultCase(code: CodeBlock.Builder, methodClassName: ClassName) {
+    val responseClassName = methodClassName.nestedClass("Response")
+    if (returns.default != null) {
+        val defaultClassName = responseClassName.nestedClass("Default")
+        val defaultModel = returns.default!!.preferredModel()
+        if (defaultModel != null && defaultModel !is Model.Primitive.Unit) {
+            code.addStatement("else -> %T(response.status, response.%M())", defaultClassName, BodyMember)
+        } else {
+            code.addStatement("else -> %T(response.status)", defaultClassName)
+        }
+    } else {
+        code.addStatement(
+            "else -> throw %T(response, %S)",
+            ResponseExceptionType,
+            "",
+        )
+    }
+}
+
+private fun Route.hasRequestConfig(includeBody: Boolean): Boolean {
+    val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
+    return nonPathParams.isNotEmpty() || (body != null && includeBody)
+}
+
+@Suppress("CanBeNonNullable")
 private fun Route.addRequestConfigCode(
     code: CodeBlock.Builder,
     includeBody: Boolean = true,
@@ -384,7 +450,6 @@ private fun ContentType.toContentTypeCodeBlock(): CodeBlock {
     }
 }
 
-@Suppress("CyclomaticComplexMethod", "LongMethod")
 private fun addBodyCode(
     code: CodeBlock.Builder,
     bodies: Route.Bodies,
@@ -393,78 +458,88 @@ private fun addBodyCode(
     bodyGuard: String? = null,
 ) {
     val body = bodies.defaultOrNull() ?: return
-    fun CodeBlock.Builder.addSetLikeBodyCode(contentType: CodeBlock) {
-        if (bodyExpr != null) {
-            if (bodyMayBeNull && bodyGuard != null) {
-                beginControlFlow("if (%L)", bodyGuard)
-                addStatement("%M(%L)", ContentTypeFunMember, contentType)
-                addStatement("%M(%L)", SetBodyMember, bodyExpr)
-                endControlFlow()
-            } else {
-                addStatement("%M(%L)", ContentTypeFunMember, contentType)
-                addStatement("%M(%L)", SetBodyMember, bodyExpr)
-            }
-        } else if (!bodyMayBeNull) {
-            addStatement("%M(%L)", ContentTypeFunMember, contentType)
-            addStatement("%M(body)", SetBodyMember)
-        } else {
-            beginControlFlow("body?.let")
-            addStatement("%M(%L)", ContentTypeFunMember, contentType)
-            addStatement("%M(it)", SetBodyMember)
-            endControlFlow()
-        }
-    }
-
     when (body) {
         is Route.Body.SetBody ->
-            code.addSetLikeBodyCode(body.contentType.toContentTypeCodeBlock())
+            code.addSetLikeBodyCode(body.contentType.toContentTypeCodeBlock(), bodyExpr, bodyMayBeNull, bodyGuard)
 
         is Route.Body.OverloadedBody ->
-            code.addSetLikeBodyCode(body.contentType.toContentTypeCodeBlock())
+            code.addSetLikeBodyCode(body.contentType.toContentTypeCodeBlock(), bodyExpr, bodyMayBeNull, bodyGuard)
 
-        is Route.Body.FormUrlEncoded -> {
-            code.add("%M(%T.build {\n", SetBodyMember, ParametersType)
-            code.indent()
-            for (formData in body.parameters) {
-                val paramName = formData.name.toParamName()
-                val valueExpr = formData.type.wireValueExpr(paramName)
-                code.addStatement("append(%S, %L)", formData.name, valueExpr)
-            }
-            code.unindent()
-            code.add("}.%M())\n", FormUrlEncodeMember)
-        }
+        is Route.Body.FormUrlEncoded -> code.addFormUrlEncodedBodyCode(body)
+        is Route.Body.Multipart.Value -> code.addMultipartValueBodyCode(body)
+        is Route.Body.Multipart.Ref -> code.addMultipartRefBodyCode(bodyMayBeNull)
+    }
+}
 
-        is Route.Body.Multipart.Value -> {
-            code.add("%M(%T(%M {\n", SetBodyMember, MultiPartFormDataContentType, FormDataMember)
-            code.indent()
-            for (formData in body.parameters) {
-                val paramName = formData.name.toParamName()
-                val valueExpr = formData.type.wireValueExpr(paramName)
-                code.addStatement("%M(%S, %L)", AppendMember, formData.name, valueExpr)
-            }
-            code.unindent()
-            code.add("}))\n")
+@Suppress("CanBeNonNullable")
+private fun CodeBlock.Builder.addSetLikeBodyCode(
+    contentType: CodeBlock,
+    bodyExpr: CodeBlock?,
+    bodyMayBeNull: Boolean,
+    bodyGuard: String?,
+) {
+    if (bodyExpr != null) {
+        if (bodyMayBeNull && bodyGuard != null) {
+            beginControlFlow("if (%L)", bodyGuard)
+            addStatement("%M(%L)", ContentTypeFunMember, contentType)
+            addStatement("%M(%L)", SetBodyMember, bodyExpr)
+            endControlFlow()
+        } else {
+            addStatement("%M(%L)", ContentTypeFunMember, contentType)
+            addStatement("%M(%L)", SetBodyMember, bodyExpr)
         }
+    } else if (!bodyMayBeNull) {
+        addStatement("%M(%L)", ContentTypeFunMember, contentType)
+        addStatement("%M(body)", SetBodyMember)
+    } else {
+        beginControlFlow("body?.let")
+        addStatement("%M(%L)", ContentTypeFunMember, contentType)
+        addStatement("%M(it)", SetBodyMember)
+        endControlFlow()
+    }
+}
 
-        is Route.Body.Multipart.Ref -> {
-            if (!bodyMayBeNull) {
-                code.addStatement(
-                    "%M(%T.MultiPart.FormData)",
-                    ContentTypeFunMember,
-                    ContentTypeType,
-                )
-                code.addStatement("%M(body)", SetBodyMember)
-            } else {
-                code.beginControlFlow("body?.let")
-                code.addStatement(
-                    "%M(%T.MultiPart.FormData)",
-                    ContentTypeFunMember,
-                    ContentTypeType,
-                )
-                code.addStatement("%M(it)", SetBodyMember)
-                code.endControlFlow()
-            }
-        }
+private fun CodeBlock.Builder.addFormUrlEncodedBodyCode(body: Route.Body.FormUrlEncoded) {
+    add("%M(%T.build {\n", SetBodyMember, ParametersType)
+    indent()
+    for (formData in body.parameters) {
+        val paramName = formData.name.toParamName()
+        val valueExpr = formData.type.wireValueExpr(paramName)
+        addStatement("append(%S, %L)", formData.name, valueExpr)
+    }
+    unindent()
+    add("}.%M())\n", FormUrlEncodeMember)
+}
+
+private fun CodeBlock.Builder.addMultipartValueBodyCode(body: Route.Body.Multipart.Value) {
+    add("%M(%T(%M {\n", SetBodyMember, MultiPartFormDataContentType, FormDataMember)
+    indent()
+    for (formData in body.parameters) {
+        val paramName = formData.name.toParamName()
+        val valueExpr = formData.type.wireValueExpr(paramName)
+        addStatement("%M(%S, %L)", AppendMember, formData.name, valueExpr)
+    }
+    unindent()
+    add("}))\n")
+}
+
+private fun CodeBlock.Builder.addMultipartRefBodyCode(bodyMayBeNull: Boolean) {
+    if (!bodyMayBeNull) {
+        addStatement(
+            "%M(%T.MultiPart.FormData)",
+            ContentTypeFunMember,
+            ContentTypeType,
+        )
+        addStatement("%M(body)", SetBodyMember)
+    } else {
+        beginControlFlow("body?.let")
+        addStatement(
+            "%M(%T.MultiPart.FormData)",
+            ContentTypeFunMember,
+            ContentTypeType,
+        )
+        addStatement("%M(it)", SetBodyMember)
+        endControlFlow()
     }
 }
 

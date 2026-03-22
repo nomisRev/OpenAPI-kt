@@ -48,7 +48,7 @@ internal val NullableMember = MemberName("kotlinx.serialization.builtins", "null
 internal val ListSerializerMember = MemberName("kotlinx.serialization.builtins", "ListSerializer")
 internal val ByteArraySerializerMember = MemberName("kotlinx.serialization.builtins", "ByteArraySerializer")
 
-@Suppress("CyclomaticComplexMethod", "LongMethod", "LongParameterList")
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 fun Model.Object.toTypeSpec(
     config: RenderConfig,
     parentInterface: ClassName? = null,
@@ -240,7 +240,7 @@ private data class RenderedAdditionalProperty(
     val kind: AdditionalPropertyKind,
 )
 
-@Suppress("CyclomaticComplexMethod", "LongParameterList")
+@Suppress("CyclomaticComplexMethod")
 private fun renderProperty(
     jsonName: String,
     property: Model.Object.Property,
@@ -460,7 +460,6 @@ internal fun Model.serializerCode(
     return if (isNullable) CodeBlock.of("%L.%M", nonNullable, NullableMember) else nonNullable
 }
 
-@Suppress("CyclomaticComplexMethod")
 internal fun Model.nonNullableSerializerCode(
     config: RenderConfig,
     originalClassName: ClassName? = null,

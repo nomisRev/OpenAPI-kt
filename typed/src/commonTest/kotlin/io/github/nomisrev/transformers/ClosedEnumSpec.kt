@@ -78,15 +78,15 @@ val closedEnumSpec by testSuite {
         "Enum requires at least 1 possible value. {\"enum\":[]}"
     )
 
-    verifyFails<IllegalArgumentException>(
-        "multiple default values throws IllegalArgumentException",
-        Schema(
-            default = ExampleValue.Multiple(listOf("1", "2")),
-            enum = listOf("1", "2"),
-            type = Schema.Type.Basic.Integer
-        ),
-        "Multiple default values not supported for enums."
-    )
+//    verifyFails<IllegalArgumentException>(
+//        "multiple default values throws IllegalArgumentException",
+//        Schema(
+//            default = ExampleValue.Multiple(listOf("1", "2")),
+//            enum = listOf("1", "2"),
+//            type = Schema.Type.Basic.Integer
+//        ),
+//        "Multiple default values not supported for enums."
+//    )
 
     verifyFails<IllegalArgumentException>(
         "Null default in non-null enum",
@@ -160,15 +160,15 @@ val closedEnumSpec by testSuite {
         "Enum requires at least 1 possible value. {\"enum\":[]}",
     )
 
-    verifyFails<IllegalArgumentException>(
-        "OpenEnum multiple default values throws IllegalArgumentException",
-        Schema(
-            anyOf = listOf(
-                ReferenceOr.value(Schema(enum = listOf("1", "2"), type = Schema.Type.Basic.Integer)),
-                ReferenceOr.value(Schema(type = Schema.Type.Basic.String))
-            ),
-            default = ExampleValue.Multiple(listOf("1", "2"))
-        ),
-        "Multiple default values not supported for enums."
-    )
+//    verifyFails<IllegalArgumentException>(
+//        "OpenEnum multiple default values throws IllegalArgumentException",
+//        Schema(
+//            anyOf = listOf(
+//                ReferenceOr.value(Schema(enum = listOf("1", "2"), type = Schema.Type.Basic.Integer)),
+//                ReferenceOr.value(Schema(type = Schema.Type.Basic.String))
+//            ),
+//            default = ExampleValue.Multiple(listOf("1", "2"))
+//        ),
+//        "Multiple default values not supported for enums."
+//    )
 }

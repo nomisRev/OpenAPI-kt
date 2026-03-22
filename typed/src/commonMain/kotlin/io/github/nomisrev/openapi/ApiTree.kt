@@ -149,7 +149,6 @@ private class PathNodeBuilder(
  */
 private fun String.normalizeSegmentSeparators(): String = replace('-', '_')
 
-@Suppress("CyclomaticComplexMethod")
 private fun PathSegment?.sameIdentityAs(other: PathSegment): Boolean = when {
     this is PathSegment.Literal && other is PathSegment.Literal ->
         name.normalizeSegmentSeparators() == other.name.normalizeSegmentSeparators()
@@ -352,81 +351,109 @@ private fun Route.ReturnType.concreteCollisionDescription(): String =
             "$contentType:${model.compatibilityDescription()}"
         }
 
-@Suppress("CyclomaticComplexMethod", "LongMethod")
 private fun Model.normalizedForCompatibility(): Model = when (this) {
-    is Model.ByteArray -> copy(description = null, title = null)
-    is Model.Collection -> copy(
-        inner = inner.normalizedForCompatibility(),
-        description = null,
-        title = null,
-    )
-    is Model.Date -> copy(description = null, title = null)
-    is Model.DateTime -> copy(description = null, title = null)
-    is Model.DiscriminatedObject -> copy(
-        context = SharedPathNodeNamingContext,
-        abstractProperties = abstractProperties.mapValues { (_, property) ->
-            property.copy(model = property.model.normalizedForCompatibility())
-        },
-        subtypes = subtypes.map { subtype ->
-            subtype.copy(
-                context = SharedPathNodeNamingContext,
-                description = null,
-                title = null,
-                properties = subtype.properties.mapValues { (_, property) ->
-                    property.copy(model = property.model.normalizedForCompatibility())
-                },
-                additionalProperties = subtype.additionalProperties.normalizedForCompatibility(),
-            )
-        },
-        description = null,
-        title = null,
-    )
-    is Model.Enum -> copy(
-        context = SharedPathNodeNamingContext,
-        inner = inner.normalizedForCompatibility(),
-        description = null,
-        title = null,
-    )
-    is Model.FreeFormJson -> copy(description = null, title = null)
-    is Model.Object -> copy(
-        context = SharedPathNodeNamingContext,
-        description = null,
-        title = null,
-        properties = properties.mapValues { (_, property) ->
-            property.copy(model = property.model.normalizedForCompatibility())
-        },
-        additionalProperties = additionalProperties.normalizedForCompatibility(),
-    )
-    is Model.Primitive.Boolean -> copy(description = null, title = null)
-    is Model.Primitive.Double -> copy(description = null, title = null)
-    is Model.Primitive.Float -> copy(description = null, title = null)
-    is Model.Primitive.Int -> copy(description = null, title = null)
-    is Model.Primitive.Long -> copy(description = null, title = null)
-    is Model.Primitive.String -> copy(description = null, title = null)
-    is Model.Primitive.Unit -> copy(description = null, title = null)
-    is Model.Reference -> copy(
-        context = SharedPathNodeNamingContext,
-        description = null,
-        title = null,
-    )
-    is Model.OneOf -> copy(
-        context = SharedPathNodeNamingContext,
-        cases = cases.map { case ->
-            case.copy(model = case.model.normalizedForCompatibility())
-        },
-        description = null,
-        title = null,
-    )
-    is Model.AnyOf -> copy(
-        context = SharedPathNodeNamingContext,
-        cases = cases.map { case ->
-            case.copy(model = case.model.normalizedForCompatibility())
-        },
-        description = null,
-        title = null,
-    )
-    is Model.Uuid -> copy(description = null, title = null)
+    is Model.Collection -> normalizedForCompatibility()
+    is Model.DiscriminatedObject -> normalizedForCompatibility()
+    is Model.Enum -> normalizedForCompatibility()
+    is Model.Object -> normalizedForCompatibility()
+    is Model.OneOf -> normalizedForCompatibility()
+    is Model.AnyOf -> normalizedForCompatibility()
+
+    is Model.ByteArray,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.FreeFormJson,
+    is Model.Primitive.Boolean,
+    is Model.Primitive.Double,
+    is Model.Primitive.Float,
+    is Model.Primitive.Int,
+    is Model.Primitive.Long,
+    is Model.Primitive.String,
+    is Model.Primitive.Unit,
+    is Model.Reference,
+    is Model.Uuid -> clearedCompatibilityMetadata()
 }
+
+private fun Model.Collection.normalizedForCompatibility(): Model = copy(
+    inner = inner.normalizedForCompatibility(),
+    description = null,
+    title = null,
+)
+
+private fun Model.DiscriminatedObject.normalizedForCompatibility(): Model = copy(
+    context = SharedPathNodeNamingContext,
+    abstractProperties = abstractProperties.mapValues { (_, property) ->
+        property.copy(model = property.model.normalizedForCompatibility())
+    },
+    subtypes = subtypes.map { subtype ->
+        subtype.copy(
+            context = SharedPathNodeNamingContext,
+            description = null,
+            title = null,
+            properties = subtype.properties.mapValues { (_, property) ->
+                property.copy(model = property.model.normalizedForCompatibility())
+            },
+            additionalProperties = subtype.additionalProperties.normalizedForCompatibility(),
+        )
+    },
+    description = null,
+    title = null,
+)
+
+private fun Model.Enum.normalizedForCompatibility(): Model = copy(
+    context = SharedPathNodeNamingContext,
+    inner = inner.normalizedForCompatibility(),
+    description = null,
+    title = null,
+)
+
+private fun Model.Object.normalizedForCompatibility(): Model = copy(
+    context = SharedPathNodeNamingContext,
+    description = null,
+    title = null,
+    properties = properties.mapValues { (_, property) ->
+        property.copy(model = property.model.normalizedForCompatibility())
+    },
+    additionalProperties = additionalProperties.normalizedForCompatibility(),
+)
+
+private fun Model.OneOf.normalizedForCompatibility(): Model = copy(
+    context = SharedPathNodeNamingContext,
+    cases = cases.map { case ->
+        case.copy(model = case.model.normalizedForCompatibility())
+    },
+    description = null,
+    title = null,
+)
+
+private fun Model.AnyOf.normalizedForCompatibility(): Model = copy(
+    context = SharedPathNodeNamingContext,
+    cases = cases.map { case ->
+        case.copy(model = case.model.normalizedForCompatibility())
+    },
+    description = null,
+    title = null,
+)
+
+private fun Model.clearedCompatibilityMetadata(): Model =
+    if (this is Model.ByteArray) copy(description = null, title = null)
+    else if (this is Model.Date) copy(description = null, title = null)
+    else if (this is Model.DateTime) copy(description = null, title = null)
+    else if (this is Model.FreeFormJson) copy(description = null, title = null)
+    else if (this is Model.Primitive.Boolean) copy(description = null, title = null)
+    else if (this is Model.Primitive.Double) copy(description = null, title = null)
+    else if (this is Model.Primitive.Float) copy(description = null, title = null)
+    else if (this is Model.Primitive.Int) copy(description = null, title = null)
+    else if (this is Model.Primitive.Long) copy(description = null, title = null)
+    else if (this is Model.Primitive.String) copy(description = null, title = null)
+    else if (this is Model.Primitive.Unit) copy(description = null, title = null)
+    else if (this is Model.Reference) copy(
+        context = SharedPathNodeNamingContext,
+        description = null,
+        title = null,
+    )
+    else if (this is Model.Uuid) copy(description = null, title = null)
+    else error("Unsupported model: $this")
 
 private fun Model.Object.AdditionalProperties.normalizedForCompatibility(): Model.Object.AdditionalProperties =
     when (this) {
@@ -435,7 +462,6 @@ private fun Model.Object.AdditionalProperties.normalizedForCompatibility(): Mode
             Model.Object.AdditionalProperties.Schema(value.normalizedForCompatibility())
     }
 
-@Suppress("CyclomaticComplexMethod")
 private fun PathSegment.compatibilityDescription(): String = when (val segment = normalizedForCompatibility()) {
     is PathSegment.FixedValue -> "FixedValue(wireValue=${segment.wireValue})"
     is PathSegment.Literal -> "Literal(name=${segment.name})"

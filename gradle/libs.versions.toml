@@ -23,7 +23,7 @@ kotlinpoet = { module = "com.squareup:kotlinpoet", version="2.2.0" }
 test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 datetime =  { module="org.jetbrains.kotlinx:kotlinx-datetime", version="0.7.1" }
-kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.94.0" }
+kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.104.0" }
 testballoon = { module="de.infix.testBalloon:testBalloon-framework-core", version.ref="testballoon"  }
 kotlinxresources = { module = "com.goncalossilva:resources", version.ref = "resources" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }

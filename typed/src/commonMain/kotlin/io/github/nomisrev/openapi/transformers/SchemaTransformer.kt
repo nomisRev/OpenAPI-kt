@@ -17,10 +17,11 @@ import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.isOneOfNullableType
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.toModel
+import io.github.nomisrev.openapi.parser.AdditionalProperties.PSchema
 import io.github.nomisrev.openapi.routes.SchemaContext
 
-@Suppress("CyclomaticComplexMethod", "UnsafeCallOnNullableType")
 // TODO: resolveReference is always false for nested calls, and true for top-level.. Split the diff and remove bool?
+@Suppress("UnsafeCallOnNullableType")
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boolean): Model = when {
     this is ResolvedSchema.Reference && !resolveReference ->
@@ -90,79 +91,64 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
     else -> fallback()
 }
 
-@Suppress("LongMethod")
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContext): Model =
     when (val ap = schema.additionalProperties) {
         null -> fallback()
-        is PSchema -> {
-            when (this) {
-                is ResolvedSchema.Recursive -> Object(
-                    name,
-                    description(),
-                    schema.title,
-                    mapOf(
-                        "values" to Object.Property(
-                            Model.Collection(
-                                inner = ap.value.toModel(name.nest(NamingContext.AdditionalProperties), context),
-                                default = Model.Default.Value(emptyList()),
-                                description = null,
-                                title = null,
-                                constraint = null,
-                                isNullable = false,
-                            ),
-                            false
-                        )
-                    ),
-                    Object.AdditionalProperties.False,
-                    isNullable
-                )
+        is PSchema -> buildTypedAdditionalPropertiesModel(context, ap)
+        is Allowed -> if (ap.value) fallback() else buildAllowedAdditionalPropertiesModel()
+    }
 
-                is ResolvedSchema.Reference -> Object(
-                    name,
-                    description(),
-                    schema.title,
-                    mapOf(
-                        "values" to Object.Property(
-                            Model.Collection(
-                                inner = ap.value.toModel(name.nest(NamingContext.AdditionalProperties), context),
-                                default = Model.Default.Value(emptyList()),
-                                description = null,
-                                title = null,
-                                constraint = null,
-                                isNullable = false,
-                            ),
-                            false
-                        )
-                    ),
-                    Object.AdditionalProperties.False,
-                    isNullable
-                )
+context(ctx: Registry.Scope)
+private suspend fun ResolvedSchema.buildTypedAdditionalPropertiesModel(
+    context: SchemaContext,
+    ap: PSchema,
+): Model =
+    when (this) {
+        is ResolvedSchema.Recursive, is ResolvedSchema.Reference ->
+            Object(
+                name,
+                description(),
+                schema.title,
+                mapOf(
+                    "values" to Object.Property(
+                        Model.Collection(
+                            inner = ap.value.toModel(name.nest(NamingContext.AdditionalProperties), context),
+                            default = Model.Default.Value(emptyList()),
+                            description = null,
+                            title = null,
+                            constraint = null,
+                            isNullable = false,
+                        ),
+                        false
+                    )
+                ),
+                Object.AdditionalProperties.False,
+                isNullable
+            )
 
-                is ResolvedSchema.Value -> Model.Collection(
-                    inner = ap.value.toModel(name, context),
-                    default = Model.Default.Value(emptyList()),
-                    description = description(),
-                    constraint = null,
-                    isNullable = isNullable,
-                    title = schema.title
-                )
-            }
-        }
+        is ResolvedSchema.Value ->
+            Model.Collection(
+                inner = ap.value.toModel(name, context),
+                default = Model.Default.Value(emptyList()),
+                description = description(),
+                constraint = null,
+                isNullable = isNullable,
+                title = schema.title
+            )
+    }
 
-        is Allowed -> when (ap.value) {
-            true -> fallback()
-            false -> when (this) {
-                is ResolvedSchema.Recursive if name.isTopLevel() ->
-                    Object(name, description(), schema.title, emptyMap(), false, isNullable)
+context(ctx: Registry.Scope)
+private suspend fun ResolvedSchema.buildAllowedAdditionalPropertiesModel(): Model =
+    when (this) {
+        is ResolvedSchema.Recursive if name.isTopLevel() ->
+            Object(name, description(), schema.title, emptyMap(), false, isNullable)
 
-                is ResolvedSchema.Reference ->
-                    Object(name, description(), schema.title, emptyMap(), false, isNullable)
+        is ResolvedSchema.Reference ->
+            Object(name, description(), schema.title, emptyMap(), false, isNullable)
 
-                is ResolvedSchema.Recursive -> Model.Primitive.Unit(description(), isNullable, schema.title)
-                is ResolvedSchema.Value -> Model.Primitive.Unit(description(), isNullable, schema.title)
-            }
-        }
+        is ResolvedSchema.Recursive -> Model.Primitive.Unit(description(), isNullable, schema.title)
+        is ResolvedSchema.Value -> Model.Primitive.Unit(description(), isNullable, schema.title)
     }
 
 context(ctx: Registry.Scope)

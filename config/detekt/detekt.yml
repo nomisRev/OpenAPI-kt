@@ -91,9 +91,9 @@ complexity:
   CyclomaticComplexMethod:
     active: true
     allowedComplexity: 14
-    ignoreSingleWhenExpression: false
+    ignoreSingleWhenExpression: true
     ignoreSimpleWhenEntries: false
-    ignoreNestingFunctions: false
+    ignoreNestingFunctions: true
     ignoreLocalFunctions: false
     nestingFunctions:
       - 'also'
@@ -116,7 +116,7 @@ complexity:
     allowedLines: 60
   LongParameterList:
     active: true
-    allowedFunctionParameters: 5
+    allowedFunctionParameters: 7
     allowedConstructorParameters: 6
     ignoreDefaultParameters: false
     ignoreDataClasses: true

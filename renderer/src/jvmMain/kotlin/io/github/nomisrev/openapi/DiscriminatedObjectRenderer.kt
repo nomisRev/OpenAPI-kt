@@ -12,7 +12,6 @@ import kotlinx.serialization.Serializable
 
 private val JsonClassDiscriminatorType = ClassName("kotlinx.serialization.json", "JsonClassDiscriminator")
 private val OptInType = ClassName("kotlin", "OptIn")
-private val UuidType = ClassName("kotlin.uuid", "Uuid")
 private val ExperimentalUuidApiType = ClassName("kotlin.uuid", "ExperimentalUuidApi")
 
 fun Model.DiscriminatedObject.toTypeSpec(

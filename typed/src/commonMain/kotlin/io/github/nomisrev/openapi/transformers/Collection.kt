@@ -11,7 +11,6 @@ import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.toModel
 
-@Suppress("CyclomaticComplexMethod")
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
     when (this) {

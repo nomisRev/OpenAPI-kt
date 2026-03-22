@@ -135,7 +135,6 @@ public data class Schema(
             override val descriptor: SerialDescriptor =
                 buildSerialDescriptor("io.github.nomisrev.openapi.Schema.Type", SerialKind.CONTEXTUAL)
 
-            @Suppress("CyclomaticComplexMethod")
             override fun deserialize(decoder: Decoder): Type =
                 when (decoder) {
                     is JsonDecoder -> {

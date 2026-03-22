@@ -206,7 +206,7 @@ private fun ResolvedSchema.Reference.simpleCase(
     )
 }
 
-@Suppress("CyclomaticComplexMethod", "UnsafeCallOnNullableType")
+@Suppress("UnsafeCallOnNullableType")
 context(ctx: Registry.Scope)
 suspend fun Schema.merge(other: Schema): Schema = when {
     this == other -> this

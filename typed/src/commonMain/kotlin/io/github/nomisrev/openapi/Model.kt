@@ -15,7 +15,6 @@ sealed interface Model {
         val context: NamingContext
     }
 
-    @Suppress("CyclomaticComplexMethod")
     fun with(
         description: String? = this.description,
         isNullable: Boolean = this.isNullable,

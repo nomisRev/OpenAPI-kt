@@ -27,6 +27,8 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<Strin
 fun ResolvedSchema.default(): Model.Default<String>? = when (val defaultValue = schema.default) {
     is Single if defaultValue.value.equals("null", ignoreCase = true) -> Model.Default.Null
     is Single -> Model.Default.Value(defaultValue.value)
-    is Multiple -> throw IllegalArgumentException("Multiple default values not supported for enums.")
+    // OpenAI sometimes has empty list for default where inapplicable sometimes
+    is Multiple if (defaultValue.values.isEmpty()) -> null
+    is Multiple -> throw IllegalArgumentException("Multiple default values not supported for enums. $this")
     null -> null
 }

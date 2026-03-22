@@ -21,8 +21,7 @@ private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")
 private val ListType = ClassName("kotlin.collections", "List")
 
 @Suppress("CyclomaticComplexMethod")
-fun Model.toTypeName(config: RenderConfig): TypeName {
-    val typeName = when (this) {
+fun Model.toTypeName(config: RenderConfig): TypeName = when (this) {
         is Model.ByteArray -> BYTE_ARRAY
         is Model.Collection -> {
             if (inner is Model.FreeFormJson) JsonArrayType
@@ -45,9 +44,7 @@ fun Model.toTypeName(config: RenderConfig): TypeName {
         is Model.Reference -> context.toClassName(config)
         is Model.Union -> context.toClassName(config)
         is Model.Uuid -> UuidType
-    }
-    return typeName.copy(nullable = isNullable)
-}
+    }.copy(nullable = isNullable)
 
 fun NamingContext.toClassName(config: RenderConfig): ClassName =
     when (val root = head) {

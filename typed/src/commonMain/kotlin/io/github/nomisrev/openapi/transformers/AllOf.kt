@@ -59,7 +59,6 @@ private tailrec suspend fun ReferenceOr<Schema>.getSuperTypeOrNull(
     }
 }
 
-@Suppress("CyclomaticComplexMethod")
 private fun Model.merge(other: Model, name: NamingContext): Model = when (this) {
     else if this == other -> this
     is Model.Reference if (other is Model.Reference && this.context == other.context) -> this
@@ -110,7 +109,6 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
     is Model.Uuid -> error("Cannot merge allOf $this \n\n $other")
 }
 
-@Suppress("CyclomaticComplexMethod")
 private fun Model.Primitive.merge(other: Model.Primitive): Model.Primitive = when (this) {
     is Model.Primitive.Boolean if other is Model.Primitive.Boolean -> Model.Primitive.Boolean(
         default = default ?: other.default,

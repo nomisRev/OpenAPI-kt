@@ -308,7 +308,6 @@ private fun Route.toOperationPropertySpec(
         .build()
 }
 
-@Suppress("LongMethod")
 private fun Route.toOperationTypeSpec(
     method: HttpMethod,
     config: RenderConfig,
@@ -331,73 +330,21 @@ private fun Route.toOperationTypeSpec(
     return TypeSpec.classBuilder(methodTypeName(method))
         .addDeprecatedIfNeeded()
         .apply {
-            addClientConstructorAndState(config, accumulatedParams)
-            routeInlineParameterModels.forEach { inline ->
-                inline.model
-                    .toInlineParameterTypeSpec(config, methodClassName, inline.simpleName)
-                    ?.let(::addType)
-            }
-            overloadedBody
-                ?.directInlineTypeSpecs(config, methodClassName, inlineModelScope)
-                ?.forEach(::addType)
-            flattenedBody?.publicTypeSpecs?.forEach(::addType)
-            inlineModelScope.methodTypeSpecs(config).forEach(::addType)
-            inlineBodyTypeSpec?.let(::addType)
-            if (!returns.isSingleUnitResponse() && !returns.isSingleDirectModelResponse()) {
-                addType(buildResponseTypeSpec(config, methodClassName, inlineModelScope))
-            }
-            if (flattenedBody != null) {
-                flattenedBody.overloads.forEach { overload ->
-                    addFunction(
-                        toInvokeFunSpecForFlattenedBody(
-                            config = config,
-                            pathClassName = pathClassName,
-                            methodClassName = methodClassName,
-                            sharedInlineParameterKeys = sharedInlineParameterKeys,
-                            overload = overload,
-                            inlineModelScope = inlineModelScope,
-                        )
-                    )
-                }
-            } else if (overloadedBody != null) {
-                if (body?.required != true) {
-                    addFunction(
-                        toInvokeFunSpecForOptionalOverloadedBodyNoBody(
-                            config = config,
-                            pathClassName = pathClassName,
-                            methodClassName = methodClassName,
-                            sharedInlineParameterKeys = sharedInlineParameterKeys,
-                            inlineModelScope = inlineModelScope,
-                        )
-                    )
-                }
-                overloadedBody
-                    .distinctCaseSignatures(config, inlineModelScope)
-                    .forEach { caseSignature ->
-                        addFunction(
-                            toInvokeFunSpecForOverloadedBodyCase(
-                                config = config,
-                                pathClassName = pathClassName,
-                                methodClassName = methodClassName,
-                                sharedInlineParameterKeys = sharedInlineParameterKeys,
-                                bodyTypeName = caseSignature.typeName,
-                                bodyJvmName = caseSignature.jvmName,
-                                inlineModelScope = inlineModelScope,
-                            )
-                        )
-                    }
-            } else {
-                addFunction(
-                    toInvokeFunSpec(
-                        config = config,
-                        pathClassName = pathClassName,
-                        methodClassName = methodClassName,
-                        sharedInlineParameterKeys = sharedInlineParameterKeys,
-                        usesNestedBodyType = inlineBodyTypeSpec != null,
-                        inlineModelScope = inlineModelScope,
-                    )
+            addOperationTypeContent(
+                OperationTypeSpecContext(
+                    route = this@toOperationTypeSpec,
+                    config = config,
+                    pathClassName = pathClassName,
+                    sharedInlineParameterKeys = sharedInlineParameterKeys,
+                    accumulatedParams = accumulatedParams,
+                    methodClassName = methodClassName,
+                    overloadedBody = overloadedBody,
+                    inlineModelScope = inlineModelScope,
+                    flattenedBody = flattenedBody,
+                    inlineBodyTypeSpec = inlineBodyTypeSpec,
+                    routeInlineParameterModels = routeInlineParameterModels,
                 )
-            }
+            )
         }
         .build()
 }
@@ -407,6 +354,107 @@ private fun operationConstructorArgs(accumulatedParams: List<AccumulatedParam>):
         add("client")
         addAll(accumulatedParams.map { it.name.toCamelCase() })
     }.joinToString(", ")
+
+private data class OperationTypeSpecContext(
+    val route: Route,
+    val config: RenderConfig,
+    val pathClassName: ClassName,
+    val sharedInlineParameterKeys: Set<String>,
+    val accumulatedParams: List<AccumulatedParam>,
+    val methodClassName: ClassName,
+    val overloadedBody: Route.Body.OverloadedBody?,
+    val inlineModelScope: OperationInlineModelScope,
+    val flattenedBody: FlattenedBodyRendering?,
+    val inlineBodyTypeSpec: TypeSpec?,
+    val routeInlineParameterModels: List<InlineParameterModel>,
+)
+
+private fun TypeSpec.Builder.addOperationTypeContent(context: OperationTypeSpecContext) {
+    addClientConstructorAndState(context.config, context.accumulatedParams)
+    addOperationInlineTypes(context)
+    addOperationResponseType(context)
+    addOperationInvokeFunctions(context)
+}
+
+private fun TypeSpec.Builder.addOperationInlineTypes(context: OperationTypeSpecContext) {
+    context.routeInlineParameterModels.forEach { inline ->
+        inline.model
+            .toInlineParameterTypeSpec(context.config, context.methodClassName, inline.simpleName)
+            ?.let(::addType)
+    }
+    context.overloadedBody
+        ?.directInlineTypeSpecs(context.config, context.methodClassName, context.inlineModelScope)
+        ?.forEach(::addType)
+    context.flattenedBody?.publicTypeSpecs?.forEach(::addType)
+    context.inlineModelScope.methodTypeSpecs(context.config).forEach(::addType)
+    context.inlineBodyTypeSpec?.let(::addType)
+}
+
+private fun TypeSpec.Builder.addOperationResponseType(context: OperationTypeSpecContext) {
+    if (!context.route.returns.isSingleUnitResponse() && !context.route.returns.isSingleDirectModelResponse()) {
+        addType(context.route.buildResponseTypeSpec(context.config, context.methodClassName, context.inlineModelScope))
+    }
+}
+
+private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeSpecContext) {
+    if (context.flattenedBody != null) {
+        context.flattenedBody.overloads.forEach { overload ->
+            addFunction(
+                context.route.toInvokeFunSpecForFlattenedBody(
+                    config = context.config,
+                    pathClassName = context.pathClassName,
+                    methodClassName = context.methodClassName,
+                    sharedInlineParameterKeys = context.sharedInlineParameterKeys,
+                    overload = overload,
+                    inlineModelScope = context.inlineModelScope,
+                )
+            )
+        }
+        return
+    }
+
+    val overloadedBody = context.overloadedBody
+    if (overloadedBody != null) {
+        if (context.route.body?.required != true) {
+            addFunction(
+                context.route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
+                    config = context.config,
+                    pathClassName = context.pathClassName,
+                    methodClassName = context.methodClassName,
+                    sharedInlineParameterKeys = context.sharedInlineParameterKeys,
+                    inlineModelScope = context.inlineModelScope,
+                )
+            )
+        }
+        overloadedBody
+            .distinctCaseSignatures(context.config, context.inlineModelScope)
+            .forEach { caseSignature ->
+                addFunction(
+                    context.route.toInvokeFunSpecForOverloadedBodyCase(
+                        config = context.config,
+                        pathClassName = context.pathClassName,
+                        methodClassName = context.methodClassName,
+                        sharedInlineParameterKeys = context.sharedInlineParameterKeys,
+                        bodyTypeName = caseSignature.typeName,
+                        bodyJvmName = caseSignature.jvmName,
+                        inlineModelScope = context.inlineModelScope,
+                    )
+                )
+            }
+        return
+    }
+
+    addFunction(
+        context.route.toInvokeFunSpec(
+            config = context.config,
+            pathClassName = context.pathClassName,
+            methodClassName = context.methodClassName,
+            sharedInlineParameterKeys = context.sharedInlineParameterKeys,
+            usesNestedBodyType = context.inlineBodyTypeSpec != null,
+            inlineModelScope = context.inlineModelScope,
+        )
+    )
+}
 
 /** Build the operation invoke(...) signature with parameters and response wrapper. */
 @Suppress("LongParameterList")
@@ -691,14 +739,12 @@ private fun Route.Input.toParameterSpec(
     }.build()
 }
 
-@Suppress("CyclomaticComplexMethod")
 private fun Route.Bodies.toInvokeParameterSpecs(
     config: RenderConfig,
     methodClassName: ClassName,
     usesNestedBodyType: Boolean,
-): List<ParameterSpec>? {
-    val body = defaultOrNull() ?: return null
-    return when (body) {
+): List<ParameterSpec>? = when (val body = defaultOrNull()) {
+        null -> null
         is Route.Body.SetBody -> {
             val bodyType = if (usesNestedBodyType) {
                 methodClassName.nestedClass("Body")
@@ -750,7 +796,6 @@ private fun Route.Bodies.toInvokeParameterSpecs(
             )
         }
     }
-}
 
 private fun Route.Bodies.flattenedBodyRendering(
     config: RenderConfig,
@@ -831,7 +876,17 @@ private data class FlattenedBodyOverload(
     val bodyMayBeNull: Boolean,
 )
 
-@Suppress("LongMethod")
+private data class FlattenedBodyOverloadContext(
+    val config: RenderConfig,
+    val methodClassName: ClassName,
+    val bodyModel: Model.Object,
+    val typeNameRemaps: Map<ClassName, TypeName>,
+    val additionalProperty: Model.Object.AdditionalProperties.Schema?,
+    val selectedModels: Map<String, Model>,
+    val bodyParamsBeforeOptionalParams: Boolean,
+    val bodyMayBeNull: Boolean,
+)
+
 private fun buildFlattenedBodyOverloads(
     config: RenderConfig,
     methodClassName: ClassName,
@@ -864,59 +919,76 @@ private fun buildFlattenedBodyOverloads(
     }
 
     return parameterGroups.map { selectedModels ->
-        val parameters = mutableListOf<ParameterSpec>()
-        val constructorArgPieces = mutableListOf<CodeBlock>()
-
-        bodyModel.properties.entries.forEach { (propertyName, property) ->
-            val paramName = propertyName.toParamName()
-            val selectedCase = if (property.isRequired && property.model.isFlattenablePrimitiveUnion()) {
-                selectedModels.getValue(propertyName)
-            } else {
-                null
-            }
-            val typeName = flattenedBodyParameterTypeName(
+        buildFlattenedBodyOverload(
+            FlattenedBodyOverloadContext(
                 config = config,
-                propertyModel = property.model,
+                methodClassName = methodClassName,
+                bodyModel = bodyModel,
                 typeNameRemaps = typeNameRemaps,
-                selectedCase = selectedCase,
-            ).copy(nullable = property.model.isNullable || !property.isRequired)
-            val parameter = ParameterSpec.builder(paramName, typeName).apply {
-                if (!property.isRequired) {
-                    defaultValue(CodeBlock.of("null"))
-                }
-            }.build()
-            parameters += parameter
-            constructorArgPieces += CodeBlock.of(
-                "%L = %L",
-                paramName,
-                flattenedBodyValueExpression(
-                    propertyName = propertyName,
-                    selectedCase = selectedCase,
-                    paramName = paramName,
-                    methodClassName = methodClassName,
-                ),
+                additionalProperty = additionalProperty,
+                selectedModels = selectedModels,
+                bodyParamsBeforeOptionalParams = bodyParamsBeforeOptionalParams,
+                bodyMayBeNull = bodyMayBeNull,
             )
-        }
-
-        if (additionalProperty != null) {
-            val additionalTypeName = MapType.parameterizedBy(
-                ClassName("kotlin", "String"),
-                additionalProperty.value.publicInputTypeName(config).remapTypeNames(typeNameRemaps),
-            ).copy(nullable = true)
-            parameters += ParameterSpec.builder("additional", additionalTypeName)
-                .defaultValue(CodeBlock.of("null"))
-                .build()
-            constructorArgPieces += CodeBlock.of("additional = additional")
-        }
-
-        FlattenedBodyOverload(
-            parameters = parameters,
-            bodyConstructorArgs = constructorArgPieces.joinToCode(separator = ", "),
-            bodyHasConstructorArgs = constructorArgPieces.isNotEmpty(),
-            bodyParamsBeforeOptionalParams = bodyParamsBeforeOptionalParams,
-            bodyMayBeNull = bodyMayBeNull,
         )
     }
+}
+
+private fun buildFlattenedBodyOverload(
+    context: FlattenedBodyOverloadContext,
+): FlattenedBodyOverload {
+    val parameters = mutableListOf<ParameterSpec>()
+    val constructorArgPieces = mutableListOf<CodeBlock>()
+
+    context.bodyModel.properties.entries.forEach { (propertyName, property) ->
+        val paramName = propertyName.toParamName()
+        val selectedCase = if (property.isRequired && property.model.isFlattenablePrimitiveUnion()) {
+            context.selectedModels.getValue(propertyName)
+        } else {
+            null
+        }
+        val typeName = flattenedBodyParameterTypeName(
+            config = context.config,
+            propertyModel = property.model,
+            typeNameRemaps = context.typeNameRemaps,
+            selectedCase = selectedCase,
+        ).copy(nullable = property.model.isNullable || !property.isRequired)
+        val parameter = ParameterSpec.builder(paramName, typeName).apply {
+            if (!property.isRequired) {
+                defaultValue(CodeBlock.of("null"))
+            }
+        }.build()
+        parameters += parameter
+        constructorArgPieces += CodeBlock.of(
+            "%L = %L",
+            paramName,
+            flattenedBodyValueExpression(
+                propertyName = propertyName,
+                selectedCase = selectedCase,
+                paramName = paramName,
+                methodClassName = context.methodClassName,
+            ),
+        )
+    }
+
+    if (context.additionalProperty != null) {
+        val additionalTypeName = MapType.parameterizedBy(
+            ClassName("kotlin", "String"),
+            context.additionalProperty.value.publicInputTypeName(context.config).remapTypeNames(context.typeNameRemaps),
+        ).copy(nullable = true)
+        parameters += ParameterSpec.builder("additional", additionalTypeName)
+            .defaultValue(CodeBlock.of("null"))
+            .build()
+        constructorArgPieces += CodeBlock.of("additional = additional")
+    }
+
+    return FlattenedBodyOverload(
+        parameters = parameters,
+        bodyConstructorArgs = constructorArgPieces.joinToCode(separator = ", "),
+        bodyHasConstructorArgs = constructorArgPieces.isNotEmpty(),
+        bodyParamsBeforeOptionalParams = context.bodyParamsBeforeOptionalParams,
+        bodyMayBeNull = context.bodyMayBeNull,
+    )
 }
 
 private fun buildFlattenedBodyPublicTypes(
@@ -1163,7 +1235,6 @@ internal fun Route.Returns.isSingleDirectModelResponse(): Boolean {
     return model != null && model !is Model.Primitive.Unit && !model.isRouteInlineModel()
 }
 
-@Suppress("LongMethod")
 private fun Route.buildSealedResponseTypeSpec(
     config: RenderConfig,
     methodClassName: ClassName,
@@ -1173,72 +1244,81 @@ private fun Route.buildSealedResponseTypeSpec(
     val builder = TypeSpec.interfaceBuilder("Response")
         .addModifiers(KModifier.SEALED)
 
-    // Status code cases (ordered by status code value)
     for ((statusCode, returnType) in returns.responses.entries.sortedBy { it.key.value }) {
-        val caseName = statusCode.toCaseName()
-        val model = returnType.preferredModel()
-
-        if (model == null || model is Model.Primitive.Unit) {
-            builder.addType(
-                TypeSpec.objectBuilder(caseName)
-                    .addModifiers(KModifier.DATA)
-                    .addSuperinterface(responseClassName)
-                    .build()
-            )
-        } else {
-            val typeName = model.toTypeName(config)
-            builder.addType(
-                TypeSpec.classBuilder(caseName)
-                    .addModifiers(KModifier.DATA)
-                    .primaryConstructor(
-                        FunSpec.constructorBuilder()
-                            .addParameter("value", typeName)
-                            .build()
-                    )
-                    .addProperty(
-                        PropertySpec.builder("value", typeName)
-                            .initializer("value")
-                            .build()
-                    )
-                    .addSuperinterface(responseClassName)
-                    .build()
-            )
-        }
+        builder.addType(buildSealedResponseCaseTypeSpec(config, responseClassName, statusCode, returnType))
     }
 
-    // Default case
-    val defaultReturnType = returns.default
-    if (defaultReturnType != null) {
-        val model = defaultReturnType.preferredModel()
-        val defaultBuilder = TypeSpec.classBuilder("Default")
+    returns.default?.let { defaultReturnType ->
+        builder.addType(buildSealedResponseDefaultTypeSpec(config, responseClassName, defaultReturnType))
+    }
+
+    return builder.build()
+}
+
+private fun buildSealedResponseCaseTypeSpec(
+    config: RenderConfig,
+    responseClassName: ClassName,
+    statusCode: HttpStatusCode,
+    returnType: Route.ReturnType,
+): TypeSpec {
+    val caseName = statusCode.toCaseName()
+    val model = returnType.preferredModel()
+    return if (model == null || model is Model.Primitive.Unit) {
+        TypeSpec.objectBuilder(caseName)
             .addModifiers(KModifier.DATA)
             .addSuperinterface(responseClassName)
-
-        val constructorBuilder = FunSpec.constructorBuilder()
-            .addParameter("status", HttpStatusCodeType)
-
-        val props = mutableListOf(
-            PropertySpec.builder("status", HttpStatusCodeType)
-                .initializer("status")
-                .build()
-        )
-
-        if (model != null && model !is Model.Primitive.Unit) {
-            val typeName = model.toTypeName(config)
-            constructorBuilder.addParameter("value", typeName)
-            props.add(
+            .build()
+    } else {
+        val typeName = model.toTypeName(config)
+        TypeSpec.classBuilder(caseName)
+            .addModifiers(KModifier.DATA)
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter("value", typeName)
+                    .build()
+            )
+            .addProperty(
                 PropertySpec.builder("value", typeName)
                     .initializer("value")
                     .build()
             )
-        }
+            .addSuperinterface(responseClassName)
+            .build()
+    }
+}
 
-        defaultBuilder.primaryConstructor(constructorBuilder.build())
-        props.forEach { defaultBuilder.addProperty(it) }
-        builder.addType(defaultBuilder.build())
+private fun buildSealedResponseDefaultTypeSpec(
+    config: RenderConfig,
+    responseClassName: ClassName,
+    defaultReturnType: Route.ReturnType,
+): TypeSpec {
+    val model = defaultReturnType.preferredModel()
+    val defaultBuilder = TypeSpec.classBuilder("Default")
+        .addModifiers(KModifier.DATA)
+        .addSuperinterface(responseClassName)
+
+    val constructorBuilder = FunSpec.constructorBuilder()
+        .addParameter("status", HttpStatusCodeType)
+
+    val props = mutableListOf(
+        PropertySpec.builder("status", HttpStatusCodeType)
+            .initializer("status")
+            .build()
+    )
+
+    if (model != null && model !is Model.Primitive.Unit) {
+        val typeName = model.toTypeName(config)
+        constructorBuilder.addParameter("value", typeName)
+        props.add(
+            PropertySpec.builder("value", typeName)
+                .initializer("value")
+                .build()
+        )
     }
 
-    return builder.build()
+    defaultBuilder.primaryConstructor(constructorBuilder.build())
+    props.forEach { defaultBuilder.addProperty(it) }
+    return defaultBuilder.build()
 }
 
 internal fun Route.Returns.singlePreferredModelOrNull(): Model? =

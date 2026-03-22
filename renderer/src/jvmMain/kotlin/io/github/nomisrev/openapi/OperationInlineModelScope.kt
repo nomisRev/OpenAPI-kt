@@ -6,7 +6,6 @@ import com.squareup.kotlinpoet.TypeSpec
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.transformers.nestedOrNull
-import kotlinx.serialization.json.Json
 
 internal class OperationInlineModelScope(
     private val typeRemaps: Map<ClassName, TypeName>,
@@ -31,9 +30,6 @@ internal class OperationInlineModelScope(
         )
     }
 }
-
-private val InlineModelSharingJson = Json { encodeDefaults = true }
-private val SharedNamingContext = NamingContext.reference("Shared", SchemaContext.Null)
 
 private enum class InlineCandidateKind(val priority: Int) {
     OverloadedRoot(priority = 0),
@@ -313,75 +309,4 @@ private fun StandaloneInlineType.toTypeSpec(
         is Model.Reference,
         is Model.Union,
         is Model.Uuid -> null
-    }
-
-@Suppress("CyclomaticComplexMethod", "LongMethod")
-private fun Model.normalizedForSharingKey(): Model =
-    when (this) {
-        is Model.ByteArray -> copy(description = null, title = null)
-        is Model.Collection -> copy(
-            inner = inner.normalizedForSharingKey(),
-            description = null,
-            title = null,
-        )
-        is Model.Date -> copy(description = null, title = null)
-        is Model.DateTime -> copy(description = null, title = null)
-        is Model.DiscriminatedObject -> copy(
-            context = SharedNamingContext,
-            abstractProperties = abstractProperties.mapValues { (_, property) ->
-                property.copy(model = property.model.normalizedForSharingKey())
-            },
-            subtypes = subtypes.map { it.normalizedForSharingKey() as Model.Object },
-            description = null,
-            title = null,
-        )
-        is Model.Enum -> copy(
-            context = SharedNamingContext,
-            inner = inner.normalizedForSharingKey(),
-            description = null,
-            title = null,
-        )
-        is Model.FreeFormJson -> copy(description = null, title = null)
-        is Model.Object -> copy(
-            context = SharedNamingContext,
-            description = null,
-            title = null,
-            properties = properties.mapValues { (_, property) ->
-                property.copy(model = property.model.normalizedForSharingKey())
-            },
-            additionalProperties = when (val additional = additionalProperties) {
-                is Model.Object.AdditionalProperties.Allowed -> additional
-                is Model.Object.AdditionalProperties.Schema ->
-                    Model.Object.AdditionalProperties.Schema(additional.value.normalizedForSharingKey())
-            },
-        )
-        is Model.Primitive.Boolean -> copy(description = null, title = null)
-        is Model.Primitive.Double -> copy(description = null, title = null)
-        is Model.Primitive.Float -> copy(description = null, title = null)
-        is Model.Primitive.Int -> copy(description = null, title = null)
-        is Model.Primitive.Long -> copy(description = null, title = null)
-        is Model.Primitive.String -> copy(description = null, title = null)
-        is Model.Primitive.Unit -> copy(description = null, title = null)
-        is Model.Reference -> copy(
-            context = SharedNamingContext,
-            description = null,
-            title = null,
-        )
-        is Model.OneOf -> copy(
-            context = SharedNamingContext,
-            cases = cases.map { case ->
-                case.copy(model = case.model.normalizedForSharingKey())
-            },
-            description = null,
-            title = null,
-        )
-        is Model.AnyOf -> copy(
-            context = SharedNamingContext,
-            cases = cases.map { case ->
-                case.copy(model = case.model.normalizedForSharingKey())
-            },
-            description = null,
-            title = null,
-        )
-        is Model.Uuid -> copy(description = null, title = null)
     }
