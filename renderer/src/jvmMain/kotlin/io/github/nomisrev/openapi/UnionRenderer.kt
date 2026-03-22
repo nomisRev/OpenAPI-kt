@@ -40,6 +40,28 @@ private val JsonDecoderType = ClassName("kotlinx.serialization.json", "JsonDecod
 private val PolymorphicKindType = ClassName("kotlinx.serialization.descriptors", "PolymorphicKind")
 private val BuildSerialDescriptorMember = MemberName("kotlinx.serialization.descriptors", "buildSerialDescriptor")
 
+private const val OBJECT_WITH_ADDITIONAL_PROPERTIES_ALLOWED_PRIORITY = 200
+private const val OBJECT_WITHOUT_ADDITIONAL_PROPERTIES_BASE_PRIORITY = 100
+private const val OBJECT_WITHOUT_ADDITIONAL_PROPERTIES_MAX_PROPERTY_COUNT = 99
+private const val OBJECT_WITH_TYPED_ADDITIONAL_PROPERTIES_PRIORITY = 150
+private const val DISCRIMINATED_OBJECT_PRIORITY = 300
+private const val UNION_PRIORITY = 400
+private const val ENUM_PRIORITY = 500
+private const val COLLECTION_PRIORITY = 600
+private const val REFERENCE_PRIORITY = 700
+private const val PRIMITIVE_INT_PRIORITY = 800
+private const val PRIMITIVE_LONG_PRIORITY = 801
+private const val PRIMITIVE_FLOAT_PRIORITY = 802
+private const val PRIMITIVE_DOUBLE_PRIORITY = 803
+private const val PRIMITIVE_BOOLEAN_PRIORITY = 804
+private const val PRIMITIVE_UNIT_PRIORITY = 805
+private const val UUID_PRIORITY = 900
+private const val DATE_PRIORITY = 901
+private const val DATE_TIME_PRIORITY = 902
+private const val BYTE_ARRAY_PRIORITY = 903
+private const val STRING_PRIORITY = 1000
+private const val FREE_FORM_JSON_PRIORITY = 1100
+
 fun Model.Union.toTypeSpec(
     config: RenderConfig,
     classNameOverride: ClassName? = null,
@@ -702,27 +724,33 @@ private fun Model.deserializationPriority(): Int = when (this) {
     // Objects without additionalProperties (more properties → higher priority)
     is Model.Object -> when (val ap = additionalProperties) {
         is Model.Object.AdditionalProperties.Allowed ->
-            if (ap.value) 200 // with additionalProperties allowed
-            else 100 - properties.size.coerceAtMost(99) // without: more props = lower number = higher priority
-        is Model.Object.AdditionalProperties.Schema -> 150 // typed additionalProperties
+            if (ap.value) OBJECT_WITH_ADDITIONAL_PROPERTIES_ALLOWED_PRIORITY // with additionalProperties allowed
+            else {
+                val propertyCountPriority = properties.size.coerceAtMost(
+                    OBJECT_WITHOUT_ADDITIONAL_PROPERTIES_MAX_PROPERTY_COUNT,
+                )
+                // More properties means a higher matching priority.
+                OBJECT_WITHOUT_ADDITIONAL_PROPERTIES_BASE_PRIORITY - propertyCountPriority
+            }
+        is Model.Object.AdditionalProperties.Schema -> OBJECT_WITH_TYPED_ADDITIONAL_PROPERTIES_PRIORITY // typed additionalProperties
     }
-    is Model.DiscriminatedObject -> 300
-    is Model.Union -> 400
-    is Model.Enum -> 500
-    is Model.Collection -> 600
-    is Model.Reference -> 700
-    is Model.Primitive.Int -> 800
-    is Model.Primitive.Long -> 801
-    is Model.Primitive.Float -> 802
-    is Model.Primitive.Double -> 803
-    is Model.Primitive.Boolean -> 804
-    is Model.Primitive.Unit -> 805
-    is Model.Uuid -> 900
-    is Model.Date -> 901
-    is Model.DateTime -> 902
-    is Model.ByteArray -> 903
-    is Model.Primitive.String -> 1000
-    is Model.FreeFormJson -> 1100
+    is Model.DiscriminatedObject -> DISCRIMINATED_OBJECT_PRIORITY
+    is Model.Union -> UNION_PRIORITY
+    is Model.Enum -> ENUM_PRIORITY
+    is Model.Collection -> COLLECTION_PRIORITY
+    is Model.Reference -> REFERENCE_PRIORITY
+    is Model.Primitive.Int -> PRIMITIVE_INT_PRIORITY
+    is Model.Primitive.Long -> PRIMITIVE_LONG_PRIORITY
+    is Model.Primitive.Float -> PRIMITIVE_FLOAT_PRIORITY
+    is Model.Primitive.Double -> PRIMITIVE_DOUBLE_PRIORITY
+    is Model.Primitive.Boolean -> PRIMITIVE_BOOLEAN_PRIORITY
+    is Model.Primitive.Unit -> PRIMITIVE_UNIT_PRIORITY
+    is Model.Uuid -> UUID_PRIORITY
+    is Model.Date -> DATE_PRIORITY
+    is Model.DateTime -> DATE_TIME_PRIORITY
+    is Model.ByteArray -> BYTE_ARRAY_PRIORITY
+    is Model.Primitive.String -> STRING_PRIORITY
+    is Model.FreeFormJson -> FREE_FORM_JSON_PRIORITY
 }
 
 // ── Shared helpers ──────────────────────────────────────────────────────────

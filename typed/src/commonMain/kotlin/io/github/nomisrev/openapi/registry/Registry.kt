@@ -8,6 +8,7 @@ import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.transformers.toModel
 import io.ktor.client.HttpClient
+import kotlinx.coroutines.yield
 
 inline fun <A> registry(openAPI: OpenAPI, block: context(Registry) () -> A): A =
     Registry(openAPI).use { block(it) }
@@ -18,6 +19,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
 
     fun names(): Set<NamingContext.Reference> = cache.toSet()
 
+    @Suppress("RedundantSuspendModifier")
     private suspend fun remoteSchema(url: String): Schema =
         TODO("Remote schemas $url not supported yet.")
 
@@ -183,22 +185,22 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
             val contextSpecific = this.readOnly == true || this.writeOnly == true || schema.readOrWriteOnly()
             val schemaContext = if (contextSpecific) context else SchemaContext.Null
             val reference = NamingContext.Reference(name, schemaContext)
-            val context = NamingContext(reference, emptyList())
-            val resolved = if (expanding.contains(context)) ResolvedSchema.Recursive(context, schema)
+            val namingContext = NamingContext(reference, emptyList())
+            val resolved = if (expanding.contains(namingContext)) ResolvedSchema.Recursive(namingContext, schema)
             else ResolvedSchema.Reference(reference, schema)
 
             // if schema isDiscriminatedObjectSubtype
 
 //            cache.add(reference)
 
-            val currentAnchor = if (schema.recursiveAnchor == true) Pair(context, schema) else null
+            val currentAnchor = if (schema.recursiveAnchor == true) Pair(namingContext, schema) else null
             // When the schema is not context-specific (schemaContext = Null), propagate Write as the
             // forced context into nested scopes. This prevents the caller's Read context from
             // "bleeding" into a schema that doesn't distinguish Read from Write — nested references
             // to context-specific schemas should resolve as Write (the plain/neutral variant) rather
             // than picking up the outer Read context and producing leaked "Read"-suffixed types.
             val nextForceContext = if (!contextSpecific) SchemaContext.Write else null
-            block.invoke(ScopeImpl(currentAnchor, expanding + context, nextForceContext), resolved)
+            block.invoke(ScopeImpl(currentAnchor, expanding + namingContext, nextForceContext), resolved)
         }
     }
 }

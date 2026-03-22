@@ -136,7 +136,7 @@ private class PathNodeBuilder(
     }
 
     fun build(): PathNode = PathNode(
-        segment = segment!!, // root only
+        segment = requireNotNull(segment) { "Empty segment for root" },
         operations = operations.toMap(),
         children = children.map { it.build() },
     )

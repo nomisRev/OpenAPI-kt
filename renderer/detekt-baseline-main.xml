@@ -36,27 +36,6 @@
     <ID>LongParameterList:UnionRenderer.kt:private fun caseSerializerCode: CodeBlock</ID>
     <ID>MagicNumber:ClientRenderer.kt:3</ID>
     <ID>MagicNumber:ClientRenderer.kt:4</ID>
-    <ID>MagicNumber:UnionRenderer.kt:100</ID>
-    <ID>MagicNumber:UnionRenderer.kt:1000</ID>
-    <ID>MagicNumber:UnionRenderer.kt:1100</ID>
-    <ID>MagicNumber:UnionRenderer.kt:150</ID>
-    <ID>MagicNumber:UnionRenderer.kt:200</ID>
-    <ID>MagicNumber:UnionRenderer.kt:300</ID>
-    <ID>MagicNumber:UnionRenderer.kt:400</ID>
-    <ID>MagicNumber:UnionRenderer.kt:500</ID>
-    <ID>MagicNumber:UnionRenderer.kt:600</ID>
-    <ID>MagicNumber:UnionRenderer.kt:700</ID>
-    <ID>MagicNumber:UnionRenderer.kt:800</ID>
-    <ID>MagicNumber:UnionRenderer.kt:801</ID>
-    <ID>MagicNumber:UnionRenderer.kt:802</ID>
-    <ID>MagicNumber:UnionRenderer.kt:803</ID>
-    <ID>MagicNumber:UnionRenderer.kt:804</ID>
-    <ID>MagicNumber:UnionRenderer.kt:805</ID>
-    <ID>MagicNumber:UnionRenderer.kt:900</ID>
-    <ID>MagicNumber:UnionRenderer.kt:901</ID>
-    <ID>MagicNumber:UnionRenderer.kt:902</ID>
-    <ID>MagicNumber:UnionRenderer.kt:903</ID>
-    <ID>MagicNumber:UnionRenderer.kt:99</ID>
     <ID>MatchingDeclarationName:InlineParameterScope.kt:InlineParameterModel</ID>
     <ID>MaxLineLength:ObjectRenderer.kt:.</ID>
     <ID>MaxLineLength:ObjectRenderer.kt:is Model.DiscriminatedObject -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))</ID>
