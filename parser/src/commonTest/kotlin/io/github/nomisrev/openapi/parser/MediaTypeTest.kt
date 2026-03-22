@@ -53,7 +53,7 @@ class MediaTypeTest {
 
         val mediaType = decode(json)
         val value = assertIs<ReferenceOr.Value<Schema>>(mediaType.schema)
-        assertEquals(Schema.Type.Basic.String, (value.value.type as Schema.Type.Basic))
+        assertEquals(Schema.Type.Basic.String, (value.value.type ?: error("Expected schema type")) as Schema.Type.Basic)
     }
 
     @Test
@@ -74,12 +74,12 @@ class MediaTypeTest {
         val mediaType = decode(json)
         val schemaValue = assertIs<ReferenceOr.Value<Schema>>(mediaType.schema)
         val schema = schemaValue.value
-        assertEquals(Schema.Type.Basic.Object, schema.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.Object, (schema.type ?: error("Expected schema type")) as Schema.Type.Basic)
         assertEquals(listOf("id"), schema.required)
         val properties = assertNotNull(schema.properties)
         assertEquals(2, properties.size)
         val idProp = assertIs<ReferenceOr.Value<Schema>>(properties["id"])
-        assertEquals(Schema.Type.Basic.Integer, idProp.value.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.Integer, (idProp.value.type ?: error("Expected schema type")) as Schema.Type.Basic)
     }
 
     // ── Example ───────────────────────────────────────────────────────────────
@@ -317,7 +317,7 @@ class MediaTypeTest {
 
         val mediaType = decode(json)
         val schemaValue = assertIs<ReferenceOr.Value<Schema>>(mediaType.schema)
-        assertEquals(Schema.Type.Basic.String, schemaValue.value.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.String, (schemaValue.value.type ?: error("Expected schema type")) as Schema.Type.Basic)
         assertTrue(mediaType.extensions.isEmpty())
     }
 
@@ -348,7 +348,7 @@ class MediaTypeTest {
 
         val mediaType = OpenAPI.Yaml.decodeFromString(MediaType.serializer(), yaml)
         val schemaValue = assertIs<ReferenceOr.Value<Schema>>(mediaType.schema)
-        assertEquals(Schema.Type.Basic.String, schemaValue.value.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.String, (schemaValue.value.type ?: error("Expected schema type")) as Schema.Type.Basic)
         assertEquals(1, mediaType.examples.size)
         val simple = assertIs<ReferenceOr.Value<Example>>(mediaType.examples["simple"])
         assertEquals("A simple example", simple.value.summary)

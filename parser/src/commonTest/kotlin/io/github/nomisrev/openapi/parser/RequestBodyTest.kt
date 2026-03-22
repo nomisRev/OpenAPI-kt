@@ -47,7 +47,7 @@ class RequestBodyTest {
 
         val jsonMedia = assertNotNull(body.content["application/json"])
         val jsonSchema = assertIs<ReferenceOr.Value<Schema>>(jsonMedia.schema).value
-        assertEquals(Schema.Type.Basic.Object, jsonSchema.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.Object, (jsonSchema.type ?: error("Expected schema type")) as Schema.Type.Basic)
         assertEquals(listOf("name"), jsonSchema.required)
 
         val xmlMedia = assertNotNull(body.content["application/xml"])

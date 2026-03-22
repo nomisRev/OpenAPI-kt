@@ -8,6 +8,77 @@ import kotlin.test.assertTrue
 
 class OpenAPITest {
 
+    private val allTopLevelFieldsSpecJson =
+        """
+        {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "Example API",
+            "version": "2026-01-01",
+            "description": "Demo API"
+          },
+          "servers": [{"url": "https://api.example.com"}],
+          "paths": {
+            "/pets": {
+              "get": {
+                "operationId": "listPets",
+                "responses": {"200": {"description": "ok"}}
+              }
+            }
+          },
+          "webhooks": {
+            "petCreated": {
+              "post": {
+                "responses": {
+                  "200": {"description": "received"}
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Pet": {"type": "object"}
+            },
+            "responses": {
+              "NotFound": {"description": "not found"}
+            },
+            "parameters": {
+              "LimitParam": {"name": "limit", "in": "query", "schema": {"type": "integer"}}
+            },
+            "examples": {
+              "PetExample": {"summary": "A pet", "value": {"name": "Milo"}}
+            },
+            "requestBodies": {
+              "PetBody": {
+                "content": {
+                  "application/json": {"schema": {"${'$'}ref": "#/components/schemas/Pet"}}
+                }
+              }
+            },
+            "headers": {
+              "X-Trace-Id": {"description": "trace id"}
+            },
+            "links": {
+              "PetById": {"operationId": "getPetById"}
+            },
+            "callbacks": {
+              "OnPetEvent": {
+                "{${'$'}request.body#/callbackUrl}": {
+                  "post": {"responses": {"200": {"description": "ok"}}}
+                }
+              }
+            },
+            "pathItems": {
+              "PetsPath": {"${'$'}ref": "#/paths/~1pets"}
+            }
+          },
+          "security": [{"apiKey": []}],
+          "tags": [{"name": "pets"}],
+          "externalDocs": {"url": "https://example.com/docs"},
+          "x-trace": "enabled"
+        }
+        """.trimIndent()
+
     @Test
     fun `minimal valid 3_0 spec deserializes`() {
         val spec = OpenAPI.fromJson(
@@ -47,77 +118,7 @@ class OpenAPITest {
 
     @Test
     fun `spec with all top level fields deserializes`() {
-        val spec = OpenAPI.fromJson(
-            """
-            {
-              "openapi": "3.1.0",
-              "info": {
-                "title": "Example API",
-                "version": "2026-01-01",
-                "description": "Demo API"
-              },
-              "servers": [{"url": "https://api.example.com"}],
-              "paths": {
-                "/pets": {
-                  "get": {
-                    "operationId": "listPets",
-                    "responses": {"200": {"description": "ok"}}
-                  }
-                }
-              },
-              "webhooks": {
-                "petCreated": {
-                  "post": {
-                    "responses": {
-                      "200": {"description": "received"}
-                    }
-                  }
-                }
-              },
-              "components": {
-                "schemas": {
-                  "Pet": {"type": "object"}
-                },
-                "responses": {
-                  "NotFound": {"description": "not found"}
-                },
-                "parameters": {
-                  "LimitParam": {"name": "limit", "in": "query", "schema": {"type": "integer"}}
-                },
-                "examples": {
-                  "PetExample": {"summary": "A pet", "value": {"name": "Milo"}}
-                },
-                "requestBodies": {
-                  "PetBody": {
-                    "content": {
-                      "application/json": {"schema": {"${'$'}ref": "#/components/schemas/Pet"}}
-                    }
-                  }
-                },
-                "headers": {
-                  "X-Trace-Id": {"description": "trace id"}
-                },
-                "links": {
-                  "PetById": {"operationId": "getPetById"}
-                },
-                "callbacks": {
-                  "OnPetEvent": {
-                    "{${'$'}request.body#/callbackUrl}": {
-                      "post": {"responses": {"200": {"description": "ok"}}}
-                    }
-                  }
-                },
-                "pathItems": {
-                  "PetsPath": {"${'$'}ref": "#/paths/~1pets"}
-                }
-              },
-              "security": [{"apiKey": []}],
-              "tags": [{"name": "pets"}],
-              "externalDocs": {"url": "https://example.com/docs"},
-              "x-trace": "enabled"
-            }
-            """.trimIndent()
-        )
+        val spec = OpenAPI.fromJson(allTopLevelFieldsSpecJson)
 
         assertEquals("3.1.0", spec.openapi)
         assertEquals("Example API", spec.info.title)

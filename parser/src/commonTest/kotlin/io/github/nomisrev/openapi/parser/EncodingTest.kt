@@ -71,7 +71,7 @@ class EncodingTest {
         val header = assertIs<ReferenceOr.Value<Header>>(encoding.headers["X-Trace-Id"])
         assertEquals(true, header.value.required)
         val schema = assertIs<ReferenceOr.Value<Schema>>(header.value.schema)
-        assertEquals(Schema.Type.Basic.String, schema.value.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.String, (schema.value.type ?: error("Expected schema type")) as Schema.Type.Basic)
     }
 
     // ── Style, explode, allowReserved ────────────────────────────────────────

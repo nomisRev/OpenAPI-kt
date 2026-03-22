@@ -62,7 +62,7 @@ class ResponseTest {
         assertEquals("Number of requests per hour", header.value.description)
         assertEquals(true, header.value.required)
         val schema = assertIs<ReferenceOr.Value<Schema>>(header.value.schema)
-        assertEquals(Schema.Type.Basic.Integer, schema.value.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.Integer, (schema.value.type ?: error("Expected schema type")) as Schema.Type.Basic)
     }
 
     @Test
@@ -181,7 +181,7 @@ class ResponseTest {
         val mediaType = assertNotNull(response.content["application/json"])
         val schemaRef = assertIs<ReferenceOr.Value<Schema>>(mediaType.schema)
         val schema = schemaRef.value
-        assertEquals(Schema.Type.Basic.Object, schema.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.Object, (schema.type ?: error("Expected schema type")) as Schema.Type.Basic)
         assertEquals(listOf("id"), schema.required)
         assertEquals(2, assertNotNull(schema.properties).size)
     }

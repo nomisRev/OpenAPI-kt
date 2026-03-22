@@ -45,7 +45,7 @@ class HeaderTest {
         assertEquals(true, header.required)
         assertEquals("An API key", header.description)
         val schemaValue = assertIs<ReferenceOr.Value<Schema>>(header.schema)
-        assertEquals(Schema.Type.Basic.String, schemaValue.value.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.String, (schemaValue.value.type ?: error("Expected schema type")) as Schema.Type.Basic)
     }
 
     @Test
@@ -74,7 +74,7 @@ class HeaderTest {
 
         val header = decode(json)
         val schemaValue = assertIs<ReferenceOr.Value<Schema>>(header.schema)
-        assertEquals(Schema.Type.Basic.Integer, schemaValue.value.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.Integer, (schemaValue.value.type ?: error("Expected schema type")) as Schema.Type.Basic)
     }
 
     @Test
@@ -107,7 +107,7 @@ class HeaderTest {
         assertEquals(true, header.required)
         val schemaValue = assertIs<ReferenceOr.Value<Schema>>(header.schema)
         val schema = schemaValue.value
-        assertEquals(Schema.Type.Basic.String, schema.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.String, (schema.type ?: error("Expected schema type")) as Schema.Type.Basic)
         assertEquals(1, schema.minLength)
         assertEquals(256, schema.maxLength)
     }
@@ -226,7 +226,7 @@ class HeaderTest {
         val header = decode(json)
         assertEquals(true, header.required)
         val schemaValue = assertIs<ReferenceOr.Value<Schema>>(header.schema)
-        assertEquals(Schema.Type.Basic.String, schemaValue.value.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.String, (schemaValue.value.type ?: error("Expected schema type")) as Schema.Type.Basic)
     }
 
     // ── YAML ──────────────────────────────────────────────────────────────────
@@ -244,7 +244,7 @@ class HeaderTest {
         assertEquals(true, header.required)
         assertEquals("Authentication token", header.description)
         val schemaValue = assertIs<ReferenceOr.Value<Schema>>(header.schema)
-        assertEquals(Schema.Type.Basic.String, schemaValue.value.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.String, (schemaValue.value.type ?: error("Expected schema type")) as Schema.Type.Basic)
     }
 
     @Test
@@ -272,7 +272,7 @@ class HeaderTest {
 
         val header = OpenAPI.Yaml.decodeFromString(Header.serializer(), yaml)
         val schemaValue = assertIs<ReferenceOr.Value<Schema>>(header.schema)
-        assertEquals(Schema.Type.Basic.String, schemaValue.value.type as Schema.Type.Basic)
+        assertEquals(Schema.Type.Basic.String, (schemaValue.value.type ?: error("Expected schema type")) as Schema.Type.Basic)
         val examples = assertNotNull(header.examples)
         assertEquals(1, examples.size)
         val bearer = assertIs<ReferenceOr.Value<Example>>(examples["bearer"])
