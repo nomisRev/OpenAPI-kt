@@ -21,8 +21,8 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
-private const val RefKey = "\$ref"
-private const val RecursiveRefKey = "\$recursiveRef"
+private const val REF_KEY = "\$ref"
+private const val RECURSIVE_REF_KEY = "\$recursiveRef"
 
 /**
  * Defines Union [A] | [Reference]. A lot of types like Header, Schema, MediaType, etc. can be
@@ -32,7 +32,7 @@ private const val RecursiveRefKey = "\$recursiveRef"
 public sealed interface ReferenceOr<out A> {
   @Serializable
   public data class Reference(
-    @SerialName(RefKey) public val ref: String,
+    @SerialName(REF_KEY) public val ref: String,
     public val readOnly: Boolean? = null,
     public val writeOnly: Boolean? = null,
   ) : ReferenceOr<Nothing>
@@ -77,16 +77,16 @@ public sealed interface ReferenceOr<out A> {
             val json = decoder.decodeSerializableValue(JsonElement.serializer())
             val jsobObject = json as? JsonObject
             when {
-              jsobObject != null && jsobObject.contains(RefKey) ->
+              jsobObject != null && jsobObject.contains(REF_KEY) ->
                 Reference(
-                  ref = json[RefKey]!!.jsonPrimitive.content,
+                  ref = json[REF_KEY]!!.jsonPrimitive.content,
                   readOnly = jsobObject["readOnly"]?.jsonPrimitive?.booleanOrNull,
                   writeOnly = jsobObject["writeOnly"]?.jsonPrimitive?.booleanOrNull,
                 )
 
-              jsobObject != null && jsobObject.contains(RecursiveRefKey) ->
+              jsobObject != null && jsobObject.contains(RECURSIVE_REF_KEY) ->
                 Reference(
-                  ref = json[RecursiveRefKey]!!.jsonPrimitive.content,
+                  ref = json[RECURSIVE_REF_KEY]!!.jsonPrimitive.content,
                   readOnly = jsobObject["readOnly"]?.jsonPrimitive?.booleanOrNull,
                   writeOnly = jsobObject["writeOnly"]?.jsonPrimitive?.booleanOrNull,
                 )
@@ -100,8 +100,8 @@ public sealed interface ReferenceOr<out A> {
             val map = node as? YamlMap
 
             val refContentOrNull =
-              map?.getOrNull(RefKey)?.yamlScalar?.content
-                ?: map?.getOrNull(RecursiveRefKey)?.yamlScalar?.content
+              map?.getOrNull(REF_KEY)?.yamlScalar?.content
+                ?: map?.getOrNull(RECURSIVE_REF_KEY)?.yamlScalar?.content
 
             when {
               refContentOrNull != null -> Reference(
