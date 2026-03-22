@@ -2,9 +2,11 @@ package io.github.nomisrev.openapi.parser
 
 import com.charleskorn.kaml.YamlInput
 import com.charleskorn.kaml.YamlList
+import com.charleskorn.kaml.YamlMap
 import com.charleskorn.kaml.YamlNode
 import com.charleskorn.kaml.YamlNull
 import com.charleskorn.kaml.YamlScalar
+import com.charleskorn.kaml.YamlTaggedNode
 import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
@@ -160,7 +162,9 @@ public data class Schema(
                                         when (item) {
                                             is YamlScalar -> item.content
                                             is YamlNull -> "null"
-                                            else -> null
+                                            is YamlList,
+                                            is YamlMap,
+                                            is YamlTaggedNode -> null
                                         }
                                     }
                                     .mapNotNull(Basic.Companion::fromString)

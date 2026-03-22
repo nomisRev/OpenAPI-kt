@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>NoNameShadowing:Registry.kt:Registry.ScopeImpl$context</ID>
+    <ID>RedundantSuspendModifier:Registry.kt:Registry$suspend</ID>
+    <ID>UnsafeCallOnNullableType:ApiTree.kt:PathNodeBuilder$segment!!</ID>
+    <ID>UnusedPrivateFunction:Union.kt:private fun Schema.compositeUnionCaseName: String?</ID>
+  </CurrentIssues>
+</SmellBaseline>

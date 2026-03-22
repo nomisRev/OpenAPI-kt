@@ -34,7 +34,9 @@ private suspend fun RequestBody.toBodies(
         val schema = mediaType.schema ?: return@mapNotNull null
         val body = when {
             ContentType.MultiPart.FormData.match(contentType) -> formDataToBody(segments, method, mediaType, schema)
-            ContentType.Application.FormUrlEncoded.match(contentType) -> formUrlEncoded(segments, method, mediaType, schema)
+            ContentType.Application.FormUrlEncoded.match(contentType) ->
+                formUrlEncoded(segments, method, mediaType, schema)
+
             else -> toBody(segments, method, contentType, mediaType, schema)
         }
         Pair(ContentType.parse(contentType), body)
@@ -154,7 +156,7 @@ private fun ReferenceOr<RequestBody>.resolve(): RequestBody = when (this) {
         when (val requestBodies = ctx.openAPI.components.requestBodies[referenceName]) {
             is ReferenceOr.Reference -> TODO("Remote parameters not supported yet.")
             is ReferenceOr.Value<RequestBody> -> requestBodies.value
-            null -> throw IllegalStateException("RequestBody $referenceName could not be found in ${ctx.openAPI.components.requestBodies}.")
+            null -> error("RequestBody $referenceName could not be found in ${ctx.openAPI.components.requestBodies}.")
         }
     }
 }

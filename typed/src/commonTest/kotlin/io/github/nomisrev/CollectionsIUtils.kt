@@ -1,5 +1,6 @@
 package io.github.nomisrev
 
+@Suppress("ComplexCondition")
 fun <T, T2, T3, T4, V> List<T>.zip(
     other: List<T2>,
     other2: List<T3>,

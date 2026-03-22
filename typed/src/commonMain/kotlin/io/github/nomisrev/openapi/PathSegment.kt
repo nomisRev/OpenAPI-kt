@@ -63,7 +63,17 @@ fun parsePathSegments(
 
 internal fun Model.toPathSegment(paramName: String): PathSegment = when (this) {
     is Model.Union -> toPathSegmentOrOverload(paramName)
-    else -> PathSegment.Parameter(paramName, this)
+    is Model.ByteArray,
+    is Model.Collection,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.DiscriminatedObject,
+    is Model.Enum,
+    is Model.FreeFormJson,
+    is Model.Object,
+    is Model.Primitive,
+    is Model.Reference,
+    is Model.Uuid -> PathSegment.Parameter(paramName, this)
 }
 
 internal fun Model.Union.toPathSegmentOrOverload(paramName: String): PathSegment {

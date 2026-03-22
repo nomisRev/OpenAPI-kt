@@ -14,8 +14,12 @@ sealed interface Constraints {
         val multipleOf: Double?,
     ) : Constraints {
         companion object {
-            operator fun invoke(schema: Schema): Number? =
-                if (schema.exclusiveMinimum != null || schema.minimum != null || schema.maximum != null || schema.multipleOf != null || schema.exclusiveMaximum != null)
+            operator fun invoke(schema: Schema): Number? {
+                val hasValidation =
+                    schema.exclusiveMinimum != null || schema.minimum != null || schema.maximum != null ||
+                            schema.multipleOf != null || schema.exclusiveMaximum != null
+
+                return if (hasValidation)
                     Number(
                         schema.exclusiveMinimum ?: false,
                         schema.minimum,
@@ -24,6 +28,7 @@ sealed interface Constraints {
                         schema.multipleOf,
                     )
                 else null
+            }
         }
     }
 

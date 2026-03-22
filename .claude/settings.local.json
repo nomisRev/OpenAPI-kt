@@ -23,7 +23,8 @@
       "Read(//Users/simonvergauwen/Developer/refactor-api/**)",
       "Bash(fi)",
       "Bash(python3:*)",
-      "mcp__gradle__inspect_dependencies"
+      "mcp__gradle__inspect_dependencies",
+      "mcp__gradle__gradle_docs"
     ]
   }
 }

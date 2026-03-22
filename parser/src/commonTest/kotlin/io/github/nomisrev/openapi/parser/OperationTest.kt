@@ -39,6 +39,7 @@ class OperationTest {
 
     // ── Full operation ─────────────────────────────────────────────────────────
 
+    @Suppress("LongMethod")
     @Test
     fun `full operation with all fields deserializes`() {
         val json = """

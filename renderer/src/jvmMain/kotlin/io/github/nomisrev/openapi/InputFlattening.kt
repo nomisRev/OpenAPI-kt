@@ -2,7 +2,9 @@ package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.Dynamic
 import com.squareup.kotlinpoet.FunSpec
+import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
@@ -49,6 +51,7 @@ private val UuidType = ClassName("kotlin.uuid", "Uuid")
 private val ExperimentalUuidApiType = ClassName("kotlin.uuid", "ExperimentalUuidApi")
 private val OptInType = ClassName("kotlin", "OptIn")
 
+@IgnorableReturnValue
 internal fun FunSpec.Builder.addExperimentalUuidOptInIfNeeded(vararg types: TypeName): FunSpec.Builder = apply {
     if (types.any(TypeName::usesExperimentalUuid)) {
         addAnnotation(
@@ -59,6 +62,7 @@ internal fun FunSpec.Builder.addExperimentalUuidOptInIfNeeded(vararg types: Type
     }
 }
 
+@IgnorableReturnValue
 internal fun TypeSpec.Builder.addExperimentalUuidOptInIfNeeded(vararg types: TypeName): TypeSpec.Builder = apply {
     if (types.any(TypeName::usesExperimentalUuid)) {
         addAnnotation(
@@ -75,5 +79,6 @@ private fun TypeName.usesExperimentalUuid(): Boolean =
         is ParameterizedTypeName -> rawType == UuidType || typeArguments.any(TypeName::usesExperimentalUuid)
         is TypeVariableName -> bounds.any(TypeName::usesExperimentalUuid)
         is WildcardTypeName -> inTypes.any(TypeName::usesExperimentalUuid) || outTypes.any(TypeName::usesExperimentalUuid)
-        else -> false
+        Dynamic,
+        is LambdaTypeName -> false
     }

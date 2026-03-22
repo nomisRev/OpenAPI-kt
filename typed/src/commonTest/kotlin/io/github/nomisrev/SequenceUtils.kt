@@ -42,6 +42,7 @@ private class MergingSequence<T1, T2, T3, T4, V>(
     private val sequence4: Sequence<T4>,
     private val transform: (T1, T2, T3, T4) -> V
 ) : Sequence<V> {
+    @Suppress("IteratorNotThrowingNoSuchElementException")
     override fun iterator(): Iterator<V> = object : Iterator<V> {
         val iterator1 = sequence1.iterator()
         val iterator2 = sequence2.iterator()

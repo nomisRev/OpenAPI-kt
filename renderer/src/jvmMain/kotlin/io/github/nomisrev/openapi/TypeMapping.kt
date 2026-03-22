@@ -79,7 +79,11 @@ fun NamingContext.toClassName(config: RenderConfig): ClassName =
                         simpleNames.add("Response")
                     }
 
-                    else -> simpleNames.add(nestedContext.toSimpleName())
+                    NamingContext.AdditionalProperties,
+                    is NamingContext.DiscriminatedObjectCase,
+                    is NamingContext.ObjectProperty,
+                    is NamingContext.RouteParam,
+                    is NamingContext.UnionCase -> simpleNames.add(nestedContext.toSimpleName())
                 }
             }
             className(config.apiPackage.toPackageName(), simpleNames)

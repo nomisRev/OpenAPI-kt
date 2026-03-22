@@ -55,8 +55,6 @@ private suspend fun Parameter.toRouteInput(
 /**
  * Some specs are missing path parameters even though they're defined in their path. (OpenAI - problem child)
  * We work around this by manually adding the required path parameters and assume they're required.
- *
- * TODO: configure as part of Leniency mode
  */
 context(ctx: Registry)
 private fun withMissingPathParameters(
@@ -86,7 +84,8 @@ private fun ReferenceOr<Parameter>.resolve(): Parameter = when (this) {
         when (val parameter = ctx.openAPI.components.parameters[referenceName]) {
             is ReferenceOr.Reference -> TODO("Remote parameters not supported yet.")
             is ReferenceOr.Value<Parameter> -> parameter.value
-            null -> throw IllegalStateException("Parameter $referenceName could not be found in ${ctx.openAPI.components.parameters}.")
+            null ->
+                error("Parameter $referenceName not found: ${ctx.openAPI.components.parameters}.")
         }
     }
 }

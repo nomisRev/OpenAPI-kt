@@ -136,7 +136,8 @@ class IntegrationTest {
         assertEquals("Supabase API (v1)", spec.info.title)
     }
 
-//   kotlinx.serialization.json.internal.JsonDecodingException: Expected JsonPrimitive, but had JsonArray as the serialized body of string at element: $.0
+//   kotlinx.serialization.json.internal.JsonDecodingException:
+//   Expected JsonPrimitive, but had JsonArray as the serialized body of string at element: $.0
 //JSON input: []
 //	at kotlinx.serialization.json.internal.JsonExceptionsKt.JsonDecodingException(JsonExceptions.kt:24)
 //	at kotlinx.serialization.json.internal.JsonExceptionsKt.JsonDecodingException(JsonExceptions.kt:32)
@@ -148,7 +149,8 @@ class IntegrationTest {
 
 // SnakeYaml chokes:
 // The incoming YAML document exceeds the limit: 3145728 code points.
-// it.krzeminski.snakeyaml.engine.kmp.exceptions.YamlEngineException: The incoming YAML document exceeds the limit: 3145728 code points.
+// it.krzeminski.snakeyaml.engine.kmp.exceptions.YamlEngineException:
+// The incoming YAML document exceeds the limit: 3145728 code points.
 //	at it.krzeminski.snakeyaml.engine.kmp.scanner.ScannerImpl.fetchMoreTokens(ScannerImpl.kt:200)
 //    @Test
 //    fun mongodb() {

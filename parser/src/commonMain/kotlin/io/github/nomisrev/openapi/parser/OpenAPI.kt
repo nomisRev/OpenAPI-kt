@@ -70,8 +70,10 @@ public data class OpenAPI(
   public fun toJsObject(): JsonObject = Json.encodeToJsonElement(this).jsonObject
 
   public companion object {
+    @Suppress("PropertyUsedBeforeDeclaration")
     public fun fromJson(json: String): OpenAPI = Json.decodeFromString(serializer(), json)
 
+    @Suppress("PropertyUsedBeforeDeclaration")
     public fun fromYaml(yaml: String): OpenAPI = Yaml.decodeFromString<OpenAPI>(yaml)
 
     @JvmStatic

@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package io.github.nomisrev.openapi.routes
 
 import io.github.nomisrev.openapi.Model
@@ -234,6 +235,7 @@ private suspend fun Route.expandFiniteEnumPathSegments(index: Int = 0): List<Rou
     }
 }
 
+@Suppress("ReturnCount")
 context(ctx: Registry)
 private suspend fun Route.expandFiniteEnumPathSegmentAt(index: Int): List<Route>? {
     val segment = segments[index]
@@ -326,7 +328,18 @@ private suspend fun Model.closedEnumOrNull(): Model.Enum? = when (this) {
         val reference = context.head as? NamingContext.Reference ?: return null
         with(ctx) { reference.toModel() as? Model.Enum }
     }
-    else -> null
+
+    is Model.ByteArray,
+    is Model.Collection,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.DiscriminatedObject,
+    is Model.FreeFormJson,
+    is Model.Object,
+    is Model.Primitive,
+    is Model.AnyOf,
+    is Model.OneOf,
+    is Model.Uuid -> null
 }
 
 context(ctx: Registry)
@@ -358,7 +371,17 @@ private fun Model.Union.rebuildDynamicPathSegment(
             }
         }
 
-        else -> dynamicModel.toPathSegment(paramName)
+        is Model.ByteArray,
+        is Model.Collection,
+        is Model.Date,
+        is Model.DateTime,
+        is Model.DiscriminatedObject,
+        is Model.Enum,
+        is Model.FreeFormJson,
+        is Model.Object,
+        is Model.Primitive,
+        is Model.Reference,
+        is Model.Uuid -> dynamicModel.toPathSegment(paramName)
     }
 
     return dynamicSegment to dynamicModel

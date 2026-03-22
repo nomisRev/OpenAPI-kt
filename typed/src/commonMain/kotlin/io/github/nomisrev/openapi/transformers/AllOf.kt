@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Constraints
@@ -58,6 +59,7 @@ private tailrec suspend fun ReferenceOr<Schema>.getSuperTypeOrNull(
     }
 }
 
+@Suppress("CyclomaticComplexMethod")
 private fun Model.merge(other: Model, name: NamingContext): Model = when (this) {
     else if this == other -> this
     is Model.Reference if (other is Model.Reference && this.context == other.context) -> this
@@ -105,9 +107,10 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
     is Model.Date,
     is Model.Primitive,
     is Model.DateTime,
-    is Model.Uuid -> throw IllegalStateException("Cannot merge allOf $this \n\n $other")
+    is Model.Uuid -> error("Cannot merge allOf $this \n\n $other")
 }
 
+@Suppress("CyclomaticComplexMethod")
 private fun Model.Primitive.merge(other: Model.Primitive): Model.Primitive = when (this) {
     is Model.Primitive.Boolean if other is Model.Primitive.Boolean -> Model.Primitive.Boolean(
         default = default ?: other.default,
@@ -162,7 +165,7 @@ private fun Model.Primitive.merge(other: Model.Primitive): Model.Primitive = whe
         title = title ?: other.title
     )
 
-    is Model.Primitive -> throw IllegalStateException("Cannot merge allOf $this with $other")
+    is Model.Primitive -> error("Cannot merge allOf $this with $other")
 }
 
 private fun <A> let(a: A?, b: A?, block: (A, A) -> A): A? =
@@ -230,5 +233,5 @@ private fun Model.Object.AdditionalProperties.merge(
             Model.Object.AdditionalProperties.Schema(value.merge(other.value, context))
 
         is Model.Object.AdditionalProperties.Schema,
-        is Model.Object.AdditionalProperties.Allowed -> throw IllegalStateException("Cannot merge allOf $this with $other")
+        is Model.Object.AdditionalProperties.Allowed -> error("Cannot merge allOf $this with $other")
     }

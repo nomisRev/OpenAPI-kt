@@ -1,21 +1,20 @@
+@file:Suppress("TooManyFunctions")
+
 package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.parser.ReferenceOr
-import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.schemaName
 import io.github.nomisrev.openapi.toPascalCase
-
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.union(
@@ -79,8 +78,9 @@ private suspend fun ResolvedSchema.buildUnionCases(
      *    -> "event": { oneOf[{ -$ref:EventA }, { -$ref:EventB }, { type: object, properties={} }]
      *    => sealed interface Event with 3 subtypes EventA, EventB, and CaseEvent
      *
-     *  So in this case whenever there are n casses, and n-1 cases are references than the non-referenced case should inherit the outer name.
-    */
+     *  So in this case whenever there are n casses, and n-1 cases are references,
+     *  then the non-referenced case should inherit the outer name.
+     */
     val cases = uniqueSubtypes.mapIndexed { index, subtype ->
         subtype.resolve(unionContexts[index], context) {
             val discriminatorValue = schema.discriminator.discriminatorValueForSubtype(subtype)
@@ -90,6 +90,7 @@ private suspend fun ResolvedSchema.buildUnionCases(
     return cases
 }
 
+@Suppress("CyclomaticComplexMethod", "UnsafeCallOnNullableType")
 context(ctx: Registry.Scope)
 suspend fun NamingContext.unionCase(
     index: Int,
@@ -123,9 +124,10 @@ suspend fun NamingContext.unionCase(
         ?.firstOrNull { (key, _) -> key in setOf("type", "event", $$"$type") }
         ?.let { (_, refOrSchema) -> refOrSchema.peek().enum?.singleOrNull() }
 
+    @Suppress("MagicNumber")
     val enumName =
         schema.enum?.joinToString(prefix = "", separator = "Or") {
-            it?.replaceFirstChar(Char::uppercaseChar) ?: ""
+            it?.replaceFirstChar(Char::uppercaseChar).orEmpty()
         }.takeIf { (it?.length ?: 0) < 90 }
 
     /**
@@ -153,7 +155,7 @@ suspend fun NamingContext.unionCase(
         return referenceCount == allSubtypes.size - 1 &&
                 valueCount == 1 &&
                 subtype is ReferenceOr.Value &&
-        schema.type == Type.Basic.Object
+                schema.type == Type.Basic.Object
     }
 
     /**
@@ -182,35 +184,40 @@ suspend fun NamingContext.unionCase(
 
 private val primitives = setOf(Type.Basic.String, Type.Basic.Number, Type.Basic.Boolean, Type.Basic.Integer)
 
+private const val MAX_CODE_LENGTH = 90
+
 /**
  * Generates a union case name based on the schema type and structure.
  * For objects: joins property names with "And" (e.g., `AgeAndName`)
  * For primitives: uses type-based names (e.g., `CaseInt`, `CaseString`)
  * For enums: joins enum values with "Or" (e.g., `AscOrDesc`)
  */
+@Suppress(
+    "CyclomaticComplexMethod",
+    "CastNullableToNonNullableType",
+    "ReturnCount"
+)
 private fun Schema.unionCaseName(index: Int): String {
+// TODO: this seems not correct here
     title?.toPascalCase()?.takeIf { it.isNotBlank() }?.let { return it }
-
     compositeUnionCaseName(index)?.let { return it }
-
-    val fmt = format
     return when (type) {
         Type.Basic.Object -> specialUnionCaseName() ?: objectUnionCaseName(index)
 
-        Type.Basic.Number -> if (fmt == "float") "CaseFloat" else "CaseDouble"
+        Type.Basic.Number -> if (format == "float") "CaseFloat" else "CaseDouble"
         Type.Basic.Boolean -> "CaseBoolean"
-        Type.Basic.Integer -> if (fmt == "int32") "CaseInt" else "CaseLong"
+        Type.Basic.Integer -> if (format == "int32") "CaseInt" else "CaseLong"
 
         Type.Basic.String -> when {
-            enum != null -> enum!!.joinToString(separator = "Or") {
-                it?.toPascalCase() ?: ""
-            }.takeIf { it.length < 90 } ?: caseIndex.getOrElse(index) { "Case$index" }
-            fmt == "binary" -> "CaseBinary"
-            fmt == "uuid" -> "CaseUuid"
-            fmt == "date" -> "CaseDate"
-            fmt == "date-time" -> "CaseDateTime"
-            !fmt.isNullOrBlank() -> "Case${fmt.toPascalCase()}"
-            else -> "CaseString"
+            enum != null -> enum?.joinToString(separator = "Or") {
+                it?.toPascalCase().orEmpty()
+            }?.takeIf { it.length < MAX_CODE_LENGTH } ?: caseIndex.getOrElse(index) { "Case$index" }
+
+            format == "binary" -> "CaseBinary"
+            format == "uuid" -> "CaseUuid"
+            format == "date" -> "CaseDate"
+            format == "date-time" -> "CaseDateTime"
+            else -> format?.takeIf { it.isNotBlank() }?.let { "Case${it.toPascalCase()}" } ?: "CaseString"
         }
 
         Type.Basic.Array -> "CaseArray"
@@ -219,7 +226,7 @@ private fun Schema.unionCaseName(index: Int): String {
         is Type.Array -> (type as Type.Array).types.joinToString(
             prefix = "Case",
             separator = "Or"
-        ) { it.name.toPascalCase() }.takeIf { it.length < 90 }
+        ) { it.name.toPascalCase() }.takeIf { it.length < MAX_CODE_LENGTH }
             ?: caseIndex.getOrElse(index) { "Case$index" }
 
         null -> caseIndex.getOrElse(index) { "Case$index" }
@@ -242,7 +249,7 @@ private fun Schema.compositeUnionCaseName(index: Int): String? {
     return names.distinct()
         .takeIf { it.size >= 2 }
         ?.joinToString(separator = "Or")
-        ?.takeIf { it.length < 90 }
+        ?.takeIf { it.length < MAX_CODE_LENGTH }
         ?: caseIndex.getOrElse(index) { "Case$index" }
 }
 
@@ -263,27 +270,37 @@ private fun Schema.objectUnionCaseName(index: Int): String {
         }
     }
     return props.joinToString(prefix = "", separator = "And") { (name, _) -> name.toPascalCase() }
-        .takeIf { it.isNotBlank() && it.length < 90 }
+        .takeIf { it.isNotBlank() && it.length < MAX_CODE_LENGTH }
         ?: caseIndex.getOrElse(index) { "Case$index" }
 }
 
 private fun Schema.objectUnionPropertySuffix(): String? = when (type) {
-    Schema.Type.Basic.Array -> items?.valueOrNull()?.collectionEntrySuffix()
-    else -> null
+    Type.Basic.Array -> items?.valueOrNull()?.collectionEntrySuffix()
+    Type.Basic.Object,
+    Type.Basic.Number,
+    Type.Basic.Boolean,
+    Type.Basic.Integer,
+    Type.Basic.Null,
+    Type.Basic.String,
+    is Type.Array,
+    null -> null
 }
 
 private fun Schema.collectionEntrySuffix(): String? = when (type) {
-    Schema.Type.Basic.String -> "Strings"
-    Schema.Type.Basic.Integer -> if (format == "int32") "Ints" else "Longs"
-    Schema.Type.Basic.Number -> if (format == "float") "Floats" else "Doubles"
-    Schema.Type.Basic.Boolean -> "Booleans"
-    Schema.Type.Basic.Object ->
+    Type.Basic.String -> "Strings"
+    Type.Basic.Integer -> if (format == "int32") "Ints" else "Longs"
+    Type.Basic.Number -> if (format == "float") "Floats" else "Doubles"
+    Type.Basic.Boolean -> "Booleans"
+    Type.Basic.Object ->
         properties?.keys
             ?.joinToString(separator = "And") { it.toPascalCase() }
             ?.takeIf(String::isNotBlank)
             ?.pluralizeCaseName()
-    Schema.Type.Basic.Array -> items?.valueOrNull()?.collectionEntrySuffix()?.removeSuffix("s")?.plus("List")
-    else -> null
+
+    Type.Basic.Array -> items?.valueOrNull()?.collectionEntrySuffix()?.removeSuffix("s")?.plus("List")
+    Type.Basic.Null,
+    is Type.Array,
+    null -> null
 }
 
 private fun String.pluralizeCaseName(): String =
@@ -291,6 +308,7 @@ private fun String.pluralizeCaseName(): String =
         endsWith("s") -> this
         endsWith("y") && length > 1 && this[length - 2].lowercaseChar() !in setOf('a', 'e', 'i', 'o', 'u') ->
             dropLast(1) + "ies"
+
         else -> this + "s"
     }
 
@@ -322,10 +340,10 @@ val caseIndex = listOf(
     "Sixteen",
 )
 
-private const val schemaRefPrefix = "#/components/schemas/"
+private const val SCHEMA_REF_PREFIX = "#/components/schemas/"
 
 private fun String.schemaRefNameOrSelf(): String =
-    if (startsWith(schemaRefPrefix)) schemaName() else this
+    if (startsWith(SCHEMA_REF_PREFIX)) schemaName() else this
 
 private fun Schema.Discriminator?.discriminatorValueForSubtype(
     subtype: ReferenceOr<Schema>

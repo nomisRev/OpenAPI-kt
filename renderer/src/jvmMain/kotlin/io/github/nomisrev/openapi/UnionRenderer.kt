@@ -3,9 +3,11 @@ package io.github.nomisrev.openapi
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.Dynamic
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
@@ -213,7 +215,7 @@ private fun Model.Union.collectionNestedTypeSpecs(
                 is Model.Object -> model.toTypeSpec(config, externalTypeNames = externalTypeNames)
                 is Model.Union -> model.toTypeSpec(config, externalTypeNames = externalTypeNames)
                 is Model.DiscriminatedObject -> model.toTypeSpec(config)
-                else -> null
+                is Model.Reference -> null
             }
         }
         .toList()
@@ -730,7 +732,7 @@ private data class RenderedUnionCase(
     val usesUuid: Boolean,
     val usesInstant: Boolean = false,
     val isInlined: Boolean = false,
-    val caseSimpleName: String = typeSpec.name ?: "",
+    val caseSimpleName: String = typeSpec.name.orEmpty(),
     val isNestedUnion: Boolean = false,
 )
 
@@ -863,7 +865,8 @@ private fun TypeName.usesUuid(): Boolean =
         is ParameterizedTypeName -> rawType == UuidType || typeArguments.any(TypeName::usesUuid)
         is TypeVariableName -> bounds.any(TypeName::usesUuid)
         is WildcardTypeName -> inTypes.any(TypeName::usesUuid) || outTypes.any(TypeName::usesUuid)
-        else -> false
+        Dynamic,
+        is LambdaTypeName -> false
     }
 
 private fun TypeName.usesInstant(): Boolean =
@@ -872,7 +875,8 @@ private fun TypeName.usesInstant(): Boolean =
         is ParameterizedTypeName -> rawType == InstantType || typeArguments.any(TypeName::usesInstant)
         is TypeVariableName -> bounds.any(TypeName::usesInstant)
         is WildcardTypeName -> inTypes.any(TypeName::usesInstant) || outTypes.any(TypeName::usesInstant)
-        else -> false
+        Dynamic,
+        is LambdaTypeName -> false
     }
 
 private fun String.escapeForKdoc(): String =

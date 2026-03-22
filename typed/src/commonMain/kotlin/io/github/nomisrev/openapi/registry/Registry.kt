@@ -19,7 +19,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
     fun names(): Set<NamingContext.Reference> = cache.toSet()
 
     private suspend fun remoteSchema(url: String): Schema =
-        TODO("Remote schemas not supported yet.")
+        TODO("Remote schemas $url not supported yet.")
 
     override fun close() = client.close()
 
@@ -80,7 +80,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
             val schema = when (val nested = openAPI.components.schemas[name]) {
                 is ReferenceOr.Reference -> remoteSchema(nested.ref)
                 is ReferenceOr.Value<Schema> -> nested.value
-                null -> throw IllegalStateException("Schema $name could not be found in ${openAPI.components.schemas.keys}.")
+                null -> error("Schema $name not found in ${openAPI.components.schemas.keys}.")
             }
             return schema
         }
@@ -108,6 +108,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
          * Traverse a schema to determine if it has readOnly or writeOnly in any (nested) properties.
          * Checks `allOf`, `oneOf`, `anyOf`, `properties`, and `items`.
          */
+        @Suppress("CyclomaticComplexMethod")
         private suspend fun Schema.readOrWriteOnly(visited: MutableSet<String> = mutableSetOf()): Boolean {
             suspend fun ReferenceOr<Schema>.schema(): Schema? = when (this) {
                 is ReferenceOr.Value<Schema> -> value
@@ -177,7 +178,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
             val schema = when (val nested = openAPI.components.schemas[name]) {
                 is ReferenceOr.Reference -> remoteSchema(nested.ref)
                 is ReferenceOr.Value<Schema> -> nested.value
-                null -> throw IllegalStateException("Schema $name could not be found in ${openAPI.components.schemas.keys}.")
+                null -> error("Schema $name could not be found in ${openAPI.components.schemas.keys}.")
             }
             val contextSpecific = this.readOnly == true || this.writeOnly == true || schema.readOrWriteOnly()
             val schemaContext = if (contextSpecific) context else SchemaContext.Null

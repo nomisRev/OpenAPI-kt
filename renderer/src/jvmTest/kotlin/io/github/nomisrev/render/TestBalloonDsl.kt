@@ -17,17 +17,17 @@ import java.nio.file.Path
 import org.intellij.lang.annotations.Language
 import kotlin.test.assertTrue
 
-private const val unifiedDiffContextLines = 3
-private const val maxDiffLinesPerFile = 200
-private const val goldenUpdateHint =
+private const val UNIFIED_DIFF_CONTEXT_LINES = 3
+private const val MAX_DIFF_LINES_PER_FILE = 200
+private const val GOLDEN_UPDATE_HINT =
     "Re-run with -PupdateGolden=true or UPDATE_GOLDEN=true to update renderer golden files."
 
-private val updateGolden: Boolean = listOfNotNull(
+private val UPDATE_GOLDEN: Boolean = listOfNotNull(
     System.getProperty("updateGolden"),
     System.getenv("UPDATE_GOLDEN")
 ).any { it.toBooleanStrictOrNull() == true }
 
-private val testRenderConfig = RenderConfig(
+private val TEST_RENDER_CONFIG = RenderConfig(
     modelPackage = "io.github.nomisrev.render.test.model",
     apiPackage = "io.github.nomisrev.render.test.api",
     targets = setOf(KmpTarget.JVM),
@@ -35,7 +35,7 @@ private val testRenderConfig = RenderConfig(
 
 private fun readGoldenFiles(outputDir: Path, dir: String): Map<String, String> {
     require(Files.isDirectory(outputDir)) {
-        "Golden directory not found for '$dir': $outputDir. $goldenUpdateHint"
+        "Golden directory not found for '$dir': $outputDir. $GOLDEN_UPDATE_HINT"
     }
     return Files.newDirectoryStream(outputDir) { path ->
         Files.isRegularFile(path) && path.fileName.toString().endsWith(".kt")
@@ -76,12 +76,12 @@ private fun renderUnifiedDiff(dir: String, fileName: String, expected: String, a
         actualPath,
         expectedLines,
         patch,
-        unifiedDiffContextLines
+        UNIFIED_DIFF_CONTEXT_LINES
     )
-    if (unifiedDiff.size <= maxDiffLinesPerFile) return unifiedDiff
-    val omitted = unifiedDiff.size - maxDiffLinesPerFile
-    return unifiedDiff.take(maxDiffLinesPerFile) +
-        "... (diff truncated: $omitted more lines, max $maxDiffLinesPerFile)"
+    if (unifiedDiff.size <= MAX_DIFF_LINES_PER_FILE) return unifiedDiff
+    val omitted = unifiedDiff.size - MAX_DIFF_LINES_PER_FILE
+    return unifiedDiff.take(MAX_DIFF_LINES_PER_FILE) +
+        "... (diff truncated: $omitted more lines, max $MAX_DIFF_LINES_PER_FILE)"
 }
 
 private fun formatFileList(files: List<String>): String =
@@ -120,7 +120,7 @@ private fun assertGoldenMatches(
             }
         }
         appendLine()
-        appendLine(goldenUpdateHint)
+        appendLine(GOLDEN_UPDATE_HINT)
     }
     throw AssertionError(message)
 }
@@ -177,7 +177,7 @@ fun TestSuite.renderSpec(
         apiTree.generateModels(config) + apiTree.generateClient(config)
     },
 ) = test(json) {
-    val config = testRenderConfig.copy(
+    val config = TEST_RENDER_CONFIG.copy(
         modelPackage = "io.github.nomisrev.render.test.${dir.replace('/', '.').replace('-', '.')}",
         apiPackage = "io.github.nomisrev.render.test.${dir.replace('/', '.').replace('-', '.')}",
     )
@@ -188,7 +188,7 @@ fun TestSuite.renderSpec(
         file.name to buildString { file.writeTo(this) }
     }
     val outputDir = Path.of("src/jvmTest/resources/kotlinTestData", dir)
-    if (updateGolden) {
+    if (UPDATE_GOLDEN) {
         Files.createDirectories(outputDir)
         actual.forEach { (name, content) ->
             Files.writeString(outputDir.resolve("$name.kt"), content)

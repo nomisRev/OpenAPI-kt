@@ -13,8 +13,8 @@ fun <Key, Value> Map<Key, Value>.combine(
     merge: (key: Key, Value, Value) -> Value
 ): Map<Key, Value> = buildMap {
     this@combine.forEach { (key, value) ->
-        if (other.contains(key)) {
-            val otherValue = other[key]!!
+        val otherValue = other[key]
+        if (otherValue != null) {
             if (value != otherValue) {
                 put(key, merge(key, value, otherValue))
             } else put(key, otherValue)
@@ -30,8 +30,8 @@ suspend fun <Key, Value> Map<Key, Value>.merge(
     merge: suspend (key: Key, Value, Value) -> Value
 ): Map<Key, Value> = buildMap {
     this@merge.forEach { (key, value) ->
-        if (other.contains(key)) {
-            val otherValue = other[key]!!
+        val otherValue = other[key]
+        if (otherValue != null) {
             if (value != otherValue) {
                 put(key, merge(key, value, otherValue))
             } else put(key, otherValue)

@@ -117,7 +117,9 @@ val closedEnumSpec by testSuite {
             )
 
         val nestedEnum = Model.Enum(
-            name.nest(NamingContext.UnionCase(values.joinToString("Or") { it.replaceFirstChar { it.uppercase() } })),
+            name.nest(NamingContext.UnionCase(values.joinToString("Or") {
+                it.replaceFirstChar { c -> c.uppercase() }
+            })),
             Model.Primitive.String(null, null, null, false, null),
             values.toList(),
             null,

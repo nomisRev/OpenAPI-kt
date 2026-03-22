@@ -1,0 +1,102 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<SmellBaseline>
+  <ManuallySuppressedIssues/>
+  <CurrentIssues>
+    <ID>CyclomaticComplexMethod:ClientRenderer.kt:private fun Route.Bodies.toInvokeParameterSpecs: List&lt;ParameterSpec>?</ID>
+    <ID>CyclomaticComplexMethod:ClientRenderer.kt:private fun Route.Input.toParameterSpec: ParameterSpec</ID>
+    <ID>CyclomaticComplexMethod:ImplRenderer.kt:internal fun Route.buildOperationBody: CodeBlock</ID>
+    <ID>CyclomaticComplexMethod:ImplRenderer.kt:private fun ContentType.toContentTypeCodeBlock: CodeBlock</ID>
+    <ID>CyclomaticComplexMethod:ImplRenderer.kt:private fun addBodyCode</ID>
+    <ID>CyclomaticComplexMethod:ObjectRenderer.kt:fun Model.Object.toTypeSpec: TypeSpec</ID>
+    <ID>CyclomaticComplexMethod:ObjectRenderer.kt:internal fun Model.nonNullableSerializerCode: CodeBlock</ID>
+    <ID>CyclomaticComplexMethod:ObjectRenderer.kt:private fun Model.Object.renderProperty: RenderedProperty</ID>
+    <ID>CyclomaticComplexMethod:OperationInlineModelScope.kt:private fun Model.normalizedForSharingKey: Model</ID>
+    <ID>CyclomaticComplexMethod:TypeMapping.kt:fun Model.toTypeName: TypeName</ID>
+    <ID>CyclomaticComplexMethod:UnionRenderer.kt:private fun Model.Union.Case.caseSimpleName: String</ID>
+    <ID>CyclomaticComplexMethod:UnionRenderer.kt:private fun Model.collectionEntryName: String</ID>
+    <ID>CyclomaticComplexMethod:UnionRenderer.kt:private fun Model.deserializationPriority: Int</ID>
+    <ID>LongMethod:ClientRenderer.kt:private fun Route.buildSealedResponseTypeSpec: TypeSpec</ID>
+    <ID>LongMethod:ClientRenderer.kt:private fun Route.toOperationTypeSpec: TypeSpec</ID>
+    <ID>LongMethod:ClientRenderer.kt:private fun buildFlattenedBodyOverloads: List&lt;FlattenedBodyOverload>?</ID>
+    <ID>LongMethod:ImplRenderer.kt:internal fun PathSegment.addConcreteNavigationMember</ID>
+    <ID>LongMethod:ImplRenderer.kt:internal fun Route.buildOperationBody: CodeBlock</ID>
+    <ID>LongMethod:ImplRenderer.kt:private fun addBodyCode</ID>
+    <ID>LongMethod:ObjectRenderer.kt:fun Model.Object.toTypeSpec: TypeSpec</ID>
+    <ID>LongMethod:OperationInlineModelScope.kt:private fun Model.normalizedForSharingKey: Model</ID>
+    <ID>LongMethod:UnionRenderer.kt:private fun buildAnyOfDeserializeCode: CodeBlock</ID>
+    <ID>LongParameterList:ClientRenderer.kt:private fun Route.buildFlattenedBodyOperationBody: CodeBlock</ID>
+    <ID>LongParameterList:ClientRenderer.kt:private fun Route.toInvokeFunSpec: FunSpec</ID>
+    <ID>LongParameterList:ClientRenderer.kt:private fun Route.toInvokeFunSpecForFlattenedBody: FunSpec</ID>
+    <ID>LongParameterList:ClientRenderer.kt:private fun Route.toInvokeFunSpecForOverloadedBodyCase: FunSpec</ID>
+    <ID>LongParameterList:ImplRenderer.kt:internal fun Route.buildOperationBody: CodeBlock</ID>
+    <ID>LongParameterList:ObjectRenderer.kt:fun Model.Object.toTypeSpec: TypeSpec</ID>
+    <ID>LongParameterList:ObjectRenderer.kt:private fun Model.Object.renderProperty: RenderedProperty</ID>
+    <ID>LongParameterList:UnionRenderer.kt:private fun Model.Union.Case.renderWrappedTypeSpec: RenderedUnionCase</ID>
+    <ID>LongParameterList:UnionRenderer.kt:private fun buildDeserializeFunction: FunSpec</ID>
+    <ID>LongParameterList:UnionRenderer.kt:private fun caseSerializerCode: CodeBlock</ID>
+    <ID>MagicNumber:ClientRenderer.kt:3</ID>
+    <ID>MagicNumber:ClientRenderer.kt:4</ID>
+    <ID>MagicNumber:UnionRenderer.kt:100</ID>
+    <ID>MagicNumber:UnionRenderer.kt:1000</ID>
+    <ID>MagicNumber:UnionRenderer.kt:1100</ID>
+    <ID>MagicNumber:UnionRenderer.kt:150</ID>
+    <ID>MagicNumber:UnionRenderer.kt:200</ID>
+    <ID>MagicNumber:UnionRenderer.kt:300</ID>
+    <ID>MagicNumber:UnionRenderer.kt:400</ID>
+    <ID>MagicNumber:UnionRenderer.kt:500</ID>
+    <ID>MagicNumber:UnionRenderer.kt:600</ID>
+    <ID>MagicNumber:UnionRenderer.kt:700</ID>
+    <ID>MagicNumber:UnionRenderer.kt:800</ID>
+    <ID>MagicNumber:UnionRenderer.kt:801</ID>
+    <ID>MagicNumber:UnionRenderer.kt:802</ID>
+    <ID>MagicNumber:UnionRenderer.kt:803</ID>
+    <ID>MagicNumber:UnionRenderer.kt:804</ID>
+    <ID>MagicNumber:UnionRenderer.kt:805</ID>
+    <ID>MagicNumber:UnionRenderer.kt:900</ID>
+    <ID>MagicNumber:UnionRenderer.kt:901</ID>
+    <ID>MagicNumber:UnionRenderer.kt:902</ID>
+    <ID>MagicNumber:UnionRenderer.kt:903</ID>
+    <ID>MagicNumber:UnionRenderer.kt:99</ID>
+    <ID>MatchingDeclarationName:InlineParameterScope.kt:InlineParameterModel</ID>
+    <ID>MaxLineLength:ObjectRenderer.kt:.</ID>
+    <ID>MaxLineLength:ObjectRenderer.kt:is Model.DiscriminatedObject -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))</ID>
+    <ID>MaxLineLength:SerializationUtilsRenderer.kt:"%S + payload + %S + errors.entries.joinToString(%S) { (type, error) -> type.toString() + %S + error.stackTraceToString() }"</ID>
+    <ID>NoNameShadowing:ObjectRenderer.kt:property</ID>
+    <ID>ReturnCount:ClientRenderer.kt:private fun Route.Bodies.flattenedBodyRendering: FlattenedBodyRendering?</ID>
+    <ID>ReturnCount:ClientRenderer.kt:private fun Route.Bodies.inlineBodyTypeSpec: TypeSpec?</ID>
+    <ID>ReturnCount:ClientRenderer.kt:private fun Route.buildResponseTypeSpec: TypeSpec</ID>
+    <ID>ReturnCount:ClientRenderer.kt:private fun Route.invokeReturnType: TypeName</ID>
+    <ID>ReturnCount:CollectionRenderer.kt:private fun List&lt;String>.toListLiteral: CodeBlock?</ID>
+    <ID>ReturnCount:ImplRenderer.kt:private fun PathSegment.OverloadedParameter.enumClassNames: Map&lt;Model.Union.Case, ClassName></ID>
+    <ID>ReturnCount:ImplRenderer.kt:private fun addBodyCode</ID>
+    <ID>ReturnCount:InlineParameterScope.kt:internal fun Route.Input.inlineParameterClassName: ClassName?</ID>
+    <ID>ReturnCount:InlineParameterScope.kt:internal fun Route.Input.inlineParameterTypeName: TypeName?</ID>
+    <ID>ReturnCount:NamingUtils.kt:fun toEnumValueName: String</ID>
+    <ID>ReturnCount:ObjectRenderer.kt:private fun List&lt;String>.toListLiteral: CodeBlock?</ID>
+    <ID>ReturnCount:OperationInlineModelScope.kt:private fun Model.collectionItemCandidateOrNull: OperationInlineModelCandidate?</ID>
+    <ID>ReturnCount:OperationInlineModelScope.kt:private fun Model.directOverloadedBodyCandidateOrNull: OperationInlineModelCandidate?</ID>
+    <ID>ReturnCount:UnionRenderer.kt:private fun Model.Union.Case.discriminatorValueFromInlineObject: String?</ID>
+    <ID>ReturnCount:UnionRenderer.kt:private fun buildAnyOfDeserializeCode: CodeBlock</ID>
+    <ID>SpreadOperator:ClientRenderer.kt:(*(signatureTypes + returnType).toTypedArray())</ID>
+    <ID>SpreadOperator:ImplRenderer.kt:(*accumulatedTypeNames.toTypedArray())</ID>
+    <ID>SpreadOperator:TypeMapping.kt:(packageName, sanitizedNames.first(), *sanitizedNames.drop(1).toTypedArray())</ID>
+    <ID>TooManyFunctions:ClientRenderer.kt:io.github.nomisrev.openapi.ClientRenderer.kt</ID>
+    <ID>TooManyFunctions:FactoryRenderer.kt:io.github.nomisrev.openapi.FactoryRenderer.kt</ID>
+    <ID>TooManyFunctions:ImplRenderer.kt:io.github.nomisrev.openapi.ImplRenderer.kt</ID>
+    <ID>TooManyFunctions:ObjectRenderer.kt:io.github.nomisrev.openapi.ObjectRenderer.kt</ID>
+    <ID>TooManyFunctions:UnionRenderer.kt:io.github.nomisrev.openapi.UnionRenderer.kt</ID>
+    <ID>UnsafeCallOnNullableType:ClientRenderer.kt:returns.singlePreferredModelOrNull()!!</ID>
+    <ID>UnsafeCallOnNullableType:FactoryRenderer.kt:description!!</ID>
+    <ID>UnsafeCallOnNullableType:FactoryRenderer.kt:variable.enum!!</ID>
+    <ID>UnsafeCallOnNullableType:FactoryRenderer.kt:variables!!</ID>
+    <ID>UnsafeCallOnNullableType:ImplRenderer.kt:body!!</ID>
+    <ID>UnsafeCallOnNullableType:ImplRenderer.kt:returns.default!!</ID>
+    <ID>UnusedParameter:ClientRenderer.kt:flattenedBody: FlattenedBodyRendering</ID>
+    <ID>UnusedParameter:ImplRenderer.kt:config: RenderConfig</ID>
+    <ID>UnusedParameter:ImplRenderer.kt:inlineModelScope: OperationInlineModelScope</ID>
+    <ID>UnusedParameter:UnionRenderer.kt:config: RenderConfig</ID>
+    <ID>UnusedPrivateFunction:OperationInlineModelScope.kt:private fun Route.ReturnType.preferredModel: Model?</ID>
+    <ID>UnusedPrivateProperty:ClientRenderer.kt:private val JsonObjectType = ClassName("kotlinx.serialization.json", "JsonObject")</ID>
+    <ID>UnusedVariable:OperationInlineModelScope.kt:propertyName</ID>
+  </CurrentIssues>
+</SmellBaseline>

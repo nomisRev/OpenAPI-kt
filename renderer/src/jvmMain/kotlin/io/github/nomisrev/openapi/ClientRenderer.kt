@@ -1050,7 +1050,15 @@ private fun Model.flattenedPrimitiveUnionCaseName(): String = when (this) {
     is Model.Date -> "CaseDate"
     is Model.DateTime -> "CaseDateTime"
     is Model.Uuid -> "CaseUuid"
-    else -> "Case"
+
+    is Model.Collection,
+    is Model.DiscriminatedObject,
+    is Model.Enum,
+    is Model.FreeFormJson,
+    is Model.Object,
+    is Model.Reference,
+    is Model.AnyOf,
+    is Model.OneOf -> "Case"
 }
 
 private val HttpStatusCodeType = ClassName("io.ktor.http", "HttpStatusCode")

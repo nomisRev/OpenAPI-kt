@@ -23,6 +23,7 @@ suspend fun ResolvedSchema.primitive(): Model = when (this) {
     }
 }
 
+@Suppress("CyclomaticComplexMethod", "NullableToStringCall")
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.toPrimitive(): Model =
     when (schema.type) {
@@ -30,7 +31,7 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
         Schema.Type.Basic.Array,
         Schema.Type.Basic.Object,
         Schema.Type.Basic.Null,
-        null -> throw IllegalStateException("${schema.type} not allowed for primitive types")
+        null -> error("${schema.type} not allowed for primitive types")
 
         Schema.Type.Basic.Number -> when (schema.format) {
             "float" -> Model.Primitive.Float(

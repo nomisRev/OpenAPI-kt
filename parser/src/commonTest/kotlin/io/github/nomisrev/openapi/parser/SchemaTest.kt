@@ -158,7 +158,8 @@ class SchemaTest {
 
     @Test
     fun `json exclusiveMinimum and exclusiveMaximum as booleans deserialize`() {
-        val schema = Schema.fromJson("""{"type":"number","minimum":0.0,"exclusiveMinimum":true,"maximum":100.0,"exclusiveMaximum":false}""")
+        val schema =
+            Schema.fromJson("""{"type":"number","minimum":0.0,"exclusiveMinimum":true,"maximum":100.0,"exclusiveMaximum":false}""")
         assertEquals(true, schema.exclusiveMinimum)
         assertEquals(false, schema.exclusiveMaximum)
     }
@@ -232,7 +233,8 @@ class SchemaTest {
 
     @Test
     fun `json properties with inline schemas deserializes`() {
-        val schema = Schema.fromJson("""{"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"}}}""")
+        val schema =
+            Schema.fromJson("""{"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"}}}""")
         assertNotNull(schema.properties)
         val idProp = assertIs<ReferenceOr.Value<Schema>>(schema.properties["id"])
         assertEquals(Schema.Type.Basic.Integer, idProp.value.type)
@@ -242,7 +244,8 @@ class SchemaTest {
 
     @Test
     fun `json properties with ref deserializes`() {
-        val schema = Schema.fromJson("""{"type":"object","properties":{"pet":{"${"$"}ref":"#/components/schemas/Pet"}}}""")
+        val schema =
+            Schema.fromJson("""{"type":"object","properties":{"pet":{"${"$"}ref":"#/components/schemas/Pet"}}}""")
         val petProp = assertIs<ReferenceOr.Reference>(schema.properties?.get("pet"))
         assertEquals("#/components/schemas/Pet", petProp.ref)
     }
@@ -289,7 +292,8 @@ class SchemaTest {
 
     @Test
     fun `json additionalProperties ref deserializes to PSchema`() {
-        val schema = Schema.fromJson("""{"type":"object","additionalProperties":{"${"$"}ref":"#/components/schemas/Foo"}}""")
+        val schema =
+            Schema.fromJson("""{"type":"object","additionalProperties":{"${"$"}ref":"#/components/schemas/Foo"}}""")
         val ap = assertIs<AdditionalProperties.PSchema>(schema.additionalProperties)
         val apRef = assertIs<ReferenceOr.Reference>(ap.value)
         assertEquals("#/components/schemas/Foo", apRef.ref)
@@ -310,7 +314,8 @@ class SchemaTest {
 
     @Test
     fun `json allOf with refs deserializes`() {
-        val schema = Schema.fromJson("""{"allOf":[{"${"$"}ref":"#/components/schemas/A"},{"${"$"}ref":"#/components/schemas/B"}]}""")
+        val schema =
+            Schema.fromJson("""{"allOf":[{"${"$"}ref":"#/components/schemas/A"},{"${"$"}ref":"#/components/schemas/B"}]}""")
         assertNotNull(schema.allOf)
         val refA = assertIs<ReferenceOr.Reference>(schema.allOf[0])
         assertEquals("#/components/schemas/A", refA.ref)
@@ -360,10 +365,22 @@ class SchemaTest {
 
     @Test
     fun `json discriminator with mapping deserializes`() {
-        val schema = Schema.fromJson("""{"discriminator":{"propertyName":"petType","mapping":{"dog":"#/components/schemas/Dog","cat":"#/components/schemas/Cat"}}}""")
+        val schema =
+            Schema.fromJson("""{
+                |   "discriminator":{
+                |       "propertyName":"petType"
+                |       "mapping":{
+                |           "dog":"#/components/schemas/Dog",
+                |           "cat":"#/components/schemas/Cat"
+                |       }
+                |   }
+                |}""".trimMargin())
         assertNotNull(schema.discriminator)
         assertEquals("petType", schema.discriminator.propertyName)
-        assertEquals(mapOf("dog" to "#/components/schemas/Dog", "cat" to "#/components/schemas/Cat"), schema.discriminator.mapping)
+        assertEquals(
+            mapOf("dog" to "#/components/schemas/Dog", "cat" to "#/components/schemas/Cat"),
+            schema.discriminator.mapping
+        )
     }
 
     @Test
@@ -464,7 +481,8 @@ class SchemaTest {
 
     @Test
     fun `json externalDocs deserializes`() {
-        val schema = Schema.fromJson("""{"externalDocs":{"url":"https://docs.example.com","description":"More info"}}""")
+        val schema =
+            Schema.fromJson("""{"externalDocs":{"url":"https://docs.example.com","description":"More info"}}""")
         assertNotNull(schema.externalDocs)
         assertEquals("https://docs.example.com", schema.externalDocs.url)
         assertEquals("More info", schema.externalDocs.description)
@@ -474,7 +492,16 @@ class SchemaTest {
 
     @Test
     fun `json xml deserializes`() {
-        val schema = Schema.fromJson("""{"type":"object","xml":{"name":"animal","namespace":"http://example.com/schema/sample","prefix":"sample","wrapped":false}}""")
+        val schema =
+            Schema.fromJson("""{
+                |"type":"object",
+                |"xml":{
+                |       "name":"animal",
+                |       "namespace":"http://example.com/schema/sample",
+                |       "prefix":"sample",
+                |       "wrapped":false
+                |   }
+                |}""".trimMargin())
         assertNotNull(schema.xml)
         assertEquals("animal", schema.xml.name)
         assertEquals("http://example.com/schema/sample", schema.xml.namespace)

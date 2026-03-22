@@ -1,9 +1,7 @@
 package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
-import io.github.nomisrev.openapi.Model.Object.*
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.NamingContext.*
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.AdditionalProperties
@@ -55,12 +53,12 @@ context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.properties(
     properties: Map<String, ReferenceOr<Schema>>,
     context: SchemaContext
-): Map<String, Property> = buildMap {
+): Map<String, Model.Object.Property> = buildMap {
     properties.forEach { (name, refOrSchema) ->
         refOrSchema.takeIf(context)
-            ?.resolve(this@properties.name.nest(ObjectProperty(name)), context) { propSchema ->
+            ?.resolve(this@properties.name.nest(NamingContext.ObjectProperty(name)), context) { propSchema ->
                 val model = propSchema.toModel(context, false)
-                put(name, Property(model, schema.required.contains(name)))
+                put(name, Model.Object.Property(model, schema.required.contains(name)))
             }
     }
 }

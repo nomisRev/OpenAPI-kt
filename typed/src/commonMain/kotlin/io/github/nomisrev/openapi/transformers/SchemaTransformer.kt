@@ -19,6 +19,7 @@ import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.routes.SchemaContext
 
+@Suppress("CyclomaticComplexMethod", "UnsafeCallOnNullableType")
 // TODO: resolveReference is always false for nested calls, and true for top-level.. Split the diff and remove bool?
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boolean): Model = when {
@@ -67,7 +68,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
         Schema.Type.Basic.String -> primitive()
 
         Schema.Type.Basic.Null ->
-            throw IllegalStateException("Null  should always be resolved to result in nullable types. Please report this bug. $schema")
+            error("Null  should always be resolved to result in nullable types. Please report this bug. $schema")
     }
 
     schema.enum != null -> toClosedEnum(context, schema.enum!!)
@@ -89,6 +90,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
     else -> fallback()
 }
 
+@Suppress("LongMethod")
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContext): Model =
     when (val ap = schema.additionalProperties) {

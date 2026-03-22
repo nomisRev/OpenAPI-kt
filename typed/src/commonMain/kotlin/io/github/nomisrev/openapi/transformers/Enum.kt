@@ -16,15 +16,17 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<Strin
         schema.copy(description = null, default = null, enum = null, nullable = false)
     ).toModel(context, false)
     val enumDefault = default()
+    @Suppress("NullableToStringCall")
     require(!(enumDefault == Model.Default.Null && !nestedNull)) {
         "The default value $enumDefault is not present in the enum values: ${schema.enum} & schema is not nullable."
     }
+    @Suppress("UnsafeCallOnNullableType")
     return Model.Enum(name, inner, schema.enum!!, enumDefault, description(), schema.title, isNullable)
 }
 
-fun ResolvedSchema.default(): Model.Default<String>? = when (val _default = schema.default) {
-    is Single if _default.value.equals("null", ignoreCase = true) -> Model.Default.Null
-    is Single -> Model.Default.Value(_default.value)
+fun ResolvedSchema.default(): Model.Default<String>? = when (val defaultValue = schema.default) {
+    is Single if defaultValue.value.equals("null", ignoreCase = true) -> Model.Default.Null
+    is Single -> Model.Default.Value(defaultValue.value)
     is Multiple -> throw IllegalArgumentException("Multiple default values not supported for enums.")
     null -> null
 }

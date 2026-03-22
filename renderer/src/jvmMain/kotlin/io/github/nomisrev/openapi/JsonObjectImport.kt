@@ -16,7 +16,14 @@ internal fun Model.needsJsonObjectImport(): Boolean = when (this) {
 
     is Model.Enum -> inner.needsJsonObjectImport()
     is Model.Collection -> inner.needsJsonObjectImport()
-    else -> false
+
+    is Model.ByteArray,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.FreeFormJson,
+    is Model.Primitive,
+    is Model.Reference,
+    is Model.Uuid -> false
 }
 
 private fun Model.AnyOf.needsJsonObjectImportForAnyOf(): Boolean {

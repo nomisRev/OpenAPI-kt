@@ -2,8 +2,10 @@ package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.Dynamic
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
@@ -123,7 +125,8 @@ private fun TypeName.usesUuid(): Boolean =
         is ParameterizedTypeName -> rawType == UuidType || typeArguments.any(TypeName::usesUuid)
         is TypeVariableName -> bounds.any(TypeName::usesUuid)
         is WildcardTypeName -> inTypes.any(TypeName::usesUuid) || outTypes.any(TypeName::usesUuid)
-        else -> false
+        Dynamic,
+        is LambdaTypeName -> false
     }
 
 private fun String.escapeForKdoc(): String =

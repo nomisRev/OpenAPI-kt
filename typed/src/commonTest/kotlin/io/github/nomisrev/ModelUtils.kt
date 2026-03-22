@@ -48,7 +48,13 @@ fun Model.context(block: (NamingContext) -> NamingContext): Model = when (this) 
         is Model.AnyOf -> copy(context = block(context))
     }
 
-    else -> this
+    is Model.ByteArray,
+    is Model.Collection,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.FreeFormJson,
+    is Model.Primitive,
+    is Model.Uuid -> TODO()
 }
 
 val api = OpenAPI(

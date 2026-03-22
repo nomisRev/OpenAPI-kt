@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.parser.Server
@@ -148,6 +149,7 @@ private class PathNodeBuilder(
  */
 private fun String.normalizeSegmentSeparators(): String = replace('-', '_')
 
+@Suppress("CyclomaticComplexMethod")
 private fun PathSegment?.sameIdentityAs(other: PathSegment): Boolean = when {
     this is PathSegment.Literal && other is PathSegment.Literal ->
         name.normalizeSegmentSeparators() == other.name.normalizeSegmentSeparators()
@@ -350,6 +352,7 @@ private fun Route.ReturnType.concreteCollisionDescription(): String =
             "$contentType:${model.compatibilityDescription()}"
         }
 
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 private fun Model.normalizedForCompatibility(): Model = when (this) {
     is Model.ByteArray -> copy(description = null, title = null)
     is Model.Collection -> copy(
@@ -432,6 +435,7 @@ private fun Model.Object.AdditionalProperties.normalizedForCompatibility(): Mode
             Model.Object.AdditionalProperties.Schema(value.normalizedForCompatibility())
     }
 
+@Suppress("CyclomaticComplexMethod")
 private fun PathSegment.compatibilityDescription(): String = when (val segment = normalizedForCompatibility()) {
     is PathSegment.FixedValue -> "FixedValue(wireValue=${segment.wireValue})"
     is PathSegment.Literal -> "Literal(name=${segment.name})"
@@ -440,6 +444,7 @@ private fun PathSegment.compatibilityDescription(): String = when (val segment =
         "OverloadedParameter(name=${segment.name}, type=${segment.type.compatibilityDescription()})"
 }
 
+@Suppress("CyclomaticComplexMethod")
 private fun Model.compatibilityDescription(): String {
     val suffix = if (isNullable) "?" else ""
     return when (this) {

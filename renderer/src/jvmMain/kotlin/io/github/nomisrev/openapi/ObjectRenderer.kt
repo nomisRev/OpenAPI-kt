@@ -3,9 +3,11 @@ package io.github.nomisrev.openapi
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.Dynamic
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
@@ -161,7 +163,8 @@ fun Model.Object.toTypeSpec(
         .sortedBy { (it as Model.ContextHolder).context.toClassName(config).canonicalName }
         .mapNotNull { model ->
             val modelClassName = (model as? Model.ContextHolder)?.context?.toClassName(config)
-            val externalTargetClassName = modelClassName?.let { externalTypeNames[it.copy(nullable = false)] } as? ClassName
+            val externalTargetClassName =
+                modelClassName?.let { externalTypeNames[it.copy(nullable = false)] } as? ClassName
             if (externalTargetClassName != null && externalTargetClassName.enclosingClassName() != effectiveClassName) {
                 return@mapNotNull null
             }
@@ -182,8 +185,18 @@ fun Model.Object.toTypeSpec(
                     classNameOverride = childClassNameOverride,
                     externalTypeNames = externalTypeNames,
                 )
+
                 is Model.Union -> model.toTypeSpec(config, classNameOverride = childClassNameOverride)
-                else -> null
+
+                is Model.ByteArray,
+                is Model.Collection,
+                is Model.Date,
+                is Model.DateTime,
+                is Model.DiscriminatedObject,
+                is Model.FreeFormJson,
+                is Model.Primitive,
+                is Model.Reference,
+                is Model.Uuid -> null
             }
         }
         .forEach(builder::addType)
@@ -236,10 +249,11 @@ private fun Model.Object.renderProperty(
     val paramName = jsonName.toParamName()
     val unescapedParamName = paramName.unescapeBackticks()
     val rawTypeName = property.model.toTypeName(config).remapTypeNames(externalTypeNames)
-    val typeName = (if (originalClassName != null && effectiveClassName != null && originalClassName != effectiveClassName)
-        rawTypeName.remapNestedClassName(originalClassName, effectiveClassName)
-    else rawTypeName)
-        .copy(nullable = property.model.isNullable || !property.isRequired)
+    val typeName =
+        (if (originalClassName != null && effectiveClassName != null && originalClassName != effectiveClassName)
+            rawTypeName.remapNestedClassName(originalClassName, effectiveClassName)
+        else rawTypeName)
+            .copy(nullable = property.model.isNullable || !property.isRequired)
     val literalDefault = property.model.defaultLiteral(config)
 
     val parameter = ParameterSpec.builder(paramName, typeName)
@@ -405,7 +419,10 @@ private fun serializerDeserializeCode(
                 )
             }
         }
-        .addStatement("val known = json.decodeFromJsonElement(generatedSerializer(), %T(element.filterKeys { it in knownNames }))", JsonObjectType)
+        .addStatement(
+            "val known = json.decodeFromJsonElement(generatedSerializer(), %T(element.filterKeys { it in knownNames }))",
+            JsonObjectType
+        )
         .apply {
             when (additionalPropertyKind) {
                 AdditionalPropertyKind.Json ->
@@ -469,11 +486,30 @@ internal fun Model.nonNullableSerializerCode(
                 )
             }
 
-        is Model.Object -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))
-        is Model.Enum -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))
-        is Model.Reference -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))
-        is Model.Union -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))
-        is Model.DiscriminatedObject -> CodeBlock.of("%T.serializer()", serializerClassName(config, originalClassName, className, externalTypeNames))
+        is Model.Object -> CodeBlock.of(
+            "%T.serializer()",
+            serializerClassName(config, originalClassName, className, externalTypeNames)
+        )
+
+        is Model.Enum -> CodeBlock.of(
+            "%T.serializer()",
+            serializerClassName(config, originalClassName, className, externalTypeNames)
+        )
+
+        is Model.Reference -> CodeBlock.of(
+            "%T.serializer()",
+            serializerClassName(config, originalClassName, className, externalTypeNames)
+        )
+
+        is Model.Union -> CodeBlock.of(
+            "%T.serializer()",
+            serializerClassName(config, originalClassName, className, externalTypeNames)
+        )
+
+        is Model.DiscriminatedObject -> CodeBlock.of(
+            "%T.serializer()",
+            serializerClassName(config, originalClassName, className, externalTypeNames)
+        )
     }
 
 private fun Model.ContextHolder.serializerClassName(
@@ -505,7 +541,18 @@ internal fun Model.defaultLiteral(config: RenderConfig): CodeBlock? =
         }
 
         is Model.Collection -> default.toLiteral { values -> values.toListLiteral(inner, config) }
-        else -> null
+
+        is Model.ByteArray,
+        is Model.Date,
+        is Model.DateTime,
+        is Model.DiscriminatedObject,
+        is Model.FreeFormJson,
+        is Model.Object,
+        is Model.Primitive,
+        is Model.Reference,
+        is Model.AnyOf,
+        is Model.OneOf,
+        is Model.Uuid -> null
     }
 
 private fun <A : Any> Model.Default<A>?.toLiteral(literal: (A) -> CodeBlock?): CodeBlock? =
@@ -540,7 +587,19 @@ private fun Model.collectionEntryLiteral(raw: String, config: RenderConfig): Cod
         is Model.Primitive.Double -> raw.toDoubleOrNull()?.let { CodeBlock.of("%L", it) }
         is Model.Primitive.Boolean -> raw.toBooleanStrictOrNull()?.let { CodeBlock.of("%L", it) }
         is Model.Enum -> CodeBlock.of("%T.%L", context.toClassName(config), toEnumValueName(raw))
-        else -> null
+
+        is Model.ByteArray,
+        is Model.Collection,
+        is Model.Date,
+        is Model.DateTime,
+        is Model.DiscriminatedObject,
+        is Model.FreeFormJson,
+        is Model.Object,
+        is Model.Primitive.Unit,
+        is Model.Reference,
+        is Model.AnyOf,
+        is Model.OneOf,
+        is Model.Uuid -> null
     }
 
 private fun TypeName.usesUuid(): Boolean =
@@ -549,7 +608,8 @@ private fun TypeName.usesUuid(): Boolean =
         is ParameterizedTypeName -> rawType == UuidType || typeArguments.any(TypeName::usesUuid)
         is TypeVariableName -> bounds.any(TypeName::usesUuid)
         is WildcardTypeName -> inTypes.any(TypeName::usesUuid) || outTypes.any(TypeName::usesUuid)
-        else -> false
+        Dynamic,
+        is LambdaTypeName -> false
     }
 
 // When a class is renamed (nameOverride), nested type references still use the old class name path.
@@ -569,12 +629,17 @@ internal fun TypeName.remapNestedClassName(oldClassName: ClassName, newClassName
                 result.copy(nullable = isNullable)
             } else this
         }
+
         is ParameterizedTypeName -> {
             (rawType.remapNestedClassName(oldClassName, newClassName) as ClassName)
                 .parameterizedBy(typeArguments.map { it.remapNestedClassName(oldClassName, newClassName) })
                 .copy(nullable = isNullable)
         }
-        else -> this
+
+        Dynamic,
+        is LambdaTypeName,
+        is TypeVariableName,
+        is WildcardTypeName -> this
     }
 
 internal fun TypeName.remapTypeNames(typeRemaps: Map<ClassName, TypeName>): TypeName =
@@ -584,15 +649,24 @@ internal fun TypeName.remapTypeNames(typeRemaps: Map<ClassName, TypeName>): Type
             val remapped = typeRemaps[key] ?: return this
             remapped.copy(nullable = remapped.isNullable || isNullable)
         }
+
         is ParameterizedTypeName -> {
             val remappedRaw = rawType.remapTypeNames(typeRemaps)
             val remappedArgs = typeArguments.map { it.remapTypeNames(typeRemaps) }
             when (remappedRaw) {
                 is ClassName -> remappedRaw.parameterizedBy(remappedArgs).copy(nullable = isNullable)
-                else -> remappedRaw.copy(nullable = isNullable)
+                Dynamic,
+                is LambdaTypeName,
+                is ParameterizedTypeName,
+                is TypeVariableName,
+                is WildcardTypeName -> remappedRaw.copy(nullable = isNullable)
             }
         }
-        else -> this
+
+        Dynamic,
+        is LambdaTypeName,
+        is TypeVariableName,
+        is WildcardTypeName -> this
     }
 
 private fun String.escapeForKdoc(): String =

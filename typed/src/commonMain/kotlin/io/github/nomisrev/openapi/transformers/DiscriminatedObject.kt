@@ -1,3 +1,5 @@
+@file:Suppress("TooManyFunctions")
+
 package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
@@ -17,6 +19,7 @@ import io.github.nomisrev.openapi.registry.schemaName
 import kotlin.collections.component1
 import kotlin.collections.component2
 
+@Suppress("ReturnCount", "UnsafeCallOnNullableType")
 context(scope: Registry.Scope)
 suspend fun Schema.discriminatedSubtypeOrNull(context: SchemaContext, name: String): NamingContext? {
     if (allOf.orEmpty().isEmpty()) return null
@@ -42,6 +45,7 @@ suspend fun Schema.discriminatedSubtypeOrNull(context: SchemaContext, name: Stri
     }
 }
 
+@Suppress("UnsafeCallOnNullableType")
 context(scope: Registry.Scope)
 suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.DiscriminatedObject {
     val discriminator = requireNotNull(schema.discriminator) { "Discriminator required for discriminated object" }
@@ -85,7 +89,7 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
     return Model.DiscriminatedObject(
         name,
         abstractProperties,
-        listOfNotNull(simpleCase(mapping, abstractProperties)) + subtypes,
+        listOf(simpleCase(mapping, abstractProperties)) + subtypes,
         description(),
         schema.title,
         discriminator.propertyName,
@@ -106,10 +110,13 @@ fun Schema.isEmpty(): Boolean =
  * This includes properties from intermediate parents, but intermediate parents are currently not generated.
  * See: BundleElement, LocalizableBundleElement, StateBundleElement in youtrack.json.
  * Where StateBundleElement is actually a subtype of LocalizableBundleElement that is a subtype of the top parent BundleElement.
- * In our current implementation StateBundleElement is just a child of BundleElement, but in this function we ensure it also has the properties of `LocalizableBundleElement`.
+ * In our current implementation StateBundleElement is just a child of BundleElement,
+ * but in this function we ensure it also has the properties of `LocalizableBundleElement`.
  * As a downside, you cannot match on `LocalizableBundleElement` and also cover `StateBundleElement` but need to explicitly cover both.
- * This cannot conveniently be modeled in Kotlin, and the additional boilerplate during 'when' is simpler than the more complex data structure.
+ * This cannot conveniently be modeled in Kotlin,
+ * and the additional boilerplate during 'when' is simpler than the more complex data structure.
  */
+@Suppress("UnsafeCallOnNullableType")
 context(scope: Registry.Scope)
 private tailrec suspend fun ReferenceOr<Schema>.collectSuperTypeProperties(
     mapping: Map<String, String>,
@@ -183,7 +190,7 @@ private fun ResolvedSchema.Reference.simpleCase(
 ): Model.Object {
     val mappingName = mapping.entries
         .singleOrNull { (_, ref) -> ref == "#/components/schemas/${reference.name}" }
-        ?.key ?: throw IllegalStateException("Expected exactly one self mapping for discriminated object")
+        ?.key ?: error("Expected exactly one self mapping for discriminated object")
 
     val selfName =
         if (mappingName == reference.name) name.nest(NamingContext.DiscriminatedObjectCase("Default"))
@@ -199,6 +206,7 @@ private fun ResolvedSchema.Reference.simpleCase(
     )
 }
 
+@Suppress("CyclomaticComplexMethod", "UnsafeCallOnNullableType")
 context(ctx: Registry.Scope)
 suspend fun Schema.merge(other: Schema): Schema = when {
     this == other -> this

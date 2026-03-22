@@ -11,6 +11,7 @@ import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.toModel
 
+@Suppress("CyclomaticComplexMethod")
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
     when (this) {
@@ -21,8 +22,8 @@ suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
                 is Model.ContextHolder if inner.context.isTopLevel() && inner.context != name -> inner
                 is Model.Collection -> inner.copy(inner = wrapIfNeeded(inner.inner))
                 is Model.ContextHolder -> when (inner) {
-                    is Model.DiscriminatedObject -> throw IllegalStateException("Discriminated objects are not supported inline")
-                    is Model.Reference -> throw IllegalStateException("References are not supported inline")
+                    is Model.DiscriminatedObject -> error("Discriminated objects are not supported inline")
+                    is Model.Reference -> error("References are not supported inline")
                     is Model.Enum -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
                     is Model.Object -> inner.nestContext(NamingContext.ObjectProperty("item"))
                     is Model.OneOf -> inner.copy(context = inner.context.nest(NamingContext.ObjectProperty("item")))
@@ -101,7 +102,19 @@ private fun Model.prependContextIfInline(prefix: NamingContext.Nested): Model = 
     is Model.OneOf if !context.isTopLevel() -> copy(context = context.prepend(prefix))
     is Model.AnyOf if !context.isTopLevel() -> copy(context = context.prepend(prefix))
     is Model.Collection -> copy(inner = inner.prependContextIfInline(prefix))
-    else -> this
+
+    is Model.ByteArray,
+    is Model.Date,
+    is Model.DateTime,
+    is Model.DiscriminatedObject,
+    is Model.Enum,
+    is Model.FreeFormJson,
+    is Model.Object,
+    is Model.Primitive,
+    is Model.Reference,
+    is Model.AnyOf,
+    is Model.OneOf,
+    is Model.Uuid -> this
 }
 
 private fun ResolvedSchema.collectionDefault() = when (val example = schema.default) {
@@ -111,9 +124,10 @@ private fun ResolvedSchema.collectionDefault() = when (val example = schema.defa
         val value = example.value
         when {
             value == "[]" -> Default.Value(emptyList())
-            value.equals("null", ignoreCase = true) ->
-                if (schema.nullable == true) Default.Null
-                else throw IllegalArgumentException("Null default for non-nullable collection.")
+            value.equals("null", ignoreCase = true) -> {
+                require(schema.nullable == true) { "Null default for non-nullable collection." }
+                Default.Null
+            }
 
             else -> Default.Value(listOf(value))
         }

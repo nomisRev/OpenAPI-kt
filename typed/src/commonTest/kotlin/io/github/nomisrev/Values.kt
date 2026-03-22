@@ -112,6 +112,7 @@ data class SchemaNumberConstraints(
     val multipleOf: Double?,
 )
 
+@Suppress("ComplexCondition")
 fun Constraints.Number.Companion.all() = listOf(true, false, null).product(
     listOf(-1000.0, null),
     listOf(true, false, null),
@@ -233,7 +234,16 @@ fun Model.Primitive.Float.Companion.all() = listOf(
 )
 
 fun Model.Primitive.Companion.all(): List<Expect<Schema, Model>> =
-    Model.Primitive.String.all() + Model.ByteArray.all() + Model.Uuid.all() + Model.Date.all() + Model.DateTime.all() + Model.Primitive.Boolean.all() + Model.Primitive.Int.all() + Model.Primitive.Long.all() + Model.Primitive.Double.all() + Model.Primitive.Float.all()
+    Model.Primitive.String.all() +
+            Model.ByteArray.all() +
+            Model.Uuid.all() +
+            Model.Date.all() +
+            Model.DateTime.all() +
+            Model.Primitive.Boolean.all() +
+            Model.Primitive.Int.all() +
+            Model.Primitive.Long.all() +
+            Model.Primitive.Double.all() +
+            Model.Primitive.Float.all()
 
 data class ObjectConstraint(val minProperties: Int?, val maxProperties: Int?)
 

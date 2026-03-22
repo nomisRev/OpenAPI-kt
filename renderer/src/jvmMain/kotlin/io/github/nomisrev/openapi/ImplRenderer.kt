@@ -132,7 +132,19 @@ internal fun PathSegment.addConcreteNavigationMember(
             for (case in cases) {
                 val caseTypeName = when (case.model) {
                     is Model.Enum -> requireNotNull(enumClassNames[case])
-                    else -> case.model.toTypeName(config)
+
+                    is Model.ByteArray,
+                    is Model.Collection,
+                    is Model.Date,
+                    is Model.DateTime,
+                    is Model.DiscriminatedObject,
+                    is Model.FreeFormJson,
+                    is Model.Object,
+                    is Model.Primitive,
+                    is Model.Reference,
+                    is Model.AnyOf,
+                    is Model.OneOf,
+                    is Model.Uuid -> case.model.toTypeName(config)
                 }
                 if (!emittedTypes.add(caseTypeName)) continue
 
@@ -215,7 +227,11 @@ internal fun Route.buildOperationBody(
     val hasRequestConfig = nonPathParams.isNotEmpty() || (body != null && includeBody)
     val bodyMayBeNull = includeBody && when (body?.defaultOrNull()) {
         is Route.Body.OverloadedBody -> false
-        else -> body?.required != true
+        is Route.Body.FormUrlEncoded,
+        is Route.Body.Multipart.Ref,
+        is Route.Body.Multipart.Value,
+        is Route.Body.SetBody,
+        null -> body?.required != true
     }
     val responseClassName = methodClassName.nestedClass("Response")
 

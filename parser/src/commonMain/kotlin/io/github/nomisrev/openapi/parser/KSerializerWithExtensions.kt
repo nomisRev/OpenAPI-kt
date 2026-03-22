@@ -22,6 +22,7 @@ internal abstract class KSerializerWithExtensions<T>(
 ) : KSerializer<T> {
   override val descriptor: SerialDescriptor = serializer.descriptor
 
+  @Suppress("NullableToStringCall")
   override fun deserialize(decoder: Decoder): T =
     when {
       decoder is JsonDecoder -> {

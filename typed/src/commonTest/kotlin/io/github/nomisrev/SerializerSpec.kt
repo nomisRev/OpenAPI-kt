@@ -462,8 +462,8 @@ data class PersonWithAdditionalPropertiesSchema(
                 buildJsonObject {
                     put("name", JsonPrimitive(value.name)) // required
                     if (value.age != null) put("age", JsonPrimitive(value.age)) // required nullable
-                    value.additional?.forEach { (key, value) ->
-                        put(key, json.encodeToJsonElement(NestedClass.serializer(), value))
+                    value.additional?.forEach { (key, additionalValue) ->
+                        put(key, json.encodeToJsonElement(NestedClass.serializer(), additionalValue))
                     }
                 })
         }
@@ -526,14 +526,6 @@ data class PersonWithAdditionalProperties(
             )
         }
     }
-}
-
-// We use this instead of `intOrNull` otherwise null swallows type conversion exceptions
-// Alternatively consider using Int.serializer().nullabble,
-// but then we need to jump through Json.decodeFromJsonElement... for JsonPrimitive...
-private fun JsonElement.orNull(): JsonElement? = when (this) {
-    JsonNull -> null
-    else -> this
 }
 
 @Serializable(with = OpenEnum.Serializer::class)

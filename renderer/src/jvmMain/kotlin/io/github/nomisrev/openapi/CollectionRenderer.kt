@@ -71,7 +71,15 @@ private fun Model.Object.toCollectionTypeSpec(config: RenderConfig): TypeSpec {
                 is Model.Object -> builder.addType(model.toTypeSpec(config))
                 is Model.Union -> builder.addType(model.toTypeSpec(config))
                 is Model.DiscriminatedObject -> builder.addType(model.toTypeSpec(config))
-                else -> {}
+
+                is Model.ByteArray,
+                is Model.Collection,
+                is Model.Date,
+                is Model.DateTime,
+                is Model.FreeFormJson,
+                is Model.Primitive,
+                is Model.Reference,
+                is Model.Uuid -> {}
             }
         }
 
@@ -113,7 +121,19 @@ private fun Model.collectionEntryLiteral(raw: String, config: RenderConfig): Cod
         is Model.Primitive.Double -> raw.toDoubleOrNull()?.let { CodeBlock.of("%L", it) }
         is Model.Primitive.Boolean -> raw.toBooleanStrictOrNull()?.let { CodeBlock.of("%L", it) }
         is Model.Enum -> CodeBlock.of("%T.%L", context.toClassName(config), toEnumValueName(raw))
-        else -> null
+
+        is Model.ByteArray,
+        is Model.Collection,
+        is Model.Date,
+        is Model.DateTime,
+        is Model.DiscriminatedObject,
+        is Model.FreeFormJson,
+        is Model.Object,
+        is Model.Primitive.Unit,
+        is Model.Reference,
+        is Model.AnyOf,
+        is Model.OneOf,
+        is Model.Uuid -> null
     }
 
 private fun String.escapeForKdoc(): String =

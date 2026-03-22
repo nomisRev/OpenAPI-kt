@@ -50,6 +50,7 @@ val routeSpec by testSuite {
         )
     )
 
+    @Suppress("LongParameterList")
     fun openAPI(
         path: String,
         method: HttpMethod = HttpMethod.Get,

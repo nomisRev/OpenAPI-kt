@@ -138,7 +138,7 @@ val objectSpec by testSuite {
     ) { name, props, isNullable, additionalProperties ->
         val schema = Schema(
             type = Type.Basic.Object,
-            properties = props.associate { (name, schema, _) -> Pair(name, ReferenceOr.value(schema.actual)) },
+            properties = props.associate { (propName, schema, _) -> Pair(propName, ReferenceOr.value(schema.actual)) },
             description = null,
             required = props.filter { it.isRequired }.map { it.name },
             additionalProperties = additionalProperties.actual,
@@ -148,8 +148,8 @@ val objectSpec by testSuite {
             context = name,
             description = null,
             title = null,
-            properties = props.associate { (name, schema, isRequired) ->
-                name to Model.Object.Property(schema.expected, isRequired)
+            properties = props.associate { (propName, schema, isRequired) ->
+                propName to Model.Object.Property(schema.expected, isRequired)
             },
             additionalProperties = additionalProperties.expected,
             isNullable = isNullable
@@ -169,7 +169,7 @@ val objectSpec by testSuite {
             title = null,
             properties = mapOf(
                 "enum" to Model.Object.Property(
-                    it.expected.context { it.nest(NamingContext.ObjectProperty("enum")) },
+                    it.expected.context { ctx -> ctx.nest(NamingContext.ObjectProperty("enum")) },
                     false
                 )
             ),
@@ -209,20 +209,20 @@ val objectSpec by testSuite {
 
     val writeOnly = listOf(true, false, null)
     val readOnly = listOf(true, false, null)
-    fun Sequence<List<Prop>>.randomRead(): Sequence<Expect<Pair<Map<String, ReferenceOr<Schema>>, List<String>>, Map<String, Model.Object.Property>>> =
+    fun Sequence<List<Prop>>.randomRead() =
         map { props ->
-            val props = props.map {
+            val readWriteProps = props.map {
                 Triple(
                     readOnly[RANDOM.nextInt(0, 2)],
                     writeOnly[RANDOM.nextInt(0, 2)],
                     it
                 )
             }
-            val actual = Pair(props.associate { (readOnly, writeOnly, prop) ->
+            val actual = Pair(readWriteProps.associate { (readOnly, writeOnly, prop) ->
                 Pair(prop.name, ReferenceOr.value(prop.schema.actual.copy(readOnly = readOnly, writeOnly = writeOnly)))
-            }, props.filter { (_, _, prop) -> prop.isRequired }.map { (_, _, prop) -> prop.name })
+            }, readWriteProps.filter { (_, _, prop) -> prop.isRequired }.map { (_, _, prop) -> prop.name })
 
-            val expected = props.filter { (readOnly, _, _) -> readOnly != true }.associate { (_, _, prop) ->
+            val expected = readWriteProps.filter { (readOnly, _, _) -> readOnly != true }.associate { (_, _, prop) ->
                 prop.name to Model.Object.Property(
                     prop.schema.expected,
                     prop.isRequired
@@ -262,16 +262,16 @@ val objectSpec by testSuite {
         objWithReadOnly.take(10_000).toList()
     )
 
-    fun Sequence<List<Prop>>.randomWrite(): Sequence<Expect<Pair<Map<String, ReferenceOr<Schema>>, List<String>>, Map<String, Model.Object.Property>>> =
+    fun Sequence<List<Prop>>.randomWrite() =
         map { props ->
-            val props = props.map {
+            val readWriteProps = props.map {
                 Triple(readOnly[RANDOM.nextInt(0, 2)], writeOnly[RANDOM.nextInt(0, 2)], it)
             }
-            val actual = Pair(props.associate { (readOnly, writeOnly, prop) ->
+            val actual = Pair(readWriteProps.associate { (readOnly, writeOnly, prop) ->
                 Pair(prop.name, ReferenceOr.value(prop.schema.actual.copy(readOnly = readOnly, writeOnly = writeOnly)))
-            }, props.filter { (_, _, prop) -> prop.isRequired }.map { (_, _, prop) -> prop.name })
+            }, readWriteProps.filter { (_, _, prop) -> prop.isRequired }.map { (_, _, prop) -> prop.name })
 
-            val expected = props.filter { (_, writeOnly, _) -> writeOnly != true }.associate { (_, _, prop) ->
+            val expected = readWriteProps.filter { (_, writeOnly, _) -> writeOnly != true }.associate { (_, _, prop) ->
                 prop.name to Model.Object.Property(
                     prop.schema.expected,
                     prop.isRequired
@@ -489,8 +489,10 @@ val objectSpec by testSuite {
                     .toModel(NamingContext.reference("Foo", SchemaContext.Null), SchemaContext.Write)
             }
             val obj = actual as Model.Object
-            assertEquals(false, obj.hadPropertiesBeforeStripping,
-                "Schema with no properties should not have hadPropertiesBeforeStripping=true")
+            assertEquals(
+                false, obj.hadPropertiesBeforeStripping,
+                "Schema with no properties should not have hadPropertiesBeforeStripping=true"
+            )
         }
     }
 
@@ -511,8 +513,10 @@ val objectSpec by testSuite {
                     .toModel(NamingContext.reference("Foo", SchemaContext.Null), SchemaContext.Write)
             }
             val obj = actual as Model.Object
-            assertEquals(false, obj.hadPropertiesBeforeStripping,
-                "Schema with no readOnly properties should not have hadPropertiesBeforeStripping=true")
+            assertEquals(
+                false, obj.hadPropertiesBeforeStripping,
+                "Schema with no readOnly properties should not have hadPropertiesBeforeStripping=true"
+            )
         }
     }
 
@@ -533,10 +537,14 @@ val objectSpec by testSuite {
                     .toModel(NamingContext.reference("AllReadOnly", SchemaContext.Write), SchemaContext.Write)
             }
             val obj = actual as Model.Object
-            assertEquals(true, obj.hadPropertiesBeforeStripping,
-                "Schema with all readOnly properties should have hadPropertiesBeforeStripping=true in Write context")
-            assertEquals(emptyMap(), obj.properties,
-                "All properties should be stripped in Write context")
+            assertEquals(
+                true, obj.hadPropertiesBeforeStripping,
+                "Schema with all readOnly properties should have hadPropertiesBeforeStripping=true in Write context"
+            )
+            assertEquals(
+                emptyMap(), obj.properties,
+                "All properties should be stripped in Write context"
+            )
         }
     }
 
@@ -557,10 +565,14 @@ val objectSpec by testSuite {
                     .toModel(NamingContext.reference("PartialReadOnly", SchemaContext.Write), SchemaContext.Write)
             }
             val obj = actual as Model.Object
-            assertEquals(true, obj.hadPropertiesBeforeStripping,
-                "Schema with some readOnly properties should have hadPropertiesBeforeStripping=true in Write context")
-            assertEquals(setOf("name"), obj.properties.keys,
-                "Only the writable property should survive")
+            assertEquals(
+                true, obj.hadPropertiesBeforeStripping,
+                "Schema with some readOnly properties should have hadPropertiesBeforeStripping=true in Write context"
+            )
+            assertEquals(
+                setOf("name"), obj.properties.keys,
+                "Only the writable property should survive"
+            )
         }
     }
 
@@ -580,8 +592,10 @@ val objectSpec by testSuite {
                     .toModel(NamingContext.reference("Tag", SchemaContext.Null), SchemaContext.Write)
             }
             val obj = actual as Model.Object
-            assertEquals(false, obj.hadPropertiesBeforeStripping,
-                "Single-property schema with no stripping should have hadPropertiesBeforeStripping=false")
+            assertEquals(
+                false, obj.hadPropertiesBeforeStripping,
+                "Single-property schema with no stripping should have hadPropertiesBeforeStripping=false"
+            )
         }
     }
 
@@ -602,10 +616,14 @@ val objectSpec by testSuite {
                     .toModel(NamingContext.reference("WithWriteOnly", SchemaContext.Read), SchemaContext.Read)
             }
             val obj = actual as Model.Object
-            assertEquals(true, obj.hadPropertiesBeforeStripping,
-                "Schema with writeOnly properties should have hadPropertiesBeforeStripping=true in Read context")
-            assertEquals(setOf("id"), obj.properties.keys,
-                "Only the readable property should survive")
+            assertEquals(
+                true, obj.hadPropertiesBeforeStripping,
+                "Schema with writeOnly properties should have hadPropertiesBeforeStripping=true in Read context"
+            )
+            assertEquals(
+                setOf("id"), obj.properties.keys,
+                "Only the readable property should survive"
+            )
         }
     }
 }

@@ -53,7 +53,7 @@ private fun ReferenceOr<Response>.resolve(): Response = when (this) {
         when (val responses = ctx.openAPI.components.responses[referenceName]) {
             is ReferenceOr.Reference -> TODO("Remote parameters not supported yet.")
             is ReferenceOr.Value<Response> -> responses.value
-            null -> throw IllegalStateException("Response $referenceName could not be found in ${ctx.openAPI.components.responses}.")
+            null -> error("Response $referenceName could not be found in ${ctx.openAPI.components.responses}.")
         }
     }
 }
