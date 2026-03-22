@@ -61,12 +61,12 @@ tasks.withType<Test>().configureEach {
 tasks.withType<DokkaTaskPartial>().configureEach {
     moduleName.set("OpenAPI Kotlin Renderer")
     dokkaSourceSets {
-        named("commonMain") {
+        named("jvmMain") {
             includes.from("README.md")
             sourceLink {
-                localDirectory.set(file("src/commonMain/kotlin"))
+                localDirectory.set(file("src/jvmMain/kotlin"))
                 remoteUrl.set(
-                    uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/renderer/src/commonMain").toURL()
+                    uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/renderer/src/jvmMain").toURL()
                 )
                 remoteLineSuffix.set("#L")
             }
