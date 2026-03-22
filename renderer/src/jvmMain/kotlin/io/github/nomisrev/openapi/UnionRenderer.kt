@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -374,6 +375,7 @@ private fun buildDescriptorProperty(
         .build()
 }
 
+@Suppress("LongParameterList")
 private fun buildDeserializeFunction(
     config: RenderConfig,
     originalClassName: ClassName,
@@ -446,6 +448,7 @@ private fun buildAttemptDeserializeBody(
     .addStatement(")")
     .build()
 
+@Suppress("LongMethod", "ReturnCount")
 private fun buildAnyOfDeserializeCode(
     config: RenderConfig,
     originalClassName: ClassName,
@@ -644,13 +647,12 @@ private fun Model.Union.buildOpenEnumTypeSpec(
     builder.addType(enumTypeSpec)
 
     // Open enum serializer
-    builder.addType(buildOpenEnumSerializer(config, className, parts, enumSimpleName, stringSimpleName))
+    builder.addType(buildOpenEnumSerializer(className, parts, enumSimpleName, stringSimpleName))
 
     return builder.build()
 }
 
 private fun buildOpenEnumSerializer(
-    config: RenderConfig,
     className: ClassName,
     parts: OpenEnumParts,
     enumSimpleName: String,
@@ -720,6 +722,7 @@ private fun List<Pair<Model.Union.Case, RenderedUnionCase>>.sortedByDeserializat
     case.model.deserializationPriority()
 }
 
+@Suppress("CyclomaticComplexMethod")
 private fun Model.deserializationPriority(): Int = when (this) {
     // Objects without additionalProperties (more properties → higher priority)
     is Model.Object -> when (val ap = additionalProperties) {
@@ -764,6 +767,7 @@ private data class RenderedUnionCase(
     val isNestedUnion: Boolean = false,
 )
 
+@Suppress("LongParameterList")
 private fun Model.Union.Case.renderWrappedTypeSpec(
     config: RenderConfig,
     originalClassName: ClassName,
@@ -799,6 +803,7 @@ private fun Model.Union.Case.renderWrappedTypeSpec(
     return RenderedUnionCase(typeSpec, valueType.usesUuid(), usesInstant = valueType.usesInstant(), caseSimpleName = simpleName)
 }
 
+@Suppress("CyclomaticComplexMethod")
 private fun Model.Union.Case.caseSimpleName(config: RenderConfig): String =
     model.unionCaseValueOrNull()?.toPascalCase()?.takeIf { it.isNotBlank() }
         ?: when (val caseModel = model) {
@@ -846,6 +851,7 @@ private fun Model.unionCaseValueOrNull(): String? =
 private fun Model.Collection.collectionCaseSimpleName(config: RenderConfig): String =
     "Case${inner.collectionEntryName(config)}"
 
+@Suppress("CyclomaticComplexMethod")
 private fun Model.collectionEntryName(config: RenderConfig): String =
     when (this) {
         is Model.Primitive.String -> "Strings"
@@ -876,6 +882,7 @@ private fun TypeSpec.Builder.addSerialNameAnnotation(value: String): TypeSpec.Bu
     )
 
 // For inlined cases, use the nested type's own serializer; for wrapped, use the model's serializer
+@Suppress("LongParameterList")
 private fun caseSerializerCode(
     case: Model.Union.Case,
     rendered: RenderedUnionCase,

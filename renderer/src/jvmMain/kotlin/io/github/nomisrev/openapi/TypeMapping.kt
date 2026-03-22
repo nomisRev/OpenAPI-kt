@@ -20,6 +20,7 @@ private val JsonElementType = ClassName("kotlinx.serialization.json", "JsonEleme
 private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")
 private val ListType = ClassName("kotlin.collections", "List")
 
+@Suppress("CyclomaticComplexMethod")
 fun Model.toTypeName(config: RenderConfig): TypeName {
     val typeName = when (this) {
         is Model.ByteArray -> BYTE_ARRAY

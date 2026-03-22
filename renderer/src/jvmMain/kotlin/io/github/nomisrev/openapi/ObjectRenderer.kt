@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -46,6 +47,7 @@ internal val NullableMember = MemberName("kotlinx.serialization.builtins", "null
 internal val ListSerializerMember = MemberName("kotlinx.serialization.builtins", "ListSerializer")
 internal val ByteArraySerializerMember = MemberName("kotlinx.serialization.builtins", "ByteArraySerializer")
 
+@Suppress("CyclomaticComplexMethod", "LongMethod", "LongParameterList")
 fun Model.Object.toTypeSpec(
     config: RenderConfig,
     parentInterface: ClassName? = null,
@@ -237,6 +239,7 @@ private data class RenderedAdditionalProperty(
     val kind: AdditionalPropertyKind,
 )
 
+@Suppress("CyclomaticComplexMethod", "LongParameterList")
 private fun Model.Object.renderProperty(
     jsonName: String,
     property: Model.Object.Property,
@@ -456,6 +459,7 @@ internal fun Model.serializerCode(
     return if (isNullable) CodeBlock.of("%L.%M", nonNullable, NullableMember) else nonNullable
 }
 
+@Suppress("CyclomaticComplexMethod")
 internal fun Model.nonNullableSerializerCode(
     config: RenderConfig,
     originalClassName: ClassName? = null,
@@ -463,13 +467,13 @@ internal fun Model.nonNullableSerializerCode(
     externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
 ): CodeBlock =
     when (this) {
-        is Model.Primitive.String -> CodeBlock.of("%T.%M()", kotlin.String::class, SerializerMember)
-        is Model.Primitive.Int -> CodeBlock.of("%T.%M()", kotlin.Int::class, SerializerMember)
-        is Model.Primitive.Long -> CodeBlock.of("%T.%M()", kotlin.Long::class, SerializerMember)
-        is Model.Primitive.Float -> CodeBlock.of("%T.%M()", kotlin.Float::class, SerializerMember)
-        is Model.Primitive.Double -> CodeBlock.of("%T.%M()", kotlin.Double::class, SerializerMember)
-        is Model.Primitive.Boolean -> CodeBlock.of("%T.%M()", kotlin.Boolean::class, SerializerMember)
-        is Model.Primitive.Unit -> CodeBlock.of("%T.%M()", kotlin.Unit::class, SerializerMember)
+        is Model.Primitive.String -> CodeBlock.of("%T.%M()", String::class, SerializerMember)
+        is Model.Primitive.Int -> CodeBlock.of("%T.%M()", Int::class, SerializerMember)
+        is Model.Primitive.Long -> CodeBlock.of("%T.%M()", Long::class, SerializerMember)
+        is Model.Primitive.Float -> CodeBlock.of("%T.%M()", Float::class, SerializerMember)
+        is Model.Primitive.Double -> CodeBlock.of("%T.%M()", Double::class, SerializerMember)
+        is Model.Primitive.Boolean -> CodeBlock.of("%T.%M()", Boolean::class, SerializerMember)
+        is Model.Primitive.Unit -> CodeBlock.of("%T.%M()", Unit::class, SerializerMember)
         is Model.ByteArray -> CodeBlock.of("%M()", ByteArraySerializerMember)
         is Model.Uuid -> CodeBlock.of("%T.serializer()", UuidType)
         is Model.Date -> CodeBlock.of("%T.serializer()", LocalDateType)
@@ -486,26 +490,10 @@ internal fun Model.nonNullableSerializerCode(
                 )
             }
 
-        is Model.Object -> CodeBlock.of(
-            "%T.serializer()",
-            serializerClassName(config, originalClassName, className, externalTypeNames)
-        )
-
-        is Model.Enum -> CodeBlock.of(
-            "%T.serializer()",
-            serializerClassName(config, originalClassName, className, externalTypeNames)
-        )
-
-        is Model.Reference -> CodeBlock.of(
-            "%T.serializer()",
-            serializerClassName(config, originalClassName, className, externalTypeNames)
-        )
-
-        is Model.Union -> CodeBlock.of(
-            "%T.serializer()",
-            serializerClassName(config, originalClassName, className, externalTypeNames)
-        )
-
+        is Model.Object ,
+        is Model.Enum,
+        is Model.Reference,
+        is Model.Union,
         is Model.DiscriminatedObject -> CodeBlock.of(
             "%T.serializer()",
             serializerClassName(config, originalClassName, className, externalTypeNames)

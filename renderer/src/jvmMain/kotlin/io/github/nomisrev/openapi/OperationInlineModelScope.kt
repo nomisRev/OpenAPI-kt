@@ -6,7 +6,6 @@ import com.squareup.kotlinpoet.TypeSpec
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.transformers.nestedOrNull
-import io.ktor.http.ContentType
 import kotlinx.serialization.json.Json
 
 internal class OperationInlineModelScope(
@@ -203,7 +202,7 @@ private fun Model.nestedOverloadedBodyCandidates(
     val rootTargetClassName = methodClassName.nestedClass(rootSimpleName)
     return rootModel.properties.entries
         .sortedBy { it.key }
-        .mapIndexedNotNull { index, (propertyName, property) ->
+        .mapIndexedNotNull { index, (_, property) ->
             val nestedModel = property.model.nestedOrNull() as? Model.ContextHolder ?: return@mapIndexedNotNull null
             when (nestedModel) {
                 is Model.Object -> {
@@ -314,6 +313,7 @@ private fun StandaloneInlineType.toTypeSpec(
         is Model.Uuid -> null
     }
 
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 private fun Model.normalizedForSharingKey(): Model =
     when (this) {
         is Model.ByteArray -> copy(description = null, title = null)
@@ -383,9 +383,3 @@ private fun Model.normalizedForSharingKey(): Model =
         )
         is Model.Uuid -> copy(description = null, title = null)
     }
-
-private fun Route.ReturnType.preferredModel(): Model? {
-    if (types.isEmpty()) return null
-    val jsonEntry = types.entries.firstOrNull { ContentType.Application.Json.match(it.key) }
-    return jsonEntry?.value ?: types.values.first()
-}

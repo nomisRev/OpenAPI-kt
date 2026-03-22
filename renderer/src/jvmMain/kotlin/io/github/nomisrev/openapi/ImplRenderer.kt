@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.ClassName
@@ -100,6 +101,7 @@ internal fun TypeSpec.Builder.addClientConstructorAndState(
     }
 }
 
+@Suppress("LongMethod")
 internal fun PathSegment.addConcreteNavigationMember(
     builder: TypeSpec.Builder,
     childClassName: ClassName,
@@ -210,11 +212,10 @@ private fun PathSegment.OverloadedParameter.enumClassNames(
     }
 }
 
+@Suppress("CyclomaticComplexMethod", "LongMethod", "LongParameterList")
 internal fun Route.buildOperationBody(
     method: HttpMethod,
-    config: RenderConfig,
     methodClassName: ClassName,
-    inlineModelScope: OperationInlineModelScope,
     includeBody: Boolean = true,
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
@@ -357,6 +358,7 @@ private fun Route.addRequestConfigCode(
  * Well-known Ktor named constants are preferred so the generated code is idiomatic.
  * Unknown types fall back to the `ContentType(contentType, subtype)` constructor.
  */
+@Suppress("CyclomaticComplexMethod")
 private fun ContentType.toContentTypeCodeBlock(): CodeBlock {
     // Map to well-known Ktor ContentType named constants where possible.
     val namedSuffix: String? = when (this) {
@@ -384,6 +386,7 @@ private fun ContentType.toContentTypeCodeBlock(): CodeBlock {
     }
 }
 
+@Suppress("CyclomaticComplexMethod", "LongMethod", "ReturnCount")
 private fun addBodyCode(
     code: CodeBlock.Builder,
     bodies: Route.Bodies,

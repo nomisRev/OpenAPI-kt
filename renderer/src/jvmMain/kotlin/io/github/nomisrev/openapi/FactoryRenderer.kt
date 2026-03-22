@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.ClassName

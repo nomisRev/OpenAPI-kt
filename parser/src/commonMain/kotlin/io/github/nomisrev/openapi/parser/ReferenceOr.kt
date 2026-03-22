@@ -74,6 +74,7 @@ public sealed interface ReferenceOr<out A> {
           is JsonDecoder -> {
             val json = decoder.decodeSerializableValue(JsonElement.serializer())
             val jsobObject = json as? JsonObject
+            @Suppress("UnsafeCallOnNullableType")
             when {
               jsobObject != null && jsobObject.contains(REF_KEY) ->
                 Reference(

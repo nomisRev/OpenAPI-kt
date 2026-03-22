@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -14,7 +15,6 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.UNIT
 import com.squareup.kotlinpoet.joinToCode
-import io.github.nomisrev.openapi.buildOperationBody
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.transformers.nestedOrNull
@@ -308,6 +308,7 @@ private fun Route.toOperationPropertySpec(
         .build()
 }
 
+@Suppress("LongMethod")
 private fun Route.toOperationTypeSpec(
     method: HttpMethod,
     config: RenderConfig,
@@ -353,7 +354,6 @@ private fun Route.toOperationTypeSpec(
                             pathClassName = pathClassName,
                             methodClassName = methodClassName,
                             sharedInlineParameterKeys = sharedInlineParameterKeys,
-                            flattenedBody = flattenedBody,
                             overload = overload,
                             inlineModelScope = inlineModelScope,
                         )
@@ -409,6 +409,7 @@ private fun operationConstructorArgs(accumulatedParams: List<AccumulatedParam>):
     }.joinToString(", ")
 
 /** Build the operation invoke(...) signature with parameters and response wrapper. */
+@Suppress("LongParameterList")
 private fun Route.toInvokeFunSpec(
     config: RenderConfig,
     pathClassName: ClassName,
@@ -465,16 +466,16 @@ private fun Route.toInvokeFunSpec(
     val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
     return builder.returns(returnType)
         .addExperimentalUuidOptInIfNeeded(*(signatureTypes + returnType).toTypedArray())
-        .addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
+        .addCode(buildOperationBody(method, methodClassName))
         .build()
 }
 
+@Suppress("LongParameterList")
 private fun Route.toInvokeFunSpecForFlattenedBody(
     config: RenderConfig,
     pathClassName: ClassName,
     methodClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
-    flattenedBody: FlattenedBodyRendering,
     overload: FlattenedBodyOverload,
     inlineModelScope: OperationInlineModelScope,
 ): FunSpec {
@@ -529,16 +530,14 @@ private fun Route.toInvokeFunSpecForFlattenedBody(
     builder.addCode(
         buildFlattenedBodyOperationBody(
             method = method,
-            config = config,
             methodClassName = methodClassName,
-            inlineModelScope = inlineModelScope,
-            flattenedBody = flattenedBody,
             overload = overload,
         )
     )
     return builder.build()
 }
 
+@Suppress("LongParameterList")
 private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     config: RenderConfig,
     pathClassName: ClassName,
@@ -591,7 +590,7 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
     builder.returns(returnType)
     builder.addExperimentalUuidOptInIfNeeded(*(signatureTypes + returnType).toTypedArray())
-    builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope))
+    builder.addCode(buildOperationBody(method, methodClassName))
     return builder.build()
 }
 
@@ -635,7 +634,7 @@ private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
     val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
     builder.returns(returnType)
     builder.addExperimentalUuidOptInIfNeeded(*(signatureTypes + returnType).toTypedArray())
-    builder.addCode(buildOperationBody(method, config, methodClassName, inlineModelScope, includeBody = false))
+    builder.addCode(buildOperationBody(method, methodClassName, includeBody = false))
     return builder.build()
 }
 
@@ -646,6 +645,7 @@ private fun Parameter.Input.sortOrder(): Int = when (this) {
     Parameter.Input.Path -> 3
 }
 
+@Suppress("CyclomaticComplexMethod")
 private fun Route.Input.toParameterSpec(
     config: RenderConfig,
     pathClassName: ClassName,
@@ -691,6 +691,7 @@ private fun Route.Input.toParameterSpec(
     }.build()
 }
 
+@Suppress("CyclomaticComplexMethod")
 private fun Route.Bodies.toInvokeParameterSpecs(
     config: RenderConfig,
     methodClassName: ClassName,
@@ -825,6 +826,7 @@ private data class FlattenedBodyOverload(
     val bodyMayBeNull: Boolean,
 )
 
+@Suppress("LongMethod")
 private fun buildFlattenedBodyOverloads(
     config: RenderConfig,
     methodClassName: ClassName,
@@ -964,6 +966,7 @@ private fun bodyTypeSpec(
         .build()
 }
 
+@Suppress("LongParameterList")
 private fun flattenedBodyParameterTypeName(
     config: RenderConfig,
     propertyModel: Model,
@@ -979,10 +982,7 @@ private fun flattenedBodyParameterTypeName(
 
 private fun Route.buildFlattenedBodyOperationBody(
     method: HttpMethod,
-    config: RenderConfig,
     methodClassName: ClassName,
-    inlineModelScope: OperationInlineModelScope,
-    flattenedBody: FlattenedBodyRendering,
     overload: FlattenedBodyOverload,
 ): CodeBlock {
     val bodyClassName = methodClassName.nestedClass("Body")
@@ -1000,17 +1000,13 @@ private fun Route.buildFlattenedBodyOperationBody(
     if (overload.bodyMayBeNull && bodyGuard == null) {
         return buildOperationBody(
             method = method,
-            config = config,
             methodClassName = methodClassName,
-            inlineModelScope = inlineModelScope,
             includeBody = false,
         )
     }
     return buildOperationBody(
         method = method,
-        config = config,
         methodClassName = methodClassName,
-        inlineModelScope = inlineModelScope,
         bodyExpr = bodyExpr,
         bodyGuard = bodyGuard,
     )
@@ -1062,7 +1058,6 @@ private fun Model.flattenedPrimitiveUnionCaseName(): String = when (this) {
 }
 
 private val HttpStatusCodeType = ClassName("io.ktor.http", "HttpStatusCode")
-private val JsonObjectType = ClassName("kotlinx.serialization.json", "JsonObject")
 private val MapType = ClassName("kotlin.collections", "Map")
 
 /** Extract the preferred model from a ReturnType, preferring JSON content. */
@@ -1155,6 +1150,7 @@ internal fun Route.Returns.isSingleDirectModelResponse(): Boolean {
     return model != null && model !is Model.Primitive.Unit && !model.isRouteInlineModel()
 }
 
+@Suppress("LongMethod")
 private fun Route.buildSealedResponseTypeSpec(
     config: RenderConfig,
     methodClassName: ClassName,
