@@ -49,8 +49,6 @@ public sealed interface ReferenceOr<out A> {
     private const val schema: String = "#/components/schemas/"
     private const val responses: String = "#/components/responses/"
     private const val parameters: String = "#/components/parameters/"
-    private const val requestBodies: String = "#/components/requestBodies/"
-    private const val pathItems: String = "#/components/pathItems/"
 
     public fun schema(name: String): Reference = Reference("$schema$name")
     public fun parameter(name: String): Reference = Reference("$parameters$name")

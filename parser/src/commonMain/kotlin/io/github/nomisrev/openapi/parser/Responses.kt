@@ -127,7 +127,7 @@ public data class Responses(
           }
         val responses =
           encoder.json.encodeToJsonElement(responsesSerializer, value.responses).jsonObject
-        val json = JsonObject((default ?: emptyMap()) + responses + value.extensions)
+        val json = JsonObject((default.orEmpty()) + responses + value.extensions)
         encoder.encodeSerializableValue(JsonElement.serializer(), json)
       }
     }
