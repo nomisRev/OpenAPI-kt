@@ -2,7 +2,6 @@
 <SmellBaseline>
   <ManuallySuppressedIssues/>
   <CurrentIssues>
-    <ID>AbstractClassCanBeConcreteClass:KSerializerWithExtensions.kt:KSerializerWithExtensions$KSerializerWithExtensions</ID>
     <ID>UnsafeCallOnNullableType:ReferenceOr.kt:ReferenceOr.Companion.Serializer$json[RECURSIVE_REF_KEY]!!</ID>
     <ID>UnsafeCallOnNullableType:ReferenceOr.kt:ReferenceOr.Companion.Serializer$json[REF_KEY]!!</ID>
   </CurrentIssues>

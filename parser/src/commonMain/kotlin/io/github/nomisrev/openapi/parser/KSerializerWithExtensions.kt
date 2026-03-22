@@ -15,7 +15,7 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
-internal abstract class KSerializerWithExtensions<T>(
+internal open class KSerializerWithExtensions<T>(
   private val serializer: KSerializer<T>,
   private val extensions: (T) -> Map<String, JsonElement>,
   private val withExtensions: (T, Map<String, JsonElement>) -> T,
