@@ -2,16 +2,11 @@ package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.Dynamic
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.LambdaTypeName
-import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
-import com.squareup.kotlinpoet.TypeVariableName
-import com.squareup.kotlinpoet.WildcardTypeName
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
@@ -108,7 +103,7 @@ private fun renderAbstractProperty(
     val propertySpec = PropertySpec.builder(jsonName.toParamName(), typeName)
         .addModifiers(KModifier.ABSTRACT)
         .build()
-    return RenderedAbstractProperty(propertySpec, typeName.usesUuid())
+    return RenderedAbstractProperty(propertySpec, typeName.usesExperimentalUuid())
 }
 
 private fun Model.Object.Property.renderedTypeName(config: RenderConfig): TypeName =
@@ -118,16 +113,6 @@ private fun Model.Object.discriminatorValue(): String =
     (context.nested.lastOrNull { it is NamingContext.DiscriminatedObjectCase } as? NamingContext.DiscriminatedObjectCase)
         ?.discriminator
         ?: error("Expected discriminated object subtype naming context for $context")
-
-private fun TypeName.usesUuid(): Boolean =
-    when (this) {
-        is ClassName -> copy(nullable = false) == UuidType
-        is ParameterizedTypeName -> rawType == UuidType || typeArguments.any(TypeName::usesUuid)
-        is TypeVariableName -> bounds.any(TypeName::usesUuid)
-        is WildcardTypeName -> inTypes.any(TypeName::usesUuid) || outTypes.any(TypeName::usesUuid)
-        Dynamic,
-        is LambdaTypeName -> false
-    }
 
 private fun String.escapeForKdoc(): String =
     replace("%", "%%")

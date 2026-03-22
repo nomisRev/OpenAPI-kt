@@ -10,22 +10,6 @@
     <ID>MaxLineLength:SerializationUtilsRenderer.kt:"%S + payload + %S + errors.entries.joinToString(%S) { (type, error) -> type.toString() + %S + error.stackTraceToString() }"</ID>
     <ID>NoNameShadowing:ObjectRenderer.kt:property</ID>
 
-    <ID>ReturnCount:ClientRenderer.kt:private fun Route.Bodies.flattenedBodyRendering: FlattenedBodyRendering?</ID>
-    <ID>ReturnCount:ClientRenderer.kt:private fun Route.Bodies.inlineBodyTypeSpec: TypeSpec?</ID>
-    <ID>ReturnCount:ClientRenderer.kt:private fun Route.buildResponseTypeSpec: TypeSpec</ID>
-    <ID>ReturnCount:ClientRenderer.kt:private fun Route.invokeReturnType: TypeName</ID>
-    <ID>ReturnCount:CollectionRenderer.kt:private fun List&lt;String>.toListLiteral: CodeBlock?</ID>
-    <ID>ReturnCount:ImplRenderer.kt:private fun PathSegment.OverloadedParameter.enumClassNames: Map&lt;Model.Union.Case, ClassName></ID>
-    <ID>ReturnCount:ImplRenderer.kt:private fun addBodyCode</ID>
-    <ID>ReturnCount:InlineParameterScope.kt:internal fun Route.Input.inlineParameterClassName: ClassName?</ID>
-    <ID>ReturnCount:InlineParameterScope.kt:internal fun Route.Input.inlineParameterTypeName: TypeName?</ID>
-    <ID>ReturnCount:NamingUtils.kt:fun toEnumValueName: String</ID>
-    <ID>ReturnCount:ObjectRenderer.kt:private fun List&lt;String>.toListLiteral: CodeBlock?</ID>
-    <ID>ReturnCount:OperationInlineModelScope.kt:private fun Model.collectionItemCandidateOrNull: OperationInlineModelCandidate?</ID>
-    <ID>ReturnCount:OperationInlineModelScope.kt:private fun Model.directOverloadedBodyCandidateOrNull: OperationInlineModelCandidate?</ID>
-    <ID>ReturnCount:UnionRenderer.kt:private fun Model.Union.Case.discriminatorValueFromInlineObject: String?</ID>
-    <ID>ReturnCount:UnionRenderer.kt:private fun buildAnyOfDeserializeCode: CodeBlock</ID>
-
     <ID>SpreadOperator:ClientRenderer.kt:(*(signatureTypes + returnType).toTypedArray())</ID>
     <ID>SpreadOperator:ImplRenderer.kt:(*accumulatedTypeNames.toTypedArray())</ID>
     <ID>SpreadOperator:TypeMapping.kt:(packageName, sanitizedNames.first(), *sanitizedNames.drop(1).toTypedArray())</ID>

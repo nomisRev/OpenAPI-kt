@@ -448,7 +448,7 @@ private fun buildAttemptDeserializeBody(
     .addStatement(")")
     .build()
 
-@Suppress("LongMethod", "ReturnCount")
+@Suppress("LongMethod")
 private fun buildAnyOfDeserializeCode(
     config: RenderConfig,
     originalClassName: ClassName,
@@ -468,11 +468,6 @@ private fun buildAnyOfDeserializeCode(
             DispatchCase(case, rendered, model, emptySet())
         }
     }
-
-    if (objectCases.size != orderedCases.size) {
-        return buildAttemptDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
-    }
-
     val uniqueKeysByCase = objectCases.map { dispatchCase ->
         val keys = dispatchCase.model.properties.keys
         val otherKeys = objectCases
@@ -481,63 +476,60 @@ private fun buildAnyOfDeserializeCode(
             .flatMapTo(mutableSetOf()) { it.model.properties.keys }
         dispatchCase.copy(uniqueKeys = keys - otherKeys)
     }
+    return if (objectCases.size != orderedCases.size || uniqueKeysByCase.count { it.uniqueKeys.isEmpty() } > 1) {
+        buildAttemptDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
+    } else {
+        val fallbackCase = uniqueKeysByCase.singleOrNull { it.uniqueKeys.isEmpty() }
+        CodeBlock.builder()
+            .addStatement("val value = decoder.decodeSerializableValue(%T.serializer())", JsonElementType)
+            .addStatement(
+                "val json = requireNotNull(decoder as? %T) { %S }.json",
+                JsonDecoderType,
+                "Complex unions currently only supported for Json"
+            )
+            .addStatement("val keys = value.jsonObject.keys")
+            .apply {
+                uniqueKeysByCase.filter { it.uniqueKeys.isNotEmpty() }.forEach { dispatchCase ->
+                    val caseClassName = className.nestedClass(dispatchCase.rendered.caseSimpleName)
+                    val serializerCode = caseSerializerCode(
+                        dispatchCase.case,
+                        dispatchCase.rendered,
+                        config,
+                        originalClassName,
+                        className,
+                        externalTypeNames
+                    )
+                    val condition = dispatchCase.uniqueKeys.joinToString(separator = " || ") { "\"${it.ktStringLiteral()}\" in keys" }
+                    beginControlFlow("if ($condition)")
+                    if (dispatchCase.rendered.isInlined || dispatchCase.rendered.isNestedUnion) {
+                        addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
+                    } else {
+                        addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
+                    }
+                    endControlFlow()
+                }
 
-    if (uniqueKeysByCase.count { it.uniqueKeys.isEmpty() } > 1) {
-        return buildAttemptDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
+                if (fallbackCase != null) {
+                    val serializerCode = caseSerializerCode(
+                        fallbackCase.case,
+                        fallbackCase.rendered,
+                        config,
+                        originalClassName,
+                        className,
+                        externalTypeNames
+                    )
+                    if (fallbackCase.rendered.isInlined || fallbackCase.rendered.isNestedUnion) {
+                        addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
+                    } else {
+                        val caseClassName = className.nestedClass(fallbackCase.rendered.caseSimpleName)
+                        addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
+                    }
+                } else {
+                    add(buildAttemptDeserializeBody(config, originalClassName, className, orderedCases, externalTypeNames))
+                }
+            }
+            .build()
     }
-
-    val fallbackCase = uniqueKeysByCase.singleOrNull { it.uniqueKeys.isEmpty() }
-    val code = CodeBlock.builder()
-        .addStatement("val value = decoder.decodeSerializableValue(%T.serializer())", JsonElementType)
-        .addStatement(
-            "val json = requireNotNull(decoder as? %T) { %S }.json",
-            JsonDecoderType,
-            "Complex unions currently only supported for Json"
-        )
-        .addStatement("val keys = value.jsonObject.keys")
-        .apply {
-            uniqueKeysByCase.filter { it.uniqueKeys.isNotEmpty() }.forEach { dispatchCase ->
-                val caseClassName = className.nestedClass(dispatchCase.rendered.caseSimpleName)
-                val serializerCode = caseSerializerCode(
-                    dispatchCase.case,
-                    dispatchCase.rendered,
-                    config,
-                    originalClassName,
-                    className,
-                    externalTypeNames
-                )
-                val condition = dispatchCase.uniqueKeys.joinToString(separator = " || ") { "\"${it.ktStringLiteral()}\" in keys" }
-                beginControlFlow("if ($condition)")
-                if (dispatchCase.rendered.isInlined || dispatchCase.rendered.isNestedUnion) {
-                    addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
-                } else {
-                    addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
-                }
-                endControlFlow()
-            }
-
-            if (fallbackCase != null) {
-                val serializerCode = caseSerializerCode(
-                    fallbackCase.case,
-                    fallbackCase.rendered,
-                    config,
-                    originalClassName,
-                    className,
-                    externalTypeNames
-                )
-                if (fallbackCase.rendered.isInlined || fallbackCase.rendered.isNestedUnion) {
-                    addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
-                } else {
-                    val caseClassName = className.nestedClass(fallbackCase.rendered.caseSimpleName)
-                    addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
-                }
-            } else {
-                add(buildAttemptDeserializeBody(config, originalClassName, className, orderedCases, externalTypeNames))
-            }
-        }
-        .build()
-
-    return code
 }
 
 private fun buildSerializeFunction(
@@ -800,7 +792,7 @@ private fun Model.Union.Case.renderWrappedTypeSpec(
             serialName?.let(::addSerialNameAnnotation)
         }
         .build()
-    return RenderedUnionCase(typeSpec, valueType.usesUuid(), usesInstant = valueType.usesInstant(), caseSimpleName = simpleName)
+    return RenderedUnionCase(typeSpec, valueType.usesExperimentalUuid(), usesInstant = valueType.usesInstant(), caseSimpleName = simpleName)
 }
 
 @Suppress("CyclomaticComplexMethod")
@@ -839,10 +831,11 @@ private fun Model.Union.Case.serialNameOrNull(discriminatorField: String): Strin
     discriminator ?: discriminatorValueFromInlineObject(discriminatorField) ?: model.unionCaseValueOrNull()
 
 private fun Model.Union.Case.discriminatorValueFromInlineObject(discriminatorField: String): String? {
-    val objectCase = model as? Model.Object ?: return null
-    val discriminatorProperty = objectCase.properties[discriminatorField] ?: return null
-    val discriminatorModel = discriminatorProperty.model as? Model.Enum ?: return null
-    return discriminatorModel.values.singleOrNull()
+    val discriminatorModel = (model as? Model.Object)
+        ?.properties
+        ?.get(discriminatorField)
+        ?.model as? Model.Enum
+    return discriminatorModel?.values?.singleOrNull()
 }
 
 private fun Model.unionCaseValueOrNull(): String? =
@@ -893,16 +886,6 @@ private fun caseSerializerCode(
 ): CodeBlock =
     if (rendered.isInlined) CodeBlock.of("%T.serializer()", className.nestedClass(rendered.caseSimpleName))
     else case.model.serializerCode(config, originalClassName, className, externalTypeNames)
-
-private fun TypeName.usesUuid(): Boolean =
-    when (this) {
-        is ClassName -> copy(nullable = false) == UuidType
-        is ParameterizedTypeName -> rawType == UuidType || typeArguments.any(TypeName::usesUuid)
-        is TypeVariableName -> bounds.any(TypeName::usesUuid)
-        is WildcardTypeName -> inTypes.any(TypeName::usesUuid) || outTypes.any(TypeName::usesUuid)
-        Dynamic,
-        is LambdaTypeName -> false
-    }
 
 private fun TypeName.usesInstant(): Boolean =
     when (this) {

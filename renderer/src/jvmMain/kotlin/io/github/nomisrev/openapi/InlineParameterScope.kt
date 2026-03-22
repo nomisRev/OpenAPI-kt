@@ -60,32 +60,37 @@ internal fun Route.Input.inlineParameterClassName(
     pathClassName: ClassName,
     methodClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
-): ClassName? {
-    val nestedModel = type.nestedOrNull() ?: return null
-    val context = (nestedModel as? Model.ContextHolder)?.context ?: return null
-    if (context.head !is NamingContext.Path) return null
-    val ownerClassName = if (InlineParameterModel(name, nestedModel).sharingKey() in sharedInlineParameterKeys) {
-        pathClassName
-    } else {
-        methodClassName
-    }
-    return ownerClassName.nestedClass(name.toPascalCase())
-}
+): ClassName? =
+    type.nestedOrNull()
+        ?.takeIf { (it as? Model.ContextHolder)?.context?.head is NamingContext.Path }
+        ?.let { nested ->
+            val ownerClassName =
+                if (InlineParameterModel(name, nested).sharingKey() in sharedInlineParameterKeys) {
+                    pathClassName
+                } else {
+                    methodClassName
+                }
+            ownerClassName.nestedClass(name.toPascalCase())
+        }
 
 internal fun Route.Input.inlineParameterTypeName(
     config: RenderConfig,
     pathClassName: ClassName,
     methodClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
-): TypeName? {
-    val nestedModel = type.nestedOrNull() ?: return null
-    val context = (nestedModel as? Model.ContextHolder)?.context ?: return null
-    if (context.head !is NamingContext.Path) return null
-    val sourceClassName = context.toClassName(config)
-    val targetClassName = inlineParameterClassName(
-        pathClassName = pathClassName,
-        methodClassName = methodClassName,
-        sharedInlineParameterKeys = sharedInlineParameterKeys,
-    ) ?: return null
-    return type.toTypeName(config).remapNestedClassName(sourceClassName, targetClassName)
-}
+): TypeName? =
+    type.nestedOrNull()
+        ?.takeIf { (it as? Model.ContextHolder)?.context?.head is NamingContext.Path }
+        ?.let { nested ->
+            val context = nested as Model.ContextHolder
+            inlineParameterClassName(
+                pathClassName = pathClassName,
+                methodClassName = methodClassName,
+                sharedInlineParameterKeys = sharedInlineParameterKeys,
+            )?.let { targetClassName ->
+                type.toTypeName(config).remapNestedClassName(
+                    context.context.toClassName(config),
+                    targetClassName,
+                )
+            }
+        }

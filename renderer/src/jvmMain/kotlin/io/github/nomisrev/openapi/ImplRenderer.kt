@@ -199,16 +199,14 @@ private fun PathSegment.OverloadedParameter.enumClassNames(
     config: RenderConfig,
 ): Map<Model.Union.Case, ClassName> {
     val enumCases = cases.filter { it.model is Model.Enum }
-    if (enumCases.isEmpty()) return emptyMap()
-
     val baseName = name.toPascalCase()
-    if (enumCases.size == 1) {
-        return mapOf(enumCases.single() to parentClassName.nestedClass(baseName))
-    }
-
-    return enumCases.associateWith { case ->
-        val enumModel = case.model as Model.Enum
-        parentClassName.nestedClass(enumModel.context.toClassName(config).simpleName)
+    return when {
+        enumCases.isEmpty() -> emptyMap()
+        enumCases.size == 1 -> mapOf(enumCases.single() to parentClassName.nestedClass(baseName))
+        else -> enumCases.associateWith { case ->
+            val enumModel = case.model as Model.Enum
+            parentClassName.nestedClass(enumModel.context.toClassName(config).simpleName)
+        }
     }
 }
 
@@ -386,7 +384,7 @@ private fun ContentType.toContentTypeCodeBlock(): CodeBlock {
     }
 }
 
-@Suppress("CyclomaticComplexMethod", "LongMethod", "ReturnCount")
+@Suppress("CyclomaticComplexMethod", "LongMethod")
 private fun addBodyCode(
     code: CodeBlock.Builder,
     bodies: Route.Bodies,
@@ -395,56 +393,34 @@ private fun addBodyCode(
     bodyGuard: String? = null,
 ) {
     val body = bodies.defaultOrNull() ?: return
-    when (body) {
-        is Route.Body.SetBody -> {
-            val ctCode = body.contentType.toContentTypeCodeBlock()
-            if (bodyExpr != null) {
-                if (bodyMayBeNull && bodyGuard != null) {
-                    code.beginControlFlow("if (%L)", bodyGuard)
-                    code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
-                    code.addStatement("%M(%L)", SetBodyMember, bodyExpr)
-                    code.endControlFlow()
-                } else {
-                    code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
-                    code.addStatement("%M(%L)", SetBodyMember, bodyExpr)
-                }
-                return
-            }
-            if (!bodyMayBeNull) {
-                code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
-                code.addStatement("%M(body)", SetBodyMember)
+    fun CodeBlock.Builder.addSetLikeBodyCode(contentType: CodeBlock) {
+        if (bodyExpr != null) {
+            if (bodyMayBeNull && bodyGuard != null) {
+                beginControlFlow("if (%L)", bodyGuard)
+                addStatement("%M(%L)", ContentTypeFunMember, contentType)
+                addStatement("%M(%L)", SetBodyMember, bodyExpr)
+                endControlFlow()
             } else {
-                code.beginControlFlow("body?.let")
-                code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
-                code.addStatement("%M(it)", SetBodyMember)
-                code.endControlFlow()
+                addStatement("%M(%L)", ContentTypeFunMember, contentType)
+                addStatement("%M(%L)", SetBodyMember, bodyExpr)
             }
+        } else if (!bodyMayBeNull) {
+            addStatement("%M(%L)", ContentTypeFunMember, contentType)
+            addStatement("%M(body)", SetBodyMember)
+        } else {
+            beginControlFlow("body?.let")
+            addStatement("%M(%L)", ContentTypeFunMember, contentType)
+            addStatement("%M(it)", SetBodyMember)
+            endControlFlow()
         }
+    }
 
-        is Route.Body.OverloadedBody -> {
-            val ctCode = body.contentType.toContentTypeCodeBlock()
-            if (bodyExpr != null) {
-                if (bodyMayBeNull && bodyGuard != null) {
-                    code.beginControlFlow("if (%L)", bodyGuard)
-                    code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
-                    code.addStatement("%M(%L)", SetBodyMember, bodyExpr)
-                    code.endControlFlow()
-                } else {
-                    code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
-                    code.addStatement("%M(%L)", SetBodyMember, bodyExpr)
-                }
-                return
-            }
-            if (!bodyMayBeNull) {
-                code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
-                code.addStatement("%M(body)", SetBodyMember)
-            } else {
-                code.beginControlFlow("body?.let")
-                code.addStatement("%M(%L)", ContentTypeFunMember, ctCode)
-                code.addStatement("%M(it)", SetBodyMember)
-                code.endControlFlow()
-            }
-        }
+    when (body) {
+        is Route.Body.SetBody ->
+            code.addSetLikeBodyCode(body.contentType.toContentTypeCodeBlock())
+
+        is Route.Body.OverloadedBody ->
+            code.addSetLikeBodyCode(body.contentType.toContentTypeCodeBlock())
 
         is Route.Body.FormUrlEncoded -> {
             code.add("%M(%T.build {\n", SetBodyMember, ParametersType)

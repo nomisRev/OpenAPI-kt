@@ -756,53 +756,58 @@ private fun Route.Bodies.flattenedBodyRendering(
     config: RenderConfig,
     methodClassName: ClassName,
 ): FlattenedBodyRendering? {
-    val body = defaultOrNull() as? Route.Body.SetBody ?: return null
-    val model = body.type.nestedOrNull() as? Model.Object ?: return null
-    if (!model.isRouteInlineModel()) return null
-    if (model.additionalProperties is Model.Object.AdditionalProperties.Schema) return null
-
-    val publicTypes = buildFlattenedBodyPublicTypes(
-        config = config,
-        methodClassName = methodClassName,
-        bodyModel = model,
-        requiredPrimitiveUnionFieldNames = model.properties.entries
-            .filter { (_, property) -> property.isRequired && property.model.isFlattenablePrimitiveUnion() }
-            .mapTo(mutableSetOf()) { it.key },
-    )
-
-    val publicTypeSpecs = publicTypes.map(FlattenedBodyPublicType::typeSpec)
-    val publicTypeRemaps = publicTypes.associate { publicType ->
-        val contextHolder = publicType.model as? Model.ContextHolder
-            ?: error("Public body type must be context-aware: ${publicType.model}")
-        val nestedClassName = contextHolder.context.toClassName(config)
-        nestedClassName to methodClassName.nestedClass(
-            requireNotNull(publicType.typeSpec.name)
+    val body = defaultOrNull() as? Route.Body.SetBody
+    val model = body?.type?.nestedOrNull() as? Model.Object
+    val isInlineAdditionalProps = body == null || model == null || !model.isRouteInlineModel() ||
+            model.additionalProperties is Model.Object.AdditionalProperties.Schema
+    return if (isInlineAdditionalProps) {
+        null
+    } else {
+        val publicTypes = buildFlattenedBodyPublicTypes(
+            config = config,
+            methodClassName = methodClassName,
+            bodyModel = model,
+            requiredPrimitiveUnionFieldNames = model.properties.entries
+                .filter { (_, property) -> property.isRequired && property.model.isFlattenablePrimitiveUnion() }
+                .mapTo(mutableSetOf()) { it.key },
         )
+
+        val publicTypeSpecs = publicTypes.map(FlattenedBodyPublicType::typeSpec)
+        val publicTypeRemaps = publicTypes.associate { publicType ->
+            val contextHolder = publicType.model as? Model.ContextHolder
+                ?: error("Public body type must be context-aware: ${publicType.model}")
+            val nestedClassName = contextHolder.context.toClassName(config)
+            nestedClassName to methodClassName.nestedClass(
+                requireNotNull(publicType.typeSpec.name)
+            )
+        }
+
+        val overloads = buildFlattenedBodyOverloads(
+            config = config,
+            methodClassName = methodClassName,
+            bodyModel = model,
+            bodyRequired = required,
+            typeNameRemaps = publicTypeRemaps,
+        )
+
+        if (overloads == null) {
+            null
+        } else {
+            FlattenedBodyRendering(
+                bodyTypeSpec = bodyTypeSpec(
+                    config = config,
+                    methodClassName = methodClassName,
+                    bodyModel = model,
+                    externalTypeNames = publicTypeRemaps,
+                ),
+                publicTypeSpecs = publicTypeSpecs,
+                overloads = overloads,
+                externalTypeNames = publicTypeRemaps,
+                bodyHasConstructorArgs = model.properties.isNotEmpty() ||
+                        model.additionalProperties is Model.Object.AdditionalProperties.Schema,
+            )
+        }
     }
-
-    val overloads = buildFlattenedBodyOverloads(
-        config = config,
-        methodClassName = methodClassName,
-        bodyModel = model,
-        bodyRequired = required,
-        typeNameRemaps = publicTypeRemaps,
-    ) ?: return null
-
-    val bodyTypeSpec = bodyTypeSpec(
-        config = config,
-        methodClassName = methodClassName,
-        bodyModel = model,
-        externalTypeNames = publicTypeRemaps,
-    )
-
-    return FlattenedBodyRendering(
-        bodyTypeSpec = bodyTypeSpec,
-        publicTypeSpecs = publicTypeSpecs,
-        overloads = overloads,
-        externalTypeNames = publicTypeRemaps,
-        bodyHasConstructorArgs = model.properties.isNotEmpty() ||
-                model.additionalProperties is Model.Object.AdditionalProperties.Schema,
-    )
 }
 
 private data class FlattenedBodyRendering(
@@ -1083,59 +1088,67 @@ private fun Route.buildResponseTypeSpec(
     config: RenderConfig,
     methodClassName: ClassName,
     inlineModelScope: OperationInlineModelScope,
-): TypeSpec {
-    if (returns.needsSealedInterface()) {
-        return buildSealedResponseTypeSpec(config, methodClassName)
-    }
+): TypeSpec =
+    when {
+        returns.needsSealedInterface() -> buildSealedResponseTypeSpec(config, methodClassName)
+        else -> {
+            val model = returns.singlePreferredModelOrNull()
+            when {
+                model != null && model.isRouteInlineModel() ->
+                    model.toInlineOperationTypeSpecOrNull(
+                        config = config,
+                        ownerClassName = methodClassName,
+                        nameOverride = "Response",
+                        externalTypeNames = inlineModelScope.externalTypeNames(),
+                    ) ?: buildDataResponseTypeSpec(model, config, inlineModelScope)
 
-    val model = returns.singlePreferredModelOrNull()
-    if (model != null && model.isRouteInlineModel()) {
-        model.toInlineOperationTypeSpecOrNull(
-            config = config,
-            ownerClassName = methodClassName,
-            nameOverride = "Response",
-            externalTypeNames = inlineModelScope.externalTypeNames(),
-        )?.let { return it }
-    }
+                model == null || model is Model.Primitive.Unit ->
+                    TypeSpec.objectBuilder("Response")
+                        .addModifiers(KModifier.DATA)
+                        .build()
 
-    return if (model == null || model is Model.Primitive.Unit) {
-        TypeSpec.objectBuilder("Response")
-            .addModifiers(KModifier.DATA)
-            .build()
-    } else {
-        val typeName = inlineModelScope.remap(model.toTypeName(config))
-        TypeSpec.classBuilder("Response")
-            .addModifiers(KModifier.DATA)
-            .primaryConstructor(
-                FunSpec.constructorBuilder()
-                    .addParameter("value", typeName)
-                    .build()
-            )
-            .addProperty(
-                PropertySpec.builder("value", typeName)
-                    .initializer("value")
-                    .build()
-            )
-            .apply {
-                inlineModelScope.responseTypeSpecs(config).forEach(::addType)
+                else -> buildDataResponseTypeSpec(model, config, inlineModelScope)
             }
-            .build()
+        }
     }
+
+private fun buildDataResponseTypeSpec(
+    model: Model,
+    config: RenderConfig,
+    inlineModelScope: OperationInlineModelScope,
+): TypeSpec {
+    val typeName = inlineModelScope.remap(model.toTypeName(config))
+    return TypeSpec.classBuilder("Response")
+        .addModifiers(KModifier.DATA)
+        .primaryConstructor(
+            FunSpec.constructorBuilder()
+                .addParameter("value", typeName)
+                .build()
+        )
+        .addProperty(
+            PropertySpec.builder("value", typeName)
+                .initializer("value")
+                .build()
+        )
+        .apply {
+            inlineModelScope.responseTypeSpecs(config).forEach(::addType)
+        }
+        .build()
 }
 
 private fun Route.invokeReturnType(
     config: RenderConfig,
     methodClassName: ClassName,
     inlineModelScope: OperationInlineModelScope,
-): TypeName {
-    if (returns.isSingleUnitResponse()) return UNIT
-    if (returns.isSingleDirectModelResponse()) {
-        // Single concrete external model — return it directly, no Response wrapper needed.
-        val model = returns.singlePreferredModelOrNull()!!
-        return inlineModelScope.remap(model.toTypeName(config))
+): TypeName =
+    when {
+        returns.isSingleUnitResponse() -> UNIT
+        returns.isSingleDirectModelResponse() ->
+            // Single concrete external model - return it directly, no Response wrapper needed.
+            inlineModelScope.remap(returns.singlePreferredModelOrNull()!!.toTypeName(config))
+
+        else -> methodClassName.nestedClass("Response")
     }
-    return methodClassName.nestedClass("Response")
-}
 
 private fun Route.Returns.isSingleUnitResponse(): Boolean {
     if (needsSealedInterface()) return false
@@ -1270,18 +1283,22 @@ private fun Route.Bodies.inlineBodyTypeSpec(
     ownerClassName: ClassName,
     externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
     internal: Boolean = false,
-): TypeSpec? {
-    if (defaultOrNull() is Route.Body.OverloadedBody) return null
-    val model = defaultOrNull().bodyModelOrNull() ?: return null
-    if (!model.isRouteInlineModel()) return null
-    val typeSpec = model.toInlineOperationTypeSpecOrNull(
-        config = config,
-        ownerClassName = ownerClassName,
-        nameOverride = "Body",
-        externalTypeNames = externalTypeNames,
-    ) ?: return null
-    return if (internal) typeSpec.toBuilder().addModifiers(KModifier.INTERNAL).build() else typeSpec
-}
+): TypeSpec? =
+    when (val body = defaultOrNull()) {
+        is Route.Body.OverloadedBody -> null
+        else -> body
+            .bodyModelOrNull()
+            ?.takeIf(Model::isRouteInlineModel)
+            ?.toInlineOperationTypeSpecOrNull(
+                config = config,
+                ownerClassName = ownerClassName,
+                nameOverride = "Body",
+                externalTypeNames = externalTypeNames,
+            )
+            ?.let { typeSpec ->
+                if (internal) typeSpec.toBuilder().addModifiers(KModifier.INTERNAL).build() else typeSpec
+            }
+    }
 
 private fun Route.Body.OverloadedBody.directInlineTypeSpecs(
     config: RenderConfig,

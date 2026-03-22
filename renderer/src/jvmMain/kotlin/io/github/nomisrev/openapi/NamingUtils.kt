@@ -80,18 +80,22 @@ fun String.toCamelCase(): String {
     return head + tail
 }
 
-fun toEnumValueName(rawValue: String): String {
-    if (rawValue == "*") return "Star"
-    if (rawValue == "/") return "Slash"
-
-    val pascalCase = if (NegativeNumberRegex.matches(rawValue)) rawValue else rawValue.toPascalCase()
-    if (pascalCase.isValidClassname()) return pascalCase
-
-    val sanitized = pascalCase
-        .let { if (it.startsWith("[")) it.drop(1) else it }
-        .let { if (it.endsWith("]")) it.dropLast(1) else it }
-    return if (sanitized.isValidClassname()) sanitized else "`$sanitized`"
-}
+fun toEnumValueName(rawValue: String): String =
+    when (rawValue) {
+        "*" -> "Star"
+        "/" -> "Slash"
+        else -> {
+            val pascalCase = if (NegativeNumberRegex.matches(rawValue)) rawValue else rawValue.toPascalCase()
+            val sanitized = pascalCase
+                .let { if (it.startsWith("[")) it.drop(1) else it }
+                .let { if (it.endsWith("]")) it.dropLast(1) else it }
+            when {
+                pascalCase.isValidClassname() -> pascalCase
+                sanitized.isValidClassname() -> sanitized
+                else -> "`$sanitized`"
+            }
+        }
+    }
 
 fun String.stringValue(): String = escapeKotlinString()
 

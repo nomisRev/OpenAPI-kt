@@ -167,6 +167,7 @@ private fun List<OperationInlineModelCandidate>.toOperationInlineModelScope(
     )
 }
 
+@Suppress("ReturnCount")
 private fun Model.directOverloadedBodyCandidateOrNull(
     config: RenderConfig,
     methodClassName: ClassName,
@@ -243,6 +244,7 @@ private fun Model.nestedOverloadedBodyCandidates(
         .toList()
 }
 
+@Suppress("ReturnCount")
 private fun Model.collectionItemCandidateOrNull(
     config: RenderConfig,
     ownerClassName: ClassName,

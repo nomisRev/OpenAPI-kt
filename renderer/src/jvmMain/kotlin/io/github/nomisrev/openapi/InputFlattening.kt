@@ -73,7 +73,7 @@ internal fun TypeSpec.Builder.addExperimentalUuidOptInIfNeeded(vararg types: Typ
     }
 }
 
-private fun TypeName.usesExperimentalUuid(): Boolean =
+internal fun TypeName.usesExperimentalUuid(): Boolean =
     when (this) {
         is ClassName -> copy(nullable = false) == UuidType
         is ParameterizedTypeName -> rawType == UuidType || typeArguments.any(TypeName::usesExperimentalUuid)

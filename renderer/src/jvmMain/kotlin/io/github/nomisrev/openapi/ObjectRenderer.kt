@@ -1,4 +1,5 @@
 @file:Suppress("TooManyFunctions")
+
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -240,7 +241,7 @@ private data class RenderedAdditionalProperty(
 )
 
 @Suppress("CyclomaticComplexMethod", "LongParameterList")
-private fun Model.Object.renderProperty(
+private fun renderProperty(
     jsonName: String,
     property: Model.Object.Property,
     config: RenderConfig,
@@ -293,7 +294,7 @@ private fun Model.Object.renderProperty(
         .initializer(paramName)
         .build()
 
-    return RenderedProperty(jsonName, parameter, property, typeName.usesUuid())
+    return RenderedProperty(jsonName, parameter, property, typeName.usesExperimentalUuid())
 }
 
 private fun Model.Object.renderAdditionalProperty(config: RenderConfig): RenderedAdditionalProperty? =
@@ -325,13 +326,13 @@ private fun Model.Object.renderAdditionalProperty(config: RenderConfig): Rendere
                 .initializer("additional")
                 .build()
             RenderedAdditionalProperty(
-                RenderedProperty("additional", parameter, property, typeName.usesUuid()),
+                RenderedProperty("additional", parameter, property, typeName.usesExperimentalUuid()),
                 AdditionalPropertyKind.Typed(ap.value)
             )
         }
     }
 
-private fun Model.Object.serializerTypeSpec(
+private fun serializerTypeSpec(
     config: RenderConfig,
     className: ClassName,
     renderedProperties: List<RenderedProperty>,
@@ -490,7 +491,7 @@ internal fun Model.nonNullableSerializerCode(
                 )
             }
 
-        is Model.Object ,
+        is Model.Object,
         is Model.Enum,
         is Model.Reference,
         is Model.Union,
@@ -548,56 +549,6 @@ private fun <A : Any> Model.Default<A>?.toLiteral(literal: (A) -> CodeBlock?): C
         null -> null
         Model.Default.Null -> CodeBlock.of("null")
         is Model.Default.Value -> literal(value)
-    }
-
-private fun List<String>.toListLiteral(inner: Model, config: RenderConfig): CodeBlock? {
-    if (isEmpty()) return CodeBlock.of("emptyList()")
-    val entries = map { value -> inner.collectionEntryLiteral(value, config) }
-    if (entries.any { it == null }) return null
-    return CodeBlock.builder()
-        .add("listOf(")
-        .apply {
-            entries.filterNotNull().forEachIndexed { index, code ->
-                if (index > 0) add(", ")
-                add("%L", code)
-            }
-        }
-        .add(")")
-        .build()
-}
-
-private fun Model.collectionEntryLiteral(raw: String, config: RenderConfig): CodeBlock? =
-    when (this) {
-        is Model.Primitive.String -> CodeBlock.of("%S", raw)
-        is Model.Primitive.Int -> raw.toIntOrNull()?.let { CodeBlock.of("%L", it) }
-        is Model.Primitive.Long -> raw.toLongOrNull()?.let { CodeBlock.of("%LL", it) }
-        is Model.Primitive.Float -> raw.toFloatOrNull()?.let { CodeBlock.of("%Lf", it) }
-        is Model.Primitive.Double -> raw.toDoubleOrNull()?.let { CodeBlock.of("%L", it) }
-        is Model.Primitive.Boolean -> raw.toBooleanStrictOrNull()?.let { CodeBlock.of("%L", it) }
-        is Model.Enum -> CodeBlock.of("%T.%L", context.toClassName(config), toEnumValueName(raw))
-
-        is Model.ByteArray,
-        is Model.Collection,
-        is Model.Date,
-        is Model.DateTime,
-        is Model.DiscriminatedObject,
-        is Model.FreeFormJson,
-        is Model.Object,
-        is Model.Primitive.Unit,
-        is Model.Reference,
-        is Model.AnyOf,
-        is Model.OneOf,
-        is Model.Uuid -> null
-    }
-
-private fun TypeName.usesUuid(): Boolean =
-    when (this) {
-        is ClassName -> copy(nullable = false) == UuidType
-        is ParameterizedTypeName -> rawType == UuidType || typeArguments.any(TypeName::usesUuid)
-        is TypeVariableName -> bounds.any(TypeName::usesUuid)
-        is WildcardTypeName -> inTypes.any(TypeName::usesUuid) || outTypes.any(TypeName::usesUuid)
-        Dynamic,
-        is LambdaTypeName -> false
     }
 
 // When a class is renamed (nameOverride), nested type references still use the old class name path.
