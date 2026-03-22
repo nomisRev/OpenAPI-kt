@@ -13,8 +13,7 @@ class IntegrationTest {
 
     @Test
     fun keycloak() {
-        val spec = OpenAPI.fromYaml(loadResource("keycloak.yml"))
-        println(spec)
+        OpenAPI.fromYaml(loadResource("keycloak.yml"))
     }
 
     // ── Petstore 3.0.x ────────────────────────────────────────────────────────
@@ -117,7 +116,7 @@ class IntegrationTest {
 
     @Test
     fun `openai parses successfully`() {
-        val spec = OpenAPI.fromYaml(loadResource("openai.yml"))
+        val spec = OpenAPI.fromYaml(loadResource("openai.yaml"))
 
         assertTrue(spec.info.title.isNotBlank())
         assertTrue(spec.info.version.isNotBlank())
