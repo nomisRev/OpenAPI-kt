@@ -272,6 +272,7 @@ internal fun Route.buildOperationBody(
                 selectedBody,
                 bodyExpr,
                 bodyGuard,
+                contentType,
                 requestTypeContentType,
             )
         }
@@ -283,6 +284,7 @@ internal fun Route.buildOperationBody(
             selectedBody,
             bodyExpr,
             bodyGuard,
+            contentType,
             requestTypeContentType,
         )
     }
@@ -296,11 +298,13 @@ private fun Route.buildSealedOperationBody(
     selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
     bodyGuard: String?,
+    contentType: ContentType?,
     requestTypeContentType: CodeBlock?,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
     val pathLiteral = segments.toPathLiteral()
+    val needsRequestConfig = hasRequestConfig(includeBody) || contentType != null
     val bodyMayBeNull = includeBody && when (selectedBody) {
         is Route.Body.OverloadedBody -> false
         is Route.Body.FormUrlEncoded,
@@ -310,7 +314,7 @@ private fun Route.buildSealedOperationBody(
         null -> body?.required != true
     }
 
-    if (hasRequestConfig(includeBody)) {
+    if (needsRequestConfig) {
         code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
         addRequestConfigCode(
             config = config,
@@ -320,6 +324,7 @@ private fun Route.buildSealedOperationBody(
             bodyMayBeNull = bodyMayBeNull,
             bodyExpr = bodyExpr,
             bodyGuard = bodyGuard,
+            acceptContentType = contentType,
             requestTypeContentType = requestTypeContentType,
         )
         code.endControlFlow()
@@ -349,6 +354,7 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
     val pathLiteral = segments.toPathLiteral()
+    val needsRequestConfig = hasRequestConfig(includeBody) || contentType != null
     val bodyMayBeNull = includeBody && when (selectedBody) {
         is Route.Body.OverloadedBody -> false
         is Route.Body.FormUrlEncoded,
@@ -358,7 +364,7 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
         null -> body?.required != true
     }
 
-    if (hasRequestConfig(includeBody)) {
+    if (needsRequestConfig) {
         code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
         addRequestConfigCode(
             config = config,
@@ -368,6 +374,7 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
             bodyMayBeNull = bodyMayBeNull,
             bodyExpr = bodyExpr,
             bodyGuard = bodyGuard,
+            acceptContentType = contentType,
             requestTypeContentType = requestTypeContentType,
         )
         code.endControlFlow()
@@ -389,11 +396,13 @@ private fun Route.buildDirectOperationBody(
     selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
     bodyGuard: String?,
+    contentType: ContentType?,
     requestTypeContentType: CodeBlock?,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
     val pathLiteral = segments.toPathLiteral()
+    val needsRequestConfig = hasRequestConfig(includeBody) || contentType != null
     val bodyMayBeNull = includeBody && when (selectedBody) {
         is Route.Body.OverloadedBody -> false
         is Route.Body.FormUrlEncoded,
@@ -405,7 +414,7 @@ private fun Route.buildDirectOperationBody(
 
     val model = returns.singlePreferredModelOrNull()
     if (model == null || model is Model.Primitive.Unit) {
-        if (hasRequestConfig(includeBody)) {
+        if (needsRequestConfig) {
             code.beginControlFlow("client.%L(%L)", httpMethodName, pathLiteral)
             addRequestConfigCode(
                 config = config,
@@ -415,6 +424,7 @@ private fun Route.buildDirectOperationBody(
                 bodyMayBeNull = bodyMayBeNull,
                 bodyExpr = bodyExpr,
                 bodyGuard = bodyGuard,
+                acceptContentType = contentType,
                 requestTypeContentType = requestTypeContentType,
             )
             code.endControlFlow()
@@ -422,7 +432,7 @@ private fun Route.buildDirectOperationBody(
             code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
         }
     } else {
-        if (hasRequestConfig(includeBody)) {
+        if (needsRequestConfig) {
             code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
             code.indent()
             addRequestConfigCode(
@@ -433,6 +443,7 @@ private fun Route.buildDirectOperationBody(
                 bodyMayBeNull = bodyMayBeNull,
                 bodyExpr = bodyExpr,
                 bodyGuard = bodyGuard,
+                acceptContentType = contentType,
                 requestTypeContentType = requestTypeContentType,
             )
             code.unindent()
@@ -451,13 +462,7 @@ private fun Route.addSealedResponseStatusCases(code: CodeBlock.Builder, methodCl
         val caseName = statusCode.toCaseName()
         val caseClassName = responseClassName.nestedClass(caseName)
         val model = returnTypeEntry.preferredModel()
-        if (model == null || model is Model.Primitive.Unit) {
-            code.addStatement("%L -> %T", statusCode.value, caseClassName)
-        } else if (model.isRouteInlineModel() && returnTypeEntry.types.size == 1) {
-            code.addStatement("%L -> response.%M<%T>()", statusCode.value, BodyMember, caseClassName)
-        } else {
-            code.addStatement("%L -> %T(response.%M())", statusCode.value, caseClassName, BodyMember)
-        }
+        code.addStatement("%L -> %L", statusCode.value, buildResponseCaseExpression(caseClassName, model))
     }
 }
 
@@ -509,25 +514,50 @@ private fun Route.addMultiContentTypeSealedResponseStatusCases(
 
             is ErrorCaseStrategy.SingleContentType -> {
                 val caseClassName = methodClassName.nestedClass(statusCode.toCaseName())
-                if (errorStrategy.model.isRouteInlineModel() && errorStrategy.model !is Model.Collection) {
-                    code.addStatement("%L -> response.%M<%T>()", statusCode.value, BodyMember, caseClassName)
-                } else {
-                    code.addStatement("%L -> %T(response.%M())", statusCode.value, caseClassName, BodyMember)
-                }
+                code.addStatement(
+                    "%L -> %L",
+                    statusCode.value,
+                    buildResponseCaseExpression(caseClassName, errorStrategy.model),
+                )
             }
 
             is ErrorCaseStrategy.MultipleContentTypes -> {
-                val (errorContentType, errorModel) = errorStrategy.variants.first()
-                val caseName = "${contentTypeToIdentifier(errorContentType)}${statusCode.toCaseName()}"
-                val caseClassName = methodClassName.nestedClass(caseName)
-                if (errorModel.isRouteInlineModel() && errorModel !is Model.Collection) {
-                    code.addStatement("%L -> response.%M<%T>()", statusCode.value, BodyMember, caseClassName)
-                } else {
-                    code.addStatement("%L -> %T(response.%M())", statusCode.value, caseClassName, BodyMember)
-                }
+                code.add(buildMultiCTErrorDispatch(methodClassName, statusCode, errorStrategy.variants))
             }
         }
     }
+}
+
+private fun buildMultiCTErrorDispatch(
+    methodClassName: ClassName,
+    statusCode: HttpStatusCode,
+    variants: List<Pair<ContentType, Model>>,
+): CodeBlock {
+    val preferredVariant = variants.firstOrNull { ContentType.Application.Json.match(it.first) } ?: variants.first()
+    val code = CodeBlock.builder()
+    code.add("%L -> run {\n", statusCode.value)
+    code.indent()
+    code.addStatement("val ct = response.%M()", ContentTypeFunMember)
+    code.beginControlFlow("when")
+    for ((errorContentType, errorModel) in variants) {
+        val caseName = "${contentTypeToIdentifier(errorContentType)}${statusCode.toCaseName()}"
+        val caseClassName = methodClassName.nestedClass(caseName)
+        code.addStatement(
+            "ct?.match(%L) == true -> %L",
+            errorContentType.toContentTypeCodeBlock(),
+            buildResponseCaseExpression(caseClassName, errorModel),
+        )
+    }
+    val preferredCaseName = "${contentTypeToIdentifier(preferredVariant.first)}${statusCode.toCaseName()}"
+    val preferredCaseClassName = methodClassName.nestedClass(preferredCaseName)
+    code.addStatement(
+        "else -> %L",
+        buildResponseCaseExpression(preferredCaseClassName, preferredVariant.second),
+    )
+    code.endControlFlow()
+    code.unindent()
+    code.add("}\n")
+    return code.build()
 }
 
 private fun Route.addMultiContentTypeSealedResponseDefaultCase(
@@ -552,6 +582,18 @@ private fun Route.addMultiContentTypeSealedResponseDefaultCase(
     }
 }
 
+private fun buildResponseCaseExpression(
+    caseClassName: ClassName,
+    model: Model?,
+): CodeBlock =
+    when {
+        model == null || model is Model.Primitive.Unit -> CodeBlock.of("%T", caseClassName)
+        model.isRouteInlineModel() && model !is Model.Collection ->
+            CodeBlock.of("response.%M<%T>()", BodyMember, caseClassName)
+
+        else -> CodeBlock.of("%T(response.%M())", caseClassName, BodyMember)
+    }
+
 private fun Route.hasRequestConfig(includeBody: Boolean): Boolean {
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
     return nonPathParams.isNotEmpty() || (body != null && includeBody)
@@ -566,9 +608,14 @@ private fun Route.addRequestConfigCode(
     bodyMayBeNull: Boolean = includeBody && body?.required != true,
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
+    acceptContentType: ContentType? = null,
     requestTypeContentType: CodeBlock? = null,
 ) {
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
+
+    if (acceptContentType != null) {
+        code.addStatement("%M(%T.Accept, %L)", HeaderMember, HttpHeadersType, acceptContentType.toContentTypeCodeBlock())
+    }
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Query }) {
         val paramName = param.name.toParamName()

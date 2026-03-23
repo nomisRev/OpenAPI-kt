@@ -1350,6 +1350,9 @@ val clientSpec by testSuite {
                     "content": {
                       "application/json": {
                         "schema": { "type": "integer", "format": "int32" }
+                      },
+                      "application/scim+json": {
+                        "schema": { "type": "string" }
                       }
                     }
                   }

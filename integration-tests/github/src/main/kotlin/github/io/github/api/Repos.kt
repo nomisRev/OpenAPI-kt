@@ -218,6 +218,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
+import io.ktor.client.request.`header`
 import io.ktor.client.request.delete
 import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
@@ -225,6 +226,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import kotlin.Boolean
 import kotlin.ByteArray
@@ -6545,7 +6547,9 @@ public class Repos internal constructor(
               private val analysisId: Long,
             ) {
               public suspend fun json(): JsonResponse {
-                val response = client.get("/repos/$owner/$repo/code-scanning/analyses/$analysisId")
+                val response = client.get("/repos/$owner/$repo/code-scanning/analyses/$analysisId") {
+                  `header`(HttpHeaders.Accept, ContentType.Application.Json)
+                }
                 return when (response.status.value) {
                   200 -> JsonResponse.Ok(response.body())
                   403 -> Forbidden(response.body())
@@ -6557,7 +6561,9 @@ public class Repos internal constructor(
               }
 
               public suspend fun sarifJson(): SarifJsonResponse {
-                val response = client.get("/repos/$owner/$repo/code-scanning/analyses/$analysisId")
+                val response = client.get("/repos/$owner/$repo/code-scanning/analyses/$analysisId") {
+                  `header`(HttpHeaders.Accept, ContentType("application", "sarif+json"))
+                }
                 return when (response.status.value) {
                   200 -> SarifJsonResponse.Ok(response.body())
                   403 -> Forbidden(response.body())
@@ -8949,6 +8955,7 @@ public class Repos internal constructor(
           ) {
             public suspend fun vndGithubObject(ref: String? = null): VndGithubObjectResponse {
               val response = client.get("/repos/$owner/$repo/contents/$path") {
+                `header`(HttpHeaders.Accept, ContentType("application", "vnd.github.object"))
                 ref?.let { parameter("ref", it) }
               }
               return when (response.status.value) {
@@ -8963,6 +8970,7 @@ public class Repos internal constructor(
 
             public suspend fun json(ref: String? = null): JsonResponse {
               val response = client.get("/repos/$owner/$repo/contents/$path") {
+                `header`(HttpHeaders.Accept, ContentType.Application.Json)
                 ref?.let { parameter("ref", it) }
               }
               return when (response.status.value) {
