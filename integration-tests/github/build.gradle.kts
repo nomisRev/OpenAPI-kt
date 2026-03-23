@@ -41,4 +41,5 @@ configure<OpenApiExtension> {
     modelPackage.set("io.github.model")
     apiPackage.set("io.github.api")
     targets.set(setOf("JVM"))
+    outputDirectory.set(project.file("src/main/kotlin"))
 }

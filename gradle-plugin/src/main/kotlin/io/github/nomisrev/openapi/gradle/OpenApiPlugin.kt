@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi.gradle
 
 import gratatouille.GPlugin
+import org.apache.tools.ant.types.resources.MultiRootFileSet
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -12,6 +13,7 @@ fun openApiPlugin(project: Project) {
     extension.modelPackage.convention("io.github.nomisrev.openapi.generated.model")
     extension.apiPackage.convention("io.github.nomisrev.openapi.generated.api")
     extension.targets.convention(setOf("JVM", "JS"))
+    extension.outputDirectory.convention(project.layout.buildDirectory.dir("generated/openapi"))
 
     val generateTask = project.registerGenerateOpenApiTask(
         taskName = "generateOpenApi",
@@ -22,7 +24,9 @@ fun openApiPlugin(project: Project) {
     )
 
     val outputDirectory = extension.specFile.flatMap { file ->
-        project.layout.buildDirectory.dir("generated/openapi/${file.asFile.nameWithoutExtension}")
+        extension.outputDirectory.map { dir ->
+            dir.dir(file.asFile.nameWithoutExtension)
+        }
     }
     generateTask.configure { task ->
         task.outputDirectory.set(outputDirectory)

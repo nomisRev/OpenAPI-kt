@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi.gradle
 
+import org.gradle.api.file.DirectoryProperty
 import javax.inject.Inject
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.file.RegularFileProperty
@@ -11,4 +12,5 @@ abstract class OpenApiExtension @Inject constructor(objects: ObjectFactory) {
     val modelPackage: Property<String> = objects.property(String::class.java)
     val apiPackage: Property<String> = objects.property(String::class.java)
     val targets: SetProperty<String> = objects.setProperty(String::class.java)
+    val outputDirectory: DirectoryProperty = objects.directoryProperty()
 }
