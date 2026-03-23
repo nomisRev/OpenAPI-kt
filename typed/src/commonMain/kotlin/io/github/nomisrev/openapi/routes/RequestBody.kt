@@ -171,7 +171,7 @@ private fun ReferenceOr<RequestBody>.resolve(): RequestBody = when (this) {
 }
 
 context(ctx: Registry)
-private suspend fun ReferenceOr<Schema>.resolveSchema(): Schema = when (this) {
+private fun ReferenceOr<Schema>.resolveSchema(): Schema = when (this) {
     is ReferenceOr.Value -> value
     is ReferenceOr.Reference -> {
         val referenceName = ref.drop("#/components/schemas/".length)

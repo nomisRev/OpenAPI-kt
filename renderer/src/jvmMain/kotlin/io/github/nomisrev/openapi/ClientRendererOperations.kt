@@ -1,4 +1,5 @@
 @file:Suppress("TooManyFunctions")
+
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.AnnotationSpec
@@ -143,10 +144,12 @@ private fun TypeSpec.Builder.addOperationResponseType(context: OperationTypeSpec
     }
 }
 
+@Suppress("LongMethod")
 private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeSpecContext) {
     val bodyVariants = context.route.body?.variants().orEmpty()
-    if (bodyVariants.size > 1) {
-        bodyVariants.forEach { variant ->
+    val overloadedBody = context.overloadedBody
+    when {
+        bodyVariants.size > 1 -> bodyVariants.forEach { variant ->
             addFunction(
                 context.route.toInvokeFunSpec(
                     config = context.config,
@@ -159,11 +162,8 @@ private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeS
                 )
             )
         }
-        return
-    }
 
-    if (context.flattenedBody != null) {
-        context.flattenedBody.overloads.forEach { overload ->
+        context.flattenedBody != null -> context.flattenedBody.overloads.forEach { overload ->
             addFunction(
                 context.route.toInvokeFunSpecForFlattenedBody(
                     config = context.config,
@@ -175,50 +175,47 @@ private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeS
                 )
             )
         }
-        return
-    }
 
-    val overloadedBody = context.overloadedBody
-    if (overloadedBody != null) {
-        if (context.route.body?.required != true) {
-            addFunction(
-                context.route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
-                    config = context.config,
-                    pathClassName = context.pathClassName,
-                    methodClassName = context.methodClassName,
-                    sharedInlineParameterKeys = context.sharedInlineParameterKeys,
-                    inlineModelScope = context.inlineModelScope,
-                )
-            )
-        }
-        overloadedBody
-            .distinctCaseSignatures(context.config, context.inlineModelScope)
-            .forEach { caseSignature ->
+        overloadedBody != null -> {
+            if (context.route.body?.required != true) {
                 addFunction(
-                    context.route.toInvokeFunSpecForOverloadedBodyCase(
+                    context.route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
                         config = context.config,
                         pathClassName = context.pathClassName,
                         methodClassName = context.methodClassName,
                         sharedInlineParameterKeys = context.sharedInlineParameterKeys,
-                        bodyTypeName = caseSignature.typeName,
-                        bodyJvmName = caseSignature.jvmName,
                         inlineModelScope = context.inlineModelScope,
                     )
                 )
             }
-        return
-    }
+            overloadedBody
+                .distinctCaseSignatures(context.config, context.inlineModelScope)
+                .forEach { caseSignature ->
+                    addFunction(
+                        context.route.toInvokeFunSpecForOverloadedBodyCase(
+                            config = context.config,
+                            pathClassName = context.pathClassName,
+                            methodClassName = context.methodClassName,
+                            sharedInlineParameterKeys = context.sharedInlineParameterKeys,
+                            bodyTypeName = caseSignature.typeName,
+                            bodyJvmName = caseSignature.jvmName,
+                            inlineModelScope = context.inlineModelScope,
+                        )
+                    )
+                }
+        }
 
-    addFunction(
-        context.route.toInvokeFunSpec(
-            config = context.config,
-            pathClassName = context.pathClassName,
-            methodClassName = context.methodClassName,
-            sharedInlineParameterKeys = context.sharedInlineParameterKeys,
-            usesNestedBodyType = context.inlineBodyTypeSpec != null,
-            inlineModelScope = context.inlineModelScope,
+        else -> addFunction(
+            context.route.toInvokeFunSpec(
+                config = context.config,
+                pathClassName = context.pathClassName,
+                methodClassName = context.methodClassName,
+                sharedInlineParameterKeys = context.sharedInlineParameterKeys,
+                usesNestedBodyType = context.inlineBodyTypeSpec != null,
+                inlineModelScope = context.inlineModelScope,
+            )
         )
-    )
+    }
 }
 
 /** Build the operation invoke(...) signature with parameters and response wrapper. */
@@ -286,7 +283,7 @@ private fun Route.toInvokeFunSpec(
     @Suppress("SpreadOperator")
     return builder.returns(returnType)
         .addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
-        .addCode(buildOperationBody(method, methodClassName, selectedBody = selectedBody))
+        .addCode(buildOperationBody(config, method, methodClassName, selectedBody = selectedBody))
         .build()
 }
 
@@ -349,6 +346,7 @@ private fun Route.toInvokeFunSpecForFlattenedBody(
     builder.addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
     builder.addCode(
         buildFlattenedBodyOperationBody(
+            config = config,
             method = method,
             methodClassName = methodClassName,
             overload = overload,
@@ -410,7 +408,7 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
     builder.returns(returnType)
     builder.addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
-    builder.addCode(buildOperationBody(method, methodClassName))
+    builder.addCode(buildOperationBody(config, method, methodClassName))
     return builder.build()
 }
 
@@ -454,7 +452,7 @@ private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
     val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
     builder.returns(returnType)
     builder.addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
-    builder.addCode(buildOperationBody(method, methodClassName, includeBody = false))
+    builder.addCode(buildOperationBody(config, method, methodClassName, includeBody = false))
     return builder.build()
 }
 
@@ -547,7 +545,8 @@ private fun Route.Body.toInvokeParameterSpecs(
 
     is Route.Body.FormUrlEncoded -> {
         parameters.map { formData ->
-            val typeName = formData.type.toTypeName(config).copy(nullable = formData.type.isNullable || !formData.isRequired)
+            val typeName =
+                formData.type.toTypeName(config).copy(nullable = formData.type.isNullable || !formData.isRequired)
             ParameterSpec.builder(formData.name.toParamName(), typeName).apply {
                 if (!formData.isRequired) {
                     defaultValue(CodeBlock.of("null"))
@@ -558,7 +557,8 @@ private fun Route.Body.toInvokeParameterSpecs(
 
     is Route.Body.Multipart.Value -> {
         parameters.map { formData ->
-            val typeName = formData.type.toTypeName(config).copy(nullable = formData.type.isNullable || !formData.isRequired)
+            val typeName =
+                formData.type.toTypeName(config).copy(nullable = formData.type.isNullable || !formData.isRequired)
             ParameterSpec.builder(formData.name.toParamName(), typeName).apply {
                 if (!formData.isRequired) {
                     defaultValue(CodeBlock.of("null"))

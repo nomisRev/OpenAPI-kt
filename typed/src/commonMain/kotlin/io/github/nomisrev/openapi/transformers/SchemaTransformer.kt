@@ -21,7 +21,7 @@ import io.github.nomisrev.openapi.parser.AdditionalProperties.PSchema
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 // TODO: resolveReference is always false for nested calls, and true for top-level.. Split the diff and remove bool?
-@Suppress("UnsafeCallOnNullableType")
+@Suppress("UnsafeCallOnNullableType", "LongMethod")
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boolean): Model = when {
     this is ResolvedSchema.Reference && !resolveReference ->

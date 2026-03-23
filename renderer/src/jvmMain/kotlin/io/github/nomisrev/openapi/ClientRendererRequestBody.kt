@@ -276,6 +276,7 @@ private fun flattenedBodyParameterTypeName(
 }
 
 internal fun Route.buildFlattenedBodyOperationBody(
+    config: RenderConfig,
     method: io.ktor.http.HttpMethod,
     methodClassName: ClassName,
     overload: FlattenedBodyOverload,
@@ -294,12 +295,14 @@ internal fun Route.buildFlattenedBodyOperationBody(
     }
     if (overload.bodyMayBeNull && bodyGuard == null) {
         return buildOperationBody(
+            config = config,
             method = method,
             methodClassName = methodClassName,
             includeBody = false,
         )
     }
     return buildOperationBody(
+        config = config,
         method = method,
         methodClassName = methodClassName,
         bodyExpr = bodyExpr,

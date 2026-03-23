@@ -3,7 +3,6 @@ package io.github.nomisrev.render.test.client.operations.`inline`.complex.body.r
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.forms.MultiPartFormDataContent
-import io.ktor.client.request.forms.append
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -13,7 +12,6 @@ import kotlin.ByteArray
 import kotlin.Int
 import kotlin.String
 import kotlin.collections.List
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 public class Uploads internal constructor(
@@ -34,14 +32,16 @@ public class Uploads internal constructor(
       public suspend operator fun invoke(
         `file`: ByteArray,
         checksum: String,
-        retries: Int,
+        retries: Int? = null,
         tags: List<String>,
       ): Response {
         val response = client.post("/uploads/$uploadId") {
           setBody(MultiPartFormDataContent(formData {
             append("file", file)
             append("checksum", checksum)
-            append("retries", retries)
+            if (retries != null) {
+              append("retries", retries)
+            }
             append("tags", Json.encodeToString(tags))
           }))
         }

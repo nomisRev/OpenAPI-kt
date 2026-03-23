@@ -1875,6 +1875,68 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/pets": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string" },
+                            "name": { "type": "string" }
+                          },
+                          "required": ["id", "name"]
+                        }
+                      }
+                    }
+                  },
+                  "503": {
+                    "description": "Service Unavailable",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "message": { "type": "string" },
+                            "retryAfter": { "type": "integer", "format": "int32" }
+                          },
+                          "required": ["message", "retryAfter"]
+                        }
+                      }
+                    }
+                  },
+                  "default": {
+                    "description": "Unexpected error",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "fallbackMessage": { "type": "string" }
+                          },
+                          "required": ["fallbackMessage"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-inline-body-collision"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/repos/{owner}/{repo}/interaction-limits": {
               "get": {
                 "parameters": [

@@ -2,7 +2,6 @@ package io.github.nomisrev.render.test.client.operations.body.multipart
 
 import io.ktor.client.HttpClient
 import io.ktor.client.request.forms.MultiPartFormDataContent
-import io.ktor.client.request.forms.append
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody

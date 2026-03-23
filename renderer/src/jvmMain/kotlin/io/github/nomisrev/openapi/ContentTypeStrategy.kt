@@ -1,3 +1,4 @@
+@file:Suppress("TooManyFunctions")
 package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.routes.Route
@@ -42,7 +43,10 @@ internal sealed interface RequestBodyStrategy {
 }
 
 private const val APPLICATION = "application"
-private val NoContentStatusCodes = setOf(204, 304)
+@Suppress("MagicNumber")
+private val NO_CONTENT_STATUS_CODE = setOf(204, 304)
+@Suppress("MagicNumber")
+private val SUCCESS_RANGE = 200..299
 
 internal fun contentTypeToIdentifier(ct: ContentType, existingNames: Set<String> = emptySet()): String =
     contentTypeIdentifierBase(ct).uniqueName(existingNames)
@@ -50,10 +54,37 @@ internal fun contentTypeToIdentifier(ct: ContentType, existingNames: Set<String>
 internal fun contentTypeToMethodName(ct: ContentType, existingNames: Set<String> = emptySet()): String =
     contentTypeMethodNameBase(ct).uniqueName(existingNames)
 
+internal fun bodyTypeName(
+    statusCode: HttpStatusCode,
+    contentType: ContentType?,
+    hasMultipleStatuses: Boolean,
+    hasMultipleContentTypes: Boolean,
+): String {
+    val statusPrefix = if (hasMultipleStatuses) statusCode.toCaseName() else ""
+    val contentTypeSuffix = if (hasMultipleContentTypes && contentType != null) {
+        contentTypeToIdentifier(contentType)
+    } else {
+        ""
+    }
+    return "${statusPrefix}${contentTypeSuffix}Body"
+}
+
+internal fun defaultBodyTypeName(
+    contentType: ContentType?,
+    hasMultipleContentTypes: Boolean,
+): String =
+    buildString {
+        append("Default")
+        if (hasMultipleContentTypes && contentType != null) {
+            append(contentTypeToIdentifier(contentType))
+        }
+        append("Body")
+    }
+
 internal fun Route.Returns.contentTypeStrategy(): ContentTypeStrategy {
     val successContentTypes = responses.entries
         .asSequence()
-        .filter { it.key.value in 200..299 }
+        .filter { it.key.value in SUCCESS_RANGE }
         .flatMap { (_, returnType) -> returnType.types.keys.asSequence().map(ContentType::normalizedForComparison) }
         .distinct()
         .toList()
@@ -64,11 +95,17 @@ internal fun Route.Returns.contentTypeStrategy(): ContentTypeStrategy {
     }
 }
 
+internal fun Route.ReturnType.preferredModel(): Model? {
+    if (types.isEmpty()) return null
+    val jsonEntry = types.entries.firstOrNull { ContentType.Application.Json.match(it.key) }
+    return jsonEntry?.value ?: types.values.first()
+}
+
 internal fun classifyErrorStatus(
     statusCode: HttpStatusCode,
     returnType: Route.ReturnType,
 ): ErrorCaseStrategy {
-    if (statusCode.value in NoContentStatusCodes || returnType.types.isEmpty()) {
+    if (statusCode.value in NO_CONTENT_STATUS_CODE || returnType.types.isEmpty()) {
         return ErrorCaseStrategy.NoContent
     }
 
@@ -145,6 +182,11 @@ private fun contentTypeIdentifierBase(ct: ContentType): String {
 
 private fun contentTypeMethodNameBase(ct: ContentType): String =
     contentTypeIdentifierBase(ct).replaceFirstChar { it.lowercase() }
+
+internal fun HttpStatusCode.toCaseName(): String =
+    description.split(" ").joinToString("") { word ->
+        word.lowercase().replaceFirstChar { it.uppercase() }
+    }
 
 private fun ContentType.normalizedForComparison(): ContentType =
     ContentType.parse(toString().substringBefore(';').trim())
