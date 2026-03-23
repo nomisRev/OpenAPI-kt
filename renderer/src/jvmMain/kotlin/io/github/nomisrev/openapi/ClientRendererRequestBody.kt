@@ -3,17 +3,21 @@ package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.joinToCode
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.transformers.nestedOrNull
+import io.ktor.http.ContentType
 
 private val MapType = ClassName("kotlin.collections", "Map")
+private val ContentTypeType = ClassName("io.ktor.http", "ContentType")
 
 internal data class FlattenedBodyRendering(
     val bodyTypeSpec: TypeSpec,
@@ -46,6 +50,34 @@ private data class FlattenedBodyOverloadContext(
     val bodyParamsBeforeOptionalParams: Boolean,
     val bodyMayBeNull: Boolean,
 )
+
+internal fun buildRequestTypeEnum(clashingVariants: List<Route.Bodies.Variant>): TypeSpec {
+    val builder = TypeSpec.enumBuilder("RequestType")
+        .primaryConstructor(
+            FunSpec.constructorBuilder()
+                .addParameter("contentType", ContentTypeType)
+                .build()
+        )
+        .addProperty(
+            PropertySpec.builder("contentType", ContentTypeType)
+                .initializer("contentType")
+                .build()
+        )
+
+    val emittedNames = mutableSetOf<String>()
+    clashingVariants.forEach { variant ->
+        val enumName = contentTypeToIdentifier(variant.contentType, emittedNames)
+        emittedNames += enumName
+        builder.addEnumConstant(
+            enumName,
+            TypeSpec.anonymousClassBuilder()
+                .addSuperclassConstructorParameter("%L", variant.contentType.toContentTypeCodeBlock())
+                .build()
+        )
+    }
+
+    return builder.build()
+}
 
 internal fun Route.Bodies.flattenedBodyRendering(
     config: RenderConfig,

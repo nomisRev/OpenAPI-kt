@@ -72,24 +72,10 @@ public class Markdown internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: String? = null): Response {
+      public suspend operator fun invoke(body: String? = null, requestType: RequestType): Response {
         val response = client.post("/markdown/raw") {
           body?.let {
-            contentType(ContentType.Text.Plain)
-            setBody(it)
-          }
-        }
-        return when (response.status.value) {
-          200 -> Response.Ok(response.body())
-          304 -> Response.NotModified
-          else -> throw ResponseException(response, "")
-        }
-      }
-
-      public suspend operator fun invoke(body: String? = null): Response {
-        val response = client.post("/markdown/raw") {
-          body?.let {
-            contentType(ContentType("text", "x-markdown"))
+            contentType(requestType.contentType)
             setBody(it)
           }
         }
@@ -106,6 +92,14 @@ public class Markdown internal constructor(
         ) : Response
 
         public data object NotModified : Response
+      }
+
+      public enum class RequestType(
+        public val contentType: ContentType,
+      ) {
+        TextPlain(ContentType.Text.Plain),
+        TextXMarkdown(ContentType("text", "x-markdown")),
+        ;
       }
     }
   }

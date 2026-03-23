@@ -248,6 +248,7 @@ internal fun Route.buildOperationBody(
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
     contentType: ContentType? = null,
+    requestTypeContentType: CodeBlock? = null,
 ): CodeBlock {
     return if (returns.needsSealedInterface()) {
         if (contentType != null && returns.contentTypeStrategy() is ContentTypeStrategy.SeparateMethods) {
@@ -260,12 +261,30 @@ internal fun Route.buildOperationBody(
                 selectedBody = selectedBody,
                 bodyExpr = bodyExpr,
                 bodyGuard = bodyGuard,
+                requestTypeContentType = requestTypeContentType,
             )
         } else {
-            buildSealedOperationBody(config, method, methodClassName, includeBody, selectedBody, bodyExpr, bodyGuard)
+            buildSealedOperationBody(
+                config,
+                method,
+                methodClassName,
+                includeBody,
+                selectedBody,
+                bodyExpr,
+                bodyGuard,
+                requestTypeContentType,
+            )
         }
     } else {
-        buildDirectOperationBody(config, method, includeBody, selectedBody, bodyExpr, bodyGuard)
+        buildDirectOperationBody(
+            config,
+            method,
+            includeBody,
+            selectedBody,
+            bodyExpr,
+            bodyGuard,
+            requestTypeContentType,
+        )
     }
 }
 
@@ -277,6 +296,7 @@ private fun Route.buildSealedOperationBody(
     selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
     bodyGuard: String?,
+    requestTypeContentType: CodeBlock?,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
@@ -292,7 +312,16 @@ private fun Route.buildSealedOperationBody(
 
     if (hasRequestConfig(includeBody)) {
         code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
-        addRequestConfigCode(config, code, includeBody, selectedBody, bodyMayBeNull, bodyExpr, bodyGuard)
+        addRequestConfigCode(
+            config = config,
+            code = code,
+            includeBody = includeBody,
+            selectedBody = selectedBody,
+            bodyMayBeNull = bodyMayBeNull,
+            bodyExpr = bodyExpr,
+            bodyGuard = bodyGuard,
+            requestTypeContentType = requestTypeContentType,
+        )
         code.endControlFlow()
     } else {
         code.addStatement("val response = client.%L(%L)", httpMethodName, pathLiteral)
@@ -315,6 +344,7 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
     selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
     bodyGuard: String?,
+    requestTypeContentType: CodeBlock?,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
@@ -330,7 +360,16 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
 
     if (hasRequestConfig(includeBody)) {
         code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
-        addRequestConfigCode(config, code, includeBody, selectedBody, bodyMayBeNull, bodyExpr, bodyGuard)
+        addRequestConfigCode(
+            config = config,
+            code = code,
+            includeBody = includeBody,
+            selectedBody = selectedBody,
+            bodyMayBeNull = bodyMayBeNull,
+            bodyExpr = bodyExpr,
+            bodyGuard = bodyGuard,
+            requestTypeContentType = requestTypeContentType,
+        )
         code.endControlFlow()
     } else {
         code.addStatement("val response = client.%L(%L)", httpMethodName, pathLiteral)
@@ -350,6 +389,7 @@ private fun Route.buildDirectOperationBody(
     selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
     bodyGuard: String?,
+    requestTypeContentType: CodeBlock?,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val httpMethodName = method.value.lowercase()
@@ -367,7 +407,16 @@ private fun Route.buildDirectOperationBody(
     if (model == null || model is Model.Primitive.Unit) {
         if (hasRequestConfig(includeBody)) {
             code.beginControlFlow("client.%L(%L)", httpMethodName, pathLiteral)
-            addRequestConfigCode(config, code, includeBody, selectedBody, bodyMayBeNull, bodyExpr, bodyGuard)
+            addRequestConfigCode(
+                config = config,
+                code = code,
+                includeBody = includeBody,
+                selectedBody = selectedBody,
+                bodyMayBeNull = bodyMayBeNull,
+                bodyExpr = bodyExpr,
+                bodyGuard = bodyGuard,
+                requestTypeContentType = requestTypeContentType,
+            )
             code.endControlFlow()
         } else {
             code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
@@ -376,7 +425,16 @@ private fun Route.buildDirectOperationBody(
         if (hasRequestConfig(includeBody)) {
             code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
             code.indent()
-            addRequestConfigCode(config, code, includeBody, selectedBody, bodyMayBeNull, bodyExpr, bodyGuard)
+            addRequestConfigCode(
+                config = config,
+                code = code,
+                includeBody = includeBody,
+                selectedBody = selectedBody,
+                bodyMayBeNull = bodyMayBeNull,
+                bodyExpr = bodyExpr,
+                bodyGuard = bodyGuard,
+                requestTypeContentType = requestTypeContentType,
+            )
             code.unindent()
             code.add("}.%M()\n", BodyMember)
         } else {
@@ -508,6 +566,7 @@ private fun Route.addRequestConfigCode(
     bodyMayBeNull: Boolean = includeBody && body?.required != true,
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
+    requestTypeContentType: CodeBlock? = null,
 ) {
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
 
@@ -548,7 +607,15 @@ private fun Route.addRequestConfigCode(
     }
 
     if (includeBody && selectedBody != null) {
-        addBodyCode(config, code, selectedBody, bodyMayBeNull, bodyExpr, bodyGuard)
+        addBodyCode(
+            config = config,
+            code = code,
+            body = selectedBody,
+            bodyMayBeNull = bodyMayBeNull,
+            bodyExpr = bodyExpr,
+            bodyGuard = bodyGuard,
+            requestTypeContentType = requestTypeContentType,
+        )
     }
 }
 
@@ -559,7 +626,7 @@ private fun Route.addRequestConfigCode(
  * Unknown types fall back to the `ContentType(contentType, subtype)` constructor.
  */
 @Suppress("CyclomaticComplexMethod")
-private fun ContentType.toContentTypeCodeBlock(): CodeBlock {
+internal fun ContentType.toContentTypeCodeBlock(): CodeBlock {
     // Map to well-known Ktor ContentType named constants where possible.
     val namedSuffix: String? = when (this) {
         ContentType.Application.Json -> "Application.Json"
@@ -593,13 +660,18 @@ private fun addBodyCode(
     bodyMayBeNull: Boolean,
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
+    requestTypeContentType: CodeBlock? = null,
 ) {
     when (body) {
-        is Route.Body.SetBody ->
-            code.addSetLikeBodyCode(body.contentType.toContentTypeCodeBlock(), bodyExpr, bodyMayBeNull, bodyGuard)
+        is Route.Body.SetBody -> {
+            val contentType = requestTypeContentType ?: body.contentType.toContentTypeCodeBlock()
+            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard)
+        }
 
-        is Route.Body.OverloadedBody ->
-            code.addSetLikeBodyCode(body.contentType.toContentTypeCodeBlock(), bodyExpr, bodyMayBeNull, bodyGuard)
+        is Route.Body.OverloadedBody -> {
+            val contentType = requestTypeContentType ?: body.contentType.toContentTypeCodeBlock()
+            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard)
+        }
 
         is Route.Body.FormUrlEncoded -> code.addFormUrlEncodedBodyCode(body)
         is Route.Body.Multipart.Value -> code.addMultipartValueBodyCode(config, body)

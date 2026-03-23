@@ -168,12 +168,21 @@ private fun TypeSpec.Builder.addOperationResponseType(context: OperationTypeSpec
 private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeSpecContext) {
     val bodyVariants = context.route.body?.variants().orEmpty()
     val overloadedBody = context.overloadedBody
+    val requestBodyStrategy = if (bodyVariants.size > 1) {
+        context.route.body!!.detectSignatureClashes(context.config)
+    } else {
+        null
+    }
+    if (requestBodyStrategy is RequestBodyStrategy.ClashingWithEnum) {
+        addType(buildRequestTypeEnum(requestBodyStrategy.clashing))
+    }
     when (val strategy = context.route.returns.contentTypeStrategy()) {
         ContentTypeStrategy.SingleContentType ->
             addOperationInvokeFunctionsForContentType(
                 context = context,
                 bodyVariants = bodyVariants,
                 overloadedBody = overloadedBody,
+                requestBodyStrategy = requestBodyStrategy,
                 contentType = null,
                 functionName = "invoke",
                 operator = true,
@@ -185,6 +194,7 @@ private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeS
                     context = context,
                     bodyVariants = bodyVariants,
                     overloadedBody = overloadedBody,
+                    requestBodyStrategy = requestBodyStrategy,
                     contentType = contentType,
                     functionName = contentTypeToMethodName(contentType),
                     operator = false,
@@ -198,13 +208,64 @@ private fun TypeSpec.Builder.addOperationInvokeFunctionsForContentType(
     context: OperationTypeSpecContext,
     bodyVariants: List<Route.Bodies.Variant>,
     overloadedBody: Route.Body.OverloadedBody?,
+    requestBodyStrategy: RequestBodyStrategy?,
     contentType: ContentType?,
     functionName: String,
     operator: Boolean,
 ) {
     when {
-        bodyVariants.size > 1 -> bodyVariants.forEach { variant ->
+        requestBodyStrategy is RequestBodyStrategy.ClashingWithEnum -> {
             addFunction(
+                context.route.toInvokeFunSpecWithRequestType(
+                    config = context.config,
+                    pathClassName = context.pathClassName,
+                    methodClassName = context.methodClassName,
+                    sharedInlineParameterKeys = context.sharedInlineParameterKeys,
+                    usesNestedBodyType = false,
+                    inlineModelScope = context.inlineModelScope,
+                    selectedBody = requestBodyStrategy.clashing.first().body,
+                    functionName = functionName,
+                    operator = operator,
+                    contentType = contentType,
+                )
+            )
+            requestBodyStrategy.unique.forEach { variant ->
+                addFunction(
+                    context.route.toInvokeFunSpec(
+                        config = context.config,
+                        pathClassName = context.pathClassName,
+                        methodClassName = context.methodClassName,
+                        sharedInlineParameterKeys = context.sharedInlineParameterKeys,
+                        usesNestedBodyType = false,
+                        inlineModelScope = context.inlineModelScope,
+                        selectedBody = variant.body,
+                        functionName = functionName,
+                        operator = operator,
+                        contentType = contentType,
+                    )
+                )
+            }
+        }
+
+        bodyVariants.size > 1 -> when (val strategy = requestBodyStrategy) {
+            is RequestBodyStrategy.SeparateOverloads -> strategy.variants.forEach { variant ->
+                addFunction(
+                    context.route.toInvokeFunSpec(
+                        config = context.config,
+                        pathClassName = context.pathClassName,
+                        methodClassName = context.methodClassName,
+                        sharedInlineParameterKeys = context.sharedInlineParameterKeys,
+                        usesNestedBodyType = false,
+                        inlineModelScope = context.inlineModelScope,
+                        selectedBody = variant.body,
+                        functionName = functionName,
+                        operator = operator,
+                        contentType = contentType,
+                    )
+                )
+            }
+
+            is RequestBodyStrategy.Single -> addFunction(
                 context.route.toInvokeFunSpec(
                     config = context.config,
                     pathClassName = context.pathClassName,
@@ -212,12 +273,16 @@ private fun TypeSpec.Builder.addOperationInvokeFunctionsForContentType(
                     sharedInlineParameterKeys = context.sharedInlineParameterKeys,
                     usesNestedBodyType = false,
                     inlineModelScope = context.inlineModelScope,
-                    selectedBody = variant.body,
+                    selectedBody = strategy.variant.body,
                     functionName = functionName,
                     operator = operator,
                     contentType = contentType,
                 )
             )
+
+            is RequestBodyStrategy.ClashingWithEnum -> error("Unreachable")
+
+            null -> error("Unreachable")
         }
 
         context.flattenedBody != null -> context.flattenedBody.overloads.forEach { overload ->
@@ -355,6 +420,83 @@ private fun Route.toInvokeFunSpec(
     return builder.returns(returnType)
         .addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
         .addCode(buildOperationBody(config, method, methodClassName, selectedBody = selectedBody, contentType = contentType))
+        .build()
+}
+
+@Suppress("LongParameterList")
+private fun Route.toInvokeFunSpecWithRequestType(
+    config: RenderConfig,
+    pathClassName: ClassName,
+    methodClassName: ClassName,
+    sharedInlineParameterKeys: Set<String>,
+    usesNestedBodyType: Boolean,
+    inlineModelScope: OperationInlineModelScope,
+    functionName: String = "invoke",
+    operator: Boolean = true,
+    contentType: ContentType? = null,
+    selectedBody: Route.Body? = body?.defaultOrNull(),
+): FunSpec {
+    val builder = operationFunBuilder(functionName, operator)
+        .addDeprecatedIfNeeded()
+    val signatureTypes = mutableListOf<TypeName>()
+
+    val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
+    val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
+    val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
+
+    val bodyParams = selectedBody?.toInvokeParameterSpecs(
+        config = config,
+        methodClassName = methodClassName,
+        usesNestedBodyType = usesNestedBodyType,
+        required = body?.required == true,
+    )
+
+    for (input in requiredParams) {
+        val parameter = input.toParameterSpec(
+            config = config,
+            pathClassName = pathClassName,
+            methodClassName = methodClassName,
+            sharedInlineParameterKeys = sharedInlineParameterKeys,
+        )
+        builder.addParameter(parameter)
+        signatureTypes += parameter.type
+    }
+    if (bodyParams != null) {
+        bodyParams.forEach { parameter ->
+            builder.addParameter(parameter)
+            signatureTypes += parameter.type
+        }
+    }
+
+    val requestTypeParameter = ParameterSpec.builder("requestType", methodClassName.nestedClass("RequestType")).build()
+    builder.addParameter(requestTypeParameter)
+    signatureTypes += requestTypeParameter.type
+
+    for (input in optionalParams) {
+        val parameter = input.toParameterSpec(
+            config = config,
+            pathClassName = pathClassName,
+            methodClassName = methodClassName,
+            sharedInlineParameterKeys = sharedInlineParameterKeys,
+        )
+        builder.addParameter(parameter)
+        signatureTypes += parameter.type
+    }
+
+    val returnType = invokeReturnType(config, methodClassName, inlineModelScope, contentType)
+    @Suppress("SpreadOperator")
+    return builder.returns(returnType)
+        .addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
+        .addCode(
+            buildOperationBody(
+                config,
+                method,
+                methodClassName,
+                selectedBody = selectedBody,
+                contentType = contentType,
+                requestTypeContentType = CodeBlock.of("requestType.contentType"),
+            )
+        )
         .build()
 }
 
