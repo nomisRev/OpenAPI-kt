@@ -41,4 +41,5 @@ configure<OpenApiExtension> {
     modelPackage.set("io.youtrack.model")
     apiPackage.set("io.youtrack.api")
     targets.set(setOf("JVM"))
+    outputDirectory.set(project.file("src/main/kotlin"))
 }
