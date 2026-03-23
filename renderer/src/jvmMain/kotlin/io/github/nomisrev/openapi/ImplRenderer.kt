@@ -527,10 +527,19 @@ private fun CodeBlock.Builder.addMultipartValueBodyCode(body: Route.Body.Multipa
         val headersExpr = formData.contentType?.let { contentType ->
             CodeBlock.of("%M(%T.ContentType, %S)", HeadersOfMember, HttpHeadersType, contentType.toString())
         }
-        if (headersExpr != null) {
-            addStatement("%M(%S, %L, %L)", AppendMember, formData.name, valueExpr, headersExpr)
+        val addAppendStatement = {
+            if (headersExpr != null) {
+                addStatement("%M(%S, %L, %L)", AppendMember, formData.name, valueExpr, headersExpr)
+            } else {
+                addStatement("%M(%S, %L)", AppendMember, formData.name, valueExpr)
+            }
+        }
+        if (!formData.isRequired) {
+            beginControlFlow("if (%L != null)", paramName)
+            addAppendStatement()
+            endControlFlow()
         } else {
-            addStatement("%M(%S, %L)", AppendMember, formData.name, valueExpr)
+            addAppendStatement()
         }
     }
     unindent()

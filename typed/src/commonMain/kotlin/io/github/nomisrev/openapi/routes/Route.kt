@@ -171,6 +171,7 @@ data class Route(
                 val name: String,
                 val type: Model,
                 val contentType: ContentType? = null,
+                val isRequired: Boolean,
             )
 
             // Inline schemas for multipart bodies do not generate a type,

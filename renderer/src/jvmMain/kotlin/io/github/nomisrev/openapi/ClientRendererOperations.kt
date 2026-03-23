@@ -547,13 +547,23 @@ private fun Route.Body.toInvokeParameterSpecs(
 
     is Route.Body.FormUrlEncoded -> {
         parameters.map { formData ->
-            ParameterSpec.builder(formData.name.toParamName(), formData.type.toTypeName(config)).build()
+            val typeName = formData.type.toTypeName(config).copy(nullable = formData.type.isNullable || !formData.isRequired)
+            ParameterSpec.builder(formData.name.toParamName(), typeName).apply {
+                if (!formData.isRequired) {
+                    defaultValue(CodeBlock.of("null"))
+                }
+            }.build()
         }
     }
 
     is Route.Body.Multipart.Value -> {
         parameters.map { formData ->
-            ParameterSpec.builder(formData.name.toParamName(), formData.type.toTypeName(config)).build()
+            val typeName = formData.type.toTypeName(config).copy(nullable = formData.type.isNullable || !formData.isRequired)
+            ParameterSpec.builder(formData.name.toParamName(), typeName).apply {
+                if (!formData.isRequired) {
+                    defaultValue(CodeBlock.of("null"))
+                }
+            }.build()
         }
     }
 

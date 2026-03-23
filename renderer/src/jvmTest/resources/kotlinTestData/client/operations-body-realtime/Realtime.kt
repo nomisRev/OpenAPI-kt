@@ -26,7 +26,7 @@ public class Realtime internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(sdp: String, session: RealtimeCallCreateRequest.Session): String = client.post("/realtime/calls") {
+      public suspend operator fun invoke(sdp: String, session: RealtimeCallCreateRequest.Session? = null): String = client.post("/realtime/calls") {
         setBody(MultiPartFormDataContent(formData {
           append("sdp", sdp, headersOf(HttpHeaders.ContentType, "application/sdp"))
           if (session != null) {
