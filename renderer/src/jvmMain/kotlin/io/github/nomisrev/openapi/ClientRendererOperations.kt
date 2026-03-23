@@ -17,6 +17,7 @@ import com.squareup.kotlinpoet.UNIT
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.transformers.nestedOrNull
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import kotlin.jvm.JvmName
 
@@ -103,6 +104,13 @@ private fun operationConstructorArgs(accumulatedParams: List<AccumulatedParam>):
         addAll(accumulatedParams.map { it.name.toCamelCase() })
     }.joinToString(", ")
 
+private fun operationFunBuilder(functionName: String, operator: Boolean): FunSpec.Builder =
+    FunSpec.builder(functionName)
+        .addModifiers(KModifier.SUSPEND)
+        .apply {
+            if (operator) addModifiers(KModifier.OPERATOR)
+        }
+
 private data class OperationTypeSpecContext(
     val route: Route,
     val config: RenderConfig,
@@ -139,8 +147,20 @@ private fun TypeSpec.Builder.addOperationInlineTypes(context: OperationTypeSpecC
 }
 
 private fun TypeSpec.Builder.addOperationResponseType(context: OperationTypeSpecContext) {
-    if (!context.route.returns.isSingleUnitResponse() && !context.route.returns.isSingleDirectModelResponse()) {
-        addType(context.route.buildResponseTypeSpec(context.config, context.methodClassName, context.inlineModelScope))
+    when (val strategy = context.route.returns.contentTypeStrategy()) {
+        ContentTypeStrategy.SingleContentType -> {
+            if (!context.route.returns.isSingleUnitResponse() && !context.route.returns.isSingleDirectModelResponse()) {
+                addType(context.route.buildResponseTypeSpec(context.config, context.methodClassName, context.inlineModelScope))
+            }
+        }
+
+        is ContentTypeStrategy.SeparateMethods -> {
+            context.route.buildMultiContentTypeResponseSpecs(
+                config = context.config,
+                methodClassName = context.methodClassName,
+                inlineModelScope = context.inlineModelScope,
+            ).forEach(::addType)
+        }
     }
 }
 
@@ -148,6 +168,40 @@ private fun TypeSpec.Builder.addOperationResponseType(context: OperationTypeSpec
 private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeSpecContext) {
     val bodyVariants = context.route.body?.variants().orEmpty()
     val overloadedBody = context.overloadedBody
+    when (val strategy = context.route.returns.contentTypeStrategy()) {
+        ContentTypeStrategy.SingleContentType ->
+            addOperationInvokeFunctionsForContentType(
+                context = context,
+                bodyVariants = bodyVariants,
+                overloadedBody = overloadedBody,
+                contentType = null,
+                functionName = "invoke",
+                operator = true,
+            )
+
+        is ContentTypeStrategy.SeparateMethods ->
+            strategy.successContentTypes.forEach { contentType ->
+                addOperationInvokeFunctionsForContentType(
+                    context = context,
+                    bodyVariants = bodyVariants,
+                    overloadedBody = overloadedBody,
+                    contentType = contentType,
+                    functionName = contentTypeToMethodName(contentType),
+                    operator = false,
+                )
+            }
+    }
+}
+
+@Suppress("LongMethod")
+private fun TypeSpec.Builder.addOperationInvokeFunctionsForContentType(
+    context: OperationTypeSpecContext,
+    bodyVariants: List<Route.Bodies.Variant>,
+    overloadedBody: Route.Body.OverloadedBody?,
+    contentType: ContentType?,
+    functionName: String,
+    operator: Boolean,
+) {
     when {
         bodyVariants.size > 1 -> bodyVariants.forEach { variant ->
             addFunction(
@@ -159,6 +213,9 @@ private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeS
                     usesNestedBodyType = false,
                     inlineModelScope = context.inlineModelScope,
                     selectedBody = variant.body,
+                    functionName = functionName,
+                    operator = operator,
+                    contentType = contentType,
                 )
             )
         }
@@ -172,6 +229,9 @@ private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeS
                     sharedInlineParameterKeys = context.sharedInlineParameterKeys,
                     overload = overload,
                     inlineModelScope = context.inlineModelScope,
+                    functionName = functionName,
+                    operator = operator,
+                    contentType = contentType,
                 )
             )
         }
@@ -185,6 +245,9 @@ private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeS
                         methodClassName = context.methodClassName,
                         sharedInlineParameterKeys = context.sharedInlineParameterKeys,
                         inlineModelScope = context.inlineModelScope,
+                        functionName = functionName,
+                        operator = operator,
+                        contentType = contentType,
                     )
                 )
             }
@@ -200,6 +263,9 @@ private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeS
                             bodyTypeName = caseSignature.typeName,
                             bodyJvmName = caseSignature.jvmName,
                             inlineModelScope = context.inlineModelScope,
+                            functionName = functionName,
+                            operator = operator,
+                            contentType = contentType,
                         )
                     )
                 }
@@ -213,6 +279,9 @@ private fun TypeSpec.Builder.addOperationInvokeFunctions(context: OperationTypeS
                 sharedInlineParameterKeys = context.sharedInlineParameterKeys,
                 usesNestedBodyType = context.inlineBodyTypeSpec != null,
                 inlineModelScope = context.inlineModelScope,
+                functionName = functionName,
+                operator = operator,
+                contentType = contentType,
             )
         )
     }
@@ -227,10 +296,12 @@ private fun Route.toInvokeFunSpec(
     sharedInlineParameterKeys: Set<String>,
     usesNestedBodyType: Boolean,
     inlineModelScope: OperationInlineModelScope,
+    functionName: String = "invoke",
+    operator: Boolean = true,
+    contentType: ContentType? = null,
     selectedBody: Route.Body? = body?.defaultOrNull(),
 ): FunSpec {
-    val builder = FunSpec.builder("invoke")
-        .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
+    val builder = operationFunBuilder(functionName, operator)
         .addDeprecatedIfNeeded()
     val signatureTypes = mutableListOf<TypeName>()
 
@@ -279,11 +350,11 @@ private fun Route.toInvokeFunSpec(
         }
     }
 
-    val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
+    val returnType = invokeReturnType(config, methodClassName, inlineModelScope, contentType)
     @Suppress("SpreadOperator")
     return builder.returns(returnType)
         .addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
-        .addCode(buildOperationBody(config, method, methodClassName, selectedBody = selectedBody))
+        .addCode(buildOperationBody(config, method, methodClassName, selectedBody = selectedBody, contentType = contentType))
         .build()
 }
 
@@ -295,9 +366,11 @@ private fun Route.toInvokeFunSpecForFlattenedBody(
     sharedInlineParameterKeys: Set<String>,
     overload: FlattenedBodyOverload,
     inlineModelScope: OperationInlineModelScope,
+    functionName: String = "invoke",
+    operator: Boolean = true,
+    contentType: ContentType? = null,
 ): FunSpec {
-    val builder = FunSpec.builder("invoke")
-        .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
+    val builder = operationFunBuilder(functionName, operator)
         .addDeprecatedIfNeeded()
     val signatureTypes = mutableListOf<TypeName>()
 
@@ -341,7 +414,7 @@ private fun Route.toInvokeFunSpecForFlattenedBody(
         }
     }
 
-    val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
+    val returnType = invokeReturnType(config, methodClassName, inlineModelScope, contentType)
     builder.returns(returnType)
     builder.addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
     builder.addCode(
@@ -364,9 +437,11 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     bodyTypeName: TypeName,
     bodyJvmName: String?,
     inlineModelScope: OperationInlineModelScope,
+    functionName: String = "invoke",
+    operator: Boolean = true,
+    contentType: ContentType? = null,
 ): FunSpec {
-    val builder = FunSpec.builder("invoke")
-        .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
+    val builder = operationFunBuilder(functionName, operator)
         .addDeprecatedIfNeeded()
     val signatureTypes = mutableListOf<TypeName>()
     bodyJvmName?.let { jvmName ->
@@ -405,10 +480,10 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
         signatureTypes += parameter.type
     }
 
-    val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
+    val returnType = invokeReturnType(config, methodClassName, inlineModelScope, contentType)
     builder.returns(returnType)
     builder.addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
-    builder.addCode(buildOperationBody(config, method, methodClassName))
+    builder.addCode(buildOperationBody(config, method, methodClassName, contentType = contentType))
     return builder.build()
 }
 
@@ -418,9 +493,11 @@ private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
     methodClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
     inlineModelScope: OperationInlineModelScope,
+    functionName: String = "invoke",
+    operator: Boolean = true,
+    contentType: ContentType? = null,
 ): FunSpec {
-    val builder = FunSpec.builder("invoke")
-        .addModifiers(KModifier.SUSPEND, KModifier.OPERATOR)
+    val builder = operationFunBuilder(functionName, operator)
         .addDeprecatedIfNeeded()
     val signatureTypes = mutableListOf<TypeName>()
 
@@ -449,10 +526,10 @@ private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
         signatureTypes += parameter.type
     }
 
-    val returnType = invokeReturnType(config, methodClassName, inlineModelScope)
+    val returnType = invokeReturnType(config, methodClassName, inlineModelScope, contentType)
     builder.returns(returnType)
     builder.addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
-    builder.addCode(buildOperationBody(config, method, methodClassName, includeBody = false))
+    builder.addCode(buildOperationBody(config, method, methodClassName, includeBody = false, contentType = contentType))
     return builder.build()
 }
 

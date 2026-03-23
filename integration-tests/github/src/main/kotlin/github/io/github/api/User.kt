@@ -30,6 +30,7 @@ import io.github.model.RepositoryInvitation
 import io.github.model.SimpleUser
 import io.github.model.SocialAccount
 import io.github.model.SshSigningKey
+import io.github.model.StarredRepository
 import io.github.model.TeamFull
 import io.github.model.UserMarketplacePurchase
 import io.github.model.ValidationError
@@ -5982,12 +5983,12 @@ public class User internal constructor(
     public class Get internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(
+      public suspend fun json(
         sort: Sort? = Sort.Created,
         direction: Direction? = Direction.Desc,
         perPage: Long? = 30L,
         page: Long? = 1L,
-      ): Response {
+      ): JsonResponse {
         val response = client.get("/user/starred") {
           sort?.let { parameter("sort", it.value) }
           direction?.let { parameter("direction", it.value) }
@@ -5995,10 +5996,31 @@ public class User internal constructor(
           page?.let { parameter("page", it) }
         }
         return when (response.status.value) {
-          200 -> Response.Ok(response.body())
-          304 -> Response.NotModified
-          401 -> Response.Unauthorized(response.body())
-          403 -> Response.Forbidden(response.body())
+          200 -> JsonResponse.Ok(response.body())
+          304 -> NotModified
+          401 -> Unauthorized(response.body())
+          403 -> Forbidden(response.body())
+          else -> throw ResponseException(response, "")
+        }
+      }
+
+      public suspend fun vndGithubV3StarJson(
+        sort: Sort? = Sort.Created,
+        direction: Direction? = Direction.Desc,
+        perPage: Long? = 30L,
+        page: Long? = 1L,
+      ): VndGithubV3StarJsonResponse {
+        val response = client.get("/user/starred") {
+          sort?.let { parameter("sort", it.value) }
+          direction?.let { parameter("direction", it.value) }
+          perPage?.let { parameter("per_page", it) }
+          page?.let { parameter("page", it) }
+        }
+        return when (response.status.value) {
+          200 -> VndGithubV3StarJsonResponse.Ok(response.body())
+          304 -> NotModified
+          401 -> Unauthorized(response.body())
+          403 -> Forbidden(response.body())
           else -> throw ResponseException(response, "")
         }
       }
@@ -6025,21 +6047,29 @@ public class User internal constructor(
         ;
       }
 
-      public sealed interface Response {
+      public sealed interface JsonResponse {
         public data class Ok(
           public val `value`: List<Repository>,
-        ) : Response
-
-        public data object NotModified : Response
-
-        public data class Unauthorized(
-          public val `value`: BasicError,
-        ) : Response
-
-        public data class Forbidden(
-          public val `value`: BasicError,
-        ) : Response
+        ) : JsonResponse
       }
+
+      public sealed interface VndGithubV3StarJsonResponse {
+        public data class Ok(
+          public val `value`: List<StarredRepository>,
+        ) : VndGithubV3StarJsonResponse
+      }
+
+      public data object NotModified : JsonResponse, VndGithubV3StarJsonResponse
+
+      public data class Unauthorized(
+        public val `value`: BasicError,
+      ) : JsonResponse,
+          VndGithubV3StarJsonResponse
+
+      public data class Forbidden(
+        public val `value`: BasicError,
+      ) : JsonResponse,
+          VndGithubV3StarJsonResponse
     }
 
     public class OwnerPath internal constructor(

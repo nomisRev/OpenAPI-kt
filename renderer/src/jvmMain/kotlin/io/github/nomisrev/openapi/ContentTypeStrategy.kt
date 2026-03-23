@@ -48,11 +48,18 @@ private val NO_CONTENT_STATUS_CODE = setOf(204, 304)
 @Suppress("MagicNumber")
 private val SUCCESS_RANGE = 200..299
 
+internal fun HttpStatusCode.isSuccessStatusCode(): Boolean = value in SUCCESS_RANGE
+
+internal fun HttpStatusCode.isNoContentStatusCode(): Boolean = value in NO_CONTENT_STATUS_CODE
+
 internal fun contentTypeToIdentifier(ct: ContentType, existingNames: Set<String> = emptySet()): String =
     contentTypeIdentifierBase(ct).uniqueName(existingNames)
 
 internal fun contentTypeToMethodName(ct: ContentType, existingNames: Set<String> = emptySet()): String =
     contentTypeMethodNameBase(ct).uniqueName(existingNames)
+
+internal fun contentTypeResponseTypeName(ct: ContentType, existingNames: Set<String> = emptySet()): String =
+    "${contentTypeToIdentifier(ct, existingNames)}Response"
 
 internal fun bodyTypeName(
     statusCode: HttpStatusCode,
@@ -84,7 +91,7 @@ internal fun defaultBodyTypeName(
 internal fun Route.Returns.contentTypeStrategy(): ContentTypeStrategy {
     val successContentTypes = responses.entries
         .asSequence()
-        .filter { it.key.value in SUCCESS_RANGE }
+        .filter { it.key.isSuccessStatusCode() }
         .flatMap { (_, returnType) -> returnType.types.keys.asSequence().map(ContentType::normalizedForComparison) }
         .distinct()
         .toList()

@@ -4,12 +4,6 @@
 
 When an operation has multiple success content types, generate separate named methods per content type, each with its own sealed response interface. Error/no-content cases are shared via multi-interface implementation.
 
-## Deliverables
-
-1. Modified `ClientRendererResponses.kt` — multi-interface generation
-2. Modified `ClientRendererOperations.kt` — named methods instead of `invoke()`
-3. Modified `OperationInlineModelScope.kt` — multi-CT body naming
-
 ## Tasks
 
 ### 3.1 Multi-Content-Type Response Type Generation
@@ -28,6 +22,28 @@ sealed interface ${CT}Response {
 }
 ```
 
+If `${OkCTBody}` is an inline defined model we inline its properties directly into the case:
+For example in case of `application/json` we could have an object like:
+
+```kotlin
+sealed interface ${CT}Response {
+    // Only success cases (2xx) are nested here
+    data class Ok(
+        val prop1: ${OkCTBodyProp1},
+        val prop2: ${OkCTBodyProp2},
+    ) : ${CT}Response
+}
+```
+
+For example in case of simple `text/plain`:
+
+```kotlin
+sealed interface ${CT}Response {
+    // Only success cases (2xx) are nested here
+    data class Ok(val value: String) : ${CT}Response
+}
+```
+
 **Shared cases (at operation class level):**
 ```kotlin
 // No-content status → data object
@@ -41,37 +57,30 @@ data class JsonBadRequest(val value: BasicError) : JsonResponse, SarifJsonRespon
 data class ScimJsonBadRequest(val value: ScimError) : JsonResponse, SarifJsonResponse
 ```
 
-**Implementation outline:**
+Same rules applies for inline defined models:
+
+If `${OkCTBody}` is an inline defined model we inline its properties directly into the case:
+For example in case of `application/json` we could have an object like:
+
 ```kotlin
-fun Route.buildMultiContentTypeResponseSpecs(
-    config: RenderConfig,
-    methodClassName: ClassName,
-    successContentTypes: List<ContentType>,
-): MultiContentTypeResponseResult {
-    val interfaceClassNames = successContentTypes.associateWith { ct ->
-        val name = "${contentTypeToIdentifier(ct)}Response"
-        methodClassName.nestedClass(name)
-    }
+    data class Forbidden(
+    val prop1: $ {OkCTBodyProp1 },
+val prop2: ${ OkCTBodyProp2 },
+) : JsonResponse, SarifJsonResponse
+```
 
-    // Build sealed interfaces with success cases
-    val sealedInterfaces = successContentTypes.map { ct ->
-        buildContentTypeResponseInterface(config, methodClassName, ct, interfaceClassNames[ct]!!)
-    }
+For example in case of simple `text/plain`:
 
-    // Build shared error/no-content cases
-    val sharedCases = buildSharedResponseCases(
-        config, methodClassName, interfaceClassNames.values.toList()
-    )
-
-    return MultiContentTypeResponseResult(sealedInterfaces, sharedCases)
-}
+```kotlin
+data class Forbidden(val value: String) : JsonResponse, SarifJsonResponse
 ```
 
 ### 3.2 Success Case Generation Per Content Type
 
 For each success status (2xx) and each success content type:
 - Look up the model from `returnType.types[contentType]`
-- If model exists: generate `data class {StatusName}(val value: {BodyType}) : {CT}Response`
+- If a top-level model generate `data class {StatusName}(val value: {BodyType}) : {CT}Response`
+- If nested model generates the appropriate structure following model generation rules
 - If no model (204/205): generate `data object {StatusName} : {CT}Response`
 
 Body type naming uses `bodyTypeName()` from Phase 2 with `hasMultipleContentTypes = true`.
@@ -148,7 +157,8 @@ internal fun Route.invokeReturnType(...): TypeName =
 - [ ] Error cases implement ALL success interfaces
 - [ ] Multi-CT error statuses generate one case per error CT (e.g., `JsonBadRequest`, `ScimJsonBadRequest`)
 - [ ] No-content statuses → `data object` implementing all interfaces
-- [ ] `./gradlew :renderer:jvmTest` passes
+- [ ] mcp gradle `:renderer:jvmTest` passes
+- [ ] mcp gradle `generateOpenApi` in integration-tests and inspect generated code 
 
 ## Verification
 

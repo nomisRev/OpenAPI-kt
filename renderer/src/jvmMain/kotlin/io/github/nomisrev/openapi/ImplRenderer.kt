@@ -247,9 +247,23 @@ internal fun Route.buildOperationBody(
     selectedBody: Route.Body? = body?.defaultOrNull(),
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
+    contentType: ContentType? = null,
 ): CodeBlock {
     return if (returns.needsSealedInterface()) {
-        buildSealedOperationBody(config, method, methodClassName, includeBody, selectedBody, bodyExpr, bodyGuard)
+        if (contentType != null && returns.contentTypeStrategy() is ContentTypeStrategy.SeparateMethods) {
+            buildMultiContentTypeSealedOperationBody(
+                config = config,
+                method = method,
+                methodClassName = methodClassName,
+                contentType = contentType,
+                includeBody = includeBody,
+                selectedBody = selectedBody,
+                bodyExpr = bodyExpr,
+                bodyGuard = bodyGuard,
+            )
+        } else {
+            buildSealedOperationBody(config, method, methodClassName, includeBody, selectedBody, bodyExpr, bodyGuard)
+        }
     } else {
         buildDirectOperationBody(config, method, includeBody, selectedBody, bodyExpr, bodyGuard)
     }
@@ -287,6 +301,44 @@ private fun Route.buildSealedOperationBody(
     code.beginControlFlow("return when (response.status.value)")
     addSealedResponseStatusCases(code, methodClassName)
     addSealedResponseDefaultCase(code, methodClassName)
+    code.endControlFlow()
+    return code.build()
+}
+
+@Suppress("LongMethod")
+private fun Route.buildMultiContentTypeSealedOperationBody(
+    config: RenderConfig,
+    method: HttpMethod,
+    methodClassName: ClassName,
+    contentType: ContentType,
+    includeBody: Boolean,
+    selectedBody: Route.Body?,
+    bodyExpr: CodeBlock?,
+    bodyGuard: String?,
+): CodeBlock {
+    val code = CodeBlock.builder()
+    val httpMethodName = method.value.lowercase()
+    val pathLiteral = segments.toPathLiteral()
+    val bodyMayBeNull = includeBody && when (selectedBody) {
+        is Route.Body.OverloadedBody -> false
+        is Route.Body.FormUrlEncoded,
+        is Route.Body.Multipart.Ref,
+        is Route.Body.Multipart.Value,
+        is Route.Body.SetBody,
+        null -> body?.required != true
+    }
+
+    if (hasRequestConfig(includeBody)) {
+        code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
+        addRequestConfigCode(config, code, includeBody, selectedBody, bodyMayBeNull, bodyExpr, bodyGuard)
+        code.endControlFlow()
+    } else {
+        code.addStatement("val response = client.%L(%L)", httpMethodName, pathLiteral)
+    }
+
+    code.beginControlFlow("return when (response.status.value)")
+    addMultiContentTypeSealedResponseStatusCases(code, methodClassName, contentType)
+    addMultiContentTypeSealedResponseDefaultCase(code, methodClassName, contentType)
     code.endControlFlow()
     return code.build()
 }
@@ -356,6 +408,78 @@ private fun Route.addSealedResponseDefaultCase(code: CodeBlock.Builder, methodCl
     if (returns.default != null) {
         val defaultClassName = responseClassName.nestedClass("Default")
         val defaultModel = returns.default!!.preferredModel()
+        if (defaultModel != null && defaultModel !is Model.Primitive.Unit) {
+            code.addStatement("else -> %T(response.status, response.%M())", defaultClassName, BodyMember)
+        } else {
+            code.addStatement("else -> %T(response.status)", defaultClassName)
+        }
+    } else {
+        code.addStatement(
+            "else -> throw %T(response, %S)",
+            ResponseExceptionType,
+            "",
+        )
+    }
+}
+
+private fun Route.addMultiContentTypeSealedResponseStatusCases(
+    code: CodeBlock.Builder,
+    methodClassName: ClassName,
+    contentType: ContentType,
+) {
+    val responseClassName = methodClassName.nestedClass(contentTypeResponseTypeName(contentType))
+    for ((statusCode, returnTypeEntry) in returns.responses.entries.sortedBy { it.key.value }) {
+        if (statusCode.isSuccessStatusCode()) {
+            val model = returnTypeEntry.types[contentType] ?: continue
+            val caseClassName = responseClassName.nestedClass(statusCode.toCaseName())
+            if (model is Model.Primitive.Unit) {
+                code.addStatement("%L -> %T", statusCode.value, caseClassName)
+            } else if (model.isRouteInlineModel() && model !is Model.Collection) {
+                code.addStatement("%L -> response.%M<%T>()", statusCode.value, BodyMember, caseClassName)
+            } else {
+                code.addStatement("%L -> %T(response.%M())", statusCode.value, caseClassName, BodyMember)
+            }
+            continue
+        }
+
+        when (val errorStrategy = classifyErrorStatus(statusCode, returnTypeEntry)) {
+            ErrorCaseStrategy.NoContent -> code.addStatement(
+                "%L -> %T",
+                statusCode.value,
+                methodClassName.nestedClass(statusCode.toCaseName()),
+            )
+
+            is ErrorCaseStrategy.SingleContentType -> {
+                val caseClassName = methodClassName.nestedClass(statusCode.toCaseName())
+                if (errorStrategy.model.isRouteInlineModel() && errorStrategy.model !is Model.Collection) {
+                    code.addStatement("%L -> response.%M<%T>()", statusCode.value, BodyMember, caseClassName)
+                } else {
+                    code.addStatement("%L -> %T(response.%M())", statusCode.value, caseClassName, BodyMember)
+                }
+            }
+
+            is ErrorCaseStrategy.MultipleContentTypes -> {
+                val (errorContentType, errorModel) = errorStrategy.variants.first()
+                val caseName = "${contentTypeToIdentifier(errorContentType)}${statusCode.toCaseName()}"
+                val caseClassName = methodClassName.nestedClass(caseName)
+                if (errorModel.isRouteInlineModel() && errorModel !is Model.Collection) {
+                    code.addStatement("%L -> response.%M<%T>()", statusCode.value, BodyMember, caseClassName)
+                } else {
+                    code.addStatement("%L -> %T(response.%M())", statusCode.value, caseClassName, BodyMember)
+                }
+            }
+        }
+    }
+}
+
+private fun Route.addMultiContentTypeSealedResponseDefaultCase(
+    code: CodeBlock.Builder,
+    methodClassName: ClassName,
+    contentType: ContentType,
+) {
+    if (returns.default != null) {
+        val defaultClassName = methodClassName.nestedClass("Default")
+        val defaultModel = returns.default!!.types[contentType] ?: returns.default!!.preferredModel()
         if (defaultModel != null && defaultModel !is Model.Primitive.Unit) {
             code.addStatement("else -> %T(response.status, response.%M())", defaultClassName, BodyMember)
         } else {

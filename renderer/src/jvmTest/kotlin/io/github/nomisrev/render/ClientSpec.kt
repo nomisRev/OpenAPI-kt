@@ -1299,6 +1299,46 @@ val clientSpec by testSuite {
                     "content": {
                       "application/json": {
                         "schema": { "type": "string" }
+                      },
+                      "application/xml": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  },
+                  "404": {
+                    "description": "Not Found",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "integer", "format": "int32" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-separate-methods"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets/{petId}": {
+              "get": {
+                "parameters": [
+                  { "name": "petId", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "string" }
                       }
                     }
                   },

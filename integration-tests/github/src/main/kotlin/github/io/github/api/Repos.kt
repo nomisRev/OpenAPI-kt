@@ -79,6 +79,7 @@ import io.github.model.ContentFile
 import io.github.model.ContentSubmodule
 import io.github.model.ContentSymlink
 import io.github.model.ContentTraffic
+import io.github.model.ContentTree
 import io.github.model.Contributor
 import io.github.model.ContributorActivity
 import io.github.model.CustomDeploymentRuleApp
@@ -6543,43 +6544,65 @@ public class Repos internal constructor(
               private val repo: String,
               private val analysisId: Long,
             ) {
-              public suspend operator fun invoke(): Response {
+              public suspend fun json(): JsonResponse {
                 val response = client.get("/repos/$owner/$repo/code-scanning/analyses/$analysisId")
                 return when (response.status.value) {
-                  200 -> Response.Ok(response.body())
-                  403 -> Response.Forbidden(response.body())
-                  404 -> Response.NotFound(response.body())
-                  422 -> Response.UnprocessableEntity(response.body())
-                  503 -> response.body<Response.ServiceUnavailable>()
+                  200 -> JsonResponse.Ok(response.body())
+                  403 -> Forbidden(response.body())
+                  404 -> NotFound(response.body())
+                  422 -> UnprocessableEntity(response.body())
+                  503 -> response.body<ServiceUnavailable>()
                   else -> throw ResponseException(response, "")
                 }
               }
 
-              public sealed interface Response {
+              public suspend fun sarifJson(): SarifJsonResponse {
+                val response = client.get("/repos/$owner/$repo/code-scanning/analyses/$analysisId")
+                return when (response.status.value) {
+                  200 -> SarifJsonResponse.Ok(response.body())
+                  403 -> Forbidden(response.body())
+                  404 -> NotFound(response.body())
+                  422 -> UnprocessableEntity(response.body())
+                  503 -> response.body<ServiceUnavailable>()
+                  else -> throw ResponseException(response, "")
+                }
+              }
+
+              public sealed interface JsonResponse {
                 public data class Ok(
                   public val `value`: CodeScanningAnalysis,
-                ) : Response
-
-                public data class Forbidden(
-                  public val `value`: BasicError,
-                ) : Response
-
-                public data class NotFound(
-                  public val `value`: BasicError,
-                ) : Response
-
-                public data class UnprocessableEntity(
-                  public val `value`: BasicError,
-                ) : Response
-
-                @Serializable
-                public data class ServiceUnavailable(
-                  public val code: String? = null,
-                  public val message: String? = null,
-                  @SerialName("documentation_url")
-                  public val documentationUrl: String? = null,
-                ) : Response
+                ) : JsonResponse
               }
+
+              public sealed interface SarifJsonResponse {
+                public data class Ok(
+                  public val `value`: JsonElement,
+                ) : SarifJsonResponse
+              }
+
+              public data class Forbidden(
+                public val `value`: BasicError,
+              ) : JsonResponse,
+                  SarifJsonResponse
+
+              public data class NotFound(
+                public val `value`: BasicError,
+              ) : JsonResponse,
+                  SarifJsonResponse
+
+              public data class UnprocessableEntity(
+                public val `value`: BasicError,
+              ) : JsonResponse,
+                  SarifJsonResponse
+
+              @Serializable
+              public data class ServiceUnavailable(
+                public val code: String? = null,
+                public val message: String? = null,
+                @SerialName("documentation_url")
+                public val documentationUrl: String? = null,
+              ) : JsonResponse,
+                  SarifJsonResponse
             }
           }
         }
@@ -8924,70 +8947,88 @@ public class Repos internal constructor(
             private val repo: String,
             private val path: String,
           ) {
-            public suspend operator fun invoke(ref: String? = null): Response {
+            public suspend fun vndGithubObject(ref: String? = null): VndGithubObjectResponse {
               val response = client.get("/repos/$owner/$repo/contents/$path") {
                 ref?.let { parameter("ref", it) }
               }
               return when (response.status.value) {
-                200 -> Response.Ok(response.body())
-                302 -> Response.Found
-                304 -> Response.NotModified
-                403 -> Response.Forbidden(response.body())
-                404 -> Response.NotFound(response.body())
+                200 -> VndGithubObjectResponse.Ok(response.body())
+                302 -> Found
+                304 -> NotModified
+                403 -> Forbidden(response.body())
+                404 -> NotFound(response.body())
                 else -> throw ResponseException(response, "")
               }
             }
 
-            public sealed interface Response {
+            public suspend fun json(ref: String? = null): JsonResponse {
+              val response = client.get("/repos/$owner/$repo/contents/$path") {
+                ref?.let { parameter("ref", it) }
+              }
+              return when (response.status.value) {
+                200 -> response.body<JsonResponse.Ok>()
+                302 -> Found
+                304 -> NotModified
+                403 -> Forbidden(response.body())
+                404 -> NotFound(response.body())
+                else -> throw ResponseException(response, "")
+              }
+            }
+
+            public sealed interface VndGithubObjectResponse {
+              public data class Ok(
+                public val `value`: ContentTree,
+              ) : VndGithubObjectResponse
+            }
+
+            public sealed interface JsonResponse {
               @OptIn(ExperimentalSerializationApi::class)
               @JsonClassDiscriminator("type")
               @Serializable
-              public sealed interface OkBody {
+              public sealed interface Ok : JsonResponse {
                 @Serializable
                 @JvmInline
                 @SerialName("array")
                 public value class Array(
                   public val `value`: ContentDirectory,
-                ) : OkBody
+                ) : Ok
 
                 @Serializable
                 @JvmInline
                 @SerialName("file")
                 public value class File(
                   public val `value`: ContentFile,
-                ) : OkBody
+                ) : Ok
 
                 @Serializable
                 @JvmInline
                 @SerialName("symlink")
                 public value class Symlink(
                   public val `value`: ContentSymlink,
-                ) : OkBody
+                ) : Ok
 
                 @Serializable
                 @JvmInline
                 @SerialName("submodule")
                 public value class Submodule(
                   public val `value`: ContentSubmodule,
-                ) : OkBody
+                ) : Ok
               }
-
-              public data class Ok(
-                public val `value`: OkBody,
-              ) : Response
-
-              public data object Found : Response
-
-              public data object NotModified : Response
-
-              public data class Forbidden(
-                public val `value`: BasicError,
-              ) : Response
-
-              public data class NotFound(
-                public val `value`: BasicError,
-              ) : Response
             }
+
+            public data object Found : VndGithubObjectResponse, JsonResponse
+
+            public data object NotModified : VndGithubObjectResponse, JsonResponse
+
+            public data class Forbidden(
+              public val `value`: BasicError,
+            ) : VndGithubObjectResponse,
+                JsonResponse
+
+            public data class NotFound(
+              public val `value`: BasicError,
+            ) : VndGithubObjectResponse,
+                JsonResponse
           }
 
           public class Put internal constructor(
