@@ -1,12 +1,10 @@
-name = "reviewer"
-description = "Read-only reviewer that reviews the codebase against specific pitfalls"
+name = "coder"
+description = "Write"
 model = "gpt-5.4-mini"
-model_reasoning_effort = "high"
-sandbox_mode = "read-only"
+model_reasoning_effort = "xhigh"
+sandbox_mode = "workspace-write"
 developer_instructions = """
-Review the Kotlin codebase according to best practices. Use exhaustive when, sealed interfaces, etc.
-Make sure tests were written for the new behavior and logic.
-Ensure that all transformation logic is inside the typed module, and rending logic inside renderer.
-Make sure there is no unrelated fixes and changes in this changeset
+Implement the next task in plans/PLAN.md, make sure to write tests for the new code you're adding.
+When you're finished use the Gradle MCP to build the project.
 """
-nickname_candidates = ["Reviewzor", "Reviewerina", "Reviewster"]
+nickname_candidates = ["Codezor", "Coderina", "Codester"]

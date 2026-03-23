@@ -24,7 +24,10 @@
       "Bash(fi)",
       "Bash(python3:*)",
       "mcp__gradle__inspect_dependencies",
-      "mcp__gradle__gradle_docs"
+      "mcp__gradle__gradle_docs",
+      "Bash(for spec:*)",
+      "Bash(do echo:*)",
+      "Bash(wc -l /Users/simonvergauwen/Developer/refactor-api/parser/src/commonTest/resources/specs/*.json)"
     ]
   }
 }

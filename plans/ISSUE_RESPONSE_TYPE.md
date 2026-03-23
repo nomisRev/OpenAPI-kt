@@ -195,8 +195,16 @@ That makes the wrapper and the inline payload fight for the same symbol.
 Inline response payloads should use distinct nested names, for example:
 
 1. single inline response without a sealed wrapper -> `Body`
-2. sealed response case payload -> `${StatusCaseName}Body`
-3. media-type-specific case payload -> `${StatusCaseName}${MediaTypeSuffix}Body`
+2. sealed response case payload (single content type) -> `${StatusCaseName}Body`
+3. sealed response case payload (multiple content types) -> `${StatusCaseName}${ContentTypeSuffix}Body`
+
+Examples:
+- `Body` - single response without sealed wrapper
+- `OkBody` - single content type, 200 response with multiple status codes
+- `OkJsonBody` - JSON content type, 200 response with multiple content types
+- `OkXmlBody` - XML content type, 200 response with multiple content types
+- `ServiceUnavailableBody` - single content type, 503 response
+- `ServiceUnavailableJsonBody` - JSON content type, 503 response with multiple content types
 
 Example target shape:
 
@@ -229,12 +237,16 @@ public data class ServiceUnavailableBody(
    - `Body`
    - `OkBody`
    - `NotFoundBody`
-   - `OkSarifJsonBody`
+   - `OkJsonBody`, `OkXmlBody` (when multiple content types)
 3. Make `OperationInlineModelScope` target those payload-owner names instead of `Response`.
 4. Make `buildSealedResponseTypeSpec()` use remapped inline response type names rather than raw
    `model.toTypeName(config)`.
 5. Ensure generated nested payload type names are deconflicted against existing nested models.
 6. Keep the wrapper/case structure unchanged for callers, only fix the case payload type.
+7. Coordinate with `ISSUE_CONTENT_TYPE.md` for content-type-aware body naming:
+   - When multiple content types exist with different schemas, body types include content type suffix
+   - Example: `OkJsonBody`, `OkXmlBody`, `BadRequestScimJsonBody`
+   - When content types share the same schema, no content type suffix needed
 
 ## Relationship To `ISSUE_MEDIA_TYPE.md`
 
@@ -243,6 +255,28 @@ This is a prerequisite for a clean media-type solution.
 Once one route can expose separate media-type-specific methods, each method or response branch may
 need its own inline payload type. That only works if inline payload names no longer collide with
 `Response`.
+
+## Relationship To `ISSUE_CONTENT_TYPE.md`
+
+This issue is a prerequisite for `ISSUE_CONTENT_TYPE.md`.
+
+Once operations can expose multiple content-type-specific methods (e.g., `json()`, `xml()`), each method needs its own sealed response interface (`JsonResponse`, `XmlResponse`). The body type naming strategy defined here extends to handle content-type-specific body types:
+
+- Multiple statuses, single content type: `OkBody`, `NotFoundBody`
+- Multiple statuses, multiple content types: `OkJsonBody`, `OkXmlBody`
+
+The sealed response wrapper must never be named `Response` when multiple content types exist — it must be `JsonResponse`, `XmlResponse`, etc. to avoid collision with body types.
+
+Error cases in multi-CT operations live at the operation class level (not nested in any sealed interface) and implement ALL success sealed interfaces via multi-inheritance:
+```kotlin
+data class NotFound(val value: BasicError) : JsonResponse, XmlResponse
+```
+
+Error statuses with multiple content types generate separate cases per error CT:
+```kotlin
+data class JsonBadRequest(val value: BasicError) : JsonResponse, XmlResponse
+data class ScimJsonBadRequest(val value: ScimError) : JsonResponse, XmlResponse
+```
 
 ## Affected Files
 
