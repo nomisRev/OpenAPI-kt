@@ -528,7 +528,14 @@ internal fun Model.defaultLiteral(config: RenderConfig): CodeBlock? =
             CodeBlock.of("%T.%L", context.toClassName(config), toEnumValueName(value))
         }
 
-        is Model.Collection -> default.toLiteral { values -> values.toListLiteral(inner, config) }
+        is Model.Collection -> default.toLiteral { values ->
+            val listLiteral = values.toListLiteral(inner, config) ?: return@toLiteral null
+            if (inner is Model.FreeFormJson) {
+                CodeBlock.of("%T(%L)", JsonArrayType, listLiteral)
+            } else {
+                listLiteral
+            }
+        }
 
         is Model.ByteArray,
         is Model.Date,
