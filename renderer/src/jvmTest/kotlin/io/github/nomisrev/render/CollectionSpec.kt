@@ -43,6 +43,17 @@ val collectionSpec by testSuite {
 
     modelTest(
         """
+        |"Payload": {
+        |  "type": "array",
+        |  "items": {},
+        |  "default": []
+        |}
+        """.trimMargin(),
+        "collection/freeform-default"
+    )
+
+    modelTest(
+        """
         |"MaybeTags": {
         |  "type": "array",
         |  "nullable": true,
