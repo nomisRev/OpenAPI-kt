@@ -58,12 +58,21 @@ internal fun Model.Union.buildSerializerObject(
 ): TypeSpec {
     val declarationCases = cases.zip(renderedCases)
     val orderedCases = declarationCases.sortedByDeserializationOrder()
-    val isAnyOf = this is Model.AnyOf
+    val anyOfDispatchAnalysis = (this as? Model.AnyOf)?.uniqueKeyDispatchAnalysis()
 
     return TypeSpec.objectBuilder("Serializer")
         .addSuperinterface(UnionKSerializerType.parameterizedBy(className))
         .addProperty(buildDescriptorProperty(config, originalClassName, className, declarationCases, externalTypeNames))
-        .addFunction(buildDeserializeFunction(config, originalClassName, className, orderedCases, isAnyOf, externalTypeNames))
+        .addFunction(
+            buildDeserializeFunction(
+                config = config,
+                originalClassName = originalClassName,
+                className = className,
+                orderedCases = orderedCases,
+                anyOfDispatchAnalysis = anyOfDispatchAnalysis,
+                externalTypeNames = externalTypeNames,
+            )
+        )
         .addFunction(buildSerializeFunction(config, originalClassName, className, declarationCases, externalTypeNames))
         .build()
 }
@@ -112,11 +121,18 @@ private fun buildDeserializeFunction(
     originalClassName: ClassName,
     className: ClassName,
     orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
-    isAnyOf: Boolean,
+    anyOfDispatchAnalysis: AnyOfUniqueKeyDispatchAnalysis?,
     externalTypeNames: Map<ClassName, TypeName>,
 ): FunSpec {
-    val code = if (isAnyOf) {
-        buildAnyOfDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
+    val code = if (anyOfDispatchAnalysis != null) {
+        buildAnyOfDeserializeCode(
+            config = config,
+            originalClassName = originalClassName,
+            className = className,
+            orderedCases = orderedCases,
+            anyOfDispatchAnalysis = anyOfDispatchAnalysis,
+            externalTypeNames = externalTypeNames,
+        )
     } else {
         buildAttemptDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
     }
@@ -184,35 +200,29 @@ private fun buildAnyOfDeserializeCode(
     originalClassName: ClassName,
     className: ClassName,
     orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    anyOfDispatchAnalysis: AnyOfUniqueKeyDispatchAnalysis,
     externalTypeNames: Map<ClassName, TypeName>,
 ): CodeBlock {
-    val objectCases = orderedCases.mapNotNull { (case, rendered) ->
-        (case.model as? Model.Object)?.let { model ->
-            AnyOfDispatchCase(case, rendered, model, emptySet())
-        }
-    }
-    val uniqueKeysByCase = objectCases.map { dispatchCase ->
-        val keys = dispatchCase.model.properties.keys
-        val otherKeys = objectCases
-            .asSequence()
-            .filterNot { it.case == dispatchCase.case }
-            .flatMapTo(mutableSetOf()) { it.model.properties.keys }
-        dispatchCase.copy(uniqueKeys = keys - otherKeys)
-    }
-    return if (objectCases.size != orderedCases.size || uniqueKeysByCase.count { it.uniqueKeys.isEmpty() } > 1) {
-        buildAttemptDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
-    } else {
-        buildAnyOfUniqueKeyDispatchCode(
-            AnyOfUniqueKeyDispatchContext(
-                config = config,
-                originalClassName = originalClassName,
-                className = className,
-                orderedCases = orderedCases,
-                uniqueKeysByCase = uniqueKeysByCase,
-                externalTypeNames = externalTypeNames,
-            )
+    val uniqueKeysByCase = orderedCases.map { (case, rendered) ->
+        val model = case.model as? Model.Object
+            ?: error("Unique-key anyOf dispatch requires object cases only: $case")
+        AnyOfDispatchCase(
+            case = case,
+            rendered = rendered,
+            model = model,
+            uniqueKeys = anyOfDispatchAnalysis.uniqueKeysFor(case),
         )
     }
+    return buildAnyOfUniqueKeyDispatchCode(
+        AnyOfUniqueKeyDispatchContext(
+            config = config,
+            originalClassName = originalClassName,
+            className = className,
+            orderedCases = orderedCases,
+            uniqueKeysByCase = uniqueKeysByCase,
+            externalTypeNames = externalTypeNames,
+        )
+    )
 }
 
 private data class AnyOfUniqueKeyDispatchContext(

@@ -6,15 +6,14 @@ import io.github.nomisrev.openapi.parser.Server
 /**
  * Describes the server configuration strategy derived from the server list:
  * - [NoServers]: no servers declared -> use a `baseUrl: String` parameter.
- * - [SingleFixed]: exactly one server with no variables -> inject the url directly as a string
- *   constant (no sealed interface generated).
+ * - [SingleFixed]: exactly one server with no variables -> no server type is generated.
  * - [SingleVariable]: exactly one server with variables -> produce a standalone data class (no
  *   sealed interface; the data class exposes a `url` property).
  * - [Multiple]: more than one server -> produce a sealed interface hierarchy.
  */
 internal sealed interface ServerStrategy {
     data object NoServers : ServerStrategy
-    data class SingleFixed(val url: String) : ServerStrategy
+    data object SingleFixed : ServerStrategy
     data class SingleVariable(val server: Server, val serverClassName: ClassName) : ServerStrategy
     data class Multiple(val servers: List<Server>, val serverClassName: ClassName) : ServerStrategy
 }
@@ -27,7 +26,7 @@ internal fun ApiTree.serverStrategy(config: RenderConfig): ServerStrategy {
     return when {
         servers.isEmpty() -> ServerStrategy.NoServers
         servers.size == 1 && servers.first().variables.isNullOrEmpty() ->
-            ServerStrategy.SingleFixed(servers.first().url)
+            ServerStrategy.SingleFixed
 
         servers.size == 1 ->
             ServerStrategy.SingleVariable(

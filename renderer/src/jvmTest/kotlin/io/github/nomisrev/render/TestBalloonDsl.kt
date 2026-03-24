@@ -87,6 +87,22 @@ private fun renderUnifiedDiff(dir: String, fileName: String, expected: String, a
 private fun formatFileList(files: List<String>): String =
     if (files.isEmpty()) "-" else files.joinToString(", ") { "$it.kt" }
 
+private fun FileSpec.renderKey(): String =
+    if (packageName.isBlank()) "$name.kt" else "$packageName.$name.kt"
+
+internal fun renderGeneratedFiles(files: List<FileSpec>): Map<String, String> {
+    val duplicates = files.groupBy(FileSpec::renderKey)
+        .filterValues { generated -> generated.size > 1 }
+        .keys
+        .sorted()
+    check(duplicates.isEmpty()) {
+        "Renderer generated duplicate files: ${duplicates.joinToString()}"
+    }
+    return files.associate { file ->
+        file.name to buildString { file.writeTo(this) }
+    }
+}
+
 private fun assertGoldenMatches(
     dir: String,
     expected: Map<String, String>,
@@ -182,11 +198,9 @@ fun TestSuite.renderSpec(
         apiPackage = "io.github.nomisrev.render.test.${dir.replace('/', '.').replace('-', '.')}",
     )
     val apiTree = OpenAPI.fromJson(json).toApiTree()
-    val files = generate(apiTree, config).sortedBy { it.name }
+    val files = generate(apiTree, config).sortedWith(compareBy<FileSpec> { it.packageName }.thenBy { it.name })
     assertTrue(files.isNotEmpty(), "Expected renderer to generate files, but it returned an empty result.")
-    val actual = files.associate { file ->
-        file.name to buildString { file.writeTo(this) }
-    }
+    val actual = renderGeneratedFiles(files)
     val outputDir = Path.of("src/jvmTest/resources/kotlinTestData", dir)
     if (UPDATE_GOLDEN) {
         Files.createDirectories(outputDir)

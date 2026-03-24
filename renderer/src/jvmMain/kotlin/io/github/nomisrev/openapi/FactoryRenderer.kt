@@ -44,7 +44,7 @@ private fun buildSecondaryConstructors(strategy: ServerStrategy): List<FunSpec> 
                 baseUrlConstructorNoBlock(),
             )
 
-        is ServerStrategy.SingleFixed ->
+        ServerStrategy.SingleFixed ->
             listOf(
                 baseUrlConstructorWithBlock(),
                 baseUrlConstructorNoBlock(),
@@ -165,7 +165,7 @@ internal fun ApiTree.generateServerType(config: RenderConfig): TypeSpec? {
     val rootName = name.toPascalCase()
 
     return when (strategy) {
-        is ServerStrategy.NoServers, is ServerStrategy.SingleFixed -> null
+        ServerStrategy.NoServers, ServerStrategy.SingleFixed -> null
 
         is ServerStrategy.SingleVariable -> {
             // Single server with variables → standalone data class (no sealed wrapper)

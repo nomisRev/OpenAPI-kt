@@ -290,6 +290,102 @@ internal fun Route.buildOperationBody(
     }
 }
 
+private data class OperationRequestInvocationContext(
+    val httpMethodName: String,
+    val pathLiteral: String,
+    val needsRequestConfig: Boolean,
+    val bodyMayBeNull: Boolean,
+)
+
+private enum class OperationRequestInvocationStyle {
+    ResponseBinding,
+    StatementOnly,
+    ReturnBody,
+}
+
+private fun Route.operationRequestInvocationContext(
+    method: HttpMethod,
+    includeBody: Boolean,
+    selectedBody: Route.Body?,
+    contentType: ContentType?,
+): OperationRequestInvocationContext =
+    OperationRequestInvocationContext(
+        httpMethodName = method.value.lowercase(),
+        pathLiteral = segments.toPathLiteral(),
+        needsRequestConfig = hasRequestConfig(includeBody) || contentType != null,
+        bodyMayBeNull = includeBody && when (selectedBody) {
+            is Route.Body.OverloadedBody -> false
+            is Route.Body.FormUrlEncoded,
+            is Route.Body.Multipart.Ref,
+            is Route.Body.Multipart.Value,
+            is Route.Body.SetBody,
+            null -> body?.required != true
+        },
+    )
+
+@Suppress("LongParameterList")
+private fun CodeBlock.Builder.addRequestInvocation(
+    route: Route,
+    request: OperationRequestInvocationContext,
+    style: OperationRequestInvocationStyle,
+    config: RenderConfig,
+    includeBody: Boolean,
+    selectedBody: Route.Body?,
+    bodyExpr: CodeBlock?,
+    bodyGuard: String?,
+    acceptContentType: ContentType?,
+    requestTypeContentType: CodeBlock?,
+) {
+    if (!request.needsRequestConfig) {
+        when (style) {
+            OperationRequestInvocationStyle.ResponseBinding ->
+                addStatement("val response = client.%L(%L)", request.httpMethodName, request.pathLiteral)
+
+            OperationRequestInvocationStyle.StatementOnly ->
+                addStatement("client.%L(%L)", request.httpMethodName, request.pathLiteral)
+
+            OperationRequestInvocationStyle.ReturnBody ->
+                addStatement("return client.%L(%L).%M()", request.httpMethodName, request.pathLiteral, BodyMember)
+        }
+        return
+    }
+
+    when (style) {
+        OperationRequestInvocationStyle.ResponseBinding ->
+            beginControlFlow("val response = client.%L(%L)", request.httpMethodName, request.pathLiteral)
+
+        OperationRequestInvocationStyle.StatementOnly ->
+            beginControlFlow("client.%L(%L)", request.httpMethodName, request.pathLiteral)
+
+        OperationRequestInvocationStyle.ReturnBody -> {
+            add("return client.%L(%L) {\n", request.httpMethodName, request.pathLiteral)
+            indent()
+        }
+    }
+
+    route.addRequestConfigCode(
+        config = config,
+        code = this,
+        includeBody = includeBody,
+        selectedBody = selectedBody,
+        bodyMayBeNull = request.bodyMayBeNull,
+        bodyExpr = bodyExpr,
+        bodyGuard = bodyGuard,
+        acceptContentType = acceptContentType,
+        requestTypeContentType = requestTypeContentType,
+    )
+
+    when (style) {
+        OperationRequestInvocationStyle.ResponseBinding,
+        OperationRequestInvocationStyle.StatementOnly -> endControlFlow()
+
+        OperationRequestInvocationStyle.ReturnBody -> {
+            unindent()
+            add("}.%M()\n", BodyMember)
+        }
+    }
+}
+
 private fun Route.buildSealedOperationBody(
     config: RenderConfig,
     method: HttpMethod,
@@ -302,35 +398,20 @@ private fun Route.buildSealedOperationBody(
     requestTypeContentType: CodeBlock?,
 ): CodeBlock {
     val code = CodeBlock.builder()
-    val httpMethodName = method.value.lowercase()
-    val pathLiteral = segments.toPathLiteral()
-    val needsRequestConfig = hasRequestConfig(includeBody) || contentType != null
-    val bodyMayBeNull = includeBody && when (selectedBody) {
-        is Route.Body.OverloadedBody -> false
-        is Route.Body.FormUrlEncoded,
-        is Route.Body.Multipart.Ref,
-        is Route.Body.Multipart.Value,
-        is Route.Body.SetBody,
-        null -> body?.required != true
-    }
+    val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType)
 
-    if (needsRequestConfig) {
-        code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
-        addRequestConfigCode(
-            config = config,
-            code = code,
-            includeBody = includeBody,
-            selectedBody = selectedBody,
-            bodyMayBeNull = bodyMayBeNull,
-            bodyExpr = bodyExpr,
-            bodyGuard = bodyGuard,
-            acceptContentType = contentType,
-            requestTypeContentType = requestTypeContentType,
-        )
-        code.endControlFlow()
-    } else {
-        code.addStatement("val response = client.%L(%L)", httpMethodName, pathLiteral)
-    }
+    code.addRequestInvocation(
+        route = this,
+        request = request,
+        style = OperationRequestInvocationStyle.ResponseBinding,
+        config = config,
+        includeBody = includeBody,
+        selectedBody = selectedBody,
+        bodyExpr = bodyExpr,
+        bodyGuard = bodyGuard,
+        acceptContentType = contentType,
+        requestTypeContentType = requestTypeContentType,
+    )
 
     code.beginControlFlow("return when (response.status.value)")
     addSealedResponseStatusCases(code, methodClassName)
@@ -352,35 +433,20 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
     requestTypeContentType: CodeBlock?,
 ): CodeBlock {
     val code = CodeBlock.builder()
-    val httpMethodName = method.value.lowercase()
-    val pathLiteral = segments.toPathLiteral()
-    val needsRequestConfig = hasRequestConfig(includeBody) || contentType != null
-    val bodyMayBeNull = includeBody && when (selectedBody) {
-        is Route.Body.OverloadedBody -> false
-        is Route.Body.FormUrlEncoded,
-        is Route.Body.Multipart.Ref,
-        is Route.Body.Multipart.Value,
-        is Route.Body.SetBody,
-        null -> body?.required != true
-    }
+    val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType)
 
-    if (needsRequestConfig) {
-        code.beginControlFlow("val response = client.%L(%L)", httpMethodName, pathLiteral)
-        addRequestConfigCode(
-            config = config,
-            code = code,
-            includeBody = includeBody,
-            selectedBody = selectedBody,
-            bodyMayBeNull = bodyMayBeNull,
-            bodyExpr = bodyExpr,
-            bodyGuard = bodyGuard,
-            acceptContentType = contentType,
-            requestTypeContentType = requestTypeContentType,
-        )
-        code.endControlFlow()
-    } else {
-        code.addStatement("val response = client.%L(%L)", httpMethodName, pathLiteral)
-    }
+    code.addRequestInvocation(
+        route = this,
+        request = request,
+        style = OperationRequestInvocationStyle.ResponseBinding,
+        config = config,
+        includeBody = includeBody,
+        selectedBody = selectedBody,
+        bodyExpr = bodyExpr,
+        bodyGuard = bodyGuard,
+        acceptContentType = contentType,
+        requestTypeContentType = requestTypeContentType,
+    )
 
     code.beginControlFlow("return when (response.status.value)")
     addMultiContentTypeSealedResponseStatusCases(code, methodClassName, contentType)
@@ -400,57 +466,35 @@ private fun Route.buildDirectOperationBody(
     requestTypeContentType: CodeBlock?,
 ): CodeBlock {
     val code = CodeBlock.builder()
-    val httpMethodName = method.value.lowercase()
-    val pathLiteral = segments.toPathLiteral()
-    val needsRequestConfig = hasRequestConfig(includeBody) || contentType != null
-    val bodyMayBeNull = includeBody && when (selectedBody) {
-        is Route.Body.OverloadedBody -> false
-        is Route.Body.FormUrlEncoded,
-        is Route.Body.Multipart.Ref,
-        is Route.Body.Multipart.Value,
-        is Route.Body.SetBody,
-        null -> body?.required != true
-    }
+    val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType)
 
     val model = returns.singlePreferredModelOrNull()
     if (model == null || model is Model.Primitive.Unit) {
-        if (needsRequestConfig) {
-            code.beginControlFlow("client.%L(%L)", httpMethodName, pathLiteral)
-            addRequestConfigCode(
-                config = config,
-                code = code,
-                includeBody = includeBody,
-                selectedBody = selectedBody,
-                bodyMayBeNull = bodyMayBeNull,
-                bodyExpr = bodyExpr,
-                bodyGuard = bodyGuard,
-                acceptContentType = contentType,
-                requestTypeContentType = requestTypeContentType,
-            )
-            code.endControlFlow()
-        } else {
-            code.addStatement("client.%L(%L)", httpMethodName, pathLiteral)
-        }
+        code.addRequestInvocation(
+            route = this,
+            request = request,
+            style = OperationRequestInvocationStyle.StatementOnly,
+            config = config,
+            includeBody = includeBody,
+            selectedBody = selectedBody,
+            bodyExpr = bodyExpr,
+            bodyGuard = bodyGuard,
+            acceptContentType = contentType,
+            requestTypeContentType = requestTypeContentType,
+        )
     } else {
-        if (needsRequestConfig) {
-            code.add("return client.%L(%L) {\n", httpMethodName, pathLiteral)
-            code.indent()
-            addRequestConfigCode(
-                config = config,
-                code = code,
-                includeBody = includeBody,
-                selectedBody = selectedBody,
-                bodyMayBeNull = bodyMayBeNull,
-                bodyExpr = bodyExpr,
-                bodyGuard = bodyGuard,
-                acceptContentType = contentType,
-                requestTypeContentType = requestTypeContentType,
-            )
-            code.unindent()
-            code.add("}.%M()\n", BodyMember)
-        } else {
-            code.addStatement("return client.%L(%L).%M()", httpMethodName, pathLiteral, BodyMember)
-        }
+        code.addRequestInvocation(
+            route = this,
+            request = request,
+            style = OperationRequestInvocationStyle.ReturnBody,
+            config = config,
+            includeBody = includeBody,
+            selectedBody = selectedBody,
+            bodyExpr = bodyExpr,
+            bodyGuard = bodyGuard,
+            acceptContentType = contentType,
+            requestTypeContentType = requestTypeContentType,
+        )
     }
 
     return code.build()
