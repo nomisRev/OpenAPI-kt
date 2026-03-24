@@ -41,4 +41,5 @@ configure<OpenApiExtension> {
     modelPackage.set("io.openai.model")
     apiPackage.set("io.openai.api")
     targets.set(setOf("JVM"))
+    outputDirectory.set(project.file("src/main/kotlin"))
 }
