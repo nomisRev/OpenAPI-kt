@@ -76,7 +76,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
 
     isAllOfNullableType() -> flattenNull(schema.allOf!!) { nonNullSchemas ->
         if (nonNullSchemas.size == 1) {
-            nonNullSchemas.single().toModel(name, context)
+            flattenedSingleNullableBranch(nonNullSchemas.single(), context)
         } else {
             allOf(context, nonNullSchemas)
         }
@@ -85,7 +85,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
 
     isOneOfNullableType() -> flattenNull(schema.oneOf!!) { nonNullSchemas ->
         if (nonNullSchemas.size == 1) {
-            nonNullSchemas.single().toModel(name, context)
+            flattenedSingleNullableBranch(nonNullSchemas.single(), context)
         } else {
             buildOneOf(context, nonNullSchemas)
         }
@@ -95,7 +95,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
 
     isAnyOfNullableType() -> flattenNull(schema.anyOf!!) { nonNullSchemas ->
         if (nonNullSchemas.size == 1) {
-            nonNullSchemas.single().toModel(name, context)
+            flattenedSingleNullableBranch(nonNullSchemas.single(), context)
         } else {
             buildAnyOf(context, nonNullSchemas)
         }
@@ -204,4 +204,17 @@ private suspend fun ResolvedSchema.flattenNull(
         isNullable = true,
         title = schema.title ?: model.title
     )
+}
+
+context(ctx: Registry.Scope)
+private suspend fun ResolvedSchema.flattenedSingleNullableBranch(
+    branch: ReferenceOr<Schema>,
+    context: SchemaContext,
+): Model = when (branch) {
+    is ReferenceOr.Reference -> branch.toModel(name, context)
+    is ReferenceOr.Value<Schema> -> when (this) {
+        is ResolvedSchema.Reference -> ResolvedSchema.Reference(reference, branch.value).toModel(context, true)
+        is ResolvedSchema.Recursive -> ResolvedSchema.Recursive(name, branch.value).toModel(context, true)
+        is ResolvedSchema.Value -> branch.toModel(name, context)
+    }
 }
