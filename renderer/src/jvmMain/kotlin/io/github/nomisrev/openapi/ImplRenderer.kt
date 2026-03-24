@@ -882,22 +882,24 @@ private fun List<PathSegment>.toPathLiteral(): String {
 
 /**
  * Returns the expression that produces the wire string for a named parameter.
- * For enums with a `value` property, appends `.value`. Otherwise returns the name as-is.
+ * For enums with a `value` property, appends `.value`. Otherwise falls back to `toString()`.
  */
 private fun Model.wireValueExpr(paramName: String): String =
     when {
         this is Model.Enum && needsValueProperty() -> "$paramName.value"
+        this is Model.Enum -> "$paramName.toString()"
         this is Model.Date || this is Model.DateTime || this is Model.Uuid -> "$paramName.toString()"
         else -> paramName
     }
 
 /**
  * Returns the expression to use inside `?.let { ... }` lambdas when accessing the wire value.
- * For enums with a `value` property, returns `"it.value"`. Otherwise returns `"it"`.
+ * For enums with a `value` property, returns `"it.value"`. Otherwise falls back to `"it.toString()"`.
  */
 private fun Model.wireItExpr(): String =
     when {
         this is Model.Enum && needsValueProperty() -> "it.value"
+        this is Model.Enum -> "it.toString()"
         this is Model.Date || this is Model.DateTime || this is Model.Uuid -> "it.toString()"
         else -> "it"
     }

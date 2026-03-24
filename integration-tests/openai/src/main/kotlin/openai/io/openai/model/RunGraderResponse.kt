@@ -15,10 +15,10 @@ public data class RunGraderResponse(
   public val metadata: Metadata,
   @SerialName("sub_rewards")
   @Required
-  public val subRewards: JsonArray = emptyList(),
+  public val subRewards: JsonArray = JsonArray(emptyList()),
   @SerialName("model_grader_token_usage_per_model")
   @Required
-  public val modelGraderTokenUsagePerModel: JsonArray = emptyList(),
+  public val modelGraderTokenUsagePerModel: JsonArray = JsonArray(emptyList()),
 ) {
   @Serializable
   public data class Metadata(

@@ -1080,6 +1080,54 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/jobs": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "status",
+                    "in": "query",
+                    "required": false,
+                    "schema": {
+                      "type": "string",
+                      "enum": ["OPEN", "CLOSED"]
+                    }
+                  }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              },
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "mode": {
+                            "type": "string",
+                            "enum": ["FAST", "SLOW"]
+                          }
+                        },
+                        "required": ["mode"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/enum-wire-tostring"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/items": {
               "get": {
                 "parameters": [

@@ -256,7 +256,7 @@ public class Images internal constructor(
             append("response_format", responseFormat.value)
           }
           if (size != null) {
-            append("size", size)
+            append("size", size.toString())
           }
           if (user != null) {
             append("user", user)

@@ -368,7 +368,7 @@ public class Organization internal constructor(
       ): UsageResponse = client.get("/organization/costs") {
         parameter("start_time", startTime)
         endTime?.let { parameter("end_time", it) }
-        bucketWidth?.let { parameter("bucket_width", it) }
+        bucketWidth?.let { parameter("bucket_width", it.toString()) }
         projectIds?.let { parameter("project_ids", it) }
         groupBy?.let { parameter("group_by", it) }
         limit?.let { parameter("limit", it) }
@@ -1344,7 +1344,7 @@ public class Organization internal constructor(
         ): UsageResponse = client.get("/organization/usage/audio_speeches") {
           parameter("start_time", startTime)
           endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it) }
+          bucketWidth?.let { parameter("bucket_width", it.toString()) }
           projectIds?.let { parameter("project_ids", it) }
           userIds?.let { parameter("user_ids", it) }
           apiKeyIds?.let { parameter("api_key_ids", it) }
@@ -1400,7 +1400,7 @@ public class Organization internal constructor(
         ): UsageResponse = client.get("/organization/usage/audio_transcriptions") {
           parameter("start_time", startTime)
           endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it) }
+          bucketWidth?.let { parameter("bucket_width", it.toString()) }
           projectIds?.let { parameter("project_ids", it) }
           userIds?.let { parameter("user_ids", it) }
           apiKeyIds?.let { parameter("api_key_ids", it) }
@@ -1453,7 +1453,7 @@ public class Organization internal constructor(
         ): UsageResponse = client.get("/organization/usage/code_interpreter_sessions") {
           parameter("start_time", startTime)
           endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it) }
+          bucketWidth?.let { parameter("bucket_width", it.toString()) }
           projectIds?.let { parameter("project_ids", it) }
           groupBy?.let { parameter("group_by", it) }
           limit?.let { parameter("limit", it) }
@@ -1501,7 +1501,7 @@ public class Organization internal constructor(
         ): UsageResponse = client.get("/organization/usage/completions") {
           parameter("start_time", startTime)
           endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it) }
+          bucketWidth?.let { parameter("bucket_width", it.toString()) }
           projectIds?.let { parameter("project_ids", it) }
           userIds?.let { parameter("user_ids", it) }
           apiKeyIds?.let { parameter("api_key_ids", it) }
@@ -1562,7 +1562,7 @@ public class Organization internal constructor(
         ): UsageResponse = client.get("/organization/usage/embeddings") {
           parameter("start_time", startTime)
           endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it) }
+          bucketWidth?.let { parameter("bucket_width", it.toString()) }
           projectIds?.let { parameter("project_ids", it) }
           userIds?.let { parameter("user_ids", it) }
           apiKeyIds?.let { parameter("api_key_ids", it) }
@@ -1620,7 +1620,7 @@ public class Organization internal constructor(
         ): UsageResponse = client.get("/organization/usage/images") {
           parameter("start_time", startTime)
           endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it) }
+          bucketWidth?.let { parameter("bucket_width", it.toString()) }
           sources?.let { parameter("sources", it) }
           sizes?.let { parameter("sizes", it) }
           projectIds?.let { parameter("project_ids", it) }
@@ -1704,7 +1704,7 @@ public class Organization internal constructor(
         ): UsageResponse = client.get("/organization/usage/moderations") {
           parameter("start_time", startTime)
           endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it) }
+          bucketWidth?.let { parameter("bucket_width", it.toString()) }
           projectIds?.let { parameter("project_ids", it) }
           userIds?.let { parameter("user_ids", it) }
           apiKeyIds?.let { parameter("api_key_ids", it) }
@@ -1757,7 +1757,7 @@ public class Organization internal constructor(
         ): UsageResponse = client.get("/organization/usage/vector_stores") {
           parameter("start_time", startTime)
           endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it) }
+          bucketWidth?.let { parameter("bucket_width", it.toString()) }
           projectIds?.let { parameter("project_ids", it) }
           groupBy?.let { parameter("group_by", it) }
           limit?.let { parameter("limit", it) }
