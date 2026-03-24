@@ -73,6 +73,27 @@ public class Files internal constructor(
         }
       }))
     }.body()
+
+    public object Body {
+      @Serializable
+      public enum class Purpose(
+        public val `value`: String,
+      ) {
+        @SerialName("assistants")
+        Assistants("assistants"),
+        @SerialName("batch")
+        Batch("batch"),
+        @SerialName("fine-tune")
+        FineTune("fine-tune"),
+        @SerialName("vision")
+        Vision("vision"),
+        @SerialName("user_data")
+        UserData("user_data"),
+        @SerialName("evals")
+        Evals("evals"),
+        ;
+      }
+    }
   }
 
   public class FileIdPath internal constructor(

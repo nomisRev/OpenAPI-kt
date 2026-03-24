@@ -35,11 +35,19 @@ public class Jobs internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(mode: Post.Body.Mode) {
+    public suspend operator fun invoke(mode: Body.Mode) {
       client.post("/jobs") {
         setBody(Parameters.build {
           append("mode", mode.toString())
         }.formUrlEncode())
+      }
+    }
+
+    public object Body {
+      @Serializable
+      public enum class Mode {
+        FAST,
+        SLOW,
       }
     }
   }

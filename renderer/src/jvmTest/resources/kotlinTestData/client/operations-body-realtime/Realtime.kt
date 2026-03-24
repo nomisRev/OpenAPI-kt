@@ -11,6 +11,7 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import io.ktor.http.headersOf
 import kotlin.String
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 public class Realtime internal constructor(
@@ -39,6 +40,14 @@ public class Realtime internal constructor(
         contentType(ContentType("application", "sdp"))
         setBody(body)
       }.body()
+
+      public object Body {
+        @Serializable
+        public data class Session(
+          public val type: String,
+          public val model: String,
+        )
+      }
     }
   }
 }

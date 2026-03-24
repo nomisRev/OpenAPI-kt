@@ -26,6 +26,7 @@ import io.openai.model.CreateTranslationResponseJson
 import io.openai.model.CreateTranslationResponseVerboseJson
 import io.openai.model.TranscriptionInclude
 import io.openai.model.UpdateVoiceConsentRequest
+import io.openai.model.VadConfig
 import io.openai.model.VoiceConsentDeletedResource
 import io.openai.model.VoiceConsentListResource
 import io.openai.model.VoiceConsentResource
@@ -41,7 +42,9 @@ import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
@@ -208,6 +211,121 @@ public class Audio internal constructor(
         }))
       }.body()
 
+      public object Body {
+        @Serializable(with = Model.Serializer::class)
+        public sealed interface Model {
+          public val `value`: String
+
+          @Serializable
+          @JvmInline
+          public value class CaseString(
+            override val `value`: String,
+          ) : Model
+
+          @Serializable
+          public enum class CaseEnum(
+            override val `value`: String,
+          ) : Model {
+            @SerialName("whisper-1")
+            Whisper1("whisper-1"),
+            @SerialName("gpt-4o-transcribe")
+            Gpt4oTranscribe("gpt-4o-transcribe"),
+            @SerialName("gpt-4o-mini-transcribe")
+            Gpt4oMiniTranscribe("gpt-4o-mini-transcribe"),
+            @SerialName("gpt-4o-mini-transcribe-2025-12-15")
+            Gpt4oMiniTranscribe20251215("gpt-4o-mini-transcribe-2025-12-15"),
+            @SerialName("gpt-4o-transcribe-diarize")
+            Gpt4oTranscribeDiarize("gpt-4o-transcribe-diarize"),
+            ;
+          }
+
+          public object Serializer : KSerializer<Model> {
+            override val descriptor: SerialDescriptor = String.serializer().descriptor
+
+            override fun serialize(encoder: Encoder, `value`: Model) {
+              when(value) {
+                CaseEnum.Whisper1 -> encoder.encodeString("whisper-1")
+                CaseEnum.Gpt4oTranscribe -> encoder.encodeString("gpt-4o-transcribe")
+                CaseEnum.Gpt4oMiniTranscribe -> encoder.encodeString("gpt-4o-mini-transcribe")
+                CaseEnum.Gpt4oMiniTranscribe20251215 -> encoder.encodeString("gpt-4o-mini-transcribe-2025-12-15")
+                CaseEnum.Gpt4oTranscribeDiarize -> encoder.encodeString("gpt-4o-transcribe-diarize")
+                is CaseString -> encoder.encodeString(value.value)
+              }
+            }
+
+            override fun deserialize(decoder: Decoder): Model = when(val value = decoder.decodeString()) {
+              "whisper-1" -> CaseEnum.Whisper1
+              "gpt-4o-transcribe" -> CaseEnum.Gpt4oTranscribe
+              "gpt-4o-mini-transcribe" -> CaseEnum.Gpt4oMiniTranscribe
+              "gpt-4o-mini-transcribe-2025-12-15" -> CaseEnum.Gpt4oMiniTranscribe20251215
+              "gpt-4o-transcribe-diarize" -> CaseEnum.Gpt4oTranscribeDiarize
+              else -> CaseString(value)
+            }
+          }
+        }
+
+        @Serializable
+        public enum class TimestampGranularities(
+          public val `value`: String,
+        ) {
+          @SerialName("word")
+          Word("word"),
+          @SerialName("segment")
+          Segment("segment"),
+          ;
+        }
+
+        /**
+         * Controls how the audio is cut into chunks. When set to `"auto"`, the server first normalizes loudness and then uses voice activity detection (VAD) to choose boundaries. `server_vad` object can be provided to tweak VAD detection parameters manually. If unset, the audio is transcribed as a single block. Required when using `gpt-4o-transcribe-diarize` for inputs longer than 30 seconds. 
+         */
+        @Serializable(with = ChunkingStrategy.Serializer::class)
+        public sealed interface ChunkingStrategy {
+          @Serializable
+          public enum class Auto(
+            public val `value`: String,
+          ) : ChunkingStrategy {
+            @SerialName("auto")
+            Auto("auto"),
+            ;
+          }
+
+          @Serializable
+          @JvmInline
+          public value class CaseVadConfig(
+            public val `value`: VadConfig,
+          ) : ChunkingStrategy
+
+          public object Serializer : KSerializer<ChunkingStrategy> {
+            @OptIn(
+              InternalSerializationApi::class,
+              ExperimentalSerializationApi::class,
+            )
+            override val descriptor: SerialDescriptor =
+                buildSerialDescriptor("io.openai.api.Audio.Transcriptions.Post.Body.ChunkingStrategy", PolymorphicKind.SEALED) {
+              element("Auto", Auto.serializer().descriptor)
+              element("CaseVadConfig", VadConfig.serializer().descriptor)
+            }
+
+            override fun deserialize(decoder: Decoder): ChunkingStrategy {
+              val value = decoder.decodeSerializableValue(JsonElement.serializer())
+              val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
+              return json.attemptDeserialize(
+                value,
+                Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+                CaseVadConfig::class to { CaseVadConfig(decodeFromJsonElement(VadConfig.serializer(), it)) },
+              )
+            }
+
+            override fun serialize(encoder: Encoder, `value`: ChunkingStrategy) {
+              when(value) {
+                is Auto -> encoder.encodeSerializableValue(Auto.serializer(), value)
+                is CaseVadConfig -> encoder.encodeSerializableValue(VadConfig.serializer(), value.value)
+              }
+            }
+          }
+        }
+      }
+
       public sealed interface JsonResponse {
         @Serializable(with = Ok.Serializer::class)
         public sealed interface Ok : JsonResponse {
@@ -300,6 +418,61 @@ public class Audio internal constructor(
           }
         }))
       }.body()
+
+      public object Body {
+        @Serializable(with = Model.Serializer::class)
+        public sealed interface Model {
+          public val `value`: String
+
+          @Serializable
+          @JvmInline
+          public value class CaseString(
+            override val `value`: String,
+          ) : Model
+
+          @Serializable
+          public enum class Whisper1(
+            override val `value`: String,
+          ) : Model {
+            @SerialName("whisper-1")
+            Whisper1("whisper-1"),
+            ;
+          }
+
+          public object Serializer : KSerializer<Model> {
+            override val descriptor: SerialDescriptor = String.serializer().descriptor
+
+            override fun serialize(encoder: Encoder, `value`: Model) {
+              when(value) {
+                Whisper1.Whisper1 -> encoder.encodeString("whisper-1")
+                is CaseString -> encoder.encodeString(value.value)
+              }
+            }
+
+            override fun deserialize(decoder: Decoder): Model = when(val value = decoder.decodeString()) {
+              "whisper-1" -> Whisper1.Whisper1
+              else -> CaseString(value)
+            }
+          }
+        }
+
+        @Serializable
+        public enum class ResponseFormat(
+          public val `value`: String,
+        ) {
+          @SerialName("json")
+          Json("json"),
+          @SerialName("text")
+          Text("text"),
+          @SerialName("srt")
+          Srt("srt"),
+          @SerialName("verbose_json")
+          VerboseJson("verbose_json"),
+          @SerialName("vtt")
+          Vtt("vtt"),
+          ;
+        }
+      }
 
       @Serializable(with = Response.Serializer::class)
       public sealed interface Response {

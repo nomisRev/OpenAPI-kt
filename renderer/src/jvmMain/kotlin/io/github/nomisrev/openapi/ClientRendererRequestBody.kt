@@ -20,11 +20,9 @@ private val MapType = ClassName("kotlin.collections", "Map")
 private val ContentTypeType = ClassName("io.ktor.http", "ContentType")
 
 internal data class FlattenedBodyRendering(
-    val bodyTypeSpec: TypeSpec,
     val publicTypeSpecs: List<TypeSpec>,
     val overloads: List<FlattenedBodyOverload>,
     val externalTypeNames: Map<ClassName, TypeName>,
-    val bodyHasConstructorArgs: Boolean,
 )
 
 private data class FlattenedBodyPublicType(
@@ -121,16 +119,9 @@ internal fun Route.Bodies.flattenedBodyRendering(
             null
         } else {
             FlattenedBodyRendering(
-                bodyTypeSpec = bodyTypeSpec(
-                    config = config,
-                    methodClassName = methodClassName,
-                    bodyModel = model,
-                    externalTypeNames = publicTypeRemaps,
-                ),
                 publicTypeSpecs = publicTypeSpecs,
                 overloads = overloads,
                 externalTypeNames = publicTypeRemaps,
-                bodyHasConstructorArgs = model.properties.isNotEmpty(),
             )
         }
     }
@@ -277,22 +268,6 @@ private fun buildFlattenedBodyPublicTypes(
     return (regularTypes + additionalTypes).distinctBy { it.typeSpec.name }
 }
 
-private fun bodyTypeSpec(
-    config: RenderConfig,
-    methodClassName: ClassName,
-    bodyModel: Model.Object,
-    externalTypeNames: Map<ClassName, TypeName>,
-): TypeSpec {
-    val bodyClassName = methodClassName.nestedClass("Body")
-    return bodyModel.toTypeSpec(
-        config = config,
-        classNameOverride = bodyClassName,
-        externalTypeNames = externalTypeNames,
-    ).toBuilder()
-        .addModifiers(KModifier.INTERNAL)
-        .build()
-}
-
 @Suppress("LongParameterList")
 private fun flattenedBodyParameterTypeName(
     config: RenderConfig,
@@ -395,6 +370,8 @@ internal fun Route.Bodies.inlineBodyTypeSpec(
 ): TypeSpec? =
     when (val body = defaultOrNull()) {
         is Route.Body.OverloadedBody -> null
+        is Route.Body.FormUrlEncoded -> body.inlineBodyNamespaceTypeSpec(config, ownerClassName, internal)
+        is Route.Body.Multipart.Value -> body.inlineBodyNamespaceTypeSpec(config, ownerClassName, internal)
         else -> body
             .bodyModelOrNull()
             ?.takeIf(Model::isRouteInlineModel)
@@ -408,6 +385,58 @@ internal fun Route.Bodies.inlineBodyTypeSpec(
                 if (internal) typeSpec.toBuilder().addModifiers(KModifier.INTERNAL).build() else typeSpec
             }
     }
+
+private fun Route.Body.FormUrlEncoded.inlineBodyNamespaceTypeSpec(
+    config: RenderConfig,
+    ownerClassName: ClassName,
+    internal: Boolean,
+): TypeSpec? =
+    inlineBodyNamespaceTypeSpec(
+        config = config,
+        ownerClassName = ownerClassName,
+        internal = internal,
+        nestedModels = parameters.mapNotNull { it.type.nestedOrNull() },
+    )
+
+private fun Route.Body.Multipart.Value.inlineBodyNamespaceTypeSpec(
+    config: RenderConfig,
+    ownerClassName: ClassName,
+    internal: Boolean,
+): TypeSpec? =
+    inlineBodyNamespaceTypeSpec(
+        config = config,
+        ownerClassName = ownerClassName,
+        internal = internal,
+        nestedModels = parameters.mapNotNull { it.type.nestedOrNull() },
+    )
+
+private fun inlineBodyNamespaceTypeSpec(
+    config: RenderConfig,
+    ownerClassName: ClassName,
+    internal: Boolean,
+    nestedModels: List<Model>,
+): TypeSpec? {
+    if (nestedModels.isEmpty()) return null
+
+    val namespaceClassName = ownerClassName.nestedClass("Body")
+    val emittedNames = mutableSetOf<String>()
+    val nestedTypeSpecs = nestedModels.mapNotNull { nestedModel ->
+        val contextHolder = nestedModel as? Model.ContextHolder ?: return@mapNotNull null
+        nestedModel.toInlineOperationTypeSpecOrNull(
+            config = config,
+            ownerClassName = namespaceClassName,
+            nameOverride = contextHolder.context.toClassName(config).simpleName,
+        )
+    }.filter { typeSpec ->
+        emittedNames.add(typeSpec.name ?: return@filter false)
+    }
+    if (nestedTypeSpecs.isEmpty()) return null
+
+    return TypeSpec.objectBuilder("Body").apply {
+        if (internal) addModifiers(KModifier.INTERNAL)
+        nestedTypeSpecs.forEach(::addType)
+    }.build()
+}
 
 internal data class OverloadedBodyCaseSignature(
     val typeName: TypeName,
