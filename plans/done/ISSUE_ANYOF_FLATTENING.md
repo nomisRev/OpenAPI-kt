@@ -112,7 +112,7 @@ public sealed interface CreateSpeechResponseStreamEvent {
 }
 ```
 
-But its currently generating a deep hierarchy with subtle bugs:
+But it's currently generating a deep hierarchy with subtle bugs:
 
 ```kotlin
 @OptIn(ExperimentalSerializationApi::class)
@@ -135,9 +135,9 @@ public sealed interface CreateSpeechResponseStreamEvent {
 }
 ```
 
+- The `type` descriminator is correct but the `@SerialName` is completely made up. Investigate the bug where we hallucinate discriminator values.
 
-The `type` is correct but the `@SerialName` is completely made up.
-Due to the `anyOf` pointing to references the generator respects the references but should just flatten them:
+`anyOf` is pointing to references the generator respects the references but should just flatten them:
 
 ```kotlin
 @Serializable
@@ -189,3 +189,5 @@ public data class SpeechAudioDeltaEvent(
   }
 }
 ```
+
+Iv
