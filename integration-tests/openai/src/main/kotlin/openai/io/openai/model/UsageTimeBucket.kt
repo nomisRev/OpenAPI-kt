@@ -1,22 +1,15 @@
 package io.openai.model
 
+import kotlin.Boolean
+import kotlin.Double
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PolymorphicKind
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonClassDiscriminator
 
 @Serializable
 public data class UsageTimeBucket(
@@ -36,110 +29,178 @@ public data class UsageTimeBucket(
     ;
   }
 
-  @Serializable(with = Result.Serializer::class)
+  @OptIn(ExperimentalSerializationApi::class)
+  @JsonClassDiscriminator("object")
+  @Serializable
   public sealed interface Result {
+    /**
+     * The aggregated completions usage details of the specific time bucket.
+     */
+    @SerialName("organization.usage.completions.result")
     @Serializable
-    @JvmInline
-    public value class CaseUsageCompletionsResult(
-      public val `value`: UsageCompletionsResult,
+    public data class OrganizationUsageCompletionsResult(
+      @SerialName("input_tokens")
+      public val inputTokens: Long,
+      @SerialName("input_cached_tokens")
+      public val inputCachedTokens: Long? = null,
+      @SerialName("output_tokens")
+      public val outputTokens: Long,
+      @SerialName("input_audio_tokens")
+      public val inputAudioTokens: Long? = null,
+      @SerialName("output_audio_tokens")
+      public val outputAudioTokens: Long? = null,
+      @SerialName("num_model_requests")
+      public val numModelRequests: Long,
+      @SerialName("project_id")
+      public val projectId: String? = null,
+      @SerialName("user_id")
+      public val userId: String? = null,
+      @SerialName("api_key_id")
+      public val apiKeyId: String? = null,
+      public val model: String? = null,
+      public val batch: Boolean? = null,
+      @SerialName("service_tier")
+      public val serviceTier: String? = null,
     ) : Result
 
+    /**
+     * The aggregated embeddings usage details of the specific time bucket.
+     */
+    @SerialName("organization.usage.embeddings.result")
     @Serializable
-    @JvmInline
-    public value class CaseUsageEmbeddingsResult(
-      public val `value`: UsageEmbeddingsResult,
+    public data class OrganizationUsageEmbeddingsResult(
+      @SerialName("input_tokens")
+      public val inputTokens: Long,
+      @SerialName("num_model_requests")
+      public val numModelRequests: Long,
+      @SerialName("project_id")
+      public val projectId: String? = null,
+      @SerialName("user_id")
+      public val userId: String? = null,
+      @SerialName("api_key_id")
+      public val apiKeyId: String? = null,
+      public val model: String? = null,
     ) : Result
 
+    /**
+     * The aggregated moderations usage details of the specific time bucket.
+     */
+    @SerialName("organization.usage.moderations.result")
     @Serializable
-    @JvmInline
-    public value class CaseUsageModerationsResult(
-      public val `value`: UsageModerationsResult,
+    public data class OrganizationUsageModerationsResult(
+      @SerialName("input_tokens")
+      public val inputTokens: Long,
+      @SerialName("num_model_requests")
+      public val numModelRequests: Long,
+      @SerialName("project_id")
+      public val projectId: String? = null,
+      @SerialName("user_id")
+      public val userId: String? = null,
+      @SerialName("api_key_id")
+      public val apiKeyId: String? = null,
+      public val model: String? = null,
     ) : Result
 
+    /**
+     * The aggregated images usage details of the specific time bucket.
+     */
+    @SerialName("organization.usage.images.result")
     @Serializable
-    @JvmInline
-    public value class CaseUsageImagesResult(
-      public val `value`: UsageImagesResult,
+    public data class OrganizationUsageImagesResult(
+      public val images: Long,
+      @SerialName("num_model_requests")
+      public val numModelRequests: Long,
+      public val source: String? = null,
+      public val size: String? = null,
+      @SerialName("project_id")
+      public val projectId: String? = null,
+      @SerialName("user_id")
+      public val userId: String? = null,
+      @SerialName("api_key_id")
+      public val apiKeyId: String? = null,
+      public val model: String? = null,
     ) : Result
 
+    /**
+     * The aggregated audio speeches usage details of the specific time bucket.
+     */
+    @SerialName("organization.usage.audio_speeches.result")
     @Serializable
-    @JvmInline
-    public value class CaseUsageAudioSpeechesResult(
-      public val `value`: UsageAudioSpeechesResult,
+    public data class OrganizationUsageAudioSpeechesResult(
+      public val characters: Long,
+      @SerialName("num_model_requests")
+      public val numModelRequests: Long,
+      @SerialName("project_id")
+      public val projectId: String? = null,
+      @SerialName("user_id")
+      public val userId: String? = null,
+      @SerialName("api_key_id")
+      public val apiKeyId: String? = null,
+      public val model: String? = null,
     ) : Result
 
+    /**
+     * The aggregated audio transcriptions usage details of the specific time bucket.
+     */
+    @SerialName("organization.usage.audio_transcriptions.result")
     @Serializable
-    @JvmInline
-    public value class CaseUsageAudioTranscriptionsResult(
-      public val `value`: UsageAudioTranscriptionsResult,
+    public data class OrganizationUsageAudioTranscriptionsResult(
+      public val seconds: Long,
+      @SerialName("num_model_requests")
+      public val numModelRequests: Long,
+      @SerialName("project_id")
+      public val projectId: String? = null,
+      @SerialName("user_id")
+      public val userId: String? = null,
+      @SerialName("api_key_id")
+      public val apiKeyId: String? = null,
+      public val model: String? = null,
     ) : Result
 
+    /**
+     * The aggregated vector stores usage details of the specific time bucket.
+     */
+    @SerialName("organization.usage.vector_stores.result")
     @Serializable
-    @JvmInline
-    public value class CaseUsageVectorStoresResult(
-      public val `value`: UsageVectorStoresResult,
+    public data class OrganizationUsageVectorStoresResult(
+      @SerialName("usage_bytes")
+      public val usageBytes: Long,
+      @SerialName("project_id")
+      public val projectId: String? = null,
     ) : Result
 
+    /**
+     * The aggregated code interpreter sessions usage details of the specific time bucket.
+     */
+    @SerialName("organization.usage.code_interpreter_sessions.result")
     @Serializable
-    @JvmInline
-    public value class CaseUsageCodeInterpreterSessionsResult(
-      public val `value`: UsageCodeInterpreterSessionsResult,
+    public data class OrganizationUsageCodeInterpreterSessionsResult(
+      @SerialName("num_sessions")
+      public val numSessions: Long? = null,
+      @SerialName("project_id")
+      public val projectId: String? = null,
     ) : Result
 
+    /**
+     * The aggregated costs details of the specific time bucket.
+     */
+    @SerialName("organization.costs.result")
     @Serializable
-    @JvmInline
-    public value class CaseCostsResult(
-      public val `value`: CostsResult,
-    ) : Result
-
-    public object Serializer : KSerializer<Result> {
-      @OptIn(
-        InternalSerializationApi::class,
-        ExperimentalSerializationApi::class,
+    public data class OrganizationCostsResult(
+      public val amount: Amount? = null,
+      @SerialName("line_item")
+      public val lineItem: String? = null,
+      @SerialName("project_id")
+      public val projectId: String? = null,
+    ) : Result {
+      /**
+       * The monetary value in its associated currency.
+       */
+      @Serializable
+      public data class Amount(
+        public val `value`: Double? = null,
+        public val currency: String? = null,
       )
-      override val descriptor: SerialDescriptor =
-          buildSerialDescriptor("io.openai.model.UsageTimeBucket.Result", PolymorphicKind.SEALED) {
-        element("CaseUsageCompletionsResult", UsageCompletionsResult.serializer().descriptor)
-        element("CaseUsageEmbeddingsResult", UsageEmbeddingsResult.serializer().descriptor)
-        element("CaseUsageModerationsResult", UsageModerationsResult.serializer().descriptor)
-        element("CaseUsageImagesResult", UsageImagesResult.serializer().descriptor)
-        element("CaseUsageAudioSpeechesResult", UsageAudioSpeechesResult.serializer().descriptor)
-        element("CaseUsageAudioTranscriptionsResult", UsageAudioTranscriptionsResult.serializer().descriptor)
-        element("CaseUsageVectorStoresResult", UsageVectorStoresResult.serializer().descriptor)
-        element("CaseUsageCodeInterpreterSessionsResult", UsageCodeInterpreterSessionsResult.serializer().descriptor)
-        element("CaseCostsResult", CostsResult.serializer().descriptor)
-      }
-
-      override fun deserialize(decoder: Decoder): Result {
-        val value = decoder.decodeSerializableValue(JsonElement.serializer())
-        val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseUsageCompletionsResult::class to { CaseUsageCompletionsResult(decodeFromJsonElement(UsageCompletionsResult.serializer(), it)) },
-          CaseUsageEmbeddingsResult::class to { CaseUsageEmbeddingsResult(decodeFromJsonElement(UsageEmbeddingsResult.serializer(), it)) },
-          CaseUsageModerationsResult::class to { CaseUsageModerationsResult(decodeFromJsonElement(UsageModerationsResult.serializer(), it)) },
-          CaseUsageImagesResult::class to { CaseUsageImagesResult(decodeFromJsonElement(UsageImagesResult.serializer(), it)) },
-          CaseUsageAudioSpeechesResult::class to { CaseUsageAudioSpeechesResult(decodeFromJsonElement(UsageAudioSpeechesResult.serializer(), it)) },
-          CaseUsageAudioTranscriptionsResult::class to { CaseUsageAudioTranscriptionsResult(decodeFromJsonElement(UsageAudioTranscriptionsResult.serializer(), it)) },
-          CaseUsageVectorStoresResult::class to { CaseUsageVectorStoresResult(decodeFromJsonElement(UsageVectorStoresResult.serializer(), it)) },
-          CaseUsageCodeInterpreterSessionsResult::class to { CaseUsageCodeInterpreterSessionsResult(decodeFromJsonElement(UsageCodeInterpreterSessionsResult.serializer(), it)) },
-          CaseCostsResult::class to { CaseCostsResult(decodeFromJsonElement(CostsResult.serializer(), it)) },
-        )
-      }
-
-      override fun serialize(encoder: Encoder, `value`: Result) {
-        when(value) {
-          is CaseUsageCompletionsResult -> encoder.encodeSerializableValue(UsageCompletionsResult.serializer(), value.value)
-          is CaseUsageEmbeddingsResult -> encoder.encodeSerializableValue(UsageEmbeddingsResult.serializer(), value.value)
-          is CaseUsageModerationsResult -> encoder.encodeSerializableValue(UsageModerationsResult.serializer(), value.value)
-          is CaseUsageImagesResult -> encoder.encodeSerializableValue(UsageImagesResult.serializer(), value.value)
-          is CaseUsageAudioSpeechesResult -> encoder.encodeSerializableValue(UsageAudioSpeechesResult.serializer(), value.value)
-          is CaseUsageAudioTranscriptionsResult -> encoder.encodeSerializableValue(UsageAudioTranscriptionsResult.serializer(), value.value)
-          is CaseUsageVectorStoresResult -> encoder.encodeSerializableValue(UsageVectorStoresResult.serializer(), value.value)
-          is CaseUsageCodeInterpreterSessionsResult -> encoder.encodeSerializableValue(UsageCodeInterpreterSessionsResult.serializer(), value.value)
-          is CaseCostsResult -> encoder.encodeSerializableValue(CostsResult.serializer(), value.value)
-        }
-      }
     }
   }
 }

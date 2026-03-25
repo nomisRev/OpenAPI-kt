@@ -16,6 +16,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 
@@ -32,48 +33,17 @@ public data class CreateMessageRequest(
     public val fileId: String? = null,
     public val tools: List<Tools>? = null,
   ) {
-    @Serializable(with = Tools.Serializer::class)
+    @OptIn(ExperimentalSerializationApi::class)
+    @JsonClassDiscriminator("type")
+    @Serializable
     public sealed interface Tools {
       @Serializable
-      @JvmInline
-      public value class CaseAssistantToolsCode(
-        public val `value`: AssistantToolsCode,
-      ) : Tools
+      @SerialName("code_interpreter")
+      public data object CodeInterpreter : Tools
 
       @Serializable
-      @JvmInline
-      public value class CaseAssistantToolsFileSearchTypeOnly(
-        public val `value`: AssistantToolsFileSearchTypeOnly,
-      ) : Tools
-
-      public object Serializer : KSerializer<Tools> {
-        @OptIn(
-          InternalSerializationApi::class,
-          ExperimentalSerializationApi::class,
-        )
-        override val descriptor: SerialDescriptor =
-            buildSerialDescriptor("io.openai.model.CreateMessageRequest.Attachments.Tools", PolymorphicKind.SEALED) {
-          element("CaseAssistantToolsCode", AssistantToolsCode.serializer().descriptor)
-          element("CaseAssistantToolsFileSearchTypeOnly", AssistantToolsFileSearchTypeOnly.serializer().descriptor)
-        }
-
-        override fun deserialize(decoder: Decoder): Tools {
-          val value = decoder.decodeSerializableValue(JsonElement.serializer())
-          val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseAssistantToolsCode::class to { CaseAssistantToolsCode(decodeFromJsonElement(AssistantToolsCode.serializer(), it)) },
-            CaseAssistantToolsFileSearchTypeOnly::class to { CaseAssistantToolsFileSearchTypeOnly(decodeFromJsonElement(AssistantToolsFileSearchTypeOnly.serializer(), it)) },
-          )
-        }
-
-        override fun serialize(encoder: Encoder, `value`: Tools) {
-          when(value) {
-            is CaseAssistantToolsCode -> encoder.encodeSerializableValue(AssistantToolsCode.serializer(), value.value)
-            is CaseAssistantToolsFileSearchTypeOnly -> encoder.encodeSerializableValue(AssistantToolsFileSearchTypeOnly.serializer(), value.value)
-          }
-        }
-      }
+      @SerialName("file_search")
+      public data object FileSearch : Tools
     }
   }
 
@@ -91,57 +61,66 @@ public data class CreateMessageRequest(
       public val `value`: List<Two>,
     ) : Content
 
-    @Serializable(with = Two.Serializer::class)
+    @OptIn(ExperimentalSerializationApi::class)
+    @JsonClassDiscriminator("type")
+    @Serializable
     public sealed interface Two {
+      /**
+       * References an image [File](/docs/api-reference/files) in the content of a message.
+       */
+      @SerialName("image_file")
       @Serializable
-      @JvmInline
-      public value class CaseMessageContentImageFileObject(
-        public val `value`: MessageContentImageFileObject,
-      ) : Two
-
-      @Serializable
-      @JvmInline
-      public value class CaseMessageContentImageUrlObject(
-        public val `value`: MessageContentImageUrlObject,
-      ) : Two
-
-      @Serializable
-      @JvmInline
-      public value class CaseMessageRequestContentTextObject(
-        public val `value`: MessageRequestContentTextObject,
-      ) : Two
-
-      public object Serializer : KSerializer<Two> {
-        @OptIn(
-          InternalSerializationApi::class,
-          ExperimentalSerializationApi::class,
-        )
-        override val descriptor: SerialDescriptor =
-            buildSerialDescriptor("io.openai.model.CreateMessageRequest.Content.Two", PolymorphicKind.SEALED) {
-          element("CaseMessageContentImageFileObject", MessageContentImageFileObject.serializer().descriptor)
-          element("CaseMessageContentImageUrlObject", MessageContentImageUrlObject.serializer().descriptor)
-          element("CaseMessageRequestContentTextObject", MessageRequestContentTextObject.serializer().descriptor)
-        }
-
-        override fun deserialize(decoder: Decoder): Two {
-          val value = decoder.decodeSerializableValue(JsonElement.serializer())
-          val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseMessageContentImageFileObject::class to { CaseMessageContentImageFileObject(decodeFromJsonElement(MessageContentImageFileObject.serializer(), it)) },
-            CaseMessageContentImageUrlObject::class to { CaseMessageContentImageUrlObject(decodeFromJsonElement(MessageContentImageUrlObject.serializer(), it)) },
-            CaseMessageRequestContentTextObject::class to { CaseMessageRequestContentTextObject(decodeFromJsonElement(MessageRequestContentTextObject.serializer(), it)) },
-          )
-        }
-
-        override fun serialize(encoder: Encoder, `value`: Two) {
-          when(value) {
-            is CaseMessageContentImageFileObject -> encoder.encodeSerializableValue(MessageContentImageFileObject.serializer(), value.value)
-            is CaseMessageContentImageUrlObject -> encoder.encodeSerializableValue(MessageContentImageUrlObject.serializer(), value.value)
-            is CaseMessageRequestContentTextObject -> encoder.encodeSerializableValue(MessageRequestContentTextObject.serializer(), value.value)
-          }
+      public data class ImageFile(
+        @SerialName("file_id")
+        public val fileId: String,
+        public val detail: Detail? = null,
+      ) : Two {
+        @Serializable
+        public enum class Detail(
+          public val `value`: String,
+        ) {
+          @SerialName("auto")
+          Auto("auto"),
+          @SerialName("low")
+          Low("low"),
+          @SerialName("high")
+          High("high"),
+          ;
         }
       }
+
+      /**
+       * References an image URL in the content of a message.
+       */
+      @SerialName("image_url")
+      @Serializable
+      public data class ImageUrl(
+        public val url: String,
+        public val detail: Detail? = null,
+      ) : Two {
+        @Serializable
+        public enum class Detail(
+          public val `value`: String,
+        ) {
+          @SerialName("auto")
+          Auto("auto"),
+          @SerialName("low")
+          Low("low"),
+          @SerialName("high")
+          High("high"),
+          ;
+        }
+      }
+
+      /**
+       * The text content that is part of a message.
+       */
+      @JvmInline
+      @SerialName("text")
+      @Serializable
+      public value class Text(
+        public val text: String,
+      ) : Two
     }
 
     public object Serializer : KSerializer<Content> {

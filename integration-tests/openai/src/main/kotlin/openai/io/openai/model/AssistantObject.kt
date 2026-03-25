@@ -1,5 +1,6 @@
 package io.openai.model
 
+import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
 import kotlin.OptIn
@@ -7,18 +8,10 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PolymorphicKind
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonClassDiscriminator
 
 /**
  * Represents an `assistant` that can call the model and use tools.
@@ -79,56 +72,40 @@ public data class AssistantObject(
     )
   }
 
-  @Serializable(with = Tools.Serializer::class)
+  @OptIn(ExperimentalSerializationApi::class)
+  @JsonClassDiscriminator("type")
+  @Serializable
   public sealed interface Tools {
     @Serializable
-    @JvmInline
-    public value class CaseAssistantToolsCode(
-      public val `value`: AssistantToolsCode,
-    ) : Tools
+    @SerialName("code_interpreter")
+    public data object CodeInterpreter : Tools
 
+    @JvmInline
+    @SerialName("file_search")
     @Serializable
-    @JvmInline
-    public value class CaseAssistantToolsFileSearch(
-      public val `value`: AssistantToolsFileSearch,
-    ) : Tools
-
-    @Serializable
-    @JvmInline
-    public value class CaseAssistantToolsFunction(
-      public val `value`: AssistantToolsFunction,
-    ) : Tools
-
-    public object Serializer : KSerializer<Tools> {
-      @OptIn(
-        InternalSerializationApi::class,
-        ExperimentalSerializationApi::class,
+    public value class FileSearch(
+      @SerialName("file_search")
+      public val fileSearch: FileSearch? = null,
+    ) : Tools {
+      /**
+       * Overrides for the file search tool.
+       */
+      @Serializable
+      public data class FileSearch(
+        @SerialName("max_num_results")
+        public val maxNumResults: Long? = null,
+        @SerialName("ranking_options")
+        public val rankingOptions: FileSearchRankingOptions? = null,
       )
-      override val descriptor: SerialDescriptor =
-          buildSerialDescriptor("io.openai.model.AssistantObject.Tools", PolymorphicKind.SEALED) {
-        element("CaseAssistantToolsCode", AssistantToolsCode.serializer().descriptor)
-        element("CaseAssistantToolsFileSearch", AssistantToolsFileSearch.serializer().descriptor)
-        element("CaseAssistantToolsFunction", AssistantToolsFunction.serializer().descriptor)
-      }
-
-      override fun deserialize(decoder: Decoder): Tools {
-        val value = decoder.decodeSerializableValue(JsonElement.serializer())
-        val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseAssistantToolsCode::class to { CaseAssistantToolsCode(decodeFromJsonElement(AssistantToolsCode.serializer(), it)) },
-          CaseAssistantToolsFileSearch::class to { CaseAssistantToolsFileSearch(decodeFromJsonElement(AssistantToolsFileSearch.serializer(), it)) },
-          CaseAssistantToolsFunction::class to { CaseAssistantToolsFunction(decodeFromJsonElement(AssistantToolsFunction.serializer(), it)) },
-        )
-      }
-
-      override fun serialize(encoder: Encoder, `value`: Tools) {
-        when(value) {
-          is CaseAssistantToolsCode -> encoder.encodeSerializableValue(AssistantToolsCode.serializer(), value.value)
-          is CaseAssistantToolsFileSearch -> encoder.encodeSerializableValue(AssistantToolsFileSearch.serializer(), value.value)
-          is CaseAssistantToolsFunction -> encoder.encodeSerializableValue(AssistantToolsFunction.serializer(), value.value)
-        }
-      }
     }
+
+    @SerialName("function")
+    @Serializable
+    public data class Function(
+      public val description: String? = null,
+      public val name: String,
+      public val parameters: FunctionParameters? = null,
+      public val strict: Boolean? = null,
+    ) : Tools
   }
 }

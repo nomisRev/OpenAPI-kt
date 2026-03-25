@@ -619,10 +619,10 @@ private suspend fun GitHubV3RESTAPI.runUserAndOrgProbes(
   results.probe("users.username.get") {
     when (val response = user.get()) {
       is Users.UsernamePath.Get.Response.Ok.Public ->
-        "login=${response.value.login}, followers=${response.value.followers}, repos=${response.value.publicRepos}"
+        "login=${response.login}, followers=${response.followers}, repos=${response.publicRepos}"
 
       is Users.UsernamePath.Get.Response.Ok.Private ->
-        "login=${response.value.login}, followers=${response.value.followers}, repos=${response.value.publicRepos}"
+        "login=${response.login}, followers=${response.followers}, repos=${response.publicRepos}"
 
       else -> "${response.responseName()} ${preview(response)}"
     }

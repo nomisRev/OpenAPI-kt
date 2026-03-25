@@ -224,45 +224,123 @@ public data class CreateChatCompletionRequest(
     public data object JsonObject : ResponseFormat
   }
 
-  @Serializable(with = Tools.Serializer::class)
+  @OptIn(ExperimentalSerializationApi::class)
+  @JsonClassDiscriminator("type")
+  @Serializable
   public sealed interface Tools {
+    /**
+     * A function tool that can be used to generate a response.
+     *
+     */
+    @SerialName("function")
     @Serializable
-    @JvmInline
-    public value class CaseChatCompletionTool(
-      public val `value`: ChatCompletionTool,
+    public data class Function(
+      public val description: String? = null,
+      public val name: String,
+      public val parameters: FunctionParameters? = null,
+      public val strict: Boolean? = null,
     ) : Tools
 
+    /**
+     * A custom tool that processes input using a specified format.
+     *
+     */
+    @SerialName("custom")
     @Serializable
-    @JvmInline
-    public value class CaseCustomToolChatCompletions(
-      public val `value`: CustomToolChatCompletions,
-    ) : Tools
+    public data class Custom(
+      public val name: String,
+      public val description: String? = null,
+      public val format: Format? = null,
+    ) : Tools {
+      /**
+       * The input format for the custom tool. Default is unconstrained text.
+       *
+       */
+      @Serializable(with = Format.Serializer::class)
+      public sealed interface Format {
+        /**
+         * Unconstrained free-form text.
+         */
+        @JvmInline
+        @Serializable
+        public value class Text(
+          public val type: Type,
+        ) : Format {
+          @Serializable
+          public enum class Type(
+            public val `value`: String,
+          ) {
+            @SerialName("text")
+            Text("text"),
+            ;
+          }
+        }
 
-    public object Serializer : KSerializer<Tools> {
-      @OptIn(
-        InternalSerializationApi::class,
-        ExperimentalSerializationApi::class,
-      )
-      override val descriptor: SerialDescriptor =
-          buildSerialDescriptor("io.openai.model.CreateChatCompletionRequest.Tools", PolymorphicKind.SEALED) {
-        element("CaseChatCompletionTool", ChatCompletionTool.serializer().descriptor)
-        element("CaseCustomToolChatCompletions", CustomToolChatCompletions.serializer().descriptor)
-      }
+        /**
+         * A grammar defined by the user.
+         */
+        @Serializable
+        public data class Grammar(
+          public val type: Type,
+          public val grammar: Grammar,
+        ) : Format {
+          /**
+           * Your chosen grammar.
+           */
+          @Serializable
+          public data class Grammar(
+            public val definition: String,
+            public val syntax: Syntax,
+          ) {
+            @Serializable
+            public enum class Syntax(
+              public val `value`: String,
+            ) {
+              @SerialName("lark")
+              Lark("lark"),
+              @SerialName("regex")
+              Regex("regex"),
+              ;
+            }
+          }
 
-      override fun deserialize(decoder: Decoder): Tools {
-        val value = decoder.decodeSerializableValue(JsonElement.serializer())
-        val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseChatCompletionTool::class to { CaseChatCompletionTool(decodeFromJsonElement(ChatCompletionTool.serializer(), it)) },
-          CaseCustomToolChatCompletions::class to { CaseCustomToolChatCompletions(decodeFromJsonElement(CustomToolChatCompletions.serializer(), it)) },
-        )
-      }
+          @Serializable
+          public enum class Type(
+            public val `value`: String,
+          ) {
+            @SerialName("grammar")
+            Grammar("grammar"),
+            ;
+          }
+        }
 
-      override fun serialize(encoder: Encoder, `value`: Tools) {
-        when(value) {
-          is CaseChatCompletionTool -> encoder.encodeSerializableValue(ChatCompletionTool.serializer(), value.value)
-          is CaseCustomToolChatCompletions -> encoder.encodeSerializableValue(CustomToolChatCompletions.serializer(), value.value)
+        public object Serializer : KSerializer<Format> {
+          @OptIn(
+            InternalSerializationApi::class,
+            ExperimentalSerializationApi::class,
+          )
+          override val descriptor: SerialDescriptor =
+              buildSerialDescriptor("io.openai.model.CreateChatCompletionRequest.Tools.Custom.Format", PolymorphicKind.SEALED) {
+            element("Text", Text.serializer().descriptor)
+            element("Grammar", Grammar.serializer().descriptor)
+          }
+
+          override fun deserialize(decoder: Decoder): Format {
+            val value = decoder.decodeSerializableValue(JsonElement.serializer())
+            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
+            return json.attemptDeserialize(
+              value,
+              Grammar::class to { decodeFromJsonElement(Grammar.serializer(), it) },
+              Text::class to { decodeFromJsonElement(Text.serializer(), it) },
+            )
+          }
+
+          override fun serialize(encoder: Encoder, `value`: Format) {
+            when(value) {
+              is Text -> encoder.encodeSerializableValue(Text.serializer(), value)
+              is Grammar -> encoder.encodeSerializableValue(Grammar.serializer(), value)
+            }
+          }
         }
       }
     }

@@ -6,17 +6,9 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PolymorphicKind
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonClassDiscriminator
 
 /**
  * Represents a message within a [thread](/docs/api-reference/threads).
@@ -51,111 +43,139 @@ public data class MessageObject(
     public val fileId: String? = null,
     public val tools: List<Tools>? = null,
   ) {
-    @Serializable(with = Tools.Serializer::class)
+    @OptIn(ExperimentalSerializationApi::class)
+    @JsonClassDiscriminator("type")
+    @Serializable
     public sealed interface Tools {
       @Serializable
-      @JvmInline
-      public value class CaseAssistantToolsCode(
-        public val `value`: AssistantToolsCode,
-      ) : Tools
+      @SerialName("code_interpreter")
+      public data object CodeInterpreter : Tools
 
       @Serializable
-      @JvmInline
-      public value class CaseAssistantToolsFileSearchTypeOnly(
-        public val `value`: AssistantToolsFileSearchTypeOnly,
-      ) : Tools
-
-      public object Serializer : KSerializer<Tools> {
-        @OptIn(
-          InternalSerializationApi::class,
-          ExperimentalSerializationApi::class,
-        )
-        override val descriptor: SerialDescriptor =
-            buildSerialDescriptor("io.openai.model.MessageObject.Attachments.Tools", PolymorphicKind.SEALED) {
-          element("CaseAssistantToolsCode", AssistantToolsCode.serializer().descriptor)
-          element("CaseAssistantToolsFileSearchTypeOnly", AssistantToolsFileSearchTypeOnly.serializer().descriptor)
-        }
-
-        override fun deserialize(decoder: Decoder): Tools {
-          val value = decoder.decodeSerializableValue(JsonElement.serializer())
-          val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseAssistantToolsCode::class to { CaseAssistantToolsCode(decodeFromJsonElement(AssistantToolsCode.serializer(), it)) },
-            CaseAssistantToolsFileSearchTypeOnly::class to { CaseAssistantToolsFileSearchTypeOnly(decodeFromJsonElement(AssistantToolsFileSearchTypeOnly.serializer(), it)) },
-          )
-        }
-
-        override fun serialize(encoder: Encoder, `value`: Tools) {
-          when(value) {
-            is CaseAssistantToolsCode -> encoder.encodeSerializableValue(AssistantToolsCode.serializer(), value.value)
-            is CaseAssistantToolsFileSearchTypeOnly -> encoder.encodeSerializableValue(AssistantToolsFileSearchTypeOnly.serializer(), value.value)
-          }
-        }
-      }
+      @SerialName("file_search")
+      public data object FileSearch : Tools
     }
   }
 
-  @Serializable(with = Content.Serializer::class)
+  @OptIn(ExperimentalSerializationApi::class)
+  @JsonClassDiscriminator("type")
+  @Serializable
   public sealed interface Content {
+    /**
+     * References an image [File](/docs/api-reference/files) in the content of a message.
+     */
+    @SerialName("image_file")
     @Serializable
-    @JvmInline
-    public value class CaseMessageContentImageFileObject(
-      public val `value`: MessageContentImageFileObject,
-    ) : Content
-
-    @Serializable
-    @JvmInline
-    public value class CaseMessageContentImageUrlObject(
-      public val `value`: MessageContentImageUrlObject,
-    ) : Content
-
-    @Serializable
-    @JvmInline
-    public value class CaseMessageContentTextObject(
-      public val `value`: MessageContentTextObject,
-    ) : Content
-
-    @Serializable
-    @JvmInline
-    public value class CaseMessageContentRefusalObject(
-      public val `value`: MessageContentRefusalObject,
-    ) : Content
-
-    public object Serializer : KSerializer<Content> {
-      @OptIn(
-        InternalSerializationApi::class,
-        ExperimentalSerializationApi::class,
-      )
-      override val descriptor: SerialDescriptor =
-          buildSerialDescriptor("io.openai.model.MessageObject.Content", PolymorphicKind.SEALED) {
-        element("CaseMessageContentImageFileObject", MessageContentImageFileObject.serializer().descriptor)
-        element("CaseMessageContentImageUrlObject", MessageContentImageUrlObject.serializer().descriptor)
-        element("CaseMessageContentTextObject", MessageContentTextObject.serializer().descriptor)
-        element("CaseMessageContentRefusalObject", MessageContentRefusalObject.serializer().descriptor)
+    public data class ImageFile(
+      @SerialName("file_id")
+      public val fileId: String,
+      public val detail: Detail? = null,
+    ) : Content {
+      @Serializable
+      public enum class Detail(
+        public val `value`: String,
+      ) {
+        @SerialName("auto")
+        Auto("auto"),
+        @SerialName("low")
+        Low("low"),
+        @SerialName("high")
+        High("high"),
+        ;
       }
+    }
 
-      override fun deserialize(decoder: Decoder): Content {
-        val value = decoder.decodeSerializableValue(JsonElement.serializer())
-        val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseMessageContentImageFileObject::class to { CaseMessageContentImageFileObject(decodeFromJsonElement(MessageContentImageFileObject.serializer(), it)) },
-          CaseMessageContentImageUrlObject::class to { CaseMessageContentImageUrlObject(decodeFromJsonElement(MessageContentImageUrlObject.serializer(), it)) },
-          CaseMessageContentTextObject::class to { CaseMessageContentTextObject(decodeFromJsonElement(MessageContentTextObject.serializer(), it)) },
-          CaseMessageContentRefusalObject::class to { CaseMessageContentRefusalObject(decodeFromJsonElement(MessageContentRefusalObject.serializer(), it)) },
-        )
+    /**
+     * References an image URL in the content of a message.
+     */
+    @SerialName("image_url")
+    @Serializable
+    public data class ImageUrl(
+      public val url: String,
+      public val detail: Detail? = null,
+    ) : Content {
+      @Serializable
+      public enum class Detail(
+        public val `value`: String,
+      ) {
+        @SerialName("auto")
+        Auto("auto"),
+        @SerialName("low")
+        Low("low"),
+        @SerialName("high")
+        High("high"),
+        ;
       }
+    }
 
-      override fun serialize(encoder: Encoder, `value`: Content) {
-        when(value) {
-          is CaseMessageContentImageFileObject -> encoder.encodeSerializableValue(MessageContentImageFileObject.serializer(), value.value)
-          is CaseMessageContentImageUrlObject -> encoder.encodeSerializableValue(MessageContentImageUrlObject.serializer(), value.value)
-          is CaseMessageContentTextObject -> encoder.encodeSerializableValue(MessageContentTextObject.serializer(), value.value)
-          is CaseMessageContentRefusalObject -> encoder.encodeSerializableValue(MessageContentRefusalObject.serializer(), value.value)
+    /**
+     * The text content that is part of a message.
+     */
+    @SerialName("text")
+    @Serializable
+    public data class Text(
+      public val `value`: String,
+      public val annotations: List<Annotations>,
+    ) : Content {
+      @OptIn(ExperimentalSerializationApi::class)
+      @JsonClassDiscriminator("type")
+      @Serializable
+      public sealed interface Annotations {
+        /**
+         * A citation within the message that points to a specific quote from a specific File associated with the assistant or the message. Generated when the assistant uses the "file_search" tool to search files.
+         */
+        @SerialName("file_citation")
+        @Serializable
+        public data class FileCitation(
+          public val text: String,
+          @SerialName("file_citation")
+          public val fileCitation: FileCitation,
+          @SerialName("start_index")
+          public val startIndex: Long,
+          @SerialName("end_index")
+          public val endIndex: Long,
+        ) : Annotations {
+          @JvmInline
+          @Serializable
+          public value class FileCitation(
+            @SerialName("file_id")
+            public val fileId: String,
+          )
+        }
+
+        /**
+         * A URL for the file that's generated when the assistant used the `code_interpreter` tool to generate a file.
+         */
+        @SerialName("file_path")
+        @Serializable
+        public data class FilePath(
+          public val text: String,
+          @SerialName("file_path")
+          public val filePath: FilePath,
+          @SerialName("start_index")
+          public val startIndex: Long,
+          @SerialName("end_index")
+          public val endIndex: Long,
+        ) : Annotations {
+          @JvmInline
+          @Serializable
+          public value class FilePath(
+            @SerialName("file_id")
+            public val fileId: String,
+          )
         }
       }
     }
+
+    /**
+     * The refusal content generated by the assistant.
+     */
+    @JvmInline
+    @SerialName("refusal")
+    @Serializable
+    public value class Refusal(
+      public val refusal: String,
+    ) : Content
   }
 
   /**

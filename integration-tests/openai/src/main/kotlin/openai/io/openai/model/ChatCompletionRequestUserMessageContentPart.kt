@@ -1,77 +1,85 @@
 package io.openai.model
 
 import kotlin.OptIn
+import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PolymorphicKind
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonClassDiscriminator
 
-@Serializable(with = ChatCompletionRequestUserMessageContentPart.Serializer::class)
+@OptIn(ExperimentalSerializationApi::class)
+@JsonClassDiscriminator("type")
+@Serializable
 public sealed interface ChatCompletionRequestUserMessageContentPart {
-  @Serializable
+  /**
+   * Learn about [text inputs](/docs/guides/text-generation).
+   *
+   */
   @JvmInline
-  public value class CaseChatCompletionRequestMessageContentPartText(
-    public val `value`: ChatCompletionRequestMessageContentPartText,
+  @SerialName("text")
+  @Serializable
+  public value class Text(
+    public val text: String,
   ) : ChatCompletionRequestUserMessageContentPart
 
+  /**
+   * Learn about [image inputs](/docs/guides/vision).
+   *
+   */
+  @SerialName("image_url")
   @Serializable
-  @JvmInline
-  public value class CaseChatCompletionRequestMessageContentPartImage(
-    public val `value`: ChatCompletionRequestMessageContentPartImage,
-  ) : ChatCompletionRequestUserMessageContentPart
-
-  @Serializable
-  @JvmInline
-  public value class CaseChatCompletionRequestMessageContentPartAudio(
-    public val `value`: ChatCompletionRequestMessageContentPartAudio,
-  ) : ChatCompletionRequestUserMessageContentPart
-
-  @Serializable
-  @JvmInline
-  public value class CaseChatCompletionRequestMessageContentPartFile(
-    public val `value`: ChatCompletionRequestMessageContentPartFile,
-  ) : ChatCompletionRequestUserMessageContentPart
-
-  public object Serializer : KSerializer<ChatCompletionRequestUserMessageContentPart> {
-    @OptIn(
-      InternalSerializationApi::class,
-      ExperimentalSerializationApi::class,
-    )
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("io.openai.model.ChatCompletionRequestUserMessageContentPart", PolymorphicKind.SEALED) {
-      element("CaseChatCompletionRequestMessageContentPartText", ChatCompletionRequestMessageContentPartText.serializer().descriptor)
-      element("CaseChatCompletionRequestMessageContentPartImage", ChatCompletionRequestMessageContentPartImage.serializer().descriptor)
-      element("CaseChatCompletionRequestMessageContentPartAudio", ChatCompletionRequestMessageContentPartAudio.serializer().descriptor)
-      element("CaseChatCompletionRequestMessageContentPartFile", ChatCompletionRequestMessageContentPartFile.serializer().descriptor)
-    }
-
-    override fun deserialize(decoder: Decoder): ChatCompletionRequestUserMessageContentPart {
-      val value = decoder.decodeSerializableValue(JsonElement.serializer())
-      val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        CaseChatCompletionRequestMessageContentPartText::class to { CaseChatCompletionRequestMessageContentPartText(decodeFromJsonElement(ChatCompletionRequestMessageContentPartText.serializer(), it)) },
-        CaseChatCompletionRequestMessageContentPartImage::class to { CaseChatCompletionRequestMessageContentPartImage(decodeFromJsonElement(ChatCompletionRequestMessageContentPartImage.serializer(), it)) },
-        CaseChatCompletionRequestMessageContentPartAudio::class to { CaseChatCompletionRequestMessageContentPartAudio(decodeFromJsonElement(ChatCompletionRequestMessageContentPartAudio.serializer(), it)) },
-        CaseChatCompletionRequestMessageContentPartFile::class to { CaseChatCompletionRequestMessageContentPartFile(decodeFromJsonElement(ChatCompletionRequestMessageContentPartFile.serializer(), it)) },
-      )
-    }
-
-    override fun serialize(encoder: Encoder, `value`: ChatCompletionRequestUserMessageContentPart) {
-      when(value) {
-        is CaseChatCompletionRequestMessageContentPartText -> encoder.encodeSerializableValue(ChatCompletionRequestMessageContentPartText.serializer(), value.value)
-        is CaseChatCompletionRequestMessageContentPartImage -> encoder.encodeSerializableValue(ChatCompletionRequestMessageContentPartImage.serializer(), value.value)
-        is CaseChatCompletionRequestMessageContentPartAudio -> encoder.encodeSerializableValue(ChatCompletionRequestMessageContentPartAudio.serializer(), value.value)
-        is CaseChatCompletionRequestMessageContentPartFile -> encoder.encodeSerializableValue(ChatCompletionRequestMessageContentPartFile.serializer(), value.value)
-      }
+  public data class ImageUrl(
+    public val url: String,
+    public val detail: Detail? = null,
+  ) : ChatCompletionRequestUserMessageContentPart {
+    @Serializable
+    public enum class Detail(
+      public val `value`: String,
+    ) {
+      @SerialName("auto")
+      Auto("auto"),
+      @SerialName("low")
+      Low("low"),
+      @SerialName("high")
+      High("high"),
+      ;
     }
   }
+
+  /**
+   * Learn about [audio inputs](/docs/guides/audio).
+   *
+   */
+  @SerialName("input_audio")
+  @Serializable
+  public data class InputAudio(
+    public val `data`: String,
+    public val format: Format,
+  ) : ChatCompletionRequestUserMessageContentPart {
+    @Serializable
+    public enum class Format(
+      public val `value`: String,
+    ) {
+      @SerialName("wav")
+      Wav("wav"),
+      @SerialName("mp3")
+      Mp3("mp3"),
+      ;
+    }
+  }
+
+  /**
+   * Learn about [file inputs](/docs/guides/text) for text generation.
+   *
+   */
+  @SerialName("file")
+  @Serializable
+  public data class File(
+    public val filename: String? = null,
+    @SerialName("file_data")
+    public val fileData: String? = null,
+    @SerialName("file_id")
+    public val fileId: String? = null,
+  ) : ChatCompletionRequestUserMessageContentPart
 }

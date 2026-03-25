@@ -7,18 +7,10 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PolymorphicKind
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonClassDiscriminator
 
 /**
  * An object representing a list of chat completion messages.
@@ -101,46 +93,42 @@ public data class ChatCompletionMessageList(
       public val transcript: String,
     )
 
-    @Serializable(with = ContentParts.Serializer::class)
+    @OptIn(ExperimentalSerializationApi::class)
+    @JsonClassDiscriminator("type")
+    @Serializable
     public sealed interface ContentParts {
-      @Serializable
+      /**
+       * Learn about [text inputs](/docs/guides/text-generation).
+       *
+       */
       @JvmInline
-      public value class CaseChatCompletionRequestMessageContentPartText(
-        public val `value`: ChatCompletionRequestMessageContentPartText,
+      @SerialName("text")
+      @Serializable
+      public value class Text(
+        public val text: String,
       ) : ContentParts
 
+      /**
+       * Learn about [image inputs](/docs/guides/vision).
+       *
+       */
+      @SerialName("image_url")
       @Serializable
-      @JvmInline
-      public value class CaseChatCompletionRequestMessageContentPartImage(
-        public val `value`: ChatCompletionRequestMessageContentPartImage,
-      ) : ContentParts
-
-      public object Serializer : KSerializer<ContentParts> {
-        @OptIn(
-          InternalSerializationApi::class,
-          ExperimentalSerializationApi::class,
-        )
-        override val descriptor: SerialDescriptor =
-            buildSerialDescriptor("io.openai.model.ChatCompletionMessageList.Data.ContentParts", PolymorphicKind.SEALED) {
-          element("CaseChatCompletionRequestMessageContentPartText", ChatCompletionRequestMessageContentPartText.serializer().descriptor)
-          element("CaseChatCompletionRequestMessageContentPartImage", ChatCompletionRequestMessageContentPartImage.serializer().descriptor)
-        }
-
-        override fun deserialize(decoder: Decoder): ContentParts {
-          val value = decoder.decodeSerializableValue(JsonElement.serializer())
-          val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseChatCompletionRequestMessageContentPartText::class to { CaseChatCompletionRequestMessageContentPartText(decodeFromJsonElement(ChatCompletionRequestMessageContentPartText.serializer(), it)) },
-            CaseChatCompletionRequestMessageContentPartImage::class to { CaseChatCompletionRequestMessageContentPartImage(decodeFromJsonElement(ChatCompletionRequestMessageContentPartImage.serializer(), it)) },
-          )
-        }
-
-        override fun serialize(encoder: Encoder, `value`: ContentParts) {
-          when(value) {
-            is CaseChatCompletionRequestMessageContentPartText -> encoder.encodeSerializableValue(ChatCompletionRequestMessageContentPartText.serializer(), value.value)
-            is CaseChatCompletionRequestMessageContentPartImage -> encoder.encodeSerializableValue(ChatCompletionRequestMessageContentPartImage.serializer(), value.value)
-          }
+      public data class ImageUrl(
+        public val url: String,
+        public val detail: Detail? = null,
+      ) : ContentParts {
+        @Serializable
+        public enum class Detail(
+          public val `value`: String,
+        ) {
+          @SerialName("auto")
+          Auto("auto"),
+          @SerialName("low")
+          Low("low"),
+          @SerialName("high")
+          High("high"),
+          ;
         }
       }
     }

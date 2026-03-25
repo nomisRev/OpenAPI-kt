@@ -1,18 +1,12 @@
 package io.openai.model
 
+import kotlin.Boolean
 import kotlin.OptIn
-import kotlin.jvm.JvmInline
+import kotlin.String
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.InternalSerializationApi
-import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.descriptors.PolymorphicKind
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.descriptors.buildSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonClassDiscriminator
 
 /**
  * An object specifying the format that the model must output.
@@ -30,55 +24,29 @@ import kotlinx.serialization.json.JsonElement
  * is preferred for models that support it.
  *
  */
-@Serializable(with = TextResponseFormatConfiguration.Serializer::class)
+@OptIn(ExperimentalSerializationApi::class)
+@JsonClassDiscriminator("type")
+@Serializable
 public sealed interface TextResponseFormatConfiguration {
   @Serializable
-  @JvmInline
-  public value class CaseResponseFormatText(
-    public val `value`: ResponseFormatText,
+  @SerialName("text")
+  public data object Text : TextResponseFormatConfiguration
+
+  /**
+   * JSON Schema response format. Used to generate structured JSON responses.
+   * Learn more about [Structured Outputs](/docs/guides/structured-outputs).
+   *
+   */
+  @SerialName("json_schema")
+  @Serializable
+  public data class JsonSchema(
+    public val description: String? = null,
+    public val name: String,
+    public val schema: ResponseFormatJsonSchemaSchema,
+    public val strict: Boolean? = null,
   ) : TextResponseFormatConfiguration
 
   @Serializable
-  @JvmInline
-  public value class CaseTextResponseFormatJsonSchema(
-    public val `value`: TextResponseFormatJsonSchema,
-  ) : TextResponseFormatConfiguration
-
-  @Serializable
-  @JvmInline
-  public value class CaseResponseFormatJsonObject(
-    public val `value`: ResponseFormatJsonObject,
-  ) : TextResponseFormatConfiguration
-
-  public object Serializer : KSerializer<TextResponseFormatConfiguration> {
-    @OptIn(
-      InternalSerializationApi::class,
-      ExperimentalSerializationApi::class,
-    )
-    override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("io.openai.model.TextResponseFormatConfiguration", PolymorphicKind.SEALED) {
-      element("CaseResponseFormatText", ResponseFormatText.serializer().descriptor)
-      element("CaseTextResponseFormatJsonSchema", TextResponseFormatJsonSchema.serializer().descriptor)
-      element("CaseResponseFormatJsonObject", ResponseFormatJsonObject.serializer().descriptor)
-    }
-
-    override fun deserialize(decoder: Decoder): TextResponseFormatConfiguration {
-      val value = decoder.decodeSerializableValue(JsonElement.serializer())
-      val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        CaseResponseFormatText::class to { CaseResponseFormatText(decodeFromJsonElement(ResponseFormatText.serializer(), it)) },
-        CaseTextResponseFormatJsonSchema::class to { CaseTextResponseFormatJsonSchema(decodeFromJsonElement(TextResponseFormatJsonSchema.serializer(), it)) },
-        CaseResponseFormatJsonObject::class to { CaseResponseFormatJsonObject(decodeFromJsonElement(ResponseFormatJsonObject.serializer(), it)) },
-      )
-    }
-
-    override fun serialize(encoder: Encoder, `value`: TextResponseFormatConfiguration) {
-      when(value) {
-        is CaseResponseFormatText -> encoder.encodeSerializableValue(ResponseFormatText.serializer(), value.value)
-        is CaseTextResponseFormatJsonSchema -> encoder.encodeSerializableValue(TextResponseFormatJsonSchema.serializer(), value.value)
-        is CaseResponseFormatJsonObject -> encoder.encodeSerializableValue(ResponseFormatJsonObject.serializer(), value.value)
-      }
-    }
-  }
+  @SerialName("json_object")
+  public data object JsonObject : TextResponseFormatConfiguration
 }
