@@ -132,6 +132,43 @@ val unionSpec by testSuite {
 
     modelTest(
         $$"""
+        |"ChatCompletionRequestUserMessageContentPart": {
+        |  "oneOf": [
+        |    { "$ref": "#/components/schemas/ChatCompletionRequestMessageContentPartText" },
+        |    { "$ref": "#/components/schemas/ChatCompletionRequestMessageContentPartImage" }
+        |  ]
+        |},
+        |"ChatCompletionRequestMessageContentPartText": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["text"] },
+        |    "text": { "type": "string" }
+        |  },
+        |  "required": ["type", "text"]
+        |},
+        |"ChatCompletionRequestMessageContentPartImage": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["image_url"] },
+        |    "image_url": {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "url": { "type": "string" }
+        |      },
+        |      "required": ["url"]
+        |    }
+        |  },
+        |  "required": ["type", "image_url"]
+        |}
+        """.trimMargin(),
+        "union/discriminated-inferred-openai-content-parts"
+    )
+
+    modelTest(
+        $$"""
         |"DiscriminatedEnumUnion": {
         |  "oneOf": [
         |    {

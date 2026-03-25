@@ -30,14 +30,15 @@ suspend fun ResolvedSchema.buildOneOf(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
 ): Model.OneOf {
-    val cases = buildUnionCases(context, subtypes)
+    val discriminator = resolveUnionDiscriminator(subtypes)
+    val cases = buildUnionCases(context, subtypes, discriminator)
     return Model.OneOf(
         name,
         cases,
         default(),
         description(),
         schema.title,
-        schema.discriminator?.propertyName,
+        discriminator?.propertyName,
         isNullable
     )
 }
@@ -47,28 +48,83 @@ suspend fun ResolvedSchema.buildAnyOf(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
 ): Model.AnyOf {
-    val cases = buildUnionCases(context, subtypes)
+    val discriminator = resolveUnionDiscriminator(subtypes)
+    val cases = buildUnionCases(context, subtypes, discriminator)
     return Model.AnyOf(
         name,
         cases,
         default(),
         description(),
         schema.title,
-        schema.discriminator?.propertyName,
+        discriminator?.propertyName,
         isNullable
     )
+}
+
+private data class UnionDiscriminator(
+    val propertyName: String,
+    val caseValues: List<String?>,
+)
+
+private val PreferredInferredDiscriminatorNames = listOf("type", "event", "role", "object", "kind", "\$type")
+
+context(ctx: Registry.Scope)
+private suspend fun ResolvedSchema.resolveUnionDiscriminator(
+    subtypes: List<ReferenceOr<Schema>>,
+): UnionDiscriminator? {
+    val uniqueSubtypes = subtypes.distinct()
+    val explicit = schema.discriminator?.propertyName?.let { propertyName ->
+        UnionDiscriminator(
+            propertyName = propertyName,
+            caseValues = uniqueSubtypes.map { subtype ->
+                schema.discriminator.discriminatorValueForSubtype(subtype)
+            }
+        )
+    }
+    return explicit ?: uniqueSubtypes.inferTagOnlyDiscriminatorOrNull()
+}
+
+context(ctx: Registry.Scope)
+private suspend fun List<ReferenceOr<Schema>>.inferTagOnlyDiscriminatorOrNull(): UnionDiscriminator? {
+    if (size < 2) return null
+    if (any { it !is ReferenceOr.Reference }) return null
+
+    val caseLiterals = map { subtype ->
+        val subtypeSchema = subtype.peek()
+        val properties = subtypeSchema.properties ?: return null
+        val required = subtypeSchema.required.toSet()
+        properties.mapNotNull { (propertyName, propertySchema) ->
+            val property = propertySchema.peek()
+            val literal = property.enum?.singleOrNull()
+            val isStringLike = property.type == null || property.type == Type.Basic.String
+            if (propertyName !in required || literal == null || !isStringLike) null
+            else propertyName to literal
+        }.toMap()
+    }
+
+    val commonPropertyNames = caseLiterals
+        .map { it.keys }
+        .reduce(Set<String>::intersect)
+
+    val discriminators = commonPropertyNames.mapNotNull { propertyName ->
+        val values = caseLiterals.map { it[propertyName] }
+        if (values.any { it == null } || values.distinct().size != values.size) null
+        else UnionDiscriminator(propertyName, values)
+    }
+
+    return discriminators.firstOrNull { it.propertyName in PreferredInferredDiscriminatorNames }
+        ?: discriminators.singleOrNull()
 }
 
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.buildUnionCases(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
+    discriminator: UnionDiscriminator?,
 ): List<Model.Union.Case> {
     val uniqueSubtypes = subtypes.distinct()
-    val discriminatorField = schema.discriminator?.propertyName
-    val caseDiscriminators = uniqueSubtypes.map { subtype ->
-        schema.discriminator.discriminatorValueForSubtype(subtype)
-    }
+    val discriminatorField = discriminator?.propertyName
+    val caseDiscriminators = discriminator?.caseValues ?: List(uniqueSubtypes.size) { null }
     val unionContexts = uniqueSubtypes.mapIndexed { index, refOrSchema ->
         caseDiscriminators[index]
             ?.let { name.nest(NamingContext.UnionCase(it)) }

@@ -118,6 +118,7 @@ Notes:
 ## References, Wrappers, And Naming
 
 - Nested `$ref`s usually stay as `Model.Reference` so the renderer can reuse the named Kotlin type instead of inlining it.
+  Discriminated `oneOf` / `anyOf` cases are the main exception: referenced cases are normalized under the union-case context so the renderer can emit shallow nested cases instead of wrapper refs.
 - Recursive references always become `Model.Reference`.
 - Top-level references to primitives are intentionally wrapped as `Model.Object.value(...)` with `isScalarWrapper = true`.
   This preserves a named Kotlin type for schemas like `UserId`, even though the underlying value is scalar.
@@ -132,7 +133,11 @@ Notes:
 - Multi-branch `anyOf` becomes `Model.AnyOf`.
 - A single branch collapses to that branch.
 - If one branch is OpenAPI `null` (or the internal nullable sentinel), `typed` drops that branch and sets `isNullable = true` on the resulting model.
-- Union cases get synthesized names from discriminator mappings, special `type`/`event` enum properties, referenced schema names, or primitive/object structure.
+- Non-discriminated union cases keep the existing naming heuristics based on special `type` / `event` enums, referenced schema names, or primitive/object structure.
+- Discriminated union case literals are resolved in this order: explicit discriminator mapping key, single-value discriminator field on the subtype, schema-name fallback for referenced cases.
+- Discriminated referenced cases are inlined under the union-case context instead of staying as `Model.Reference`.
+- When a discriminated case has a tag-only discriminator property, `typed` strips it from the case payload before rendering.
+- If stripping leaves exactly one required closed object property, `typed` hoists that object's direct fields into the case payload.
 
 ### Discriminated object hierarchies
 

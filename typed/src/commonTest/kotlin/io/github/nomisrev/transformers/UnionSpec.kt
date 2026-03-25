@@ -391,6 +391,80 @@ val unionSpec by testSuite {
         }
     }
 
+    test("Ref-only union infers tag-only discriminator and inlines referenced cases") {
+        val textPart = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("text")
+                    )
+                ),
+                "text" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("type", "text")
+        )
+        val imagePart = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("image_url")
+                    )
+                ),
+                "image_url" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "url" to ReferenceOr.value(Schema.string)
+                        ),
+                        required = listOf("url")
+                    )
+                )
+            ),
+            required = listOf("type", "image_url")
+        )
+        val contentPart = Schema(
+            oneOf = listOf(
+                ReferenceOr.schema("ChatCompletionRequestMessageContentPartText"),
+                ReferenceOr.schema("ChatCompletionRequestMessageContentPartImage")
+            )
+        )
+        val testApi = api
+            .reference("ChatCompletionRequestMessageContentPartText", textPart)
+            .reference("ChatCompletionRequestMessageContentPartImage", imagePart)
+            .reference("ChatCompletionRequestUserMessageContentPart", contentPart)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("ChatCompletionRequestUserMessageContentPart")
+                .toModel(
+                    NamingContext.reference("ChatCompletionRequestUserMessageContentPart", SchemaContext.Null),
+                    SchemaContext.Write
+                ) as OneOf
+
+            assertEquals("type", result.discriminator)
+            assertEquals(listOf("text", "image_url"), result.cases.map { it.discriminator })
+
+            val text = assertIs<Model.Object>(result.cases[0].model)
+            assertEquals(setOf("text"), text.properties.keys)
+            assertEquals(
+                NamingContext.reference("ChatCompletionRequestUserMessageContentPart", SchemaContext.Null)
+                    .nest(NamingContext.UnionCase("text")),
+                text.context
+            )
+
+            val image = assertIs<Model.Object>(result.cases[1].model)
+            assertEquals(setOf("url"), image.properties.keys)
+            assertEquals(
+                NamingContext.reference("ChatCompletionRequestUserMessageContentPart", SchemaContext.Null)
+                    .nest(NamingContext.UnionCase("image_url")),
+                image.context
+            )
+        }
+    }
+
     test("Union preserves nullable case models") {
         val unionSchema = Schema(
             oneOf = listOf(

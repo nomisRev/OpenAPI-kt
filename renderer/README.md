@@ -13,6 +13,7 @@ The renderer does not work directly on raw OpenAPI JSON shapes. It renders the n
 
 - read/write splits can produce `Read` / `Write` model variants
 - discriminated `allOf` inheritance arrives as `Model.DiscriminatedObject`
+- discriminated `oneOf` / `anyOf` cases may already have referenced branches inlined, discriminator fields stripped, and a single remaining object payload hoisted
 - named top-level collections are already normalized into a single-field wrapper model
 
 ## Rendering Pipeline
@@ -30,9 +31,11 @@ OpenAPI schema (after normalization into renderer models)
 ├─ Normalized as `Model.Union` (`oneOf` / `anyOf`)?
 │  ├─ Has discriminator?
 │  │  └─ Render a sealed interface with nested cases
-│  │     ├─ Inline object / enum / unit case -> nested subtype directly
-│  │     └─ Primitive / reference / top-level object / collection / union case
+│  │     ├─ Object / enum / unit case -> nested subtype directly
+│  │     └─ Primitive / collection / union case
 │  │        -> nested wrapper value class around `value`
+│  │     └─ Reference case
+│  │        -> rare fallback, typically only when normalization could not inline the branch
 │  └─ No discriminator
 │     ├─ Exactly `enum + string`?
 │     │  └─ Render the "open enum" pattern:
@@ -96,6 +99,12 @@ OpenAPI schema (after normalization into renderer models)
 - Descriptions become KDoc.
 - Nested inline object, enum, and union models are emitted as nested Kotlin types inside the owning class/interface.
 - When the same component name exists in both read and write contexts, the renderer appends `Read` / `Write` to the generated class name.
+
+## Discriminated Union Assumptions
+
+- The typed layer is responsible for choosing the discriminator literal for a discriminated case.
+- Tag-only discriminator fields are expected to be removed from case payloads before rendering, so generated subtype constructors do not expose the discriminator property.
+- Referenced discriminated cases are usually already inlined, which is why discriminated unions now render shallow nested cases instead of wrapper classes around standalone component models.
 
 ## Union Deserialization Order
 
