@@ -223,9 +223,9 @@ else → RequestType enum for clashing groups
 ## Phase Details
 
 See individual phase documents:
-- [PHASE_1.md](./PHASE_1.md) — Infrastructure: ContentType naming & strategy detection
-- [PHASE_2.md](./PHASE_2.md) — Fix ISSUE_RESPONSE_TYPE: body naming collision
-- [PHASE_3.md](./PHASE_3.md) — Multi-content-type response generation
-- [PHASE_4.md](./PHASE_4.md) — Request body signature clash detection
-- [PHASE_5.md](./PHASE_5.md) — Implementation rendering
-- [PHASE_6.md](./PHASE_6.md) — Testing & integration validation
+- [PHASE_1.md](PHASE_1.md) — Infrastructure: ContentType naming & strategy detection
+- [PHASE_2.md](PHASE_2.md) — Fix ISSUE_RESPONSE_TYPE: body naming collision
+- [PHASE_3.md](PHASE_3.md) — Multi-content-type response generation
+- [PHASE_4.md](PHASE_4.md) — Request body signature clash detection
+- [PHASE_5.md](PHASE_5.md) — Implementation rendering
+- [PHASE_6.md](PHASE_6.md) — Testing & integration validation
