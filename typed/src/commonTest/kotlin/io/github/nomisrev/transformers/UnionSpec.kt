@@ -21,6 +21,7 @@ import io.github.nomisrev.product
 import io.github.nomisrev.verifyAll
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 val unionSpec by testSuite {
     fun moderationInputUnionSchema(): Schema =
@@ -265,6 +266,7 @@ val unionSpec by testSuite {
                 listOf("content-directory", "content-file"),
                 result.cases.map { it.discriminator }
             )
+            assertTrue(result.cases.all { it.model is Model.Primitive.Unit })
         }
     }
 
@@ -301,6 +303,91 @@ val unionSpec by testSuite {
 
             assertEquals("type", result.discriminator)
             assertEquals(listOf("dir", "file"), result.cases.map { it.discriminator })
+            assertTrue(result.cases.all { it.model is Model.Primitive.Unit })
+        }
+    }
+
+    test("Discriminated anyOf inlines referenced cases, strips discriminator, and hoists single object payloads") {
+        val speechAudioDeltaEvent = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("speech.audio.delta")
+                    )
+                ),
+                "audio" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("type", "audio")
+        )
+        val speechAudioDoneEvent = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("speech.audio.done")
+                    )
+                ),
+                "usage" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "input_tokens" to ReferenceOr.value(Schema.integer),
+                            "output_tokens" to ReferenceOr.value(Schema.integer),
+                            "total_tokens" to ReferenceOr.value(Schema.integer),
+                        ),
+                        required = listOf("input_tokens", "output_tokens", "total_tokens")
+                    )
+                )
+            ),
+            required = listOf("type", "usage")
+        )
+        val streamEvent = Schema(
+            anyOf = listOf(
+                ReferenceOr.schema("SpeechAudioDeltaEvent"),
+                ReferenceOr.schema("SpeechAudioDoneEvent")
+            ),
+            discriminator = Schema.Discriminator(propertyName = "type")
+        )
+        val testApi = api
+            .reference("SpeechAudioDeltaEvent", speechAudioDeltaEvent)
+            .reference("SpeechAudioDoneEvent", speechAudioDoneEvent)
+            .reference("CreateSpeechResponseStreamEvent", streamEvent)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("CreateSpeechResponseStreamEvent")
+                .toModel(
+                    NamingContext.reference("CreateSpeechResponseStreamEvent", SchemaContext.Null),
+                    SchemaContext.Write
+                ) as AnyOf
+
+            assertEquals("type", result.discriminator)
+            assertEquals(
+                listOf("speech.audio.delta", "speech.audio.done"),
+                result.cases.map { it.discriminator }
+            )
+
+            val delta = assertIs<Model.Object>(result.cases[0].model)
+            assertEquals(setOf("audio"), delta.properties.keys)
+            assertEquals(
+                NamingContext.reference("CreateSpeechResponseStreamEvent", SchemaContext.Null)
+                    .nest(NamingContext.UnionCase("speech.audio.delta")),
+                delta.context
+            )
+
+            val done = assertIs<Model.Object>(result.cases[1].model)
+            assertEquals(
+                setOf("input_tokens", "output_tokens", "total_tokens"),
+                done.properties.keys
+            )
+            assertEquals(
+                NamingContext.reference("CreateSpeechResponseStreamEvent", SchemaContext.Null)
+                    .nest(NamingContext.UnionCase("speech.audio.done")),
+                done.context
+            )
+            assertTrue(done.properties.values.all { it.model is Model.Primitive.Long })
         }
     }
 

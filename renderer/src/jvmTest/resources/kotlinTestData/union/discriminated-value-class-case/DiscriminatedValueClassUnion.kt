@@ -12,35 +12,14 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("kind")
 @Serializable
 public sealed interface DiscriminatedValueClassUnion {
-  @JvmInline
-  @SerialName("inline")
   @Serializable
-  public value class Inline(
-    public val kind: Kind,
-  ) : DiscriminatedValueClassUnion {
-    @Serializable
-    public enum class Kind(
-      public val `value`: String,
-    ) {
-      @SerialName("inline")
-      Inline("inline"),
-      ;
-    }
-  }
+  @SerialName("inline")
+  public data object Inline : DiscriminatedValueClassUnion
 
+  @JvmInline
   @SerialName("remote")
   @Serializable
-  public data class Remote(
-    public val kind: Kind,
+  public value class Remote(
     public val id: String,
-  ) : DiscriminatedValueClassUnion {
-    @Serializable
-    public enum class Kind(
-      public val `value`: String,
-    ) {
-      @SerialName("remote")
-      Remote("remote"),
-      ;
-    }
-  }
+  ) : DiscriminatedValueClassUnion
 }

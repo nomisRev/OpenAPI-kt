@@ -3,6 +3,7 @@ package io.github.nomisrev.render.test.union.discriminated.basic
 import kotlin.Int
 import kotlin.OptIn
 import kotlin.String
+import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,35 +13,17 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("type")
 @Serializable
 public sealed interface DiscriminatedBasicUnion {
+  @JvmInline
   @SerialName("employee")
   @Serializable
-  public data class Employee(
-    public val type: Type,
+  public value class Employee(
     public val name: String,
-  ) : DiscriminatedBasicUnion {
-    @Serializable
-    public enum class Type(
-      public val `value`: String,
-    ) {
-      @SerialName("employee")
-      Employee("employee"),
-      ;
-    }
-  }
+  ) : DiscriminatedBasicUnion
 
+  @JvmInline
   @SerialName("manager")
   @Serializable
-  public data class Manager(
-    public val type: Type,
+  public value class Manager(
     public val level: Int,
-  ) : DiscriminatedBasicUnion {
-    @Serializable
-    public enum class Type(
-      public val `value`: String,
-    ) {
-      @SerialName("manager")
-      Manager("manager"),
-      ;
-    }
-  }
+  ) : DiscriminatedBasicUnion
 }

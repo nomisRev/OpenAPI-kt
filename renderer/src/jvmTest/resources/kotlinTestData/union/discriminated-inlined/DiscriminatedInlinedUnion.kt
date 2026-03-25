@@ -3,6 +3,7 @@ package io.github.nomisrev.render.test.union.discriminated.inlined
 import kotlin.Boolean
 import kotlin.OptIn
 import kotlin.String
+import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,35 +13,17 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("event")
 @Serializable
 public sealed interface DiscriminatedInlinedUnion {
+  @JvmInline
   @SerialName("created")
   @Serializable
-  public data class Created(
-    public val event: Event,
+  public value class Created(
     public val id: String,
-  ) : DiscriminatedInlinedUnion {
-    @Serializable
-    public enum class Event(
-      public val `value`: String,
-    ) {
-      @SerialName("created")
-      Created("created"),
-      ;
-    }
-  }
+  ) : DiscriminatedInlinedUnion
 
+  @JvmInline
   @SerialName("deleted")
   @Serializable
-  public data class Deleted(
-    public val event: Event,
+  public value class Deleted(
     public val hard: Boolean,
-  ) : DiscriminatedInlinedUnion {
-    @Serializable
-    public enum class Event(
-      public val `value`: String,
-    ) {
-      @SerialName("deleted")
-      Deleted("deleted"),
-      ;
-    }
-  }
+  ) : DiscriminatedInlinedUnion
 }

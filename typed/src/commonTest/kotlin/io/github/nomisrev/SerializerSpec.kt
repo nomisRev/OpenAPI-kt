@@ -723,6 +723,28 @@ sealed interface DiscriminatedUnion {
     data class Employee(val age: Int, val department: String) : DiscriminatedUnion
 }
 
+@OptIn(ExperimentalSerializationApi::class)
+@kotlinx.serialization.json.JsonClassDiscriminator("type")
+@Serializable
+sealed interface ConflictingDiscriminatedUnion {
+    @SerialName("person")
+    @Serializable
+    data class Person(val type: String, val name: String) : ConflictingDiscriminatedUnion
+}
+
+@Serializable
+data class TaggedPerson(val type: String, val name: String)
+
+@OptIn(ExperimentalSerializationApi::class)
+@kotlinx.serialization.json.JsonClassDiscriminator("type")
+@Serializable
+sealed interface WrappedConflictingDiscriminatedUnion {
+    @SerialName("person")
+    @Serializable
+    @JvmInline
+    value class Person(val value: TaggedPerson) : WrappedConflictingDiscriminatedUnion
+}
+
 val discriminatedUnionSpec by testSuite {
     fun casePerson(): DiscriminatedUnion =
         DiscriminatedUnion.CasePerson(Person(id = 1, name = "John"))
@@ -751,4 +773,22 @@ val discriminatedUnionSpec by testSuite {
             put("department", "Engineering")
         }
     )
+
+    test("discriminator field on an inlined subtype conflicts with polymorphic serialization") {
+        val error = assertFailsWith<SerializationException> {
+            Json.encodeToString<ConflictingDiscriminatedUnion>(
+                ConflictingDiscriminatedUnion.Person(type = "person", name = "John")
+            )
+        }
+
+        assertTrue(error.message.orEmpty().contains("conflicts with JSON class discriminator 'type'"))
+    }
+
+    test("value class wrappers can encode duplicate discriminator keys") {
+        val encoded = Json.encodeToString<WrappedConflictingDiscriminatedUnion>(
+            WrappedConflictingDiscriminatedUnion.Person(TaggedPerson(type = "person", name = "John"))
+        )
+
+        assertEquals(2, "\"type\"".toRegex().findAll(encoded).count())
+    }
 }

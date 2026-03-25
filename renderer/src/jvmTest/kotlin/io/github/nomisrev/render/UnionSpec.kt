@@ -210,6 +210,46 @@ val unionSpec by testSuite {
         "union/discriminated-value-class-case"
     )
 
+    modelTest(
+        $$"""
+        |"CreateSpeechResponseStreamEvent": {
+        |  "anyOf": [
+        |    { "$ref": "#/components/schemas/SpeechAudioDeltaEvent" },
+        |    { "$ref": "#/components/schemas/SpeechAudioDoneEvent" }
+        |  ],
+        |  "discriminator": { "propertyName": "type" }
+        |},
+        |"SpeechAudioDeltaEvent": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["speech.audio.delta"] },
+        |    "audio": { "type": "string" }
+        |  },
+        |  "required": ["type", "audio"]
+        |},
+        |"SpeechAudioDoneEvent": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["speech.audio.done"] },
+        |    "usage": {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "input_tokens": { "type": "integer" },
+        |        "output_tokens": { "type": "integer" },
+        |        "total_tokens": { "type": "integer" }
+        |      },
+        |      "required": ["input_tokens", "output_tokens", "total_tokens"]
+        |    }
+        |  },
+        |  "required": ["type", "usage"]
+        |}
+        """.trimMargin(),
+        "union/discriminated-anyof-openai-speech"
+    )
+
     // ── Phase 6: Non-discriminated unions ───────────────────────────────
 
     // Union of all primitive types

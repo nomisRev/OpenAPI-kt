@@ -13,26 +13,17 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("kind")
 @Serializable
 public sealed interface DiscriminatedMixedUnion {
-  @Serializable
   @JvmInline
   @SerialName("user")
+  @Serializable
   public value class User(
-    public val `value`: MixedUser,
+    public val name: String,
   ) : DiscriminatedMixedUnion
 
+  @JvmInline
   @SerialName("guest")
   @Serializable
-  public data class Guest(
-    public val kind: Kind,
+  public value class Guest(
     public val id: Int,
-  ) : DiscriminatedMixedUnion {
-    @Serializable
-    public enum class Kind(
-      public val `value`: String,
-    ) {
-      @SerialName("guest")
-      Guest("guest"),
-      ;
-    }
-  }
+  ) : DiscriminatedMixedUnion
 }

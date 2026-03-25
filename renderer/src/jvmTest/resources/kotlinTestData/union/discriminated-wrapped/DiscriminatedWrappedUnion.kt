@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.union.discriminated.wrapped
 
 import kotlin.OptIn
+import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -11,17 +12,17 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("kind")
 @Serializable
 public sealed interface DiscriminatedWrappedUnion {
-  @Serializable
   @JvmInline
   @SerialName("employee")
+  @Serializable
   public value class Employee(
-    public val `value`: WrappedEmployee,
+    public val name: String,
   ) : DiscriminatedWrappedUnion
 
-  @Serializable
   @JvmInline
   @SerialName("contractor")
+  @Serializable
   public value class Contractor(
-    public val `value`: WrappedContractor,
+    public val name: String,
   ) : DiscriminatedWrappedUnion
 }

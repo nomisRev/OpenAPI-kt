@@ -4,6 +4,7 @@ package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.routes.SchemaContext
@@ -64,8 +65,14 @@ private suspend fun ResolvedSchema.buildUnionCases(
     subtypes: List<ReferenceOr<Schema>>,
 ): List<Model.Union.Case> {
     val uniqueSubtypes = subtypes.distinct()
+    val discriminatorField = schema.discriminator?.propertyName
+    val caseDiscriminators = uniqueSubtypes.map { subtype ->
+        schema.discriminator.discriminatorValueForSubtype(subtype)
+    }
     val unionContexts = uniqueSubtypes.mapIndexed { index, refOrSchema ->
-        name.unionCase(index, refOrSchema, uniqueSubtypes, context)
+        caseDiscriminators[index]
+            ?.let { name.nest(NamingContext.UnionCase(it)) }
+            ?: name.unionCase(index, refOrSchema, uniqueSubtypes, context)
     }
 
     /**
@@ -83,12 +90,108 @@ private suspend fun ResolvedSchema.buildUnionCases(
      */
     val cases = uniqueSubtypes.mapIndexed { index, subtype ->
         subtype.resolve(unionContexts[index], context) {
-            val discriminatorValue = schema.discriminator.discriminatorValueForSubtype(subtype)
-            Model.Union.Case(it.toModel(context, false), discriminatorValue)
+            val discriminatorValue = caseDiscriminators[index]
+            val model = if (discriminatorField != null) {
+                it.toDiscriminatedUnionCaseModel(
+                    context = context,
+                    caseContext = unionContexts[index],
+                    discriminatorField = discriminatorField,
+                    caseDiscriminator = discriminatorValue,
+                )
+            } else {
+                it.toModel(context, false)
+            }
+            Model.Union.Case(model, discriminatorValue)
         }
     }
     return cases
 }
+
+context(ctx: Registry.Scope)
+private suspend fun ResolvedSchema.toDiscriminatedUnionCaseModel(
+    context: SchemaContext,
+    caseContext: NamingContext,
+    discriminatorField: String,
+    caseDiscriminator: String?,
+): Model {
+    val normalizedSchema = schema.normalizedDiscriminatedUnionCase(
+        discriminatorField = discriminatorField,
+        caseDiscriminator = caseDiscriminator,
+    )
+    val normalized = when (this) {
+        is ResolvedSchema.Reference,
+        is ResolvedSchema.Value -> ResolvedSchema.Value(caseContext, normalizedSchema)
+
+        is ResolvedSchema.Recursive -> ResolvedSchema.Recursive(caseContext, normalizedSchema)
+    }
+    return normalized.toModel(context, true)
+}
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.normalizedDiscriminatedUnionCase(
+    discriminatorField: String,
+    caseDiscriminator: String?,
+): Schema =
+    stripTagOnlyDiscriminatorProperty(discriminatorField, caseDiscriminator)
+        .hoistSingleRemainingObjectProperty()
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.stripTagOnlyDiscriminatorProperty(
+    discriminatorField: String,
+    caseDiscriminator: String?,
+): Schema {
+    val currentProperties = properties ?: return this
+    val discriminatorProperty = currentProperties[discriminatorField] ?: return this
+    if (!discriminatorProperty.isTagOnlyDiscriminator(caseDiscriminator)) return this
+
+    return copy(
+        properties = currentProperties - discriminatorField,
+        required = required - discriminatorField,
+        additionalProperties = additionalProperties ?: AdditionalProperties.Allowed(false),
+    )
+}
+
+context(ctx: Registry.Scope)
+private suspend fun ReferenceOr<Schema>.isTagOnlyDiscriminator(caseDiscriminator: String?): Boolean {
+    val propertySchema = peek()
+    return when {
+        propertySchema.enum?.singleOrNull() != null -> true
+        caseDiscriminator != null && propertySchema.type == Type.Basic.String && propertySchema.enum == null -> true
+        else -> false
+    }
+}
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.hoistSingleRemainingObjectProperty(): Schema {
+    val currentProperties = properties ?: return this
+    if (currentProperties.size != 1) return this
+
+    val (propertyName, propertySchema) = currentProperties.entries.single()
+    if (required.size != 1 || required.single() != propertyName) return this
+
+    val hoistedSchema = propertySchema.peek()
+    if (!hoistedSchema.isHoistableSinglePropertyObject()) return this
+
+    return copy(
+        properties = hoistedSchema.properties,
+        required = hoistedSchema.required,
+        additionalProperties = hoistedSchema.additionalProperties,
+    )
+}
+
+private fun Schema.isHoistableSinglePropertyObject(): Boolean =
+    type == Type.Basic.Object &&
+            properties?.isNotEmpty() == true &&
+            items == null &&
+            oneOf.isNullOrEmpty() &&
+            anyOf.isNullOrEmpty() &&
+            allOf.isNullOrEmpty() &&
+            enum.isNullOrEmpty() &&
+            when (val value = additionalProperties) {
+                null -> true
+                is AdditionalProperties.Allowed -> !value.value
+                is AdditionalProperties.PSchema -> false
+            }
 
 @Suppress("CyclomaticComplexMethod", "UnsafeCallOnNullableType")
 context(ctx: Registry.Scope)
@@ -345,21 +448,38 @@ private const val SCHEMA_REF_PREFIX = "#/components/schemas/"
 private fun String.schemaRefNameOrSelf(): String =
     if (startsWith(SCHEMA_REF_PREFIX)) schemaName() else this
 
-private fun Schema.Discriminator?.discriminatorValueForSubtype(
+context(ctx: Registry.Scope)
+private suspend fun Schema.Discriminator?.discriminatorValueForSubtype(
     subtype: ReferenceOr<Schema>
-): String? = when (subtype) {
-    is ReferenceOr.Reference -> {
-        val subtypeRefName = subtype.ref.schemaRefNameOrSelf()
-        val mapped = this?.mapping
-            ?.entries
-            ?.firstOrNull { (_, ref) ->
-                ref == subtype.ref || ref.schemaRefNameOrSelf() == subtypeRefName
-            }
-            ?.key
+): String? {
+    if (this == null) return null
 
-        // OpenAPI allows implicit mapping: if no explicit mapping matches, fall back to schema name.
-        mapped ?: this?.let { subtypeRefName }
+    val mapped = when (subtype) {
+        is ReferenceOr.Reference -> {
+            val subtypeRefName = subtype.ref.schemaRefNameOrSelf()
+            mapping
+                ?.entries
+                ?.firstOrNull { (_, ref) ->
+                    ref == subtype.ref || ref.schemaRefNameOrSelf() == subtypeRefName
+                }
+                ?.key
+        }
+
+        is ReferenceOr.Value<Schema> -> null
     }
+    if (mapped != null) return mapped
 
-    is ReferenceOr.Value<Schema> -> null
+    val discriminatorLiteral = propertyName.let { propertyName ->
+        subtype.peek().properties
+            ?.get(propertyName)
+            ?.peek()
+            ?.enum
+            ?.singleOrNull()
+    }
+    if (discriminatorLiteral != null) return discriminatorLiteral
+
+    return when (subtype) {
+        is ReferenceOr.Reference -> subtype.ref.schemaRefNameOrSelf()
+        is ReferenceOr.Value<Schema> -> null
+    }
 }
