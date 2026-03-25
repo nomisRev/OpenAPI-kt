@@ -1,11 +1,15 @@
 package io.github.nomisrev.render
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.nomisrev.openapi.GenerationDiagnosticSeverity
 import io.github.nomisrev.openapi.KmpTarget
 import io.github.nomisrev.openapi.RenderConfig
 import io.github.nomisrev.openapi.generateClient
+import io.github.nomisrev.openapi.generateClientWithDiagnostics
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.toApiTree
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 
 val clientSpec by testSuite {
@@ -1033,6 +1037,58 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/search": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "query": { "type": "string" },
+                          "filters": {
+                            "type": "object",
+                            "properties": {
+                              "status": { "type": "string" }
+                            }
+                          }
+                        },
+                        "required": ["query"]
+                      }
+                    },
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "query": { "type": "string" },
+                          "filters": {
+                            "type": "object",
+                            "properties": {
+                              "status": { "type": "string" }
+                            }
+                          }
+                        },
+                        "required": ["query"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/operations-body-form-ambiguous"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/legacy": {
               "get": {
                 "deprecated": true,
@@ -2006,6 +2062,105 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/items": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string" }
+                            },
+                            "required": ["id"]
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "201": {
+                    "description": "Created",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": { "type": "string" }
+                            },
+                            "required": ["name"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-inline-collection-items-multiple-statuses"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/items": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": { "type": "string" }
+                            },
+                            "required": ["id"]
+                          }
+                        }
+                      },
+                      "application/xml": {
+                        "schema": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "name": { "type": "string" }
+                            },
+                            "required": ["name"]
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-inline-collection-items-separate-methods"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/pets": {
               "get": {
                 "responses": {
@@ -2174,4 +2329,119 @@ val clientSpec by testSuite {
         """.trimIndent(),
         "client/inline-union-case-with-nested-enum"
     )
+
+    test("ambiguous form overload emits warning and is omitted when json body is available") {
+        val json = """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/search": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "query": { "type": "string" },
+                          "filters": {
+                            "type": "object",
+                            "properties": {
+                              "status": { "type": "string" }
+                            }
+                          }
+                        },
+                        "required": ["query"]
+                      }
+                    },
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "query": { "type": "string" },
+                          "filters": {
+                            "type": "object",
+                            "properties": {
+                              "status": { "type": "string" }
+                            }
+                          }
+                        },
+                        "required": ["query"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent()
+
+        val result = OpenAPI.fromJson(json)
+            .toApiTree()
+            .generateClientWithDiagnostics(
+                RenderConfig(
+                    modelPackage = "io.github.nomisrev.render.test.client.operations.body.form.ambiguous.model",
+                    apiPackage = "io.github.nomisrev.render.test.client.operations.body.form.ambiguous.api",
+                    targets = setOf(KmpTarget.JVM),
+                )
+            )
+
+        assertEquals(1, result.diagnostics.size)
+        assertEquals(GenerationDiagnosticSeverity.Warning, result.diagnostics.single().severity)
+        assertTrue(result.diagnostics.single().message.contains("Skipping unsupported form overload"))
+    }
+
+    test("ambiguous form-only request body fails generation") {
+        val json = """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/search": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "query": { "type": "string" },
+                          "filters": {
+                            "type": "object",
+                            "properties": {
+                              "status": { "type": "string" }
+                            }
+                          }
+                        },
+                        "required": ["query"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent()
+
+        val error = assertFailsWith<IllegalArgumentException> {
+            OpenAPI.fromJson(json)
+                .toApiTree()
+                .generateClient(
+                    RenderConfig(
+                        modelPackage = "io.github.nomisrev.render.test.client.operations.body.form.ambiguous.model",
+                        apiPackage = "io.github.nomisrev.render.test.client.operations.body.form.ambiguous.api",
+                        targets = setOf(KmpTarget.JVM),
+                    )
+                )
+        }
+
+        assertTrue(error.message.orEmpty().contains("non-scalar form fields without explicit encoding rules"))
+    }
 }

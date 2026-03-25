@@ -127,12 +127,12 @@ public class Videos internal constructor(
         private val client: HttpClient,
         private val videoId: String,
       ) {
-        public suspend fun videoMp4(variant: VideoContentVariant? = null): String = client.get("/videos/$videoId/content") {
+        public suspend fun videoMp4(variant: VideoContentVariant? = null): ByteArray = client.get("/videos/$videoId/content") {
           `header`(HttpHeaders.Accept, ContentType("video", "mp4"))
           variant?.let { parameter("variant", it.value) }
         }.body()
 
-        public suspend fun imageWebp(variant: VideoContentVariant? = null): String = client.get("/videos/$videoId/content") {
+        public suspend fun imageWebp(variant: VideoContentVariant? = null): ByteArray = client.get("/videos/$videoId/content") {
           `header`(HttpHeaders.Accept, ContentType("image", "webp"))
           variant?.let { parameter("variant", it.value) }
         }.body()

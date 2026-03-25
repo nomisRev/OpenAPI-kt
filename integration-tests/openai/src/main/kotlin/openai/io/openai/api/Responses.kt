@@ -11,26 +11,17 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
-import io.ktor.http.Parameters
 import io.ktor.http.contentType
-import io.ktor.http.formUrlEncode
 import io.openai.model.CompactResource
 import io.openai.model.CompactResponseMethodPublicBody
-import io.openai.model.ConversationParam
 import io.openai.model.CreateResponse
 import io.openai.model.Error
 import io.openai.model.IncludeEnum
-import io.openai.model.ModelIdsCompaction
-import io.openai.model.Reasoning
 import io.openai.model.Response
 import io.openai.model.ResponseItemList
 import io.openai.model.ResponseStreamEvent
-import io.openai.model.ResponseTextParam
 import io.openai.model.TokenCountsBody
 import io.openai.model.TokenCountsResource
-import io.openai.model.Tool
-import io.openai.model.ToolChoiceParam
-import io.openai.model.TruncationEnum
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
@@ -58,7 +49,7 @@ public class Responses internal constructor(
       setBody(body)
     }.body()
 
-    public suspend fun textEventStream(body: CreateResponse): Response = client.post("/responses") {
+    public suspend fun textEventStream(body: CreateResponse): ResponseStreamEvent = client.post("/responses") {
       `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
       contentType(ContentType.Application.Json)
       setBody(body)
@@ -209,34 +200,6 @@ public class Responses internal constructor(
           setBody(it)
         }
       }.body()
-
-      public suspend operator fun invoke(
-        model: String? = null,
-        input: Post.Body.Input? = null,
-        previousResponseId: String? = null,
-        tools: List<Tool>? = null,
-        text: ResponseTextParam? = null,
-        reasoning: Reasoning? = null,
-        truncation: TruncationEnum? = null,
-        instructions: String? = null,
-        conversation: ConversationParam? = null,
-        toolChoice: ToolChoiceParam? = null,
-        parallelToolCalls: Boolean? = null,
-      ): TokenCountsResource = client.post("/responses/input_tokens") {
-        setBody(Parameters.build {
-          append("model", model)
-          append("input", input)
-          append("previous_response_id", previousResponseId)
-          append("tools", tools)
-          append("text", text)
-          append("reasoning", reasoning)
-          append("truncation", truncation)
-          append("instructions", instructions)
-          append("conversation", conversation)
-          append("tool_choice", toolChoice)
-          append("parallel_tool_calls", parallelToolCalls)
-        }.formUrlEncode())
-      }.body()
     }
   }
 
@@ -253,22 +216,6 @@ public class Responses internal constructor(
           contentType(ContentType.Application.Json)
           setBody(it)
         }
-      }.body()
-
-      public suspend operator fun invoke(
-        model: ModelIdsCompaction,
-        input: Post.Body.Input? = null,
-        previousResponseId: String? = null,
-        instructions: String? = null,
-        promptCacheKey: String? = null,
-      ): CompactResource = client.post("/responses/compact") {
-        setBody(Parameters.build {
-          append("model", model)
-          append("input", input)
-          append("previous_response_id", previousResponseId)
-          append("instructions", instructions)
-          append("prompt_cache_key", promptCacheKey)
-        }.formUrlEncode())
       }.body()
     }
   }

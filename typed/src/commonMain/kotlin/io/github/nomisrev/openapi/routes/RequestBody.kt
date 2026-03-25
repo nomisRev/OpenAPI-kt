@@ -98,8 +98,14 @@ private suspend fun RequestBody.formUrlEncoded(
             "Form URL encoded body must be an object. $this"
         }
     }
+    val unsupportedFields = with(scope) {
+        obj.properties.mapNotNull { (baseName, prop) ->
+            if (baseName in mediaType.encoding || prop.model.isSafeFormUrlEncodedField()) null
+            else baseName
+        }
+    }
     val params = obj.properties.map { (baseName, prop) -> Route.Body.Multipart.FormData(baseName, prop.model, null, prop.isRequired) }
-    return Route.Body.FormUrlEncoded(params, description, mediaType.extensions)
+    return Route.Body.FormUrlEncoded(params, unsupportedFields, description, mediaType.extensions)
 }
 
 context(scope: Registry)
@@ -180,5 +186,43 @@ private fun ReferenceOr<Schema>.resolveSchema(): Schema = when (this) {
             is ReferenceOr.Value<Schema> -> schemas.value
             null -> error("Schema $referenceName could not be found in ${ctx.openAPI.components.schemas}.")
         }
+    }
+}
+
+context(scope: Registry)
+private suspend fun Model.isSafeFormUrlEncodedField(
+    visited: Set<NamingContext.Reference> = emptySet(),
+): Boolean = when (this) {
+    is Model.Date,
+    is Model.DateTime,
+    is Model.Enum,
+    is Model.Primitive.Boolean,
+    is Model.Primitive.Double,
+    is Model.Primitive.Float,
+    is Model.Primitive.Int,
+    is Model.Primitive.Long,
+    is Model.Primitive.String,
+    is Model.Uuid -> true
+
+    is Model.ByteArray,
+    is Model.Collection,
+    is Model.DiscriminatedObject,
+    is Model.FreeFormJson,
+    is Model.OneOf,
+    is Model.AnyOf,
+    is Model.Primitive.Unit -> false
+
+    is Model.Object ->
+        isScalarWrapper &&
+            additionalProperties == Model.Object.AdditionalProperties.False &&
+            properties.size == 1 &&
+            properties["value"]?.let { property ->
+                property.isRequired && property.model.isSafeFormUrlEncodedField(visited)
+            } == true
+
+    is Model.Reference -> {
+        val reference = context.head as? NamingContext.Reference ?: return false
+        if (reference in visited) false
+        else with(scope) { reference.toModel() }.isSafeFormUrlEncodedField(visited + reference)
     }
 }

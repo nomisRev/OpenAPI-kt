@@ -4,7 +4,21 @@ import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
 
-fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> {
+fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> =
+    generateClientWithDiagnostics(config)
+        .also(GenerationResult::throwOnErrors)
+        .files
+
+fun ApiTree.generateClientWithDiagnostics(config: RenderConfig): GenerationResult {
+    val diagnostics = requestBodyDiagnostics()
+    val filteredTree = withSupportedRequestBodiesOnly()
+    return GenerationResult(
+        files = filteredTree.generateClientFiles(config),
+        diagnostics = diagnostics,
+    )
+}
+
+private fun ApiTree.generateClientFiles(config: RenderConfig): List<FileSpec> {
     if (children.isEmpty() && operations.isEmpty()) return emptyList()
     val needsSerializationUtils =
         hasInlineNonDiscriminatedParameterUnion() ||

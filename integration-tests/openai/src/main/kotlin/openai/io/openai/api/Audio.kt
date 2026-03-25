@@ -81,7 +81,7 @@ public class Audio internal constructor(
         setBody(body)
       }.body()
 
-      public suspend fun textEventStream(body: CreateSpeechRequest): ByteArray = client.post("/audio/speech") {
+      public suspend fun textEventStream(body: CreateSpeechRequest): CreateSpeechResponseStreamEvent = client.post("/audio/speech") {
         `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
         contentType(ContentType.Application.Json)
         setBody(body)

@@ -165,7 +165,7 @@ private fun buildDataResponseTypeSpec(
     config: RenderConfig,
     inlineModelScope: OperationInlineModelScope,
 ): TypeSpec {
-    val typeName = inlineModelScope.remap(model.toTypeName(config))
+    val typeName = inlineModelScope.remapResponseType(model, config)
     return TypeSpec.classBuilder("Response")
         .addModifiers(KModifier.DATA)
         .primaryConstructor(
@@ -204,7 +204,7 @@ internal fun Route.invokeReturnType(
     when {
         returns.isSingleUnitResponse() -> com.squareup.kotlinpoet.UNIT
         returns.isSingleDirectModelResponse() ->
-            inlineModelScope.remap(returns.singlePreferredModelOrNull()!!.toTypeName(config))
+            inlineModelScope.remapResponseType(requireNotNull(returns.singlePreferredModelOrNull(contentType)), config)
 
         contentType != null && returns.contentTypeStrategy() is ContentTypeStrategy.SeparateMethods ->
             methodClassName.nestedClass(contentTypeResponseTypeName(contentType))
@@ -320,7 +320,7 @@ private fun buildSealedResponseCaseTypeSpec(
             inlineTypeSpec != null -> responseClassName.nestedClass(
                 bodyTypeName
             )
-            else -> inlineModelScope.remap(model.toTypeName(config))
+            else -> inlineModelScope.remapResponseType(model, config)
         }
         val caseBuilder = TypeSpec.classBuilder(caseName)
             .addModifiers(KModifier.DATA)
@@ -422,7 +422,7 @@ private fun buildSealedResponseDefaultTypeSpec(
     }
     val valueType = when {
         inlineTypeSpec != null -> responseClassName.nestedClass(bodyTypeName)
-        model != null -> inlineModelScope.remap(model.toTypeName(config))
+        model != null -> inlineModelScope.remapResponseType(model, config)
         else -> null
     }
 
@@ -506,7 +506,7 @@ private fun buildMultiContentTypeResponseCaseTypeSpec(
     }
     val typeName = when {
         inlineTypeSpec != null -> responseClassName.nestedClass(bodyTypeName)
-        else -> inlineModelScope.remap(model.toTypeName(config))
+        else -> inlineModelScope.remapResponseType(model, config)
     }
     val caseBuilder = TypeSpec.classBuilder(caseName)
         .addModifiers(KModifier.DATA)
@@ -580,7 +580,7 @@ private fun buildSharedResponseCaseTypeSpec(
     }
     val typeName = when {
         inlineTypeSpec != null -> caseClassName.nestedClass(bodyTypeName)
-        else -> inlineModelScope.remap(model.toTypeName(config))
+        else -> inlineModelScope.remapResponseType(model, config)
     }
     return TypeSpec.classBuilder(caseName)
         .addModifiers(KModifier.DATA)
@@ -638,7 +638,7 @@ private fun buildMultiContentTypeDefaultTypeSpec(
     }
     val valueType = when {
         inlineTypeSpec != null -> defaultClassName.nestedClass(bodyTypeName)
-        model != null -> inlineModelScope.remap(model.toTypeName(config))
+        model != null -> inlineModelScope.remapResponseType(model, config)
         else -> null
     }
 
@@ -677,3 +677,19 @@ private fun buildMultiContentTypeDefaultTypeSpec(
 
 internal fun Route.Returns.singlePreferredModelOrNull(): Model? =
     (responses.values.firstOrNull() ?: default)?.preferredModel()
+
+private fun Route.Returns.singlePreferredModelOrNull(contentType: ContentType?): Model? {
+    if (contentType == null || contentTypeStrategy() !is ContentTypeStrategy.SeparateMethods) {
+        return singlePreferredModelOrNull()
+    }
+    return responses.entries
+        .asSequence()
+        .filter { it.key.isSuccessStatusCode() }
+        .mapNotNull { (_, returnType) ->
+            returnType.types.entries.firstOrNull { (candidate, _) ->
+                candidate.match(contentType) || contentType.match(candidate)
+            }?.value
+        }
+        .firstOrNull()
+        ?: singlePreferredModelOrNull()
+}

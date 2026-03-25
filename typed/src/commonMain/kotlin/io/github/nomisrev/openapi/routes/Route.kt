@@ -162,9 +162,13 @@ data class Route(
         /** application/x-www-form-urlencoded body. Represented as key/value pairs. */
         data class FormUrlEncoded(
             val parameters: List<Multipart.FormData>,
+            val unsupportedFields: List<String> = emptyList(),
             override val description: String?,
             override val extensions: Map<String, JsonElement>,
-        ) : Body, List<Multipart.FormData> by parameters
+        ) : Body, List<Multipart.FormData> by parameters {
+            val isSupported: Boolean
+                get() = unsupportedFields.isEmpty()
+        }
 
         sealed interface Multipart : Body {
             data class FormData(

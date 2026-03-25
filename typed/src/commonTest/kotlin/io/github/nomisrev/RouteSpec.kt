@@ -5,6 +5,7 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.parser.Components
+import io.github.nomisrev.openapi.parser.Encoding
 import io.github.nomisrev.openapi.parser.Info
 import io.github.nomisrev.openapi.parser.MediaType
 import io.github.nomisrev.openapi.parser.OpenAPI
@@ -86,6 +87,22 @@ val routeSpec by testSuite {
             required = required,
             content = mapOf(
                 ContentType.Application.Json.toString() to MediaType(schema = schema)
+            )
+        )
+    )
+
+    fun formRequestBody(
+        schema: ReferenceOr<Schema>,
+        required: Boolean = true,
+        encoding: Map<String, Encoding> = emptyMap(),
+    ): ReferenceOr<RequestBody> = ReferenceOr.value(
+        RequestBody(
+            required = required,
+            content = mapOf(
+                ContentType.Application.FormUrlEncoded.toString() to MediaType(
+                    schema = schema,
+                    encoding = encoding,
+                )
             )
         )
     )
@@ -599,5 +616,105 @@ val routeSpec by testSuite {
 
         val sdpOnly = assertIs<Route.Body.SetBody>(bodies.types.getValue(ContentType.parse("application/sdp")))
         assertTrue(sdpOnly.type is Model.Primitive.String)
+    }
+
+    test("scalar-only form-urlencoded body stays supported") {
+        val route = routes(
+            openAPI(
+                path = "/oauth/token",
+                method = HttpMethod.Post,
+                requestBody = formRequestBody(
+                    ReferenceOr.value(
+                        Schema(
+                            type = Schema.Type.Basic.Object,
+                            required = listOf("grant_type", "code"),
+                            properties = mapOf(
+                                "grant_type" to ReferenceOr.value(Schema.string),
+                                "code" to ReferenceOr.value(Schema.string),
+                            ),
+                        )
+                    )
+                ),
+            )
+        ).single()
+
+        val form = assertIs<Route.Body.FormUrlEncoded>(
+            requireNotNull(route.body).types.getValue(ContentType.Application.FormUrlEncoded)
+        )
+        assertTrue(form.isSupported)
+        assertTrue(form.unsupportedFields.isEmpty())
+    }
+
+    test("form-urlencoded body with non-scalar fields and no encoding becomes unsupported") {
+        val route = routes(
+            openAPI(
+                path = "/search",
+                method = HttpMethod.Post,
+                requestBody = formRequestBody(
+                    ReferenceOr.value(
+                        Schema(
+                            type = Schema.Type.Basic.Object,
+                            properties = mapOf(
+                                "filters" to ReferenceOr.value(
+                                    Schema(
+                                        type = Schema.Type.Basic.Object,
+                                        properties = mapOf(
+                                            "status" to ReferenceOr.value(Schema.string),
+                                        ),
+                                    )
+                                ),
+                                "tags" to ReferenceOr.value(
+                                    Schema(
+                                        type = Schema.Type.Basic.Array,
+                                        items = ReferenceOr.value(Schema.string),
+                                    )
+                                ),
+                            ),
+                        )
+                    )
+                ),
+            )
+        ).single()
+
+        val form = assertIs<Route.Body.FormUrlEncoded>(
+            requireNotNull(route.body).types.getValue(ContentType.Application.FormUrlEncoded)
+        )
+        assertEquals(listOf("filters", "tags"), form.unsupportedFields.sorted())
+        assertTrue(!form.isSupported)
+    }
+
+    test("explicit form field encoding keeps non-scalar field supported") {
+        val route = routes(
+            openAPI(
+                path = "/search",
+                method = HttpMethod.Post,
+                requestBody = formRequestBody(
+                    schema = ReferenceOr.value(
+                        Schema(
+                            type = Schema.Type.Basic.Object,
+                            properties = mapOf(
+                                "filters" to ReferenceOr.value(
+                                    Schema(
+                                        type = Schema.Type.Basic.Object,
+                                        properties = mapOf(
+                                            "status" to ReferenceOr.value(Schema.string),
+                                        ),
+                                    )
+                                ),
+                            ),
+                        )
+                    ),
+                    encoding = mapOf(
+                        "filters" to Encoding(style = "deepObject", explode = true),
+                    ),
+                ),
+            )
+        ).single()
+
+        val form = assertIs<Route.Body.FormUrlEncoded>(
+            requireNotNull(route.body).types.getValue(ContentType.Application.FormUrlEncoded)
+        )
+        assertTrue(form.isSupported)
+        assertTrue(form.unsupportedFields.isEmpty())
     }
 }

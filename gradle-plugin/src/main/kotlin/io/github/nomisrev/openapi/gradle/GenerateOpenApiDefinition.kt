@@ -3,11 +3,14 @@ package io.github.nomisrev.openapi.gradle
 import gratatouille.tasks.GInputFile
 import gratatouille.tasks.GOutputDirectory
 import gratatouille.tasks.GTask
+import io.github.nomisrev.openapi.GenerationDiagnosticSeverity
 import io.github.nomisrev.openapi.KmpTarget
 import io.github.nomisrev.openapi.RenderConfig
-import io.github.nomisrev.openapi.generate
+import io.github.nomisrev.openapi.generateWithDiagnostics
+import io.github.nomisrev.openapi.throwOnErrors
 import io.github.nomisrev.openapi.parser.OpenAPI
 import kotlinx.coroutines.runBlocking
+import org.gradle.api.logging.Logging
 import kotlin.collections.forEach
 import kotlin.collections.mapTo
 import kotlin.io.extension
@@ -38,9 +41,18 @@ fun generateOpenApi(
         apiPackage = apiPackage,
         targets = renderTargets,
     )
+    val taskLogger = Logging.getLogger("openapi.generate")
 
     runBlocking {
-        openApi.generate(config).forEach { file ->
+        val result = openApi.generateWithDiagnostics(config)
+        result.diagnostics.forEach { diagnostic ->
+            when (diagnostic.severity) {
+                GenerationDiagnosticSeverity.Warning -> taskLogger.warn(diagnostic.message)
+                GenerationDiagnosticSeverity.Error -> taskLogger.error(diagnostic.message)
+            }
+        }
+        result.throwOnErrors()
+        result.files.forEach { file ->
             file.writeTo(outputDirectory)
         }
     }

@@ -135,7 +135,7 @@ public class Images internal constructor(
         stream: Boolean? = null,
         partialImages: PartialImages? = null,
         quality: CreateImageEditRequest.Quality? = null,
-      ): ImagesResponse = client.post("/images/edits") {
+      ): ImageEditStreamEvent = client.post("/images/edits") {
         `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
         setBody(MultiPartFormDataContent(formData {
           append("image", Json.encodeToString(image))
@@ -182,7 +182,7 @@ public class Images internal constructor(
         }))
       }.body()
 
-      public suspend fun textEventStream(body: EditImageBodyJsonParam): ImagesResponse = client.post("/images/edits") {
+      public suspend fun textEventStream(body: EditImageBodyJsonParam): ImageEditStreamEvent = client.post("/images/edits") {
         `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
         contentType(ContentType.Application.Json)
         setBody(body)
@@ -216,7 +216,7 @@ public class Images internal constructor(
         setBody(body)
       }.body()
 
-      public suspend fun textEventStream(body: CreateImageRequest): ImagesResponse = client.post("/images/generations") {
+      public suspend fun textEventStream(body: CreateImageRequest): ImageGenStreamEvent = client.post("/images/generations") {
         `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
         contentType(ContentType.Application.Json)
         setBody(body)

@@ -5,11 +5,26 @@ import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 suspend fun OpenAPI.generate(config: RenderConfig = RenderConfig()): List<FileSpec> =
-    toApiTree().render(config)
+    generateWithDiagnostics(config)
+        .also(GenerationResult::throwOnErrors)
+        .files
 
-fun ApiTree.render(config: RenderConfig): List<FileSpec> {
+suspend fun OpenAPI.generateWithDiagnostics(config: RenderConfig = RenderConfig()): GenerationResult =
+    toApiTree().renderWithDiagnostics(config)
+
+fun ApiTree.render(config: RenderConfig): List<FileSpec> =
+    renderWithDiagnostics(config)
+        .also(GenerationResult::throwOnErrors)
+        .files
+
+fun ApiTree.renderWithDiagnostics(config: RenderConfig): GenerationResult {
+    val diagnostics = requestBodyDiagnostics()
     val enrichedConfig = config.copy(contextSpecificNames = models.contextSpecificNames())
-    return generateModels(enrichedConfig) + generateClient(enrichedConfig)
+    val filteredTree = withSupportedRequestBodiesOnly()
+    return GenerationResult(
+        files = filteredTree.generateModels(enrichedConfig) + filteredTree.generateClient(enrichedConfig),
+        diagnostics = diagnostics,
+    )
 }
 
 fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> =

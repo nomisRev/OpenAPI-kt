@@ -127,7 +127,7 @@ public class Skills internal constructor(
         private val client: HttpClient,
         private val skillId: String,
       ) {
-        public suspend fun zip(): String = client.get("/skills/$skillId/content") {
+        public suspend fun zip(): ByteArray = client.get("/skills/$skillId/content") {
           `header`(HttpHeaders.Accept, ContentType.Application.Zip)
         }.body()
 
@@ -234,7 +234,7 @@ public class Skills internal constructor(
             private val skillId: String,
             private val version: String,
           ) {
-            public suspend fun zip(): String = client.get("/skills/$skillId/versions/$version/content") {
+            public suspend fun zip(): ByteArray = client.get("/skills/$skillId/versions/$version/content") {
               `header`(HttpHeaders.Accept, ContentType.Application.Zip)
             }.body()
 

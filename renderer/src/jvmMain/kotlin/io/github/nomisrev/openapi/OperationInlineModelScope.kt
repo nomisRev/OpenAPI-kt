@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import io.github.nomisrev.openapi.routes.Route
@@ -9,10 +10,31 @@ import io.github.nomisrev.openapi.transformers.nestedOrNull
 
 internal class OperationInlineModelScope(
     private val typeRemaps: Map<ClassName, TypeName>,
+    private val responseCollectionTypeRemaps: Map<Pair<String, String>, TypeName>,
     private val methodStandaloneTypes: List<StandaloneInlineType>,
     private val responseStandaloneTypes: List<StandaloneInlineType>,
 ) {
     fun remap(typeName: TypeName): TypeName = typeName.remapTypeNames(typeRemaps)
+
+    fun remapResponseType(model: Model, config: RenderConfig): TypeName =
+        when (model) {
+            is Model.Collection -> model.responseCollectionItemGroupingKey(config)
+                ?.let(responseCollectionTypeRemaps::get)
+                ?.let { ResponseCollectionListType.parameterizedBy(it).copy(nullable = model.isNullable) }
+                ?: remap(model.toTypeName(config))
+
+            is Model.ByteArray,
+            is Model.Date,
+            is Model.DateTime,
+            is Model.DiscriminatedObject,
+            is Model.Enum,
+            is Model.FreeFormJson,
+            is Model.Object,
+            is Model.Primitive,
+            is Model.Reference,
+            is Model.Union,
+            is Model.Uuid -> remap(model.toTypeName(config))
+        }
 
     fun externalTypeNames(): Map<ClassName, TypeName> = typeRemaps
 
@@ -25,6 +47,7 @@ internal class OperationInlineModelScope(
     companion object {
         fun empty(): OperationInlineModelScope = OperationInlineModelScope(
             typeRemaps = emptyMap(),
+            responseCollectionTypeRemaps = emptyMap(),
             methodStandaloneTypes = emptyList(),
             responseStandaloneTypes = emptyList(),
         )
@@ -53,6 +76,8 @@ private data class OperationInlineModelCandidate(
         get() = simpleName to structuralKey
 }
 
+private val ResponseCollectionListType = ClassName("kotlin.collections", "List")
+
 internal data class StandaloneInlineType(
     val model: Model,
     val targetClassName: ClassName,
@@ -62,10 +87,10 @@ internal fun Route.operationInlineModelScope(
     config: RenderConfig,
     methodClassName: ClassName,
 ): OperationInlineModelScope {
-    // When the response has no wrapper class (single direct model), inline response types
-    // must be placed on the method class itself instead of a nested Response class.
+    // When response payloads are emitted directly from method APIs, standalone response
+    // collection item types must live on the method class rather than a nested Response type.
     val responseOwnerClassName =
-        if (returns.isSingleDirectModelResponse()) methodClassName
+        if (returns.isSingleDirectModelResponse() || returns.contentTypeStrategy() is ContentTypeStrategy.SeparateMethods) methodClassName
         else methodClassName.nestedClass("Response")
 
     val overloadedBody = body?.defaultOrNull() as? Route.Body.OverloadedBody ?: return responseInlineModelScopeOnly(
@@ -83,14 +108,9 @@ internal fun Route.operationInlineModelScope(
             case.model.collectionItemCandidateOrNull(config, methodClassName, InlineCandidateKind.OverloadedCollectionItem, sourceOrder++)
                 ?.let(::add)
         }
-        returns.singlePreferredModelOrNull()
-            ?.collectionItemCandidateOrNull(
-                config = config,
-                ownerClassName = responseOwnerClassName,
-                kind = InlineCandidateKind.ResponseCollectionItem,
-                sourceOrder = sourceOrder++,
-            )
-            ?.let(::add)
+        addAll(responseCollectionItemCandidates(config, responseOwnerClassName, sourceOrder).also {
+            sourceOrder += it.size
+        })
     }
     return candidates.toOperationInlineModelScope(methodClassName, responseOwnerClassName)
 }
@@ -100,15 +120,46 @@ private fun Route.responseInlineModelScopeOnly(
     methodClassName: ClassName,
     responseOwnerClassName: ClassName = methodClassName.nestedClass("Response"),
 ): OperationInlineModelScope {
-    val candidate = returns.singlePreferredModelOrNull()
-        ?.collectionItemCandidateOrNull(
-            config = config,
-            ownerClassName = responseOwnerClassName,
-            kind = InlineCandidateKind.ResponseCollectionItem,
-            sourceOrder = 0,
-        )
-        ?: return OperationInlineModelScope.empty()
-    return listOf(candidate).toOperationInlineModelScope(methodClassName, responseOwnerClassName)
+    val candidates = responseCollectionItemCandidates(config, responseOwnerClassName, sourceOrderStart = 0)
+    if (candidates.isEmpty()) return OperationInlineModelScope.empty()
+    return candidates.toOperationInlineModelScope(methodClassName, responseOwnerClassName)
+}
+
+private fun Route.responseCollectionItemCandidates(
+    config: RenderConfig,
+    ownerClassName: ClassName,
+    sourceOrderStart: Int,
+): List<OperationInlineModelCandidate> {
+    var sourceOrder = sourceOrderStart
+    return buildList {
+        returns.responses.entries
+            .sortedBy { it.key.value }
+            .forEach { (_, returnType) ->
+                returnType.types.entries
+                    .sortedBy { it.key.toString() }
+                    .forEach { (_, model) ->
+                        model.collectionItemCandidateOrNull(
+                            config = config,
+                            ownerClassName = ownerClassName,
+                            kind = InlineCandidateKind.ResponseCollectionItem,
+                            sourceOrder = sourceOrder++,
+                        )?.let(::add)
+                    }
+            }
+
+        returns.default
+            ?.types
+            ?.entries
+            ?.sortedBy { it.key.toString() }
+            ?.forEach { (_, model) ->
+                model.collectionItemCandidateOrNull(
+                    config = config,
+                    ownerClassName = ownerClassName,
+                    kind = InlineCandidateKind.ResponseCollectionItem,
+                    sourceOrder = sourceOrder++,
+                )?.let(::add)
+            }
+    }
 }
 
 private fun List<OperationInlineModelCandidate>.toOperationInlineModelScope(
@@ -132,6 +183,11 @@ private fun List<OperationInlineModelCandidate>.toOperationInlineModelScope(
             typeRemaps[candidate.sourceClassName] = winner.targetClassName
         }
     }
+
+    val responseCollectionTypeRemaps = winners.values
+        .asSequence()
+        .filter { it.kind == InlineCandidateKind.ResponseCollectionItem }
+        .associate { it.groupingKey to it.targetClassName }
 
     val methodStandaloneTypes = linkedMapOf<ClassName, StandaloneInlineType>()
     val responseStandaloneTypes = linkedMapOf<ClassName, StandaloneInlineType>()
@@ -158,6 +214,7 @@ private fun List<OperationInlineModelCandidate>.toOperationInlineModelScope(
 
     return OperationInlineModelScope(
         typeRemaps = typeRemaps,
+        responseCollectionTypeRemaps = responseCollectionTypeRemaps,
         methodStandaloneTypes = methodStandaloneTypes.values.toList(),
         responseStandaloneTypes = responseStandaloneTypes.values.toList(),
     )
@@ -284,6 +341,20 @@ private fun Model.Object.collectionItemSimpleName(config: RenderConfig): String 
         .joinToString(separator = "And") { it.toPascalCase() }
         .takeIf(String::isNotBlank)
         ?: context.toClassName(config).simpleName
+
+private fun Model.Collection.responseCollectionItemGroupingKey(config: RenderConfig): Pair<String, String>? {
+    val nestedModel = inner.nestedOrNull() as? Model.ContextHolder ?: return null
+    val simpleName = when (val model = nestedModel) {
+        is Model.Object -> model.collectionItemSimpleName(config)
+        is Model.Enum -> nestedModel.context.toClassName(config).simpleName
+        is Model.DiscriminatedObject,
+        is Model.Reference,
+        is Model.OneOf,
+        is Model.AnyOf -> return null
+    }
+    val structuralKey = InlineModelSharingJson.encodeToString((nestedModel as Model).normalizedForSharingKey())
+    return simpleName to structuralKey
+}
 
 private fun StandaloneInlineType.toTypeSpec(
     config: RenderConfig,

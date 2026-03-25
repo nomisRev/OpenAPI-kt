@@ -76,7 +76,7 @@ public class Chat internal constructor(
         setBody(body)
       }.body()
 
-      public suspend fun textEventStream(body: CreateChatCompletionRequest): CreateChatCompletionResponse = client.post("/chat/completions") {
+      public suspend fun textEventStream(body: CreateChatCompletionRequest): CreateChatCompletionStreamResponse = client.post("/chat/completions") {
         `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
         contentType(ContentType.Application.Json)
         setBody(body)
