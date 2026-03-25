@@ -1,7 +1,8 @@
 package io.openai.model
 
+import kotlin.Long
 import kotlin.OptIn
-import kotlin.jvm.JvmInline
+import kotlin.String
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -14,31 +15,58 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("type")
 @Serializable
 public sealed interface Annotation {
+  /**
+   * A citation to a file.
+   */
+  @SerialName("file_citation")
   @Serializable
-  @JvmInline
-  @SerialName("FileCitationBody")
-  public value class FileCitationBody(
-    public val `value`: io.openai.model.FileCitationBody,
+  public data class FileCitation(
+    @SerialName("file_id")
+    public val fileId: String,
+    public val index: Long,
+    public val filename: String,
   ) : Annotation
 
+  /**
+   * A citation for a web resource used to generate a model response.
+   */
+  @SerialName("url_citation")
   @Serializable
-  @JvmInline
-  @SerialName("UrlCitationBody")
-  public value class UrlCitationBody(
-    public val `value`: io.openai.model.UrlCitationBody,
+  public data class UrlCitation(
+    public val url: String,
+    @SerialName("start_index")
+    public val startIndex: Long,
+    @SerialName("end_index")
+    public val endIndex: Long,
+    public val title: String,
   ) : Annotation
 
+  /**
+   * A citation for a container file used to generate a model response.
+   */
+  @SerialName("container_file_citation")
   @Serializable
-  @JvmInline
-  @SerialName("ContainerFileCitationBody")
-  public value class ContainerFileCitationBody(
-    public val `value`: io.openai.model.ContainerFileCitationBody,
+  public data class ContainerFileCitation(
+    @SerialName("container_id")
+    public val containerId: String,
+    @SerialName("file_id")
+    public val fileId: String,
+    @SerialName("start_index")
+    public val startIndex: Long,
+    @SerialName("end_index")
+    public val endIndex: Long,
+    public val filename: String,
   ) : Annotation
 
+  /**
+   * A path to a file.
+   *
+   */
+  @SerialName("file_path")
   @Serializable
-  @JvmInline
-  @SerialName("FilePath")
-  public value class FilePath(
-    public val `value`: io.openai.model.FilePath,
+  public data class FilePath(
+    @SerialName("file_id")
+    public val fileId: String,
+    public val index: Long,
   ) : Annotation
 }

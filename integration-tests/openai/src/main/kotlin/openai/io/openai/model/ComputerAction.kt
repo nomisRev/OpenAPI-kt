@@ -1,6 +1,9 @@
 package io.openai.model
 
+import kotlin.Long
 import kotlin.OptIn
+import kotlin.String
+import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -11,66 +14,86 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("type")
 @Serializable
 public sealed interface ComputerAction {
+  /**
+   * A click action.
+   */
+  @SerialName("click")
   @Serializable
+  public data class Click(
+    public val button: ClickButtonType,
+    public val x: Long,
+    public val y: Long,
+  ) : ComputerAction
+
+  /**
+   * A double click action.
+   */
+  @SerialName("double_click")
+  @Serializable
+  public data class DoubleClick(
+    public val x: Long,
+    public val y: Long,
+  ) : ComputerAction
+
+  /**
+   * A drag action.
+   */
   @JvmInline
-  @SerialName("ClickParam")
-  public value class ClickParam(
-    public val `value`: io.openai.model.ClickParam,
+  @SerialName("drag")
+  @Serializable
+  public value class Drag(
+    public val path: List<CoordParam>,
+  ) : ComputerAction
+
+  /**
+   * A collection of keypresses the model would like to perform.
+   */
+  @JvmInline
+  @SerialName("keypress")
+  @Serializable
+  public value class Keypress(
+    public val keys: List<String>,
+  ) : ComputerAction
+
+  /**
+   * A mouse move action.
+   */
+  @SerialName("move")
+  @Serializable
+  public data class Move(
+    public val x: Long,
+    public val y: Long,
   ) : ComputerAction
 
   @Serializable
+  @SerialName("screenshot")
+  public data object Screenshot : ComputerAction
+
+  /**
+   * A scroll action.
+   */
+  @SerialName("scroll")
+  @Serializable
+  public data class Scroll(
+    public val x: Long,
+    public val y: Long,
+    @SerialName("scroll_x")
+    public val scrollX: Long,
+    @SerialName("scroll_y")
+    public val scrollY: Long,
+  ) : ComputerAction
+
+  /**
+   * An action to type in text.
+   */
   @JvmInline
-  @SerialName("DoubleClickAction")
-  public value class DoubleClickAction(
-    public val `value`: io.openai.model.DoubleClickAction,
+  @SerialName("type")
+  @Serializable
+  public value class Type(
+    public val text: String,
   ) : ComputerAction
 
   @Serializable
-  @JvmInline
-  @SerialName("DragParam")
-  public value class DragParam(
-    public val `value`: io.openai.model.DragParam,
-  ) : ComputerAction
-
-  @Serializable
-  @JvmInline
-  @SerialName("KeyPressAction")
-  public value class KeyPressAction(
-    public val `value`: io.openai.model.KeyPressAction,
-  ) : ComputerAction
-
-  @Serializable
-  @JvmInline
-  @SerialName("MoveParam")
-  public value class MoveParam(
-    public val `value`: io.openai.model.MoveParam,
-  ) : ComputerAction
-
-  @Serializable
-  @JvmInline
-  @SerialName("ScreenshotParam")
-  public value class ScreenshotParam(
-    public val `value`: io.openai.model.ScreenshotParam,
-  ) : ComputerAction
-
-  @Serializable
-  @JvmInline
-  @SerialName("ScrollParam")
-  public value class ScrollParam(
-    public val `value`: io.openai.model.ScrollParam,
-  ) : ComputerAction
-
-  @Serializable
-  @JvmInline
-  @SerialName("TypeParam")
-  public value class TypeParam(
-    public val `value`: io.openai.model.TypeParam,
-  ) : ComputerAction
-
-  @Serializable
-  @JvmInline
-  @SerialName("WaitParam")
-  public value class WaitParam(
-    public val `value`: io.openai.model.WaitParam,
-  ) : ComputerAction
+  @SerialName("wait")
+  public data object Wait : ComputerAction
 }

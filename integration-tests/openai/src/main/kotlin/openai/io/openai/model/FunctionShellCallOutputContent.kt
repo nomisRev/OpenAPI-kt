@@ -1,5 +1,6 @@
 package io.openai.model
 
+import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
@@ -27,17 +28,18 @@ public data class FunctionShellCallOutputContent(
   @Serializable
   public sealed interface Outcome {
     @Serializable
-    @JvmInline
-    @SerialName("FunctionShellCallOutputTimeoutOutcome")
-    public value class FunctionShellCallOutputTimeoutOutcome(
-      public val `value`: io.openai.model.FunctionShellCallOutputTimeoutOutcome,
-    ) : Outcome
+    @SerialName("timeout")
+    public data object Timeout : Outcome
 
-    @Serializable
+    /**
+     * Indicates that the shell commands finished and returned an exit code.
+     */
     @JvmInline
-    @SerialName("FunctionShellCallOutputExitOutcome")
-    public value class FunctionShellCallOutputExitOutcome(
-      public val `value`: io.openai.model.FunctionShellCallOutputExitOutcome,
+    @SerialName("exit")
+    @Serializable
+    public value class Exit(
+      @SerialName("exit_code")
+      public val exitCode: Long,
     ) : Outcome
   }
 }

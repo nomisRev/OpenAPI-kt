@@ -1,6 +1,7 @@
 package io.openai.model
 
 import kotlin.OptIn
+import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -11,24 +12,41 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("type")
 @Serializable
 public sealed interface InputContent {
-  @Serializable
+  /**
+   * A text input to the model.
+   */
   @JvmInline
-  @SerialName("InputTextContent")
-  public value class InputTextContent(
-    public val `value`: io.openai.model.InputTextContent,
+  @SerialName("input_text")
+  @Serializable
+  public value class InputText(
+    public val text: String,
   ) : InputContent
 
+  /**
+   * An image input to the model. Learn about [image inputs](/docs/guides/vision).
+   */
+  @SerialName("input_image")
   @Serializable
-  @JvmInline
-  @SerialName("InputImageContent")
-  public value class InputImageContent(
-    public val `value`: io.openai.model.InputImageContent,
+  public data class InputImage(
+    @SerialName("image_url")
+    public val imageUrl: String? = null,
+    @SerialName("file_id")
+    public val fileId: String? = null,
+    public val detail: ImageDetail,
   ) : InputContent
 
+  /**
+   * A file input to the model.
+   */
+  @SerialName("input_file")
   @Serializable
-  @JvmInline
-  @SerialName("InputFileContent")
-  public value class InputFileContent(
-    public val `value`: io.openai.model.InputFileContent,
+  public data class InputFile(
+    @SerialName("file_id")
+    public val fileId: String? = null,
+    public val filename: String? = null,
+    @SerialName("file_data")
+    public val fileData: String? = null,
+    @SerialName("file_url")
+    public val fileUrl: String? = null,
   ) : InputContent
 }

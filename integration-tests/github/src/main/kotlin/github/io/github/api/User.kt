@@ -24,7 +24,6 @@ import io.github.model.Package
 import io.github.model.PackageVersion
 import io.github.model.PrivateUser
 import io.github.model.ProjectsV2ItemSimple
-import io.github.model.PublicUser
 import io.github.model.Repository
 import io.github.model.RepositoryInvitation
 import io.github.model.SimpleUser
@@ -151,19 +150,171 @@ public class User internal constructor(
       @JsonClassDiscriminator("user_view_type")
       @Serializable
       public sealed interface Ok : Response {
-        @Serializable
-        @JvmInline
+        /**
+         * Private User
+         */
         @SerialName("private")
-        public value class Private(
-          public val `value`: PrivateUser,
-        ) : Ok
-
         @Serializable
-        @JvmInline
+        public data class Private(
+          public val login: String,
+          public val id: Long,
+          @SerialName("node_id")
+          public val nodeId: String,
+          @SerialName("avatar_url")
+          public val avatarUrl: String,
+          @SerialName("gravatar_id")
+          public val gravatarId: String?,
+          public val url: String,
+          @SerialName("html_url")
+          public val htmlUrl: String,
+          @SerialName("followers_url")
+          public val followersUrl: String,
+          @SerialName("following_url")
+          public val followingUrl: String,
+          @SerialName("gists_url")
+          public val gistsUrl: String,
+          @SerialName("starred_url")
+          public val starredUrl: String,
+          @SerialName("subscriptions_url")
+          public val subscriptionsUrl: String,
+          @SerialName("organizations_url")
+          public val organizationsUrl: String,
+          @SerialName("repos_url")
+          public val reposUrl: String,
+          @SerialName("events_url")
+          public val eventsUrl: String,
+          @SerialName("received_events_url")
+          public val receivedEventsUrl: String,
+          public val type: String,
+          @SerialName("site_admin")
+          public val siteAdmin: Boolean,
+          public val name: String?,
+          public val company: String?,
+          public val blog: String?,
+          public val location: String?,
+          public val email: String?,
+          @SerialName("notification_email")
+          public val notificationEmail: String? = null,
+          public val hireable: Boolean?,
+          public val bio: String?,
+          @SerialName("twitter_username")
+          public val twitterUsername: String? = null,
+          @SerialName("public_repos")
+          public val publicRepos: Long,
+          @SerialName("public_gists")
+          public val publicGists: Long,
+          public val followers: Long,
+          public val following: Long,
+          @SerialName("created_at")
+          public val createdAt: Instant,
+          @SerialName("updated_at")
+          public val updatedAt: Instant,
+          @SerialName("private_gists")
+          public val privateGists: Long,
+          @SerialName("total_private_repos")
+          public val totalPrivateRepos: Long,
+          @SerialName("owned_private_repos")
+          public val ownedPrivateRepos: Long,
+          @SerialName("disk_usage")
+          public val diskUsage: Long,
+          public val collaborators: Long,
+          @SerialName("two_factor_authentication")
+          public val twoFactorAuthentication: Boolean,
+          public val plan: Plan? = null,
+          @SerialName("business_plus")
+          public val businessPlus: Boolean? = null,
+          @SerialName("ldap_dn")
+          public val ldapDn: String? = null,
+        ) : Ok {
+          @Serializable
+          public data class Plan(
+            public val collaborators: Long,
+            public val name: String,
+            public val space: Long,
+            @SerialName("private_repos")
+            public val privateRepos: Long,
+          )
+        }
+
+        /**
+         * Public User
+         */
         @SerialName("public")
-        public value class Public(
-          public val `value`: PublicUser,
-        ) : Ok
+        @Serializable
+        public data class Public(
+          public val login: String,
+          public val id: Long,
+          @SerialName("node_id")
+          public val nodeId: String,
+          @SerialName("avatar_url")
+          public val avatarUrl: String,
+          @SerialName("gravatar_id")
+          public val gravatarId: String?,
+          public val url: String,
+          @SerialName("html_url")
+          public val htmlUrl: String,
+          @SerialName("followers_url")
+          public val followersUrl: String,
+          @SerialName("following_url")
+          public val followingUrl: String,
+          @SerialName("gists_url")
+          public val gistsUrl: String,
+          @SerialName("starred_url")
+          public val starredUrl: String,
+          @SerialName("subscriptions_url")
+          public val subscriptionsUrl: String,
+          @SerialName("organizations_url")
+          public val organizationsUrl: String,
+          @SerialName("repos_url")
+          public val reposUrl: String,
+          @SerialName("events_url")
+          public val eventsUrl: String,
+          @SerialName("received_events_url")
+          public val receivedEventsUrl: String,
+          public val type: String,
+          @SerialName("site_admin")
+          public val siteAdmin: Boolean,
+          public val name: String?,
+          public val company: String?,
+          public val blog: String?,
+          public val location: String?,
+          public val email: String?,
+          @SerialName("notification_email")
+          public val notificationEmail: String? = null,
+          public val hireable: Boolean?,
+          public val bio: String?,
+          @SerialName("twitter_username")
+          public val twitterUsername: String? = null,
+          @SerialName("public_repos")
+          public val publicRepos: Long,
+          @SerialName("public_gists")
+          public val publicGists: Long,
+          public val followers: Long,
+          public val following: Long,
+          @SerialName("created_at")
+          public val createdAt: Instant,
+          @SerialName("updated_at")
+          public val updatedAt: Instant,
+          public val plan: Plan? = null,
+          @SerialName("private_gists")
+          public val privateGists: Long? = null,
+          @SerialName("total_private_repos")
+          public val totalPrivateRepos: Long? = null,
+          @SerialName("owned_private_repos")
+          public val ownedPrivateRepos: Long? = null,
+          @SerialName("disk_usage")
+          public val diskUsage: Long? = null,
+          public val collaborators: Long? = null,
+        ) : Ok {
+          @Serializable
+          public data class Plan(
+            public val collaborators: Long,
+            public val name: String,
+            public val space: Long,
+            @SerialName("private_repos")
+            public val privateRepos: Long,
+          )
+        }
       }
 
       public data object NotModified : Response
@@ -6308,19 +6459,171 @@ public class User internal constructor(
         @JsonClassDiscriminator("user_view_type")
         @Serializable
         public sealed interface Ok : Response {
-          @Serializable
-          @JvmInline
+          /**
+           * Private User
+           */
           @SerialName("private")
-          public value class Private(
-            public val `value`: PrivateUser,
-          ) : Ok
-
           @Serializable
-          @JvmInline
+          public data class Private(
+            public val login: String,
+            public val id: Long,
+            @SerialName("node_id")
+            public val nodeId: String,
+            @SerialName("avatar_url")
+            public val avatarUrl: String,
+            @SerialName("gravatar_id")
+            public val gravatarId: String?,
+            public val url: String,
+            @SerialName("html_url")
+            public val htmlUrl: String,
+            @SerialName("followers_url")
+            public val followersUrl: String,
+            @SerialName("following_url")
+            public val followingUrl: String,
+            @SerialName("gists_url")
+            public val gistsUrl: String,
+            @SerialName("starred_url")
+            public val starredUrl: String,
+            @SerialName("subscriptions_url")
+            public val subscriptionsUrl: String,
+            @SerialName("organizations_url")
+            public val organizationsUrl: String,
+            @SerialName("repos_url")
+            public val reposUrl: String,
+            @SerialName("events_url")
+            public val eventsUrl: String,
+            @SerialName("received_events_url")
+            public val receivedEventsUrl: String,
+            public val type: String,
+            @SerialName("site_admin")
+            public val siteAdmin: Boolean,
+            public val name: String?,
+            public val company: String?,
+            public val blog: String?,
+            public val location: String?,
+            public val email: String?,
+            @SerialName("notification_email")
+            public val notificationEmail: String? = null,
+            public val hireable: Boolean?,
+            public val bio: String?,
+            @SerialName("twitter_username")
+            public val twitterUsername: String? = null,
+            @SerialName("public_repos")
+            public val publicRepos: Long,
+            @SerialName("public_gists")
+            public val publicGists: Long,
+            public val followers: Long,
+            public val following: Long,
+            @SerialName("created_at")
+            public val createdAt: Instant,
+            @SerialName("updated_at")
+            public val updatedAt: Instant,
+            @SerialName("private_gists")
+            public val privateGists: Long,
+            @SerialName("total_private_repos")
+            public val totalPrivateRepos: Long,
+            @SerialName("owned_private_repos")
+            public val ownedPrivateRepos: Long,
+            @SerialName("disk_usage")
+            public val diskUsage: Long,
+            public val collaborators: Long,
+            @SerialName("two_factor_authentication")
+            public val twoFactorAuthentication: Boolean,
+            public val plan: Plan? = null,
+            @SerialName("business_plus")
+            public val businessPlus: Boolean? = null,
+            @SerialName("ldap_dn")
+            public val ldapDn: String? = null,
+          ) : Ok {
+            @Serializable
+            public data class Plan(
+              public val collaborators: Long,
+              public val name: String,
+              public val space: Long,
+              @SerialName("private_repos")
+              public val privateRepos: Long,
+            )
+          }
+
+          /**
+           * Public User
+           */
           @SerialName("public")
-          public value class Public(
-            public val `value`: PublicUser,
-          ) : Ok
+          @Serializable
+          public data class Public(
+            public val login: String,
+            public val id: Long,
+            @SerialName("node_id")
+            public val nodeId: String,
+            @SerialName("avatar_url")
+            public val avatarUrl: String,
+            @SerialName("gravatar_id")
+            public val gravatarId: String?,
+            public val url: String,
+            @SerialName("html_url")
+            public val htmlUrl: String,
+            @SerialName("followers_url")
+            public val followersUrl: String,
+            @SerialName("following_url")
+            public val followingUrl: String,
+            @SerialName("gists_url")
+            public val gistsUrl: String,
+            @SerialName("starred_url")
+            public val starredUrl: String,
+            @SerialName("subscriptions_url")
+            public val subscriptionsUrl: String,
+            @SerialName("organizations_url")
+            public val organizationsUrl: String,
+            @SerialName("repos_url")
+            public val reposUrl: String,
+            @SerialName("events_url")
+            public val eventsUrl: String,
+            @SerialName("received_events_url")
+            public val receivedEventsUrl: String,
+            public val type: String,
+            @SerialName("site_admin")
+            public val siteAdmin: Boolean,
+            public val name: String?,
+            public val company: String?,
+            public val blog: String?,
+            public val location: String?,
+            public val email: String?,
+            @SerialName("notification_email")
+            public val notificationEmail: String? = null,
+            public val hireable: Boolean?,
+            public val bio: String?,
+            @SerialName("twitter_username")
+            public val twitterUsername: String? = null,
+            @SerialName("public_repos")
+            public val publicRepos: Long,
+            @SerialName("public_gists")
+            public val publicGists: Long,
+            public val followers: Long,
+            public val following: Long,
+            @SerialName("created_at")
+            public val createdAt: Instant,
+            @SerialName("updated_at")
+            public val updatedAt: Instant,
+            public val plan: Plan? = null,
+            @SerialName("private_gists")
+            public val privateGists: Long? = null,
+            @SerialName("total_private_repos")
+            public val totalPrivateRepos: Long? = null,
+            @SerialName("owned_private_repos")
+            public val ownedPrivateRepos: Long? = null,
+            @SerialName("disk_usage")
+            public val diskUsage: Long? = null,
+            public val collaborators: Long? = null,
+          ) : Ok {
+            @Serializable
+            public data class Plan(
+              public val collaborators: Long,
+              public val name: String,
+              public val space: Long,
+              @SerialName("private_repos")
+              public val privateRepos: Long,
+            )
+          }
         }
 
         public data class NotFound(

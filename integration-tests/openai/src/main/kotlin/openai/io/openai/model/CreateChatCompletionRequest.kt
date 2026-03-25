@@ -202,25 +202,26 @@ public data class CreateChatCompletionRequest(
   @Serializable
   public sealed interface ResponseFormat {
     @Serializable
-    @JvmInline
-    @SerialName("ResponseFormatText")
-    public value class ResponseFormatText(
-      public val `value`: io.openai.model.ResponseFormatText,
+    @SerialName("text")
+    public data object Text : ResponseFormat
+
+    /**
+     * JSON Schema response format. Used to generate structured JSON responses.
+     * Learn more about [Structured Outputs](/docs/guides/structured-outputs).
+     *
+     */
+    @SerialName("json_schema")
+    @Serializable
+    public data class JsonSchema(
+      public val description: String? = null,
+      public val name: String,
+      public val schema: ResponseFormatJsonSchemaSchema? = null,
+      public val strict: Boolean? = null,
     ) : ResponseFormat
 
     @Serializable
-    @JvmInline
-    @SerialName("ResponseFormatJsonSchema")
-    public value class ResponseFormatJsonSchema(
-      public val `value`: io.openai.model.ResponseFormatJsonSchema,
-    ) : ResponseFormat
-
-    @Serializable
-    @JvmInline
-    @SerialName("ResponseFormatJsonObject")
-    public value class ResponseFormatJsonObject(
-      public val `value`: io.openai.model.ResponseFormatJsonObject,
-    ) : ResponseFormat
+    @SerialName("json_object")
+    public data object JsonObject : ResponseFormat
   }
 
   @Serializable(with = Tools.Serializer::class)

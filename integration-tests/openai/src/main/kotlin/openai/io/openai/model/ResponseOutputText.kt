@@ -3,7 +3,6 @@ package io.openai.model
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
@@ -27,19 +26,45 @@ public data class ResponseOutputText(
   @JsonClassDiscriminator("type")
   @Serializable
   public sealed interface Annotations {
+    /**
+     * Annotation that references an uploaded file.
+     */
+    @SerialName("file")
     @Serializable
-    @JvmInline
-    @SerialName("FileAnnotation")
-    public value class FileAnnotation(
-      public val `value`: io.openai.model.FileAnnotation,
-    ) : Annotations
+    public data class File(
+      @Required
+      public val type: Type = Type.File,
+      public val filename: String,
+    ) : Annotations {
+      @Serializable
+      public enum class Type(
+        public val `value`: String,
+      ) {
+        @SerialName("file")
+        File("file"),
+        ;
+      }
+    }
 
+    /**
+     * Annotation that references a URL.
+     */
+    @SerialName("url")
     @Serializable
-    @JvmInline
-    @SerialName("UrlAnnotation")
-    public value class UrlAnnotation(
-      public val `value`: io.openai.model.UrlAnnotation,
-    ) : Annotations
+    public data class Url(
+      @Required
+      public val type: Type = Type.Url,
+      public val url: String,
+    ) : Annotations {
+      @Serializable
+      public enum class Type(
+        public val `value`: String,
+      ) {
+        @SerialName("url")
+        Url("url"),
+        ;
+      }
+    }
   }
 
   @Serializable

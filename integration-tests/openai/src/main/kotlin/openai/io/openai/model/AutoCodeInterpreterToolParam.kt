@@ -3,7 +3,6 @@ package io.openai.model
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
@@ -32,17 +31,16 @@ public data class AutoCodeInterpreterToolParam(
   @Serializable
   public sealed interface NetworkPolicy {
     @Serializable
-    @JvmInline
-    @SerialName("ContainerNetworkPolicyDisabledParam")
-    public value class ContainerNetworkPolicyDisabledParam(
-      public val `value`: io.openai.model.ContainerNetworkPolicyDisabledParam,
-    ) : NetworkPolicy
+    @SerialName("disabled")
+    public data object Disabled : NetworkPolicy
 
+    @SerialName("allowlist")
     @Serializable
-    @JvmInline
-    @SerialName("ContainerNetworkPolicyAllowlistParam")
-    public value class ContainerNetworkPolicyAllowlistParam(
-      public val `value`: io.openai.model.ContainerNetworkPolicyAllowlistParam,
+    public data class Allowlist(
+      @SerialName("allowed_domains")
+      public val allowedDomains: List<String>,
+      @SerialName("domain_secrets")
+      public val domainSecrets: List<ContainerNetworkPolicyDomainSecretParam>? = null,
     ) : NetworkPolicy
   }
 

@@ -4,7 +4,6 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -57,17 +56,16 @@ public data class CreateContainerBody(
   @Serializable
   public sealed interface NetworkPolicy {
     @Serializable
-    @JvmInline
-    @SerialName("ContainerNetworkPolicyDisabledParam")
-    public value class ContainerNetworkPolicyDisabledParam(
-      public val `value`: io.openai.model.ContainerNetworkPolicyDisabledParam,
-    ) : NetworkPolicy
+    @SerialName("disabled")
+    public data object Disabled : NetworkPolicy
 
+    @SerialName("allowlist")
     @Serializable
-    @JvmInline
-    @SerialName("ContainerNetworkPolicyAllowlistParam")
-    public value class ContainerNetworkPolicyAllowlistParam(
-      public val `value`: io.openai.model.ContainerNetworkPolicyAllowlistParam,
+    public data class Allowlist(
+      @SerialName("allowed_domains")
+      public val allowedDomains: List<String>,
+      @SerialName("domain_secrets")
+      public val domainSecrets: List<ContainerNetworkPolicyDomainSecretParam>? = null,
     ) : NetworkPolicy
   }
 
@@ -75,18 +73,20 @@ public data class CreateContainerBody(
   @JsonClassDiscriminator("type")
   @Serializable
   public sealed interface Skills {
+    @SerialName("skill_reference")
     @Serializable
-    @JvmInline
-    @SerialName("SkillReferenceParam")
-    public value class SkillReferenceParam(
-      public val `value`: io.openai.model.SkillReferenceParam,
+    public data class SkillReference(
+      @SerialName("skill_id")
+      public val skillId: String,
+      public val version: String? = null,
     ) : Skills
 
+    @SerialName("inline")
     @Serializable
-    @JvmInline
-    @SerialName("InlineSkillParam")
-    public value class InlineSkillParam(
-      public val `value`: io.openai.model.InlineSkillParam,
+    public data class Inline(
+      public val name: String,
+      public val description: String,
+      public val source: InlineSkillSourceParam,
     ) : Skills
   }
 }

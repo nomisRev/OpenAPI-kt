@@ -1,6 +1,8 @@
 package io.openai.model
 
 import kotlin.OptIn
+import kotlin.String
+import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -11,24 +13,34 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("type")
 @Serializable
 public sealed interface OutputContent {
+  /**
+   * A text output from the model.
+   */
+  @SerialName("output_text")
   @Serializable
-  @JvmInline
-  @SerialName("OutputTextContent")
-  public value class OutputTextContent(
-    public val `value`: io.openai.model.OutputTextContent,
+  public data class OutputText(
+    public val text: String,
+    public val annotations: List<Annotation>,
+    public val logprobs: List<LogProb>,
   ) : OutputContent
 
-  @Serializable
+  /**
+   * A refusal from the model.
+   */
   @JvmInline
-  @SerialName("RefusalContent")
-  public value class RefusalContent(
-    public val `value`: io.openai.model.RefusalContent,
+  @SerialName("refusal")
+  @Serializable
+  public value class Refusal(
+    public val refusal: String,
   ) : OutputContent
 
-  @Serializable
+  /**
+   * Reasoning text from the model.
+   */
   @JvmInline
-  @SerialName("ReasoningTextContent")
-  public value class ReasoningTextContent(
-    public val `value`: io.openai.model.ReasoningTextContent,
+  @SerialName("reasoning_text")
+  @Serializable
+  public value class ReasoningText(
+    public val text: String,
   ) : OutputContent
 }

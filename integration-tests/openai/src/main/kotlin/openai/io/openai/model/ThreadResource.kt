@@ -41,24 +41,27 @@ public data class ThreadResource(
   @Serializable
   public sealed interface Status {
     @Serializable
+    @SerialName("active")
+    public data object Active : Status
+
+    /**
+     * Indicates that a thread is locked and cannot accept new input.
+     */
     @JvmInline
-    @SerialName("ActiveStatus")
-    public value class ActiveStatus(
-      public val `value`: io.openai.model.ActiveStatus,
+    @SerialName("locked")
+    @Serializable
+    public value class Locked(
+      public val reason: String?,
     ) : Status
 
-    @Serializable
+    /**
+     * Indicates that a thread has been closed.
+     */
     @JvmInline
-    @SerialName("LockedStatus")
-    public value class LockedStatus(
-      public val `value`: io.openai.model.LockedStatus,
-    ) : Status
-
+    @SerialName("closed")
     @Serializable
-    @JvmInline
-    @SerialName("ClosedStatus")
-    public value class ClosedStatus(
-      public val `value`: io.openai.model.ClosedStatus,
+    public value class Closed(
+      public val reason: String?,
     ) : Status
   }
 }

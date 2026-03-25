@@ -74,10 +74,7 @@ import io.github.model.Commit
 import io.github.model.CommitComment
 import io.github.model.CommitComparison
 import io.github.model.CommunityProfile
-import io.github.model.ContentDirectory
 import io.github.model.ContentFile
-import io.github.model.ContentSubmodule
-import io.github.model.ContentSymlink
 import io.github.model.ContentTraffic
 import io.github.model.ContentTree
 import io.github.model.Contributor
@@ -8998,29 +8995,100 @@ public class Repos internal constructor(
                 @JvmInline
                 @SerialName("array")
                 public value class Array(
-                  public val `value`: ContentDirectory,
+                  public val `value`: List<Array>,
                 ) : Ok
 
-                @Serializable
-                @JvmInline
+                /**
+                 * Content File
+                 */
                 @SerialName("file")
-                public value class File(
-                  public val `value`: ContentFile,
-                ) : Ok
-
                 @Serializable
-                @JvmInline
+                public data class File(
+                  public val encoding: String,
+                  public val size: Long,
+                  public val name: String,
+                  public val path: String,
+                  public val content: String,
+                  public val sha: String,
+                  public val url: String,
+                  @SerialName("git_url")
+                  public val gitUrl: String?,
+                  @SerialName("html_url")
+                  public val htmlUrl: String?,
+                  @SerialName("download_url")
+                  public val downloadUrl: String?,
+                  @SerialName("_links")
+                  public val links: Links,
+                  public val target: String? = null,
+                  @SerialName("submodule_git_url")
+                  public val submoduleGitUrl: String? = null,
+                ) : Ok {
+                  @Serializable
+                  public data class Links(
+                    public val git: String?,
+                    public val html: String?,
+                    public val self: String,
+                  )
+                }
+
+                /**
+                 * An object describing a symlink
+                 */
                 @SerialName("symlink")
-                public value class Symlink(
-                  public val `value`: ContentSymlink,
-                ) : Ok
-
                 @Serializable
-                @JvmInline
+                public data class Symlink(
+                  public val target: String,
+                  public val size: Long,
+                  public val name: String,
+                  public val path: String,
+                  public val sha: String,
+                  public val url: String,
+                  @SerialName("git_url")
+                  public val gitUrl: String?,
+                  @SerialName("html_url")
+                  public val htmlUrl: String?,
+                  @SerialName("download_url")
+                  public val downloadUrl: String?,
+                  @SerialName("_links")
+                  public val links: Links,
+                ) : Ok {
+                  @Serializable
+                  public data class Links(
+                    public val git: String?,
+                    public val html: String?,
+                    public val self: String,
+                  )
+                }
+
+                /**
+                 * An object describing a submodule
+                 */
                 @SerialName("submodule")
-                public value class Submodule(
-                  public val `value`: ContentSubmodule,
-                ) : Ok
+                @Serializable
+                public data class Submodule(
+                  @SerialName("submodule_git_url")
+                  public val submoduleGitUrl: String,
+                  public val size: Long,
+                  public val name: String,
+                  public val path: String,
+                  public val sha: String,
+                  public val url: String,
+                  @SerialName("git_url")
+                  public val gitUrl: String?,
+                  @SerialName("html_url")
+                  public val htmlUrl: String?,
+                  @SerialName("download_url")
+                  public val downloadUrl: String?,
+                  @SerialName("_links")
+                  public val links: Links,
+                ) : Ok {
+                  @Serializable
+                  public data class Links(
+                    public val git: String?,
+                    public val html: String?,
+                    public val self: String,
+                  )
+                }
               }
             }
 

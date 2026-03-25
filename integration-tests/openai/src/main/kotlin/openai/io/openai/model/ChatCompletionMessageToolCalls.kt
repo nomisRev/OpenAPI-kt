@@ -1,6 +1,7 @@
 package io.openai.model
 
 import kotlin.OptIn
+import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -20,18 +21,44 @@ public value class ChatCompletionMessageToolCalls(
   @JsonClassDiscriminator("type")
   @Serializable
   public sealed interface Item {
+    /**
+     * A call to a function tool created by the model.
+     *
+     */
+    @SerialName("function")
     @Serializable
-    @JvmInline
-    @SerialName("ChatCompletionMessageToolCall")
-    public value class ChatCompletionMessageToolCall(
-      public val `value`: io.openai.model.ChatCompletionMessageToolCall,
-    ) : Item
+    public data class Function(
+      public val id: String,
+      public val function: Function,
+    ) : Item {
+      /**
+       * The function that the model called.
+       */
+      @Serializable
+      public data class Function(
+        public val name: String,
+        public val arguments: String,
+      )
+    }
 
+    /**
+     * A call to a custom tool created by the model.
+     *
+     */
+    @SerialName("custom")
     @Serializable
-    @JvmInline
-    @SerialName("ChatCompletionMessageCustomToolCall")
-    public value class ChatCompletionMessageCustomToolCall(
-      public val `value`: io.openai.model.ChatCompletionMessageCustomToolCall,
-    ) : Item
+    public data class Custom(
+      public val id: String,
+      public val custom: Custom,
+    ) : Item {
+      /**
+       * The custom tool that the model called.
+       */
+      @Serializable
+      public data class Custom(
+        public val name: String,
+        public val input: String,
+      )
+    }
   }
 }

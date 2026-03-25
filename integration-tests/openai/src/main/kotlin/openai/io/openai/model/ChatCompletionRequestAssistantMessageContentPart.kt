@@ -1,6 +1,7 @@
 package io.openai.model
 
 import kotlin.OptIn
+import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
@@ -11,17 +12,21 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("type")
 @Serializable
 public sealed interface ChatCompletionRequestAssistantMessageContentPart {
-  @Serializable
+  /**
+   * Learn about [text inputs](/docs/guides/text-generation).
+   *
+   */
   @JvmInline
-  @SerialName("ChatCompletionRequestMessageContentPartText")
-  public value class ChatCompletionRequestMessageContentPartText(
-    public val `value`: io.openai.model.ChatCompletionRequestMessageContentPartText,
+  @SerialName("text")
+  @Serializable
+  public value class Text(
+    public val text: String,
   ) : ChatCompletionRequestAssistantMessageContentPart
 
-  @Serializable
   @JvmInline
-  @SerialName("ChatCompletionRequestMessageContentPartRefusal")
-  public value class ChatCompletionRequestMessageContentPartRefusal(
-    public val `value`: io.openai.model.ChatCompletionRequestMessageContentPartRefusal,
+  @SerialName("refusal")
+  @Serializable
+  public value class Refusal(
+    public val refusal: String,
   ) : ChatCompletionRequestAssistantMessageContentPart
 }
