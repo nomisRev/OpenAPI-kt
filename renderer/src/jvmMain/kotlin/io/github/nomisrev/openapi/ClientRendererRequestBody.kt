@@ -18,6 +18,7 @@ import io.ktor.http.ContentType
 
 private val MapType = ClassName("kotlin.collections", "Map")
 private val ContentTypeType = ClassName("io.ktor.http", "ContentType")
+internal const val FlattenedBodyMaxOverloads: Long = 32
 
 internal data class FlattenedBodyRendering(
     val publicTypeSpecs: List<TypeSpec>,
@@ -127,13 +128,54 @@ internal fun Route.Bodies.flattenedBodyRendering(
     }
 }
 
+internal fun countFlattenedBodyOverloadsOrNull(
+    optionCounts: Iterable<Int>,
+    maxOverloads: Long = FlattenedBodyMaxOverloads,
+): Long? {
+    require(maxOverloads >= 0) { "maxOverloads must be non-negative: $maxOverloads" }
+
+    var overloadCount = 1L
+    for (optionCount in optionCounts) {
+        require(optionCount >= 0) { "optionCount must be non-negative: $optionCount" }
+        if (optionCount == 0) return 0L
+        val optionCountLong = optionCount.toLong()
+        if (overloadCount > maxOverloads / optionCountLong) return null
+        overloadCount *= optionCountLong
+    }
+
+    return overloadCount
+}
+
+internal fun Route.Bodies.exceedsFlattenedBodyOverloadLimit(
+    maxOverloads: Long = FlattenedBodyMaxOverloads,
+): Boolean {
+    if (types.size != 1) return false
+
+    val body = defaultOrNull() as? Route.Body.SetBody ?: return false
+    val model = body.type.nestedOrNull() as? Model.Object ?: return false
+    val supportsFlattening = model.isRouteInlineModel() &&
+        model.additionalProperties !is Model.Object.AdditionalProperties.Schema
+    if (!supportsFlattening) return false
+
+    val optionCounts = model.properties.values.map { property ->
+        if (property.isRequired && property.model.isFlattenablePrimitiveUnion()) {
+            val union = property.model as Model.Union
+            union.cases.size
+        } else {
+            1
+        }
+    }
+
+    return countFlattenedBodyOverloadsOrNull(optionCounts, maxOverloads) == null
+}
+
 private fun buildFlattenedBodyOverloads(
     config: RenderConfig,
     methodClassName: ClassName,
     bodyModel: Model.Object,
     bodyRequired: Boolean,
     typeNameRemaps: Map<ClassName, TypeName>,
-    maxOverloads: Long = 32
+    maxOverloads: Long = FlattenedBodyMaxOverloads
 ): List<FlattenedBodyOverload>? {
     val propertyOptions = bodyModel.properties.entries.map { (name, property) ->
         val modelOptions = if (property.isRequired && property.model.isFlattenablePrimitiveUnion()) {
@@ -146,10 +188,9 @@ private fun buildFlattenedBodyOverloads(
     }
     val additionalProperty = bodyModel.additionalProperties as? Model.Object.AdditionalProperties.Schema
 
-    val overloadCount = propertyOptions.fold(1) { acc, (_, options) ->
-        acc * options.size
+    if (countFlattenedBodyOverloadsOrNull(propertyOptions.map { (_, options) -> options.size }, maxOverloads) == null) {
+        return null
     }
-    if (overloadCount > maxOverloads) return null
 
     val bodyParamsBeforeOptionalParams = bodyModel.properties.values.any { it.isRequired }
     val bodyMayBeNull = !bodyRequired && bodyModel.properties.values.none { it.isRequired }

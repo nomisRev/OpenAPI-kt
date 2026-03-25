@@ -2444,4 +2444,83 @@ val clientSpec by testSuite {
 
         assertTrue(error.message.orEmpty().contains("non-scalar form fields without explicit encoding rules"))
     }
+
+    test("flattened request body overload limit is reported as an error") {
+        val json = flattenedBodyOverloadLimitJson(requiredUnionFieldCount = 6)
+
+        val result = OpenAPI.fromJson(json)
+            .toApiTree()
+            .generateClientWithDiagnostics(
+                RenderConfig(
+                    modelPackage = "io.github.nomisrev.render.test.client.flattened.body.limit.model",
+                    apiPackage = "io.github.nomisrev.render.test.client.flattened.body.limit.api",
+                    targets = setOf(KmpTarget.JVM),
+                )
+            )
+
+        assertEquals(1, result.diagnostics.size)
+        assertEquals(GenerationDiagnosticSeverity.Error, result.diagnostics.single().severity)
+        assertTrue(result.diagnostics.single().message.contains("flattened request-body overloads"))
+        assertTrue(result.diagnostics.single().message.contains("32"))
+    }
+
+    test("flattened request body overload limit fails generation") {
+        val json = flattenedBodyOverloadLimitJson(requiredUnionFieldCount = 6)
+
+        val error = assertFailsWith<IllegalArgumentException> {
+            OpenAPI.fromJson(json)
+                .toApiTree()
+                .generateClient(
+                    RenderConfig(
+                        modelPackage = "io.github.nomisrev.render.test.client.flattened.body.limit.model",
+                        apiPackage = "io.github.nomisrev.render.test.client.flattened.body.limit.api",
+                        targets = setOf(KmpTarget.JVM),
+                    )
+                )
+        }
+
+        assertTrue(error.message.orEmpty().contains("flattened request-body overloads"))
+        assertTrue(error.message.orEmpty().contains("32"))
+    }
+}
+
+private fun flattenedBodyOverloadLimitJson(requiredUnionFieldCount: Int): String {
+    val propertyEntries = (1..requiredUnionFieldCount).joinToString(",\n") { index ->
+        """
+        "field$index": {
+          "oneOf": [
+            { "type": "string" },
+            { "type": "integer", "format": "int32" }
+          ]
+        }
+        """.trimIndent()
+    }
+    val requiredEntries = (1..requiredUnionFieldCount).joinToString(", ") { "\"field$it\"" }
+    return """
+    {
+      "openapi": "3.1.0",
+      "info": { "title": "Api", "version": "0.0.1" },
+      "paths": {
+        "/search": {
+          "post": {
+            "requestBody": {
+              "required": true,
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      $propertyEntries
+                    },
+                    "required": [$requiredEntries]
+                  }
+                }
+              }
+            },
+            "responses": { "200": { "description": "OK" } }
+          }
+        }
+      }
+    }
+    """.trimIndent()
 }

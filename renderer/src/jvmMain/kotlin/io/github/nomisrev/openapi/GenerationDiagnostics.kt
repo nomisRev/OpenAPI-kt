@@ -46,12 +46,12 @@ private fun PathNode.requestBodyDiagnostics(): List<GenerationDiagnostic> =
 
 private fun Route.requestBodyDiagnostics(): List<GenerationDiagnostic> {
     val bodies = body ?: return emptyList()
+    val diagnostics = mutableListOf<GenerationDiagnostic>()
     val variants = bodies.variants()
     val supportedVariants = variants.filter { it.body.isSupportedForGeneration() }
     val unsupportedVariants = variants.filter { !it.body.isSupportedForGeneration() }
-    if (unsupportedVariants.isEmpty()) return emptyList()
 
-    return unsupportedVariants.mapNotNull { variant ->
+    diagnostics += unsupportedVariants.mapNotNull { variant ->
         val formBody = variant.body as? Route.Body.FormUrlEncoded ?: return@mapNotNull null
         val fieldDescription = formBody.unsupportedFields.sorted().joinToString(", ")
         val prefix = "${method.value} $path (${variant.contentType})"
@@ -71,6 +71,19 @@ private fun Route.requestBodyDiagnostics(): List<GenerationDiagnostic> {
             )
         }
     }
+
+    if (bodies.exceedsFlattenedBodyOverloadLimit()) {
+        val contentType = bodies.variants().single().contentType
+        diagnostics += GenerationDiagnostic(
+            severity = GenerationDiagnosticSeverity.Error,
+            message =
+                "${method.value} $path ($contentType) would generate more than " +
+                    "$FlattenedBodyMaxOverloads flattened request-body overloads. " +
+                    "Generation stops instead of silently falling back to a nested body parameter.",
+        )
+    }
+
+    return diagnostics
 }
 
 internal fun ApiTree.withSupportedRequestBodiesOnly(): ApiTree = copy(
