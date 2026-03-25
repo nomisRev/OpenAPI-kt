@@ -210,6 +210,9 @@ private fun ResolvedSchema.Reference.simpleCase(
 context(ctx: Registry.Scope)
 suspend fun Schema.merge(other: Schema): Schema = when {
     this == other -> this
+    !allOf.isNullOrEmpty() || !other.allOf.isNullOrEmpty() -> mergeNestedAllOf(other)
+    compositeUnionOrNull() != null || other.compositeUnionOrNull() != null -> mergeCompositeUnion(other)
+    enum?.isNotEmpty() == true || other.enum?.isNotEmpty() == true -> mergeEnum(other)
     type != null && type == other.type -> when (type!!) {
         Type.Basic.Array -> mergeCommon(other)
             .mergeCollectionConstraints(other)
@@ -224,9 +227,125 @@ suspend fun Schema.merge(other: Schema): Schema = when {
         is Type.Array -> mergeCommon(other)
     }
 
-    properties != null || other.properties != null -> mergeObject(other)
-    enum?.isNotEmpty() == true && other.enum?.isNotEmpty() == true -> TODO("allOf Enum")
+    isObjectLike() && other.isObjectLike() -> mergeObject(other)
+    isNonStructural() -> other.mergeCommon(this)
+    other.isNonStructural() -> mergeCommon(other)
     else -> TODO("Merge not supported: $this, $other")
+}
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.mergeNestedAllOf(other: Schema): Schema =
+    expandAllOf().merge(other.expandAllOf())
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.expandAllOf(): Schema =
+    if (allOf.isNullOrEmpty()) this
+    else (allOf!!.map { it.peek() } + copy(allOf = null)).reduce { acc, schema -> acc.merge(schema) }
+
+private enum class CompositeKind { OneOf, AnyOf }
+
+private data class CompositeUnion(
+    val kind: CompositeKind,
+    val branches: List<ReferenceOr<Schema>>
+)
+
+private fun Schema.compositeUnionOrNull(): CompositeUnion? =
+    when {
+        !oneOf.isNullOrEmpty() -> CompositeUnion(CompositeKind.OneOf, oneOf!!)
+        !anyOf.isNullOrEmpty() -> CompositeUnion(CompositeKind.AnyOf, anyOf!!)
+        else -> null
+    }
+
+private fun Schema.isObjectLike(): Boolean =
+    type == Type.Basic.Object || properties != null || additionalProperties != null
+
+private fun Schema.isNonStructural(): Boolean =
+    type == null &&
+            properties == null &&
+            additionalProperties == null &&
+            items == null &&
+            allOf.isNullOrEmpty() &&
+            oneOf.isNullOrEmpty() &&
+            anyOf.isNullOrEmpty() &&
+            enum == null
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.mergeCompositeUnion(other: Schema): Schema {
+    val left = compositeUnionOrNull()
+    val right = other.compositeUnionOrNull()
+    val mergedBranches = when {
+        left != null && right != null ->
+            left.branches.flatMap { l ->
+                right.branches.mapNotNull { r ->
+                    runCatching { l.peek().merge(r.peek()) }.getOrNull()?.let { ReferenceOr.value(it) }
+                }
+            }
+
+        left != null ->
+            left.branches.mapNotNull { branch ->
+                runCatching { branch.peek().merge(other) }.getOrNull()?.let { ReferenceOr.value(it) }
+            }
+
+        right != null ->
+            right.branches.mapNotNull { branch ->
+                runCatching { merge(branch.peek()) }.getOrNull()?.let { ReferenceOr.value(it) }
+            }
+
+        else -> emptyList()
+    }.distinct()
+
+    if (mergedBranches.isEmpty()) return Schema(description = description ?: other.description, nullable = let(nullable, other.nullable) { a, b -> a || b })
+    if (mergedBranches.size == 1) return mergedBranches.single().peek()
+
+    val kind = when {
+        left?.kind == CompositeKind.AnyOf || right?.kind == CompositeKind.AnyOf -> CompositeKind.AnyOf
+        else -> CompositeKind.OneOf
+    }
+
+    return Schema(
+        title = title ?: other.title,
+        description = description ?: other.description,
+        nullable = let(nullable, other.nullable) { a, b -> a || b },
+        default = default ?: other.default,
+        oneOf = mergedBranches.takeIf { kind == CompositeKind.OneOf },
+        anyOf = mergedBranches.takeIf { kind == CompositeKind.AnyOf }
+    )
+}
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.mergeEnum(other: Schema): Schema {
+    val leftValues = enum
+    val rightValues = other.enum
+    return when {
+        leftValues != null && rightValues != null -> {
+            val mergedValues = leftValues.filter { it in rightValues }
+            require(mergedValues.isNotEmpty()) { "Enum intersection is empty for allOf: $this, $other" }
+            copy(enum = null).merge(other.copy(enum = null)).copy(
+                enum = mergedValues,
+                default = mergedEnumDefault(mergedValues, default, other.default)
+            )
+        }
+
+        leftValues != null ->
+            copy(enum = null).merge(other).copy(
+                enum = leftValues,
+                default = mergedEnumDefault(leftValues, default, other.default)
+            )
+
+        rightValues != null -> other.mergeEnum(this)
+        else -> error("Expected at least one enum when merging enums")
+    }
+}
+
+private fun mergedEnumDefault(
+    values: List<String?>,
+    left: io.github.nomisrev.openapi.parser.DefaultValue?,
+    right: io.github.nomisrev.openapi.parser.DefaultValue?
+): io.github.nomisrev.openapi.parser.DefaultValue? {
+    val allowedValues = values.toSet()
+    return sequenceOf(left, right)
+        .filterIsInstance<io.github.nomisrev.openapi.parser.ExampleValue.Single>()
+        .firstOrNull { it.value in allowedValues }
 }
 
 fun Schema.mergeCommon(other: Schema): Schema = copy(
@@ -273,7 +392,7 @@ suspend fun Schema.mergeObject(other: Schema): Schema {
         .mergeObjectConstraints(other)
         .copy(
             properties = properties,
-            additionalProperties = additionalProperties?.merge(other.additionalProperties)
+            additionalProperties = additionalProperties.merge(other.additionalProperties)
         )
 }
 

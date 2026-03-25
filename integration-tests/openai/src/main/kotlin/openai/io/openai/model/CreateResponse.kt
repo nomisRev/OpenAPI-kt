@@ -1,6 +1,7 @@
 package io.openai.model
 
 import kotlin.Boolean
+import kotlin.Double
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
@@ -9,6 +10,21 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 public data class CreateResponse(
+  public val metadata: Metadata? = null,
+  @SerialName("top_logprobs")
+  public val topLogprobs: Long? = null,
+  public val temperature: Double? = null,
+  @SerialName("top_p")
+  public val topP: Double? = null,
+  public val user: String? = null,
+  @SerialName("safety_identifier")
+  public val safetyIdentifier: String? = null,
+  @SerialName("prompt_cache_key")
+  public val promptCacheKey: String? = null,
+  @SerialName("service_tier")
+  public val serviceTier: ServiceTier? = null,
+  @SerialName("prompt_cache_retention")
+  public val promptCacheRetention: PromptCacheRetention? = null,
   @SerialName("previous_response_id")
   public val previousResponseId: String? = null,
   public val model: ModelIdsResponses? = null,
@@ -37,6 +53,16 @@ public data class CreateResponse(
   @SerialName("context_management")
   public val contextManagement: List<ContextManagementParam>? = null,
 ) {
+  @Serializable
+  public enum class PromptCacheRetention(
+    public val `value`: String,
+  ) {
+    @SerialName("in-memory")
+    InMemory("in-memory"),
+    `24h`("24h"),
+    ;
+  }
+
   @Serializable
   public enum class Truncation(
     public val `value`: String,

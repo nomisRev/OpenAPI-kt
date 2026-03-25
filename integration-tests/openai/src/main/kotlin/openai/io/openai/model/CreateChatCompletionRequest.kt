@@ -23,6 +23,21 @@ import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class CreateChatCompletionRequest(
+  public val metadata: Metadata? = null,
+  @SerialName("top_logprobs")
+  public val topLogprobs: Long? = null,
+  public val temperature: Double? = null,
+  @SerialName("top_p")
+  public val topP: Double? = null,
+  public val user: String? = null,
+  @SerialName("safety_identifier")
+  public val safetyIdentifier: String? = null,
+  @SerialName("prompt_cache_key")
+  public val promptCacheKey: String? = null,
+  @SerialName("service_tier")
+  public val serviceTier: ServiceTier? = null,
+  @SerialName("prompt_cache_retention")
+  public val promptCacheRetention: PromptCacheRetention? = null,
   public val messages: List<ChatCompletionRequestMessage>? = null,
   public val model: ModelIdsShared? = null,
   public val modalities: ResponseModalities? = null,
@@ -37,8 +52,6 @@ public data class CreateChatCompletionRequest(
   public val presencePenalty: Double? = null,
   @SerialName("web_search_options")
   public val webSearchOptions: WebSearchOptions? = null,
-  @SerialName("top_logprobs")
-  public val topLogprobs: Long? = null,
   @SerialName("response_format")
   public val responseFormat: ResponseFormat? = null,
   public val audio: Audio? = null,
@@ -159,6 +172,16 @@ public data class CreateChatCompletionRequest(
         }
       }
     }
+  }
+
+  @Serializable
+  public enum class PromptCacheRetention(
+    public val `value`: String,
+  ) {
+    @SerialName("in-memory")
+    InMemory("in-memory"),
+    `24h`("24h"),
+    ;
   }
 
   /**

@@ -67,7 +67,9 @@ public class AppManifests internal constructor(
           /**
            * GitHub apps are a new way to extend GitHub. They can be installed directly on organizations and user accounts and granted access to specific repositories. They come with granular permissions and built-in webhooks. GitHub apps are first class actors within GitHub.
            */
-          @Serializable
+          @OptIn(ExperimentalSerializationApi::class)
+          @KeepGeneratedSerializer
+          @Serializable(with = Created.Serializer::class)
           public data class Created(
             public val id: Long,
             public val slug: String? = null,
@@ -95,6 +97,7 @@ public class AppManifests internal constructor(
             @SerialName("webhook_secret")
             public val webhookSecret: String? = null,
             public val pem: String? = null,
+            public val additional: JsonObject? = null,
           ) : Response {
             @Serializable(with = Owner.Serializer::class)
             public sealed interface Owner {
@@ -182,6 +185,34 @@ public class AppManifests internal constructor(
                     .ifEmpty { null }
                   return known.copy(additional = additional)
                 }
+              }
+            }
+
+            public object Serializer : KSerializer<Created> {
+              override val descriptor: SerialDescriptor = generatedSerializer().descriptor
+
+              override fun serialize(encoder: Encoder, `value`: Created) {
+                val json = (encoder as JsonEncoder).json
+                val known = json.encodeToJsonElement(generatedSerializer(), value.copy(additional = null)) as JsonObject
+                val content = mutableMapOf<String, JsonElement>()
+                known.forEach { (key, jsonElement) ->
+                  if (key != "additional") {
+                    content[key] = jsonElement
+                  }
+                }
+                value.additional?.forEach { (key, jsonElement) ->
+                  content[key] = jsonElement
+                }
+                encoder.encodeSerializableValue(JsonObject.serializer(), JsonObject(content))
+              }
+
+              override fun deserialize(decoder: Decoder): Created {
+                val json = (decoder as JsonDecoder).json
+                val element = decoder.decodeSerializableValue(JsonObject.serializer())
+                val knownNames = setOf("id", "slug", "node_id", "client_id", "owner", "name", "description", "external_url", "html_url", "created_at", "updated_at", "permissions", "events", "installations_count", "client_secret", "webhook_secret", "pem")
+                val known = json.decodeFromJsonElement(generatedSerializer(), JsonObject(element.filterKeys { it in knownNames }))
+                val additional = JsonObject(element - knownNames).ifEmpty { null }
+                return known.copy(additional = additional)
               }
             }
           }
