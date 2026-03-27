@@ -6,7 +6,8 @@ import io.github.nomisrev.openapi.transformers.isTopLevel
 
 @Suppress("CyclomaticComplexMethod")
 internal fun Model.Union.Case.caseSimpleName(config: RenderConfig): String =
-    model.unionCaseValueOrNull()?.toPascalCase()?.takeIf { it.isNotBlank() }
+    discriminatorValues.singleOrNull()?.toPascalCase()?.takeIf { it.isNotBlank() }
+        ?: model.unionCaseValueOrNull()?.toPascalCase()?.takeIf { it.isNotBlank() }
         ?: when (val caseModel = model) {
             is Model.Reference -> "Case${caseModel.context.toClassName(config).simpleName}"
             is Model.Primitive.String -> "CaseString"
@@ -37,7 +38,7 @@ internal fun Model.Union.Case.caseSimpleName(config: RenderConfig): String =
         }
 
 internal fun Model.Union.Case.serialNameOrNull(discriminatorField: String): String? =
-    discriminator ?: discriminatorValueFromInlineObject(discriminatorField) ?: model.unionCaseValueOrNull()
+    discriminatorValues.singleOrNull() ?: discriminatorValueFromInlineObject(discriminatorField) ?: model.unionCaseValueOrNull()
 
 private fun Model.Union.Case.discriminatorValueFromInlineObject(discriminatorField: String): String? {
     val discriminatorModel = (model as? Model.Object)

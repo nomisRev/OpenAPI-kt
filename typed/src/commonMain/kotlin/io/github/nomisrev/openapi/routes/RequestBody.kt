@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi.routes
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.parser.MediaType
@@ -120,12 +121,11 @@ private suspend fun RequestBody.toBody(
     val resolvedSchema = schema.resolveSchema()
     val model = schema.toRequestBodyModel(name, SchemaContext.Write)
     val hasExplicitDiscriminator = resolvedSchema.discriminator != null
-    return if (
+    val isStructuralPathUnion =
         model is Model.Union &&
-        model.discriminator == null &&
-        !hasExplicitDiscriminator &&
-        model.context.head is NamingContext.Path
-    ) {
+                model.context.head is NamingContext.Path &&
+                model.dispatch is UnionDispatch.Structural
+    return if (isStructuralPathUnion && !hasExplicitDiscriminator) {
         Route.Body.OverloadedBody(
             contentType = ContentType.parse(contentType),
             type = model,

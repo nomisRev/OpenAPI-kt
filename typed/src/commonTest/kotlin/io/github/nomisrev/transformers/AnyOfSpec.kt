@@ -11,6 +11,7 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.Model.AnyOf
 import io.github.nomisrev.openapi.Model.Union
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.registry
@@ -21,6 +22,9 @@ import io.github.nomisrev.zip
 import kotlin.test.assertEquals
 
 val anyOfSpec by testSuite {
+    fun case(model: Model, vararg discriminatorValues: String): Union.Case =
+        Union.Case(model, discriminatorValues.toSet())
+
     test("anyOf with null among three cases becomes nullable union") {
         val schema = Schema(
             anyOf = listOf(
@@ -37,8 +41,8 @@ val anyOfSpec by testSuite {
             val expected = AnyOf(
                 NamingContext.reference("Model", SchemaContext.Null),
                 listOf(
-                    Union.Case(Model.Primitive.String(null, null, null, false, null), null),
-                    Union.Case(
+                    case(Model.Primitive.String(null, null, null, false, null)),
+                    case(
                         Model.Enum(
                             NamingContext.reference("Model", SchemaContext.Null)
                                 .nest(NamingContext.UnionCase("AOrB")),
@@ -48,14 +52,13 @@ val anyOfSpec by testSuite {
                             null,
                             null,
                             false
-                        ),
-                        null
+                        )
                     )
                 ),
                 null,
                 null,
                 null,
-                null,
+                UnionDispatch.Structural,
                 true
             )
 
@@ -89,21 +92,20 @@ val anyOfSpec by testSuite {
             val expected = AnyOf(
                 NamingContext.reference("ModelIdsCompaction", SchemaContext.Null),
                 listOf(
-                    Union.Case(
+                    case(
                         Model.Reference(
                             NamingContext.reference("ModelIdsResponses", SchemaContext.Null),
                             null,
                             false,
                             null
-                        ),
-                        null
+                        )
                     ),
-                    Union.Case(Model.Primitive.String(null, null, null, false, null), null)
+                    case(Model.Primitive.String(null, null, null, false, null))
                 ),
                 null,
                 null,
                 null,
-                null,
+                UnionDispatch.Structural,
                 true
             )
 
@@ -145,10 +147,10 @@ val anyOfSpec by testSuite {
                 ReferenceOr.value(d.actual),
                 ReferenceOr.value(b.actual),
             ) expect listOf(
-                Union.Case(s.expected, null),
-                Union.Case(l.expected, null),
-                Union.Case(d.expected, null),
-                Union.Case(b.expected, null),
+                case(s.expected),
+                case(l.expected),
+                case(d.expected),
+                case(b.expected),
             )
         }
 
@@ -166,7 +168,7 @@ val anyOfSpec by testSuite {
                 null,
                 description.expected,
                 null,
-                null,
+                UnionDispatch.Structural,
                 isNullable ?: false
             )
 

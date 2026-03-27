@@ -4,6 +4,7 @@ package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
@@ -31,14 +32,15 @@ suspend fun ResolvedSchema.buildOneOf(
     subtypes: List<ReferenceOr<Schema>>,
 ): Model.OneOf {
     val discriminator = resolveUnionDiscriminator(subtypes)
-    val cases = buildUnionCases(context, subtypes, discriminator)
+    val dispatch = classifyDispatch(discriminator)
+    val cases = buildUnionCases(context, subtypes, discriminator, dispatch)
     return Model.OneOf(
         name,
         cases,
         default(),
         description(),
         schema.title,
-        discriminator?.propertyName,
+        dispatch,
         isNullable
     )
 }
@@ -49,21 +51,22 @@ suspend fun ResolvedSchema.buildAnyOf(
     subtypes: List<ReferenceOr<Schema>>,
 ): Model.AnyOf {
     val discriminator = resolveUnionDiscriminator(subtypes)
-    val cases = buildUnionCases(context, subtypes, discriminator)
+    val dispatch = classifyDispatch(discriminator)
+    val cases = buildUnionCases(context, subtypes, discriminator, dispatch)
     return Model.AnyOf(
         name,
         cases,
         default(),
         description(),
         schema.title,
-        discriminator?.propertyName,
+        dispatch,
         isNullable
     )
 }
 
 private data class UnionDiscriminator(
     val propertyName: String,
-    val caseValues: List<String?>,
+    val caseValues: List<Set<String>>,
 )
 
 private val PreferredInferredDiscriminatorNames = listOf("type", "event", "role", "object", "kind", "\$type")
@@ -80,14 +83,21 @@ private suspend fun ResolvedSchema.resolveUnionDiscriminator(
                 schema.discriminator.discriminatorValueForSubtype(subtype)
             }
         )
-    }?.takeIf(UnionDiscriminator::hasConcreteDistinctCaseValues)
+    }
     return explicit ?: uniqueSubtypes.inferTagOnlyDiscriminatorOrNull()
 }
 
-private fun UnionDiscriminator.hasConcreteDistinctCaseValues(): Boolean =
-    caseValues.all { it != null } && caseValues.filterNotNull().distinct().size == caseValues.size
+private fun classifyDispatch(discriminator: UnionDiscriminator?): UnionDispatch = when {
+    discriminator == null -> UnionDispatch.Structural
+    discriminator.caseValues.all { it.size == 1 } &&
+            discriminator.caseValues.map { it.single() }.distinct().size == discriminator.caseValues.size ->
+        UnionDispatch.NativeDiscriminator(discriminator.propertyName)
+
+    else -> UnionDispatch.TaggedCustom(discriminator.propertyName)
+}
 
 context(ctx: Registry.Scope)
+@Suppress("ReturnCount")
 private suspend fun List<ReferenceOr<Schema>>.inferTagOnlyDiscriminatorOrNull(): UnionDiscriminator? {
     if (size < 2) return null
     if (any { it !is ReferenceOr.Reference }) return null
@@ -98,10 +108,10 @@ private suspend fun List<ReferenceOr<Schema>>.inferTagOnlyDiscriminatorOrNull():
         val required = subtypeSchema.required.toSet()
         properties.mapNotNull { (propertyName, propertySchema) ->
             val property = propertySchema.peek()
-            val literal = property.enum?.singleOrNull()
+            val literals = property.enum.orEmpty().filterNotNull().toSet()
             val isStringLike = property.type == null || property.type == Type.Basic.String
-            if (propertyName !in required || literal == null || !isStringLike) null
-            else propertyName to literal
+            if (propertyName !in required || literals.isEmpty() || !isStringLike) null
+            else propertyName to literals
         }.toMap()
     }
 
@@ -111,8 +121,8 @@ private suspend fun List<ReferenceOr<Schema>>.inferTagOnlyDiscriminatorOrNull():
 
     val discriminators = commonPropertyNames.mapNotNull { propertyName ->
         val values = caseLiterals.map { it[propertyName] }
-        if (values.any { it == null } || values.distinct().size != values.size) null
-        else UnionDiscriminator(propertyName, values)
+        if (values.any { it == null } || values.filterNotNull().flatten().distinct().size <= 1) null
+        else UnionDiscriminator(propertyName, values.filterNotNull())
     }
 
     return discriminators.firstOrNull { it.propertyName in PreferredInferredDiscriminatorNames }
@@ -124,12 +134,14 @@ private suspend fun ResolvedSchema.buildUnionCases(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
     discriminator: UnionDiscriminator?,
+    dispatch: UnionDispatch,
 ): List<Model.Union.Case> {
     val uniqueSubtypes = subtypes.distinct()
-    val discriminatorField = discriminator?.propertyName
-    val caseDiscriminators = discriminator?.caseValues ?: List(uniqueSubtypes.size) { null }
+    val caseDiscriminators = discriminator?.caseValues ?: List(uniqueSubtypes.size) { emptySet() }
     val unionContexts = uniqueSubtypes.mapIndexed { index, refOrSchema ->
         caseDiscriminators[index]
+            .singleOrNull()
+            .takeIf { dispatch !is UnionDispatch.Structural }
             ?.let { name.nest(NamingContext.UnionCase(it)) }
             ?: name.unionCase(index, refOrSchema, uniqueSubtypes, context)
     }
@@ -149,18 +161,19 @@ private suspend fun ResolvedSchema.buildUnionCases(
      */
     val cases = uniqueSubtypes.mapIndexed { index, subtype ->
         subtype.resolve(unionContexts[index], context) {
-            val discriminatorValue = caseDiscriminators[index]
-            val model = if (discriminatorField != null) {
-                it.toDiscriminatedUnionCaseModel(
+            val discriminatorValues = caseDiscriminators[index]
+            val model = when (dispatch) {
+                is UnionDispatch.NativeDiscriminator -> it.toDiscriminatedUnionCaseModel(
                     context = context,
                     caseContext = unionContexts[index],
-                    discriminatorField = discriminatorField,
-                    caseDiscriminator = discriminatorValue,
+                    discriminatorField = dispatch.propertyName,
+                    caseDiscriminator = discriminatorValues.singleOrNull(),
                 )
-            } else {
-                it.toModel(context, false)
+
+                UnionDispatch.Structural,
+                is UnionDispatch.TaggedCustom -> it.toModel(context, false)
             }
-            Model.Union.Case(model, discriminatorValue)
+            Model.Union.Case(model, discriminatorValues)
         }
     }
     return cases
@@ -197,11 +210,15 @@ private suspend fun Schema.normalizedDiscriminatedUnionCase(
 
 context(ctx: Registry.Scope)
 private suspend fun Schema.flattenAllOfForUnionDiscriminator(): Schema =
-    if (allOf.isNullOrEmpty()) this
-    else (allOf!!.map { it.peek().flattenAllOfForUnionDiscriminator() } + copy(allOf = null))
-        .reduce { acc, schema ->
-            acc.merge(schema).copy(required = (acc.required + schema.required).distinct())
+    allOf
+        ?.takeIf { it.isNotEmpty() }
+        ?.let { allOfSchemas ->
+            (allOfSchemas.map { it.peek().flattenAllOfForUnionDiscriminator() } + copy(allOf = null))
+                .reduce { acc, schema ->
+                    acc.merge(schema).copy(required = (acc.required + schema.required).distinct())
+                }
         }
+        ?: this
 
 context(ctx: Registry.Scope)
 private suspend fun Schema.stripTagOnlyDiscriminatorProperty(
@@ -517,25 +534,26 @@ private fun String.schemaRefNameOrSelf(): String =
     if (startsWith(SCHEMA_REF_PREFIX)) schemaName() else this
 
 context(ctx: Registry.Scope)
+@Suppress("ReturnCount")
 private suspend fun Schema.Discriminator?.discriminatorValueForSubtype(
     subtype: ReferenceOr<Schema>
-): String? {
-    if (this == null) return null
+): Set<String> {
+    if (this == null) return emptySet()
 
     val mapped = when (subtype) {
         is ReferenceOr.Reference -> {
             val subtypeRefName = subtype.ref.schemaRefNameOrSelf()
             mapping
                 ?.entries
-                ?.firstOrNull { (_, ref) ->
+                ?.filter { (_, ref) ->
                     ref == subtype.ref || ref.schemaRefNameOrSelf() == subtypeRefName
                 }
-                ?.key
+                ?.mapTo(linkedSetOf()) { (key, _) -> key }
         }
 
         is ReferenceOr.Value<Schema> -> null
     }
-    if (mapped != null) return mapped
+    if (!mapped.isNullOrEmpty()) return mapped
 
     val discriminatorProperty = propertyName.let { propertyName ->
         subtype.peek()
@@ -545,11 +563,17 @@ private suspend fun Schema.Discriminator?.discriminatorValueForSubtype(
             ?.peek()
     }
     val discriminatorLiteral = discriminatorProperty?.enum?.singleOrNull()
-    if (discriminatorLiteral != null) return discriminatorLiteral
-    if (discriminatorProperty?.enum?.isNotEmpty() == true) return null
+    if (discriminatorLiteral != null) return setOf(discriminatorLiteral)
+
+    val discriminatorValues = discriminatorProperty
+        ?.enum
+        .orEmpty()
+        .filterNotNull()
+        .toSet()
+    if (discriminatorValues.isNotEmpty()) return discriminatorValues
 
     return when (subtype) {
-        is ReferenceOr.Reference -> subtype.ref.schemaRefNameOrSelf().takeUnless { it == "#" }
-        is ReferenceOr.Value<Schema> -> null
+        is ReferenceOr.Reference -> subtype.ref.schemaRefNameOrSelf().takeUnless { it == "#" }?.let(::setOf).orEmpty()
+        is ReferenceOr.Value<Schema> -> emptySet()
     }
 }

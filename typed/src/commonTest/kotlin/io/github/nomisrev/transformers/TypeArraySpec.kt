@@ -6,6 +6,7 @@ import io.github.nomisrev.description
 import io.github.nomisrev.expect
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
@@ -43,15 +44,15 @@ private fun values(
         val expect = Model.OneOf(
             name,
             listOf(
-                Model.Union.Case(Model.Primitive.Boolean(null, null, false, null), null),
-                Model.Union.Case(Model.Primitive.Long(null, null, null, false, null), null),
-                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
-                Model.Union.Case(Model.Primitive.Double(null, null, null, false, null), null),
+                Model.Union.Case(Model.Primitive.Boolean(null, null, false, null), emptySet()),
+                Model.Union.Case(Model.Primitive.Long(null, null, null, false, null), emptySet()),
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), emptySet()),
+                Model.Union.Case(Model.Primitive.Double(null, null, null, false, null), emptySet()),
             ),
             null,
             description.expected,
             null,
-            null,
+            UnionDispatch.Structural,
             nullable ?: isNullable ?: false
         )
         actual expect expect

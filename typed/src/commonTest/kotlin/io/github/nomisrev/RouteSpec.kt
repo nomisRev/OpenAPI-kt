@@ -4,6 +4,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
+import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.parser.Components
 import io.github.nomisrev.openapi.parser.Encoding
 import io.github.nomisrev.openapi.parser.Info
@@ -537,7 +538,7 @@ val routeSpec by testSuite {
         assertTrue(union.context.head is NamingContext.Reference)
     }
 
-    test("explicitly discriminated request body union stays set body even when it falls back to plain union modeling") {
+    test("explicitly discriminated request body union stays set body when it uses tagged custom dispatch") {
         val bodySchema = Schema(
             oneOf = listOf(
                 ReferenceOr.value(
@@ -568,7 +569,7 @@ val routeSpec by testSuite {
 
         val body = assertIs<Route.Body.SetBody>(route.body?.defaultOrNull())
         val union = assertIs<Model.Union>(body.type)
-        assertEquals(null, union.discriminator)
+        assertEquals(UnionDispatch.TaggedCustom("type"), union.dispatch)
         assertTrue(union.context.head is NamingContext.Path)
     }
 

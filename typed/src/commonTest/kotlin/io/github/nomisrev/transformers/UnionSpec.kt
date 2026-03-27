@@ -12,6 +12,7 @@ import io.github.nomisrev.openapi.Model.AnyOf
 import io.github.nomisrev.openapi.Model.OneOf
 import io.github.nomisrev.openapi.Model.Union
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.registry
@@ -24,6 +25,9 @@ import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 val unionSpec by testSuite {
+    fun case(model: Model, vararg discriminatorValues: String): Union.Case =
+        Union.Case(model, discriminatorValues.toSet())
+
     fun moderationInputUnionSchema(): Schema =
         Schema(
             oneOf = listOf(
@@ -98,10 +102,10 @@ val unionSpec by testSuite {
                 ReferenceOr.value(d.actual),
                 ReferenceOr.value(b.actual),
             ) expect listOf(
-                Union.Case(s.expected, null),
-                Union.Case(l.expected, null),
-                Union.Case(d.expected, null),
-                Union.Case(b.expected, null),
+                case(s.expected),
+                case(l.expected),
+                case(d.expected),
+                case(b.expected),
             )
         }
 
@@ -119,7 +123,7 @@ val unionSpec by testSuite {
                 null,
                 description.expected,
                 null,
-                null,
+                UnionDispatch.Structural,
                 isNullable ?: false
             )
 
@@ -144,21 +148,20 @@ val unionSpec by testSuite {
             val expected = AnyOf(
                 NamingContext.reference("Model", SchemaContext.Null),
                 listOf(
-                    Union.Case(Model.Primitive.String(null, null, null, false, null), null),
-                    Union.Case(
+                    case(Model.Primitive.String(null, null, null, false, null)),
+                    case(
                         Model.Enum(
                             NamingContext.reference("Model", SchemaContext.Null)
                                 .nest(NamingContext.UnionCase("AOrB")),
                             Model.Primitive.String(null, null, null, false, null),
                             listOf("a", "b"), null, null, null, false
-                        ),
-                        null
+                        )
                     )
                 ),
                 null,
                 null,
                 null,
-                null,
+                UnionDispatch.Structural,
                 false
             )
             assertEquals(expected, result)
@@ -200,23 +203,23 @@ val unionSpec by testSuite {
             val expected = OneOf(
                 NamingContext.reference("Event", SchemaContext.Null),
                 listOf(
-                    Union.Case(
+                    case(
                         Model.Reference(
                             NamingContext.reference("EventA", SchemaContext.Null),
                             null,
                             false,
                             null
-                        ), null
+                        )
                     ),
-                    Union.Case(
+                    case(
                         Model.Reference(
                             NamingContext.reference("EventB", SchemaContext.Null),
                             null,
                             false,
                             null
-                        ), null
+                        )
                     ),
-                    Union.Case(
+                    case(
                         Model.Object(
                             NamingContext.reference("Event", SchemaContext.Null)
                                 .nest(NamingContext.UnionCase("CaseElse")), null, null, mapOf(
@@ -225,11 +228,11 @@ val unionSpec by testSuite {
                                     false
                                 )
                             ), false, false
-                        ), null
+                        )
                     )
                 ),
                 null,
-                null, null, null, false
+                null, null, UnionDispatch.Structural, false
             )
 
             assertEquals(expected, result)
@@ -261,10 +264,10 @@ val unionSpec by testSuite {
             val result = ReferenceOr.schema("content")
                 .toModel(NamingContext.reference("content", SchemaContext.Null), SchemaContext.Write) as OneOf
 
-            assertEquals("type", result.discriminator)
+            assertEquals(UnionDispatch.NativeDiscriminator("type"), result.dispatch)
             assertEquals(
-                listOf("content-directory", "content-file"),
-                result.cases.map { it.discriminator }
+                listOf(setOf("content-directory"), setOf("content-file")),
+                result.cases.map { it.discriminatorValues }
             )
             assertTrue(result.cases.all { it.model is Model.Primitive.Unit })
         }
@@ -301,8 +304,8 @@ val unionSpec by testSuite {
             val result = ReferenceOr.schema("content")
                 .toModel(NamingContext.reference("content", SchemaContext.Null), SchemaContext.Write) as OneOf
 
-            assertEquals("type", result.discriminator)
-            assertEquals(listOf("dir", "file"), result.cases.map { it.discriminator })
+            assertEquals(UnionDispatch.NativeDiscriminator("type"), result.dispatch)
+            assertEquals(listOf(setOf("dir"), setOf("file")), result.cases.map { it.discriminatorValues })
             assertTrue(result.cases.all { it.model is Model.Primitive.Unit })
         }
     }
@@ -363,10 +366,10 @@ val unionSpec by testSuite {
                     SchemaContext.Write
                 ) as AnyOf
 
-            assertEquals("type", result.discriminator)
+            assertEquals(UnionDispatch.NativeDiscriminator("type"), result.dispatch)
             assertEquals(
-                listOf("speech.audio.delta", "speech.audio.done"),
-                result.cases.map { it.discriminator }
+                listOf(setOf("speech.audio.delta"), setOf("speech.audio.done")),
+                result.cases.map { it.discriminatorValues }
             )
 
             val delta = assertIs<Model.Object>(result.cases[0].model)
@@ -452,8 +455,8 @@ val unionSpec by testSuite {
                     SchemaContext.Write
                 ) as AnyOf
 
-            assertEquals("type", result.discriminator)
-            assertEquals(listOf("message", "function_call"), result.cases.map { it.discriminator })
+            assertEquals(UnionDispatch.NativeDiscriminator("type"), result.dispatch)
+            assertEquals(listOf(setOf("message"), setOf("function_call")), result.cases.map { it.discriminatorValues })
 
             val message = assertIs<Model.Object>(result.cases[0].model)
             assertEquals(setOf("text"), message.properties.keys)
@@ -524,8 +527,8 @@ val unionSpec by testSuite {
                     SchemaContext.Write
                 ) as OneOf
 
-            assertEquals("type", result.discriminator)
-            assertEquals(listOf("text", "image_url"), result.cases.map { it.discriminator })
+            assertEquals(UnionDispatch.NativeDiscriminator("type"), result.dispatch)
+            assertEquals(listOf(setOf("text"), setOf("image_url")), result.cases.map { it.discriminatorValues })
 
             val text = assertIs<Model.Object>(result.cases[0].model)
             assertEquals(setOf("text"), text.properties.keys)
@@ -545,7 +548,7 @@ val unionSpec by testSuite {
         }
     }
 
-    test("Recursive unions with multi-valued discriminator fields fall back to plain references") {
+    test("Recursive unions with multi-valued discriminator fields use tagged custom dispatch") {
         val comparisonFilter = Schema(
             type = Schema.Type.Basic.Object,
             properties = mapOf(
@@ -606,8 +609,11 @@ val unionSpec by testSuite {
                     .nest(NamingContext.ObjectProperty("filters")),
                 union.context
             )
-            assertEquals(null, union.discriminator)
-            assertEquals(listOf(null, null), union.cases.map { it.discriminator })
+            assertEquals(UnionDispatch.TaggedCustom("type"), union.dispatch)
+            assertEquals(
+                listOf(setOf("eq", "ne"), setOf("and", "or")),
+                union.cases.map { it.discriminatorValues }
+            )
 
             val comparison = assertIs<Model.Reference>(union.cases[0].model)
             assertEquals(NamingContext.reference("ComparisonFilter", SchemaContext.Null), comparison.context)
@@ -700,6 +706,181 @@ val unionSpec by testSuite {
                 setOf("type", "text"),
                 assertIs<Model.Object>(itemUnion.cases[1].model).properties.keys
             )
+        }
+    }
+
+    test("Multi-value discriminator enum produces tagged custom dispatch") {
+        val directory = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("dir", "folder")
+                    )
+                )
+            ),
+            required = listOf("type")
+        )
+        val file = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("file")
+                    )
+                )
+            ),
+            required = listOf("type")
+        )
+        val contentSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.schema("Directory"),
+                ReferenceOr.schema("File")
+            ),
+            discriminator = Schema.Discriminator(propertyName = "type")
+        )
+        val testApi = api
+            .reference("Directory", directory)
+            .reference("File", file)
+            .reference("Content", contentSchema)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("Content")
+                .toModel(NamingContext.reference("Content", SchemaContext.Null), SchemaContext.Write) as OneOf
+
+            assertEquals(UnionDispatch.TaggedCustom("type"), result.dispatch)
+            assertEquals(listOf(setOf("dir", "folder"), setOf("file")), result.cases.map { it.discriminatorValues })
+        }
+    }
+
+    test("Duplicate discriminator tags produce tagged custom dispatch") {
+        val first = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("node")
+                    )
+                )
+            ),
+            required = listOf("type")
+        )
+        val second = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("node")
+                    )
+                )
+            ),
+            required = listOf("type")
+        )
+        val unionSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.schema("FirstNode"),
+                ReferenceOr.schema("SecondNode")
+            ),
+            discriminator = Schema.Discriminator(propertyName = "type")
+        )
+        val testApi = api
+            .reference("FirstNode", first)
+            .reference("SecondNode", second)
+            .reference("NodeUnion", unionSchema)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("NodeUnion")
+                .toModel(NamingContext.reference("NodeUnion", SchemaContext.Null), SchemaContext.Write) as OneOf
+
+            assertEquals(UnionDispatch.TaggedCustom("type"), result.dispatch)
+            assertEquals(listOf(setOf("node"), setOf("node")), result.cases.map { it.discriminatorValues })
+        }
+    }
+
+    test("Partial discriminator coverage produces tagged custom dispatch") {
+        val cat = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("cat")
+                    )
+                )
+            ),
+            required = listOf("type")
+        )
+        val dog = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("type")
+        )
+        val petSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.value(cat),
+                ReferenceOr.value(dog)
+            ),
+            discriminator = Schema.Discriminator(propertyName = "type")
+        )
+        val testApi = api.reference("Pet", petSchema)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("Pet")
+                .toModel(NamingContext.reference("Pet", SchemaContext.Null), SchemaContext.Write) as OneOf
+
+            assertEquals(UnionDispatch.TaggedCustom("type"), result.dispatch)
+            assertEquals(listOf(setOf("cat"), emptySet()), result.cases.map { it.discriminatorValues })
+        }
+    }
+
+    test("Inferred multi-value discriminator produces tagged custom dispatch") {
+        val created = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("created", "updated")
+                    )
+                )
+            ),
+            required = listOf("type")
+        )
+        val deleted = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("deleted")
+                    )
+                )
+            ),
+            required = listOf("type")
+        )
+        val eventSchema = Schema(
+            oneOf = listOf(
+                ReferenceOr.schema("CreatedEvent"),
+                ReferenceOr.schema("DeletedEvent")
+            )
+        )
+        val testApi = api
+            .reference("CreatedEvent", created)
+            .reference("DeletedEvent", deleted)
+            .reference("Event", eventSchema)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("Event")
+                .toModel(NamingContext.reference("Event", SchemaContext.Null), SchemaContext.Write) as OneOf
+
+            assertEquals(UnionDispatch.TaggedCustom("type"), result.dispatch)
+            assertEquals(listOf(setOf("created", "updated"), setOf("deleted")), result.cases.map { it.discriminatorValues })
         }
     }
 }

@@ -6,6 +6,18 @@ import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 
 @Serializable
+sealed interface UnionDispatch {
+    @Serializable
+    data object Structural : UnionDispatch
+
+    @Serializable
+    data class NativeDiscriminator(val propertyName: String) : UnionDispatch
+
+    @Serializable
+    data class TaggedCustom(val propertyName: String) : UnionDispatch
+}
+
+@Serializable
 sealed interface Model {
     val description: String?
     val title: String?
@@ -293,7 +305,7 @@ sealed interface Model {
         val default: Default<String>?
         override val description: String?
         override val title: String?
-        val discriminator: String?
+        val dispatch: UnionDispatch
         override val isNullable: Boolean
 
         val inline: Set<Model>
@@ -302,7 +314,7 @@ sealed interface Model {
         @Serializable
         data class Case(
             val model: Model,
-            val discriminator: String?
+            val discriminatorValues: Set<String>
         )
     }
 
@@ -314,7 +326,7 @@ sealed interface Model {
         override val default: Default<String>?,
         override val description: String?,
         override val title: String?,
-        override val discriminator: String?,
+        override val dispatch: UnionDispatch,
         override val isNullable: Boolean
     ) : Union
 
@@ -326,7 +338,7 @@ sealed interface Model {
         override val default: Default<String>?,
         override val description: String?,
         override val title: String?,
-        override val discriminator: String?,
+        override val dispatch: UnionDispatch,
         override val isNullable: Boolean
     ) : Union
 

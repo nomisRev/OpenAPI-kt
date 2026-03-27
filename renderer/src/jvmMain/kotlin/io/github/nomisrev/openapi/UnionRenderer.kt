@@ -17,7 +17,9 @@ fun Model.Union.toTypeSpec(
 ): TypeSpec {
     val originalClassName = context.toClassName(config)
     val className = classNameOverride ?: originalClassName
-    return if (discriminator != null) toDiscriminatedTypeSpec(config, originalClassName, className, externalTypeNames)
+    return if (dispatch is UnionDispatch.NativeDiscriminator) {
+        toDiscriminatedTypeSpec(config, originalClassName, className, externalTypeNames)
+    }
     else toNonDiscriminatedTypeSpec(config, originalClassName, className, externalTypeNames)
 }
 
@@ -41,7 +43,8 @@ private fun Model.Union.toDiscriminatedTypeSpec(
     className: ClassName,
     externalTypeNames: Map<ClassName, TypeName>,
 ): TypeSpec {
-    val disc = requireNotNull(discriminator)
+    val disc = (dispatch as? UnionDispatch.NativeDiscriminator)?.propertyName
+        ?: error("Native union renderer requires NativeDiscriminator dispatch: $dispatch")
     val renderedCases = cases.map { it.renderDiscriminatedCase(config, originalClassName, className, disc, externalTypeNames) }
 
     val builder = TypeSpec.interfaceBuilder(className.simpleName)

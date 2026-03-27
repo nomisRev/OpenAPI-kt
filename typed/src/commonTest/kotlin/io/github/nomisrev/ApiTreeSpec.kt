@@ -7,6 +7,7 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.OpenApiPreprocessors
 import io.github.nomisrev.openapi.PathNode
 import io.github.nomisrev.openapi.PathSegment
+import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.buildTree
 import io.github.nomisrev.openapi.parser.Components
 import io.github.nomisrev.openapi.parser.Info
@@ -77,13 +78,13 @@ val apiTreeSpec by testSuite {
         val unionType = Model.OneOf(
             context = NamingContext.path(listOf("workflows", routeKey)),
             cases = listOf(
-                Model.Union.Case(intType, discriminator = null),
-                Model.Union.Case(enumType, discriminator = null),
+                Model.Union.Case(intType, emptySet()),
+                Model.Union.Case(enumType, emptySet()),
             ),
             default = null,
             description = null,
             title = null,
-            discriminator = null,
+            dispatch = UnionDispatch.Structural,
             isNullable = false,
         )
         return PathSegment.OverloadedParameter(name, unionType)
@@ -400,12 +401,12 @@ val apiTreeSpec by testSuite {
                         title = null,
                         isNullable = false,
                     )
-                    Model.Union.Case(enumType, discriminator = null)
+                    Model.Union.Case(enumType, emptySet())
                 },
                 default = null,
                 description = null,
                 title = null,
-                discriminator = null,
+                dispatch = UnionDispatch.Structural,
                 isNullable = false,
             )
             return PathSegment.OverloadedParameter(name, unionType)

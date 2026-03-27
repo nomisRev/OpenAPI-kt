@@ -94,5 +94,5 @@ private fun Model.requiresSerializationUtils(): Boolean = when (this) {
                 properties.values.any { it.model.requiresSerializationUtils() } ||
                 ((additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.requiresSerializationUtils() == true)
     is Model.Union ->
-        discriminator == null || cases.any { it.model.requiresSerializationUtils() }
+        dispatch !is UnionDispatch.NativeDiscriminator || cases.any { it.model.requiresSerializationUtils() }
 }

@@ -4,6 +4,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
+import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.parsePathSegments
 
 val PathSegmentSpec by testSuite {
@@ -33,13 +34,13 @@ val PathSegmentSpec by testSuite {
     val flattenableUnionType = Model.OneOf(
         context = NamingContext.path("workflowId"),
         cases = listOf(
-            Model.Union.Case(intType, discriminator = null),
-            Model.Union.Case(workflowEnumType, discriminator = null),
+            Model.Union.Case(intType, emptySet()),
+            Model.Union.Case(workflowEnumType, emptySet()),
         ),
         default = null,
         description = null,
         title = null,
-        discriminator = null,
+        dispatch = UnionDispatch.Structural,
         isNullable = false,
     )
     val queuedEnumType = Model.Enum(
@@ -63,13 +64,13 @@ val PathSegmentSpec by testSuite {
     val multiEnumUnionType = Model.OneOf(
         context = NamingContext.path("workflowId"),
         cases = listOf(
-            Model.Union.Case(queuedEnumType, discriminator = null),
-            Model.Union.Case(inProgressEnumType, discriminator = null),
+            Model.Union.Case(queuedEnumType, emptySet()),
+            Model.Union.Case(inProgressEnumType, emptySet()),
         ),
         default = null,
         description = null,
         title = null,
-        discriminator = null,
+        dispatch = UnionDispatch.Structural,
         isNullable = false,
     )
     val objectType = Model.Object(
@@ -83,13 +84,13 @@ val PathSegmentSpec by testSuite {
     val nonFlattenableUnionType = Model.OneOf(
         context = NamingContext.path("payload"),
         cases = listOf(
-            Model.Union.Case(stringType, discriminator = null),
-            Model.Union.Case(objectType, discriminator = null),
+            Model.Union.Case(stringType, emptySet()),
+            Model.Union.Case(objectType, emptySet()),
         ),
         default = null,
         description = null,
         title = null,
-        discriminator = null,
+        dispatch = UnionDispatch.Structural,
         isNullable = false,
     )
 

@@ -9,6 +9,7 @@ import io.github.nomisrev.description
 import io.github.nomisrev.expect
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
@@ -135,10 +136,10 @@ val closedEnumSpec by testSuite {
 //            default = default.expected,
             default = null, // TODO Union defaults
             cases = listOf(
-                Model.Union.Case(nestedEnum, null),
-                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), null),
+                Model.Union.Case(nestedEnum, emptySet()),
+                Model.Union.Case(Model.Primitive.String(null, null, null, false, null), emptySet()),
             ),
-            discriminator = null,
+            dispatch = UnionDispatch.Structural,
             isNullable = isNullable ?: false
         )
     }

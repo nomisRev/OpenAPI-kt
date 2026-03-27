@@ -5,6 +5,7 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.RequestBodyStrategy
 import io.github.nomisrev.openapi.RenderConfig
+import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.classifyErrorStatus
 import io.github.nomisrev.openapi.contentTypeToIdentifier
 import io.github.nomisrev.openapi.contentTypeToMethodName
@@ -240,13 +241,13 @@ class ContentTypeStrategyTest {
             type = Model.OneOf(
                 context = NamingContext.reference("Choice", SchemaContext.Null),
                 cases = listOf(
-                    Model.Union.Case(stringModel(), null),
-                    Model.Union.Case(intModel(), null),
+                    Model.Union.Case(stringModel(), emptySet()),
+                    Model.Union.Case(intModel(), emptySet()),
                 ),
                 default = null,
                 description = null,
                 title = null,
-                discriminator = null,
+                dispatch = UnionDispatch.Structural,
                 isNullable = false,
             ),
             description = null,

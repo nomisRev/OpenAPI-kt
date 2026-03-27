@@ -22,25 +22,25 @@ import kotlinx.serialization.json.JsonElement
 public sealed interface Tool {
   @Serializable
   @JvmInline
-  public value class CaseFunctionTool(
+  public value class Function(
     public val `value`: FunctionTool,
   ) : Tool
 
   @Serializable
   @JvmInline
-  public value class CaseFileSearchTool(
+  public value class FileSearch(
     public val `value`: FileSearchTool,
   ) : Tool
 
   @Serializable
   @JvmInline
-  public value class CaseComputerTool(
+  public value class Computer(
     public val `value`: ComputerTool,
   ) : Tool
 
   @Serializable
   @JvmInline
-  public value class CaseComputerUsePreviewTool(
+  public value class ComputerUsePreview(
     public val `value`: ComputerUsePreviewTool,
   ) : Tool
 
@@ -52,49 +52,49 @@ public sealed interface Tool {
 
   @Serializable
   @JvmInline
-  public value class CaseMCPTool(
+  public value class Mcp(
     public val `value`: MCPTool,
   ) : Tool
 
   @Serializable
   @JvmInline
-  public value class CaseCodeInterpreterTool(
+  public value class CodeInterpreter(
     public val `value`: CodeInterpreterTool,
   ) : Tool
 
   @Serializable
   @JvmInline
-  public value class CaseImageGenTool(
+  public value class ImageGeneration(
     public val `value`: ImageGenTool,
   ) : Tool
 
   @Serializable
   @JvmInline
-  public value class CaseLocalShellToolParam(
+  public value class LocalShell(
     public val `value`: LocalShellToolParam,
   ) : Tool
 
   @Serializable
   @JvmInline
-  public value class CaseFunctionShellToolParam(
+  public value class Shell(
     public val `value`: FunctionShellToolParam,
   ) : Tool
 
   @Serializable
   @JvmInline
-  public value class CaseCustomToolParam(
+  public value class Custom(
     public val `value`: CustomToolParam,
   ) : Tool
 
   @Serializable
   @JvmInline
-  public value class CaseNamespaceToolParam(
+  public value class Namespace(
     public val `value`: NamespaceToolParam,
   ) : Tool
 
   @Serializable
   @JvmInline
-  public value class CaseToolSearchToolParam(
+  public value class ToolSearch(
     public val `value`: ToolSearchToolParam,
   ) : Tool
 
@@ -106,7 +106,7 @@ public sealed interface Tool {
 
   @Serializable
   @JvmInline
-  public value class CaseApplyPatchToolParam(
+  public value class ApplyPatch(
     public val `value`: ApplyPatchToolParam,
   ) : Tool
 
@@ -117,21 +117,21 @@ public sealed interface Tool {
     )
     override val descriptor: SerialDescriptor =
         buildSerialDescriptor("io.openai.model.Tool", PolymorphicKind.SEALED) {
-      element("CaseFunctionTool", FunctionTool.serializer().descriptor)
-      element("CaseFileSearchTool", FileSearchTool.serializer().descriptor)
-      element("CaseComputerTool", ComputerTool.serializer().descriptor)
-      element("CaseComputerUsePreviewTool", ComputerUsePreviewTool.serializer().descriptor)
+      element("Function", FunctionTool.serializer().descriptor)
+      element("FileSearch", FileSearchTool.serializer().descriptor)
+      element("Computer", ComputerTool.serializer().descriptor)
+      element("ComputerUsePreview", ComputerUsePreviewTool.serializer().descriptor)
       element("CaseWebSearchTool", WebSearchTool.serializer().descriptor)
-      element("CaseMCPTool", MCPTool.serializer().descriptor)
-      element("CaseCodeInterpreterTool", CodeInterpreterTool.serializer().descriptor)
-      element("CaseImageGenTool", ImageGenTool.serializer().descriptor)
-      element("CaseLocalShellToolParam", LocalShellToolParam.serializer().descriptor)
-      element("CaseFunctionShellToolParam", FunctionShellToolParam.serializer().descriptor)
-      element("CaseCustomToolParam", CustomToolParam.serializer().descriptor)
-      element("CaseNamespaceToolParam", NamespaceToolParam.serializer().descriptor)
-      element("CaseToolSearchToolParam", ToolSearchToolParam.serializer().descriptor)
+      element("Mcp", MCPTool.serializer().descriptor)
+      element("CodeInterpreter", CodeInterpreterTool.serializer().descriptor)
+      element("ImageGeneration", ImageGenTool.serializer().descriptor)
+      element("LocalShell", LocalShellToolParam.serializer().descriptor)
+      element("Shell", FunctionShellToolParam.serializer().descriptor)
+      element("Custom", CustomToolParam.serializer().descriptor)
+      element("Namespace", NamespaceToolParam.serializer().descriptor)
+      element("ToolSearch", ToolSearchToolParam.serializer().descriptor)
       element("CaseWebSearchPreviewTool", WebSearchPreviewTool.serializer().descriptor)
-      element("CaseApplyPatchToolParam", ApplyPatchToolParam.serializer().descriptor)
+      element("ApplyPatch", ApplyPatchToolParam.serializer().descriptor)
     }
 
     override fun deserialize(decoder: Decoder): Tool {
@@ -139,41 +139,41 @@ public sealed interface Tool {
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
       return json.attemptDeserialize(
         value,
-        CaseFunctionTool::class to { CaseFunctionTool(decodeFromJsonElement(FunctionTool.serializer(), it)) },
-        CaseFileSearchTool::class to { CaseFileSearchTool(decodeFromJsonElement(FileSearchTool.serializer(), it)) },
-        CaseComputerTool::class to { CaseComputerTool(decodeFromJsonElement(ComputerTool.serializer(), it)) },
-        CaseComputerUsePreviewTool::class to { CaseComputerUsePreviewTool(decodeFromJsonElement(ComputerUsePreviewTool.serializer(), it)) },
+        Function::class to { Function(decodeFromJsonElement(FunctionTool.serializer(), it)) },
+        FileSearch::class to { FileSearch(decodeFromJsonElement(FileSearchTool.serializer(), it)) },
+        Computer::class to { Computer(decodeFromJsonElement(ComputerTool.serializer(), it)) },
+        ComputerUsePreview::class to { ComputerUsePreview(decodeFromJsonElement(ComputerUsePreviewTool.serializer(), it)) },
         CaseWebSearchTool::class to { CaseWebSearchTool(decodeFromJsonElement(WebSearchTool.serializer(), it)) },
-        CaseMCPTool::class to { CaseMCPTool(decodeFromJsonElement(MCPTool.serializer(), it)) },
-        CaseCodeInterpreterTool::class to { CaseCodeInterpreterTool(decodeFromJsonElement(CodeInterpreterTool.serializer(), it)) },
-        CaseImageGenTool::class to { CaseImageGenTool(decodeFromJsonElement(ImageGenTool.serializer(), it)) },
-        CaseLocalShellToolParam::class to { CaseLocalShellToolParam(decodeFromJsonElement(LocalShellToolParam.serializer(), it)) },
-        CaseFunctionShellToolParam::class to { CaseFunctionShellToolParam(decodeFromJsonElement(FunctionShellToolParam.serializer(), it)) },
-        CaseCustomToolParam::class to { CaseCustomToolParam(decodeFromJsonElement(CustomToolParam.serializer(), it)) },
-        CaseNamespaceToolParam::class to { CaseNamespaceToolParam(decodeFromJsonElement(NamespaceToolParam.serializer(), it)) },
-        CaseToolSearchToolParam::class to { CaseToolSearchToolParam(decodeFromJsonElement(ToolSearchToolParam.serializer(), it)) },
+        Mcp::class to { Mcp(decodeFromJsonElement(MCPTool.serializer(), it)) },
+        CodeInterpreter::class to { CodeInterpreter(decodeFromJsonElement(CodeInterpreterTool.serializer(), it)) },
+        ImageGeneration::class to { ImageGeneration(decodeFromJsonElement(ImageGenTool.serializer(), it)) },
+        LocalShell::class to { LocalShell(decodeFromJsonElement(LocalShellToolParam.serializer(), it)) },
+        Shell::class to { Shell(decodeFromJsonElement(FunctionShellToolParam.serializer(), it)) },
+        Custom::class to { Custom(decodeFromJsonElement(CustomToolParam.serializer(), it)) },
+        Namespace::class to { Namespace(decodeFromJsonElement(NamespaceToolParam.serializer(), it)) },
+        ToolSearch::class to { ToolSearch(decodeFromJsonElement(ToolSearchToolParam.serializer(), it)) },
         CaseWebSearchPreviewTool::class to { CaseWebSearchPreviewTool(decodeFromJsonElement(WebSearchPreviewTool.serializer(), it)) },
-        CaseApplyPatchToolParam::class to { CaseApplyPatchToolParam(decodeFromJsonElement(ApplyPatchToolParam.serializer(), it)) },
+        ApplyPatch::class to { ApplyPatch(decodeFromJsonElement(ApplyPatchToolParam.serializer(), it)) },
       )
     }
 
     override fun serialize(encoder: Encoder, `value`: Tool) {
       when(value) {
-        is CaseFunctionTool -> encoder.encodeSerializableValue(FunctionTool.serializer(), value.value)
-        is CaseFileSearchTool -> encoder.encodeSerializableValue(FileSearchTool.serializer(), value.value)
-        is CaseComputerTool -> encoder.encodeSerializableValue(ComputerTool.serializer(), value.value)
-        is CaseComputerUsePreviewTool -> encoder.encodeSerializableValue(ComputerUsePreviewTool.serializer(), value.value)
+        is Function -> encoder.encodeSerializableValue(FunctionTool.serializer(), value.value)
+        is FileSearch -> encoder.encodeSerializableValue(FileSearchTool.serializer(), value.value)
+        is Computer -> encoder.encodeSerializableValue(ComputerTool.serializer(), value.value)
+        is ComputerUsePreview -> encoder.encodeSerializableValue(ComputerUsePreviewTool.serializer(), value.value)
         is CaseWebSearchTool -> encoder.encodeSerializableValue(WebSearchTool.serializer(), value.value)
-        is CaseMCPTool -> encoder.encodeSerializableValue(MCPTool.serializer(), value.value)
-        is CaseCodeInterpreterTool -> encoder.encodeSerializableValue(CodeInterpreterTool.serializer(), value.value)
-        is CaseImageGenTool -> encoder.encodeSerializableValue(ImageGenTool.serializer(), value.value)
-        is CaseLocalShellToolParam -> encoder.encodeSerializableValue(LocalShellToolParam.serializer(), value.value)
-        is CaseFunctionShellToolParam -> encoder.encodeSerializableValue(FunctionShellToolParam.serializer(), value.value)
-        is CaseCustomToolParam -> encoder.encodeSerializableValue(CustomToolParam.serializer(), value.value)
-        is CaseNamespaceToolParam -> encoder.encodeSerializableValue(NamespaceToolParam.serializer(), value.value)
-        is CaseToolSearchToolParam -> encoder.encodeSerializableValue(ToolSearchToolParam.serializer(), value.value)
+        is Mcp -> encoder.encodeSerializableValue(MCPTool.serializer(), value.value)
+        is CodeInterpreter -> encoder.encodeSerializableValue(CodeInterpreterTool.serializer(), value.value)
+        is ImageGeneration -> encoder.encodeSerializableValue(ImageGenTool.serializer(), value.value)
+        is LocalShell -> encoder.encodeSerializableValue(LocalShellToolParam.serializer(), value.value)
+        is Shell -> encoder.encodeSerializableValue(FunctionShellToolParam.serializer(), value.value)
+        is Custom -> encoder.encodeSerializableValue(CustomToolParam.serializer(), value.value)
+        is Namespace -> encoder.encodeSerializableValue(NamespaceToolParam.serializer(), value.value)
+        is ToolSearch -> encoder.encodeSerializableValue(ToolSearchToolParam.serializer(), value.value)
         is CaseWebSearchPreviewTool -> encoder.encodeSerializableValue(WebSearchPreviewTool.serializer(), value.value)
-        is CaseApplyPatchToolParam -> encoder.encodeSerializableValue(ApplyPatchToolParam.serializer(), value.value)
+        is ApplyPatch -> encoder.encodeSerializableValue(ApplyPatchToolParam.serializer(), value.value)
       }
     }
   }

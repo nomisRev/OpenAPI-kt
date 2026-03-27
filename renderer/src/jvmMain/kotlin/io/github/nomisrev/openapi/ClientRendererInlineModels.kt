@@ -16,7 +16,7 @@ internal fun PathNode.hasInlineNonDiscriminatedParameterUnion(): Boolean =
 
 internal fun Iterable<Route>.hasInlineNonDiscriminatedParameterUnion(): Boolean =
     flatMap(Route::inlineParameterModels)
-        .any { inline -> inline.model is Model.Union && inline.model.discriminator == null }
+        .any { inline -> inline.model is Model.Union && inline.model.dispatch !is UnionDispatch.NativeDiscriminator }
 
 internal fun ApiTree.hasInlineNonDiscriminatedBodyUnion(): Boolean =
     operations.values.hasInlineNonDiscriminatedBodyUnion() ||
@@ -58,7 +58,7 @@ private fun Route.Body.containsInlineNonDiscriminatedUnion(): Boolean =
 private fun Model.containsInlineNonDiscriminatedUnion(): Boolean =
     when (this) {
         is Model.Union ->
-            (context.head is NamingContext.Path && discriminator == null) ||
+            (context.head is NamingContext.Path && dispatch !is UnionDispatch.NativeDiscriminator) ||
                     cases.any { it.model.containsInlineNonDiscriminatedUnion() }
 
         is Model.Object ->
