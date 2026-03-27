@@ -24,8 +24,11 @@ internal val UnionDecoderType = ClassName("kotlinx.serialization.encoding", "Dec
 internal val UnionEncoderType = ClassName("kotlinx.serialization.encoding", "Encoder")
 private val UnionJsonElementType = ClassName("kotlinx.serialization.json", "JsonElement")
 private val UnionJsonDecoderType = ClassName("kotlinx.serialization.json", "JsonDecoder")
+private val UnionJsonObjectType = ClassName("kotlinx.serialization.json", "JsonObject")
+private val UnionJsonPrimitiveType = ClassName("kotlinx.serialization.json", "JsonPrimitive")
 private val UnionPolymorphicKindType = ClassName("kotlinx.serialization.descriptors", "PolymorphicKind")
 private val UnionBuildSerialDescriptorMember = MemberName("kotlinx.serialization.descriptors", "buildSerialDescriptor")
+private val UnionSerializationExceptionType = ClassName("kotlinx.serialization", "SerializationException")
 
 private const val OBJECT_WITH_ADDITIONAL_PROPERTIES_ALLOWED_PRIORITY = 200
 private const val OBJECT_WITHOUT_ADDITIONAL_PROPERTIES_BASE_PRIORITY = 100
@@ -65,9 +68,11 @@ internal fun Model.Union.buildSerializerObject(
         .addProperty(buildDescriptorProperty(config, originalClassName, className, declarationCases, externalTypeNames))
         .addFunction(
             buildDeserializeFunction(
+                union = this,
                 config = config,
                 originalClassName = originalClassName,
                 className = className,
+                declarationCases = declarationCases,
                 orderedCases = orderedCases,
                 anyOfDispatchAnalysis = anyOfDispatchAnalysis,
                 externalTypeNames = externalTypeNames,
@@ -117,24 +122,43 @@ private fun buildDescriptorProperty(
 
 @Suppress("LongParameterList")
 private fun buildDeserializeFunction(
+    union: Model.Union,
     config: RenderConfig,
     originalClassName: ClassName,
     className: ClassName,
+    declarationCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
     orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
     anyOfDispatchAnalysis: AnyOfUniqueKeyDispatchAnalysis?,
     externalTypeNames: Map<ClassName, TypeName>,
 ): FunSpec {
-    val code = if (anyOfDispatchAnalysis != null) {
-        buildAnyOfDeserializeCode(
-            config = config,
-            originalClassName = originalClassName,
-            className = className,
-            orderedCases = orderedCases,
-            anyOfDispatchAnalysis = anyOfDispatchAnalysis,
-            externalTypeNames = externalTypeNames,
-        )
-    } else {
-        buildAttemptDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
+    val code = when (val dispatch = union.dispatch) {
+        is UnionDispatch.TaggedCustom ->
+            buildTaggedCustomDeserializeCode(
+                union = union,
+                propertyName = dispatch.propertyName,
+                config = config,
+                originalClassName = originalClassName,
+                className = className,
+                declarationCases = declarationCases,
+                externalTypeNames = externalTypeNames,
+            )
+
+        UnionDispatch.Structural ->
+            if (anyOfDispatchAnalysis != null) {
+                buildAnyOfDeserializeCode(
+                    config = config,
+                    originalClassName = originalClassName,
+                    className = className,
+                    orderedCases = orderedCases,
+                    anyOfDispatchAnalysis = anyOfDispatchAnalysis,
+                    externalTypeNames = externalTypeNames,
+                )
+            } else {
+                buildAttemptDeserializeCode(config, originalClassName, className, orderedCases, externalTypeNames)
+            }
+
+        is UnionDispatch.NativeDiscriminator ->
+            error("Custom serializer renderer does not support native discriminator dispatch: $dispatch")
     }
 
     return FunSpec.builder("deserialize")
@@ -195,6 +219,178 @@ private fun buildAttemptDeserializeBody(
     .addStatement(")")
     .build()
 
+@Suppress("LongMethod", "LongParameterList")
+private fun buildTaggedCustomDeserializeCode(
+    union: Model.Union,
+    propertyName: String,
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    declarationCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    externalTypeNames: Map<ClassName, TypeName>,
+): CodeBlock {
+    val casesByTag = linkedMapOf<String, MutableList<Pair<Model.Union.Case, RenderedUnionCase>>>()
+    val untaggedCases = mutableListOf<Pair<Model.Union.Case, RenderedUnionCase>>()
+
+    declarationCases.forEach { declarationCase ->
+        val discriminatorValues = declarationCase.first.discriminatorValues
+        if (discriminatorValues.isEmpty()) {
+            untaggedCases += declarationCase
+        } else {
+            discriminatorValues.forEach { tag ->
+                casesByTag.getOrPut(tag) { mutableListOf() } += declarationCase
+            }
+        }
+    }
+
+    return CodeBlock.builder()
+        .addStatement("val value = decoder.decodeSerializableValue(%T.serializer())", UnionJsonElementType)
+        .addStatement(
+            "val json = requireNotNull(decoder as? %T) { %S }.json",
+            UnionJsonDecoderType,
+            "Complex unions currently only supported for Json"
+        )
+        .addStatement("val obj = value as? %T", UnionJsonObjectType)
+        .addStatement("val tag = (obj?.get(%S) as? %T)?.content", propertyName, UnionJsonPrimitiveType)
+        .beginControlFlow("when(tag)")
+        .apply {
+            declarationCases.forEach { declarationCase ->
+                val uniqueTags = declarationCase.first.discriminatorValues
+                    .filter { tag -> casesByTag.getValue(tag).size == 1 }
+                if (uniqueTags.isNotEmpty()) {
+                    addStatement(
+                        "%L -> return %L",
+                        tagLabelsCode(uniqueTags),
+                        decodeCaseExpression(
+                            case = declarationCase.first,
+                            rendered = declarationCase.second,
+                            config = config,
+                            originalClassName = originalClassName,
+                            className = className,
+                            externalTypeNames = externalTypeNames,
+                        )
+                    )
+                }
+            }
+
+            casesByTag.forEach { (tag, collisionCases) ->
+                if (collisionCases.size > 1) {
+                    beginControlFlow("%S ->", tag)
+                    add(
+                        buildTaggedCustomCollisionDispatchCode(
+                            union = union,
+                            config = config,
+                            originalClassName = originalClassName,
+                            className = className,
+                            collisionCases = collisionCases,
+                            externalTypeNames = externalTypeNames,
+                        )
+                    )
+                    endControlFlow()
+                }
+            }
+
+            if (untaggedCases.isNotEmpty()) {
+                beginControlFlow("else ->")
+                add(
+                    buildAttemptDeserializeBody(
+                        config = config,
+                        originalClassName = originalClassName,
+                        className = className,
+                        orderedCases = untaggedCases.sortedByDeserializationOrder(),
+                        externalTypeNames = externalTypeNames,
+                    )
+                )
+                endControlFlow()
+            } else {
+                addStatement(
+                    "else -> throw %T(%S + tag + %S)",
+                    UnionSerializationExceptionType,
+                    "Unknown tag: ",
+                    " for ${className.canonicalName}",
+                )
+            }
+        }
+        .endControlFlow()
+        .build()
+}
+
+private fun tagLabelsCode(tags: List<String>): CodeBlock =
+    CodeBlock.builder()
+        .apply {
+            tags.forEachIndexed { index, tag ->
+                if (index > 0) add(", ")
+                add("%S", tag)
+            }
+        }
+        .build()
+
+@Suppress("LongParameterList")
+private fun decodeCaseExpression(
+    case: Model.Union.Case,
+    rendered: RenderedUnionCase,
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    externalTypeNames: Map<ClassName, TypeName>,
+): CodeBlock {
+    val serializerCode = caseSerializerCode(case, rendered, config, originalClassName, className, externalTypeNames)
+    return if (rendered.isInlined || rendered.isNestedUnion) {
+        CodeBlock.of("json.decodeFromJsonElement(%L, value)", serializerCode)
+    } else {
+        CodeBlock.of(
+            "%T(json.decodeFromJsonElement(%L, value))",
+            className.nestedClass(rendered.caseSimpleName),
+            serializerCode,
+        )
+    }
+}
+
+@Suppress("LongParameterList")
+private fun buildTaggedCustomCollisionDispatchCode(
+    union: Model.Union,
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    collisionCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    externalTypeNames: Map<ClassName, TypeName>,
+): CodeBlock {
+    val orderedCollisionCases = collisionCases.sortedByDeserializationOrder()
+    val anyOfDispatchAnalysis = if (union is Model.AnyOf) {
+        collisionCases.map { it.first }.uniqueKeyDispatchAnalysisOrNull()
+    } else {
+        null
+    }
+
+    if (anyOfDispatchAnalysis == null) {
+        return buildAttemptDeserializeBody(
+            config = config,
+            originalClassName = originalClassName,
+            className = className,
+            orderedCases = orderedCollisionCases,
+            externalTypeNames = externalTypeNames,
+        )
+    }
+
+    val uniqueKeysByCase = orderedCollisionCases.map { (case, rendered) ->
+        AnyOfDispatchCase(
+            case = case,
+            rendered = rendered,
+            uniqueKeys = anyOfDispatchAnalysis.uniqueKeysFor(case),
+        )
+    }
+    return buildAnyOfUniqueKeyCollisionDispatchCode(
+        AnyOfUniqueKeyDispatchContext(
+            config = config,
+            originalClassName = originalClassName,
+            className = className,
+            orderedCases = orderedCollisionCases,
+            uniqueKeysByCase = uniqueKeysByCase,
+            externalTypeNames = externalTypeNames,
+        )
+    )
+}
+
 private fun buildAnyOfDeserializeCode(
     config: RenderConfig,
     originalClassName: ClassName,
@@ -204,12 +400,9 @@ private fun buildAnyOfDeserializeCode(
     externalTypeNames: Map<ClassName, TypeName>,
 ): CodeBlock {
     val uniqueKeysByCase = orderedCases.map { (case, rendered) ->
-        val model = case.model as? Model.Object
-            ?: error("Unique-key anyOf dispatch requires object cases only: $case")
         AnyOfDispatchCase(
             case = case,
             rendered = rendered,
-            model = model,
             uniqueKeys = anyOfDispatchAnalysis.uniqueKeysFor(case),
         )
     }
@@ -240,48 +433,42 @@ private fun buildAnyOfUniqueKeyDispatchCode(
     val fallbackCase = context.uniqueKeysByCase.singleOrNull { it.uniqueKeys.isEmpty() }
     return CodeBlock.builder()
         .addStatement("val value = decoder.decodeSerializableValue(%T.serializer())", UnionJsonElementType)
-    .addStatement(
-        "val json = requireNotNull(decoder as? %T) { %S }.json",
-        UnionJsonDecoderType,
-        "Complex unions currently only supported for Json"
-    )
+        .addStatement(
+            "val json = requireNotNull(decoder as? %T) { %S }.json",
+            UnionJsonDecoderType,
+            "Complex unions currently only supported for Json"
+        )
         .addStatement("val keys = value.jsonObject.keys")
         .apply {
             context.uniqueKeysByCase.filter { it.uniqueKeys.isNotEmpty() }.forEach { dispatchCase ->
-                val caseClassName = context.className.nestedClass(dispatchCase.rendered.caseSimpleName)
-                val serializerCode = caseSerializerCode(
-                    dispatchCase.case,
-                    dispatchCase.rendered,
-                    context.config,
-                    context.originalClassName,
-                    context.className,
-                    context.externalTypeNames
-                )
                 val condition = dispatchCase.uniqueKeys.joinToString(separator = " || ") { "\"${it.ktStringLiteral()}\" in keys" }
                 beginControlFlow("if ($condition)")
-                if (dispatchCase.rendered.isInlined || dispatchCase.rendered.isNestedUnion) {
-                    addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
-                } else {
-                    addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
-                }
+                addStatement(
+                    "return %L",
+                    decodeCaseExpression(
+                        case = dispatchCase.case,
+                        rendered = dispatchCase.rendered,
+                        config = context.config,
+                        originalClassName = context.originalClassName,
+                        className = context.className,
+                        externalTypeNames = context.externalTypeNames,
+                    )
+                )
                 endControlFlow()
             }
 
             if (fallbackCase != null) {
-                val serializerCode = caseSerializerCode(
-                    fallbackCase.case,
-                    fallbackCase.rendered,
-                    context.config,
-                    context.originalClassName,
-                    context.className,
-                    context.externalTypeNames
+                addStatement(
+                    "return %L",
+                    decodeCaseExpression(
+                        case = fallbackCase.case,
+                        rendered = fallbackCase.rendered,
+                        config = context.config,
+                        originalClassName = context.originalClassName,
+                        className = context.className,
+                        externalTypeNames = context.externalTypeNames,
+                    )
                 )
-                if (fallbackCase.rendered.isInlined || fallbackCase.rendered.isNestedUnion) {
-                    addStatement("return json.decodeFromJsonElement(%L, value)", serializerCode)
-                } else {
-                    val caseClassName = context.className.nestedClass(fallbackCase.rendered.caseSimpleName)
-                    addStatement("return %T(json.decodeFromJsonElement(%L, value))", caseClassName, serializerCode)
-                }
             } else {
                 add(
                     buildAttemptDeserializeBody(
@@ -297,10 +484,60 @@ private fun buildAnyOfUniqueKeyDispatchCode(
         .build()
 }
 
+private fun buildAnyOfUniqueKeyCollisionDispatchCode(
+    context: AnyOfUniqueKeyDispatchContext,
+): CodeBlock {
+    val fallbackCase = context.uniqueKeysByCase.singleOrNull { it.uniqueKeys.isEmpty() }
+    return CodeBlock.builder()
+        .addStatement("val keys = obj?.keys.orEmpty()")
+        .apply {
+            context.uniqueKeysByCase.filter { it.uniqueKeys.isNotEmpty() }.forEach { dispatchCase ->
+                val condition = dispatchCase.uniqueKeys.joinToString(separator = " || ") { "\"${it.ktStringLiteral()}\" in keys" }
+                beginControlFlow("if ($condition)")
+                addStatement(
+                    "return %L",
+                    decodeCaseExpression(
+                        case = dispatchCase.case,
+                        rendered = dispatchCase.rendered,
+                        config = context.config,
+                        originalClassName = context.originalClassName,
+                        className = context.className,
+                        externalTypeNames = context.externalTypeNames,
+                    )
+                )
+                endControlFlow()
+            }
+
+            if (fallbackCase != null) {
+                addStatement(
+                    "return %L",
+                    decodeCaseExpression(
+                        case = fallbackCase.case,
+                        rendered = fallbackCase.rendered,
+                        config = context.config,
+                        originalClassName = context.originalClassName,
+                        className = context.className,
+                        externalTypeNames = context.externalTypeNames,
+                    )
+                )
+            } else {
+                add(
+                    buildAttemptDeserializeBody(
+                        config = context.config,
+                        originalClassName = context.originalClassName,
+                        className = context.className,
+                        orderedCases = context.orderedCases,
+                        externalTypeNames = context.externalTypeNames,
+                    )
+                )
+            }
+        }
+        .build()
+}
+
 private data class AnyOfDispatchCase(
     val case: Model.Union.Case,
     val rendered: RenderedUnionCase,
-    val model: Model.Object,
     val uniqueKeys: Set<String>,
 )
 

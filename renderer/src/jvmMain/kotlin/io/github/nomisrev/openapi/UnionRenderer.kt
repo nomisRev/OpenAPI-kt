@@ -17,10 +17,16 @@ fun Model.Union.toTypeSpec(
 ): TypeSpec {
     val originalClassName = context.toClassName(config)
     val className = classNameOverride ?: originalClassName
-    return if (dispatch is UnionDispatch.NativeDiscriminator) {
-        toDiscriminatedTypeSpec(config, originalClassName, className, externalTypeNames)
+    return when (dispatch) {
+        is UnionDispatch.NativeDiscriminator ->
+            toNativeDiscriminatedTypeSpec(config, originalClassName, className, externalTypeNames)
+
+        is UnionDispatch.TaggedCustom ->
+            toTaggedCustomTypeSpec(config, originalClassName, className, externalTypeNames)
+
+        UnionDispatch.Structural ->
+            toStructuralTypeSpec(config, originalClassName, className, externalTypeNames)
     }
-    else toNonDiscriminatedTypeSpec(config, originalClassName, className, externalTypeNames)
 }
 
 fun Model.Union.toFileSpec(config: RenderConfig): FileSpec {
@@ -37,7 +43,7 @@ fun Model.Union.toFileSpec(config: RenderConfig): FileSpec {
 
 // ── Discriminated unions ────────────────────────────────────────────────────
 
-private fun Model.Union.toDiscriminatedTypeSpec(
+private fun Model.Union.toNativeDiscriminatedTypeSpec(
     config: RenderConfig,
     originalClassName: ClassName,
     className: ClassName,
@@ -80,15 +86,44 @@ private fun Model.Union.toDiscriminatedTypeSpec(
     renderedCases.forEach { builder.addType(it.typeSpec) }
     return builder.build()
 }
-// ── Non-discriminated unions ────────────────────────────────────────────────
+// ── Custom serializer unions ────────────────────────────────────────────────
 
-private fun Model.Union.toNonDiscriminatedTypeSpec(
+private fun Model.Union.toStructuralTypeSpec(
     config: RenderConfig,
     originalClassName: ClassName,
     className: ClassName,
     externalTypeNames: Map<ClassName, TypeName>,
+): TypeSpec =
+    toCustomSerializedTypeSpec(
+        config = config,
+        originalClassName = originalClassName,
+        className = className,
+        externalTypeNames = externalTypeNames,
+        allowOpenEnum = true,
+    )
+
+private fun Model.Union.toTaggedCustomTypeSpec(
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    externalTypeNames: Map<ClassName, TypeName>,
+): TypeSpec =
+    toCustomSerializedTypeSpec(
+        config = config,
+        originalClassName = originalClassName,
+        className = className,
+        externalTypeNames = externalTypeNames,
+        allowOpenEnum = false,
+    )
+
+private fun Model.Union.toCustomSerializedTypeSpec(
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    externalTypeNames: Map<ClassName, TypeName>,
+    allowOpenEnum: Boolean,
 ): TypeSpec {
-    val openEnum = detectOpenEnum()
+    val openEnum = detectOpenEnum().takeIf { allowOpenEnum }
     if (openEnum != null) return buildOpenEnumTypeSpec(config, className, openEnum)
 
     val renderedCases = cases.map { it.renderNonDiscriminatedCase(config, originalClassName, className, externalTypeNames) }

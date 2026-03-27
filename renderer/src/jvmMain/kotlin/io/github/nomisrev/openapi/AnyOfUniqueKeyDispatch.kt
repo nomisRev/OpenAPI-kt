@@ -1,3 +1,5 @@
+@file:Suppress("MatchingDeclarationName")
+
 package io.github.nomisrev.openapi
 
 internal data class AnyOfUniqueKeyDispatchAnalysis(
@@ -8,10 +10,14 @@ internal data class AnyOfUniqueKeyDispatchAnalysis(
 }
 
 internal fun Model.AnyOf.uniqueKeyDispatchAnalysis(): AnyOfUniqueKeyDispatchAnalysis? {
-    val objectCases = cases.mapNotNull { case ->
+    return cases.uniqueKeyDispatchAnalysisOrNull()
+}
+
+internal fun List<Model.Union.Case>.uniqueKeyDispatchAnalysisOrNull(): AnyOfUniqueKeyDispatchAnalysis? {
+    val objectCases = mapNotNull { case ->
         (case.model as? Model.Object)?.let { case to it }
     }
-    if (objectCases.size != cases.size) return null
+    if (objectCases.size != size) return null
 
     val uniqueKeysByCase = objectCases.associate { (case, model) ->
         val otherKeys = objectCases

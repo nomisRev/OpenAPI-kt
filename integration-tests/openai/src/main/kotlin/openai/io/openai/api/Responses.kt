@@ -18,6 +18,7 @@ import io.openai.model.CreateResponse
 import io.openai.model.Error
 import io.openai.model.IncludeEnum
 import io.openai.model.Response
+import io.openai.model.ResponseItemList
 import io.openai.model.ResponseStreamEvent
 import io.openai.model.TokenCountsBody
 import io.openai.model.TokenCountsResource
@@ -25,6 +26,8 @@ import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 public class Responses internal constructor(
   private val client: HttpClient,
@@ -74,6 +77,8 @@ public class Responses internal constructor(
     public val `get`: Get = Get(client, responseId)
 
     public val cancel: Cancel = Cancel(client, responseId)
+
+    public val inputItems: InputItems = InputItems(client, responseId)
 
     public class Delete internal constructor(
       private val client: HttpClient,
@@ -141,6 +146,41 @@ public class Responses internal constructor(
           public data class NotFound(
             public val `value`: Error,
           ) : Response
+        }
+      }
+    }
+
+    public class InputItems internal constructor(
+      private val client: HttpClient,
+      private val responseId: String,
+    ) {
+      public val `get`: Get = Get(client, responseId)
+
+      public class Get internal constructor(
+        private val client: HttpClient,
+        private val responseId: String,
+      ) {
+        public suspend operator fun invoke(
+          limit: Long? = 20L,
+          order: Order? = null,
+          after: String? = null,
+          include: List<IncludeEnum>? = null,
+        ): ResponseItemList = client.get("/responses/$responseId/input_items") {
+          limit?.let { parameter("limit", it) }
+          order?.let { parameter("order", it.value) }
+          after?.let { parameter("after", it) }
+          include?.let { parameter("include", it) }
+        }.body()
+
+        @Serializable
+        public enum class Order(
+          public val `value`: String,
+        ) {
+          @SerialName("asc")
+          Asc("asc"),
+          @SerialName("desc")
+          Desc("desc"),
+          ;
         }
       }
     }

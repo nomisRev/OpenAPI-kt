@@ -18,6 +18,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Configuration for turn detection, ether Server VAD or Semantic VAD. This can be set to `null` to turn off, in which case the client must manually trigger model response.
@@ -91,11 +93,17 @@ public sealed interface RealtimeTurnDetection {
     override fun deserialize(decoder: Decoder): RealtimeTurnDetection {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        ServerVAD::class to { decodeFromJsonElement(ServerVAD.serializer(), it) },
-        SemanticVAD::class to { decodeFromJsonElement(SemanticVAD.serializer(), it) },
-      )
+      val obj = value as? JsonObject
+      val tag = (obj?.get("type") as? JsonPrimitive)?.content
+      when(tag) {
+        else -> {
+          return json.attemptDeserialize(
+            value,
+            ServerVAD::class to { decodeFromJsonElement(ServerVAD.serializer(), it) },
+            SemanticVAD::class to { decodeFromJsonElement(SemanticVAD.serializer(), it) },
+          )
+        }
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: RealtimeTurnDetection) {

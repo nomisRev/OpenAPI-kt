@@ -1,5 +1,6 @@
-package io.github.nomisrev.render.test.union.discriminated.`enum`.case
+package io.github.nomisrev.render.test.union.discriminated.tagged.custom.partial
 
+import kotlin.Boolean
 import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
@@ -18,56 +19,60 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
-@Serializable(with = DiscriminatedEnumUnion.Serializer::class)
-public sealed interface DiscriminatedEnumUnion {
+@Serializable(with = Pet.Serializer::class)
+public sealed interface Pet {
   @Serializable
-  public enum class AscOrDesc(
-    public val `value`: String,
-  ) : DiscriminatedEnumUnion {
-    @SerialName("asc")
-    Asc("asc"),
-    @SerialName("desc")
-    Desc("desc"),
-    ;
+  public data class Cat(
+    public val type: Type,
+    public val name: String,
+  ) : Pet {
+    @Serializable
+    public enum class Type(
+      public val `value`: String,
+    ) {
+      @SerialName("cat")
+      Cat("cat"),
+      ;
+    }
   }
 
   @JvmInline
   @Serializable
-  public value class Manual(
-    public val kind: String,
-  ) : DiscriminatedEnumUnion
+  public value class Barks(
+    public val barks: Boolean,
+  ) : Pet
 
-  public object Serializer : KSerializer<DiscriminatedEnumUnion> {
+  public object Serializer : KSerializer<Pet> {
     @OptIn(
       InternalSerializationApi::class,
       ExperimentalSerializationApi::class,
     )
     override val descriptor: SerialDescriptor =
-        buildSerialDescriptor("io.github.nomisrev.render.test.union.discriminated.enum.case.DiscriminatedEnumUnion", PolymorphicKind.SEALED) {
-      element("AscOrDesc", AscOrDesc.serializer().descriptor)
-      element("Manual", Manual.serializer().descriptor)
+        buildSerialDescriptor("io.github.nomisrev.render.test.union.discriminated.tagged.custom.partial.Pet", PolymorphicKind.SEALED) {
+      element("Cat", Cat.serializer().descriptor)
+      element("Barks", Barks.serializer().descriptor)
     }
 
-    override fun deserialize(decoder: Decoder): DiscriminatedEnumUnion {
+    override fun deserialize(decoder: Decoder): Pet {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
       val obj = value as? JsonObject
-      val tag = (obj?.get("kind") as? JsonPrimitive)?.content
+      val tag = (obj?.get("type") as? JsonPrimitive)?.content
       when(tag) {
-        "manual" -> return json.decodeFromJsonElement(Manual.serializer(), value)
+        "cat" -> return json.decodeFromJsonElement(Cat.serializer(), value)
         else -> {
           return json.attemptDeserialize(
             value,
-            AscOrDesc::class to { decodeFromJsonElement(AscOrDesc.serializer(), it) },
+            Barks::class to { decodeFromJsonElement(Barks.serializer(), it) },
           )
         }
       }
     }
 
-    override fun serialize(encoder: Encoder, `value`: DiscriminatedEnumUnion) {
+    override fun serialize(encoder: Encoder, `value`: Pet) {
       when(value) {
-        is AscOrDesc -> encoder.encodeSerializableValue(AscOrDesc.serializer(), value)
-        is Manual -> encoder.encodeSerializableValue(Manual.serializer(), value)
+        is Cat -> encoder.encodeSerializableValue(Cat.serializer(), value)
+        is Barks -> encoder.encodeSerializableValue(Barks.serializer(), value)
       }
     }
   }

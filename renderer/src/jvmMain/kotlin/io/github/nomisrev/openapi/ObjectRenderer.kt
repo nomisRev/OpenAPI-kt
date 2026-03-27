@@ -258,7 +258,12 @@ private fun renderProperty(
             rawTypeName.remapNestedClassName(originalClassName, effectiveClassName)
         else rawTypeName)
             .copy(nullable = property.model.isNullable || !property.isRequired)
-    val literalDefault = property.model.defaultLiteral(config)
+    val literalDefault = property.model.defaultLiteral(
+        config = config,
+        originalClassName = originalClassName,
+        renderedClassName = effectiveClassName,
+        externalTypeNames = externalTypeNames,
+    )
 
     val parameter = ParameterSpec.builder(paramName, typeName)
         .apply {
@@ -516,7 +521,12 @@ private fun Model.ContextHolder.serializerClassName(
         }
         .remapTypeNames(externalTypeNames)
 
-internal fun Model.defaultLiteral(config: RenderConfig): CodeBlock? =
+internal fun Model.defaultLiteral(
+    config: RenderConfig,
+    originalClassName: ClassName? = null,
+    renderedClassName: ClassName? = null,
+    externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
+): CodeBlock? =
     when (this) {
         is Model.Primitive.String -> default.toLiteral { value -> CodeBlock.of("%S", value) }
         is Model.Primitive.Int -> default.toLiteral { value -> CodeBlock.of("%L", value) }
@@ -525,7 +535,16 @@ internal fun Model.defaultLiteral(config: RenderConfig): CodeBlock? =
         is Model.Primitive.Double -> default.toLiteral { value -> CodeBlock.of("%L", value) }
         is Model.Primitive.Boolean -> default.toLiteral { value -> CodeBlock.of("%L", value) }
         is Model.Enum -> default.toLiteral { value ->
-            CodeBlock.of("%T.%L", context.toClassName(config), toEnumValueName(value))
+            val typeName = context.toClassName(config)
+                .let { enumClassName ->
+                    if (originalClassName != null && renderedClassName != null) {
+                        enumClassName.remapNestedClassName(originalClassName, renderedClassName)
+                    } else {
+                        enumClassName
+                    }
+                }
+                .remapTypeNames(externalTypeNames)
+            CodeBlock.of("%T.%L", typeName, toEnumValueName(value))
         }
 
         is Model.Collection -> default.toLiteral { values ->

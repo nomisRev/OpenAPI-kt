@@ -615,8 +615,15 @@ val unionSpec by testSuite {
                 union.cases.map { it.discriminatorValues }
             )
 
-            val comparison = assertIs<Model.Reference>(union.cases[0].model)
-            assertEquals(NamingContext.reference("ComparisonFilter", SchemaContext.Null), comparison.context)
+            val comparison = assertIs<Model.Object>(union.cases[0].model)
+            assertEquals(
+                NamingContext.reference("CompoundFilter", SchemaContext.Null)
+                    .nest(NamingContext.ObjectProperty("filters"))
+                    .nest(NamingContext.UnionCase("ComparisonFilter")),
+                comparison.context
+            )
+            assertEquals(setOf("type", "key", "value"), comparison.properties.keys)
+            assertTrue(comparison.properties.getValue("type").isRequired)
 
             val recursive = assertIs<Model.Reference>(union.cases[1].model)
             assertEquals(NamingContext.reference("CompoundFilter", SchemaContext.Null), recursive.context)
@@ -752,6 +759,24 @@ val unionSpec by testSuite {
 
             assertEquals(UnionDispatch.TaggedCustom("type"), result.dispatch)
             assertEquals(listOf(setOf("dir", "folder"), setOf("file")), result.cases.map { it.discriminatorValues })
+
+            val directoryCase = assertIs<Model.Object>(result.cases[0].model)
+            assertEquals(
+                NamingContext.reference("Content", SchemaContext.Null)
+                    .nest(NamingContext.UnionCase("Directory")),
+                directoryCase.context
+            )
+            assertEquals(setOf("type"), directoryCase.properties.keys)
+            assertTrue(directoryCase.properties.getValue("type").isRequired)
+
+            val fileCase = assertIs<Model.Object>(result.cases[1].model)
+            assertEquals(
+                NamingContext.reference("Content", SchemaContext.Null)
+                    .nest(NamingContext.UnionCase("File")),
+                fileCase.context
+            )
+            assertEquals(setOf("type"), fileCase.properties.keys)
+            assertTrue(fileCase.properties.getValue("type").isRequired)
         }
     }
 

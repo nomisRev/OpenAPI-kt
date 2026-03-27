@@ -138,12 +138,27 @@ private suspend fun ResolvedSchema.buildUnionCases(
 ): List<Model.Union.Case> {
     val uniqueSubtypes = subtypes.distinct()
     val caseDiscriminators = discriminator?.caseValues ?: List(uniqueSubtypes.size) { emptySet() }
+    val singleTagCounts = caseDiscriminators
+        .mapNotNull { it.singleOrNull() }
+        .groupingBy { it }
+        .eachCount()
     val unionContexts = uniqueSubtypes.mapIndexed { index, refOrSchema ->
-        caseDiscriminators[index]
-            .singleOrNull()
-            .takeIf { dispatch !is UnionDispatch.Structural }
-            ?.let { name.nest(NamingContext.UnionCase(it)) }
-            ?: name.unionCase(index, refOrSchema, uniqueSubtypes, context)
+        when {
+            dispatch is UnionDispatch.TaggedCustom &&
+                    refOrSchema is ReferenceOr.Reference &&
+                    refOrSchema.ref != "#" ->
+                name.nest(NamingContext.UnionCase(refOrSchema.ref.schemaName()))
+
+            else ->
+                caseDiscriminators[index]
+                    .singleOrNull()
+                    ?.takeIf { tag ->
+                        dispatch !is UnionDispatch.Structural &&
+                                (dispatch !is UnionDispatch.TaggedCustom || singleTagCounts[tag] == 1)
+                    }
+                    ?.let { name.nest(NamingContext.UnionCase(it)) }
+                    ?: name.unionCase(index, refOrSchema, uniqueSubtypes, context)
+        }
     }
 
     /**
@@ -170,8 +185,12 @@ private suspend fun ResolvedSchema.buildUnionCases(
                     caseDiscriminator = discriminatorValues.singleOrNull(),
                 )
 
-                UnionDispatch.Structural,
-                is UnionDispatch.TaggedCustom -> it.toModel(context, false)
+                is UnionDispatch.TaggedCustom -> it.toTaggedCustomUnionCaseModel(
+                    context = context,
+                    caseContext = unionContexts[index],
+                )
+
+                UnionDispatch.Structural -> it.toModel(context, false)
             }
             Model.Union.Case(model, discriminatorValues)
         }
@@ -200,6 +219,21 @@ private suspend fun ResolvedSchema.toDiscriminatedUnionCaseModel(
 }
 
 context(ctx: Registry.Scope)
+private suspend fun ResolvedSchema.toTaggedCustomUnionCaseModel(
+    context: SchemaContext,
+    caseContext: NamingContext,
+): Model {
+    val normalizedSchema = schema.normalizedTaggedCustomUnionCase()
+    val normalized = when (this) {
+        is ResolvedSchema.Reference,
+        is ResolvedSchema.Value -> ResolvedSchema.Value(caseContext, normalizedSchema)
+
+        is ResolvedSchema.Recursive -> return toModel(context, false)
+    }
+    return normalized.toModel(context, true)
+}
+
+context(ctx: Registry.Scope)
 private suspend fun Schema.normalizedDiscriminatedUnionCase(
     discriminatorField: String,
     caseDiscriminator: String?,
@@ -207,6 +241,10 @@ private suspend fun Schema.normalizedDiscriminatedUnionCase(
     flattenAllOfForUnionDiscriminator()
         .stripTagOnlyDiscriminatorProperty(discriminatorField, caseDiscriminator)
         .hoistSingleRemainingObjectProperty()
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.normalizedTaggedCustomUnionCase(): Schema =
+    flattenAllOfForUnionDiscriminator()
 
 context(ctx: Registry.Scope)
 private suspend fun Schema.flattenAllOfForUnionDiscriminator(): Schema =

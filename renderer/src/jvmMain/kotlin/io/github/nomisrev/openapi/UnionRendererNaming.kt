@@ -37,16 +37,8 @@ internal fun Model.Union.Case.caseSimpleName(config: RenderConfig): String =
             is Model.DiscriminatedObject -> "Case${caseModel.context.toClassName(config).simpleName}"
         }
 
-internal fun Model.Union.Case.serialNameOrNull(discriminatorField: String): String? =
-    discriminatorValues.singleOrNull() ?: discriminatorValueFromInlineObject(discriminatorField) ?: model.unionCaseValueOrNull()
-
-private fun Model.Union.Case.discriminatorValueFromInlineObject(discriminatorField: String): String? {
-    val discriminatorModel = (model as? Model.Object)
-        ?.properties
-        ?.get(discriminatorField)
-        ?.model as? Model.Enum
-    return discriminatorModel?.values?.singleOrNull()
-}
+internal fun Model.Union.Case.serialNameOrNull(@Suppress("UNUSED_PARAMETER") discriminatorField: String): String? =
+    discriminatorValues.singleOrNull()
 
 internal fun Model.unionCaseValueOrNull(): String? =
     (((this as? Model.ContextHolder)?.context?.nested?.lastOrNull()) as? NamingContext.UnionCase)?.value

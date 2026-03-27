@@ -324,6 +324,158 @@ val unionSpec by testSuite {
 
     modelTest(
         $$"""
+        |"Entry": {
+        |  "oneOf": [
+        |    { "$ref": "#/components/schemas/DirectoryEntry" },
+        |    { "$ref": "#/components/schemas/FileEntry" }
+        |  ],
+        |  "discriminator": { "propertyName": "type" }
+        |},
+        |"DirectoryEntry": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["dir", "folder"] },
+        |    "children": {
+        |      "type": "array",
+        |      "items": { "type": "string" }
+        |    }
+        |  },
+        |  "required": ["type", "children"]
+        |},
+        |"FileEntry": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["file"] },
+        |    "size": { "type": "integer", "format": "int32" }
+        |  },
+        |  "required": ["type", "size"]
+        |}
+        """.trimMargin(),
+        "union/discriminated-tagged-custom-multivalue"
+    )
+
+    modelTest(
+        $$"""
+        |"Entry": {
+        |  "oneOf": [
+        |    { "$ref": "#/components/schemas/DirectoryEntry" },
+        |    { "$ref": "#/components/schemas/FileEntry" }
+        |  ],
+        |  "discriminator": { "propertyName": "type" }
+        |},
+        |"EntryBase": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "id": { "type": "string" }
+        |  },
+        |  "required": ["id"]
+        |},
+        |"DirectoryEntry": {
+        |  "allOf": [
+        |    { "$ref": "#/components/schemas/EntryBase" },
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "type": { "type": "string", "enum": ["dir", "folder"] },
+        |        "children": {
+        |          "type": "array",
+        |          "items": { "type": "string" }
+        |        }
+        |      },
+        |      "required": ["type", "children"]
+        |    }
+        |  ]
+        |},
+        |"FileEntry": {
+        |  "allOf": [
+        |    { "$ref": "#/components/schemas/EntryBase" },
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "type": { "type": "string", "enum": ["file"] },
+        |        "size": { "type": "integer", "format": "int32" }
+        |      },
+        |      "required": ["type", "size"]
+        |    }
+        |  ]
+        |}
+        """.trimMargin(),
+        "union/discriminated-tagged-custom-ref-allof"
+    )
+
+    modelTest(
+        """
+        |"Node": {
+        |  "anyOf": [
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "type": { "type": "string", "enum": ["node", "remote"] },
+        |        "remoteId": { "type": "string" }
+        |      },
+        |      "required": ["type", "remoteId"]
+        |    },
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "type": { "type": "string", "enum": ["node", "local"] },
+        |        "path": { "type": "string" }
+        |      },
+        |      "required": ["type", "path"]
+        |    },
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "type": { "type": "string", "enum": ["leaf"] },
+        |        "name": { "type": "string" }
+        |      },
+        |      "required": ["type", "name"]
+        |    }
+        |  ],
+        |  "discriminator": { "propertyName": "type" }
+        |}
+        """.trimMargin(),
+        "union/discriminated-tagged-custom-collision"
+    )
+
+    modelTest(
+        """
+        |"Pet": {
+        |  "oneOf": [
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "type": { "type": "string", "enum": ["cat"] },
+        |        "name": { "type": "string" }
+        |      },
+        |      "required": ["type", "name"]
+        |    },
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "barks": { "type": "boolean" }
+        |      },
+        |      "required": ["barks"]
+        |    }
+        |  ],
+        |  "discriminator": { "propertyName": "type" }
+        |}
+        """.trimMargin(),
+        "union/discriminated-tagged-custom-partial"
+    )
+
+    modelTest(
+        $$"""
         |"ConversationItem": {
         |  "anyOf": [
         |    { "$ref": "#/components/schemas/MessageItem" },
