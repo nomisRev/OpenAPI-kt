@@ -1,4 +1,4 @@
-package io.openai.model
+package io.github.nomisrev.render.test.union.discriminated.recursive.ref.fallback
 
 import kotlin.OptIn
 import kotlin.String
@@ -17,9 +17,6 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 
-/**
- * Combine multiple filters using `and` or `or`.
- */
 @Serializable
 public data class CompoundFilter(
   public val type: Type,
@@ -45,7 +42,7 @@ public data class CompoundFilter(
         ExperimentalSerializationApi::class,
       )
       override val descriptor: SerialDescriptor =
-          buildSerialDescriptor("io.openai.model.CompoundFilter.Filters", PolymorphicKind.SEALED) {
+          buildSerialDescriptor("io.github.nomisrev.render.test.union.discriminated.recursive.ref.fallback.CompoundFilter.Filters", PolymorphicKind.SEALED) {
         element("CaseComparisonFilter", ComparisonFilter.serializer().descriptor)
         element("CaseCompoundFilter", CompoundFilter.serializer().descriptor)
       }

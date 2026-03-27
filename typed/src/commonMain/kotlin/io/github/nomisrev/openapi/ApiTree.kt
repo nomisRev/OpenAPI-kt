@@ -52,10 +52,14 @@ private tailrec suspend fun Set<NamingContext.Reference>.topLevelModels(registry
     return if (newNames == this) models else newNames.topLevelModels(registry)
 }
 
-suspend fun OpenAPI.toApiTree(name: String = info.title.toPascalCase()): ApiTree =
-    Registry(this).use { registry ->
-        val globalServers = servers.normalizeForClientGeneration()
-        val routes = with(registry) { toRoutes() }
+suspend fun OpenAPI.toApiTree(
+    name: String = info.title.toPascalCase(),
+    preprocessor: OpenApiPreprocessor = OpenApiPreprocessor.None,
+): ApiTree {
+    val preprocessed = preprocessedBy(preprocessor)
+    return Registry(preprocessed).use { registry ->
+        val globalServers = preprocessed.servers.normalizeForClientGeneration()
+        val routes = with(registry) { preprocessed.toRoutes() }
         val models = with(registry) {
             routes
                 .flatMapTo(mutableSetOf()) { it.topLevelNames() }
@@ -63,6 +67,7 @@ suspend fun OpenAPI.toApiTree(name: String = info.title.toPascalCase()): ApiTree
         }
         routes.buildTree(name = name, models = models, servers = globalServers)
     }
+}
 
 private fun Route.topLevelNames(): Set<NamingContext.Reference> =
     parameters.topLevelNames() + returns.topLevelNames() + body.topLevelNames()

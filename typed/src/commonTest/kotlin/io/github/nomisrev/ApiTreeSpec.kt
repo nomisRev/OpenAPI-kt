@@ -4,6 +4,7 @@ import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.ApiTree
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.OpenApiPreprocessors
 import io.github.nomisrev.openapi.PathNode
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.buildTree
@@ -668,6 +669,35 @@ val apiTreeSpec by testSuite {
             models.mapNotNull { (it as? Model.ContextHolder)?.context?.head as? NamingContext.Reference }
                 .map(NamingContext.Reference::name)
         )
+    }
+
+    test("toApiTree applies OpenAPI preprocessors before building routes") {
+        val api = OpenAPI(
+            info = Info("Test", "1.0"),
+            paths = mapOf(
+                "/pets" to PathItem(
+                    get = Operation(
+                        responses = Responses(200, Response())
+                    )
+                ),
+                "/responses/{response_id}/input_items" to PathItem(
+                    get = Operation(
+                        responses = Responses(200, Response())
+                    )
+                ),
+            ),
+        )
+
+        val tree = api.toApiTree(
+            name = "Pets",
+            preprocessor = OpenApiPreprocessors.excludePaths(
+                setOf("/responses/{response_id}/input_items")
+            ),
+        )
+
+        assertEquals("Pets", tree.name)
+        assertEquals(listOf("pets"), tree.children.map { (it.segment as PathSegment.Literal).name })
+        assertTrue(tree.children.single().operations.containsKey(HttpMethod.Get))
     }
 
     test("toApiTree does not keep referenced enum models that are fully unrolled from path params") {

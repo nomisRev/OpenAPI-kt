@@ -718,17 +718,7 @@ private suspend fun GitHubV3RESTAPI.runUserAndOrgProbes(
   }
 
   results.probe("orgs.org.rulesets.ruleSuites.get") {
-    when (
-      val response = org.rulesets.ruleSuites.get(
-        ref = null,
-        repositoryName = null,
-        timePeriod = Orgs.OrgPath.Rulesets.RuleSuites.Get.TimePeriod.Day,
-        actorName = null,
-        ruleSuiteResult = Orgs.OrgPath.Rulesets.RuleSuites.Get.RuleSuiteResult.All,
-        perPage = 5L,
-        page = 1L,
-      )
-    ) {
+    when (val response = org.rulesets.ruleSuites.get()) {
       is Orgs.OrgPath.Rulesets.RuleSuites.Get.Response.Ok -> {
         fixture.ruleSuiteId = response.value.items.firstOrNull()?.id
         describeList(response.value.items) { "${it.id}:${it.repositoryName}:${it.result?.value}" }
@@ -764,7 +754,7 @@ private suspend fun GitHubV3RESTAPI.runGistProbes(
   fixture: GistFixture,
 ) {
   results.probe("gists.public.get") {
-    when (val response = gists.public.get(since = null, perPage = 5L, page = 1L)) {
+    when (val response = gists.public.get()) {
       is Gists.Public.Get.Response.Ok -> {
         fixture.gistId = response.value.firstOrNull()?.id
         describeList(response.value) { it.id }
@@ -792,7 +782,7 @@ private suspend fun GitHubV3RESTAPI.runGistProbes(
   }
 
   results.probe("gists.gistId.comments.get") {
-    when (val response = gist.comments.get(perPage = 5L, page = 1L)) {
+    when (val response = gist.comments.get()) {
       is Gists.GistIdPath.Comments.Get.Response.Ok ->
         describeList(response.value) { "#${it.id} ${it.user?.login ?: "unknown"}" }
 
@@ -801,7 +791,7 @@ private suspend fun GitHubV3RESTAPI.runGistProbes(
   }
 
   results.probe("gists.gistId.commits.get") {
-    when (val response = gist.commits.get(perPage = 5L, page = 1L)) {
+    when (val response = gist.commits.get()) {
       is Gists.GistIdPath.Commits.Get.Response.Ok ->
         describeList(response.value) { it.version.take(12) }
 

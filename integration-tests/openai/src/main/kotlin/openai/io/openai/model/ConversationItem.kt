@@ -10,7 +10,6 @@ import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -158,11 +157,10 @@ public sealed interface ConversationItem {
    * [function calling guide](/docs/guides/function-calling) for more information.
    *
    */
-  @SerialName("FunctionToolCallResource")
+  @SerialName("function_call")
   @Serializable
-  public data class FunctionToolCallResource(
-    public val id: String? = null,
-    public val type: Type,
+  public data class FunctionCall(
+    public val id: String,
     @SerialName("call_id")
     public val callId: String,
     public val namespace: String? = null,
@@ -182,26 +180,16 @@ public sealed interface ConversationItem {
       Incomplete("incomplete"),
       ;
     }
-
-    @Serializable
-    public enum class Type(
-      public val `value`: String,
-    ) {
-      @SerialName("function_call")
-      FunctionCall("function_call"),
-      ;
-    }
   }
 
   /**
    * The output of a function tool call.
    *
    */
-  @SerialName("FunctionToolCallOutputResource")
+  @SerialName("function_call_output")
   @Serializable
-  public data class FunctionToolCallOutputResource(
-    public val id: String? = null,
-    public val type: Type,
+  public data class FunctionCallOutput(
+    public val id: String,
     @SerialName("call_id")
     public val callId: String,
     public val output: Output,
@@ -232,7 +220,7 @@ public sealed interface ConversationItem {
           ExperimentalSerializationApi::class,
         )
         override val descriptor: SerialDescriptor =
-            buildSerialDescriptor("io.openai.model.ConversationItem.FunctionToolCallOutputResource.Output", PolymorphicKind.SEALED) {
+            buildSerialDescriptor("io.openai.model.ConversationItem.FunctionCallOutput.Output", PolymorphicKind.SEALED) {
           element("CaseString", String.serializer().descriptor)
           element("CaseFunctionAndCustomToolCallOutputList", ListSerializer(FunctionAndCustomToolCallOutput.serializer()).descriptor)
         }
@@ -266,15 +254,6 @@ public sealed interface ConversationItem {
       Completed("completed"),
       @SerialName("incomplete")
       Incomplete("incomplete"),
-      ;
-    }
-
-    @Serializable
-    public enum class Type(
-      public val `value`: String,
-    ) {
-      @SerialName("function_call_output")
-      FunctionCallOutput("function_call_output"),
       ;
     }
   }
@@ -410,12 +389,10 @@ public sealed interface ConversationItem {
    * The output of a computer tool call.
    *
    */
-  @SerialName("ComputerToolCallOutputResource")
+  @SerialName("computer_call_output")
   @Serializable
-  public data class ComputerToolCallOutputResource(
-    @Required
-    public val type: Type = Type.ComputerCallOutput,
-    public val id: String? = null,
+  public data class ComputerCallOutput(
+    public val id: String,
     @SerialName("call_id")
     public val callId: String,
     @SerialName("acknowledged_safety_checks")
@@ -433,15 +410,6 @@ public sealed interface ConversationItem {
       Completed("completed"),
       @SerialName("incomplete")
       Incomplete("incomplete"),
-      ;
-    }
-
-    @Serializable
-    public enum class Type(
-      public val `value`: String,
-    ) {
-      @SerialName("computer_call_output")
-      ComputerCallOutput("computer_call_output"),
       ;
     }
   }

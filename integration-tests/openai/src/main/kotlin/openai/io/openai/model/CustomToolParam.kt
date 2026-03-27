@@ -3,7 +3,6 @@ package io.openai.model
 import kotlin.Boolean
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
@@ -31,17 +30,17 @@ public data class CustomToolParam(
   @Serializable
   public sealed interface Format {
     @Serializable
-    @JvmInline
-    @SerialName("CustomTextFormatParam")
-    public value class CustomTextFormatParam(
-      public val `value`: io.openai.model.CustomTextFormatParam,
-    ) : Format
+    @SerialName("text")
+    public data object Text : Format
 
+    /**
+     * A grammar defined by the user.
+     */
+    @SerialName("grammar")
     @Serializable
-    @JvmInline
-    @SerialName("CustomGrammarFormatParam")
-    public value class CustomGrammarFormatParam(
-      public val `value`: io.openai.model.CustomGrammarFormatParam,
+    public data class Grammar(
+      public val syntax: GrammarSyntax1,
+      public val definition: String,
     ) : Format
   }
 

@@ -391,6 +391,86 @@ val unionSpec by testSuite {
         }
     }
 
+    test("Discriminated anyOf resolves inherited allOf discriminators and strips inherited tags") {
+        val messageItem = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("message")
+                    )
+                ),
+                "text" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("type", "text")
+        )
+        val functionToolCall = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("function_call")
+                    )
+                ),
+                "call_id" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("type", "call_id")
+        )
+        val functionToolCallResource = Schema(
+            allOf = listOf(
+                ReferenceOr.schema("FunctionToolCall"),
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "id" to ReferenceOr.value(Schema.string)
+                        ),
+                        required = listOf("id")
+                    )
+                )
+            )
+        )
+        val conversationItem = Schema(
+            anyOf = listOf(
+                ReferenceOr.schema("MessageItem"),
+                ReferenceOr.schema("FunctionToolCallResource")
+            ),
+            discriminator = Schema.Discriminator(propertyName = "type")
+        )
+        val testApi = api
+            .reference("MessageItem", messageItem)
+            .reference("FunctionToolCall", functionToolCall)
+            .reference("FunctionToolCallResource", functionToolCallResource)
+            .reference("ConversationItem", conversationItem)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("ConversationItem")
+                .toModel(
+                    NamingContext.reference("ConversationItem", SchemaContext.Null),
+                    SchemaContext.Write
+                ) as AnyOf
+
+            assertEquals("type", result.discriminator)
+            assertEquals(listOf("message", "function_call"), result.cases.map { it.discriminator })
+
+            val message = assertIs<Model.Object>(result.cases[0].model)
+            assertEquals(setOf("text"), message.properties.keys)
+            assertTrue(message.properties.getValue("text").isRequired)
+
+            val functionCall = assertIs<Model.Object>(result.cases[1].model)
+            assertEquals(setOf("call_id", "id"), functionCall.properties.keys)
+            assertTrue(functionCall.properties.getValue("call_id").isRequired)
+            assertTrue(functionCall.properties.getValue("id").isRequired)
+            assertEquals(
+                NamingContext.reference("ConversationItem", SchemaContext.Null)
+                    .nest(NamingContext.UnionCase("function_call")),
+                functionCall.context
+            )
+        }
+    }
+
     test("Ref-only union infers tag-only discriminator and inlines referenced cases") {
         val textPart = Schema(
             type = Schema.Type.Basic.Object,
@@ -462,6 +542,78 @@ val unionSpec by testSuite {
                     .nest(NamingContext.UnionCase("image_url")),
                 image.context
             )
+        }
+    }
+
+    test("Recursive unions with multi-valued discriminator fields fall back to plain references") {
+        val comparisonFilter = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("eq", "ne")
+                    )
+                ),
+                "key" to ReferenceOr.value(Schema.string),
+                "value" to ReferenceOr.value(Schema.string),
+            ),
+            required = listOf("type", "key", "value")
+        )
+        val compoundFilter = Schema(
+            recursiveAnchor = true,
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("and", "or")
+                    )
+                ),
+                "filters" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Array,
+                        items = ReferenceOr.value(
+                            Schema(
+                                oneOf = listOf(
+                                    ReferenceOr.schema("ComparisonFilter"),
+                                    ReferenceOr.Reference("#")
+                                ),
+                                discriminator = Schema.Discriminator(propertyName = "type")
+                            )
+                        )
+                    )
+                )
+            ),
+            required = listOf("type", "filters")
+        )
+        val testApi = api
+            .reference("ComparisonFilter", comparisonFilter)
+            .reference("CompoundFilter", compoundFilter)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("CompoundFilter")
+                .toModel(
+                    NamingContext.reference("CompoundFilter", SchemaContext.Null),
+                    SchemaContext.Write
+                )
+            val compound = assertIs<Model.Object>(result)
+            val filters = assertIs<Model.Collection>(compound.properties.getValue("filters").model)
+            val union = assertIs<Model.OneOf>(filters.inner)
+
+            assertEquals(
+                NamingContext.reference("CompoundFilter", SchemaContext.Null)
+                    .nest(NamingContext.ObjectProperty("filters")),
+                union.context
+            )
+            assertEquals(null, union.discriminator)
+            assertEquals(listOf(null, null), union.cases.map { it.discriminator })
+
+            val comparison = assertIs<Model.Reference>(union.cases[0].model)
+            assertEquals(NamingContext.reference("ComparisonFilter", SchemaContext.Null), comparison.context)
+
+            val recursive = assertIs<Model.Reference>(union.cases[1].model)
+            assertEquals(NamingContext.reference("CompoundFilter", SchemaContext.Null), recursive.context)
         }
     }
 

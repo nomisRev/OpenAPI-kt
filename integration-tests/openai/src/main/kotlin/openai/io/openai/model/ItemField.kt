@@ -10,7 +10,6 @@ import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -416,12 +415,10 @@ public sealed interface ItemField {
    * The output of a computer tool call.
    *
    */
-  @SerialName("ComputerToolCallOutputResource")
+  @SerialName("computer_call_output")
   @Serializable
-  public data class ComputerToolCallOutputResource(
-    @Required
-    public val type: Type = Type.ComputerCallOutput,
-    public val id: String? = null,
+  public data class ComputerCallOutput(
+    public val id: String,
     @SerialName("call_id")
     public val callId: String,
     @SerialName("acknowledged_safety_checks")
@@ -439,15 +436,6 @@ public sealed interface ItemField {
       Completed("completed"),
       @SerialName("incomplete")
       Incomplete("incomplete"),
-      ;
-    }
-
-    @Serializable
-    public enum class Type(
-      public val `value`: String,
-    ) {
-      @SerialName("computer_call_output")
-      ComputerCallOutput("computer_call_output"),
       ;
     }
   }

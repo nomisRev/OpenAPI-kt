@@ -117,8 +117,15 @@ private suspend fun RequestBody.toBody(
     schema: ReferenceOr<Schema>,
 ): Route.Body {
     val name = NamingContext.path(segments, method).nest(NamingContext.RouteBody)
+    val resolvedSchema = schema.resolveSchema()
     val model = schema.toRequestBodyModel(name, SchemaContext.Write)
-    return if (model is Model.Union && model.discriminator == null && model.context.head is NamingContext.Path) {
+    val hasExplicitDiscriminator = resolvedSchema.discriminator != null
+    return if (
+        model is Model.Union &&
+        model.discriminator == null &&
+        !hasExplicitDiscriminator &&
+        model.context.head is NamingContext.Path
+    ) {
         Route.Body.OverloadedBody(
             contentType = ContentType.parse(contentType),
             type = model,

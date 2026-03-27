@@ -537,7 +537,7 @@ val routeSpec by testSuite {
         assertTrue(union.context.head is NamingContext.Reference)
     }
 
-    test("discriminated request body union stays set body") {
+    test("explicitly discriminated request body union stays set body even when it falls back to plain union modeling") {
         val bodySchema = Schema(
             oneOf = listOf(
                 ReferenceOr.value(
@@ -568,7 +568,7 @@ val routeSpec by testSuite {
 
         val body = assertIs<Route.Body.SetBody>(route.body?.defaultOrNull())
         val union = assertIs<Model.Union>(body.type)
-        assertEquals("type", union.discriminator)
+        assertEquals(null, union.discriminator)
         assertTrue(union.context.head is NamingContext.Path)
     }
 

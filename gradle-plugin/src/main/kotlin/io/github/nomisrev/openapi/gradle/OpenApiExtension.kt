@@ -12,5 +12,6 @@ abstract class OpenApiExtension @Inject constructor(objects: ObjectFactory) {
     val modelPackage: Property<String> = objects.property(String::class.java)
     val apiPackage: Property<String> = objects.property(String::class.java)
     val targets: SetProperty<String> = objects.setProperty(String::class.java)
+    val excludedPaths: SetProperty<String> = objects.setProperty(String::class.java)
     val outputDirectory: DirectoryProperty = objects.directoryProperty()
 }

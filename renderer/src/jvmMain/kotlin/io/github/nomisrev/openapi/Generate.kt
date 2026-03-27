@@ -4,13 +4,19 @@ import com.squareup.kotlinpoet.FileSpec
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.routes.SchemaContext
 
-suspend fun OpenAPI.generate(config: RenderConfig = RenderConfig()): List<FileSpec> =
-    generateWithDiagnostics(config)
+suspend fun OpenAPI.generate(
+    config: RenderConfig = RenderConfig(),
+    preprocessor: OpenApiPreprocessor = OpenApiPreprocessor.None,
+): List<FileSpec> =
+    generateWithDiagnostics(config, preprocessor)
         .also(GenerationResult::throwOnErrors)
         .files
 
-suspend fun OpenAPI.generateWithDiagnostics(config: RenderConfig = RenderConfig()): GenerationResult =
-    toApiTree().renderWithDiagnostics(config)
+suspend fun OpenAPI.generateWithDiagnostics(
+    config: RenderConfig = RenderConfig(),
+    preprocessor: OpenApiPreprocessor = OpenApiPreprocessor.None,
+): GenerationResult =
+    toApiTree(preprocessor = preprocessor).renderWithDiagnostics(config)
 
 fun ApiTree.render(config: RenderConfig): List<FileSpec> =
     renderWithDiagnostics(config)

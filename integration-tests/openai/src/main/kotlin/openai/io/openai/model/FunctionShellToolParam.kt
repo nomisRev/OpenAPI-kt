@@ -2,6 +2,7 @@ package io.openai.model
 
 import kotlin.OptIn
 import kotlin.String
+import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
@@ -22,25 +23,73 @@ public data class FunctionShellToolParam(
   @JsonClassDiscriminator("type")
   @Serializable
   public sealed interface Environment {
+    @SerialName("container_auto")
     @Serializable
+    public data class ContainerAuto(
+      @SerialName("file_ids")
+      public val fileIds: List<String>? = null,
+      @SerialName("memory_limit")
+      public val memoryLimit: ContainerMemoryLimit? = null,
+      @SerialName("network_policy")
+      public val networkPolicy: NetworkPolicy? = null,
+      public val skills: List<Skills>? = null,
+    ) : Environment {
+      /**
+       * Network access policy for the container.
+       */
+      @OptIn(ExperimentalSerializationApi::class)
+      @JsonClassDiscriminator("type")
+      @Serializable
+      public sealed interface NetworkPolicy {
+        @Serializable
+        @SerialName("disabled")
+        public data object Disabled : NetworkPolicy
+
+        @SerialName("allowlist")
+        @Serializable
+        public data class Allowlist(
+          @SerialName("allowed_domains")
+          public val allowedDomains: List<String>,
+          @SerialName("domain_secrets")
+          public val domainSecrets: List<ContainerNetworkPolicyDomainSecretParam>? = null,
+        ) : NetworkPolicy
+      }
+
+      @OptIn(ExperimentalSerializationApi::class)
+      @JsonClassDiscriminator("type")
+      @Serializable
+      public sealed interface Skills {
+        @SerialName("skill_reference")
+        @Serializable
+        public data class SkillReference(
+          @SerialName("skill_id")
+          public val skillId: String,
+          public val version: String? = null,
+        ) : Skills
+
+        @SerialName("inline")
+        @Serializable
+        public data class Inline(
+          public val name: String,
+          public val description: String,
+          public val source: InlineSkillSourceParam,
+        ) : Skills
+      }
+    }
+
     @JvmInline
-    @SerialName("ContainerAutoParam")
-    public value class ContainerAutoParam(
-      public val `value`: io.openai.model.ContainerAutoParam,
+    @SerialName("local")
+    @Serializable
+    public value class Local(
+      public val skills: List<LocalSkillParam>? = null,
     ) : Environment
 
-    @Serializable
     @JvmInline
-    @SerialName("LocalEnvironmentParam")
-    public value class LocalEnvironmentParam(
-      public val `value`: io.openai.model.LocalEnvironmentParam,
-    ) : Environment
-
+    @SerialName("container_reference")
     @Serializable
-    @JvmInline
-    @SerialName("ContainerReferenceParam")
-    public value class ContainerReferenceParam(
-      public val `value`: io.openai.model.ContainerReferenceParam,
+    public value class ContainerReference(
+      @SerialName("container_id")
+      public val containerId: String,
     ) : Environment
   }
 

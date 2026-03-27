@@ -13,6 +13,7 @@ fun openApiPlugin(project: Project) {
     extension.modelPackage.convention("io.github.nomisrev.openapi.generated.model")
     extension.apiPackage.convention("io.github.nomisrev.openapi.generated.api")
     extension.targets.convention(setOf("JVM", "JS"))
+    extension.excludedPaths.convention(emptySet())
     extension.outputDirectory.convention(project.layout.buildDirectory.dir("generated/openapi"))
 
     val generateTask = project.registerGenerateOpenApiTask(
@@ -21,6 +22,7 @@ fun openApiPlugin(project: Project) {
         modelPackage = extension.modelPackage,
         apiPackage = extension.apiPackage,
         targets = extension.targets,
+        excludedPaths = extension.excludedPaths,
     )
 
     val outputDirectory = extension.specFile.flatMap { file ->

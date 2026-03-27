@@ -287,6 +287,85 @@ val unionSpec by testSuite {
         "union/discriminated-anyof-openai-speech"
     )
 
+    modelTest(
+        $$"""
+        |"CompoundFilter": {
+        |  "$recursiveAnchor": true,
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["and", "or"] },
+        |    "filters": {
+        |      "type": "array",
+        |      "items": {
+        |        "oneOf": [
+        |          { "$ref": "#/components/schemas/ComparisonFilter" },
+        |          { "$recursiveRef": "#" }
+        |        ],
+        |        "discriminator": { "propertyName": "type" }
+        |      }
+        |    }
+        |  },
+        |  "required": ["type", "filters"]
+        |},
+        |"ComparisonFilter": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["eq", "ne"] },
+        |    "key": { "type": "string" },
+        |    "value": { "type": "string" }
+        |  },
+        |  "required": ["type", "key", "value"]
+        |}
+        """.trimMargin(),
+        "union/discriminated-recursive-ref-fallback"
+    )
+
+    modelTest(
+        $$"""
+        |"ConversationItem": {
+        |  "anyOf": [
+        |    { "$ref": "#/components/schemas/MessageItem" },
+        |    { "$ref": "#/components/schemas/FunctionToolCallResource" }
+        |  ],
+        |  "discriminator": { "propertyName": "type" }
+        |},
+        |"MessageItem": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["message"] },
+        |    "text": { "type": "string" }
+        |  },
+        |  "required": ["type", "text"]
+        |},
+        |"FunctionToolCall": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["function_call"] },
+        |    "call_id": { "type": "string" }
+        |  },
+        |  "required": ["type", "call_id"]
+        |},
+        |"FunctionToolCallResource": {
+        |  "allOf": [
+        |    { "$ref": "#/components/schemas/FunctionToolCall" },
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "id": { "type": "string" }
+        |      },
+        |      "required": ["id"]
+        |    }
+        |  ]
+        |}
+        """.trimMargin(),
+        "union/discriminated-anyof-inherited-allof-tag"
+    )
+
     // ── Phase 6: Non-discriminated unions ───────────────────────────────
 
     // Union of all primitive types

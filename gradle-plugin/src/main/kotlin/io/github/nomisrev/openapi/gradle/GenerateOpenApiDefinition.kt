@@ -5,6 +5,7 @@ import gratatouille.tasks.GOutputDirectory
 import gratatouille.tasks.GTask
 import io.github.nomisrev.openapi.GenerationDiagnosticSeverity
 import io.github.nomisrev.openapi.KmpTarget
+import io.github.nomisrev.openapi.OpenApiPreprocessors
 import io.github.nomisrev.openapi.RenderConfig
 import io.github.nomisrev.openapi.generateWithDiagnostics
 import io.github.nomisrev.openapi.throwOnErrors
@@ -24,6 +25,7 @@ fun generateOpenApi(
     modelPackage: String,
     apiPackage: String,
     targets: Set<String>,
+    excludedPaths: Set<String>,
     outputDirectory: GOutputDirectory,
 ) {
     val spec = specFile.readText()
@@ -41,10 +43,11 @@ fun generateOpenApi(
         apiPackage = apiPackage,
         targets = renderTargets,
     )
+    val preprocessor = OpenApiPreprocessors.excludePaths(excludedPaths)
     val taskLogger = Logging.getLogger("openapi.generate")
 
     runBlocking {
-        val result = openApi.generateWithDiagnostics(config)
+        val result = openApi.generateWithDiagnostics(config, preprocessor)
         result.diagnostics.forEach { diagnostic ->
             when (diagnostic.severity) {
                 GenerationDiagnosticSeverity.Warning -> taskLogger.warn(diagnostic.message)

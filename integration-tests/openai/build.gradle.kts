@@ -41,5 +41,6 @@ configure<OpenApiExtension> {
     modelPackage.set("io.openai.model")
     apiPackage.set("io.openai.api")
     targets.set(setOf("JVM"))
+    excludedPaths.set(setOf("/responses/{response_id}/input_items"))
     outputDirectory.set(project.file("src/main/kotlin"))
 }
