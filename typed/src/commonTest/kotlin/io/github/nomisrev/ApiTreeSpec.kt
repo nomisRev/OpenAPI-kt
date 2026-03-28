@@ -69,7 +69,7 @@ val apiTreeSpec by testSuite {
         val enumType = Model.Enum(
             context = NamingContext.path(listOf("workflows", routeKey, "workflowId")),
             inner = stringType,
-            values = listOf("queued", "in-progress"),
+            values = listOf(Model.EnumValue.String("queued"), Model.EnumValue.String("in-progress")),
             default = null,
             description = null,
             title = null,
@@ -395,7 +395,7 @@ val apiTreeSpec by testSuite {
                     val enumType = Model.Enum(
                         context = NamingContext.path(listOf("workflows", routeKey, "workflowId", "case$index")),
                         inner = stringType,
-                        values = values,
+                        values = values.map(Model.EnumValue::String),
                         default = null,
                         description = null,
                         title = null,

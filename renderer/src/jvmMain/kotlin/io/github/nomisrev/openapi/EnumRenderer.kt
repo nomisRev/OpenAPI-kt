@@ -19,8 +19,8 @@ import kotlinx.serialization.Serializable
  * kotlinx.serialization, not by Ktor's `parameter()` / form-data `append()`).
  */
 fun Model.Enum.needsValueProperty(): Boolean =
-    values.any { rawValue ->
-        val v = rawValue ?: "null"
+    values.any { enumValue ->
+        val v = enumValue.wireValue()
         v != toEnumValueName(v).unescapeBackticks()
     }
 
@@ -63,8 +63,8 @@ fun Model.Enum.toTypeSpec(
             }
             parentInterface?.let(::addSuperinterface)
 
-            values.forEach { value ->
-                val rawValue = value ?: "null"
+            values.forEach { enumValue ->
+                val rawValue = enumValue.wireValue()
                 val entryName = toEnumValueName(rawValue)
                 val entry = TypeSpec.anonymousClassBuilder()
 
@@ -97,4 +97,3 @@ fun Model.Enum.toFileSpec(config: RenderConfig): FileSpec {
         .addType(toTypeSpec(config))
         .build()
 }
-

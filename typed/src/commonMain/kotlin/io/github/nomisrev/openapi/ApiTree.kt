@@ -509,5 +509,5 @@ private fun Model.compatibilityDescription(): String {
     }
 }
 
-private fun List<String?>.compatibilityDescription(): String =
-    joinToString(prefix = "[", postfix = "]") { it ?: "null" }
+private fun List<Model.EnumValue>.compatibilityDescription(): String =
+    joinToString(prefix = "[", postfix = "]")

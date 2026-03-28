@@ -54,18 +54,6 @@ public class Responses internal constructor(
       contentType(ContentType.Application.Json)
       setBody(body)
     }.body()
-
-    public sealed interface JsonResponse {
-      public data class Ok(
-        public val `value`: Response,
-      ) : JsonResponse
-    }
-
-    public sealed interface TextEventStreamResponse {
-      public data class Ok(
-        public val `value`: ResponseStreamEvent,
-      ) : TextEventStreamResponse
-    }
   }
 
   public class ResponseIdPath internal constructor(

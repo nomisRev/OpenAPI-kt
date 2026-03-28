@@ -158,6 +158,55 @@ sealed interface Model {
     }
 
     @Serializable
+    sealed interface EnumValue {
+        val rawValue: kotlin.String?
+
+        @Serializable
+        @SerialName("String")
+        data class String(val value: kotlin.String) : EnumValue {
+            override val rawValue: kotlin.String = value
+
+            override fun toString(): kotlin.String = value
+        }
+
+        @Serializable
+        @SerialName("Int")
+        data class Int(val value: kotlin.Int, override val rawValue: kotlin.String) : EnumValue {
+            override fun toString(): kotlin.String = rawValue
+        }
+
+        @Serializable
+        @SerialName("Long")
+        data class Long(val value: kotlin.Long, override val rawValue: kotlin.String) : EnumValue {
+            override fun toString(): kotlin.String = rawValue
+        }
+
+        @Serializable
+        @SerialName("Float")
+        data class Float(val value: kotlin.Float, override val rawValue: kotlin.String) : EnumValue {
+            override fun toString(): kotlin.String = rawValue
+        }
+
+        @Serializable
+        @SerialName("Double")
+        data class Double(val value: kotlin.Double, override val rawValue: kotlin.String) : EnumValue {
+            override fun toString(): kotlin.String = rawValue
+        }
+
+        @Serializable
+        @SerialName("Boolean")
+        data class Boolean(val value: kotlin.Boolean, override val rawValue: kotlin.String) : EnumValue {
+            override fun toString(): kotlin.String = rawValue
+        }
+
+        @Serializable
+        @SerialName("Null")
+        data class Null(override val rawValue: kotlin.String? = null) : EnumValue {
+            override fun toString(): kotlin.String = rawValue ?: "null"
+        }
+    }
+
+    @Serializable
     data class ByteArray(
         override val description: String?,
         override val isNullable: Boolean,
@@ -368,8 +417,8 @@ sealed interface Model {
     data class Enum(
         override val context: NamingContext,
         val inner: Model,
-        val values: List<String?>,
-        val default: Default<String>?,
+        val values: List<EnumValue>,
+        val default: Default<EnumValue>?,
         override val description: String?,
         override val title: String?,
         override val isNullable: Boolean,

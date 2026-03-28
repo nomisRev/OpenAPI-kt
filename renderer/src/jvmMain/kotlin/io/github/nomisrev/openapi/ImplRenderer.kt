@@ -903,7 +903,7 @@ private fun Model.Enum.toPathParamValueExpression(
     code.add("when (%L) {\n", paramName)
     code.indent()
     for (value in values) {
-        val rawValue = value ?: "null"
+        val rawValue = value.wireValue()
         code.add("%T.%L -> %S\n", enumClassName, toEnumValueName(rawValue), rawValue)
     }
     code.unindent()

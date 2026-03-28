@@ -90,8 +90,8 @@ private fun buildOpenEnumSerializer(
     val serializeCode = CodeBlock.builder()
         .beginControlFlow("when(value)")
         .apply {
-            parts.enumModel.values.forEach { rawValue ->
-                val v = rawValue ?: "null"
+            parts.enumModel.values.forEach { enumValue ->
+                val v = enumValue.wireValue()
                 val entryName = toEnumValueName(v)
                 addStatement("%T.%L -> encoder.encodeString(%S)", enumClassName, entryName, v)
             }
@@ -104,8 +104,8 @@ private fun buildOpenEnumSerializer(
         .add("return ")
         .beginControlFlow("when(val value = decoder.decodeString())")
         .apply {
-            parts.enumModel.values.forEach { rawValue ->
-                val v = rawValue ?: "null"
+            parts.enumModel.values.forEach { enumValue ->
+                val v = enumValue.wireValue()
                 val entryName = toEnumValueName(v)
                 addStatement("%S -> %T.%L", v, enumClassName, entryName)
             }

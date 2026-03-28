@@ -7,6 +7,7 @@ import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.isFlattenablePathUnion
 import io.github.nomisrev.openapi.parsePathSegments
 import io.github.nomisrev.openapi.toPathSegment
+import io.github.nomisrev.openapi.wireValue
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
@@ -268,7 +269,7 @@ private suspend fun Route.expandFiniteEnumPathSegmentAt(index: Int): List<Route>
     val fixedEnum = model.closedEnumOrNull()
     if (fixedEnum != null) {
         return fixedEnum.values
-            .map { it ?: "null" }
+            .map { it.wireValue() }
             .distinct()
             .map { wireValue ->
                 replacePathSegment(
@@ -284,13 +285,13 @@ private suspend fun Route.expandFiniteEnumPathSegmentAt(index: Int): List<Route>
     val cases = union.resolvedPathEnumCases()
     if (cases.none { it.enumModel != null }) return null
 
-    val fixedRoutes = cases
+    val fixedRoutes: List<Route> = cases
         .flatMap { case ->
             case.enumModel
                 ?.values
                 .orEmpty()
-                .map { it ?: "null" }
-                .map { wireValue ->
+                .map { enumValue ->
+                    val wireValue = enumValue.wireValue()
                     replacePathSegment(
                         index = index,
                         paramName = segment.name,

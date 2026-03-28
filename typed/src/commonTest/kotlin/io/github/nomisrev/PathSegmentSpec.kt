@@ -25,7 +25,7 @@ val PathSegmentSpec by testSuite {
     val workflowEnumType = Model.Enum(
         context = NamingContext.path("workflowId"),
         inner = stringType,
-        values = listOf("queued", "in-progress"),
+        values = listOf(Model.EnumValue.String("queued"), Model.EnumValue.String("in-progress")),
         default = null,
         description = null,
         title = null,
@@ -46,7 +46,7 @@ val PathSegmentSpec by testSuite {
     val queuedEnumType = Model.Enum(
         context = NamingContext.path(listOf("workflowId", "queued")),
         inner = stringType,
-        values = listOf("queued"),
+        values = listOf(Model.EnumValue.String("queued")),
         default = null,
         description = null,
         title = null,
@@ -55,7 +55,7 @@ val PathSegmentSpec by testSuite {
     val inProgressEnumType = Model.Enum(
         context = NamingContext.path(listOf("workflowId", "inProgress")),
         inner = stringType,
-        values = listOf("in-progress"),
+        values = listOf(Model.EnumValue.String("in-progress")),
         default = null,
         description = null,
         title = null,

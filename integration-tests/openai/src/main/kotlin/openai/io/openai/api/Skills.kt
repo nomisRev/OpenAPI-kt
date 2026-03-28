@@ -134,18 +134,6 @@ public class Skills internal constructor(
         public suspend fun json(): String = client.get("/skills/$skillId/content") {
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
         }.body()
-
-        public sealed interface ZipResponse {
-          public data class Ok(
-            public val `value`: ByteArray,
-          ) : ZipResponse
-        }
-
-        public sealed interface JsonResponse {
-          public data class Ok(
-            public val `value`: String,
-          ) : JsonResponse
-        }
       }
     }
 
@@ -241,18 +229,6 @@ public class Skills internal constructor(
             public suspend fun json(): String = client.get("/skills/$skillId/versions/$version/content") {
               `header`(HttpHeaders.Accept, ContentType.Application.Json)
             }.body()
-
-            public sealed interface ZipResponse {
-              public data class Ok(
-                public val `value`: ByteArray,
-              ) : ZipResponse
-            }
-
-            public sealed interface JsonResponse {
-              public data class Ok(
-                public val `value`: String,
-              ) : JsonResponse
-            }
           }
         }
       }

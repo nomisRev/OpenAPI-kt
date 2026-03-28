@@ -81,18 +81,6 @@ public class Chat internal constructor(
         contentType(ContentType.Application.Json)
         setBody(body)
       }.body()
-
-      public sealed interface JsonResponse {
-        public data class Ok(
-          public val `value`: CreateChatCompletionResponse,
-        ) : JsonResponse
-      }
-
-      public sealed interface TextEventStreamResponse {
-        public data class Ok(
-          public val `value`: CreateChatCompletionStreamResponse,
-        ) : TextEventStreamResponse
-      }
     }
 
     public class CompletionIdPath internal constructor(

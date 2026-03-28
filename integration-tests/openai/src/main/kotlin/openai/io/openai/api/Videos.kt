@@ -141,24 +141,6 @@ public class Videos internal constructor(
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
           variant?.let { parameter("variant", it.value) }
         }.body()
-
-        public sealed interface VideoMp4Response {
-          public data class Ok(
-            public val `value`: ByteArray,
-          ) : VideoMp4Response
-        }
-
-        public sealed interface ImageWebpResponse {
-          public data class Ok(
-            public val `value`: ByteArray,
-          ) : ImageWebpResponse
-        }
-
-        public sealed interface JsonResponse {
-          public data class Ok(
-            public val `value`: String,
-          ) : JsonResponse
-        }
       }
     }
 

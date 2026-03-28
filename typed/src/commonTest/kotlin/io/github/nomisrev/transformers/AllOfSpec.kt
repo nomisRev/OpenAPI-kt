@@ -74,7 +74,7 @@ val allOfSpec by testSuite {
             Model.Enum(
                 NamingContext.path("test"),
                 Model.Primitive.String(null, null, null, false, null),
-                listOf("B"),
+                listOf(Model.EnumValue.String("B")),
                 null,
                 null,
                 null,

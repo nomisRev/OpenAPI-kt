@@ -86,18 +86,6 @@ public class Audio internal constructor(
         contentType(ContentType.Application.Json)
         setBody(body)
       }.body()
-
-      public sealed interface OctetStreamResponse {
-        public data class Ok(
-          public val `value`: ByteArray,
-        ) : OctetStreamResponse
-      }
-
-      public sealed interface TextEventStreamResponse {
-        public data class Ok(
-          public val `value`: CreateSpeechResponseStreamEvent,
-        ) : TextEventStreamResponse
-      }
     }
   }
 

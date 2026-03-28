@@ -17,7 +17,7 @@ fun Schema.nullable(): Schema = copy(nullable = true)
 
 @Suppress("UNCHECKED_CAST")
 fun Model.default(default: Model.Default<*>?): Model = when (this) {
-    is Model.Enum -> copy(default = default as Model.Default<String>?)
+    is Model.Enum -> copy(default = default as Model.Default<Model.EnumValue>?)
     is Model.Collection -> copy(default = default as Model.Default<List<String>>?)
     is Model.Primitive.Boolean -> copy(default = default as Model.Default<Boolean>?)
     is Model.Primitive.Double -> copy(default = default as Model.Default<Double>?)

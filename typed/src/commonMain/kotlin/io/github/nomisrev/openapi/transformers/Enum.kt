@@ -15,19 +15,64 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<Strin
         name,
         schema.copy(description = null, default = null, enum = null, nullable = false)
     ).toModel(context, false)
-    val enumDefault = default()
+    val enumValues = enum.map(inner::toEnumValue)
+    val enumDefault = enumDefault(inner)
     @Suppress("NullableToStringCall")
     require(!(enumDefault == Model.Default.Null && !nestedNull)) {
         "The default value $enumDefault is not present in the enum values: ${schema.enum} & schema is not nullable."
     }
     @Suppress("UnsafeCallOnNullableType")
-    return Model.Enum(name, inner, schema.enum!!, enumDefault, description(), schema.title, isNullable)
+    return Model.Enum(name, inner, enumValues, enumDefault, description(), schema.title, isNullable)
+}
+
+private fun Model.toEnumValue(rawValue: String?): Model.EnumValue =
+    when {
+        rawValue == null || rawValue.equals("null", ignoreCase = true) -> Model.EnumValue.Null(rawValue)
+        this is Model.Primitive.Boolean ->
+            Model.EnumValue.Boolean(
+                requireNotNull(rawValue.lowercase().toBooleanStrictOrNull()) { "Enum value $rawValue is not a Boolean." },
+                rawValue,
+            )
+
+        this is Model.Primitive.Int ->
+            Model.EnumValue.Int(
+                requireNotNull(rawValue.toIntOrNull()) { "Enum value $rawValue is not a Integer." },
+                rawValue,
+            )
+
+        this is Model.Primitive.Long ->
+            Model.EnumValue.Long(
+                requireNotNull(rawValue.toLongOrNull()) { "Enum value $rawValue is not a Integer." },
+                rawValue,
+            )
+
+        this is Model.Primitive.Float ->
+            Model.EnumValue.Float(
+                requireNotNull(rawValue.toFloatOrNull()) { "Enum value $rawValue is not a Number." },
+                rawValue,
+            )
+
+        this is Model.Primitive.Double ->
+            Model.EnumValue.Double(
+                requireNotNull(rawValue.toDoubleOrNull()) { "Enum value $rawValue is not a Number." },
+                rawValue,
+            )
+
+        else -> Model.EnumValue.String(rawValue)
+    }
+
+private fun ResolvedSchema.enumDefault(inner: Model): Model.Default<Model.EnumValue>? = when (val defaultValue = schema.default) {
+    is Single if defaultValue.value.equals("null", ignoreCase = true) -> Model.Default.Null
+    is Single -> Model.Default.Value(inner.toEnumValue(defaultValue.value))
+    // OpenAI sometimes has empty list for default where inapplicable sometimes
+    is Multiple if (defaultValue.values.isEmpty()) -> null
+    is Multiple -> throw IllegalArgumentException("Multiple default values not supported for enums. $this")
+    null -> null
 }
 
 fun ResolvedSchema.default(): Model.Default<String>? = when (val defaultValue = schema.default) {
     is Single if defaultValue.value.equals("null", ignoreCase = true) -> Model.Default.Null
     is Single -> Model.Default.Value(defaultValue.value)
-    // OpenAI sometimes has empty list for default where inapplicable sometimes
     is Multiple if (defaultValue.values.isEmpty()) -> null
     is Multiple -> throw IllegalArgumentException("Multiple default values not supported for enums. $this")
     null -> null

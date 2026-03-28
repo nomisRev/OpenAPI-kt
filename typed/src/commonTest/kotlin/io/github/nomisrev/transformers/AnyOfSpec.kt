@@ -47,7 +47,7 @@ val anyOfSpec by testSuite {
                             NamingContext.reference("Model", SchemaContext.Null)
                                 .nest(NamingContext.UnionCase("AOrB")),
                             Model.Primitive.String(null, null, null, false, null),
-                            listOf("a", "b"),
+                            listOf(Model.EnumValue.String("a"), Model.EnumValue.String("b")),
                             null,
                             null,
                             null,

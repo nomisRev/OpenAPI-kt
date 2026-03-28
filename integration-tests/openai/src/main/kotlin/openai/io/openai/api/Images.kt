@@ -187,18 +187,6 @@ public class Images internal constructor(
         contentType(ContentType.Application.Json)
         setBody(body)
       }.body()
-
-      public sealed interface JsonResponse {
-        public data class Ok(
-          public val `value`: ImagesResponse,
-        ) : JsonResponse
-      }
-
-      public sealed interface TextEventStreamResponse {
-        public data class Ok(
-          public val `value`: ImageEditStreamEvent,
-        ) : TextEventStreamResponse
-      }
     }
   }
 
@@ -221,18 +209,6 @@ public class Images internal constructor(
         contentType(ContentType.Application.Json)
         setBody(body)
       }.body()
-
-      public sealed interface JsonResponse {
-        public data class Ok(
-          public val `value`: ImagesResponse,
-        ) : JsonResponse
-      }
-
-      public sealed interface TextEventStreamResponse {
-        public data class Ok(
-          public val `value`: ImageGenStreamEvent,
-        ) : TextEventStreamResponse
-      }
     }
   }
 
