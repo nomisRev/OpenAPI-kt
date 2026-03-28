@@ -550,6 +550,123 @@ val unionSpec by testSuite {
         }
     }
 
+    test("Explicit discriminator resolves nested union tags and nullable tag wrappers") {
+        val easyInputMessage = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("message")
+                    )
+                ),
+                "role" to ReferenceOr.value(Schema.string),
+                "content" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("type", "role", "content")
+        )
+        val inputMessage = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("message")
+                    )
+                ),
+                "content" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("type", "content")
+        )
+        val functionToolCall = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("function_call")
+                    )
+                ),
+                "call_id" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("type", "call_id")
+        )
+        val item = Schema(
+            type = Schema.Type.Basic.Object,
+            oneOf = listOf(
+                ReferenceOr.schema("InputMessage"),
+                ReferenceOr.schema("FunctionToolCall")
+            ),
+            discriminator = Schema.Discriminator(propertyName = "type")
+        )
+        val itemReferenceParam = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        anyOf = listOf(
+                            ReferenceOr.value(
+                                Schema(
+                                    type = Schema.Type.Basic.String,
+                                    enum = listOf("item_reference")
+                                )
+                            ),
+                            ReferenceOr.value(Schema.NULL)
+                        )
+                    )
+                ),
+                "id" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("id")
+        )
+        val inputItem = Schema(
+            oneOf = listOf(
+                ReferenceOr.schema("EasyInputMessage"),
+                ReferenceOr.schema("Item"),
+                ReferenceOr.schema("ItemReferenceParam")
+            ),
+            discriminator = Schema.Discriminator(propertyName = "type")
+        )
+        val testApi = api
+            .reference("EasyInputMessage", easyInputMessage)
+            .reference("InputMessage", inputMessage)
+            .reference("FunctionToolCall", functionToolCall)
+            .reference("Item", item)
+            .reference("ItemReferenceParam", itemReferenceParam)
+            .reference("InputItem", inputItem)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("InputItem")
+                .toModel(
+                    NamingContext.reference("InputItem", SchemaContext.Null),
+                    SchemaContext.Write
+                ) as OneOf
+
+            assertEquals(UnionDispatch.TaggedCustom("type"), result.dispatch)
+            assertEquals(
+                listOf(
+                    setOf("message"),
+                    setOf("message", "function_call"),
+                    setOf("item_reference")
+                ),
+                result.cases.map { it.discriminatorValues }
+            )
+            assertTrue(result.cases.none { "Item" in it.discriminatorValues || "ItemReferenceParam" in it.discriminatorValues })
+
+            val nestedItem = assertIs<OneOf>(result.cases[1].model)
+            assertEquals(UnionDispatch.NativeDiscriminator("type"), nestedItem.dispatch)
+            assertEquals(
+                NamingContext.reference("InputItem", SchemaContext.Null)
+                    .nest(NamingContext.UnionCase("Item")),
+                nestedItem.context
+            )
+            assertEquals(
+                listOf(setOf("message"), setOf("function_call")),
+                nestedItem.cases.map { it.discriminatorValues }
+            )
+        }
+    }
+
     test("Ref-only union infers tag-only discriminator and inlines referenced cases") {
         val textPart = Schema(
             type = Schema.Type.Basic.Object,

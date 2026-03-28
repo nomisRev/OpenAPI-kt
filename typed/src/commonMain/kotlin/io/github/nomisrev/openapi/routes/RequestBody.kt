@@ -149,24 +149,38 @@ private suspend fun ReferenceOr<Schema>.toRequestBodyModel(
 ): Model =
     when (this) {
         is ReferenceOr.Value<Schema> -> {
-            val additionalProperties = value.additionalProperties as? AdditionalProperties.PSchema
-            if (value.properties.isNullOrEmpty() && additionalProperties != null) {
+            val normalizedValue = value.normalizedInlineRequestBodySchema()
+            val additionalProperties = normalizedValue.additionalProperties as? AdditionalProperties.PSchema
+            if (normalizedValue.properties.isNullOrEmpty() && additionalProperties != null) {
                 Model.Object(
                     context = name,
-                    description = value.description?.valueOrNull(),
-                    title = value.title,
+                    description = normalizedValue.description?.valueOrNull(),
+                    title = normalizedValue.title,
                     properties = emptyMap(),
                     additionalProperties = Model.Object.AdditionalProperties.Schema(
                         additionalProperties.value.toModel(name.nest(NamingContext.AdditionalProperties), context)
                     ),
-                    isNullable = value.nullable == true,
+                    isNullable = normalizedValue.nullable == true,
                 )
             } else {
-                toModel(name, context)
+                ReferenceOr.value(normalizedValue).toModel(name, context)
             }
         }
 
         is ReferenceOr.Reference -> toModel(name, context)
+    }
+
+// Client operations are not ready to expose typed object composites as request-body unions yet.
+private fun Schema.normalizedInlineRequestBodySchema(): Schema =
+    if (type == Schema.Type.Basic.Object && (allOf != null || oneOf != null || anyOf != null)) {
+        copy(
+            allOf = null,
+            oneOf = null,
+            anyOf = null,
+            discriminator = null,
+        )
+    } else {
+        this
     }
 
 // TODO Move to Registry and support top-level schemas.

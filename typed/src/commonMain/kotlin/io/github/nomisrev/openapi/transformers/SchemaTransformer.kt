@@ -26,6 +26,7 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boolean): Model {
     val enumLikeValues = schema.enumLikeValues()
+    val compositeTakesPrecedence = schema.type == null || schema.compositeShouldTakePrecedenceOverType()
     return when {
         this is ResolvedSchema.Reference && !resolveReference ->
             Model.Reference(
@@ -46,6 +47,35 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
         this is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
 
         this is ResolvedSchema.Reference && isObjectWithDiscriminator() -> toDiscriminatedObject(context)
+        compositeTakesPrecedence && isAllOfNullableType() -> flattenNull(schema.allOf!!) { nonNullSchemas ->
+            if (nonNullSchemas.size == 1) {
+                flattenedSingleNullableBranch(nonNullSchemas.single(), context)
+            } else {
+                allOf(context, nonNullSchemas)
+            }
+        }
+        compositeTakesPrecedence && schema.allOf != null -> allOf(context, schema.allOf!!)
+
+        compositeTakesPrecedence && isOneOfNullableType() -> flattenNull(schema.oneOf!!) { nonNullSchemas ->
+            if (nonNullSchemas.size == 1) {
+                flattenedSingleNullableBranch(nonNullSchemas.single(), context)
+            } else {
+                buildOneOf(context, nonNullSchemas)
+            }
+        }
+        compositeTakesPrecedence && schema.oneOf?.size == 1 -> schema.oneOf!!.single().toModel(name, context)
+        compositeTakesPrecedence && schema.oneOf?.isNotEmpty() == true -> buildOneOf(context, schema.oneOf!!)
+
+        compositeTakesPrecedence && isAnyOfNullableType() -> flattenNull(schema.anyOf!!) { nonNullSchemas ->
+            if (nonNullSchemas.size == 1) {
+                flattenedSingleNullableBranch(nonNullSchemas.single(), context)
+            } else {
+                buildAnyOf(context, nonNullSchemas)
+            }
+        }
+        compositeTakesPrecedence && schema.anyOf?.size == 1 -> schema.anyOf!!.single().toModel(name, context)
+        compositeTakesPrecedence && schema.anyOf?.isNotEmpty() == true -> buildAnyOf(context, schema.anyOf!!)
+
         schema.type != null -> when (val type = schema.type!!) {
             is Schema.Type.Array -> { // Flatten Null
                 val resolved = if (type.types.contains(Schema.Type.Basic.Null) && schema.nullable != true) {
@@ -77,41 +107,34 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
 
         enumLikeValues != null -> toClosedEnum(context, enumLikeValues)
 
-        isAllOfNullableType() -> flattenNull(schema.allOf!!) { nonNullSchemas ->
-            if (nonNullSchemas.size == 1) {
-                flattenedSingleNullableBranch(nonNullSchemas.single(), context)
-            } else {
-                allOf(context, nonNullSchemas)
-            }
-        }
-        schema.allOf != null -> allOf(context, schema.allOf!!)
-
-        isOneOfNullableType() -> flattenNull(schema.oneOf!!) { nonNullSchemas ->
-            if (nonNullSchemas.size == 1) {
-                flattenedSingleNullableBranch(nonNullSchemas.single(), context)
-            } else {
-                buildOneOf(context, nonNullSchemas)
-            }
-        }
-        schema.oneOf?.size == 1 -> schema.oneOf!!.single().toModel(name, context)
-        schema.oneOf?.isNotEmpty() == true -> buildOneOf(context, schema.oneOf!!)
-
-        isAnyOfNullableType() -> flattenNull(schema.anyOf!!) { nonNullSchemas ->
-            if (nonNullSchemas.size == 1) {
-                flattenedSingleNullableBranch(nonNullSchemas.single(), context)
-            } else {
-                buildAnyOf(context, nonNullSchemas)
-            }
-        }
-        schema.anyOf?.size == 1 -> schema.anyOf!!.single().toModel(name, context)
-        schema.anyOf?.isNotEmpty() == true -> buildAnyOf(context, schema.anyOf!!)
-
         schema.properties?.isNotEmpty() == true -> toObject(context, schema.properties!!)
         schema.additionalProperties != null -> objectWithoutProperties(context)
         schema.items != null -> collection(context)
         else -> fallback()
     }
 }
+
+private fun Schema.compositeShouldTakePrecedenceOverType(): Boolean =
+    listOfNotNull(allOf, oneOf, anyOf)
+        .flatten()
+        .any(ReferenceOr<Schema>::addsStructuralCompositeShape)
+
+private fun ReferenceOr<Schema>.addsStructuralCompositeShape(): Boolean =
+    when (this) {
+        is ReferenceOr.Reference -> true
+        is ReferenceOr.Value<Schema> -> value.addsStructuralCompositeShape()
+    }
+
+private fun Schema.addsStructuralCompositeShape(): Boolean =
+    type != null ||
+            properties?.isNotEmpty() == true ||
+            additionalProperties != null ||
+            items != null ||
+            enumLikeValues() != null ||
+            allOf.orEmpty().isNotEmpty() ||
+            oneOf.orEmpty().isNotEmpty() ||
+            anyOf.orEmpty().isNotEmpty() ||
+            format != null
 
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContext): Model =

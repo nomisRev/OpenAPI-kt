@@ -36,6 +36,7 @@ internal fun Model.Union.buildOpenEnumTypeSpec(
     config: RenderConfig,
     className: ClassName,
     parts: OpenEnumParts,
+    parentInterface: ClassName? = null,
 ): TypeSpec {
     val enumSimpleName = parts.enumCase.caseSimpleName(config)
     val stringSimpleName = parts.stringCase.caseSimpleName(config)
@@ -48,6 +49,8 @@ internal fun Model.Union.buildOpenEnumTypeSpec(
                 .build()
         )
         .addProperty(PropertySpec.builder("value", STRING).build())
+
+    parentInterface?.let(builder::addSuperinterface)
 
     val stringTypeSpec = TypeSpec.classBuilder(stringSimpleName)
         .addModifiers(KModifier.VALUE)

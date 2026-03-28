@@ -514,6 +514,108 @@ val routeSpec by testSuite {
         assertTrue(union.context.head is NamingContext.Path)
     }
 
+    test("typed object request body with top-level composite stays a set body object") {
+        val bodySchema = Schema(
+            type = Schema.Type.Basic.Object,
+            required = listOf("name"),
+            properties = mapOf(
+                "name" to ReferenceOr.value(Schema.string),
+                "status" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        enum = listOf("queued", "in_progress", "completed"),
+                    )
+                ),
+                "conclusion" to ReferenceOr.value(Schema.string),
+            ),
+            oneOf = listOf(
+                ReferenceOr.value(
+                    Schema(
+                        properties = mapOf(
+                            "status" to ReferenceOr.value(
+                                Schema(
+                                    enum = listOf("completed"),
+                                )
+                            )
+                        ),
+                        required = listOf("status", "conclusion"),
+                    )
+                ),
+                ReferenceOr.value(
+                    Schema(
+                        properties = mapOf(
+                            "status" to ReferenceOr.value(
+                                Schema(
+                                    enum = listOf("queued", "in_progress"),
+                                )
+                            )
+                        ),
+                    )
+                ),
+            ),
+        )
+
+        val route = routes(
+            openAPI(
+                path = "/check-runs",
+                method = HttpMethod.Post,
+                requestBody = jsonRequestBody(ReferenceOr.value(bodySchema)),
+            )
+        ).single()
+
+        val body = assertIs<Route.Body.SetBody>(route.body?.defaultOrNull())
+        val bodyModel = assertIs<Model.Object>(body.type)
+        assertEquals(setOf("name", "status", "conclusion"), bodyModel.properties.keys)
+    }
+
+    test("typed object request body without top-level properties stays opaque json") {
+        val bodySchema = Schema(
+            type = Schema.Type.Basic.Object,
+            oneOf = listOf(
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "subject_digests" to ReferenceOr.value(
+                                Schema(
+                                    type = Schema.Type.Basic.Array,
+                                    items = ReferenceOr.value(Schema.string),
+                                )
+                            )
+                        ),
+                        required = listOf("subject_digests"),
+                    )
+                ),
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "attestation_ids" to ReferenceOr.value(
+                                Schema(
+                                    type = Schema.Type.Basic.Array,
+                                    items = ReferenceOr.value(Schema.integer),
+                                )
+                            )
+                        ),
+                        required = listOf("attestation_ids"),
+                    )
+                ),
+            ),
+        )
+
+        val route = routes(
+            openAPI(
+                path = "/attestations/delete-request",
+                method = HttpMethod.Post,
+                requestBody = jsonRequestBody(ReferenceOr.value(bodySchema)),
+            )
+        ).single()
+
+        val body = assertIs<Route.Body.SetBody>(route.body?.defaultOrNull())
+        val bodyModel = assertIs<Model.FreeFormJson>(body.type)
+        assertTrue(!bodyModel.isNullable)
+    }
+
     test("referenced request body union stays set body") {
         val unionSchema = Schema(
             oneOf = listOf(

@@ -118,7 +118,12 @@ internal fun Model.Union.Case.renderNonDiscriminatedCase(
         is Model.Union ->
             if (!caseModel.context.isTopLevel()) {
                 RenderedUnionCase(
-                    caseModel.toTypeSpec(config, externalTypeNames = externalTypeNames),
+                    caseModel.toTypeSpec(
+                        config,
+                        classNameOverride = parentInterface.nestedClass(simpleName),
+                        externalTypeNames = externalTypeNames,
+                        parentInterface = parentInterface,
+                    ),
                     usesUuid = false,
                     isInlined = false,
                     caseSimpleName = simpleName,

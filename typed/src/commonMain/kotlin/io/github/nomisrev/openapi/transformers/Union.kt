@@ -17,6 +17,7 @@ import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.schemaName
+import io.github.nomisrev.openapi.registry.isNull
 import io.github.nomisrev.openapi.toPascalCase
 
 context(ctx: Registry.Scope)
@@ -278,9 +279,12 @@ private suspend fun Schema.stripTagOnlyDiscriminatorProperty(
 context(ctx: Registry.Scope)
 private suspend fun ReferenceOr<Schema>.isTagOnlyDiscriminator(caseDiscriminator: String?): Boolean {
     val propertySchema = peek()
+    val explicitValues = propertySchema.discriminatorPropertyTagValues()
     return when {
-        propertySchema.enumLikeValues()?.singleOrNull() != null -> true
-        caseDiscriminator != null && propertySchema.type == Type.Basic.String && propertySchema.enumLikeValues() == null -> true
+        explicitValues.singleOrNull() != null ->
+            caseDiscriminator == null || explicitValues == setOf(caseDiscriminator)
+
+        caseDiscriminator != null && propertySchema.isPlainStringLikeDiscriminator() -> true
         else -> false
     }
 }
@@ -575,7 +579,9 @@ private fun String.schemaRefNameOrSelf(): String =
 context(ctx: Registry.Scope)
 @Suppress("ReturnCount")
 private suspend fun Schema.Discriminator?.discriminatorValueForSubtype(
-    subtype: ReferenceOr<Schema>
+    subtype: ReferenceOr<Schema>,
+    fallbackToSubtypeName: Boolean = true,
+    visitedRefs: Set<String> = emptySet(),
 ): Set<String> {
     if (this == null) return emptySet()
 
@@ -594,25 +600,108 @@ private suspend fun Schema.Discriminator?.discriminatorValueForSubtype(
     }
     if (!mapped.isNullOrEmpty()) return mapped
 
-    val discriminatorProperty = propertyName.let { propertyName ->
-        subtype.peek()
-            .flattenAllOfForUnionDiscriminator()
-            .properties
-            ?.get(propertyName)
-            ?.peek()
-    }
-    val discriminatorLiteral = discriminatorProperty?.enumLikeValues()?.singleOrNull()
-    if (discriminatorLiteral != null) return setOf(discriminatorLiteral)
-
-    val discriminatorValues = discriminatorProperty
-        ?.enumLikeValues()
-        .orEmpty()
-        .filterNotNull()
-        .toSet()
+    val discriminatorValues = subtype.discriminatorTagsForProperty(propertyName, visitedRefs)
     if (discriminatorValues.isNotEmpty()) return discriminatorValues
+
+    if (!fallbackToSubtypeName) return emptySet()
 
     return when (subtype) {
         is ReferenceOr.Reference -> subtype.ref.schemaRefNameOrSelf().takeUnless { it == "#" }?.let(::setOf).orEmpty()
         is ReferenceOr.Value<Schema> -> emptySet()
     }
+}
+
+context(ctx: Registry.Scope)
+private suspend fun ReferenceOr<Schema>.discriminatorTagsForProperty(
+    propertyName: String,
+    visitedRefs: Set<String> = emptySet(),
+): Set<String> = when (this) {
+    is ReferenceOr.Reference ->
+        if (ref in visitedRefs) emptySet()
+        else peek().discriminatorTagsForProperty(propertyName, visitedRefs + ref)
+
+    is ReferenceOr.Value<Schema> -> value.discriminatorTagsForProperty(propertyName, visitedRefs)
+}
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.discriminatorTagsForProperty(
+    propertyName: String,
+    visitedRefs: Set<String> = emptySet(),
+): Set<String> {
+    val flattened = flattenAllOfForUnionDiscriminator()
+    val directTags = flattened.properties
+        ?.get(propertyName)
+        ?.discriminatorPropertyTagValues(visitedRefs)
+        .orEmpty()
+    if (directTags.isNotEmpty()) return directTags
+
+    val branches = flattened.oneOf.orEmpty().ifEmpty { flattened.anyOf.orEmpty() }
+    val nestedDiscriminator = flattened.discriminator
+    if (branches.isNotEmpty() && nestedDiscriminator?.propertyName == propertyName) {
+        val nestedTags = branches.flatMapTo(linkedSetOf()) { branch ->
+            nestedDiscriminator.discriminatorValueForSubtype(
+                branch,
+                fallbackToSubtypeName = false,
+                visitedRefs = visitedRefs,
+            )
+        }
+        if (nestedTags.isNotEmpty()) return nestedTags
+    }
+
+    return emptySet()
+}
+
+context(ctx: Registry.Scope)
+private suspend fun ReferenceOr<Schema>.discriminatorPropertyTagValues(
+    visitedRefs: Set<String> = emptySet(),
+): Set<String> = when (this) {
+    is ReferenceOr.Reference ->
+        if (ref in visitedRefs) emptySet()
+        else peek().discriminatorPropertyTagValues(visitedRefs + ref)
+
+    is ReferenceOr.Value<Schema> -> value.discriminatorPropertyTagValues(visitedRefs)
+}
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.discriminatorPropertyTagValues(
+    visitedRefs: Set<String> = emptySet(),
+): Set<String> {
+    val flattened = flattenAllOfForUnionDiscriminator()
+    val direct = flattened.enumLikeValues()
+        .orEmpty()
+        .filterNotNull()
+        .toCollection(linkedSetOf())
+    if (direct.isNotEmpty()) return direct
+
+    val branches = flattened.oneOf.orEmpty().ifEmpty { flattened.anyOf.orEmpty() }
+    if (branches.isEmpty()) return emptySet()
+
+    return branches.flatMapTo(linkedSetOf()) { branch ->
+        branch.discriminatorPropertyTagValues(visitedRefs)
+    }
+}
+
+context(ctx: Registry.Scope)
+private suspend fun ReferenceOr<Schema>.isPlainStringLikeDiscriminator(
+    visitedRefs: Set<String> = emptySet(),
+): Boolean = when (this) {
+    is ReferenceOr.Reference ->
+        ref !in visitedRefs && peek().isPlainStringLikeDiscriminator(visitedRefs + ref)
+
+    is ReferenceOr.Value<Schema> -> value.isPlainStringLikeDiscriminator(visitedRefs)
+}
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.isPlainStringLikeDiscriminator(
+    visitedRefs: Set<String> = emptySet(),
+): Boolean {
+    val flattened = flattenAllOfForUnionDiscriminator()
+    if (flattened.enumLikeValues() != null) return false
+    if (flattened.type == Type.Basic.String) return true
+
+    val branches = flattened.oneOf.orEmpty().ifEmpty { flattened.anyOf.orEmpty() }
+    if (branches.isEmpty()) return false
+
+    val nonNullBranches = branches.filterNot { it.peek().isNull() }
+    return nonNullBranches.size == 1 && nonNullBranches.single().isPlainStringLikeDiscriminator(visitedRefs)
 }

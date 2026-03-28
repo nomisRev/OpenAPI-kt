@@ -510,6 +510,70 @@ val unionSpec by testSuite {
 
     modelTest(
         $$"""
+        |"InputItem": {
+        |  "oneOf": [
+        |    { "$ref": "#/components/schemas/EasyInputMessage" },
+        |    { "$ref": "#/components/schemas/Item" },
+        |    { "$ref": "#/components/schemas/ItemReferenceParam" }
+        |  ],
+        |  "discriminator": { "propertyName": "type" }
+        |},
+        |"EasyInputMessage": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["message"] },
+        |    "role": { "type": "string" },
+        |    "content": { "type": "string" }
+        |  },
+        |  "required": ["type", "role", "content"]
+        |},
+        |"Item": {
+        |  "type": "object",
+        |  "oneOf": [
+        |    { "$ref": "#/components/schemas/InputMessage" },
+        |    { "$ref": "#/components/schemas/FunctionToolCall" }
+        |  ],
+        |  "discriminator": { "propertyName": "type" }
+        |},
+        |"InputMessage": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["message"] },
+        |    "content": { "type": "string" }
+        |  },
+        |  "required": ["type", "content"]
+        |},
+        |"FunctionToolCall": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["function_call"] },
+        |    "call_id": { "type": "string" }
+        |  },
+        |  "required": ["type", "call_id"]
+        |},
+        |"ItemReferenceParam": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": {
+        |      "anyOf": [
+        |        { "type": "string", "enum": ["item_reference"] },
+        |        { "type": "null" }
+        |      ]
+        |    },
+        |    "id": { "type": "string" }
+        |  },
+        |  "required": ["id"]
+        |}
+        """.trimMargin(),
+        "union/discriminated-tagged-custom-nested-union-case"
+    )
+
+    modelTest(
+        $$"""
         |"ConversationItem": {
         |  "anyOf": [
         |    { "$ref": "#/components/schemas/MessageItem" },

@@ -14,18 +14,19 @@ fun Model.Union.toTypeSpec(
     config: RenderConfig,
     classNameOverride: ClassName? = null,
     externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
+    parentInterface: ClassName? = null,
 ): TypeSpec {
     val originalClassName = context.toClassName(config)
     val className = classNameOverride ?: originalClassName
     return when (dispatch) {
         is UnionDispatch.NativeDiscriminator ->
-            toNativeDiscriminatedTypeSpec(config, originalClassName, className, externalTypeNames)
+            toNativeDiscriminatedTypeSpec(config, originalClassName, className, externalTypeNames, parentInterface)
 
         is UnionDispatch.TaggedCustom ->
-            toTaggedCustomTypeSpec(config, originalClassName, className, externalTypeNames)
+            toTaggedCustomTypeSpec(config, originalClassName, className, externalTypeNames, parentInterface)
 
         UnionDispatch.Structural ->
-            toStructuralTypeSpec(config, originalClassName, className, externalTypeNames)
+            toStructuralTypeSpec(config, originalClassName, className, externalTypeNames, parentInterface)
     }
 }
 
@@ -48,6 +49,7 @@ private fun Model.Union.toNativeDiscriminatedTypeSpec(
     originalClassName: ClassName,
     className: ClassName,
     externalTypeNames: Map<ClassName, TypeName>,
+    parentInterface: ClassName? = null,
 ): TypeSpec {
     val disc = (dispatch as? UnionDispatch.NativeDiscriminator)?.propertyName
         ?: error("Native union renderer requires NativeDiscriminator dispatch: $dispatch")
@@ -66,6 +68,8 @@ private fun Model.Union.toNativeDiscriminatedTypeSpec(
                 .build()
         )
         .addAnnotation(Serializable::class)
+
+    parentInterface?.let(builder::addSuperinterface)
 
     val optInClasses = buildList {
         if (renderedCases.any { it.usesUuid }) add(UnionExperimentalUuidApiType)
@@ -93,12 +97,14 @@ private fun Model.Union.toStructuralTypeSpec(
     originalClassName: ClassName,
     className: ClassName,
     externalTypeNames: Map<ClassName, TypeName>,
+    parentInterface: ClassName? = null,
 ): TypeSpec =
     toCustomSerializedTypeSpec(
         config = config,
         originalClassName = originalClassName,
         className = className,
         externalTypeNames = externalTypeNames,
+        parentInterface = parentInterface,
         allowOpenEnum = true,
     )
 
@@ -107,12 +113,14 @@ private fun Model.Union.toTaggedCustomTypeSpec(
     originalClassName: ClassName,
     className: ClassName,
     externalTypeNames: Map<ClassName, TypeName>,
+    parentInterface: ClassName? = null,
 ): TypeSpec =
     toCustomSerializedTypeSpec(
         config = config,
         originalClassName = originalClassName,
         className = className,
         externalTypeNames = externalTypeNames,
+        parentInterface = parentInterface,
         allowOpenEnum = false,
     )
 
@@ -121,10 +129,11 @@ private fun Model.Union.toCustomSerializedTypeSpec(
     originalClassName: ClassName,
     className: ClassName,
     externalTypeNames: Map<ClassName, TypeName>,
+    parentInterface: ClassName? = null,
     allowOpenEnum: Boolean,
 ): TypeSpec {
     val openEnum = detectOpenEnum().takeIf { allowOpenEnum }
-    if (openEnum != null) return buildOpenEnumTypeSpec(config, className, openEnum)
+    if (openEnum != null) return buildOpenEnumTypeSpec(config, className, openEnum, parentInterface)
 
     val collidingSingleDiscriminatorTags = cases.collidingSingleDiscriminatorTags()
     val renderedCases = cases.map {
@@ -145,6 +154,8 @@ private fun Model.Union.toCustomSerializedTypeSpec(
                 .build()
         )
 
+    parentInterface?.let(builder::addSuperinterface)
+
     val optInClasses = buildList {
         if (renderedCases.any { it.usesUuid }) add(UnionExperimentalUuidApiType)
         if (renderedCases.any { it.usesInstant }) add(UnionExperimentalTimeType)
@@ -162,13 +173,15 @@ private fun Model.Union.toCustomSerializedTypeSpec(
         ?.let { builder.addKdoc("%L\n", it.unionEscapeForKdoc()) }
 
     renderedCases.forEach { builder.addType(it.typeSpec) }
-    collectionNestedTypeSpecs(config, externalTypeNames).forEach(builder::addType)
+    collectionNestedTypeSpecs(config, originalClassName, className, externalTypeNames).forEach(builder::addType)
     builder.addType(buildSerializerObject(config, originalClassName, className, renderedCases, externalTypeNames))
     return builder.build()
 }
 
 private fun Model.Union.collectionNestedTypeSpecs(
     config: RenderConfig,
+    originalClassName: ClassName,
+    renderedClassName: ClassName,
     externalTypeNames: Map<ClassName, TypeName>,
 ): List<TypeSpec> =
     cases.asSequence()
@@ -176,11 +189,34 @@ private fun Model.Union.collectionNestedTypeSpecs(
         .filterIsInstance<Model.ContextHolder>()
         .distinctBy { it.context.toClassName(config).canonicalName }
         .mapNotNull { model ->
+            val modelClassName = model.context.toClassName(config)
+            val externalTargetClassName =
+                externalTypeNames[modelClassName.copy(nullable = false)] as? ClassName
+            if (externalTargetClassName != null && externalTargetClassName.enclosingClassName() != renderedClassName) {
+                return@mapNotNull null
+            }
+            val classNameOverride = when {
+                externalTargetClassName != null && externalTargetClassName.enclosingClassName() == renderedClassName ->
+                    externalTargetClassName
+
+                renderedClassName != originalClassName ->
+                    modelClassName.remapNestedClassName(originalClassName, renderedClassName) as? ClassName
+
+                else -> null
+            }
             when (model) {
-                is Model.Enum -> model.toTypeSpec(config)
-                is Model.Object -> model.toTypeSpec(config, externalTypeNames = externalTypeNames)
-                is Model.Union -> model.toTypeSpec(config, externalTypeNames = externalTypeNames)
-                is Model.DiscriminatedObject -> model.toTypeSpec(config)
+                is Model.Enum -> model.toTypeSpec(config, nameOverride = classNameOverride?.simpleName)
+                is Model.Object -> model.toTypeSpec(
+                    config,
+                    classNameOverride = classNameOverride,
+                    externalTypeNames = externalTypeNames,
+                )
+                is Model.Union -> model.toTypeSpec(
+                    config,
+                    classNameOverride = classNameOverride,
+                    externalTypeNames = externalTypeNames,
+                )
+                is Model.DiscriminatedObject -> model.toTypeSpec(config, classNameOverride = classNameOverride)
                 is Model.Reference -> null
             }
         }
