@@ -5,6 +5,7 @@ package io.github.nomisrev.openapi.transformers
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.UnionDispatch
+import io.github.nomisrev.openapi.enumLikeValues
 import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
@@ -108,7 +109,7 @@ private suspend fun List<ReferenceOr<Schema>>.inferTagOnlyDiscriminatorOrNull():
         val required = subtypeSchema.required.toSet()
         properties.mapNotNull { (propertyName, propertySchema) ->
             val property = propertySchema.peek()
-            val literals = property.enum.orEmpty().filterNotNull().toSet()
+            val literals = property.enumLikeValues().orEmpty().filterNotNull().toSet()
             val isStringLike = property.type == null || property.type == Type.Basic.String
             if (propertyName !in required || literals.isEmpty() || !isStringLike) null
             else propertyName to literals
@@ -278,8 +279,8 @@ context(ctx: Registry.Scope)
 private suspend fun ReferenceOr<Schema>.isTagOnlyDiscriminator(caseDiscriminator: String?): Boolean {
     val propertySchema = peek()
     return when {
-        propertySchema.enum?.singleOrNull() != null -> true
-        caseDiscriminator != null && propertySchema.type == Type.Basic.String && propertySchema.enum == null -> true
+        propertySchema.enumLikeValues()?.singleOrNull() != null -> true
+        caseDiscriminator != null && propertySchema.type == Type.Basic.String && propertySchema.enumLikeValues() == null -> true
         else -> false
     }
 }
@@ -309,7 +310,7 @@ private fun Schema.isHoistableSinglePropertyObject(): Boolean =
             oneOf.isNullOrEmpty() &&
             anyOf.isNullOrEmpty() &&
             allOf.isNullOrEmpty() &&
-            enum.isNullOrEmpty() &&
+            enumLikeValues().isNullOrEmpty() &&
             when (val value = additionalProperties) {
                 null -> true
                 is AdditionalProperties.Allowed -> !value.value
@@ -348,11 +349,11 @@ suspend fun NamingContext.unionCase(
     val specialName = schema.properties
         ?.entries
         ?.firstOrNull { (key, _) -> key in setOf("type", "event", $$"$type") }
-        ?.let { (_, refOrSchema) -> refOrSchema.peek().enum?.singleOrNull() }
+        ?.let { (_, refOrSchema) -> refOrSchema.peek().enumLikeValues()?.singleOrNull() }
 
     @Suppress("MagicNumber")
     val enumName =
-        schema.enum?.joinToString(prefix = "", separator = "Or") {
+        schema.enumLikeValues()?.joinToString(prefix = "", separator = "Or") {
             it?.replaceFirstChar(Char::uppercaseChar).orEmpty()
         }.takeIf { (it?.length ?: 0) < 90 }
 
@@ -363,12 +364,12 @@ suspend fun NamingContext.unionCase(
     suspend fun isOpenEnumCase(): Boolean {
         if (allSubtypes.size < 2) return false
         val schemas = allSubtypes.map { it.peek() }
-        val stringTypes = schemas.filter { it.type == Type.Basic.String && it.enum == null }
-        val enumTypes = schemas.filter { it.type == Type.Basic.String && it.enum != null }
+        val stringTypes = schemas.filter { it.type == Type.Basic.String && it.enumLikeValues() == null }
+        val enumTypes = schemas.filter { it.type == Type.Basic.String && it.enumLikeValues() != null }
         return stringTypes.size == allSubtypes.size - 1 &&
                 enumTypes.size == 1 &&
                 schema.type == Type.Basic.String &&
-                schema.enum != null
+                schema.enumLikeValues() != null
     }
 
     /**
@@ -435,7 +436,7 @@ private fun Schema.unionCaseName(index: Int): String {
         Type.Basic.Integer -> if (format == "int32") "CaseInt" else "CaseLong"
 
         Type.Basic.String -> when {
-            enum != null -> enum?.joinToString(separator = "Or") {
+            enumLikeValues() != null -> enumLikeValues()?.joinToString(separator = "Or") {
                 it?.toPascalCase().orEmpty()
             }?.takeIf { it.length < MAX_CODE_LENGTH } ?: caseIndex.getOrElse(index) { "Case$index" }
 
@@ -483,7 +484,7 @@ private fun Schema.specialUnionCaseName(): String? =
     properties
         ?.entries
         ?.firstOrNull { (key, _) -> key in setOf("type", "event", "\$type") }
-        ?.let { (_, refOrSchema) -> refOrSchema.valueOrNull()?.enum?.singleOrNull()?.toPascalCase() }
+        ?.let { (_, refOrSchema) -> refOrSchema.valueOrNull()?.enumLikeValues()?.singleOrNull()?.toPascalCase() }
         ?.takeIf { it.isNotBlank() }
 
 private fun Schema.objectUnionCaseName(index: Int): String {
@@ -540,7 +541,7 @@ private fun String.pluralizeCaseName(): String =
 
 private fun Schema.isComplexCompositeUnionCase(): Boolean =
     type == null &&
-            enum == null &&
+            enumLikeValues() == null &&
             (
                     oneOf.orEmpty().isNotEmpty() ||
                             anyOf.orEmpty().isNotEmpty() ||
@@ -600,11 +601,11 @@ private suspend fun Schema.Discriminator?.discriminatorValueForSubtype(
             ?.get(propertyName)
             ?.peek()
     }
-    val discriminatorLiteral = discriminatorProperty?.enum?.singleOrNull()
+    val discriminatorLiteral = discriminatorProperty?.enumLikeValues()?.singleOrNull()
     if (discriminatorLiteral != null) return setOf(discriminatorLiteral)
 
     val discriminatorValues = discriminatorProperty
-        ?.enum
+        ?.enumLikeValues()
         .orEmpty()
         .filterNotNull()
         .toSet()

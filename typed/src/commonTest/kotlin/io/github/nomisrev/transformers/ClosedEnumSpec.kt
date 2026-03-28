@@ -3,6 +3,7 @@ package io.github.nomisrev.transformers
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.Expect
 import io.github.nomisrev.all
+import io.github.nomisrev.assertEq
 import io.github.nomisrev.verifyAll
 import io.github.nomisrev.default
 import io.github.nomisrev.description
@@ -13,9 +14,13 @@ import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.registry.registry
+import io.github.nomisrev.openapi.registry.toModel
+import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.product
 import io.github.nomisrev.verifyFails
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlinx.serialization.json.JsonPrimitive
 
 private val nulls = listOf("null", "NULL", null)
 
@@ -127,6 +132,55 @@ val closedEnumSpec by testSuite {
     verifyAll("ClosedEnum(Float)", Model.Enum.floats(NamingContext.path("test")))
     verifyAll("ClosedEnum(Double)", Model.Enum.doubles(NamingContext.path("test")))
     verifyAll("ClosedEnum(Boolean)", Model.Enum.booleans(NamingContext.path("test")))
+
+    test("String const becomes closed enum") {
+        val actual = registry(io.github.nomisrev.api) {
+            ReferenceOr.value(
+                Schema(
+                    type = Schema.Type.Basic.String,
+                    `const` = JsonPrimitive("gpt-5")
+                )
+            ).toModel(NamingContext.path("test"), SchemaContext.Write)
+        }
+
+        assertEq(
+            Model.Enum(
+                NamingContext.path("test"),
+                Model.Primitive.String(null, null, null, false, null),
+                listOf(Model.EnumValue.String("gpt-5")),
+                null,
+                null,
+                null,
+                false
+            ),
+            actual
+        )
+    }
+
+    test("Integer const becomes closed enum") {
+        val actual = registry(io.github.nomisrev.api) {
+            ReferenceOr.value(
+                Schema(
+                    type = Schema.Type.Basic.Integer,
+                    format = "int32",
+                    `const` = JsonPrimitive(7)
+                )
+            ).toModel(NamingContext.path("test"), SchemaContext.Write)
+        }
+
+        assertEq(
+            Model.Enum(
+                NamingContext.path("test"),
+                Model.Primitive.Int(null, null, null, false, null),
+                listOf(Model.EnumValue.Int(7, "7")),
+                null,
+                null,
+                null,
+                false
+            ),
+            actual
+        )
+    }
 
     verifyFails<IllegalArgumentException>(
         "Empty enum throws IllegalArgumentException",

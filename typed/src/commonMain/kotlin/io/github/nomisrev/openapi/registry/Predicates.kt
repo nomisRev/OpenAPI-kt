@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi.registry
 
 import io.github.nomisrev.openapi.NamingContext.Companion.reference
+import io.github.nomisrev.openapi.enumLikeValues
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
@@ -25,7 +26,7 @@ context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.isOpenEnumeration(): Boolean = with(ctx) {
     val anyOf = schema.anyOf ?: return false
     if (anyOf.size != 2) return false
-    val enum = anyOf.singleOrNull { it.peek().enum != null } ?: return false
+    val enum = anyOf.singleOrNull { it.peek().enumLikeValues() != null } ?: return false
     val other = (anyOf - enum).singleOrNull() ?: return false
     // TODO: what about other open enums? Should we detect type of enum at parse time?
     other.peek().type == Schema.Type.Basic.String

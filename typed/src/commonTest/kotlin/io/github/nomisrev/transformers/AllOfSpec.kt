@@ -16,6 +16,7 @@ import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.reference
 import io.github.nomisrev.verifyAll
 import kotlin.collections.listOf
+import kotlinx.serialization.json.JsonPrimitive
 
 val allOfSpec by testSuite {
     verifyAll("allOf[{ type: null }, { type: primitive }", Model.Primitive.all().map { (schema, model) ->
@@ -65,6 +66,42 @@ val allOfSpec by testSuite {
                     allOf = listOf(
                         ReferenceOr.value(Schema(type = Schema.Type.Basic.String, enum = listOf("A", "B"))),
                         ReferenceOr.value(Schema(type = Schema.Type.Basic.String, enum = listOf("B", "C")))
+                    )
+                )
+            ).toModel(NamingContext.path("test"), SchemaContext.Write)
+        }
+
+        assertEq(
+            Model.Enum(
+                NamingContext.path("test"),
+                Model.Primitive.String(null, null, null, false, null),
+                listOf(Model.EnumValue.String("B")),
+                null,
+                null,
+                null,
+                false
+            ),
+            actual
+        )
+    }
+
+    test("allOf const intersection remains enum") {
+        val actual = registry(api) {
+            ReferenceOr.value(
+                Schema(
+                    allOf = listOf(
+                        ReferenceOr.value(
+                            Schema(
+                                type = Schema.Type.Basic.String,
+                                `const` = JsonPrimitive("B")
+                            )
+                        ),
+                        ReferenceOr.value(
+                            Schema(
+                                type = Schema.Type.Basic.String,
+                                enum = listOf("A", "B")
+                            )
+                        )
                     )
                 )
             ).toModel(NamingContext.path("test"), SchemaContext.Write)

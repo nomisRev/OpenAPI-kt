@@ -1,10 +1,12 @@
 package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.enumLikeValues
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
+import io.github.nomisrev.openapi.withoutEnumLikeValues
 import kotlin.text.equals
 
 context(ctx: Registry.Scope)
@@ -13,13 +15,13 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<Strin
     val nestedNull = enum.any { it.equals("null", ignoreCase = true) || it == null } || schema.nullable == true
     val inner = ResolvedSchema.Value(
         name,
-        schema.copy(description = null, default = null, enum = null, nullable = false)
+        schema.withoutEnumLikeValues().copy(description = null, default = null, nullable = false)
     ).toModel(context, false)
     val enumValues = enum.map(inner::toEnumValue)
     val enumDefault = enumDefault(inner)
     @Suppress("NullableToStringCall")
     require(!(enumDefault == Model.Default.Null && !nestedNull)) {
-        "The default value $enumDefault is not present in the enum values: ${schema.enum} & schema is not nullable."
+        "The default value $enumDefault is not present in the enum values: ${schema.enumLikeValues()} & schema is not nullable."
     }
     @Suppress("UnsafeCallOnNullableType")
     return Model.Enum(name, inner, enumValues, enumDefault, description(), schema.title, isNullable)

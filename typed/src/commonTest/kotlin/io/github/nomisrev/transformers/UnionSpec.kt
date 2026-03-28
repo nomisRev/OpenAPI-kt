@@ -23,6 +23,7 @@ import io.github.nomisrev.verifyAll
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
+import kotlinx.serialization.json.JsonPrimitive
 
 val unionSpec by testSuite {
     fun case(model: Model, vararg discriminatorValues: String): Union.Case =
@@ -474,6 +475,81 @@ val unionSpec by testSuite {
         }
     }
 
+    test("Discriminated anyOf resolves const discriminator values and strips inherited tags") {
+        val messageItem = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        `const` = JsonPrimitive("message")
+                    )
+                ),
+                "text" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("type", "text")
+        )
+        val functionToolCall = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        `const` = JsonPrimitive("function_call")
+                    )
+                ),
+                "call_id" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("type", "call_id")
+        )
+        val functionToolCallResource = Schema(
+            allOf = listOf(
+                ReferenceOr.schema("FunctionToolCall"),
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "id" to ReferenceOr.value(Schema.string)
+                        ),
+                        required = listOf("id")
+                    )
+                )
+            )
+        )
+        val conversationItem = Schema(
+            anyOf = listOf(
+                ReferenceOr.schema("MessageItem"),
+                ReferenceOr.schema("FunctionToolCallResource")
+            ),
+            discriminator = Schema.Discriminator(propertyName = "type")
+        )
+        val testApi = api
+            .reference("MessageItem", messageItem)
+            .reference("FunctionToolCall", functionToolCall)
+            .reference("FunctionToolCallResource", functionToolCallResource)
+            .reference("ConversationItem", conversationItem)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("ConversationItem")
+                .toModel(
+                    NamingContext.reference("ConversationItem", SchemaContext.Null),
+                    SchemaContext.Write
+                ) as AnyOf
+
+            assertEquals(UnionDispatch.NativeDiscriminator("type"), result.dispatch)
+            assertEquals(listOf(setOf("message"), setOf("function_call")), result.cases.map { it.discriminatorValues })
+
+            val message = assertIs<Model.Object>(result.cases[0].model)
+            assertEquals(setOf("text"), message.properties.keys)
+            assertTrue(message.properties.getValue("text").isRequired)
+
+            val functionCall = assertIs<Model.Object>(result.cases[1].model)
+            assertEquals(setOf("call_id", "id"), functionCall.properties.keys)
+            assertTrue(functionCall.properties.getValue("call_id").isRequired)
+            assertTrue(functionCall.properties.getValue("id").isRequired)
+        }
+    }
+
     test("Ref-only union infers tag-only discriminator and inlines referenced cases") {
         val textPart = Schema(
             type = Schema.Type.Basic.Object,
@@ -545,6 +621,70 @@ val unionSpec by testSuite {
                     .nest(NamingContext.UnionCase("image_url")),
                 image.context
             )
+        }
+    }
+
+    test("Ref-only oneOf infers const tag-only discriminator and inlines referenced cases") {
+        val textPart = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        `const` = JsonPrimitive("text")
+                    )
+                ),
+                "text" to ReferenceOr.value(Schema.string)
+            ),
+            required = listOf("type", "text")
+        )
+        val imagePart = Schema(
+            type = Schema.Type.Basic.Object,
+            properties = mapOf(
+                "type" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.String,
+                        `const` = JsonPrimitive("image_url")
+                    )
+                ),
+                "image_url" to ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "url" to ReferenceOr.value(Schema.string)
+                        ),
+                        required = listOf("url")
+                    )
+                )
+            ),
+            required = listOf("type", "image_url")
+        )
+        val contentPart = Schema(
+            oneOf = listOf(
+                ReferenceOr.schema("ChatCompletionRequestMessageContentPartTextConst"),
+                ReferenceOr.schema("ChatCompletionRequestMessageContentPartImageConst")
+            )
+        )
+        val testApi = api
+            .reference("ChatCompletionRequestMessageContentPartTextConst", textPart)
+            .reference("ChatCompletionRequestMessageContentPartImageConst", imagePart)
+            .reference("ChatCompletionRequestUserMessageContentPartConst", contentPart)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("ChatCompletionRequestUserMessageContentPartConst")
+                .toModel(
+                    NamingContext.reference("ChatCompletionRequestUserMessageContentPartConst", SchemaContext.Null),
+                    SchemaContext.Write
+                ) as OneOf
+
+            assertEquals(UnionDispatch.NativeDiscriminator("type"), result.dispatch)
+            assertEquals(listOf(setOf("text"), setOf("image_url")), result.cases.map { it.discriminatorValues })
+
+            val text = assertIs<Model.Object>(result.cases[0].model)
+            assertEquals(setOf("text"), text.properties.keys)
+
+            val image = assertIs<Model.Object>(result.cases[1].model)
+            assertEquals(setOf("url"), image.properties.keys)
         }
     }
 

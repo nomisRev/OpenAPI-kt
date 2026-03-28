@@ -4,6 +4,7 @@ package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.enumLikeValues
 import io.github.nomisrev.openapi.merge
 import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed
@@ -100,7 +101,7 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
 fun Schema.isEmpty(): Boolean =
     properties.isNullOrEmpty() &&
             additionalProperties == null &&
-            enum.isNullOrEmpty() &&
+            enumLikeValues().isNullOrEmpty() &&
             items == null &&
             anyOf.isNullOrEmpty() &&
             allOf.isNullOrEmpty() &&
@@ -212,7 +213,7 @@ suspend fun Schema.merge(other: Schema): Schema = when {
     this == other -> this
     !allOf.isNullOrEmpty() || !other.allOf.isNullOrEmpty() -> mergeNestedAllOf(other)
     compositeUnionOrNull() != null || other.compositeUnionOrNull() != null -> mergeCompositeUnion(other)
-    enum?.isNotEmpty() == true || other.enum?.isNotEmpty() == true -> mergeEnum(other)
+    enumLikeValues()?.isNotEmpty() == true || other.enumLikeValues()?.isNotEmpty() == true -> mergeEnum(other)
     type != null && type == other.type -> when (type!!) {
         Type.Basic.Array -> mergeCommon(other)
             .mergeCollectionConstraints(other)
@@ -267,7 +268,7 @@ private fun Schema.isNonStructural(): Boolean =
             allOf.isNullOrEmpty() &&
             oneOf.isNullOrEmpty() &&
             anyOf.isNullOrEmpty() &&
-            enum == null
+            enumLikeValues() == null
 
 context(ctx: Registry.Scope)
 private suspend fun Schema.mergeCompositeUnion(other: Schema): Schema {
@@ -314,21 +315,23 @@ private suspend fun Schema.mergeCompositeUnion(other: Schema): Schema {
 
 context(ctx: Registry.Scope)
 private suspend fun Schema.mergeEnum(other: Schema): Schema {
-    val leftValues = enum
-    val rightValues = other.enum
+    val leftValues = enumLikeValues()
+    val rightValues = other.enumLikeValues()
     return when {
         leftValues != null && rightValues != null -> {
             val mergedValues = leftValues.filter { it in rightValues }
             require(mergedValues.isNotEmpty()) { "Enum intersection is empty for allOf: $this, $other" }
-            copy(enum = null).merge(other.copy(enum = null)).copy(
+            copy(enum = null, `const` = null).merge(other.copy(enum = null, `const` = null)).copy(
                 enum = mergedValues,
+                `const` = null,
                 default = mergedEnumDefault(mergedValues, default, other.default)
             )
         }
 
         leftValues != null ->
-            copy(enum = null).merge(other).copy(
+            copy(enum = null, `const` = null).merge(other).copy(
                 enum = leftValues,
+                `const` = null,
                 default = mergedEnumDefault(leftValues, default, other.default)
             )
 
