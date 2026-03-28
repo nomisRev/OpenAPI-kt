@@ -5,6 +5,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
@@ -28,13 +29,60 @@ public data class Eval(
   public val id: String,
   public val name: String,
   @SerialName("data_source_config")
-  public val dataSourceConfig: JsonElement,
+  public val dataSourceConfig: DataSourceConfig,
   @SerialName("testing_criteria")
   public val testingCriteria: List<TestingCriteria>,
   @SerialName("created_at")
   public val createdAt: Long,
   public val metadata: Metadata,
 ) {
+  /**
+   * Configuration of data sources used in runs of the evaluation.
+   */
+  @OptIn(ExperimentalSerializationApi::class)
+  @JsonClassDiscriminator("type")
+  @Serializable
+  public sealed interface DataSourceConfig {
+    /**
+     * A CustomDataSourceConfig which specifies the schema of your `item` and optionally `sample` namespaces.
+     * The response schema defines the shape of the data that will be:
+     * - Used to define your testing criteria and
+     * - What data is required when creating a run
+     *
+     */
+    @JvmInline
+    @SerialName("custom")
+    @Serializable
+    public value class Custom(
+      public val schema: JsonElement,
+    ) : DataSourceConfig
+
+    /**
+     * A LogsDataSourceConfig which specifies the metadata property of your logs query.
+     * This is usually metadata like `usecase=chatbot` or `prompt-version=v2`, etc.
+     * The schema returned by this data source config is used to defined what variables are available in your evals.
+     * `item` and `sample` are both defined when using this data source config.
+     *
+     */
+    @SerialName("logs")
+    @Serializable
+    public data class Logs(
+      public val metadata: Metadata? = null,
+      public val schema: JsonElement,
+    ) : DataSourceConfig
+
+    /**
+     * Deprecated in favor of LogsDataSourceConfig.
+     *
+     */
+    @SerialName("stored_completions")
+    @Serializable
+    public data class StoredCompletions(
+      public val metadata: Metadata? = null,
+      public val schema: JsonElement,
+    ) : DataSourceConfig
+  }
+
   @Serializable
   public enum class Object(
     public val `value`: String,

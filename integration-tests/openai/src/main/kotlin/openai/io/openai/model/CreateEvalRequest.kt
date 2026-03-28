@@ -1,10 +1,12 @@
 package io.openai.model
 
+import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -16,10 +18,57 @@ public data class CreateEvalRequest(
   public val name: String? = null,
   public val metadata: Metadata? = null,
   @SerialName("data_source_config")
-  public val dataSourceConfig: JsonElement,
+  public val dataSourceConfig: DataSourceConfig,
   @SerialName("testing_criteria")
   public val testingCriteria: List<TestingCriteria>,
 ) {
+  /**
+   * The configuration for the data source used for the evaluation runs. Dictates the schema of the data used in the evaluation.
+   */
+  @OptIn(ExperimentalSerializationApi::class)
+  @JsonClassDiscriminator("type")
+  @Serializable
+  public sealed interface DataSourceConfig {
+    /**
+     * A CustomDataSourceConfig object that defines the schema for the data source used for the evaluation runs.
+     * This schema is used to define the shape of the data that will be:
+     * - Used to define your testing criteria and
+     * - What data is required when creating a run
+     *
+     */
+    @SerialName("custom")
+    @Serializable
+    public data class Custom(
+      @SerialName("item_schema")
+      public val itemSchema: JsonElement,
+      @SerialName("include_sample_schema")
+      public val includeSampleSchema: Boolean? = null,
+    ) : DataSourceConfig
+
+    /**
+     * A data source config which specifies the metadata property of your logs query.
+     * This is usually metadata like `usecase=chatbot` or `prompt-version=v2`, etc.
+     *
+     */
+    @JvmInline
+    @SerialName("logs")
+    @Serializable
+    public value class Logs(
+      public val metadata: JsonElement? = null,
+    ) : DataSourceConfig
+
+    /**
+     * Deprecated in favor of LogsDataSourceConfig.
+     *
+     */
+    @JvmInline
+    @SerialName("stored_completions")
+    @Serializable
+    public value class StoredCompletions(
+      public val metadata: JsonElement? = null,
+    ) : DataSourceConfig
+  }
+
   @OptIn(ExperimentalSerializationApi::class)
   @JsonClassDiscriminator("type")
   @Serializable

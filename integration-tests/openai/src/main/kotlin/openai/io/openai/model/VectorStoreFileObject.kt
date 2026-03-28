@@ -1,10 +1,12 @@
 package io.openai.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonClassDiscriminator
 
 /**
  * A list of files attached to a vector store.
@@ -23,9 +25,30 @@ public data class VectorStoreFileObject(
   @SerialName("last_error")
   public val lastError: LastError?,
   @SerialName("chunking_strategy")
-  public val chunkingStrategy: JsonElement? = null,
+  public val chunkingStrategy: ChunkingStrategy? = null,
   public val attributes: VectorStoreFileAttributes? = null,
 ) {
+  /**
+   * The strategy used to chunk the file.
+   */
+  @OptIn(ExperimentalSerializationApi::class)
+  @JsonClassDiscriminator("type")
+  @Serializable
+  public sealed interface ChunkingStrategy {
+    @SerialName("static")
+    @Serializable
+    public data class Static(
+      @SerialName("max_chunk_size_tokens")
+      public val maxChunkSizeTokens: Long,
+      @SerialName("chunk_overlap_tokens")
+      public val chunkOverlapTokens: Long,
+    ) : ChunkingStrategy
+
+    @Serializable
+    @SerialName("other")
+    public data object Other : ChunkingStrategy
+  }
+
   /**
    * The last error associated with this vector store file. Will be `null` if there are no errors.
    */

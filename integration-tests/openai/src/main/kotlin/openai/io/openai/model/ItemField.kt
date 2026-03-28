@@ -335,8 +335,71 @@ public sealed interface ItemField {
   public data class WebSearchCall(
     public val id: String,
     public val status: Status,
-    public val action: JsonElement,
+    public val action: Action,
   ) : ItemField {
+    /**
+     * An object describing the specific action taken in this web search call.
+     * Includes details on how the model used the web (search, open_page, find_in_page).
+     *
+     */
+    @OptIn(ExperimentalSerializationApi::class)
+    @JsonClassDiscriminator("type")
+    @Serializable
+    public sealed interface Action {
+      /**
+       * Action type "search" - Performs a web search query.
+       *
+       */
+      @SerialName("search")
+      @Serializable
+      public data class Search(
+        public val query: String,
+        public val queries: List<String>? = null,
+        public val sources: List<Sources>? = null,
+      ) : Action {
+        /**
+         * A source used in the search.
+         *
+         */
+        @Serializable
+        public data class Sources(
+          public val type: Type,
+          public val url: String,
+        ) {
+          @Serializable
+          public enum class Type(
+            public val `value`: String,
+          ) {
+            @SerialName("url")
+            Url("url"),
+            ;
+          }
+        }
+      }
+
+      /**
+       * Action type "open_page" - Opens a specific URL from search results.
+       *
+       */
+      @JvmInline
+      @SerialName("open_page")
+      @Serializable
+      public value class OpenPage(
+        public val url: String? = null,
+      ) : Action
+
+      /**
+       * Action type "find_in_page": Searches for a pattern within a loaded page.
+       *
+       */
+      @SerialName("find_in_page")
+      @Serializable
+      public data class FindInPage(
+        public val url: String,
+        public val pattern: String,
+      ) : Action
+    }
+
     @Serializable
     public enum class Status(
       public val `value`: String,
