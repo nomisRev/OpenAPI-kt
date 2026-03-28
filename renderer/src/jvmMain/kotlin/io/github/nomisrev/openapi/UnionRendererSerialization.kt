@@ -134,7 +134,6 @@ private fun buildDeserializeFunction(
     val code = when (val dispatch = union.dispatch) {
         is UnionDispatch.TaggedCustom ->
             buildTaggedCustomDeserializeCode(
-                union = union,
                 propertyName = dispatch.propertyName,
                 config = config,
                 originalClassName = originalClassName,
@@ -221,7 +220,6 @@ private fun buildAttemptDeserializeBody(
 
 @Suppress("LongMethod", "LongParameterList")
 private fun buildTaggedCustomDeserializeCode(
-    union: Model.Union,
     propertyName: String,
     config: RenderConfig,
     originalClassName: ClassName,
@@ -278,7 +276,6 @@ private fun buildTaggedCustomDeserializeCode(
                     beginControlFlow("%S ->", tag)
                     add(
                         buildTaggedCustomCollisionDispatchCode(
-                            union = union,
                             config = config,
                             originalClassName = originalClassName,
                             className = className,
@@ -348,7 +345,6 @@ private fun decodeCaseExpression(
 
 @Suppress("LongParameterList")
 private fun buildTaggedCustomCollisionDispatchCode(
-    union: Model.Union,
     config: RenderConfig,
     originalClassName: ClassName,
     className: ClassName,
@@ -356,11 +352,7 @@ private fun buildTaggedCustomCollisionDispatchCode(
     externalTypeNames: Map<ClassName, TypeName>,
 ): CodeBlock {
     val orderedCollisionCases = collisionCases.sortedByDeserializationOrder()
-    val anyOfDispatchAnalysis = if (union is Model.AnyOf) {
-        collisionCases.map { it.first }.uniqueKeyDispatchAnalysisOrNull()
-    } else {
-        null
-    }
+    val anyOfDispatchAnalysis = collisionCases.map { it.first }.uniqueKeyDispatchAnalysisOrNull()
 
     if (anyOfDispatchAnalysis == null) {
         return buildAttemptDeserializeBody(
@@ -453,7 +445,7 @@ private fun buildAnyOfUniqueKeyDispatchCode(
                         className = context.className,
                         externalTypeNames = context.externalTypeNames,
                     )
-                )
+                    )
                 endControlFlow()
             }
 
@@ -487,7 +479,6 @@ private fun buildAnyOfUniqueKeyDispatchCode(
 private fun buildAnyOfUniqueKeyCollisionDispatchCode(
     context: AnyOfUniqueKeyDispatchContext,
 ): CodeBlock {
-    val fallbackCase = context.uniqueKeysByCase.singleOrNull { it.uniqueKeys.isEmpty() }
     return CodeBlock.builder()
         .addStatement("val keys = obj?.keys.orEmpty()")
         .apply {
@@ -504,33 +495,19 @@ private fun buildAnyOfUniqueKeyCollisionDispatchCode(
                         className = context.className,
                         externalTypeNames = context.externalTypeNames,
                     )
-                )
+                    )
                 endControlFlow()
             }
 
-            if (fallbackCase != null) {
-                addStatement(
-                    "return %L",
-                    decodeCaseExpression(
-                        case = fallbackCase.case,
-                        rendered = fallbackCase.rendered,
-                        config = context.config,
-                        originalClassName = context.originalClassName,
-                        className = context.className,
-                        externalTypeNames = context.externalTypeNames,
-                    )
+            add(
+                buildAttemptDeserializeBody(
+                    config = context.config,
+                    originalClassName = context.originalClassName,
+                    className = context.className,
+                    orderedCases = context.orderedCases,
+                    externalTypeNames = context.externalTypeNames,
                 )
-            } else {
-                add(
-                    buildAttemptDeserializeBody(
-                        config = context.config,
-                        originalClassName = context.originalClassName,
-                        className = context.className,
-                        orderedCases = context.orderedCases,
-                        externalTypeNames = context.externalTypeNames,
-                    )
-                )
-            }
+            )
         }
         .build()
 }

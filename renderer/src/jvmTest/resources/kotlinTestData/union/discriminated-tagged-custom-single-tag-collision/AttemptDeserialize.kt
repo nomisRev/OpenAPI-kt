@@ -1,4 +1,4 @@
-package io.openai.model
+package io.github.nomisrev.render.test.union.discriminated.tagged.custom.single.tag.collision
 
 import java.lang.IllegalArgumentException
 import kotlin.Pair

@@ -5,8 +5,14 @@ import com.squareup.kotlinpoet.TypeSpec
 import io.github.nomisrev.openapi.transformers.isTopLevel
 
 @Suppress("CyclomaticComplexMethod")
-internal fun Model.Union.Case.caseSimpleName(config: RenderConfig): String =
-    discriminatorValues.singleOrNull()?.toPascalCase()?.takeIf { it.isNotBlank() }
+internal fun Model.Union.Case.caseSimpleName(
+    config: RenderConfig,
+    collidingSingleDiscriminatorTags: Set<String> = emptySet(),
+): String =
+    discriminatorValues.singleOrNull()
+        ?.takeUnless { it in collidingSingleDiscriminatorTags }
+        ?.toPascalCase()
+        ?.takeIf { it.isNotBlank() }
         ?: model.unionCaseValueOrNull()?.toPascalCase()?.takeIf { it.isNotBlank() }
         ?: when (val caseModel = model) {
             is Model.Reference -> "Case${caseModel.context.toClassName(config).simpleName}"
@@ -36,6 +42,13 @@ internal fun Model.Union.Case.caseSimpleName(config: RenderConfig): String =
             is Model.Union -> "Case${caseModel.context.toClassName(config).simpleName}"
             is Model.DiscriminatedObject -> "Case${caseModel.context.toClassName(config).simpleName}"
         }
+
+internal fun List<Model.Union.Case>.collidingSingleDiscriminatorTags(): Set<String> =
+    mapNotNull { it.discriminatorValues.singleOrNull() }
+        .groupingBy { it }
+        .eachCount()
+        .filterValues { it > 1 }
+        .keys
 
 internal fun Model.Union.Case.serialNameOrNull(@Suppress("UNUSED_PARAMETER") discriminatorField: String): String? =
     discriminatorValues.singleOrNull()

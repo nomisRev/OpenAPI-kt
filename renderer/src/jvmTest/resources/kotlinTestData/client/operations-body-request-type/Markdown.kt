@@ -30,18 +30,6 @@ public class Markdown internal constructor(
       setBody(body)
     }.body()
 
-    public sealed interface JsonResponse {
-      public data class Ok(
-        public val `value`: String,
-      ) : JsonResponse
-    }
-
-    public sealed interface XmlResponse {
-      public data class Ok(
-        public val `value`: String,
-      ) : XmlResponse
-    }
-
     public enum class RequestType(
       public val contentType: ContentType,
     ) {

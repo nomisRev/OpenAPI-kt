@@ -38,17 +38,5 @@ public class Items internal constructor(
     public value class Name(
       public val name: String,
     )
-
-    public sealed interface JsonResponse {
-      public data class Ok(
-        public val `value`: List<Id>,
-      ) : JsonResponse
-    }
-
-    public sealed interface XmlResponse {
-      public data class Ok(
-        public val `value`: List<Name>,
-      ) : XmlResponse
-    }
   }
 }

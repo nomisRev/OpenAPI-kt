@@ -447,6 +447,40 @@ val unionSpec by testSuite {
     )
 
     modelTest(
+        $$"""
+        |"MessageResource": {
+        |  "oneOf": [
+        |    { "$ref": "#/components/schemas/InputMessage" },
+        |    { "$ref": "#/components/schemas/OutputMessage" }
+        |  ],
+        |  "discriminator": { "propertyName": "type" }
+        |},
+        |"InputMessage": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["message"] },
+        |    "role": { "type": "string", "enum": ["user"] },
+        |    "content": { "type": "string" }
+        |  },
+        |  "required": ["type", "role", "content"]
+        |},
+        |"OutputMessage": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "type": { "type": "string", "enum": ["message"] },
+        |    "role": { "type": "string", "enum": ["assistant"] },
+        |    "content": { "type": "string" },
+        |    "phase": { "type": "string" }
+        |  },
+        |  "required": ["type", "role", "content"]
+        |}
+        """.trimMargin(),
+        "union/discriminated-tagged-custom-single-tag-collision"
+    )
+
+    modelTest(
         """
         |"Pet": {
         |  "oneOf": [

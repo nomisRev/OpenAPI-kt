@@ -823,6 +823,20 @@ val unionSpec by testSuite {
 
             assertEquals(UnionDispatch.TaggedCustom("type"), result.dispatch)
             assertEquals(listOf(setOf("node"), setOf("node")), result.cases.map { it.discriminatorValues })
+
+            val firstCase = assertIs<Model.Object>(result.cases[0].model)
+            assertEquals(
+                NamingContext.reference("NodeUnion", SchemaContext.Null)
+                    .nest(NamingContext.UnionCase("FirstNode")),
+                firstCase.context
+            )
+
+            val secondCase = assertIs<Model.Object>(result.cases[1].model)
+            assertEquals(
+                NamingContext.reference("NodeUnion", SchemaContext.Null)
+                    .nest(NamingContext.UnionCase("SecondNode")),
+                secondCase.context
+            )
         }
     }
 

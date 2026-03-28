@@ -155,11 +155,13 @@ private fun TypeSpec.Builder.addOperationResponseType(context: OperationTypeSpec
         }
 
         is ContentTypeStrategy.SeparateMethods -> {
-            context.route.buildMultiContentTypeResponseSpecs(
-                config = context.config,
-                methodClassName = context.methodClassName,
-                inlineModelScope = context.inlineModelScope,
-            ).forEach(::addType)
+            if (!context.route.returns.isSingleDirectModelResponse()) {
+                context.route.buildMultiContentTypeResponseSpecs(
+                    config = context.config,
+                    methodClassName = context.methodClassName,
+                    inlineModelScope = context.inlineModelScope,
+                ).forEach(::addType)
+            }
         }
     }
 }

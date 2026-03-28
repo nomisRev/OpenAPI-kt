@@ -72,9 +72,10 @@ internal fun Model.Union.Case.renderNonDiscriminatedCase(
     config: RenderConfig,
     originalClassName: ClassName,
     parentInterface: ClassName,
+    collidingSingleDiscriminatorTags: Set<String> = emptySet(),
     externalTypeNames: Map<ClassName, TypeName>,
 ): RenderedUnionCase {
-    val simpleName = caseSimpleName(config)
+    val simpleName = caseSimpleName(config, collidingSingleDiscriminatorTags)
     return when (val caseModel = model) {
         is Model.Object ->
             if (!caseModel.context.isTopLevel()) {
@@ -127,14 +128,15 @@ internal fun Model.Union.Case.renderNonDiscriminatedCase(
                 renderWrappedTypeSpec(config, originalClassName, parentInterface, simpleName, null, externalTypeNames)
             }
 
-        is Model.DiscriminatedObject ->
-            if (!caseModel.context.isTopLevel()) {
-                renderWrappedTypeSpec(config, originalClassName, parentInterface, simpleName, null, externalTypeNames)
-            } else {
-                renderWrappedTypeSpec(config, originalClassName, parentInterface, simpleName, null, externalTypeNames)
-            }
-
-        else -> renderWrappedTypeSpec(config, originalClassName, parentInterface, simpleName, null, externalTypeNames)
+        is Model.DiscriminatedObject,
+        is Model.ByteArray,
+        is Model.Collection,
+        is Model.Date,
+        is Model.DateTime,
+        is Model.FreeFormJson,
+        is Model.Primitive,
+        is Model.Reference,
+        is Model.Uuid -> renderWrappedTypeSpec(config, originalClassName, parentInterface, simpleName, null, externalTypeNames)
     }
 }
 
