@@ -1,5 +1,9 @@
 package io.github.nomisrev.openapi.parser
 
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -32,6 +36,7 @@ class SchemaTest {
         assertNull(schema.additionalProperties)
         assertNull(schema.discriminator)
         assertNull(schema.enum)
+        assertNull(schema.`const`)
         assertNull(schema.id)
         assertNull(schema.anchor)
         assertNull(schema.recursiveAnchor)
@@ -410,6 +415,76 @@ class SchemaTest {
         val schema = Schema.fromJson("""{"enum":["active",null]}""")
         assertNotNull(schema.enum)
         assertEquals(listOf("active", null), schema.enum)
+    }
+
+    // ── const ─────────────────────────────────────────────────────────────────
+
+    @Test
+    fun `json const object deserializes`() {
+        val schema = Schema.fromJson("""{"const":{"nested":[1,true,null,"x"]}}""")
+        assertEquals(
+            JsonObject(
+                mapOf(
+                    "nested" to
+                        JsonArray(
+                            listOf(
+                                JsonPrimitive(1),
+                                JsonPrimitive(true),
+                                JsonNull,
+                                JsonPrimitive("x"),
+                            )
+                        )
+                )
+            ),
+            schema.`const`,
+        )
+    }
+
+    @Test
+    fun `yaml const object deserializes`() {
+        val yaml = """
+            const:
+              nested:
+                - 1
+                - true
+                - null
+                - x
+        """.trimIndent()
+        val schema = Schema.fromYaml(yaml)
+        assertEquals(
+            JsonObject(
+                mapOf(
+                    "nested" to
+                        JsonArray(
+                            listOf(
+                                JsonPrimitive(1),
+                                JsonPrimitive(true),
+                                JsonNull,
+                                JsonPrimitive("x"),
+                            )
+                        )
+                )
+            ),
+            schema.`const`,
+        )
+    }
+
+    @Test
+    fun `json const round-trips string and numeric primitives`() {
+        val original = Schema(
+            `const` = JsonObject(
+                mapOf(
+                    "stringNumber" to JsonPrimitive("1"),
+                    "number" to JsonPrimitive(1),
+                    "boolString" to JsonPrimitive("true"),
+                    "bool" to JsonPrimitive(true),
+                    "nested" to JsonArray(listOf(JsonPrimitive("x"), JsonPrimitive(2), JsonNull)),
+                )
+            )
+        )
+        val json = OpenAPI.Json.encodeToString(Schema.serializer(), original)
+        val decoded = Schema.fromJson(json)
+        assertEquals(original, decoded)
     }
 
     // ── default and example ───────────────────────────────────────────────────
