@@ -805,6 +805,134 @@ val unionSpec by testSuite {
         }
     }
 
+    test("Inline oneOf infers tag-only discriminator and normalizes chunking strategy cases") {
+        val chunkingStrategy = Schema(
+            oneOf = listOf(
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "type" to ReferenceOr.value(
+                                Schema(
+                                    type = Schema.Type.Basic.String,
+                                    enum = listOf("auto")
+                                )
+                            )
+                        ),
+                        required = listOf("type")
+                    )
+                ),
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "type" to ReferenceOr.value(
+                                Schema(
+                                    type = Schema.Type.Basic.String,
+                                    enum = listOf("static")
+                                )
+                            ),
+                            "static" to ReferenceOr.value(
+                                Schema(
+                                    type = Schema.Type.Basic.Object,
+                                    properties = mapOf(
+                                        "max_chunk_size_tokens" to ReferenceOr.value(Schema.integer),
+                                        "chunk_overlap_tokens" to ReferenceOr.value(Schema.integer),
+                                    ),
+                                    required = listOf("max_chunk_size_tokens", "chunk_overlap_tokens")
+                                )
+                            )
+                        ),
+                        required = listOf("type", "static")
+                    )
+                )
+            )
+        )
+        val testApi = api.reference("ChunkingStrategy", chunkingStrategy)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("ChunkingStrategy")
+                .toModel(
+                    NamingContext.reference("ChunkingStrategy", SchemaContext.Null),
+                    SchemaContext.Write
+                ) as OneOf
+
+            assertEquals(UnionDispatch.NativeDiscriminator("type"), result.dispatch)
+            assertEquals(listOf(setOf("auto"), setOf("static")), result.cases.map { it.discriminatorValues })
+
+            assertTrue(result.cases[0].model is Model.Primitive.Unit)
+
+            val static = assertIs<Model.Object>(result.cases[1].model)
+            assertEquals(setOf("max_chunk_size_tokens", "chunk_overlap_tokens"), static.properties.keys)
+            assertEquals(
+                NamingContext.reference("ChunkingStrategy", SchemaContext.Null)
+                    .nest(NamingContext.UnionCase("static")),
+                static.context
+            )
+        }
+    }
+
+    test("Inline oneOf infers const tag-only discriminator and normalizes chunking strategy cases") {
+        val chunkingStrategy = Schema(
+            oneOf = listOf(
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "type" to ReferenceOr.value(
+                                Schema(
+                                    type = Schema.Type.Basic.String,
+                                    `const` = JsonPrimitive("auto")
+                                )
+                            )
+                        ),
+                        required = listOf("type")
+                    )
+                ),
+                ReferenceOr.value(
+                    Schema(
+                        type = Schema.Type.Basic.Object,
+                        properties = mapOf(
+                            "type" to ReferenceOr.value(
+                                Schema(
+                                    type = Schema.Type.Basic.String,
+                                    `const` = JsonPrimitive("static")
+                                )
+                            ),
+                            "static" to ReferenceOr.value(
+                                Schema(
+                                    type = Schema.Type.Basic.Object,
+                                    properties = mapOf(
+                                        "max_chunk_size_tokens" to ReferenceOr.value(Schema.integer),
+                                        "chunk_overlap_tokens" to ReferenceOr.value(Schema.integer),
+                                    ),
+                                    required = listOf("max_chunk_size_tokens", "chunk_overlap_tokens")
+                                )
+                            )
+                        ),
+                        required = listOf("type", "static")
+                    )
+                )
+            )
+        )
+        val testApi = api.reference("ChunkingStrategyConst", chunkingStrategy)
+
+        registry(testApi) {
+            val result = ReferenceOr.schema("ChunkingStrategyConst")
+                .toModel(
+                    NamingContext.reference("ChunkingStrategyConst", SchemaContext.Null),
+                    SchemaContext.Write
+                ) as OneOf
+
+            assertEquals(UnionDispatch.NativeDiscriminator("type"), result.dispatch)
+            assertEquals(listOf(setOf("auto"), setOf("static")), result.cases.map { it.discriminatorValues })
+            assertTrue(result.cases[0].model is Model.Primitive.Unit)
+
+            val static = assertIs<Model.Object>(result.cases[1].model)
+            assertEquals(setOf("max_chunk_size_tokens", "chunk_overlap_tokens"), static.properties.keys)
+        }
+    }
+
     test("Recursive unions with multi-valued discriminator fields use tagged custom dispatch") {
         val comparisonFilter = Schema(
             type = Schema.Type.Basic.Object,
@@ -953,6 +1081,7 @@ val unionSpec by testSuite {
                     .nest(NamingContext.UnionCase("ImageUrlOrText")),
                 itemUnion.context
             )
+            assertEquals(UnionDispatch.NativeDiscriminator("type"), itemUnion.dispatch)
             assertEquals(
                 listOf("image_url", "text"),
                 itemUnion.cases.map {
@@ -963,11 +1092,11 @@ val unionSpec by testSuite {
                 }
             )
             assertEquals(
-                setOf("type", "image_url"),
+                setOf("url"),
                 assertIs<Model.Object>(itemUnion.cases[0].model).properties.keys
             )
             assertEquals(
-                setOf("type", "text"),
+                setOf("text"),
                 assertIs<Model.Object>(itemUnion.cases[1].model).properties.keys
             )
         }

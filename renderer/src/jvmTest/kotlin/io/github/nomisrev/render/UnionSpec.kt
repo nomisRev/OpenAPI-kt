@@ -168,6 +168,41 @@ val unionSpec by testSuite {
     )
 
     modelTest(
+        """
+        |"ChunkingStrategy": {
+        |  "oneOf": [
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "type": { "type": "string", "enum": ["auto"] }
+        |      },
+        |      "required": ["type"]
+        |    },
+        |    {
+        |      "type": "object",
+        |      "additionalProperties": false,
+        |      "properties": {
+        |        "type": { "type": "string", "enum": ["static"] },
+        |        "static": {
+        |          "type": "object",
+        |          "additionalProperties": false,
+        |          "properties": {
+        |            "max_chunk_size_tokens": { "type": "integer" },
+        |            "chunk_overlap_tokens": { "type": "integer" }
+        |          },
+        |          "required": ["max_chunk_size_tokens", "chunk_overlap_tokens"]
+        |        }
+        |      },
+        |      "required": ["type", "static"]
+        |    }
+        |  ]
+        |}
+        """.trimMargin(),
+        "union/discriminated-inferred-inline-chunking-strategy"
+    )
+
+    modelTest(
         $$"""
         |"DiscriminatedEnumUnion": {
         |  "oneOf": [

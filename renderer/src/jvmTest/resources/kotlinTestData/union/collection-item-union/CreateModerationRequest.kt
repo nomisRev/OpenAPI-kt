@@ -16,6 +16,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 
@@ -44,73 +45,23 @@ public value class CreateModerationRequest(
       public val `value`: List<ImageUrlOrText>,
     ) : Input
 
-    @Serializable(with = ImageUrlOrText.Serializer::class)
+    @OptIn(ExperimentalSerializationApi::class)
+    @JsonClassDiscriminator("type")
+    @Serializable
     public sealed interface ImageUrlOrText {
+      @JvmInline
+      @SerialName("image_url")
       @Serializable
-      public data class ImageUrl(
-        public val type: Type,
-        @SerialName("image_url")
-        public val imageUrl: ImageUrl,
-      ) : ImageUrlOrText {
-        @JvmInline
-        @Serializable
-        public value class ImageUrl(
-          public val url: String,
-        )
+      public value class ImageUrl(
+        public val url: String,
+      ) : ImageUrlOrText
 
-        @Serializable
-        public enum class Type(
-          public val `value`: String,
-        ) {
-          @SerialName("image_url")
-          ImageUrl("image_url"),
-          ;
-        }
-      }
-
+      @JvmInline
+      @SerialName("text")
       @Serializable
-      public data class Text(
-        public val type: Type,
+      public value class Text(
         public val text: String,
-      ) : ImageUrlOrText {
-        @Serializable
-        public enum class Type(
-          public val `value`: String,
-        ) {
-          @SerialName("text")
-          Text("text"),
-          ;
-        }
-      }
-
-      public object Serializer : KSerializer<ImageUrlOrText> {
-        @OptIn(
-          InternalSerializationApi::class,
-          ExperimentalSerializationApi::class,
-        )
-        override val descriptor: SerialDescriptor =
-            buildSerialDescriptor("io.github.nomisrev.render.test.union.collection.item.union.CreateModerationRequest.Input.ImageUrlOrText", PolymorphicKind.SEALED) {
-          element("ImageUrl", ImageUrl.serializer().descriptor)
-          element("Text", Text.serializer().descriptor)
-        }
-
-        override fun deserialize(decoder: Decoder): ImageUrlOrText {
-          val value = decoder.decodeSerializableValue(JsonElement.serializer())
-          val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            ImageUrl::class to { decodeFromJsonElement(ImageUrl.serializer(), it) },
-            Text::class to { decodeFromJsonElement(Text.serializer(), it) },
-          )
-        }
-
-        override fun serialize(encoder: Encoder, `value`: ImageUrlOrText) {
-          when(value) {
-            is ImageUrl -> encoder.encodeSerializableValue(ImageUrl.serializer(), value)
-            is Text -> encoder.encodeSerializableValue(Text.serializer(), value)
-          }
-        }
-      }
+      ) : ImageUrlOrText
     }
 
     public object Serializer : KSerializer<Input> {

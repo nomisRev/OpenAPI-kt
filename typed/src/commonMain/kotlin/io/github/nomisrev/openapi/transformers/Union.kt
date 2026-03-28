@@ -102,7 +102,6 @@ context(ctx: Registry.Scope)
 @Suppress("ReturnCount")
 private suspend fun List<ReferenceOr<Schema>>.inferTagOnlyDiscriminatorOrNull(): UnionDiscriminator? {
     if (size < 2) return null
-    if (any { it !is ReferenceOr.Reference }) return null
 
     val caseLiterals = map { subtype ->
         val subtypeSchema = subtype.peek().flattenAllOfForUnionDiscriminator()

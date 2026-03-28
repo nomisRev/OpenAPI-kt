@@ -1,4 +1,4 @@
-package io.github.nomisrev.render.test.collection.item.with.nested.union
+package io.github.nomisrev.render.test.union.discriminated.tagged.custom.nested.union.case
 
 import java.lang.IllegalArgumentException
 import kotlin.Pair

@@ -26,7 +26,7 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boolean): Model {
     val enumLikeValues = schema.enumLikeValues()
-    val compositeTakesPrecedence = schema.type == null || schema.compositeShouldTakePrecedenceOverType()
+    val compositeTakesPrecedence  = schema.type == null || schema.compositeShouldTakePrecedenceOverType()
     return when {
         this is ResolvedSchema.Reference && !resolveReference ->
             Model.Reference(
