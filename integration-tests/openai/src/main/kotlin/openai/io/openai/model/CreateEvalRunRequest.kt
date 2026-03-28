@@ -95,11 +95,14 @@ public data class CreateEvalRunRequest(
       /**
        * Used when sampling from a model. Dictates the structure of the messages passed into the model. Can either be a reference to a prebuilt trajectory (ie, `item.input_trajectory`), or a template with variable references to the `item` namespace.
        */
-      @Serializable(with = InputMessages.Serializer::class)
+      @OptIn(ExperimentalSerializationApi::class)
+      @JsonClassDiscriminator("type")
+      @Serializable
       public sealed interface InputMessages {
+        @JvmInline
+        @SerialName("template")
         @Serializable
-        public data class Template(
-          public val type: Type,
+        public value class Template(
           public val template: List<Template>,
         ) : InputMessages {
           @Serializable(with = Template.Serializer::class)
@@ -305,61 +308,15 @@ public data class CreateEvalRunRequest(
               }
             }
           }
-
-          @Serializable
-          public enum class Type(
-            public val `value`: String,
-          ) {
-            @SerialName("template")
-            Template("template"),
-            ;
-          }
         }
 
+        @JvmInline
+        @SerialName("item_reference")
         @Serializable
-        public data class ItemReference(
-          public val type: Type,
+        public value class ItemReference(
           @SerialName("item_reference")
           public val itemReference: String,
-        ) : InputMessages {
-          @Serializable
-          public enum class Type(
-            public val `value`: String,
-          ) {
-            @SerialName("item_reference")
-            ItemReference("item_reference"),
-            ;
-          }
-        }
-
-        public object Serializer : KSerializer<InputMessages> {
-          @OptIn(
-            InternalSerializationApi::class,
-            ExperimentalSerializationApi::class,
-          )
-          override val descriptor: SerialDescriptor =
-              buildSerialDescriptor("io.openai.model.CreateEvalRunRequest.DataSource.Completions.InputMessages", PolymorphicKind.SEALED) {
-            element("Template", Template.serializer().descriptor)
-            element("ItemReference", ItemReference.serializer().descriptor)
-          }
-
-          override fun deserialize(decoder: Decoder): InputMessages {
-            val value = decoder.decodeSerializableValue(JsonElement.serializer())
-            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            return json.attemptDeserialize(
-              value,
-              Template::class to { decodeFromJsonElement(Template.serializer(), it) },
-              ItemReference::class to { decodeFromJsonElement(ItemReference.serializer(), it) },
-            )
-          }
-
-          override fun serialize(encoder: Encoder, `value`: InputMessages) {
-            when(value) {
-              is Template -> encoder.encodeSerializableValue(Template.serializer(), value)
-              is ItemReference -> encoder.encodeSerializableValue(ItemReference.serializer(), value)
-            }
-          }
-        }
+        ) : InputMessages
       }
 
       @Serializable
@@ -479,11 +436,14 @@ public data class CreateEvalRunRequest(
       /**
        * Used when sampling from a model. Dictates the structure of the messages passed into the model. Can either be a reference to a prebuilt trajectory (ie, `item.input_trajectory`), or a template with variable references to the `item` namespace.
        */
-      @Serializable(with = InputMessages.Serializer::class)
+      @OptIn(ExperimentalSerializationApi::class)
+      @JsonClassDiscriminator("type")
+      @Serializable
       public sealed interface InputMessages {
+        @JvmInline
+        @SerialName("template")
         @Serializable
-        public data class Template(
-          public val type: Type,
+        public value class Template(
           public val template: List<Template>,
         ) : InputMessages {
           @Serializable(with = Template.Serializer::class)
@@ -529,61 +489,15 @@ public data class CreateEvalRunRequest(
               }
             }
           }
-
-          @Serializable
-          public enum class Type(
-            public val `value`: String,
-          ) {
-            @SerialName("template")
-            Template("template"),
-            ;
-          }
         }
 
+        @JvmInline
+        @SerialName("item_reference")
         @Serializable
-        public data class ItemReference(
-          public val type: Type,
+        public value class ItemReference(
           @SerialName("item_reference")
           public val itemReference: String,
-        ) : InputMessages {
-          @Serializable
-          public enum class Type(
-            public val `value`: String,
-          ) {
-            @SerialName("item_reference")
-            ItemReference("item_reference"),
-            ;
-          }
-        }
-
-        public object Serializer : KSerializer<InputMessages> {
-          @OptIn(
-            InternalSerializationApi::class,
-            ExperimentalSerializationApi::class,
-          )
-          override val descriptor: SerialDescriptor =
-              buildSerialDescriptor("io.openai.model.CreateEvalRunRequest.DataSource.Responses.InputMessages", PolymorphicKind.SEALED) {
-            element("Template", Template.serializer().descriptor)
-            element("ItemReference", ItemReference.serializer().descriptor)
-          }
-
-          override fun deserialize(decoder: Decoder): InputMessages {
-            val value = decoder.decodeSerializableValue(JsonElement.serializer())
-            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            return json.attemptDeserialize(
-              value,
-              Template::class to { decodeFromJsonElement(Template.serializer(), it) },
-              ItemReference::class to { decodeFromJsonElement(ItemReference.serializer(), it) },
-            )
-          }
-
-          override fun serialize(encoder: Encoder, `value`: InputMessages) {
-            when(value) {
-              is Template -> encoder.encodeSerializableValue(Template.serializer(), value)
-              is ItemReference -> encoder.encodeSerializableValue(ItemReference.serializer(), value)
-            }
-          }
-        }
+        ) : InputMessages
       }
 
       @Serializable

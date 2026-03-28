@@ -49,6 +49,7 @@ import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PolymorphicKind
@@ -59,6 +60,8 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Users internal constructor(
   private val client: HttpClient,
@@ -2783,7 +2786,7 @@ public class Users internal constructor(
             private val username: String,
             private val projectNumber: Long,
           ) {
-            public suspend operator fun invoke(body: NameAndDataType): Response {
+            public suspend operator fun invoke(body: Body): Response {
               val response = client.post("/users/$username/projectsV2/$projectNumber/fields") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
@@ -2798,89 +2801,96 @@ public class Users internal constructor(
               }
             }
 
-            public suspend operator fun invoke(body: NameAndDataTypeAndSingleSelectOptions): Response {
-              val response = client.post("/users/$username/projectsV2/$projectNumber/fields") {
-                contentType(ContentType.Application.Json)
-                setBody(body)
-              }
-              return when (response.status.value) {
-                201 -> Response.Created(response.body())
-                304 -> Response.NotModified
-                401 -> Response.Unauthorized(response.body())
-                403 -> Response.Forbidden(response.body())
-                422 -> Response.UnprocessableEntity(response.body())
-                else -> throw ResponseException(response, "")
-              }
-            }
-
-            public suspend operator fun invoke(body: NameAndDataTypeAndIterationConfiguration): Response {
-              val response = client.post("/users/$username/projectsV2/$projectNumber/fields") {
-                contentType(ContentType.Application.Json)
-                setBody(body)
-              }
-              return when (response.status.value) {
-                201 -> Response.Created(response.body())
-                304 -> Response.NotModified
-                401 -> Response.Unauthorized(response.body())
-                403 -> Response.Forbidden(response.body())
-                422 -> Response.UnprocessableEntity(response.body())
-                else -> throw ResponseException(response, "")
-              }
-            }
-
-            @Serializable
-            public data class NameAndDataType(
-              public val name: String,
-              @SerialName("data_type")
-              public val dataType: DataType,
-            ) {
+            @Serializable(with = Body.Serializer::class)
+            public sealed interface Body {
               @Serializable
-              public enum class DataType(
-                public val `value`: String,
-              ) {
-                @SerialName("text")
-                Text("text"),
-                @SerialName("number")
-                Number("number"),
-                @SerialName("date")
-                Date("date"),
-                ;
+              public data class NameAndDataType(
+                public val name: String,
+                @SerialName("data_type")
+                public val dataType: DataType,
+              ) : Body {
+                @Serializable
+                public enum class DataType(
+                  public val `value`: String,
+                ) {
+                  @SerialName("text")
+                  Text("text"),
+                  @SerialName("number")
+                  Number("number"),
+                  @SerialName("date")
+                  Date("date"),
+                  ;
+                }
               }
-            }
 
-            @Serializable
-            public data class NameAndDataTypeAndSingleSelectOptions(
-              public val name: String,
-              @SerialName("data_type")
-              public val dataType: DataType,
-              @SerialName("single_select_options")
-              public val singleSelectOptions: List<ProjectsV2FieldSingleSelectOption>,
-            ) {
               @Serializable
-              public enum class DataType(
-                public val `value`: String,
-              ) {
-                @SerialName("single_select")
-                SingleSelect("single_select"),
-                ;
+              public data class SingleSelect(
+                public val name: String,
+                @SerialName("data_type")
+                public val dataType: DataType,
+                @SerialName("single_select_options")
+                public val singleSelectOptions: List<ProjectsV2FieldSingleSelectOption>,
+              ) : Body {
+                @Serializable
+                public enum class DataType(
+                  public val `value`: String,
+                ) {
+                  @SerialName("single_select")
+                  SingleSelect("single_select"),
+                  ;
+                }
               }
-            }
 
-            @Serializable
-            public data class NameAndDataTypeAndIterationConfiguration(
-              public val name: String,
-              @SerialName("data_type")
-              public val dataType: DataType,
-              @SerialName("iteration_configuration")
-              public val iterationConfiguration: ProjectsV2FieldIterationConfiguration,
-            ) {
               @Serializable
-              public enum class DataType(
-                public val `value`: String,
-              ) {
-                @SerialName("iteration")
-                Iteration("iteration"),
-                ;
+              public data class Iteration(
+                public val name: String,
+                @SerialName("data_type")
+                public val dataType: DataType,
+                @SerialName("iteration_configuration")
+                public val iterationConfiguration: ProjectsV2FieldIterationConfiguration,
+              ) : Body {
+                @Serializable
+                public enum class DataType(
+                  public val `value`: String,
+                ) {
+                  @SerialName("iteration")
+                  Iteration("iteration"),
+                  ;
+                }
+              }
+
+              public object Serializer : KSerializer<Body> {
+                @OptIn(
+                  InternalSerializationApi::class,
+                  ExperimentalSerializationApi::class,
+                )
+                override val descriptor: SerialDescriptor =
+                    buildSerialDescriptor("io.github.api.Users.UsernamePath.ProjectsV2.ProjectNumberPath.Fields.Post.Body", PolymorphicKind.SEALED) {
+                  element("NameAndDataType", NameAndDataType.serializer().descriptor)
+                  element("SingleSelect", SingleSelect.serializer().descriptor)
+                  element("Iteration", Iteration.serializer().descriptor)
+                }
+
+                override fun deserialize(decoder: Decoder): Body {
+                  val value = decoder.decodeSerializableValue(JsonElement.serializer())
+                  val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
+                  val obj = value as? JsonObject
+                  val tag = (obj?.get("data_type") as? JsonPrimitive)?.content
+                  when(tag) {
+                    "text", "number", "date" -> return json.decodeFromJsonElement(NameAndDataType.serializer(), value)
+                    "single_select" -> return json.decodeFromJsonElement(SingleSelect.serializer(), value)
+                    "iteration" -> return json.decodeFromJsonElement(Iteration.serializer(), value)
+                    else -> throw SerializationException("Unknown tag: " + tag + " for io.github.api.Users.UsernamePath.ProjectsV2.ProjectNumberPath.Fields.Post.Body")
+                  }
+                }
+
+                override fun serialize(encoder: Encoder, `value`: Body) {
+                  when(value) {
+                    is NameAndDataType -> encoder.encodeSerializableValue(NameAndDataType.serializer(), value)
+                    is SingleSelect -> encoder.encodeSerializableValue(SingleSelect.serializer(), value)
+                    is Iteration -> encoder.encodeSerializableValue(Iteration.serializer(), value)
+                  }
+                }
               }
             }
 

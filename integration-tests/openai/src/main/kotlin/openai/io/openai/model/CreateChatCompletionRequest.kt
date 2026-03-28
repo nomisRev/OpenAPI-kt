@@ -256,90 +256,32 @@ public data class CreateChatCompletionRequest(
        * The input format for the custom tool. Default is unconstrained text.
        *
        */
-      @Serializable(with = Format.Serializer::class)
+      @OptIn(ExperimentalSerializationApi::class)
+      @JsonClassDiscriminator("type")
+      @Serializable
       public sealed interface Format {
-        /**
-         * Unconstrained free-form text.
-         */
-        @JvmInline
         @Serializable
-        public value class Text(
-          public val type: Type,
-        ) : Format {
-          @Serializable
-          public enum class Type(
-            public val `value`: String,
-          ) {
-            @SerialName("text")
-            Text("text"),
-            ;
-          }
-        }
+        @SerialName("text")
+        public data object Text : Format
 
         /**
          * A grammar defined by the user.
          */
+        @SerialName("grammar")
         @Serializable
         public data class Grammar(
-          public val type: Type,
-          public val grammar: Grammar,
+          public val definition: String,
+          public val syntax: Syntax,
         ) : Format {
-          /**
-           * Your chosen grammar.
-           */
           @Serializable
-          public data class Grammar(
-            public val definition: String,
-            public val syntax: Syntax,
-          ) {
-            @Serializable
-            public enum class Syntax(
-              public val `value`: String,
-            ) {
-              @SerialName("lark")
-              Lark("lark"),
-              @SerialName("regex")
-              Regex("regex"),
-              ;
-            }
-          }
-
-          @Serializable
-          public enum class Type(
+          public enum class Syntax(
             public val `value`: String,
           ) {
-            @SerialName("grammar")
-            Grammar("grammar"),
+            @SerialName("lark")
+            Lark("lark"),
+            @SerialName("regex")
+            Regex("regex"),
             ;
-          }
-        }
-
-        public object Serializer : KSerializer<Format> {
-          @OptIn(
-            InternalSerializationApi::class,
-            ExperimentalSerializationApi::class,
-          )
-          override val descriptor: SerialDescriptor =
-              buildSerialDescriptor("io.openai.model.CreateChatCompletionRequest.Tools.Custom.Format", PolymorphicKind.SEALED) {
-            element("Text", Text.serializer().descriptor)
-            element("Grammar", Grammar.serializer().descriptor)
-          }
-
-          override fun deserialize(decoder: Decoder): Format {
-            val value = decoder.decodeSerializableValue(JsonElement.serializer())
-            val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            return json.attemptDeserialize(
-              value,
-              Grammar::class to { decodeFromJsonElement(Grammar.serializer(), it) },
-              Text::class to { decodeFromJsonElement(Text.serializer(), it) },
-            )
-          }
-
-          override fun serialize(encoder: Encoder, `value`: Format) {
-            when(value) {
-              is Text -> encoder.encodeSerializableValue(Text.serializer(), value)
-              is Grammar -> encoder.encodeSerializableValue(Grammar.serializer(), value)
-            }
           }
         }
       }

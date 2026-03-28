@@ -124,77 +124,22 @@ public data class CreateAssistantRequest(
         /**
          * The chunking strategy used to chunk the file(s). If not set, will use the `auto` strategy.
          */
-        @Serializable(with = ChunkingStrategy.Serializer::class)
+        @OptIn(ExperimentalSerializationApi::class)
+        @JsonClassDiscriminator("type")
+        @Serializable
         public sealed interface ChunkingStrategy {
-          /**
-           * The default strategy. This strategy currently uses a `max_chunk_size_tokens` of `800` and `chunk_overlap_tokens` of `400`.
-           */
-          @JvmInline
           @Serializable
-          public value class Auto(
-            public val type: Type,
-          ) : ChunkingStrategy {
-            @Serializable
-            public enum class Type(
-              public val `value`: String,
-            ) {
-              @SerialName("auto")
-              Auto("auto"),
-              ;
-            }
-          }
+          @SerialName("auto")
+          public data object Auto : ChunkingStrategy
 
+          @SerialName("static")
           @Serializable
           public data class Static(
-            public val type: Type,
-            public val static: Static,
-          ) : ChunkingStrategy {
-            @Serializable
-            public data class Static(
-              @SerialName("max_chunk_size_tokens")
-              public val maxChunkSizeTokens: Long,
-              @SerialName("chunk_overlap_tokens")
-              public val chunkOverlapTokens: Long,
-            )
-
-            @Serializable
-            public enum class Type(
-              public val `value`: String,
-            ) {
-              @SerialName("static")
-              Static("static"),
-              ;
-            }
-          }
-
-          public object Serializer : KSerializer<ChunkingStrategy> {
-            @OptIn(
-              InternalSerializationApi::class,
-              ExperimentalSerializationApi::class,
-            )
-            override val descriptor: SerialDescriptor =
-                buildSerialDescriptor("io.openai.model.CreateAssistantRequest.ToolResources.FileSearch.VectorStores.ChunkingStrategy", PolymorphicKind.SEALED) {
-              element("Auto", Auto.serializer().descriptor)
-              element("Static", Static.serializer().descriptor)
-            }
-
-            override fun deserialize(decoder: Decoder): ChunkingStrategy {
-              val value = decoder.decodeSerializableValue(JsonElement.serializer())
-              val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-              return json.attemptDeserialize(
-                value,
-                Static::class to { decodeFromJsonElement(Static.serializer(), it) },
-                Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-              )
-            }
-
-            override fun serialize(encoder: Encoder, `value`: ChunkingStrategy) {
-              when(value) {
-                is Auto -> encoder.encodeSerializableValue(Auto.serializer(), value)
-                is Static -> encoder.encodeSerializableValue(Static.serializer(), value)
-              }
-            }
-          }
+            @SerialName("max_chunk_size_tokens")
+            public val maxChunkSizeTokens: Long,
+            @SerialName("chunk_overlap_tokens")
+            public val chunkOverlapTokens: Long,
+          ) : ChunkingStrategy
         }
       }
     }
