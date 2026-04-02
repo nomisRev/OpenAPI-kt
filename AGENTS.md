@@ -1,5 +1,6 @@
-# Repository Guidelines
+Chat as little as possible. Use short single-line sentences and be critical & strict. Do not try to unnecessarily try to please 
 
+# Repository Guidelines
 - Keep changes focused on the task at hand. Do not refactor unrelated modules while touching shared code.
 
 ## Project Layout

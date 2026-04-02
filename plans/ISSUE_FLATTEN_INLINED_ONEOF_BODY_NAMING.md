@@ -1,4 +1,11 @@
-## Problematic Kotlin Code from OpenAI
+# Issue: non-idiomatic Kotlin client generated
+
+## Step 1: Research issue
+
+Find the `"/repos/{owner}/{repo}/check-runs/{check_run_id}"` patch route and inline the JSON OpenAPI for it.
+Include the **full** spec for it, meaning look for all references schemas and add them.
+
+## Current Code
 
 ```kotlin
 public class Patch internal constructor(

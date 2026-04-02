@@ -373,7 +373,7 @@ currently
         }
 ```
 
-Instead should probably just be a regular data class which performs the validation inside `init { }` with `require`.
+Instead, should probably just be a regular data class which performs the validation inside `init { }` with `require`.
 
 I.e.
 ```kotlin

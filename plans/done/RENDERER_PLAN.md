@@ -45,5 +45,5 @@ Generate Kotlin source code from the typed OpenAPI model using KotlinPoet. Cover
 
 ## Specs
 
-- [MODEL_SPEC.md](../../specs/MODEL_SPEC.md) — How OpenAPI schemas map to Kotlin types
-- [CLIENT_SPEC.md](../../specs/CLIENT_SPEC.md) — How the generated Ktor client should look
+- [MODEL_SPEC.md](../../specs/outdated/MODEL_SPEC.md) — How OpenAPI schemas map to Kotlin types
+- [CLIENT_SPEC.md](../../specs/outdated/CLIENT_SPEC.md) — How the generated Ktor client should look
