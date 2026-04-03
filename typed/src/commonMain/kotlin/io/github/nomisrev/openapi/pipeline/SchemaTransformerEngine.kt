@@ -3,6 +3,8 @@ package io.github.nomisrev.openapi.pipeline
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.pipeline.plugins.fallback.FallbackPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.implicit.ImplicitEnumPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.typed.EnumPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.PrimitivePlugin
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
@@ -93,7 +95,9 @@ class SchemaTransformerEngineBuilder {
     private val interceptors = mutableListOf<ModelInterceptor>()
 
     fun defaults() {
+        addFirst(Phase.TYPED, EnumPlugin)
         addFirst(Phase.TYPED, PrimitivePlugin)
+        addFirst(Phase.IMPLICIT, ImplicitEnumPlugin)
         addFirst(Phase.FALLBACK, FallbackPlugin)
     }
 
