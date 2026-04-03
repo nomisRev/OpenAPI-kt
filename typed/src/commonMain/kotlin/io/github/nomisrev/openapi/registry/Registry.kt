@@ -24,6 +24,8 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
         TODO("Remote schemas $url not supported yet.")
 
     override fun close() = client.close()
+    
+    fun scope(): Scope = ScopeImpl(null, emptySet())
 
     suspend fun NamingContext.Reference.toModel(): Model =
         ReferenceOr.schema(name).toModel(NamingContext(this, emptyList()), context)
