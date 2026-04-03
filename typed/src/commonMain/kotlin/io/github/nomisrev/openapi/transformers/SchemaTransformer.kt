@@ -18,6 +18,7 @@ import io.github.nomisrev.openapi.registry.isObjectWithDiscriminator
 import io.github.nomisrev.openapi.registry.isOneOfNullableType
 import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.toModel
+import io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.parser.AdditionalProperties.PSchema
 import io.github.nomisrev.openapi.routes.SchemaContext
 
@@ -90,7 +91,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
             }
 
             Schema.Type.Basic.Object if schema.properties?.isNotEmpty() == true -> toObject(context, schema.properties!!)
-            Schema.Type.Basic.Object -> objectWithoutProperties(context)
+            Schema.Type.Basic.Object -> objectWithoutProperties(context) ?: fallback()
             Schema.Type.Basic.Array -> collection(context)
             Schema.Type.Basic.String if enumLikeValues != null -> toClosedEnum(context, enumLikeValues)
             Schema.Type.Basic.Number if enumLikeValues != null -> toClosedEnum(context, enumLikeValues)
@@ -108,7 +109,7 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
         enumLikeValues != null -> toClosedEnum(context, enumLikeValues)
 
         schema.properties?.isNotEmpty() == true -> toObject(context, schema.properties!!)
-        schema.additionalProperties != null -> objectWithoutProperties(context)
+        schema.additionalProperties != null -> objectWithoutProperties(context) ?: fallback()
         schema.items != null -> collection(context)
         else -> fallback()
     }
@@ -136,76 +137,6 @@ private fun Schema.addsStructuralCompositeShape(): Boolean =
             anyOf.orEmpty().isNotEmpty() ||
             format != null
 
-context(ctx: Registry.Scope)
-private suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContext): Model =
-    when (val ap = schema.additionalProperties) {
-        null -> fallback()
-        is PSchema -> buildTypedAdditionalPropertiesModel(context, ap)
-        is Allowed -> if (ap.value) fallback() else buildAllowedAdditionalPropertiesModel()
-    }
-
-context(ctx: Registry.Scope)
-private suspend fun ResolvedSchema.buildTypedAdditionalPropertiesModel(
-    context: SchemaContext,
-    ap: PSchema,
-): Model =
-    when (this) {
-        is ResolvedSchema.Recursive, is ResolvedSchema.Reference ->
-            Object(
-                name,
-                description(),
-                schema.title,
-                mapOf(
-                    "values" to Object.Property(
-                        Model.Collection(
-                            inner = ap.value.toModel(name.nest(NamingContext.AdditionalProperties), context),
-                            default = Model.Default.Value(emptyList()),
-                            description = null,
-                            title = null,
-                            constraint = null,
-                            isNullable = false,
-                        ),
-                        false
-                    )
-                ),
-                Object.AdditionalProperties.False,
-                isNullable
-            )
-
-        is ResolvedSchema.Value ->
-            Model.Collection(
-                inner = ap.value.toModel(name, context),
-                default = Model.Default.Value(emptyList()),
-                description = description(),
-                constraint = null,
-                isNullable = isNullable,
-                title = schema.title
-            )
-    }
-
-context(ctx: Registry.Scope)
-private suspend fun ResolvedSchema.buildAllowedAdditionalPropertiesModel(): Model =
-    when (this) {
-        is ResolvedSchema.Recursive if name.isTopLevel() ->
-            Object(name, description(), schema.title, emptyMap(), false, isNullable)
-
-        is ResolvedSchema.Reference ->
-            Object(name, description(), schema.title, emptyMap(), false, isNullable)
-
-        is ResolvedSchema.Recursive -> Model.Primitive.Unit(description(), isNullable, schema.title)
-        is ResolvedSchema.Value -> Model.Primitive.Unit(description(), isNullable, schema.title)
-    }
-
-context(ctx: Registry.Scope)
-private suspend fun ResolvedSchema.fallback(): Model = when (this) {
-    is Value -> FreeFormJson(description(), Constraints.Object(schema), isNullable, schema.title)
-    is Recursive -> Model.Reference(name, description(), isNullable, schema.title)
-    is Reference -> Object.value(
-        reference,
-        FreeFormJson(description(), Constraints.Object(schema), isNullable, schema.title),
-        title = schema.title
-    )
-}
 
 /**
  * oneOf: [{ type: null }, { type: string }]

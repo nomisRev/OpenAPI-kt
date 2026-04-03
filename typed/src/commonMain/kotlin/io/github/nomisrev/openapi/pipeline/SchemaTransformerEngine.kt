@@ -5,8 +5,10 @@ import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.pipeline.plugins.fallback.FallbackPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.implicit.ImplicitCollectionPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.implicit.ImplicitEnumPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.implicit.ImplicitObjectPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.CollectionPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.EnumPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.typed.ObjectPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.PrimitivePlugin
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
@@ -99,9 +101,11 @@ class SchemaTransformerEngineBuilder {
     fun defaults() {
         addFirst(Phase.TYPED, EnumPlugin)
         addFirst(Phase.TYPED, CollectionPlugin)
+        addFirst(Phase.TYPED, ObjectPlugin)
         addFirst(Phase.TYPED, PrimitivePlugin)
         addFirst(Phase.IMPLICIT, ImplicitEnumPlugin)
         addFirst(Phase.IMPLICIT, ImplicitCollectionPlugin)
+        addFirst(Phase.IMPLICIT, ImplicitObjectPlugin)
         addFirst(Phase.FALLBACK, FallbackPlugin)
     }
 

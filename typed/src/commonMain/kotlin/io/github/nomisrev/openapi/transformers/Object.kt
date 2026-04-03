@@ -2,17 +2,19 @@ package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
-import io.github.nomisrev.openapi.registry.Registry
-import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.AdditionalProperties
+import io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed
+import io.github.nomisrev.openapi.parser.AdditionalProperties.PSchema
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.readOnly
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.registry.writeOnly
+import io.github.nomisrev.openapi.routes.SchemaContext
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.toObject(
@@ -72,3 +74,74 @@ private suspend fun ResolvedSchema.additionalProperties(context: SchemaContext) 
             ap.value.toModel(name.nest(NamingContext.AdditionalProperties), context)
         )
     }
+
+context(ctx: Registry.Scope)
+suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContext): Model? =
+    when (val ap = schema.additionalProperties) {
+        null -> null
+        is PSchema -> buildTypedAdditionalPropertiesModel(context, ap)
+        is Allowed -> if (ap.value) null else buildAllowedAdditionalPropertiesModel()
+    }
+
+context(ctx: Registry.Scope)
+internal suspend fun ResolvedSchema.buildTypedAdditionalPropertiesModel(
+    context: SchemaContext,
+    ap: PSchema,
+): Model =
+    when (this) {
+        is ResolvedSchema.Recursive, is ResolvedSchema.Reference ->
+            Model.Object(
+                name,
+                description(),
+                schema.title,
+                mapOf(
+                    "values" to Model.Object.Property(
+                        Model.Collection(
+                            inner = ap.value.toModel(name.nest(NamingContext.AdditionalProperties), context),
+                            default = Model.Default.Value(emptyList()),
+                            description = null,
+                            title = null,
+                            constraint = null,
+                            isNullable = false,
+                        ),
+                        false
+                    )
+                ),
+                Model.Object.AdditionalProperties.False,
+                isNullable
+            )
+
+        is ResolvedSchema.Value ->
+            Model.Collection(
+                inner = ap.value.toModel(name, context),
+                default = Model.Default.Value(emptyList()),
+                description = description(),
+                constraint = null,
+                isNullable = isNullable,
+                title = schema.title
+            )
+    }
+
+context(ctx: Registry.Scope)
+internal suspend fun ResolvedSchema.buildAllowedAdditionalPropertiesModel(): Model =
+    when (this) {
+        is ResolvedSchema.Recursive if name.isTopLevel() ->
+            Model.Object(name, description(), schema.title, emptyMap(), false, isNullable)
+
+        is ResolvedSchema.Reference ->
+            Model.Object(name, description(), schema.title, emptyMap(), false, isNullable)
+
+        is ResolvedSchema.Recursive -> Model.Primitive.Unit(description(), isNullable, schema.title)
+        is ResolvedSchema.Value -> Model.Primitive.Unit(description(), isNullable, schema.title)
+    }
+
+context(ctx: Registry.Scope)
+internal suspend fun ResolvedSchema.fallback(): Model = when (this) {
+    is ResolvedSchema.Value -> Model.FreeFormJson(description(), io.github.nomisrev.openapi.Constraints.Object(schema), isNullable, schema.title)
+    is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
+    is ResolvedSchema.Reference -> Model.Object.value(
+        reference,
+        Model.FreeFormJson(description(), io.github.nomisrev.openapi.Constraints.Object(schema), isNullable, schema.title),
+        title = schema.title
+    )
+}

@@ -7,4 +7,6 @@ object PluginKeys {
     val ImplicitEnum = PluginKey("implicit-enum")
     val Collection = PluginKey("collection")
     val ImplicitCollection = PluginKey("implicit-collection")
+    val Object = PluginKey("object")
+    val ImplicitObject = PluginKey("implicit-object")
 }
