@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kotlin Builder DSL"
+  short_description: "Write ergonomic DSLs for Kotlin ADTs"
+  default_prompt: "Add or update an AWS SDK Kotlin-style builder DSL for this existing Kotlin type, with strong end-user ergonomics for lists, sets, maps, nested ADTs, defaults, and required fields."
