@@ -14,6 +14,8 @@ import io.github.nomisrev.openapi.pipeline.plugins.fallback.FallbackPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.implicit.ImplicitCollectionPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.implicit.ImplicitEnumPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.implicit.ImplicitObjectPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.reference.DiscriminatedObjectPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.reference.DiscriminatedSubtypePlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.CollectionPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.EnumPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.ObjectPlugin
@@ -108,6 +110,8 @@ class SchemaTransformerEngineBuilder {
     private val interceptors = mutableListOf<ModelInterceptor>()
 
     fun defaults() {
+        addFirst(Phase.REFERENCE, DiscriminatedSubtypePlugin)
+        addFirst(Phase.REFERENCE, DiscriminatedObjectPlugin)
         addFirst(Phase.COMPOSITE, AllOfNullableFlattenPlugin)
         addFirst(Phase.COMPOSITE, AllOfPlugin)
         addFirst(Phase.COMPOSITE, OneOfNullableFlattenPlugin)
