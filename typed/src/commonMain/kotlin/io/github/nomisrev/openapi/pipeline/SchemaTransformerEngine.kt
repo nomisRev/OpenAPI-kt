@@ -4,6 +4,12 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.pipeline.plugins.composite.AllOfNullableFlattenPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.composite.AllOfPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.composite.AnyOfNullableFlattenPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.composite.AnyOfPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.composite.AnyOfSinglePlugin
+import io.github.nomisrev.openapi.pipeline.plugins.composite.OneOfNullableFlattenPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.composite.OneOfPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.composite.OneOfSinglePlugin
 import io.github.nomisrev.openapi.pipeline.plugins.fallback.FallbackPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.implicit.ImplicitCollectionPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.implicit.ImplicitEnumPlugin
@@ -104,6 +110,12 @@ class SchemaTransformerEngineBuilder {
     fun defaults() {
         addFirst(Phase.COMPOSITE, AllOfNullableFlattenPlugin)
         addFirst(Phase.COMPOSITE, AllOfPlugin)
+        addFirst(Phase.COMPOSITE, OneOfNullableFlattenPlugin)
+        addFirst(Phase.COMPOSITE, OneOfSinglePlugin)
+        addFirst(Phase.COMPOSITE, OneOfPlugin)
+        addFirst(Phase.COMPOSITE, AnyOfNullableFlattenPlugin)
+        addFirst(Phase.COMPOSITE, AnyOfSinglePlugin)
+        addFirst(Phase.COMPOSITE, AnyOfPlugin)
         addFirst(Phase.TYPED, EnumPlugin)
         addFirst(Phase.TYPED, CollectionPlugin)
         addFirst(Phase.TYPED, TypeArrayPlugin)

@@ -12,4 +12,10 @@ object PluginKeys {
     val TypeArray = PluginKey("type-array")
     val AllOfNullable = PluginKey("all-of-nullable")
     val AllOf = PluginKey("all-of")
+    val OneOfNullable = PluginKey("one-of-nullable")
+    val OneOfSingle = PluginKey("one-of-single")
+    val OneOf = PluginKey("one-of")
+    val AnyOfNullable = PluginKey("any-of-nullable")
+    val AnyOfSingle = PluginKey("any-of-single")
+    val AnyOf = PluginKey("any-of")
 }
