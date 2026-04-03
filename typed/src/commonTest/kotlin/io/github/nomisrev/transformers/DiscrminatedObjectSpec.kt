@@ -152,5 +152,7 @@ private inline fun testScope(api: OpenAPI, block: context(Registry.Scope) () -> 
 
         override suspend fun peek(ref: String): Schema =
             requireNotNull(api.components.schemas.getValue(ref.schemaName()).valueOrNull())
+
+        override fun registry(): Registry = Registry(api)
     })
 }

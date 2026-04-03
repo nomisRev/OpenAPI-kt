@@ -6,6 +6,7 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.pipeline.SchemaTransformerEngine
 import io.github.nomisrev.openapi.transformers.toModel
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.yield
@@ -32,7 +33,9 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
 
     suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
         with(ScopeImpl(null, emptySet())) {
-            resolve(name, context) { it.toModel(context, true) }
+            resolve(name, context) {
+                SchemaTransformerEngine.default().transform(this, this@Registry, it, context, true)
+            }
         }
 
     interface Scope {
@@ -52,6 +55,8 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
          */
         suspend fun ReferenceOr<Schema>.peek(): Schema
         suspend fun peek(ref: String): Schema
+
+        fun registry(): Registry
     }
 
     // Layer of indirection to keep `Registry.Scope` construction private
@@ -70,6 +75,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
          */
         private val forceContext: SchemaContext? = null,
     ) : Scope {
+        override fun registry(): Registry = this@Registry
         override suspend fun ReferenceOr<Schema>.peek(): Schema = when (this) {
             is ReferenceOr.Value<Schema> -> value
             is ReferenceOr.Reference if ref == "#" -> requireNotNull(currentAnchor) {
@@ -226,7 +232,9 @@ suspend fun ReferenceOr<Schema>.peek(): Schema = with(ctx) { peek() }
 
 context(ctx: Registry.Scope)
 suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
-    resolve(name, context) { it.toModel(context, true) }
+    resolve(name, context) {
+        SchemaTransformerEngine.default().transform(ctx, ctx.registry(), it, context, true)
+    }
 
 context(ctx: Registry)
 suspend fun ReferenceOr<Schema>.toModel(name: NamingContext.Head, context: SchemaContext): Model =

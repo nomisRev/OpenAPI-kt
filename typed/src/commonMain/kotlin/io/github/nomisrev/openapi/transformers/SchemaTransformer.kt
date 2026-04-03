@@ -115,18 +115,18 @@ suspend fun ResolvedSchema.toModel(context: SchemaContext, resolveReference: Boo
     }
 }
 
-private fun Schema.compositeShouldTakePrecedenceOverType(): Boolean =
+internal fun Schema.compositeShouldTakePrecedenceOverType(): Boolean =
     listOfNotNull(allOf, oneOf, anyOf)
         .flatten()
         .any(ReferenceOr<Schema>::addsStructuralCompositeShape)
 
-private fun ReferenceOr<Schema>.addsStructuralCompositeShape(): Boolean =
+internal fun ReferenceOr<Schema>.addsStructuralCompositeShape(): Boolean =
     when (this) {
         is ReferenceOr.Reference -> true
         is ReferenceOr.Value<Schema> -> value.addsStructuralCompositeShape()
     }
 
-private fun Schema.addsStructuralCompositeShape(): Boolean =
+internal fun Schema.addsStructuralCompositeShape(): Boolean =
     type != null ||
             properties?.isNotEmpty() == true ||
             additionalProperties != null ||
@@ -148,7 +148,7 @@ private fun Schema.addsStructuralCompositeShape(): Boolean =
  * }
  */
 context(ctx: Registry.Scope)
-private suspend fun ResolvedSchema.flattenNull(
+internal suspend fun ResolvedSchema.flattenNull(
     schemas: List<ReferenceOr<Schema>>,
     build: suspend (List<ReferenceOr<Schema>>) -> Model,
 ): Model {
@@ -165,7 +165,7 @@ private suspend fun ResolvedSchema.flattenNull(
 }
 
 context(ctx: Registry.Scope)
-private suspend fun ResolvedSchema.flattenedSingleNullableBranch(
+internal suspend fun ResolvedSchema.flattenedSingleNullableBranch(
     branch: ReferenceOr<Schema>,
     context: SchemaContext,
 ): Model = when (branch) {

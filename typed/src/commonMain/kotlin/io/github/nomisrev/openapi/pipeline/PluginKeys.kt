@@ -10,4 +10,6 @@ object PluginKeys {
     val Object = PluginKey("object")
     val ImplicitObject = PluginKey("implicit-object")
     val TypeArray = PluginKey("type-array")
+    val AllOfNullable = PluginKey("all-of-nullable")
+    val AllOf = PluginKey("all-of")
 }
