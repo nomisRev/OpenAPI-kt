@@ -10,6 +10,7 @@ import io.github.nomisrev.openapi.pipeline.plugins.typed.CollectionPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.EnumPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.ObjectPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.PrimitivePlugin
+import io.github.nomisrev.openapi.pipeline.plugins.typed.TypeArrayPlugin
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
@@ -101,6 +102,7 @@ class SchemaTransformerEngineBuilder {
     fun defaults() {
         addFirst(Phase.TYPED, EnumPlugin)
         addFirst(Phase.TYPED, CollectionPlugin)
+        addFirst(Phase.TYPED, TypeArrayPlugin)
         addFirst(Phase.TYPED, ObjectPlugin)
         addFirst(Phase.TYPED, PrimitivePlugin)
         addFirst(Phase.IMPLICIT, ImplicitEnumPlugin)

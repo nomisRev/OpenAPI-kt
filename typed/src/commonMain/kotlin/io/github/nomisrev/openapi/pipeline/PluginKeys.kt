@@ -9,4 +9,5 @@ object PluginKeys {
     val ImplicitCollection = PluginKey("implicit-collection")
     val Object = PluginKey("object")
     val ImplicitObject = PluginKey("implicit-object")
+    val TypeArray = PluginKey("type-array")
 }
