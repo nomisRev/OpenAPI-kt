@@ -13,8 +13,8 @@ RUN npm install -g npm@11.12.1 && \
 
 # Copy the JetBrains AI proxy extension (URLs already point to host.docker.internal)
 # so the container can reach the proxy running on the host.
-RUN mkdir -p /root/.pi/extensions
-COPY jetbrainsai-proxies.js /root/.pi/extensions/jetbrainsai-proxies.js
+RUN mkdir -p /root/.pi/agent/extensions
+COPY jetbrainsai-proxies.js /root/.pi/agent/extensions/jetbrainsai-proxies.js
 
 WORKDIR /app
 
