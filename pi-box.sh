@@ -9,4 +9,4 @@ docker run -it --rm \
   -v "$HOME/.gradle":/root/.gradle \
   -v "$HOME/.m2":/root/.m2 \
   -w /app \
-  pi-box
+  pi-box:latest

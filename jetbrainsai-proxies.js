@@ -1,10 +1,10 @@
 /**
- * Routes Pi providers through the OpenCode proxy defined in ~/.config/opencode/opencode.json.
+ * Routes Pi providers through the pi proxy
  *
  * Proxied providers:
- *   anthropic     -> http://host.docker.internal:19516/wire/39b25b562368f306f9d5fcc886959c4d/opencode/anthropic
- *   google-vertex -> http://host.docker.internal:19516/wire/39b25b562368f306f9d5fcc886959c4d/opencode/vertex
- *   openai        -> http://host.docker.internal:19516/wire/39b25b562368f306f9d5fcc886959c4d/opencode/openai
+ *   anthropic     -> http://host.docker.internal:19516/wire/39b25b562368f306f9d5fcc886959c4d/pi/anthropic
+ *   google-vertex -> http://host.docker.internal:19516/wire/39b25b562368f306f9d5fcc886959c4d/pi/vertex
+ *   openai        -> http://host.docker.internal:19516/wire/39b25b562368f306f9d5fcc886959c4d/pi/openai
  */
 export default function (pi) {
   pi.registerProvider("anthropic", {
