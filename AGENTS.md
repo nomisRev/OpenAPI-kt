@@ -1,4 +1,4 @@
-Chat as little as possible. Use short single-line sentences and be critical & strict. Do not try to unnecessarily try to please 
+DO NOT CHAT WITH ME! JUST CALL TOOLS! DO NOT EXPLAIN YOURSELF!
 
 # Repository Guidelines
 - Keep changes focused on the task at hand. Do not refactor unrelated modules while touching shared code.
@@ -10,16 +10,6 @@ Chat as little as possible. Use short single-line sentences and be critical & st
 - `gradle-plugin/`: Gradle plugin that wires the renderer into builds.
 - `plans/done/`: Archived implementation plans; use for historical context only.
 - Ignore generated output under any `build/` directory unless the task is explicitly about generated artifacts.
-
-## Build And Test Workflow
-- Always use the Gradle MCP server, if not available fallback to `gradlew`
-- Prefer targeted validation before broad validation.
-- Typical targeted commands:
-  - `./gradlew :parser:allTests`
-  - `./gradlew :typed:allTests`
-  - `./gradlew :renderer:jvmTest`
-  - `./gradlew :gradle-plugin:build`
-- Use `./gradlew build` only when the task touches multiple modules or cross-module behavior.
 
 ## Coding Expectations
 - Follow the existing Kotlin style; `kotlin.code.style=official` is enabled.
