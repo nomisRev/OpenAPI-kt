@@ -5,8 +5,9 @@
  * Usage:
  *   npx ts-node .pi/gradle-test.ts                          – run all tests
  *   npx ts-node .pi/gradle-test.ts <module>                 – run tests for one module
- *   npx ts-node .pi/gradle-test.ts inspect <testName>       – inspect a stored failure
- *   npx ts-node .pi/gradle-test.ts inspect <module> <name>  – inspect in a specific module
+ *   npx ts-node .pi/gradle-test.ts inspect <testName>                – inspect a stored failure
+ *   npx ts-node .pi/gradle-test.ts inspect <module> <name>           – inspect in a specific module
+ *   npx ts-node .pi/gradle-test.ts inspect <name> --lines=N          – limit stack trace to N lines (0 = unlimited)
  *
  * Failures are persisted to .pi/gradle-test-failures.json.
  */
@@ -323,9 +324,20 @@ async function handleRun(root: string, targetModule: string | undefined): Promis
 
 async function handleInspect(root: string, parts: string[]): Promise<void> {
   if (parts.length === 0) {
-    console.error("Usage: gradle-test inspect [module] <testName>");
+    console.error("Usage: gradle-test inspect [module] <testName> [--lines=N]");
     process.exit(1);
   }
+
+  // Extract --lines=N flag before processing other args.
+  let traceLines = 10;
+  const args = parts.filter((p) => {
+    const m = p.match(/^--lines=(\d+)$/);
+    if (m) {
+      traceLines = parseInt(m[1], 10);
+      return false;
+    }
+    return true;
+  });
 
   const store = await loadStore(root);
 
@@ -333,11 +345,11 @@ async function handleInspect(root: string, parts: string[]): Promise<void> {
   let testName: string;
 
   const knownModules = [...new Set(store.failures.map((f) => f.module))];
-  if (parts.length >= 2 && knownModules.includes(parts[0])) {
-    moduleName = parts[0];
-    testName = parts.slice(1).join(" ");
+  if (args.length >= 2 && knownModules.includes(args[0])) {
+    moduleName = args[0];
+    testName = args.slice(1).join(" ");
   } else {
-    testName = parts.join(" ");
+    testName = args.join(" ");
   }
 
   const needle = testName.toLowerCase();
@@ -352,19 +364,26 @@ async function handleInspect(root: string, parts: string[]): Promise<void> {
     process.exit(1);
   }
 
+  // When the same test failed on multiple platforms, prefer jvm.
+  const deduped: Failure[] = [];
+  const byName = new Map<string, Failure[]>();
   for (const m of matches) {
-    const header = `${m.name}  [${m.module}${m.platform ? ", " + m.platform : ""}]`;
-    const bar = "─".repeat(header.length);
-    console.log(bar);
-    console.log(header);
-    console.log(bar);
-    if (m.message) {
-      console.log();
-      console.log(m.message);
-      console.log();
-    }
+    const key = `${m.module}::${m.name}`;
+    if (!byName.has(key)) byName.set(key, []);
+    byName.get(key)!.push(m);
+  }
+  for (const group of byName.values()) {
+    const jvm = group.find((f) => f.platform === "jvm");
+    deduped.push(jvm ?? group[0]);
+  }
+
+  for (const m of deduped) {
     if (m.trace) {
-      console.log(m.trace);
+      const lines = m.trace.split("\n");
+      const truncated = traceLines > 0 && lines.length > traceLines
+        ? [...lines.slice(0, traceLines), `        ... (${lines.length - traceLines} more lines)`]
+        : lines;
+      console.log(truncated.join("\n"));
     }
     console.log();
   }
