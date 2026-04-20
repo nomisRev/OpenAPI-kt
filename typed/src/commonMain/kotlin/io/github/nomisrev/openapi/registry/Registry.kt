@@ -7,14 +7,19 @@ import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.pipeline.SchemaTransformerEngine
-import io.github.nomisrev.openapi.transformers.toModel
 import io.ktor.client.HttpClient
 import kotlinx.coroutines.yield
 
-inline fun <A> registry(openAPI: OpenAPI, block: context(Registry) () -> A): A =
-    Registry(openAPI).use { block(it) }
+inline fun <A> registry(
+    openAPI: OpenAPI,
+    engine: SchemaTransformerEngine = SchemaTransformerEngine.default(),
+    block: context(Registry) () -> A
+): A = Registry(openAPI, engine).use { block(it) }
 
-class Registry(val openAPI: OpenAPI) : AutoCloseable {
+class Registry(
+    val openAPI: OpenAPI,
+    val engine: SchemaTransformerEngine = SchemaTransformerEngine.default(),
+) : AutoCloseable {
     private val client: HttpClient = HttpClient()
     private val cache: MutableSet<NamingContext.Reference> = mutableSetOf()
 
@@ -32,9 +37,9 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
         ReferenceOr.schema(name).toModel(NamingContext(this, emptyList()), context)
 
     suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
-        with(ScopeImpl(null, emptySet())) {
-            resolve(name, context) {
-                SchemaTransformerEngine.default().transform(this, this@Registry, it, context, true)
+        with(scope()) {
+            resolve(name, context) { scope, resolved ->
+                engine.transform(scope, this@Registry, resolved, context, true)
             }
         }
 
@@ -46,7 +51,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
         suspend fun <A> ReferenceOr<Schema>.resolve(
             name: NamingContext,
             context: SchemaContext,
-            block: suspend context(Scope) (ResolvedSchema) -> A
+            block: suspend (Scope, ResolvedSchema) -> A
         ): A
 
         /**
@@ -62,25 +67,14 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
     // Layer of indirection to keep `Registry.Scope` construction private
     private inner class ScopeImpl(
         private val currentAnchor: Pair<NamingContext, Schema>?,
-        // TODO: this probably isn't right... ? What about duplicate inline Value Schema's?
         private val expanding: Set<NamingContext>,
-        /**
-         * When non-null, overrides the `context` argument passed to [resolve] for
-         * `$ref` resolutions within this scope. This is used to propagate a Null
-         * [SchemaContext] into schemas that are not themselves context-specific: a
-         * schema that has no readOnly / writeOnly properties (and therefore gets a
-         * Null context) should not cause the context-specific schemas it references
-         * to pick up the outer Read / Write context — they should also resolve as
-         * Null (no suffix).
-         */
         private val forceContext: SchemaContext? = null,
     ) : Scope {
         override fun registry(): Registry = this@Registry
         override suspend fun ReferenceOr<Schema>.peek(): Schema = when (this) {
             is ReferenceOr.Value<Schema> -> value
-            is ReferenceOr.Reference if ref == "#" -> requireNotNull(currentAnchor) {
-                "Cannot resolve top-level schema without anchor."
-            }.second
+            is ReferenceOr.Reference if ref == "#" -> currentAnchor?.second
+                ?: error("Cannot resolve top-level schema without anchor.")
 
             is ReferenceOr.Reference -> peek(ref)
         }
@@ -102,15 +96,49 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
         override suspend fun <A> ReferenceOr<Schema>.resolve(
             name: NamingContext,
             context: SchemaContext,
-            block: suspend context(Scope) (ResolvedSchema) -> A
+            block: suspend (Scope, ResolvedSchema) -> A
         ): A = when (this) {
-            is ReferenceOr.Reference -> resolve(forceContext ?: context, block)
-            is ReferenceOr.Value<Schema> -> {
-                if (value.recursiveAnchor == true) block(
-                    ScopeImpl(Pair(name, value), expanding, forceContext),
-                    ResolvedSchema.Value(name, value)
+            is ReferenceOr.Reference if ref == "#" -> {
+                @Suppress("RETURN_VALUE_NOT_USED")
+                requireNotNull(currentAnchor) { "Cannot resolve top-level schema without anchor." }
+                block(this@ScopeImpl, ResolvedSchema.Recursive(currentAnchor.first, currentAnchor.second))
+            }
+            is ReferenceOr.Reference -> {
+                val peeked = peek()
+                val contextSpecific = readOnly == true || writeOnly == true || peeked.readOrWriteOnly()
+                val resolvedRef = if (contextSpecific) {
+                    forceContext ?: context
+                } else {
+                    SchemaContext.Null
+                }
+                val nextForceContext = if (!contextSpecific) SchemaContext.Write else null
+                val reference = NamingContext.Reference(ref.schemaName(), resolvedRef)
+                val namingContext = NamingContext(reference, emptyList())
+                val resolved = if (expanding.contains(namingContext)) {
+                    ResolvedSchema.Recursive(namingContext, peeked)
+                } else {
+                    ResolvedSchema.Reference(reference, peeked)
+                }
+                val nextAnchor = if (peeked.recursiveAnchor == true) Pair(namingContext, peeked) else currentAnchor
+                block(
+                    ScopeImpl(nextAnchor, expanding + namingContext, nextForceContext),
+                    resolved
                 )
-                else block(this@ScopeImpl, ResolvedSchema.Value(name, value))
+            }
+            is ReferenceOr.Value<Schema> -> {
+                val hasReadOnlyOrWriteOnly = value.readOrWriteOnly()
+                val nextContext = if (hasReadOnlyOrWriteOnly) (forceContext ?: context) else SchemaContext.Null
+                if (value.recursiveAnchor == true) {
+                    block(
+                        ScopeImpl(Pair(name, value), expanding, nextContext),
+                        ResolvedSchema.Value(name, value)
+                    )
+                } else {
+                    block(
+                        ScopeImpl(currentAnchor, expanding, nextContext),
+                        ResolvedSchema.Value(name, value)
+                    )
+                }
             }
         }
 
@@ -178,7 +206,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
          */
         private suspend fun <A> ReferenceOr.Reference.resolve(
             context: SchemaContext,
-            block: suspend context(Scope) (ResolvedSchema) -> A
+            block: suspend (Scope, ResolvedSchema) -> A
         ): A = if (ref == "#") {
             @Suppress("RETURN_VALUE_NOT_USED")
             requireNotNull(currentAnchor) { "Cannot resolve top-level schema without anchor." }
@@ -208,7 +236,7 @@ class Registry(val openAPI: OpenAPI) : AutoCloseable {
             // to context-specific schemas should resolve as Write (the plain/neutral variant) rather
             // than picking up the outer Read context and producing leaked "Read"-suffixed types.
             val nextForceContext = if (!contextSpecific) SchemaContext.Write else null
-            block.invoke(ScopeImpl(currentAnchor, expanding + namingContext, nextForceContext), resolved)
+            block(ScopeImpl(currentAnchor, expanding + namingContext, nextForceContext), resolved)
         }
     }
 }
@@ -224,7 +252,7 @@ context(ctx: Registry.Scope)
 suspend fun <A> ReferenceOr<Schema>.resolve(
     name: NamingContext,
     context: SchemaContext,
-    block: suspend context(Registry.Scope) (ResolvedSchema) -> A
+    block: suspend (Registry.Scope, ResolvedSchema) -> A
 ): A = with(ctx) { resolve(name, context, block) }
 
 context(ctx: Registry.Scope)
@@ -232,8 +260,8 @@ suspend fun ReferenceOr<Schema>.peek(): Schema = with(ctx) { peek() }
 
 context(ctx: Registry.Scope)
 suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
-    resolve(name, context) {
-        SchemaTransformerEngine.default().transform(ctx, ctx.registry(), it, context, true)
+    resolve(name, context) { scope, resolved ->
+        scope.registry().engine.transform(scope, scope.registry(), resolved, context, true)
     }
 
 context(ctx: Registry)
@@ -244,4 +272,3 @@ suspend fun ReferenceOr<Schema>.toModel(name: NamingContext.Head, context: Schem
 context(ctx: Registry)
 suspend fun ReferenceOr<Schema>.toModel(name: NamingContext, context: SchemaContext): Model =
     with(ctx) { toModel(name, context) }
-

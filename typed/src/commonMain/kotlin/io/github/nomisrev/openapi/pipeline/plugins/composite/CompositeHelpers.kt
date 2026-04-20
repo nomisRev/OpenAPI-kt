@@ -10,7 +10,6 @@ import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.isNull
 import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.toModel
-import io.github.nomisrev.openapi.transformers.toModel
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 context(ctx: Registry.Scope)
@@ -37,8 +36,22 @@ internal suspend fun ResolvedSchema.flattenedSingleNullableBranch(
 ): Model = when (branch) {
     is ReferenceOr.Reference -> branch.toModel(name, context)
     is ReferenceOr.Value<Schema> -> when (this) {
-        is ResolvedSchema.Reference -> ResolvedSchema.Reference(reference, branch.value).toModel(context, true)
-        is ResolvedSchema.Recursive -> ResolvedSchema.Recursive(name, branch.value).toModel(context, true)
+        is ResolvedSchema.Reference -> ctx.registry().engine.transform(
+            ctx,
+            ctx.registry(),
+            ResolvedSchema.Reference(reference, branch.value),
+            context,
+            true
+        )
+
+        is ResolvedSchema.Recursive -> ctx.registry().engine.transform(
+            ctx,
+            ctx.registry(),
+            ResolvedSchema.Recursive(name, branch.value),
+            context,
+            true
+        )
+
         is ResolvedSchema.Value -> branch.toModel(name, context)
     }
 }

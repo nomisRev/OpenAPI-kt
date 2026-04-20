@@ -84,7 +84,7 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
             )
         )   // TODO: To remove 'resolveReference' make this toObject to work with resolveReference = false
             //  It's the only place where indirect recursion due to subtype relationship is broken and results in OOM
-            .toObject(context, properties)
+            .let { scope.registry().engine.transform(scope, scope.registry(), it, context, false) as Model.Object }
     }
 
     return Model.DiscriminatedObject(

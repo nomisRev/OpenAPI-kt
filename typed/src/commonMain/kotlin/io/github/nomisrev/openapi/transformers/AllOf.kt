@@ -31,7 +31,9 @@ context(scope: Registry.Scope)
 private suspend fun ResolvedSchema.resolveAllOf(
     allOf: List<ReferenceOr<Schema>>,
     context: SchemaContext
-): Model = ReferenceOr.value(allOf.map { it.peek() }.reduce { acc, or -> acc.merge(or) }).toModel(name, context)
+): Model = with(scope.registry()) {
+    ReferenceOr.value(allOf.map { it.peek() }.reduce { acc, or -> acc.merge(or) }).toModel(name, context)
+}
 
 context(scope: Registry.Scope)
 private tailrec suspend fun ReferenceOr<Schema>.getSuperTypeOrNull(

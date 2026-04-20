@@ -58,8 +58,8 @@ suspend fun ResolvedSchema.properties(
 ): Map<String, Model.Object.Property> = buildMap {
     properties.forEach { (name, refOrSchema) ->
         refOrSchema.takeIf(context)
-            ?.resolve(this@properties.name.nest(NamingContext.ObjectProperty(name)), context) { propSchema ->
-                val model = propSchema.toModel(context, false)
+            ?.resolve(this@properties.name.nest(NamingContext.ObjectProperty(name)), context) { scope, propSchema ->
+                val model = scope.registry().engine.transform(scope, scope.registry(), propSchema, context, false)
                 put(name, Model.Object.Property(model, schema.required.contains(name)))
             }
     }

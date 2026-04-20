@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi
 
 import io.github.nomisrev.openapi.parser.Server
 import io.github.nomisrev.openapi.parser.OpenAPI
+import io.github.nomisrev.openapi.pipeline.SchemaTransformerEngine
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.SchemaContext
@@ -55,9 +56,10 @@ private tailrec suspend fun Set<NamingContext.Reference>.topLevelModels(registry
 suspend fun OpenAPI.toApiTree(
     name: String = info.title.toPascalCase(),
     preprocessor: OpenApiPreprocessor = OpenApiPreprocessor.None,
+    engine: SchemaTransformerEngine = SchemaTransformerEngine.default(),
 ): ApiTree {
     val preprocessed = preprocessedBy(preprocessor)
-    return Registry(preprocessed).use { registry ->
+    return Registry(preprocessed, engine).use { registry ->
         val globalServers = preprocessed.servers.normalizeForClientGeneration()
         val routes = with(registry) { preprocessed.toRoutes() }
         val models = with(registry) {

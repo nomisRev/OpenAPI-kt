@@ -39,7 +39,9 @@ suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
                 null -> Model.FreeFormJson(description = null, constraint = null, isNullable = false, title = null)
             }
 
-            val inner = wrapIfNeeded(schema.items?.toModel(name, context))
+            val inner = wrapIfNeeded(
+                schema.items?.toModel(name, context)
+            ).normalizeCollectionItemWrapper()
 
             Model.Object(
                 name,
@@ -66,7 +68,7 @@ suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
 
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.toCollection(context: SchemaContext): Model.Collection {
-    val inner = schema.items?.toModel(name, context)
+    val inner = schema.items?.toModel(name, context)?.normalizeCollectionItemWrapper()
         ?: Model.FreeFormJson(description = null, constraint = null, isNullable = false, title = null)
     return Model.Collection(
         inner,
@@ -94,6 +96,15 @@ private fun Model.Object.nestContext(prefix: NamingContext.Nested): Model.Object
 }
 
 private fun NamingContext.prepend(prefix: NamingContext.Nested) = copy(nested = listOf(prefix) + nested)
+
+private fun Model.normalizeCollectionItemWrapper(): Model = when (this) {
+    is Model.Object -> {
+        val value = properties["value"]?.model
+        if (value is Model.FreeFormJson && isScalarWrapper) copy(isScalarWrapper = false) else this
+    }
+    is Model.Collection -> copy(inner = inner.normalizeCollectionItemWrapper())
+    else -> this
+}
 
 private fun Model.prependContextIfInline(prefix: NamingContext.Nested): Model = when (this) {
     is Model.Enum if !context.isTopLevel() -> copy(context = context.prepend(prefix))

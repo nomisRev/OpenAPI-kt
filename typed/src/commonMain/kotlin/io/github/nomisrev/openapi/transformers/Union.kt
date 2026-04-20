@@ -176,22 +176,27 @@ private suspend fun ResolvedSchema.buildUnionCases(
      *  then the non-referenced case should inherit the outer name.
      */
     val cases = uniqueSubtypes.mapIndexed { index, subtype ->
-        subtype.resolve(unionContexts[index], context) {
+        subtype.resolve(unionContexts[index], context) { scope, resolved ->
             val discriminatorValues = caseDiscriminators[index]
             val model = when (dispatch) {
-                is UnionDispatch.NativeDiscriminator -> it.toDiscriminatedUnionCaseModel(
-                    context = context,
-                    caseContext = unionContexts[index],
-                    discriminatorField = dispatch.propertyName,
-                    caseDiscriminator = discriminatorValues.singleOrNull(),
-                )
+                is UnionDispatch.NativeDiscriminator -> with(scope) {
+                    resolved.toDiscriminatedUnionCaseModel(
+                        context = context,
+                        caseContext = unionContexts[index],
+                        discriminatorField = dispatch.propertyName,
+                        caseDiscriminator = discriminatorValues.singleOrNull(),
+                    )
+                }
 
-                is UnionDispatch.TaggedCustom -> it.toTaggedCustomUnionCaseModel(
-                    context = context,
-                    caseContext = unionContexts[index],
-                )
+                is UnionDispatch.TaggedCustom -> with(scope) {
+                    resolved.toTaggedCustomUnionCaseModel(
+                        context = context,
+                        caseContext = unionContexts[index],
+                    )
+                }
 
-                UnionDispatch.Structural -> it.toModel(context, false)
+                UnionDispatch.Structural ->
+                    scope.registry().engine.transform(scope, scope.registry(), resolved, context, false)
             }
             Model.Union.Case(model, discriminatorValues)
         }
@@ -216,7 +221,7 @@ private suspend fun ResolvedSchema.toDiscriminatedUnionCaseModel(
 
         is ResolvedSchema.Recursive -> ResolvedSchema.Recursive(caseContext, normalizedSchema)
     }
-    return normalized.toModel(context, true)
+    return ctx.registry().engine.transform(ctx, ctx.registry(), normalized, context, true)
 }
 
 context(ctx: Registry.Scope)
@@ -229,9 +234,9 @@ private suspend fun ResolvedSchema.toTaggedCustomUnionCaseModel(
         is ResolvedSchema.Reference,
         is ResolvedSchema.Value -> ResolvedSchema.Value(caseContext, normalizedSchema)
 
-        is ResolvedSchema.Recursive -> return toModel(context, false)
+        is ResolvedSchema.Recursive -> return ctx.registry().engine.transform(ctx, ctx.registry(), this, context, false)
     }
-    return normalized.toModel(context, true)
+    return ctx.registry().engine.transform(ctx, ctx.registry(), normalized, context, true)
 }
 
 context(ctx: Registry.Scope)

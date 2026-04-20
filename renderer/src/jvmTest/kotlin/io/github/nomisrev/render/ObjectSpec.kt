@@ -503,6 +503,134 @@ val objectSpec by testSuite {
         "object/plain-model-no-read-suffix"
     ) { apiTree, config -> apiTree.render(config) }
 
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Test API", "version": "0.0.1" },
+          "paths": {
+            "/config": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "${'$'}ref": "#/components/schemas/ResponseConfig" }
+                      }
+                    }
+                  }
+                }
+              },
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "${'$'}ref": "#/components/schemas/RequestConfig" }
+                    }
+                  }
+                },
+                "responses": {
+                  "204": {
+                    "description": "No Content"
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Mode": {
+                "type": "string",
+                "enum": ["enabled", "disabled"]
+              },
+              "Enabled": {
+                "type": "boolean"
+              },
+              "ResponseConfig": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "mode": { "${'$'}ref": "#/components/schemas/Mode" },
+                  "enabled": { "${'$'}ref": "#/components/schemas/Enabled" }
+                },
+                "required": ["mode", "enabled"]
+              },
+              "RequestConfig": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "mode": { "${'$'}ref": "#/components/schemas/Mode" },
+                  "enabled": { "${'$'}ref": "#/components/schemas/Enabled" }
+                },
+                "required": ["mode", "enabled"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "object/neutral-leaf-no-split"
+    ) { apiTree, config -> apiTree.generateModels(config) }
+
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Test API", "version": "0.0.1" },
+          "paths": {
+            "/advisories": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": { "${'$'}ref": "#/components/schemas/RepositoryAdvisoryCreate" }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "${'$'}ref": "#/components/schemas/RepositoryAdvisoryVulnerability" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "SecurityAdvisoryEcosystems": {
+                "type": "string",
+                "enum": ["rubygems", "npm"]
+              },
+              "RepositoryAdvisoryCreate": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "ecosystem": { "${'$'}ref": "#/components/schemas/SecurityAdvisoryEcosystems" }
+                },
+                "required": ["ecosystem"]
+              },
+              "RepositoryAdvisoryVulnerability": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "ecosystem": { "${'$'}ref": "#/components/schemas/SecurityAdvisoryEcosystems" }
+                },
+                "required": ["ecosystem"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "object/shared-enum-no-read-write-split"
+    ) { apiTree, config -> apiTree.generateModels(config) }
+
     // Read/Write variant: schema used as both request body (Write) and response (Read)
     // Both contexts exist → Read/Write suffixes are applied
     renderSpec(

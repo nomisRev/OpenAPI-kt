@@ -8,14 +8,14 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 public data class OrganizationSecretScanningAlert(
-  public val number: AlertNumberWrite? = null,
+  public val number: AlertNumber? = null,
   @SerialName("created_at")
-  public val createdAt: AlertCreatedAtWrite? = null,
+  public val createdAt: AlertCreatedAt? = null,
   @SerialName("updated_at")
   public val updatedAt: NullableAlertUpdatedAt? = null,
-  public val url: AlertUrlWrite? = null,
+  public val url: AlertUrl? = null,
   @SerialName("html_url")
-  public val htmlUrl: AlertHtmlUrlWrite? = null,
+  public val htmlUrl: AlertHtmlUrl? = null,
   @SerialName("locations_url")
   public val locationsUrl: String? = null,
   public val state: SecretScanningAlertState? = null,

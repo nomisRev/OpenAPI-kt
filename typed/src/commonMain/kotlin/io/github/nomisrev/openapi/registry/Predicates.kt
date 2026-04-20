@@ -12,12 +12,14 @@ import kotlin.contracts.contract
 
 context(ctx: Registry.Scope)
 suspend fun ReferenceOr<Schema>.readOnly(): Boolean? = when (this) {
+    is ReferenceOr.Reference if ref == "#" -> readOnly
     is ReferenceOr.Reference -> readOnly ?: with(ctx) { peek().readOnly }
     is ReferenceOr.Value -> value.readOnly
 }
 
 context(ctx: Registry.Scope)
 suspend fun ReferenceOr<Schema>.writeOnly(): Boolean? = when (this) {
+    is ReferenceOr.Reference if ref == "#" -> writeOnly
     is ReferenceOr.Reference -> writeOnly ?: with(ctx) { peek().writeOnly }
     is ReferenceOr.Value -> value.writeOnly
 }

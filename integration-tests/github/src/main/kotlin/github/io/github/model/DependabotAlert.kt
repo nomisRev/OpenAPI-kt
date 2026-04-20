@@ -10,22 +10,22 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 public data class DependabotAlert(
-  public val number: AlertNumberRead,
+  public val number: AlertNumber,
   public val state: State,
   public val dependency: Dependency,
   @SerialName("security_advisory")
   public val securityAdvisory: DependabotAlertSecurityAdvisory,
   @SerialName("security_vulnerability")
   public val securityVulnerability: DependabotAlertSecurityVulnerability,
-  public val url: AlertUrlRead,
+  public val url: AlertUrl,
   @SerialName("html_url")
-  public val htmlUrl: AlertHtmlUrlRead,
+  public val htmlUrl: AlertHtmlUrl,
   @SerialName("created_at")
-  public val createdAt: AlertCreatedAtRead,
+  public val createdAt: AlertCreatedAt,
   @SerialName("updated_at")
-  public val updatedAt: AlertUpdatedAtRead,
+  public val updatedAt: AlertUpdatedAt,
   @SerialName("dismissed_at")
-  public val dismissedAt: AlertDismissedAtRead?,
+  public val dismissedAt: AlertDismissedAt?,
   @SerialName("dismissed_by")
   public val dismissedBy: NullableSimpleUser?,
   @SerialName("dismissed_reason")
@@ -33,7 +33,7 @@ public data class DependabotAlert(
   @SerialName("dismissed_comment")
   public val dismissedComment: String?,
   @SerialName("fixed_at")
-  public val fixedAt: AlertFixedAtRead?,
+  public val fixedAt: AlertFixedAt?,
   @SerialName("auto_dismissed_at")
   public val autoDismissedAt: AlertAutoDismissedAt? = null,
   @SerialName("dismissal_request")

@@ -6,23 +6,23 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 public data class CodeScanningAlertItems(
-  public val number: AlertNumberWrite,
+  public val number: AlertNumber,
   @SerialName("created_at")
-  public val createdAt: AlertCreatedAtWrite,
+  public val createdAt: AlertCreatedAt,
   @SerialName("updated_at")
-  public val updatedAt: AlertUpdatedAtWrite? = null,
-  public val url: AlertUrlWrite,
+  public val updatedAt: AlertUpdatedAt? = null,
+  public val url: AlertUrl,
   @SerialName("html_url")
-  public val htmlUrl: AlertHtmlUrlWrite,
+  public val htmlUrl: AlertHtmlUrl,
   @SerialName("instances_url")
   public val instancesUrl: AlertInstancesUrl,
   public val state: CodeScanningAlertState?,
   @SerialName("fixed_at")
-  public val fixedAt: AlertFixedAtWrite? = null,
+  public val fixedAt: AlertFixedAt? = null,
   @SerialName("dismissed_by")
   public val dismissedBy: NullableSimpleUser?,
   @SerialName("dismissed_at")
-  public val dismissedAt: AlertDismissedAtWrite?,
+  public val dismissedAt: AlertDismissedAt?,
   @SerialName("dismissed_reason")
   public val dismissedReason: CodeScanningAlertDismissedReason?,
   @SerialName("dismissed_comment")

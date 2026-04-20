@@ -2,7 +2,6 @@ package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.FileSpec
 import io.github.nomisrev.openapi.parser.OpenAPI
-import io.github.nomisrev.openapi.routes.SchemaContext
 
 suspend fun OpenAPI.generate(
     config: RenderConfig = RenderConfig(),
@@ -41,24 +40,6 @@ private fun ApiTree.additionalFiles(config: RenderConfig): List<FileSpec> {
     return if (needsSerializationUtils) {
         listOf(generateSerializationUtils(config))
     } else emptyList()
-}
-
-/**
- * Computes the set of schema names that appear in both [SchemaContext.Read] and [SchemaContext.Write]
- * contexts within the model list. Only schemas present in both contexts will receive a Read/Write suffix.
- */
-private fun List<Model>.contextSpecificNames(): Set<String> {
-    val contextsByName = filterIsInstance<Model.ContextHolder>()
-        .mapNotNull { model ->
-            val ref = model.context.head as? NamingContext.Reference ?: return@mapNotNull null
-            ref.name to ref.context
-        }
-        .groupBy({ it.first }, { it.second })
-    return contextsByName
-        .filter { (_, contexts) ->
-            contexts.contains(SchemaContext.Read) && contexts.contains(SchemaContext.Write)
-        }
-        .keys
 }
 
 private fun Model.toFileSpecOrNull(config: RenderConfig): FileSpec? = when (this) {

@@ -16,7 +16,7 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<Strin
     val inner = ResolvedSchema.Value(
         name,
         schema.withoutEnumLikeValues().copy(description = null, default = null, nullable = false)
-    ).toModel(context, false)
+    ).let { ctx.registry().engine.transform(ctx, ctx.registry(), it, context, false) }
     val enumValues = enum.map(inner::toEnumValue)
     val enumDefault = enumDefault(inner)
     @Suppress("NullableToStringCall")
