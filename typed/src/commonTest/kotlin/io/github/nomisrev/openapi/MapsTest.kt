@@ -111,7 +111,7 @@ class MapsTest {
 
     val expectedMessages =
       Model.Collection.Map(
-        inner = expectedMessage,
+        inner = Model.Reference(context = NamingContext.Named("Message"), null),
         description = null,
         constraint = null,
       )
