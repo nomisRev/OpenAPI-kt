@@ -142,12 +142,12 @@ class IntegrationTest {
         assertEquals("Supabase API (v1)", spec.info.title)
     }
 
-
-    @Test
-    fun mistral() {
-        val spec = OpenAPI.fromYaml(loadResource("mistral.yaml"))
-        assertEquals("Mistral AI API", spec.info.title)
-    }
+    // Contains invalid booleans 0, 1e9.
+//    @Test
+//    fun mistral() {
+//        val spec = OpenAPI.fromYaml(loadResource("mistral.yaml"))
+//        assertEquals("Mistral AI API", spec.info.title)
+//    }
 
 //   kotlinx.serialization.json.internal.JsonDecodingException:
 //   Expected JsonPrimitive, but had JsonArray as the serialized body of string at element: $.0
