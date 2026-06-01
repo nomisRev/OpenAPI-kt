@@ -37,7 +37,7 @@ public sealed interface UserRead {
 
   public val profiles: UserProfiles?
 
-  @SerialName("Default")
+  @SerialName("User")
   @Serializable
   public data class Default(
     override val id: String? = null,

@@ -14,7 +14,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("${'$'}type")
 @Serializable
 public sealed interface ColorCodingWrite {
-  @SerialName("Default")
+  @SerialName("ColorCoding")
   @Serializable
   public data object Default : ColorCodingWrite
 

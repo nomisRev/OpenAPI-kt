@@ -22,7 +22,7 @@ public sealed interface IssueFolderRead {
 
   public val name: String?
 
-  @SerialName("Default")
+  @SerialName("IssueFolder")
   @Serializable
   public data class Default(
     override val id: String? = null,

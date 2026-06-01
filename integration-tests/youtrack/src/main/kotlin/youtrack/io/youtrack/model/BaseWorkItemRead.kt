@@ -20,7 +20,7 @@ public sealed interface BaseWorkItemRead {
   public val id: String?
 
   @JvmInline
-  @SerialName("Default")
+  @SerialName("BaseWorkItem")
   @Serializable
   public value class Default(
     override val id: String? = null,

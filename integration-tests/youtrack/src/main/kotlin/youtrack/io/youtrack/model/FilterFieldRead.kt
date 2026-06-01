@@ -20,7 +20,7 @@ public sealed interface FilterFieldRead {
 
   public val name: String?
 
-  @SerialName("Default")
+  @SerialName("FilterField")
   @Serializable
   public data class Default(
     override val id: String? = null,

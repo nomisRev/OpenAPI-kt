@@ -10,7 +10,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("${'$'}type")
 @Serializable
 public sealed interface UserGroupWrite {
-  @SerialName("Default")
+  @SerialName("UserGroup")
   @Serializable
   public data object Default : UserGroupWrite
 

@@ -108,10 +108,17 @@ private fun renderAbstractProperty(
 private fun Model.Object.Property.renderedTypeName(config: RenderConfig): TypeName =
     model.toTypeName(config).copy(nullable = model.isNullable || !isRequired)
 
-private fun Model.Object.discriminatorValue(): String =
-    (context.nested.lastOrNull { it is NamingContext.DiscriminatedObjectCase } as? NamingContext.DiscriminatedObjectCase)
-        ?.discriminator
-        ?: error("Expected discriminated object subtype naming context for $context")
+private fun Model.Object.discriminatorValue(): String {
+    val case =
+        (context.nested.lastOrNull { it is NamingContext.DiscriminatedObjectCase } as? NamingContext.DiscriminatedObjectCase)
+            ?: error("Expected discriminated object subtype naming context for $context")
+
+    return when {
+        case.discriminator != "Default" -> case.discriminator
+        context.head is NamingContext.Reference -> (context.head as NamingContext.Reference).name
+        else -> case.discriminator
+    }
+}
 
 private fun String.escapeForKdoc(): String =
     replace("%", "%%")

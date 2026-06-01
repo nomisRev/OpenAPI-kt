@@ -23,7 +23,7 @@ public sealed interface CustomFieldDefaultsRead {
 
   public val parent: CustomFieldRead?
 
-  @SerialName("Default")
+  @SerialName("CustomFieldDefaults")
   @Serializable
   public data class Default(
     override val id: String? = null,

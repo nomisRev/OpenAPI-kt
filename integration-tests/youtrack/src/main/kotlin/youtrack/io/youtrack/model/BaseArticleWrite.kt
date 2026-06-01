@@ -26,7 +26,7 @@ public sealed interface BaseArticleWrite {
 
   public val visibility: VisibilityWrite?
 
-  @SerialName("Default")
+  @SerialName("BaseArticle")
   @Serializable
   public data class Default(
     override val attachments: List<ArticleAttachmentWrite>? = null,

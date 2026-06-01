@@ -19,7 +19,7 @@ public sealed interface DatabaseAttributeValueRead {
   public val id: String?
 
   @JvmInline
-  @SerialName("Default")
+  @SerialName("DatabaseAttributeValue")
   @Serializable
   public value class Default(
     override val id: String? = null,

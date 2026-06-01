@@ -27,7 +27,7 @@ public sealed interface UserGroupRead {
 
   public val teamForProject: IssueFolderRead.Project?
 
-  @SerialName("Default")
+  @SerialName("UserGroup")
   @Serializable
   public data class Default(
     override val id: String? = null,

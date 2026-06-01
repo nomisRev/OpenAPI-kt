@@ -27,7 +27,7 @@ public sealed interface BundleElementWrite {
 
   public val color: FieldStyleWrite?
 
-  @SerialName("Default")
+  @SerialName("BundleElement")
   @Serializable
   public data class Default(
     override val name: String? = null,

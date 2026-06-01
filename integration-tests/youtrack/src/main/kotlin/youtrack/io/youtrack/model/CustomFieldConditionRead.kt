@@ -20,7 +20,7 @@ public sealed interface CustomFieldConditionRead {
 
   public val parent: ProjectCustomFieldRead?
 
-  @SerialName("Default")
+  @SerialName("CustomFieldCondition")
   @Serializable
   public data class Default(
     override val id: String? = null,

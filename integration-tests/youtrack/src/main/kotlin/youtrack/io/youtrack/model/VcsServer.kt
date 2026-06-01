@@ -18,7 +18,7 @@ public sealed interface VcsServer {
 
   public val url: String?
 
-  @SerialName("Default")
+  @SerialName("VcsServer")
   @Serializable
   public data class Default(
     override val id: String? = null,

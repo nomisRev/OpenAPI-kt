@@ -33,7 +33,7 @@ public sealed interface BundleElementRead {
 
   public val hasRunningJob: Boolean?
 
-  @SerialName("Default")
+  @SerialName("BundleElement")
   @Serializable
   public data class Default(
     override val id: String? = null,

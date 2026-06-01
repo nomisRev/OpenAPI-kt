@@ -17,7 +17,7 @@ public sealed interface BundleRead {
 
   public val isUpdateable: Boolean?
 
-  @SerialName("Default")
+  @SerialName("Bundle")
   @Serializable
   public data class Default(
     override val id: String? = null,

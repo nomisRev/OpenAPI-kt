@@ -30,7 +30,7 @@ public sealed interface ChangesProcessor {
 
   public val lookupIssuesInBranchName: Boolean?
 
-  @SerialName("Default")
+  @SerialName("ChangesProcessor")
   @Serializable
   public data class Default(
     override val id: String? = null,

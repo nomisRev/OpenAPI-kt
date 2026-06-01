@@ -13,7 +13,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("${'$'}type")
 @Serializable
 public sealed interface CommandVisibilityWrite {
-  @SerialName("Default")
+  @SerialName("CommandVisibility")
   @Serializable
   public data object Default : CommandVisibilityWrite
 

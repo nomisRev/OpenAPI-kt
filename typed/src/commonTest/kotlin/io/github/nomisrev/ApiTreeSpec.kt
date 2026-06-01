@@ -141,10 +141,6 @@ val apiTreeSpec by testSuite {
         assertEquals(messages.first(), messages.last())
     }
 
-    test("fail") {
-        throw AssertionError("fail")
-    }
-
     test("buildTree empty routes") {
         assertEquals(
             ApiTree(name = "Empty", operations = emptyMap(), children = emptyList(), servers = emptyList()),

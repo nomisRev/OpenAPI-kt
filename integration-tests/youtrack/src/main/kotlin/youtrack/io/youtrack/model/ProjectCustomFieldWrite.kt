@@ -24,7 +24,7 @@ public sealed interface ProjectCustomFieldWrite {
 
   public val condition: CustomFieldConditionWrite?
 
-  @SerialName("Default")
+  @SerialName("ProjectCustomField")
   @Serializable
   public data class Default(
     override val canBeEmpty: Boolean? = null,

@@ -15,7 +15,7 @@ public sealed interface IssueFolderRead {
   public val id: String?
 
   @JvmInline
-  @SerialName("Default")
+  @SerialName("IssueFolder")
   @Serializable
   public value class Default(
     override val id: String? = null,

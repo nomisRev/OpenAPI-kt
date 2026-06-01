@@ -11,7 +11,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("${'$'}type")
 @Serializable
 public sealed interface BundleWrite {
-  @SerialName("Default")
+  @SerialName("Bundle")
   @Serializable
   public data object Default : BundleWrite
 

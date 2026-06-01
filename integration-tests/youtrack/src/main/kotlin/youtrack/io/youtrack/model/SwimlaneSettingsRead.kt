@@ -20,7 +20,7 @@ public sealed interface SwimlaneSettingsRead {
 
   public val enabled: Boolean?
 
-  @SerialName("Default")
+  @SerialName("SwimlaneSettings")
   @Serializable
   public data class Default(
     override val id: String? = null,

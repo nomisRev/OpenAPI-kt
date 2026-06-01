@@ -29,7 +29,7 @@ public sealed interface BaseArticleRead {
 
   public val visibility: VisibilityRead?
 
-  @SerialName("Default")
+  @SerialName("BaseArticle")
   @Serializable
   public data class Default(
     override val id: String? = null,

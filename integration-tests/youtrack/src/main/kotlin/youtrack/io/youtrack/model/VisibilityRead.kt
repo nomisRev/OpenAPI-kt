@@ -19,7 +19,7 @@ public sealed interface VisibilityRead {
   public val id: String?
 
   @JvmInline
-  @SerialName("Default")
+  @SerialName("Visibility")
   @Serializable
   public value class Default(
     override val id: String? = null,

@@ -27,7 +27,7 @@ public sealed interface ActivityItem {
 
   public val timestamp: Long?
 
-  @SerialName("Default")
+  @SerialName("ActivityItem")
   @Serializable
   public data class Default(
     override val id: String? = null,

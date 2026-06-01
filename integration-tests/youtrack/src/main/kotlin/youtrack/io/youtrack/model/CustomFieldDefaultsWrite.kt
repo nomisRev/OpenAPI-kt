@@ -19,7 +19,7 @@ public sealed interface CustomFieldDefaultsWrite {
 
   public val isPublic: Boolean?
 
-  @SerialName("Default")
+  @SerialName("CustomFieldDefaults")
   @Serializable
   public data class Default(
     override val canBeEmpty: Boolean? = null,

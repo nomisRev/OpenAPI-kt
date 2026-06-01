@@ -21,7 +21,7 @@ public sealed interface IssueFolderWrite {
   public val name: String?
 
   @JvmInline
-  @SerialName("Default")
+  @SerialName("IssueFolder")
   @Serializable
   public value class Default(
     override val name: String? = null,

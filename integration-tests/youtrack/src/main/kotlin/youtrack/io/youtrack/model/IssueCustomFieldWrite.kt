@@ -11,7 +11,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("${'$'}type")
 @Serializable
 public sealed interface IssueCustomFieldWrite {
-  @SerialName("Default")
+  @SerialName("IssueCustomField")
   @Serializable
   public data object Default : IssueCustomFieldWrite
 

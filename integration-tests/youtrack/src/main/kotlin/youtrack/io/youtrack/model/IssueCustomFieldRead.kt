@@ -19,7 +19,7 @@ public sealed interface IssueCustomFieldRead {
 
   public val projectCustomField: ProjectCustomFieldRead?
 
-  @SerialName("Default")
+  @SerialName("IssueCustomField")
   @Serializable
   public data class Default(
     override val id: String? = null,

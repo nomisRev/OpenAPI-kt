@@ -19,7 +19,7 @@ public sealed interface CustomFieldConditionWrite {
   public val parent: ProjectCustomFieldWrite?
 
   @JvmInline
-  @SerialName("Default")
+  @SerialName("CustomFieldCondition")
   @Serializable
   public value class Default(
     override val parent: ProjectCustomFieldWrite? = null,

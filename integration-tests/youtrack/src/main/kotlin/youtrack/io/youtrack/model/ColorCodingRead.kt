@@ -19,7 +19,7 @@ public sealed interface ColorCodingRead {
   public val id: String?
 
   @JvmInline
-  @SerialName("Default")
+  @SerialName("ColorCoding")
   @Serializable
   public value class Default(
     override val id: String? = null,

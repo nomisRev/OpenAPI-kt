@@ -19,7 +19,7 @@ public sealed interface CommandVisibilityRead {
   public val id: String?
 
   @JvmInline
-  @SerialName("Default")
+  @SerialName("CommandVisibility")
   @Serializable
   public value class Default(
     override val id: String? = null,

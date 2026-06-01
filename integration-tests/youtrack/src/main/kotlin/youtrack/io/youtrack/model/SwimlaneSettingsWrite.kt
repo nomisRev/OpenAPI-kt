@@ -19,7 +19,7 @@ public sealed interface SwimlaneSettingsWrite {
   public val enabled: Boolean?
 
   @JvmInline
-  @SerialName("Default")
+  @SerialName("SwimlaneSettings")
   @Serializable
   public value class Default(
     override val enabled: Boolean? = null,

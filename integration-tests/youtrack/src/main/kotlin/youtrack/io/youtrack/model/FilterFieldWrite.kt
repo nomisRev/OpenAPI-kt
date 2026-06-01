@@ -13,7 +13,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("${'$'}type")
 @Serializable
 public sealed interface FilterFieldWrite {
-  @SerialName("Default")
+  @SerialName("FilterField")
   @Serializable
   public data object Default : FilterFieldWrite
 
