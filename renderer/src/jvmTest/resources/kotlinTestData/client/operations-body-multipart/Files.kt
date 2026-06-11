@@ -1,0 +1,28 @@
+package io.github.nomisrev.render.test.client.operations.body.multipart
+
+import io.ktor.client.HttpClient
+import io.ktor.client.request.forms.MultiPartFormDataContent
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import kotlin.ByteArray
+import kotlin.String
+
+public class Files internal constructor(
+  private val client: HttpClient,
+) {
+  public val post: Post = Post(client)
+
+  public class Post internal constructor(
+    private val client: HttpClient,
+  ) {
+    public suspend operator fun invoke(`file`: ByteArray, purpose: String) {
+      client.post("/files") {
+        setBody(MultiPartFormDataContent(formData {
+          append("file", file)
+          append("purpose", purpose)
+        }))
+      }
+    }
+  }
+}

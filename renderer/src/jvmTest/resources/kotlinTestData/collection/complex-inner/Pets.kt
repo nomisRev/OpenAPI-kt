@@ -1,0 +1,18 @@
+package io.github.nomisrev.render.test.collection.complex.`inner`
+
+import kotlin.String
+import kotlin.collections.List
+import kotlin.jvm.JvmInline
+import kotlinx.serialization.Serializable
+
+@JvmInline
+@Serializable
+public value class Pets(
+  public val items: List<Item>,
+) {
+  @Serializable
+  public data class Item(
+    public val id: String,
+    public val name: String,
+  )
+}
