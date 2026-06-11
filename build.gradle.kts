@@ -24,14 +24,6 @@ dependencies {
 
 subprojects {
     apply(plugin = publishId)
-    configure<MavenPublishBaseExtension> {
-        publishToMavenCentral()
-        val shouldSign =
-            project.gradle.startParameter.taskNames.none {
-                it.contains("publishToMavenLocal", ignoreCase = true)
-            }
-        if (shouldSign) signAllPublications()
-    }
 
     apply(plugin = assertId)
     @Suppress("OPT_IN_USAGE")
