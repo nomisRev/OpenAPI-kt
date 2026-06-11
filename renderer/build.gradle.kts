@@ -1,4 +1,3 @@
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import org.gradle.api.tasks.testing.Test
 
 plugins {
@@ -57,18 +56,14 @@ tasks.withType<Test>().configureEach {
 
 
 
-tasks.withType<DokkaTaskPartial>().configureEach {
-    moduleName.set("OpenAPI Kotlin Renderer")
-    dokkaSourceSets {
-        named("jvmMain") {
-            includes.from("README.md")
-            sourceLink {
-                localDirectory.set(file("src/jvmMain/kotlin"))
-                remoteUrl.set(
-                    uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/renderer/src/jvmMain").toURL()
-                )
-                remoteLineSuffix.set("#L")
-            }
+dokka {
+    moduleName = "OpenAPI Kotlin Renderer"
+    dokkaSourceSets.named("jvmMain") {
+        includes.from("README.md")
+        sourceLink {
+            localDirectory.set(file("src/jvmMain/kotlin"))
+            remoteUrl("https://github.com/nomisRev/OpenAPI-kt/tree/main/renderer/src/jvmMain")
+            remoteLineSuffix = "#L"
         }
     }
 }

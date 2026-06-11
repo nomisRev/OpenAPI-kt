@@ -1,4 +1,4 @@
-# OpenAPI Kotlin Renderer
+# Module OpenAPI Kotlin Renderer
 
 JVM-only renderer that turns the transformed `ApiTree` / `Model` graph into KotlinPoet source files.
 

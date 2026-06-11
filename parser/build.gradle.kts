@@ -1,5 +1,3 @@
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
-
 plugins {
     id(libs.plugins.multiplatform.get().pluginId)
     alias(libs.plugins.serialization)
@@ -36,18 +34,14 @@ kotlin {
     }
 }
 
-tasks.withType<DokkaTaskPartial>().configureEach {
-    moduleName.set("OpenAPI Kotlin Parser")
-    dokkaSourceSets {
-        named("commonMain") {
-            includes.from("README.md")
-            sourceLink {
-                localDirectory.set(file("src/commonMain/kotlin"))
-                remoteUrl.set(
-                    uri("https://github.com/nomisRev/OpenAPI-kt/tree/main/parser/src/commonMain").toURL()
-                )
-                remoteLineSuffix.set("#L")
-            }
+dokka {
+    moduleName = "OpenAPI Kotlin Parser"
+    dokkaSourceSets.named("commonMain") {
+        includes.from("README.md")
+        sourceLink {
+            localDirectory.set(file("src/commonMain/kotlin"))
+            remoteUrl("https://github.com/nomisRev/OpenAPI-kt/tree/main/parser/src/commonMain")
+            remoteLineSuffix = "#L"
         }
     }
 }

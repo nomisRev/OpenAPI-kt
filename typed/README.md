@@ -1,4 +1,4 @@
-# OpenAPI Kotlin Typed
+# Module OpenAPI Kotlin Typed
 
 `typed` turns parsed OpenAPI schemas into a typed intermediate model (`Model`) that the JVM renderer later turns into Kotlin declarations and route APIs.
 

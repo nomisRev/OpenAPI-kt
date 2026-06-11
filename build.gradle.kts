@@ -20,6 +20,13 @@ val publishId = libs.plugins.publish.get().pluginId
 
 dependencies {
     kover(projects.parser)
+    dokka(projects.parser)
+    dokka(projects.typed)
+    dokka(projects.renderer)
+}
+
+dokka {
+    moduleName = "OpenAPI-kt"
 }
 
 subprojects {
@@ -52,8 +59,6 @@ subprojects {
         }
     }
 }
-
-//tasks.dokkaHtmlMultiModule { moduleName.set("OpenAPI-kt") }
 
 /**
  * Inspect a stored test failure by name.
