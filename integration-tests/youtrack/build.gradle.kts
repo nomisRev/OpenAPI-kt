@@ -12,8 +12,8 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "2.3.0"
-    kotlin("plugin.serialization") version "2.3.0"
+    kotlin("jvm") version "2.4.0"
+    kotlin("plugin.serialization") version "2.4.0"
 }
 
 apply(plugin = "io.github.nomisrev.openapi")

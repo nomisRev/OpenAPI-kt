@@ -2,7 +2,7 @@
   <artifact type="jar" name="renderer-jvm">
     <output-path>$PROJECT_DIR$/../renderer/build/libs</output-path>
     <root id="archive" name="renderer-jvm.jar">
-      <element id="module-output" name="openapi-kt.renderer.jvmMain" />
+      <element id="module-output" name="refactor-api.renderer.jvmMain" />
     </root>
   </artifact>
 </component>

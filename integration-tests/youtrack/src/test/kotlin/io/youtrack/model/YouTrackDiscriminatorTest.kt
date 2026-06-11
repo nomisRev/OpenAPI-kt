@@ -4,14 +4,18 @@ import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertIs
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlin.test.assertEquals
 
 class YouTrackDiscriminatorTest {
     private val json = Json {
         encodeDefaults = true
         ignoreUnknownKeys = true
+    }
+
+    @Test
+    fun test() {
+        assertEquals(true, true)
     }
 
     @Test
@@ -41,22 +45,22 @@ class YouTrackDiscriminatorTest {
     @Test
     fun `write base discriminators match the spec`() {
         assertWritesDiscriminator(BaseArticleWrite.serializer(), BaseArticleWrite.Default(), "BaseArticle")
-        assertWritesDiscriminator(BaseWorkItemWrite.serializer(), BaseWorkItemWrite.Default, "BaseWorkItem")
+        assertWritesDiscriminator(BaseWorkItemWrite.serializer(), BaseWorkItemWrite.Default(), "BaseWorkItem")
         assertWritesDiscriminator(BundleElementWrite.serializer(), BundleElementWrite.Default(), "BundleElement")
-        assertWritesDiscriminator(BundleWrite.serializer(), BundleWrite.Default, "Bundle")
-        assertWritesDiscriminator(ColorCodingWrite.serializer(), ColorCodingWrite.Default, "ColorCoding")
-        assertWritesDiscriminator(CommandVisibilityWrite.serializer(), CommandVisibilityWrite.Default, "CommandVisibility")
+        assertWritesDiscriminator(BundleWrite.serializer(), BundleWrite.Default(), "Bundle")
+        assertWritesDiscriminator(ColorCodingWrite.serializer(), ColorCodingWrite.Default(), "ColorCoding")
+        assertWritesDiscriminator(CommandVisibilityWrite.serializer(), CommandVisibilityWrite.Default(), "CommandVisibility")
         assertWritesDiscriminator(CustomFieldConditionWrite.serializer(), CustomFieldConditionWrite.Default(), "CustomFieldCondition")
         assertWritesDiscriminator(CustomFieldDefaultsWrite.serializer(), CustomFieldDefaultsWrite.Default(), "CustomFieldDefaults")
-        assertWritesDiscriminator(DatabaseAttributeValueWrite.serializer(), DatabaseAttributeValueWrite.Default, "DatabaseAttributeValue")
-        assertWritesDiscriminator(FilterFieldWrite.serializer(), FilterFieldWrite.Default, "FilterField")
-        assertWritesDiscriminator(IssueCustomFieldWrite.serializer(), IssueCustomFieldWrite.Default, "IssueCustomField")
+        assertWritesDiscriminator(DatabaseAttributeValueWrite.serializer(), DatabaseAttributeValueWrite.Default(), "DatabaseAttributeValue")
+        assertWritesDiscriminator(FilterFieldWrite.serializer(), FilterFieldWrite.Default(), "FilterField")
+        assertWritesDiscriminator(IssueCustomFieldWrite.serializer(), IssueCustomFieldWrite.Default(), "IssueCustomField")
         assertWritesDiscriminator(IssueFolderWrite.serializer(), IssueFolderWrite.Default(), "IssueFolder")
         assertWritesDiscriminator(ProjectCustomFieldWrite.serializer(), ProjectCustomFieldWrite.Default(), "ProjectCustomField")
         assertWritesDiscriminator(SwimlaneSettingsWrite.serializer(), SwimlaneSettingsWrite.Default(), "SwimlaneSettings")
-        assertWritesDiscriminator(UserWrite.serializer(), UserWrite.Default, "User")
-        assertWritesDiscriminator(UserGroupWrite.serializer(), UserGroupWrite.Default, "UserGroup")
-        assertWritesDiscriminator(VisibilityWrite.serializer(), VisibilityWrite.Default, "Visibility")
+        assertWritesDiscriminator(UserWrite.serializer(), UserWrite.Default(), "User")
+        assertWritesDiscriminator(UserGroupWrite.serializer(), UserGroupWrite.Default(), "UserGroup")
+        assertWritesDiscriminator(VisibilityWrite.serializer(), VisibilityWrite.Default(), "Visibility")
     }
 
     private fun <T> decodeRead(serializer: KSerializer<T>, type: String): T =

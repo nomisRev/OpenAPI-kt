@@ -1,7 +1,6 @@
 package io.github.nomisrev.openapi.gradle
 
 import gratatouille.GPlugin
-import org.apache.tools.ant.types.resources.MultiRootFileSet
 import org.gradle.api.Project
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -25,13 +24,8 @@ fun openApiPlugin(project: Project) {
         excludedPaths = extension.excludedPaths,
     )
 
-    val outputDirectory = extension.specFile.flatMap { file ->
-        extension.outputDirectory.map { dir ->
-            dir.dir(file.asFile.nameWithoutExtension)
-        }
-    }
     generateTask.configure { task ->
-        task.outputDirectory.set(outputDirectory)
+        task.outputDirectory.set(extension.outputDirectory)
     }
     val generatedSources = generateTask.flatMap { it.outputDirectory }
 

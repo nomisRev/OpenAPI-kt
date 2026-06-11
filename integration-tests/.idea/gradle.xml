@@ -27,7 +27,6 @@
             <option value="$PROJECT_DIR$/../gradle-plugin" />
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/github" />
-            <option value="$PROJECT_DIR$/mistral" />
             <option value="$PROJECT_DIR$/openai" />
             <option value="$PROJECT_DIR$/youtrack" />
             <option value="$PROJECT_DIR$/../parser" />
@@ -37,5 +36,6 @@
         </option>
       </GradleProjectSettings>
     </option>
+    <option name="parallelModelFetch" value="false" />
   </component>
 </project>

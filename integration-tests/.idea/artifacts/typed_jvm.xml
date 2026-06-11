@@ -2,7 +2,7 @@
   <artifact type="jar" name="typed-jvm">
     <output-path>$PROJECT_DIR$/../typed/build/libs</output-path>
     <root id="archive" name="typed-jvm.jar">
-      <element id="module-output" name="openapi-kt.typed.jvmMain" />
+      <element id="module-output" name="refactor-api.typed.jvmMain" />
     </root>
   </artifact>
 </component>
