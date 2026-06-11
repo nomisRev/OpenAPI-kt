@@ -85,8 +85,16 @@ public data class Parameter(
    * examples value SHALL override the example provided by the schema.
    */
   public val examples: Map<String, ReferenceOr<Example>>? = emptyMap(),
+  /**
+   * A map containing the representations for the parameter. The key is the media type and the value
+   * describes it. The map MUST only contain one entry.
+   */
+  public val content: Map<String, MediaType> = emptyMap(),
 ) {
   init {
+    require(schema == null || content.isEmpty()) {
+      "A parameter MUST contain either a schema property, or a content property, but not both."
+    }
     if (input == Input.Path)
       @Suppress("MaxLineLength")
       require(required) {

@@ -360,4 +360,47 @@ class ParameterTest {
         assertEquals(Parameter.Input.Path, param.input)
         assertTrue(param.required)
     }
+
+    // ── content ───────────────────────────────────────────────────────────────
+
+    @Test
+    fun `parameter with content deserializes`() {
+        val yaml = """
+            name: metadata
+            in: query
+            required: false
+            content:
+              application/json:
+                schema:
+                  anyOf:
+                  - type: object
+                    additionalProperties: true
+                  - type: 'null'
+                  title: Metadata
+        """.trimIndent()
+
+        val param = OpenAPI.Yaml.decodeFromString(Parameter.serializer(), yaml)
+        assertEquals("metadata", param.name)
+        val content = assertNotNull(param.content["application/json"])
+        val schemaValue = assertIs<ReferenceOr.Value<Schema>>(content.schema)
+        assertEquals("Metadata", schemaValue.value.title)
+    }
+
+    @Test
+    fun `parameter with both schema and content fails`() {
+        val yaml = """
+            name: both
+            in: query
+            schema:
+              type: string
+            content:
+              application/json:
+                schema:
+                  type: string
+        """.trimIndent()
+
+        kotlin.test.assertFailsWith<IllegalArgumentException> {
+            OpenAPI.Yaml.decodeFromString(Parameter.serializer(), yaml)
+        }
+    }
 }
