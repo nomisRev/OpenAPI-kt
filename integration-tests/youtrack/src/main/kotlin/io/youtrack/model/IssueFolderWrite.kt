@@ -5,6 +5,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -19,9 +20,10 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface IssueFolderWrite {
   public val name: String?
 
+  @JvmInline
   @SerialName("IssueFolder")
   @Serializable
-  public data class Default(
+  public value class Default(
     override val name: String? = null,
   ) : IssueFolderWrite
 

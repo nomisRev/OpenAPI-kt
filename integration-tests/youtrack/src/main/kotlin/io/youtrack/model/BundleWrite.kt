@@ -13,7 +13,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface BundleWrite {
   @SerialName("Bundle")
   @Serializable
-  public class Default() : BundleWrite
+  public data object Default : BundleWrite
 
   @SerialName("BaseBundle")
   @Serializable

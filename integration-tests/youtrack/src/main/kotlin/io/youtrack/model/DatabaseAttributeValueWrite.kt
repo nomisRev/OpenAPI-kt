@@ -16,7 +16,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface DatabaseAttributeValueWrite {
   @SerialName("DatabaseAttributeValue")
   @Serializable
-  public class Default() : DatabaseAttributeValueWrite
+  public data object Default : DatabaseAttributeValueWrite
 
   @SerialName("SwimlaneEntityAttributeValue")
   @Serializable

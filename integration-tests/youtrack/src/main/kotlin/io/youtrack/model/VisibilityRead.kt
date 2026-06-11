@@ -3,6 +3,7 @@ package io.youtrack.model
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -17,15 +18,17 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface VisibilityRead {
   public val id: String?
 
+  @JvmInline
   @SerialName("Visibility")
   @Serializable
-  public data class Default(
+  public value class Default(
     override val id: String? = null,
   ) : VisibilityRead
 
+  @JvmInline
   @SerialName("UnlimitedVisibility")
   @Serializable
-  public data class UnlimitedVisibility(
+  public value class UnlimitedVisibility(
     override val id: String? = null,
   ) : VisibilityRead
 

@@ -55,9 +55,7 @@ fun Model.DiscriminatedObject.toTypeSpec(
     subtypes
         .map { subtype ->
             val discriminatorValue = subtype.discriminatorValue()
-            subtype
-                .copy(hadPropertiesBeforeStripping = true)
-                .toTypeSpec(
+            subtype.toTypeSpec(
                     config = config,
                     parentInterface = className,
                     serialName = discriminatorValue,

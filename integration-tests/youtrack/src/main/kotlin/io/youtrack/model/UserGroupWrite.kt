@@ -12,7 +12,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface UserGroupWrite {
   @SerialName("UserGroup")
   @Serializable
-  public class Default() : UserGroupWrite
+  public data object Default : UserGroupWrite
 
   @SerialName("AllUsersGroup")
   @Serializable

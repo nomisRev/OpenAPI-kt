@@ -12,7 +12,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface UserWrite {
   @SerialName("User")
   @Serializable
-  public class Default() : UserWrite
+  public data object Default : UserWrite
 
   @SerialName("VcsUnresolvedUser")
   @Serializable

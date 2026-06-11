@@ -17,7 +17,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface BaseWorkItemWrite {
   @SerialName("BaseWorkItem")
   @Serializable
-  public class Default() : BaseWorkItemWrite
+  public data object Default : BaseWorkItemWrite
 
   @SerialName("IssueWorkItem")
   @Serializable

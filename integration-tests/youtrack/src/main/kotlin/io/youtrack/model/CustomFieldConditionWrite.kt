@@ -3,6 +3,7 @@ package io.youtrack.model
 import kotlin.Boolean
 import kotlin.OptIn
 import kotlin.collections.List
+import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -17,9 +18,10 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface CustomFieldConditionWrite {
   public val parent: ProjectCustomFieldWrite?
 
+  @JvmInline
   @SerialName("CustomFieldCondition")
   @Serializable
-  public data class Default(
+  public value class Default(
     override val parent: ProjectCustomFieldWrite? = null,
   ) : CustomFieldConditionWrite
 

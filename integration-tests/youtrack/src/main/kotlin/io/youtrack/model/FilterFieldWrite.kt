@@ -15,7 +15,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface FilterFieldWrite {
   @SerialName("FilterField")
   @Serializable
-  public class Default() : FilterFieldWrite
+  public data object Default : FilterFieldWrite
 
   @SerialName("PredefinedFilterField")
   @Serializable
