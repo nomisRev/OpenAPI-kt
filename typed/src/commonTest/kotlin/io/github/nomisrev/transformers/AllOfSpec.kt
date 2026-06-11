@@ -19,7 +19,7 @@ import kotlin.collections.listOf
 import kotlinx.serialization.json.JsonPrimitive
 
 val allOfSpec by testSuite {
-    verifyAll("allOf[{ type: null }, { type: primitive }", Model.Primitive.all().map { (schema, model) ->
+    verifyAll("allOf[{ type: null }, { type: primitive }", Model.Primitive.all().map { [schema, model] ->
         Schema(
             allOf = listOf(
                 ReferenceOr.value(Schema.NULL),
@@ -28,7 +28,7 @@ val allOfSpec by testSuite {
         ) expect model.with(isNullable = true)
     })
 
-    verifyAll("allOf[{ nullable: true }, { type: primitive }", Model.Primitive.all().map { (schema, model) ->
+    verifyAll("allOf[{ nullable: true }, { type: primitive }", Model.Primitive.all().map { [schema, model] ->
         Schema(
             allOf = listOf(
                 ReferenceOr.value(Schema(nullable = true)),

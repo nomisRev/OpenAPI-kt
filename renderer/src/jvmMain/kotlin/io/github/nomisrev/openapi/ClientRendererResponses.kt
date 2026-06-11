@@ -66,7 +66,7 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
         val builder = TypeSpec.interfaceBuilder(responseClassName.simpleName)
             .addModifiers(KModifier.SEALED)
 
-        for ((statusCode, returnType) in returns.responses.entries.sortedBy { it.key.value }) {
+        for ([statusCode, returnType] in returns.responses.entries.sortedBy { it.key.value }) {
             if (!statusCode.isSuccessStatusCode()) continue
             val model = returnType.types[contentType] ?: continue
             val rendering = buildMultiContentTypeResponseCaseTypeSpec(
@@ -86,7 +86,7 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
         specs += builder.build()
     }
 
-    for ((statusCode, returnType) in returns.responses.entries.sortedBy { it.key.value }) {
+    for ([statusCode, returnType] in returns.responses.entries.sortedBy { it.key.value }) {
         if (statusCode.isSuccessStatusCode()) {
             if (returnType.types.isEmpty()) {
                 specs += buildSharedNoContentCaseTypeSpec(
@@ -121,7 +121,7 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
             }
 
             is ErrorCaseStrategy.MultipleContentTypes -> {
-                errorStrategy.variants.forEach { (contentType, model) ->
+                errorStrategy.variants.forEach { [contentType, model] ->
                     val caseName = "${contentTypeToIdentifier(contentType)}${statusCode.toCaseName()}"
                     specs += buildSharedResponseCaseTypeSpec(
                         config = config,
@@ -237,7 +237,7 @@ private fun Route.buildSealedResponseTypeSpec(
 
     inlineModelScope.responseTypeSpecs(config).forEach(builder::addType)
 
-    for ((statusCode, returnType) in returns.responses.entries.sortedBy { it.key.value }) {
+    for ([statusCode, returnType] in returns.responses.entries.sortedBy { it.key.value }) {
         val rendering = buildSealedResponseCaseTypeSpec(
             config = config,
             responseClassName = responseClassName,
@@ -685,8 +685,8 @@ private fun Route.Returns.singlePreferredModelOrNull(contentType: ContentType?):
     return responses.entries
         .asSequence()
         .filter { it.key.isSuccessStatusCode() }
-        .mapNotNull { (_, returnType) ->
-            returnType.types.entries.firstOrNull { (candidate, _) ->
+        .mapNotNull { [_, returnType] ->
+            returnType.types.entries.firstOrNull { [candidate, _] ->
                 candidate.match(contentType) || contentType.match(candidate)
             }?.value
         }

@@ -56,25 +56,25 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
     val mappings = mapping.filterValues { it != "#/components/schemas/${reference.name}" }
 
     val abstractProperties = properties(schema.properties!!, context)
-        .filter { (name, prop) -> prop.model !is Model.FreeFormJson && name != discriminator.propertyName }
+        .filter { [name, prop] -> prop.model !is Model.FreeFormJson && name != discriminator.propertyName }
 
-    val subtypes = mappings.map { (mappedName, ref) ->
+    val subtypes = mappings.map { [mappedName, ref] ->
         val name = name.nest(NamingContext.DiscriminatedObjectCase(mappedName))
         val subtypeSchema = ReferenceOr.Reference(ref).peek()
         val allOf = requireNotNull(subtypeSchema.allOf) { "Subtype schema must be allOf" }
 
         val parentClass = allOf.single { it.isSubtype(mapping) }
-        val (superRequired, superProps) =
+        val [superRequired, superProps] =
             parentClass.collectSuperTypeProperties(mapping, context)
 
         val peeked =
             (allOf - parentClass).singleOrNull()?.peek() ?: Schema()
         val peekedProperties =
-            peeked.properties.orEmpty().filter { (_, refOrSchema) -> refOrSchema.takeIf(context) != null }
+            peeked.properties.orEmpty().filter { [_, refOrSchema] -> refOrSchema.takeIf(context) != null }
 
         val properties =
             superProps.merge(peekedProperties) { _, a, b -> a.combine(b) }
-                .filter { (name, _) -> name != discriminator.propertyName }
+                .filter { [name, _] -> name != discriminator.propertyName }
 
         ResolvedSchema.Value(
             name,
@@ -84,7 +84,10 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
             )
         )   // TODO: To remove 'resolveReference' make this toObject to work with resolveReference = false
             //  It's the only place where indirect recursion due to subtype relationship is broken and results in OOM
-            .let { scope.registry().engine.transform(scope, scope.registry(), it, context, false) as Model.Object }
+            .let {
+                it.toObject(context, properties)
+//                scope.registry().engine.transform(scope, scope.registry(), it, context, false) as Model.Object
+            }
     }
 
     return Model.DiscriminatedObject(
@@ -129,7 +132,7 @@ private tailrec suspend fun ReferenceOr<Schema>.collectSuperTypeProperties(
     return if (superTypeOrNull != null) {
         val schema = (parentSchema.allOf!! - superTypeOrNull).singleOrNull()?.peek()
         val schemaProps = schema?.properties.orEmpty()
-            .filter { (_, refOrSchema) -> refOrSchema.takeIf(context) != null }
+            .filter { [_, refOrSchema] -> refOrSchema.takeIf(context) != null }
 
         superTypeOrNull.collectSuperTypeProperties(
             mapping,
@@ -190,7 +193,7 @@ private fun ResolvedSchema.Reference.simpleCase(
     abstractProperties: Map<String, Model.Object.Property>
 ): Model.Object {
     val mappingName = mapping.entries
-        .singleOrNull { (_, ref) -> ref == "#/components/schemas/${reference.name}" }
+        .singleOrNull { [_, ref] -> ref == "#/components/schemas/${reference.name}" }
         ?.key ?: error("Expected exactly one self mapping for discriminated object")
 
     val selfName =

@@ -252,7 +252,7 @@ private fun Server.buildServerCaseWithVariables(
 
     val ctorBuilder = FunSpec.constructorBuilder()
 
-    for ((varName, variable) in variables!!) {
+    for ([varName, variable] in variables!!) {
         val paramName = varName.toCamelCase()
         if (!variable.enum.isNullOrEmpty()) {
             val enumName = varName.toPascalCase()
@@ -313,7 +313,7 @@ private fun buildServerUrlTemplate(
     variables: Map<String, Server.Variable>,
 ): String {
     var result = urlTemplate
-    for ((varName, variable) in variables) {
+    for ([varName, variable] in variables) {
         val paramName = varName.toCamelCase()
         val hasEnum = !variable.enum.isNullOrEmpty()
         val replacement = if (hasEnum) "\${$paramName.value}" else "\$$paramName"

@@ -51,7 +51,7 @@ private fun Model.Collection.normalizedForSharingKey(): Model = copy(
 
 private fun Model.DiscriminatedObject.normalizedForSharingKey(): Model = copy(
     context = SharedNamingContext,
-    abstractProperties = abstractProperties.mapValues { (_, property) ->
+    abstractProperties = abstractProperties.mapValues { [_, property] ->
         property.copy(model = property.model.normalizedForSharingKey())
     },
     subtypes = subtypes.map { it.normalizedForSharingKey() as Model.Object },
@@ -70,7 +70,7 @@ private fun Model.Object.normalizedForSharingKey(): Model = copy(
     context = SharedNamingContext,
     description = null,
     title = null,
-    properties = properties.mapValues { (_, property) ->
+    properties = properties.mapValues { [_, property] ->
         property.copy(model = property.model.normalizedForSharingKey())
     },
     additionalProperties = when (val additional = additionalProperties) {

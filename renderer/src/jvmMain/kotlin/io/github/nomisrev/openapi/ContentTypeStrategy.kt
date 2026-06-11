@@ -92,7 +92,7 @@ internal fun Route.Returns.contentTypeStrategy(): ContentTypeStrategy {
     val successContentTypes = responses.entries
         .asSequence()
         .filter { it.key.isSuccessStatusCode() }
-        .flatMap { (_, returnType) -> returnType.types.keys.asSequence().map(ContentType::normalizedForComparison) }
+        .flatMap { [_, returnType] -> returnType.types.keys.asSequence().map(ContentType::normalizedForComparison) }
         .distinct()
         .toList()
     return if (successContentTypes.size <= 1) {
@@ -118,7 +118,7 @@ internal fun classifyErrorStatus(
 
     val variants = returnType.types.entries
         .asSequence()
-        .map { (contentType, model) -> contentType.normalizedForComparison() to model }
+        .map { [contentType, model] -> contentType.normalizedForComparison() to model }
         .distinctBy { it.first }
         .toList()
     return when (variants.size) {

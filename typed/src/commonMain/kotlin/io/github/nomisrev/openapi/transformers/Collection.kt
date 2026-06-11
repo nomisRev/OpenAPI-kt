@@ -86,7 +86,7 @@ private suspend fun ResolvedSchema.toCollection(context: SchemaContext): Model.C
  * item wrapping in [collection].
  */
 private fun Model.Object.nestContext(prefix: NamingContext.Nested): Model.Object {
-    val nestedProperties = properties.mapValues { (_, prop) ->
+    val nestedProperties = properties.mapValues { [_, prop] ->
         prop.copy(model = prop.model.prependContextIfInline(prefix))
     }
     return copy(

@@ -107,7 +107,7 @@ private suspend fun List<ReferenceOr<Schema>>.inferTagOnlyDiscriminatorOrNull():
         val subtypeSchema = subtype.peek().flattenAllOfForUnionDiscriminator()
         val properties = subtypeSchema.properties ?: return null
         val required = subtypeSchema.required.toSet()
-        properties.mapNotNull { (propertyName, propertySchema) ->
+        properties.mapNotNull { [propertyName, propertySchema] ->
             val property = propertySchema.peek()
             val literals = property.enumLikeValues().orEmpty().filterNotNull().toSet()
             val isStringLike = property.type == null || property.type == Type.Basic.String
@@ -298,7 +298,7 @@ private suspend fun Schema.hoistSingleRemainingObjectProperty(): Schema {
     val currentProperties = properties ?: return this
     if (currentProperties.size != 1) return this
 
-    val (propertyName, propertySchema) = currentProperties.entries.single()
+    val [propertyName, propertySchema] = currentProperties.entries.single()
     if (required.size != 1 || required.single() != propertyName) return this
 
     val hoistedSchema = propertySchema.peek()
@@ -356,8 +356,8 @@ suspend fun NamingContext.unionCase(
 
     val specialName = schema.properties
         ?.entries
-        ?.firstOrNull { (key, _) -> key in setOf("type", "event", $$"$type") }
-        ?.let { (_, refOrSchema) -> refOrSchema.peek().enumLikeValues()?.singleOrNull() }
+        ?.firstOrNull { [key, _] -> key in setOf("type", "event", $$"$type") }
+        ?.let { [_, refOrSchema] -> refOrSchema.peek().enumLikeValues()?.singleOrNull() }
 
     @Suppress("MagicNumber")
     val enumName =
@@ -491,20 +491,20 @@ private fun Schema.compositeUnionCaseName(index: Int): String? {
 private fun Schema.specialUnionCaseName(): String? =
     properties
         ?.entries
-        ?.firstOrNull { (key, _) -> key in setOf("type", "event", "\$type") }
-        ?.let { (_, refOrSchema) -> refOrSchema.valueOrNull()?.enumLikeValues()?.singleOrNull()?.toPascalCase() }
+        ?.firstOrNull { [key, _] -> key in setOf("type", "event", "\$type") }
+        ?.let { [_, refOrSchema] -> refOrSchema.valueOrNull()?.enumLikeValues()?.singleOrNull()?.toPascalCase() }
         ?.takeIf { it.isNotBlank() }
 
 private fun Schema.objectUnionCaseName(index: Int): String {
     val props = properties?.entries.orEmpty()
     if (props.size == 1) {
-        val (name, refOrSchema) = props.single()
+        val [name, refOrSchema] = props.single()
         val suffix = refOrSchema.valueOrNull()?.objectUnionPropertySuffix()
         if (!suffix.isNullOrBlank()) {
             return "${name.toPascalCase()}$suffix"
         }
     }
-    return props.joinToString(prefix = "", separator = "And") { (name, _) -> name.toPascalCase() }
+    return props.joinToString(prefix = "", separator = "And") { [name, _] -> name.toPascalCase() }
         .takeIf { it.isNotBlank() && it.length < MAX_CODE_LENGTH }
         ?: caseIndex.getOrElse(index) { "Case$index" }
 }
@@ -594,10 +594,10 @@ private suspend fun Schema.Discriminator?.discriminatorValueForSubtype(
             val subtypeRefName = subtype.ref.schemaRefNameOrSelf()
             mapping
                 ?.entries
-                ?.filter { (_, ref) ->
+                ?.filter { [_, ref] ->
                     ref == subtype.ref || ref.schemaRefNameOrSelf() == subtypeRefName
                 }
-                ?.mapTo(linkedSetOf()) { (key, _) -> key }
+                ?.mapTo(linkedSetOf()) { [key, _] -> key }
         }
 
         is ReferenceOr.Value<Schema> -> null

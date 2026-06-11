@@ -134,10 +134,10 @@ private fun Route.responseCollectionItemCandidates(
     return buildList {
         returns.responses.entries
             .sortedBy { it.key.value }
-            .forEach { (_, returnType) ->
+            .forEach { [_, returnType] ->
                 returnType.types.entries
                     .sortedBy { it.key.toString() }
-                    .forEach { (_, model) ->
+                    .forEach { [_, model] ->
                         model.collectionItemCandidateOrNull(
                             config = config,
                             ownerClassName = ownerClassName,
@@ -151,7 +151,7 @@ private fun Route.responseCollectionItemCandidates(
             ?.types
             ?.entries
             ?.sortedBy { it.key.toString() }
-            ?.forEach { (_, model) ->
+            ?.forEach { [_, model] ->
                 model.collectionItemCandidateOrNull(
                     config = config,
                     ownerClassName = ownerClassName,
@@ -169,7 +169,7 @@ private fun List<OperationInlineModelCandidate>.toOperationInlineModelScope(
     if (isEmpty()) return OperationInlineModelScope.empty()
 
     val winners = groupBy(OperationInlineModelCandidate::groupingKey)
-        .mapValues { (_, candidates) ->
+        .mapValues { [_, candidates] ->
             candidates.minWith(
                 compareBy<OperationInlineModelCandidate> { it.kind.priority }
                     .thenBy { it.sourceOrder }
@@ -256,7 +256,7 @@ private fun Model.nestedOverloadedBodyCandidates(
     val rootTargetClassName = methodClassName.nestedClass(rootSimpleName)
     return rootModel.properties.entries
         .sortedBy { it.key }
-        .mapIndexedNotNull { index, (_, property) ->
+        .mapIndexedNotNull { index, [_, property] ->
             val nestedModel = property.model.nestedOrNull() as? Model.ContextHolder ?: return@mapIndexedNotNull null
             when (nestedModel) {
                 is Model.Object -> {

@@ -19,7 +19,7 @@ internal data class OpenEnumParts(
 
 internal fun Model.Union.detectOpenEnum(): OpenEnumParts? {
     if (cases.size != 2) return null
-    val (a, b) = cases
+    val [a, b] = cases
     val aEnum = a.model as? Model.Enum
     val bEnum = b.model as? Model.Enum
     val aString = a.model as? Model.Primitive.String

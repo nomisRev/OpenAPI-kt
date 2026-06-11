@@ -87,12 +87,12 @@ private fun Route.requestBodyDiagnostics(): List<GenerationDiagnostic> {
 }
 
 internal fun ApiTree.withSupportedRequestBodiesOnly(): ApiTree = copy(
-    operations = operations.mapValues { (_, route) -> route.withSupportedRequestBodiesOnly() },
+    operations = operations.mapValues { [_, route] -> route.withSupportedRequestBodiesOnly() },
     children = children.map(PathNode::withSupportedRequestBodiesOnly),
 )
 
 private fun PathNode.withSupportedRequestBodiesOnly(): PathNode = copy(
-    operations = operations.mapValues { (_, route) -> route.withSupportedRequestBodiesOnly() },
+    operations = operations.mapValues { [_, route] -> route.withSupportedRequestBodiesOnly() },
     children = children.map(PathNode::withSupportedRequestBodiesOnly),
 )
 

@@ -31,7 +31,7 @@ private suspend fun RequestBody.toBodies(
     segments: List<PathSegment>,
     method: HttpMethod,
 ): Route.Bodies? {
-    val typedBodies = content.entries.mapNotNull { (contentType, mediaType) ->
+    val typedBodies = content.entries.mapNotNull { [contentType, mediaType] ->
         val schema = mediaType.schema ?: return@mapNotNull null
         val body = when {
             ContentType.MultiPart.FormData.match(contentType) -> formDataToBody(segments, method, mediaType, schema)
@@ -74,7 +74,7 @@ private suspend fun RequestBody.formDataToBody(
     val resolvedSchema = schema.resolveSchema()
     return with(scope) { when (val model = ReferenceOr.value(resolvedSchema).toModel(name, SchemaContext.Write)) {
         is Model.Object -> {
-            val params = model.properties.map { (baseName, prop) ->
+            val params = model.properties.map { [baseName, prop] ->
                 val contentType = mediaType.encoding[baseName]?.contentType?.let(ContentType::parse)
                 Route.Body.Multipart.FormData(baseName, prop.model, contentType, prop.isRequired)
             }
@@ -100,12 +100,12 @@ private suspend fun RequestBody.formUrlEncoded(
         }
     }
     val unsupportedFields = with(scope) {
-        obj.properties.mapNotNull { (baseName, prop) ->
+        obj.properties.mapNotNull { [baseName, prop] ->
             if (baseName in mediaType.encoding || prop.model.isSafeFormUrlEncodedField()) null
             else baseName
         }
     }
-    val params = obj.properties.map { (baseName, prop) -> Route.Body.Multipart.FormData(baseName, prop.model, null, prop.isRequired) }
+    val params = obj.properties.map { [baseName, prop] -> Route.Body.Multipart.FormData(baseName, prop.model, null, prop.isRequired) }
     return Route.Body.FormUrlEncoded(params, unsupportedFields, description, mediaType.extensions)
 }
 

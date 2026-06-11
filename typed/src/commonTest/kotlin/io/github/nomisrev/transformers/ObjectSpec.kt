@@ -66,7 +66,7 @@ private val additionalProperties = primitives.flatMap { (actual, expected) ->
 }
 
 val objectSpec by testSuite {
-    val aProps = Model.Primitive.all().map { (schema, model) ->
+    val aProps = Model.Primitive.all().map { [schema, model] ->
         Schema(
             type = Type.Basic.Object,
             additionalProperties = PSchema(ReferenceOr.value(schema)),
@@ -102,7 +102,7 @@ val objectSpec by testSuite {
 
     verifyAll("Additional Properties", aProps)
 
-    fun List<Expect<Schema, Model>>.removeType() = map { (schema, model) ->
+    fun List<Expect<Schema, Model>>.removeType() = map { [schema, model] ->
         schema.copy(type = null) expect model
     }
 
@@ -110,7 +110,7 @@ val objectSpec by testSuite {
 
     verifyAll(
         "AdditionalProperties referenced schema remains referenced",
-        Model.Primitive.all().map { (schema, model) ->
+        Model.Primitive.all().map { [schema, model] ->
             val api = api.reference("Top", schema)
             val actualSchema = Schema(type = Type.Basic.Object, additionalProperties = PSchema(schema("Top")))
             val expectedModel = Model.Collection(
@@ -138,7 +138,7 @@ val objectSpec by testSuite {
     ) { name, props, isNullable, additionalProperties ->
         val schema = Schema(
             type = Type.Basic.Object,
-            properties = props.associate { (propName, schema, _) -> Pair(propName, ReferenceOr.value(schema.actual)) },
+            properties = props.associate { [propName, schema, _] -> Pair(propName, ReferenceOr.value(schema.actual)) },
             description = null,
             required = props.filter { it.isRequired }.map { it.name },
             additionalProperties = additionalProperties.actual,
@@ -148,7 +148,7 @@ val objectSpec by testSuite {
             context = name,
             description = null,
             title = null,
-            properties = props.associate { (propName, schema, isRequired) ->
+            properties = props.associate { [propName, schema, isRequired] ->
                 propName to Model.Object.Property(schema.expected, isRequired)
             },
             additionalProperties = additionalProperties.expected,
@@ -182,7 +182,7 @@ val objectSpec by testSuite {
     verifyAll("Enum Value", enum)
 
     val enumNesting = Model.Enum.strings(NamingContext.path("test"))
-        .map { (innerSchema, innerModel) ->
+        .map { [innerSchema, innerModel] ->
             val listSchema = Schema(type = Type.Basic.Array, items = ReferenceOr.value(innerSchema))
             val listModel = Model.Collection(
                 innerModel.context { it.nest(NamingContext.ObjectProperty("enum")) },
@@ -218,11 +218,11 @@ val objectSpec by testSuite {
                     it
                 )
             }
-            val actual = Pair(readWriteProps.associate { (readOnly, writeOnly, prop) ->
+            val actual = Pair(readWriteProps.associate { [readOnly, writeOnly, prop] ->
                 Pair(prop.name, ReferenceOr.value(prop.schema.actual.copy(readOnly = readOnly, writeOnly = writeOnly)))
-            }, readWriteProps.filter { (_, _, prop) -> prop.isRequired }.map { (_, _, prop) -> prop.name })
+            }, readWriteProps.filter { [_, _, prop] -> prop.isRequired }.map { [_, _, prop] -> prop.name })
 
-            val expected = readWriteProps.filter { (readOnly, _, _) -> readOnly != true }.associate { (_, _, prop) ->
+            val expected = readWriteProps.filter { [readOnly, _, _] -> readOnly != true }.associate { [_, _, prop] ->
                 prop.name to Model.Object.Property(
                     prop.schema.expected,
                     prop.isRequired
@@ -267,11 +267,11 @@ val objectSpec by testSuite {
             val readWriteProps = props.map {
                 Triple(readOnly[RANDOM.nextInt(0, 2)], writeOnly[RANDOM.nextInt(0, 2)], it)
             }
-            val actual = Pair(readWriteProps.associate { (readOnly, writeOnly, prop) ->
+            val actual = Pair(readWriteProps.associate { [readOnly, writeOnly, prop] ->
                 Pair(prop.name, ReferenceOr.value(prop.schema.actual.copy(readOnly = readOnly, writeOnly = writeOnly)))
-            }, readWriteProps.filter { (_, _, prop) -> prop.isRequired }.map { (_, _, prop) -> prop.name })
+            }, readWriteProps.filter { [_, _, prop] -> prop.isRequired }.map { [_, _, prop] -> prop.name })
 
-            val expected = readWriteProps.filter { (_, writeOnly, _) -> writeOnly != true }.associate { (_, _, prop) ->
+            val expected = readWriteProps.filter { [_, writeOnly, _] -> writeOnly != true }.associate { [_, _, prop] ->
                 prop.name to Model.Object.Property(
                     prop.schema.expected,
                     prop.isRequired
@@ -467,10 +467,9 @@ val objectSpec by testSuite {
             false
         )
         registry(api) {
-            assertEquals(
-                expected,
+            val actual =
                 ReferenceOr.value(s).toModel(NamingContext.reference("test", SchemaContext.Null), SchemaContext.Null)
-            )
+            assertEquals(expected, actual)
         }
     }
 

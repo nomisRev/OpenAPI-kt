@@ -10,6 +10,7 @@ import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.toModel
+import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 
 enum class SchemaContext {
@@ -45,11 +46,18 @@ private suspend fun Parameter.toRouteInput(
     method: HttpMethod,
 ): Route.Input {
     val context = NamingContext.path(segments, method).nest(RouteParam(name))
-    val refOrSchema = requireNotNull(schema) {
-        "Parameter $name without schema for ${method.value} $path"
+    val [type, contentType] = if (schema != null) {
+        schema!!.toModel(context, SchemaContext.Write) to null
+    } else if (content.isNotEmpty()) {
+        val [contentType, mediaType] = content.entries.first()
+        val mediaTypeSchema = requireNotNull(mediaType.schema) {
+            "Parameter $name with content $contentType without schema for ${method.value} $path"
+        }
+        mediaTypeSchema.toModel(context, SchemaContext.Write) to ContentType.parse(contentType)
+    } else {
+        error("Parameter $name without schema or content for ${method.value} $path")
     }
-    val type = refOrSchema.toModel(context, SchemaContext.Write)
-    return Route.Input(name, type, required, input, description)
+    return Route.Input(name, type, contentType, required, input, description)
 }
 
 /**

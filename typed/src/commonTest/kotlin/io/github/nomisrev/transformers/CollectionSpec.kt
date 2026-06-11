@@ -31,7 +31,7 @@ val collectionSpec by testSuite {
             this is Model.Primitive ||
             this is Model.Uuid
 
-    val primitives = (Model.Primitive.all() + Model.FreeFormJson.all()).map { (schema, model) ->
+    val primitives = (Model.Primitive.all() + Model.FreeFormJson.all()).map { [schema, model] ->
         val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.Value(schema))
         val expected = Model.Collection(model, null, null, null, false, null)
         schema expect expected
@@ -41,12 +41,12 @@ val collectionSpec by testSuite {
 
     verifyAll(
         "Collection (primitive) without type: Array",
-        primitives.map { (schema, expected) -> schema.copy(type = null) expect expected }
+        primitives.map { [schema, expected] -> schema.copy(type = null) expect expected }
     )
 
     verifyAll(
         "Collection with referenced primitive",
-        (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
+        (Model.Primitive.all() + Model.FreeFormJson.all()).map { [innerSchema, model] ->
             val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.schema("CollectionItem"))
             val expected = Model.Collection(
                 Model.Object.value(
@@ -71,7 +71,7 @@ val collectionSpec by testSuite {
 
     verifyAll(
         "Collection with referenced primitive without type: Array",
-        (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
+        (Model.Primitive.all() + Model.FreeFormJson.all()).map { [innerSchema, model] ->
             val schema = Schema(items = ReferenceOr.schema("CollectionItem"))
             val wrapped = Model.Object.value(
                 NamingContext.Reference("CollectionItem", SchemaContext.Null),
@@ -90,7 +90,7 @@ val collectionSpec by testSuite {
 
     verifyAll(
         "Referenced Collection with primitive",
-        (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
+        (Model.Primitive.all() + Model.FreeFormJson.all()).map { [innerSchema, model] ->
             val schema = Schema(type = Type.Basic.Array, items = ReferenceOr.Value(innerSchema))
             val expected = Model.Object(
                 context = NamingContext.reference("Collection", SchemaContext.Null),
@@ -117,7 +117,7 @@ val collectionSpec by testSuite {
 
     verifyAll(
         "Referenced Collection with primitive without type: array",
-        (Model.Primitive.all() + Model.FreeFormJson.all()).map { (innerSchema, model) ->
+        (Model.Primitive.all() + Model.FreeFormJson.all()).map { [innerSchema, model] ->
             val schema = Schema(items = ReferenceOr.Value(innerSchema))
             val expected = Model.Object(
                 context = NamingContext.reference("Collection", SchemaContext.Null),

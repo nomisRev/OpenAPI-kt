@@ -1,4 +1,5 @@
 @file:Suppress("TooManyFunctions")
+
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.ClassName
@@ -79,7 +80,7 @@ internal fun TypeSpec.Builder.addClientConstructorAndState(
     val constructor = FunSpec.constructorBuilder()
         .addModifiers(KModifier.INTERNAL)
         .addParameter("client", HttpClientType)
-    for ((index, param) in accumulatedParams.withIndex()) {
+    for ([index, param] in accumulatedParams.withIndex()) {
         val typeName = accumulatedTypeNames[index]
         constructor.addParameter(param.name.toCamelCase(), typeName)
     }
@@ -91,7 +92,7 @@ internal fun TypeSpec.Builder.addClientConstructorAndState(
             .initializer("client")
             .build()
     )
-    for ((index, param) in accumulatedParams.withIndex()) {
+    for ([index, param] in accumulatedParams.withIndex()) {
         val paramName = param.name.toCamelCase()
         val typeName = accumulatedTypeNames[index]
         addProperty(
@@ -174,7 +175,7 @@ private fun TypeSpec.Builder.addOverloadedNavigationMembers(
 ) {
     val paramName = segment.name.toCamelCase()
     val enumClassNames = segment.enumClassNames(parentClassName, config)
-    enumClassNames.forEach { (case, enumClassName) ->
+    enumClassNames.forEach { [case, enumClassName] ->
         val enumModel = case.model as Model.Enum
         addType(enumModel.toTypeSpec(config, nameOverride = enumClassName.simpleName))
     }
@@ -502,7 +503,7 @@ private fun Route.buildDirectOperationBody(
 
 private fun Route.addSealedResponseStatusCases(code: CodeBlock.Builder, methodClassName: ClassName) {
     val responseClassName = methodClassName.nestedClass("Response")
-    for ((statusCode, returnTypeEntry) in returns.responses.entries.sortedBy { it.key.value }) {
+    for ([statusCode, returnTypeEntry] in returns.responses.entries.sortedBy { it.key.value }) {
         val caseName = statusCode.toCaseName()
         val caseClassName = responseClassName.nestedClass(caseName)
         val model = returnTypeEntry.preferredModel()
@@ -535,7 +536,7 @@ private fun Route.addMultiContentTypeSealedResponseStatusCases(
     contentType: ContentType,
 ) {
     val responseClassName = methodClassName.nestedClass(contentTypeResponseTypeName(contentType))
-    for ((statusCode, returnTypeEntry) in returns.responses.entries.sortedBy { it.key.value }) {
+    for ([statusCode, returnTypeEntry] in returns.responses.entries.sortedBy { it.key.value }) {
         if (statusCode.isSuccessStatusCode()) {
             val model = returnTypeEntry.types[contentType] ?: continue
             val caseClassName = responseClassName.nestedClass(statusCode.toCaseName())
@@ -583,7 +584,7 @@ private fun buildMultiCTErrorDispatch(
     code.indent()
     code.addStatement("val ct = response.%M()", ContentTypeFunMember)
     code.beginControlFlow("when")
-    for ((errorContentType, errorModel) in variants) {
+    for ([errorContentType, errorModel] in variants) {
         val caseName = "${contentTypeToIdentifier(errorContentType)}${statusCode.toCaseName()}"
         val caseClassName = methodClassName.nestedClass(caseName)
         code.addStatement(
@@ -658,7 +659,12 @@ private fun Route.addRequestConfigCode(
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
 
     if (acceptContentType != null) {
-        code.addStatement("%M(%T.Accept, %L)", HeaderMember, HttpHeadersType, acceptContentType.toContentTypeCodeBlock())
+        code.addStatement(
+            "%M(%T.Accept, %L)",
+            HeaderMember,
+            HttpHeadersType,
+            acceptContentType.toContentTypeCodeBlock()
+        )
     }
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Query }) {
@@ -819,23 +825,28 @@ private fun CodeBlock.Builder.addMultipartValueBodyCode(config: RenderConfig, bo
         val headersExpr = formData.contentType?.let { contentType ->
             CodeBlock.of("%M(%T.ContentType, %S)", HeadersOfMember, HttpHeadersType, contentType.toString())
         }
-        val addAppendStatement = {
-            if (headersExpr != null) {
-                addStatement("append(%S, %L, %L)", formData.name, valueExpr, headersExpr)
-            } else {
-                addStatement("append(%S, %L)", formData.name, valueExpr)
-            }
-        }
         if (!formData.isRequired) {
             beginControlFlow("if (%L != null)", paramName)
-            addAppendStatement()
+            appendStatement(headersExpr, formData, valueExpr)
             endControlFlow()
         } else {
-            addAppendStatement()
+            appendStatement(headersExpr, formData, valueExpr)
         }
     }
     unindent()
     add("}))\n")
+}
+
+private fun CodeBlock.Builder.appendStatement(
+    headersExpr: CodeBlock?,
+    formData: Route.Body.Multipart.FormData,
+    valueExpr: CodeBlock
+) {
+    if (headersExpr != null) {
+        addStatement("append(%S, %L, %L)", formData.name, valueExpr, headersExpr)
+    } else {
+        addStatement("append(%S, %L)", formData.name, valueExpr)
+    }
 }
 
 private fun CodeBlock.Builder.addMultipartRefBodyCode(bodyMayBeNull: Boolean) {

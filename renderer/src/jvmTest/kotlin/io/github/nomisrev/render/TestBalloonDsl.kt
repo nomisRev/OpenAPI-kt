@@ -204,7 +204,7 @@ fun TestSuite.renderSpec(
     val outputDir = Path.of("src/jvmTest/resources/kotlinTestData", dir)
     if (UPDATE_GOLDEN) {
         Files.createDirectories(outputDir)
-        actual.forEach { (name, content) ->
+        actual.forEach { [name, content] ->
             Files.writeString(outputDir.resolve("$name.kt"), content)
         }
         return@test

@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi.transformers
 
+import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.AdditionalProperties
@@ -56,7 +57,7 @@ suspend fun ResolvedSchema.properties(
     properties: Map<String, ReferenceOr<Schema>>,
     context: SchemaContext
 ): Map<String, Model.Object.Property> = buildMap {
-    properties.forEach { (name, refOrSchema) ->
+    properties.forEach { [name, refOrSchema] ->
         refOrSchema.takeIf(context)
             ?.resolve(this@properties.name.nest(NamingContext.ObjectProperty(name)), context) { scope, propSchema ->
                 val model = scope.registry().engine.transform(scope, scope.registry(), propSchema, context, false)
@@ -68,9 +69,9 @@ suspend fun ResolvedSchema.properties(
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.additionalProperties(context: SchemaContext) =
     when (val ap = schema.additionalProperties) {
-        is AdditionalProperties.Allowed -> Model.Object.AdditionalProperties.Allowed(ap.value)
+        is Allowed -> Model.Object.AdditionalProperties.Allowed(ap.value)
         null -> Model.Object.AdditionalProperties.Allowed(false)
-        is AdditionalProperties.PSchema -> Model.Object.AdditionalProperties.Schema(
+        is PSchema -> Model.Object.AdditionalProperties.Schema(
             ap.value.toModel(name.nest(NamingContext.AdditionalProperties), context)
         )
     }
@@ -137,11 +138,11 @@ internal suspend fun ResolvedSchema.buildAllowedAdditionalPropertiesModel(): Mod
 
 context(ctx: Registry.Scope)
 internal suspend fun ResolvedSchema.fallback(): Model = when (this) {
-    is ResolvedSchema.Value -> Model.FreeFormJson(description(), io.github.nomisrev.openapi.Constraints.Object(schema), isNullable, schema.title)
+    is ResolvedSchema.Value -> Model.FreeFormJson(description(), Constraints.Object(schema), isNullable, schema.title)
     is ResolvedSchema.Recursive -> Model.Reference(name, description(), isNullable, schema.title)
     is ResolvedSchema.Reference -> Model.Object.value(
         reference,
-        Model.FreeFormJson(description(), io.github.nomisrev.openapi.Constraints.Object(schema), isNullable, schema.title),
+        Model.FreeFormJson(description(), Constraints.Object(schema), isNullable, schema.title),
         title = schema.title
     )
 }

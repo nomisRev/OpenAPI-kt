@@ -30,7 +30,7 @@ import kotlin.collections.orEmpty
 
 context(ctx: Registry)
 suspend fun OpenAPI.toRoutes(): List<Route> =
-    paths.entries.flatMap { (path, pathItem) ->
+    paths.entries.flatMap { [path, pathItem] ->
         val pathParams = pathItem.parameters
         listOfNotNull(
             pathItem.get?.let { toRoute(path, HttpMethod.Get, it.withParams(pathParams)) },
@@ -102,7 +102,7 @@ data class Route(
             val body: Body,
         )
 
-        fun variants(): List<Variant> = types.entries.map { (contentType, body) ->
+        fun variants(): List<Variant> = types.entries.map { [contentType, body] ->
             Variant(contentType, body)
         }
 
@@ -199,6 +199,7 @@ data class Route(
     data class Input(
         val name: String,
         val type: Model,
+        val contentType: ContentType?,
         val isRequired: Boolean,
         val input: Parameter.Input,
         val description: String?,
@@ -215,7 +216,7 @@ data class Route(
 }
 
 private fun Bodies?.nested(): Set<Model> =
-    this?.types.orEmpty().flatMapTo(mutableSetOf()) { (_, body) ->
+    this?.types.orEmpty().flatMapTo(mutableSetOf()) { [_, body] ->
         when (body) {
             is Body.Multipart.Value -> body.parameters.mapNotNull { it.type.nestedOrNull() }
             is Body.Multipart.Ref -> listOfNotNull(body.value.nestedOrNull())
@@ -233,7 +234,10 @@ private fun Returns.nested(): Set<Model> {
     return defaultNested + responsesNested
 }
 
-private fun List<Input>.nested(): Set<Model> = mapNotNullTo(mutableSetOf()) { it.type.nestedOrNull() }
+private fun List<Input>.nested(): Set<Model> =
+    flatMapTo(mutableSetOf()) { input ->
+        input.type.nestedOrNull()?.let { setOf(it) } ?: emptySet()
+    }
 
 private data class ResolvedPathEnumCase(
     val original: Model.Union.Case,
@@ -306,7 +310,7 @@ private suspend fun Route.expandFiniteEnumPathSegmentAt(index: Int): List<Route>
         .filter { it.enumModel == null }
         .map(ResolvedPathEnumCase::original)
 
-    val dynamicRoute = union.rebuildDynamicPathSegment(segment.name, dynamicCases)?.let { (replacementSegment, replacementType) ->
+    val dynamicRoute = union.rebuildDynamicPathSegment(segment.name, dynamicCases)?.let { [replacementSegment, replacementType] ->
         replacePathSegment(
             index = index,
             paramName = segment.name,
@@ -330,7 +334,7 @@ private fun Route.replacePathSegment(
             if (input.input != Parameter.Input.Path || input.name != paramName) {
                 input
             } else {
-                replacementType?.let { type -> input.copy(type = type) }
+                replacementType?.let { type -> input.copy(type = type, contentType = null) }
             }
         }
     )

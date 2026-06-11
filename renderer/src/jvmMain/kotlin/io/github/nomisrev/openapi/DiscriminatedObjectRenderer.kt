@@ -20,7 +20,7 @@ fun Model.DiscriminatedObject.toTypeSpec(
 ): TypeSpec {
     val className = classNameOverride ?: context.toClassName(config)
     val abstractProperties = consistentAbstractProperties(config)
-    val renderedAbstractProperties = abstractProperties.map { (jsonName, property) ->
+    val renderedAbstractProperties = abstractProperties.map { [jsonName, property] ->
         renderAbstractProperty(jsonName, property, config)
     }
 
@@ -55,12 +55,14 @@ fun Model.DiscriminatedObject.toTypeSpec(
     subtypes
         .map { subtype ->
             val discriminatorValue = subtype.discriminatorValue()
-            subtype.toTypeSpec(
-                config = config,
-                parentInterface = className,
-                serialName = discriminatorValue,
-                overridePropertyNames = abstractProperties.keys,
-            )
+            subtype
+                .copy(hadPropertiesBeforeStripping = true)
+                .toTypeSpec(
+                    config = config,
+                    parentInterface = className,
+                    serialName = discriminatorValue,
+                    overridePropertyNames = abstractProperties.keys,
+                )
         }
         .forEach(builder::addType)
 
@@ -85,7 +87,7 @@ private data class RenderedAbstractProperty(
 )
 
 private fun Model.DiscriminatedObject.consistentAbstractProperties(config: RenderConfig): Map<String, Model.Object.Property> =
-    abstractProperties.filter { (name, property) ->
+    abstractProperties.filter { [name, property] ->
         val expected = property.renderedTypeName(config)
         subtypes.all { subtype ->
             val subtypeProperty = subtype.properties[name]

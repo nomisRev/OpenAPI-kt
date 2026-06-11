@@ -68,7 +68,7 @@ private fun buildUnionSerializationException(): TypeSpec {
         .superclass(SerializationExceptionType)
         .addSuperclassConstructorParameter(
             CodeBlock.of(
-                "%S + payload + %S + errors.entries.joinToString(%S) { (type, error) -> type.toString() + %S + error.stackTraceToString() }",
+                "%S + payload + %S + errors.entries.joinToString(%S) { it.key.toString() + %S + it.value.stackTraceToString() }",
                 "Failed to deserialize Json: ",
                 ".\nErrors:\n",
                 "\n",
@@ -108,11 +108,11 @@ private fun buildAttemptDeserialize(): FunSpec {
                     KClassType.parameterizedBy(STAR),
                     IllegalArgumentException::class.asClassName()
                 )
-                .beginControlFlow("block.forEach { (kclass, parse) ->")
+                .beginControlFlow("block.forEach")
                 .beginControlFlow("try")
-                .addStatement("return parse(json)")
+                .addStatement("return it.second.invoke(this@attemptDeserialize, json)")
                 .nextControlFlow("catch (e: %T)", IllegalArgumentException::class)
-                .addStatement("errors[kclass] = e")
+                .addStatement("errors[it.first] = e")
                 .endControlFlow()
                 .endControlFlow()
                 .addStatement("throw UnionSerializationException(json, errors)")

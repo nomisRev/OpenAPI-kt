@@ -51,9 +51,9 @@ private tailrec suspend fun ReferenceOr<Schema>.getSuperTypeOrNull(
             parentSchema.discriminator
                 ?.mapping
                 ?.entries
-                ?.singleOrNull { (_, ref) ->
+                ?.singleOrNull { [_, ref] ->
                     ref.schemaName() == name
-                }?.let { (mappingName, _) ->
+                }?.let { [mappingName, _] ->
                     NamingContext.reference((this as ReferenceOr.Reference).ref.schemaName(), context)
                         .nest(NamingContext.DiscriminatedObjectCase(mappingName))
                 }

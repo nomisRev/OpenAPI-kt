@@ -115,8 +115,8 @@ val routeSpec by testSuite {
                 ContentType.MultiPart.FormData.toString() to MediaType(
                     schema = ReferenceOr.schema("RealtimeCallCreateRequest"),
                     encoding = mapOf(
-                        "sdp" to io.github.nomisrev.openapi.parser.Encoding(contentType = "application/sdp"),
-                        "session" to io.github.nomisrev.openapi.parser.Encoding(contentType = "application/json"),
+                        "sdp" to Encoding(contentType = "application/sdp"),
+                        "session" to Encoding(contentType = "application/json"),
                     ),
                 ),
                 "application/sdp" to MediaType(
@@ -138,7 +138,8 @@ val routeSpec by testSuite {
 
     test("NamingContext path uniqueness by literal path") {
         val pets = NamingContext.path(listOf(PathSegment.Literal("pets")), HttpMethod.Get).nest(NamingContext.Response)
-        val users = NamingContext.path(listOf(PathSegment.Literal("users")), HttpMethod.Get).nest(NamingContext.Response)
+        val users =
+            NamingContext.path(listOf(PathSegment.Literal("users")), HttpMethod.Get).nest(NamingContext.Response)
         assertNotEquals(pets, users)
     }
 
@@ -462,7 +463,9 @@ val routeSpec by testSuite {
                                         Schema(
                                             type = Schema.Type.Basic.Object,
                                             required = listOf("ifAnyMatch"),
-                                            additionalProperties = io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed(false),
+                                            additionalProperties = io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed(
+                                                false
+                                            ),
                                             properties = mapOf(
                                                 "ifAnyMatch" to ReferenceOr.value(
                                                     Schema(
@@ -477,7 +480,9 @@ val routeSpec by testSuite {
                                         Schema(
                                             type = Schema.Type.Basic.Object,
                                             required = listOf("ifNoneMatch"),
-                                            additionalProperties = io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed(false),
+                                            additionalProperties = io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed(
+                                                false
+                                            ),
                                             properties = mapOf(
                                                 "ifNoneMatch" to ReferenceOr.value(
                                                     Schema(
@@ -819,5 +824,56 @@ val routeSpec by testSuite {
         )
         assertTrue(form.isSupported)
         assertTrue(form.unsupportedFields.isEmpty())
+    }
+
+    test("parameter with content is resolved") {
+        val route = routes(
+            openAPI(
+                path = "/pets",
+                parameters = listOf(
+                    ReferenceOr.value(
+                        Parameter(
+                            name = "metadata",
+                            input = Parameter.Input.Query,
+                            content = mapOf(
+                                "application/json" to MediaType(
+                                    schema = ReferenceOr.value(Schema.string)
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        ).single()
+
+        val input = route.parameters.single()
+        assertEquals("metadata", input.name)
+        assertTrue(input.type is Model.Primitive.String)
+    }
+
+    test("only first content type is supported for parameters") {
+        val jsonSchema = Schema(type = Schema.Type.Basic.String)
+        val xmlSchema = Schema(type = Schema.Type.Basic.Integer)
+        val parameter = ReferenceOr.value(
+            Parameter(
+                name = "test",
+                input = Parameter.Input.Query,
+                content = mapOf(
+                    "application/json" to MediaType(schema = ReferenceOr.value(jsonSchema)),
+                    "application/xml" to MediaType(schema = ReferenceOr.value(xmlSchema))
+                )
+            )
+        )
+        val openAPI = openAPI(
+            path = "/test",
+            parameters = listOf(parameter)
+        )
+
+        val routes = Registry(openAPI).use { with(it) { openAPI.toRoutes() } }
+        val route = routes.first()
+        val input = route.parameters.first { it.name == "test" }
+
+        assertEquals(ContentType.Application.Json, input.contentType)
+        assertEquals(stringType, input.type)
     }
 }

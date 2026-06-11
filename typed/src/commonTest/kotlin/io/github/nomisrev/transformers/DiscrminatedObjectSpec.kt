@@ -102,6 +102,7 @@ val discriminatedObjectSpec by testSuite {
         false
     )
 
+    // TODO: Report power-assert inline actual into assertEquals fails. Index -155 out of bounds for length 61
     test("check") {
         registry(
             api.reference("User", baseSchema)
@@ -109,11 +110,9 @@ val discriminatedObjectSpec by testSuite {
                 .reference("ProUser", proSchema)
                 .reference("empty", Schema())
         ) {
-            assertEquals(
-                expected,
-                ReferenceOr.schema("User")
-                    .toModel(NamingContext.Reference("User", SchemaContext.Null), SchemaContext.Null)
-            )
+            val actual = ReferenceOr.schema("User")
+                .toModel(NamingContext.Reference("User", SchemaContext.Null), SchemaContext.Null)
+            assertEquals(expected, actual)
         }
     }
 

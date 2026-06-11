@@ -44,8 +44,8 @@ internal fun Iterable<Route>.sharedInlineParameterModels(): List<InlineParameter
     }
     return shared
         .values
-        .filter { (_, indexes) -> indexes.size > 1 }
-        .map { (inline, _) -> inline }
+        .filter { [_, indexes] -> indexes.size > 1 }
+        .map { [inline, _] -> inline }
         .toList()
 }
 

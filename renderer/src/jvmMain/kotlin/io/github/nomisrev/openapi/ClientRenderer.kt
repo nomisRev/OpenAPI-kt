@@ -86,7 +86,7 @@ private fun ApiTree.toRootTypeSpec(config: RenderConfig, className: ClassName): 
             ?.let(builder::addType)
     }
 
-    for ((method, route) in orderedOperations) {
+    for ([method, route] in orderedOperations) {
         builder.addProperty(route.toOperationPropertySpec(method, className, emptyList()))
         builder.addType(
             route.toOperationTypeSpec(
@@ -136,7 +136,7 @@ private fun PathNode.toTypeSpec(
             ?.let(builder::addType)
     }
 
-    for ((method, route) in orderedOperations) {
+    for ([method, route] in orderedOperations) {
         builder.addProperty(route.toOperationPropertySpec(method, className, currentAccumulatedParams))
         builder.addType(
             route.toOperationTypeSpec(

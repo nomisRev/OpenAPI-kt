@@ -29,7 +29,7 @@ private fun Model.flattenedScalarInputModel(): Model? = when (this) {
             return null
         }
 
-        val (propertyName, property) = properties.entries.single()
+        val [propertyName, property] = properties.entries.single()
         if (propertyName != "value" || !property.isRequired) return null
 
         property.model.flattenedScalarInputModel()?.with(

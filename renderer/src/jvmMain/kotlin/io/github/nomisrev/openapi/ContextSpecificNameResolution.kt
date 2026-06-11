@@ -20,7 +20,7 @@ internal fun List<Model>.contextSpecificNames(): Set<String> {
     var splitNames = emptySet<String>()
     while (true) {
         val next = modelsByName
-            .filter { (_, models) ->
+            .filter { [_, models] ->
                 val readKeys = models
                     .asSequence()
                     .filter { it.context == SchemaContext.Read }
@@ -88,7 +88,7 @@ private fun Model.Collection.normalizedForContextComparison(splitNames: Set<Stri
 
 private fun Model.DiscriminatedObject.normalizedForContextComparison(splitNames: Set<String>): Model = copy(
     context = SharedNamingContext,
-    abstractProperties = abstractProperties.mapValues { (_, property) ->
+    abstractProperties = abstractProperties.mapValues { [_, property] ->
         property.copy(model = property.model.normalizedForContextComparison(splitNames))
     },
     subtypes = subtypes.map { subtype ->
@@ -109,7 +109,7 @@ private fun Model.Object.normalizedForContextComparison(splitNames: Set<String>)
     context = SharedNamingContext,
     description = null,
     title = null,
-    properties = properties.mapValues { (_, property) ->
+    properties = properties.mapValues { [_, property] ->
         property.copy(model = property.model.normalizedForContextComparison(splitNames))
     },
     additionalProperties = when (val additional = additionalProperties) {

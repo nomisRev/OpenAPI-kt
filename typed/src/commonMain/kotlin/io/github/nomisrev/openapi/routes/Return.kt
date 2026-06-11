@@ -20,7 +20,7 @@ suspend fun resolveReturns(
 ): Route.Returns =
     Route.Returns(
         default = operation.responses.default?.resolve()?.toReturnType(path, segments, method),
-        responses = operation.responses.responses.entries.associate { (code, response) ->
+        responses = operation.responses.responses.entries.associate { [code, response] ->
             Pair(HttpStatusCode.fromValue(code), response.resolve().toReturnType(path, segments, method))
         },
         extensions = operation.responses.extensions
@@ -32,7 +32,7 @@ private suspend fun Response.toReturnType(
     segments: List<PathSegment>,
     method: HttpMethod,
 ): Route.ReturnType = Route.ReturnType(
-    types = content.entries.associate { (contentType, mediaType) ->
+    types = content.entries.associate { [contentType, mediaType] ->
         val schema = requireNotNull(mediaType.schema) {
             "Response without $mediaType schema for ${method.value} $path. $this"
         }

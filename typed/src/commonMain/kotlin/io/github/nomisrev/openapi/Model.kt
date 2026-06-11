@@ -287,7 +287,7 @@ sealed interface Model {
         val isScalarWrapper: Boolean = false,
     ) : Model, ContextHolder {
         val inline: Set<Model> =
-            properties.mapNotNullTo(mutableSetOf()) { (_, prop) -> prop.model.nestedOrNull() } +
+            properties.mapNotNullTo(mutableSetOf()) { [_, prop] -> prop.model.nestedOrNull() } +
                     setOfNotNull((additionalProperties as? AdditionalProperties.Schema)?.value?.nestedOrNull())
 
         constructor(

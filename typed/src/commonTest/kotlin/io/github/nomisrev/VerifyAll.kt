@@ -34,8 +34,8 @@ context(suite: TestSuite)
 fun <A, B> List<A>.verifyAll(
     name: String,
     check: suspend (A) -> Eq<B>,
-) {
-    suite.test(name) {
+) = with(suite) {
+    test(name) {
         forEach { value ->
             val eq = check(value)
             if (eq.expected != eq.actual) {
@@ -57,7 +57,6 @@ data class ExpectedApi(
     val names: List<NamingContext.Reference>
 )
 
-@OptIn(ExperimentalAtomicApi::class)
 @TestRegistering
 @JvmName("checkAllExpectedApi")
 fun TestSuite.verifyAll(
@@ -66,7 +65,6 @@ fun TestSuite.verifyAll(
     vararg names: NamingContext.Reference
 ) = verifyAll(name, values, Write, names.toList())
 
-@OptIn(ExperimentalAtomicApi::class)
 @TestRegistering
 @JvmName("checkAllExpectedApi")
 fun TestSuite.verifyAll(
@@ -110,7 +108,6 @@ fun TestSuite.verifyAll(
     }
 }
 
-@OptIn(ExperimentalAtomicApi::class)
 @TestRegistering
 @JvmName("checkAllExpectedApi")
 fun TestSuite.verifyAll(
@@ -192,7 +189,7 @@ fun TestSuite.verifyAll(
 ) {
     test(name) {
         Registry(api).use { registry ->
-            for ((schema, model) in values) {
+            for ([schema, model] in values) {
                 val result = try {
                     with(registry) {
                         val resolved = actual(schema)
@@ -228,7 +225,6 @@ fun TestSuite.verifyAll(
     }
 }
 
-@OptIn(ExperimentalAtomicApi::class)
 @TestRegistering
 fun TestSuite.verifyAll(
     name: String,
@@ -237,8 +233,8 @@ fun TestSuite.verifyAll(
 ) {
     test(name) {
         Registry(api).use { registry ->
-            for ((schema, model) in values) {
-                val eq = with(registry) { actual(schema, model) }
+            for ([schema, model] in values) {
+                val eq = actual(schema, model)
                 if (eq.actual != eq.expected) {
                     fail(
                         """

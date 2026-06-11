@@ -97,7 +97,7 @@ private fun buildDescriptorProperty(
             UnionPolymorphicKindType,
         )
         .apply {
-            cases.forEach { (case, rendered) ->
+            cases.forEach { [case, rendered] ->
                 addStatement(
                     "element(%S, %L.descriptor)",
                     rendered.caseSimpleName,
@@ -195,7 +195,7 @@ private fun buildAttemptDeserializeBody(
     .indent()
     .addStatement("value,")
     .apply {
-        orderedCases.forEach { (case, rendered) ->
+        orderedCases.forEach { [case, rendered] ->
             val caseClassName = className.nestedClass(rendered.caseSimpleName)
             val serializerCode = caseSerializerCode(case, rendered, config, originalClassName, className, externalTypeNames)
             if (rendered.isInlined || rendered.isNestedUnion) {
@@ -271,7 +271,7 @@ private fun buildTaggedCustomDeserializeCode(
                 }
             }
 
-            casesByTag.forEach { (tag, collisionCases) ->
+            casesByTag.forEach { [tag, collisionCases] ->
                 if (collisionCases.size > 1) {
                     beginControlFlow("%S ->", tag)
                     add(
@@ -364,7 +364,7 @@ private fun buildTaggedCustomCollisionDispatchCode(
         )
     }
 
-    val uniqueKeysByCase = orderedCollisionCases.map { (case, rendered) ->
+    val uniqueKeysByCase = orderedCollisionCases.map { [case, rendered] ->
         AnyOfDispatchCase(
             case = case,
             rendered = rendered,
@@ -391,7 +391,7 @@ private fun buildAnyOfDeserializeCode(
     anyOfDispatchAnalysis: AnyOfUniqueKeyDispatchAnalysis,
     externalTypeNames: Map<ClassName, TypeName>,
 ): CodeBlock {
-    val uniqueKeysByCase = orderedCases.map { (case, rendered) ->
+    val uniqueKeysByCase = orderedCases.map { [case, rendered] ->
         AnyOfDispatchCase(
             case = case,
             rendered = rendered,
@@ -528,7 +528,7 @@ private fun buildSerializeFunction(
     val code = CodeBlock.builder()
         .beginControlFlow("when(value)")
         .apply {
-            allCases.forEach { (case, rendered) ->
+            allCases.forEach { [case, rendered] ->
                 val caseClassName = className.nestedClass(rendered.caseSimpleName)
                 val serializerCode = caseSerializerCode(case, rendered, config, originalClassName, className, externalTypeNames)
                 if (rendered.isInlined || rendered.isNestedUnion) {
@@ -558,7 +558,7 @@ private fun buildSerializeFunction(
 }
 
 internal fun List<Pair<Model.Union.Case, RenderedUnionCase>>.sortedByDeserializationOrder():
-    List<Pair<Model.Union.Case, RenderedUnionCase>> = sortedBy { (case, _) ->
+    List<Pair<Model.Union.Case, RenderedUnionCase>> = sortedBy { [case, _] ->
     case.model.deserializationPriority()
 }
 

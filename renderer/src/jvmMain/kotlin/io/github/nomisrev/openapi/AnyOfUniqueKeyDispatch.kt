@@ -19,7 +19,7 @@ internal fun List<Model.Union.Case>.uniqueKeyDispatchAnalysisOrNull(): AnyOfUniq
     }
     if (objectCases.size != size) return null
 
-    val uniqueKeysByCase = objectCases.associate { (case, model) ->
+    val uniqueKeysByCase = objectCases.associate { [case, model] ->
         val otherKeys = objectCases
             .asSequence()
             .filterNot { it.first == case }

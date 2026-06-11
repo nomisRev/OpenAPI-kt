@@ -14,8 +14,8 @@ kotlin {
     compilerOptions{
         freeCompilerArgs.addAll(listOfNotNull(
             "-Xcontext-sensitive-resolution",
-            "-Xcontext-parameters",
             "-Xreturn-value-checker=full",
+            "-Xname-based-destructuring=complete",
             "-Xdebug".takeIf { System.getProperty("idea.active") == "true" }
         ))
         allWarningsAsErrors = true

@@ -462,7 +462,7 @@ data class PersonWithAdditionalPropertiesSchema(
                 buildJsonObject {
                     put("name", JsonPrimitive(value.name)) // required
                     if (value.age != null) put("age", JsonPrimitive(value.age)) // required nullable
-                    value.additional?.forEach { (key, additionalValue) ->
+                    value.additional?.forEach { [key, additionalValue] ->
                         put(key, json.encodeToJsonElement(NestedClass.serializer(), additionalValue))
                     }
                 })
@@ -477,7 +477,7 @@ data class PersonWithAdditionalPropertiesSchema(
                 name = json.decodeFromJsonElement(String.serializer(), element["name"]!!),
                 age = json.decodeFromJsonElement(Int.serializer().nullable, element["age"]!!),
                 additional = (element - names)
-                    .mapValues { (_, value) -> decodeFromJsonElement(NestedClass.serializer(), value) }
+                    .mapValues { [_, value] -> decodeFromJsonElement(NestedClass.serializer(), value) }
                     .ifEmpty { null }
             )
         }
@@ -686,7 +686,7 @@ class UnionSerializationException(
         Failed to deserialize Json: $payload.
         Errors:
         ${
-        errors.entries.joinToString(separator = "\n") { (type, error) ->
+        errors.entries.joinToString(separator = "\n") { [type, error] ->
             "$type - failed to deserialize: ${error.stackTraceToString()}"
         }
     }""".trimIndent()
@@ -694,7 +694,7 @@ class UnionSerializationException(
 
 fun <A> attemptDeserialize(json: JsonElement, vararg block: Pair<KClass<*>, (JsonElement) -> A>): A {
     val errors = linkedMapOf<KClass<*>, IllegalArgumentException>()
-    block.forEach { (kclass, parse) ->
+    block.forEach { [kclass, parse] ->
         try {
             return parse(json)
         } catch (e: IllegalArgumentException) {

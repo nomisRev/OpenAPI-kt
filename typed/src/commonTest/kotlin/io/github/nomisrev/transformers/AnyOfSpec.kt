@@ -113,7 +113,7 @@ val anyOfSpec by testSuite {
         }
     }
 
-    verifyAll("anyOf[{ type: null }, { type: primitive }", Model.Primitive.all().map { (schema, model) ->
+    verifyAll("anyOf[{ type: null }, { type: primitive }", Model.Primitive.all().map { [schema, model] ->
         Schema(
             anyOf = listOf(
                 ReferenceOr.value(Schema.NULL),
@@ -122,7 +122,7 @@ val anyOfSpec by testSuite {
         ) expect model.with(isNullable = true)
     })
 
-    verifyAll("anyOf[{ nullable: true }, { type: primitive }", Model.Primitive.all().map { (schema, model) ->
+    verifyAll("anyOf[{ nullable: true }, { type: primitive }", Model.Primitive.all().map { [schema, model] ->
         Schema(
             anyOf = listOf(
                 ReferenceOr.value(Schema(nullable = true)),
@@ -131,7 +131,7 @@ val anyOfSpec by testSuite {
         ) expect model.with(isNullable = true)
     })
 
-    verifyAll("anyOf[{ type: primitive }]", Model.Primitive.all().map { (schema, model) ->
+    verifyAll("anyOf[{ type: primitive }]", Model.Primitive.all().map { [schema, model] ->
         Schema(anyOf = listOf(ReferenceOr.value(schema))) expect model
     })
 

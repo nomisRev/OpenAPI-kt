@@ -94,7 +94,7 @@ internal fun Route.Bodies.flattenedBodyRendering(
             methodClassName = methodClassName,
             bodyModel = model,
             requiredPrimitiveUnionFieldNames = model.properties.entries
-                .filter { (_, property) -> property.isRequired && property.model.isFlattenablePrimitiveUnion() }
+                .filter { [_, property] -> property.isRequired && property.model.isFlattenablePrimitiveUnion() }
                 .mapTo(mutableSetOf()) { it.key },
         )
 
@@ -177,7 +177,7 @@ private fun buildFlattenedBodyOverloads(
     typeNameRemaps: Map<ClassName, TypeName>,
     maxOverloads: Long = FlattenedBodyMaxOverloads
 ): List<FlattenedBodyOverload>? {
-    val propertyOptions = bodyModel.properties.entries.map { (name, property) ->
+    val propertyOptions = bodyModel.properties.entries.map { [name, property] ->
         val modelOptions = if (property.isRequired && property.model.isFlattenablePrimitiveUnion()) {
             val union = property.model as Model.Union
             union.cases.map { case -> case.model }
@@ -188,13 +188,13 @@ private fun buildFlattenedBodyOverloads(
     }
     val additionalProperty = bodyModel.additionalProperties as? Model.Object.AdditionalProperties.Schema
 
-    if (countFlattenedBodyOverloadsOrNull(propertyOptions.map { (_, options) -> options.size }, maxOverloads) == null) {
+    if (countFlattenedBodyOverloadsOrNull(propertyOptions.map { [_, options] -> options.size }, maxOverloads) == null) {
         return null
     }
 
     val bodyParamsBeforeOptionalParams = bodyModel.properties.values.any { it.isRequired }
     val bodyMayBeNull = !bodyRequired && bodyModel.properties.values.none { it.isRequired }
-    val parameterGroups = propertyOptions.fold(listOf(emptyMap<String, Model>())) { acc, (name, options) ->
+    val parameterGroups = propertyOptions.fold(listOf(emptyMap<String, Model>())) { acc, [name, options] ->
         acc.flatMap { current ->
             options.map { option -> current + (name to option) }
         }
@@ -222,7 +222,7 @@ private fun buildFlattenedBodyOverload(
     val parameters = mutableListOf<ParameterSpec>()
     val constructorArgPieces = mutableListOf<CodeBlock>()
 
-    context.bodyModel.properties.entries.forEach { (propertyName, property) ->
+    context.bodyModel.properties.entries.forEach { [propertyName, property] ->
         val paramName = propertyName.toParamName()
         val selectedCase = if (property.isRequired && property.model.isFlattenablePrimitiveUnion()) {
             context.selectedModels.getValue(propertyName)
@@ -279,7 +279,7 @@ private fun buildFlattenedBodyPublicTypes(
     bodyModel: Model.Object,
     requiredPrimitiveUnionFieldNames: Set<String>,
 ): List<FlattenedBodyPublicType> {
-    val regularTypes = bodyModel.properties.entries.mapNotNull { (propertyName, property) ->
+    val regularTypes = bodyModel.properties.entries.mapNotNull { [propertyName, property] ->
         if (propertyName in requiredPrimitiveUnionFieldNames) return@mapNotNull null
         val nestedModel = property.model.nestedOrNull() ?: return@mapNotNull null
         if (nestedModel is Model.Object && nestedModel.isScalarWrapper) return@mapNotNull null

@@ -75,7 +75,7 @@ private fun Route.topLevelNames(): Set<NamingContext.Reference> =
     parameters.topLevelNames() + returns.topLevelNames() + body.topLevelNames()
 
 private fun Route.Bodies?.topLevelNames(): Set<NamingContext.Reference> =
-    this?.types.orEmpty().flatMapTo(mutableSetOf()) { (_, body) ->
+    this?.types.orEmpty().flatMapTo(mutableSetOf()) { [_, body] ->
         when (body) {
             is Route.Body.Multipart.Value -> body.parameters.flatMap { it.type.topLevelNames() }
             is Route.Body.Multipart.Ref -> body.value.topLevelNames()
@@ -94,7 +94,9 @@ private fun Route.Returns.topLevelNames(): Set<NamingContext.Reference> {
 }
 
 private fun List<Route.Input>.topLevelNames(): Set<NamingContext.Reference> =
-    flatMapTo(mutableSetOf()) { it.type.topLevelNames() }
+    flatMapTo(mutableSetOf()) { input ->
+        input.type.topLevelNames()
+    }
 
 private fun List<Server>.normalizeForClientGeneration(): List<Server> {
     if (size != 1) return this
@@ -191,9 +193,9 @@ private fun PathSegment.requireCompatibleWith(
     val conflicts = listOf(
         existingRoute to compatibilityDescription(),
         incomingRoute to other.compatibilityDescription(),
-    ).sortedBy { (route, _) -> route.descriptor() }
+    ).sortedBy { [route, _] -> route.descriptor() }
 
-    val routes = conflicts.joinToString(separator = "; ") { (route, segment) ->
+    val routes = conflicts.joinToString(separator = "; ") { [route, segment] ->
         "${route.descriptor()} -> $segment"
     }
     throw IllegalArgumentException(
@@ -264,7 +266,7 @@ private fun Route.Input.normalizedForConcreteCollision(): Route.Input =
 
 private fun Route.Bodies?.normalizedForConcreteCollision(): Route.Bodies? =
     this?.copy(
-        types = types.mapValues { (_, body) -> body.normalizedForConcreteCollision() },
+        types = types.mapValues { [_, body] -> body.normalizedForConcreteCollision() },
         extensions = emptyMap(),
     )
 
@@ -302,12 +304,12 @@ private fun Route.Body.normalizedForConcreteCollision(): Route.Body = when (this
 
 private fun Route.Returns.normalizedForConcreteCollision(): Route.Returns = copy(
     default = default?.normalizedForConcreteCollision(),
-    responses = responses.mapValues { (_, value) -> value.normalizedForConcreteCollision() },
+    responses = responses.mapValues { [_, value] -> value.normalizedForConcreteCollision() },
     extensions = emptyMap(),
 )
 
 private fun Route.ReturnType.normalizedForConcreteCollision(): Route.ReturnType = copy(
-    types = types.mapValues { (_, model) -> model.normalizedForCompatibility() },
+    types = types.mapValues { [_, model] -> model.normalizedForCompatibility() },
     extensions = emptyMap(),
 )
 
@@ -317,7 +319,7 @@ private fun Route.concreteCollisionDescription(): String = buildString {
         "${input.input.name.lowercase()}:${input.name}:${input.type.compatibilityDescription()}"
     })
     append(", body=")
-    append(body?.types?.entries?.joinToString(prefix = "[", postfix = "]") { (contentType, body) ->
+    append(body?.types?.entries?.joinToString(prefix = "[", postfix = "]") { [contentType, body] ->
         "$contentType:${body.concreteCollisionDescription()}"
     } ?: "null")
     append(", returns=")
@@ -345,7 +347,7 @@ private fun Route.Returns.concreteCollisionDescription(): String = buildString {
     append(
         responses.entries
             .sortedBy { it.key.value }
-            .joinToString(prefix = "[", postfix = "]") { (status, response) ->
+            .joinToString(prefix = "[", postfix = "]") { [status, response] ->
                 "${status.value}:${response.concreteCollisionDescription()}"
             }
     )
@@ -354,7 +356,7 @@ private fun Route.Returns.concreteCollisionDescription(): String = buildString {
 private fun Route.ReturnType.concreteCollisionDescription(): String =
     types.entries
         .sortedBy { it.key.toString() }
-        .joinToString(prefix = "[", postfix = "]") { (contentType, model) ->
+        .joinToString(prefix = "[", postfix = "]") { [contentType, model] ->
             "$contentType:${model.compatibilityDescription()}"
         }
 
@@ -389,7 +391,7 @@ private fun Model.Collection.normalizedForCompatibility(): Model = copy(
 
 private fun Model.DiscriminatedObject.normalizedForCompatibility(): Model = copy(
     context = SharedPathNodeNamingContext,
-    abstractProperties = abstractProperties.mapValues { (_, property) ->
+    abstractProperties = abstractProperties.mapValues { [_, property] ->
         property.copy(model = property.model.normalizedForCompatibility())
     },
     subtypes = subtypes.map { subtype ->
@@ -397,7 +399,7 @@ private fun Model.DiscriminatedObject.normalizedForCompatibility(): Model = copy
             context = SharedPathNodeNamingContext,
             description = null,
             title = null,
-            properties = subtype.properties.mapValues { (_, property) ->
+            properties = subtype.properties.mapValues { [_, property] ->
                 property.copy(model = property.model.normalizedForCompatibility())
             },
             additionalProperties = subtype.additionalProperties.normalizedForCompatibility(),
@@ -418,7 +420,7 @@ private fun Model.Object.normalizedForCompatibility(): Model = copy(
     context = SharedPathNodeNamingContext,
     description = null,
     title = null,
-    properties = properties.mapValues { (_, property) ->
+    properties = properties.mapValues { [_, property] ->
         property.copy(model = property.model.normalizedForCompatibility())
     },
     additionalProperties = additionalProperties.normalizedForCompatibility(),
@@ -491,7 +493,7 @@ private fun Model.compatibilityDescription(): String {
         is Model.Object -> {
             val propertiesDescription = properties.entries
                 .sortedBy { it.key }
-                .joinToString(prefix = "[", postfix = "]") { (name, property) ->
+                .joinToString(prefix = "[", postfix = "]") { [name, property] ->
                     "$name:${property.model.compatibilityDescription()}"
                 }
             val kind = if (isScalarWrapper) "ScalarWrapper" else "Object"

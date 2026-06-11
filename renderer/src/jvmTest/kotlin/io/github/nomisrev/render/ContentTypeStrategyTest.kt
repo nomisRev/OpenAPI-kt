@@ -42,7 +42,7 @@ class ContentTypeStrategyTest {
             ContentType.parse("text/event-stream") to "TextEventStream",
         )
 
-        cases.forEach { (contentType, expected) ->
+        cases.forEach { [contentType, expected] ->
             assertEquals(expected, contentTypeToIdentifier(contentType))
             assertEquals(expected.replaceFirstChar { it.lowercase() }, contentTypeToMethodName(contentType))
         }

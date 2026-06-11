@@ -42,7 +42,7 @@ val recursiveSpec by testSuite {
     val root = NamingContext.reference("Root", SchemaContext.Null)
     verifyAll(
         "Recursive anchors reference",
-        recursiveAnchors(root).map { (schema, model) ->
+        recursiveAnchors(root).map { [schema, model] ->
             ExpectedApi(
                 schema,
                 model,

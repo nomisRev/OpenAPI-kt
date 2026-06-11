@@ -66,7 +66,7 @@ fun Model.Object.toTypeSpec(
     val simpleName = classNameOverride?.simpleName ?: nameOverride ?: className.simpleName
     // When the class is renamed or moved, nested type references still use the old name.
     // Build a corrected ClassName so nested types resolve against the rendered owner.
-    val renderedProperties = properties.map { (jsonName, prop) ->
+    val renderedProperties = properties.map { [jsonName, prop] ->
         renderProperty(
             jsonName = jsonName,
             property = prop,
@@ -384,23 +384,23 @@ private fun serializerSerializeCode(
             JsonObjectType
         )
         .addStatement("val content = mutableMapOf<%T, %T>()", String::class, JsonElementType)
-        .beginControlFlow("known.forEach { (key, jsonElement) ->")
-        .beginControlFlow("if (key != %S)", "additional")
-        .addStatement("content[key] = jsonElement")
+        .beginControlFlow("known.forEach")
+        .beginControlFlow("if (it.key != %S)", "additional")
+        .addStatement("content[it.key] = it.value")
         .endControlFlow()
         .endControlFlow()
         .apply {
             when (additionalPropertyKind) {
                 AdditionalPropertyKind.Json -> {
-                    beginControlFlow("value.additional?.forEach { (key, jsonElement) ->")
-                    addStatement("content[key] = jsonElement")
+                    beginControlFlow("value.additional?.forEach")
+                    addStatement("content[it.key] = it.value")
                     endControlFlow()
                 }
 
                 is AdditionalPropertyKind.Typed -> {
-                    beginControlFlow("value.additional?.forEach { (key, additionalValue) ->")
+                    beginControlFlow("value.additional?.forEach")
                     addStatement(
-                        "content[key] = json.encodeToJsonElement(%L, additionalValue)",
+                        "content[it.key] = json.encodeToJsonElement(%L, it.value)",
                         additionalPropertyKind.valueType.serializerCode(config)
                     )
                     endControlFlow()
@@ -443,7 +443,7 @@ private fun serializerDeserializeCode(
                         .addStatement("val additional = (element - knownNames)")
                         .indent()
                         .addStatement(
-                            ".mapValues { (_, jsonElement) -> json.decodeFromJsonElement(%L, jsonElement) }",
+                            ".mapValues { json.decodeFromJsonElement(%L, it.value) }",
                             additionalPropertyKind.valueType.serializerCode(config)
                         )
                         .addStatement(".ifEmpty { null }")

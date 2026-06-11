@@ -17,7 +17,7 @@ import kotlin.test.assertEquals
 val oneOfSpec by testSuite {
     verifyAll(
         "oneOf[]",
-        Model.FreeFormJson.all().map { (schema, model) ->
+        Model.FreeFormJson.all().map { [schema, model] ->
             Schema(
                 oneOf = emptyList(),
                 description = schema.description,
@@ -26,11 +26,11 @@ val oneOfSpec by testSuite {
         }
     )
 
-    verifyAll("oneOf[{ type: primitive }]", Model.Primitive.all().map { (schema, model) ->
+    verifyAll("oneOf[{ type: primitive }]", Model.Primitive.all().map { [schema, model] ->
         Schema(oneOf = listOf(ReferenceOr.value(schema))) expect model
     })
 
-    verifyAll("oneOf[{ type: null }, { type: primitive }", Model.Primitive.all().map { (schema, model) ->
+    verifyAll("oneOf[{ type: null }, { type: primitive }", Model.Primitive.all().map { [schema, model] ->
         Schema(
             oneOf = listOf(
                 ReferenceOr.value(Schema.NULL),
@@ -39,7 +39,7 @@ val oneOfSpec by testSuite {
         ) expect model.with(isNullable = true)
     })
 
-    verifyAll("oneOf[{ nullable: true }, { type: primitive }", Model.Primitive.all().map { (schema, model) ->
+    verifyAll("oneOf[{ nullable: true }, { type: primitive }", Model.Primitive.all().map { [schema, model] ->
         Schema(
             oneOf = listOf(
                 ReferenceOr.value(Schema(nullable = true)),

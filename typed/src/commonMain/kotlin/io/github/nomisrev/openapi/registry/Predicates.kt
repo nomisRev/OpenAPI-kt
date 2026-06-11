@@ -77,7 +77,7 @@ context(ctx: Registry.Scope)
 private suspend fun Schema.isObjectWithDiscriminator(ref: String): Boolean = with(ctx) {
     properties != null &&
             discriminator?.mapping?.isNotEmpty() == true &&
-            discriminator?.mapping?.all { (_, mappingName) ->
+            discriminator?.mapping?.all { [_, mappingName] ->
                 if (ref == mappingName.schemaName()) {
                     true
                 } else {

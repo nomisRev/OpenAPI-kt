@@ -43,9 +43,9 @@ private fun Model.addNames() {
         is Model.ContextHolder -> when (this) {
             is Model.DiscriminatedObject -> {
                 context.addIfReference()
-                abstractProperties.forEach { (_, prop) -> prop.model.addNames() }
+                abstractProperties.forEach { [_, prop] -> prop.model.addNames() }
                 subtypes.forEach { subtype ->
-                    subtype.properties.forEach { (_, prop) -> prop.model.addNames() }
+                    subtype.properties.forEach { [_, prop] -> prop.model.addNames() }
                     (subtype.additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.addNames()
                 }
             }
@@ -58,7 +58,7 @@ private fun Model.addNames() {
             is Model.Enum -> context.addIfReference()
             is Model.Object -> {
                 context.addIfReference()
-                properties.forEach { (_, prop) -> prop.model.addNames() }
+                properties.forEach { [_, prop] -> prop.model.addNames() }
                 (additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.addNames()
             }
 
