@@ -1,0 +1,25 @@
+package io.openai.model
+
+import kotlin.Boolean
+import kotlin.String
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+
+/**
+ * Confirmation payload returned after deleting a role.
+ */
+@Serializable
+public data class RoleDeletedResource(
+  public val `object`: Object,
+  public val id: String,
+  public val deleted: Boolean,
+) {
+  @Serializable
+  public enum class Object(
+    public val `value`: String,
+  ) {
+    @SerialName("role.deleted")
+    RoleDeleted("role.deleted"),
+    ;
+  }
+}

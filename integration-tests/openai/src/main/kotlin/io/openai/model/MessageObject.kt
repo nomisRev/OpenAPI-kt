@@ -1,0 +1,239 @@
+package io.openai.model
+
+import kotlin.Long
+import kotlin.OptIn
+import kotlin.String
+import kotlin.collections.List
+import kotlin.jvm.JvmInline
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonClassDiscriminator
+
+/**
+ * Represents a message within a [thread](/docs/api-reference/threads).
+ */
+@Serializable
+public data class MessageObject(
+  public val id: String,
+  public val `object`: Object,
+  @SerialName("created_at")
+  public val createdAt: Long,
+  @SerialName("thread_id")
+  public val threadId: String,
+  public val status: Status,
+  @SerialName("incomplete_details")
+  public val incompleteDetails: IncompleteDetails?,
+  @SerialName("completed_at")
+  public val completedAt: Long?,
+  @SerialName("incomplete_at")
+  public val incompleteAt: Long?,
+  public val role: Role,
+  public val content: List<Content>,
+  @SerialName("assistant_id")
+  public val assistantId: String?,
+  @SerialName("run_id")
+  public val runId: String?,
+  public val attachments: List<Attachments>?,
+  public val metadata: Metadata,
+) {
+  @Serializable
+  public data class Attachments(
+    @SerialName("file_id")
+    public val fileId: String? = null,
+    public val tools: List<Tools>? = null,
+  ) {
+    @OptIn(ExperimentalSerializationApi::class)
+    @JsonClassDiscriminator("type")
+    @Serializable
+    public sealed interface Tools {
+      @Serializable
+      @SerialName("code_interpreter")
+      public data object CodeInterpreter : Tools
+
+      @Serializable
+      @SerialName("file_search")
+      public data object FileSearch : Tools
+    }
+  }
+
+  @OptIn(ExperimentalSerializationApi::class)
+  @JsonClassDiscriminator("type")
+  @Serializable
+  public sealed interface Content {
+    /**
+     * References an image [File](/docs/api-reference/files) in the content of a message.
+     */
+    @SerialName("image_file")
+    @Serializable
+    public data class ImageFile(
+      @SerialName("file_id")
+      public val fileId: String,
+      public val detail: Detail? = null,
+    ) : Content {
+      @Serializable
+      public enum class Detail(
+        public val `value`: String,
+      ) {
+        @SerialName("auto")
+        Auto("auto"),
+        @SerialName("low")
+        Low("low"),
+        @SerialName("high")
+        High("high"),
+        ;
+      }
+    }
+
+    /**
+     * References an image URL in the content of a message.
+     */
+    @SerialName("image_url")
+    @Serializable
+    public data class ImageUrl(
+      public val url: String,
+      public val detail: Detail? = null,
+    ) : Content {
+      @Serializable
+      public enum class Detail(
+        public val `value`: String,
+      ) {
+        @SerialName("auto")
+        Auto("auto"),
+        @SerialName("low")
+        Low("low"),
+        @SerialName("high")
+        High("high"),
+        ;
+      }
+    }
+
+    /**
+     * The text content that is part of a message.
+     */
+    @SerialName("text")
+    @Serializable
+    public data class Text(
+      public val `value`: String,
+      public val annotations: List<Annotations>,
+    ) : Content {
+      @OptIn(ExperimentalSerializationApi::class)
+      @JsonClassDiscriminator("type")
+      @Serializable
+      public sealed interface Annotations {
+        /**
+         * A citation within the message that points to a specific quote from a specific File associated with the assistant or the message. Generated when the assistant uses the "file_search" tool to search files.
+         */
+        @SerialName("file_citation")
+        @Serializable
+        public data class FileCitation(
+          public val text: String,
+          @SerialName("file_citation")
+          public val fileCitation: FileCitation,
+          @SerialName("start_index")
+          public val startIndex: Long,
+          @SerialName("end_index")
+          public val endIndex: Long,
+        ) : Annotations {
+          @JvmInline
+          @Serializable
+          public value class FileCitation(
+            @SerialName("file_id")
+            public val fileId: String,
+          )
+        }
+
+        /**
+         * A URL for the file that's generated when the assistant used the `code_interpreter` tool to generate a file.
+         */
+        @SerialName("file_path")
+        @Serializable
+        public data class FilePath(
+          public val text: String,
+          @SerialName("file_path")
+          public val filePath: FilePath,
+          @SerialName("start_index")
+          public val startIndex: Long,
+          @SerialName("end_index")
+          public val endIndex: Long,
+        ) : Annotations {
+          @JvmInline
+          @Serializable
+          public value class FilePath(
+            @SerialName("file_id")
+            public val fileId: String,
+          )
+        }
+      }
+    }
+
+    /**
+     * The refusal content generated by the assistant.
+     */
+    @JvmInline
+    @SerialName("refusal")
+    @Serializable
+    public value class Refusal(
+      public val refusal: String,
+    ) : Content
+  }
+
+  /**
+   * On an incomplete message, details about why the message is incomplete.
+   */
+  @JvmInline
+  @Serializable
+  public value class IncompleteDetails(
+    public val reason: Reason,
+  ) {
+    @Serializable
+    public enum class Reason(
+      public val `value`: String,
+    ) {
+      @SerialName("content_filter")
+      ContentFilter("content_filter"),
+      @SerialName("max_tokens")
+      MaxTokens("max_tokens"),
+      @SerialName("run_cancelled")
+      RunCancelled("run_cancelled"),
+      @SerialName("run_expired")
+      RunExpired("run_expired"),
+      @SerialName("run_failed")
+      RunFailed("run_failed"),
+      ;
+    }
+  }
+
+  @Serializable
+  public enum class Object(
+    public val `value`: String,
+  ) {
+    @SerialName("thread.message")
+    ThreadMessage("thread.message"),
+    ;
+  }
+
+  @Serializable
+  public enum class Role(
+    public val `value`: String,
+  ) {
+    @SerialName("user")
+    User("user"),
+    @SerialName("assistant")
+    Assistant("assistant"),
+    ;
+  }
+
+  @Serializable
+  public enum class Status(
+    public val `value`: String,
+  ) {
+    @SerialName("in_progress")
+    InProgress("in_progress"),
+    @SerialName("incomplete")
+    Incomplete("incomplete"),
+    @SerialName("completed")
+    Completed("completed"),
+    ;
+  }
+}
