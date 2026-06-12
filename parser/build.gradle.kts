@@ -22,13 +22,10 @@ kotlin {
     js {
         browser {
             testTask {
-                useMocha {
-                    timeout = "10s"
+                useKarma {
+                    useChromeHeadless()
+                    timeout.set(Duration.ofMinutes(5))
                 }
-//                useKarma {
-//                    useChromeHeadless()
-//                    timeout.set(Duration.ofMinutes(5))
-//                }
             }
         }
     }
