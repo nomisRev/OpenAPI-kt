@@ -31,11 +31,25 @@ kotlin {
         commonMain {
             dependencies {
                 api(projects.parser)
-                implementation(ktorLibs.client.cio)
                 implementation(ktorLibs.client.contentNegotiation)
                 implementation(ktorLibs.serialization.kotlinx.json)
                 implementation(libs.json)
                 implementation(libs.datetime)
+            }
+        }
+        jvmMain {
+            dependencies {
+                implementation(ktorLibs.client.cio)
+            }
+        }
+        nativeMain {
+            dependencies {
+                implementation(ktorLibs.client.cio)
+            }
+        }
+        jsMain {
+            dependencies {
+                implementation(ktorLibs.client.js)
             }
         }
         commonTest {
