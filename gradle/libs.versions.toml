@@ -45,4 +45,4 @@ testballoon = { id = "de.infix.testBalloon", version.ref="testballoon" }
 kotlinxresources = { id = "com.goncalossilva.resources", version.ref = "resources" }
 gratatouille = { id = "com.gradleup.gratatouille", version.ref = "gratatouille" }
 gratatouille-tasks = { id = "com.gradleup.gratatouille.tasks", version.ref = "gratatouille" }
-ksp = { id = "com.google.devtools.ksp", version = "2.3.0" }
+ksp = { id = "com.google.devtools.ksp", version = "2.3.9" }
