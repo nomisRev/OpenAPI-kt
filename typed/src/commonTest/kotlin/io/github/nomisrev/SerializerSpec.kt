@@ -113,7 +113,7 @@ val serializerSpec by testSuite {
         }
         assertEquals(
             """
-            |Failed to parse literal '"not-a-number"' as an int value at element: $.primitive
+            |Failed to parse literal '"not-a-number"' as an int value at path: $.primitive
             |JSON input: "not-a-number"
             """.trimMargin(),
             ex.message

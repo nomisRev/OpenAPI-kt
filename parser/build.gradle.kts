@@ -24,7 +24,6 @@ kotlin {
             testTask {
                 useKarma {
                     useChromeHeadless()
-                    timeout.set(Duration.ofMinutes(5))
                 }
             }
         }
