@@ -1,22 +1,17 @@
-import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.kotlin.powerassert.gradle.PowerAssertGradleExtension
 
 plugins {
     alias(libs.plugins.multiplatform) apply false
-    alias(libs.plugins.jvm) apply false
     alias(libs.plugins.serialization) apply false
     alias(libs.plugins.publish) apply false
-    alias(libs.plugins.assert)
     alias(libs.plugins.dokka)
-    alias(libs.plugins.kover)
+    id(libs.plugins.kover.get().pluginId)
 }
 
 val assertId = libs.plugins.assert.get().pluginId
 val spotlessId = libs.plugins.spotless.get().pluginId
-val publishId = libs.plugins.publish.get().pluginId
 
 dependencies {
     kover(projects.parser)
@@ -30,19 +25,6 @@ dokka {
 }
 
 subprojects {
-    apply(plugin = publishId)
-
-    apply(plugin = assertId)
-    @Suppress("OPT_IN_USAGE")
-    configure<PowerAssertGradleExtension> {
-        functions = listOf(
-            "kotlin.test.assertEquals",
-            "kotlin.test.assertTrue",
-            "kotlin.test.assertFalse",
-            "io.github.nomisrev.Eq.Companion.invoke"
-        )
-    }
-
     tasks {
         withType<JavaCompile> { options.release.set(11) }
         withType<KotlinCompile> {
@@ -50,6 +32,7 @@ subprojects {
                 jvmTarget.set(JvmTarget.JVM_11)
             }
         }
+
         withType<Test> {
             useJUnitPlatform()
             testLogging {

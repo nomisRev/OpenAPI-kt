@@ -1,11 +1,11 @@
 plugins {
     id(libs.plugins.multiplatform.get().pluginId)
     alias(libs.plugins.serialization)
-    id(libs.plugins.publish.get().pluginId)
     alias(libs.plugins.dokka)
-    id(libs.plugins.kover.get().pluginId)
-    alias(libs.plugins.testballoon)
     alias(libs.plugins.kotlinxresources)
+    id(libs.plugins.publish.get().pluginId)
+    id("test-conventions")
+    alias(libs.plugins.testballoon)
 }
 
 kotlin {
@@ -21,10 +21,9 @@ kotlin {
         progressiveMode = true
     }
 
-
     jvm()
     macosArm64()
-    js(IR) { browser() }
+    js { browser() }
 
     applyDefaultHierarchyTemplate()
 

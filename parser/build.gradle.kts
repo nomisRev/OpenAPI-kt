@@ -1,10 +1,12 @@
+import java.time.Duration
+
 plugins {
     id(libs.plugins.multiplatform.get().pluginId)
     alias(libs.plugins.serialization)
     id(libs.plugins.publish.get().pluginId)
     alias(libs.plugins.dokka)
-    id(libs.plugins.kover.get().pluginId)
     alias(libs.plugins.kotlinxresources)
+    id("test-conventions")
 }
 
 kotlin {
@@ -14,9 +16,19 @@ kotlin {
         progressiveMode = true
     }
     explicitApi()
+
     jvm()
     macosArm64()
-    js(IR) { browser() }
+    js {
+        browser {
+            testTask {
+                useKarma {
+                    useChromeHeadless()
+                    timeout.set(Duration.ofMinutes(5))
+                }
+            }
+        }
+    }
 
     sourceSets {
         commonMain {

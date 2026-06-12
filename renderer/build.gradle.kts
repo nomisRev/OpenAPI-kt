@@ -3,19 +3,14 @@ import org.gradle.api.tasks.testing.Test
 plugins {
     id(libs.plugins.multiplatform.get().pluginId)
     alias(libs.plugins.serialization)
-    id(libs.plugins.publish.get().pluginId)
     alias(libs.plugins.dokka)
-    id(libs.plugins.kover.get().pluginId)
+    id(libs.plugins.publish.get().pluginId)
+    id("test-conventions")
     alias(libs.plugins.testballoon)
 }
 
 kotlin {
     jvm()
-
-    compilerOptions.freeCompilerArgs.addAll(
-        "-Xreturn-value-checker=full",
-        "-Xname-based-destructuring=full",
-    )
 
     compilerOptions.freeCompilerArgs.addAll(
         listOfNotNull(
@@ -53,7 +48,6 @@ kotlin {
 tasks.withType<Test>().configureEach {
     systemProperty("updateGolden", project.findProperty("updateGolden")?.toString() ?: "false")
 }
-
 
 
 dokka {

@@ -1,8 +1,8 @@
 plugins {
-    alias(libs.plugins.jvm)
+    id(libs.plugins.jvm.get().pluginId)
     alias(libs.plugins.ksp)
     alias(libs.plugins.gratatouille)
-    `maven-publish`
+    id(libs.plugins.publish.get().pluginId)
 }
 
 publishing {

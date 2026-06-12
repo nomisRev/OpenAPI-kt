@@ -18,6 +18,7 @@ java-diff-utils = "4.15"
 [libraries]
 compile-testing = { module = "dev.zacsweers.kctfork:core", version.ref = "test-compile" }
 gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
+power-assert = { module = "org.jetbrains.kotlin:kotlin-power-assert", version.ref = "kotlin" }
 stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
 kotlinpoet = { module = "com.squareup:kotlinpoet", version="2.3.0" }
 test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -25,11 +26,13 @@ json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.re
 datetime =  { module="org.jetbrains.kotlinx:kotlinx-datetime", version="0.8.0" }
 kaml = { group = "com.charleskorn.kaml", name = "kaml", version = "0.104.0" }
 testballoon = { module="de.infix.testBalloon:testBalloon-framework-core", version.ref="testballoon"  }
+testballoon-plugin = { module="de.infix.testBalloon:de.infix.testBalloon.gradle.plugin", version.ref="testballoon"  }
 kotlinxresources = { module = "com.goncalossilva:resources", version.ref = "resources" }
 coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
 gratatouille-runtime = { module = "com.gradleup.gratatouille:gratatouille-runtime", version.ref = "gratatouille" }
 gratatouille-tasks-runtime = { module = "com.gradleup.gratatouille:gratatouille-tasks-runtime", version.ref = "gratatouille" }
 java-diff-utils = { module = "io.github.java-diff-utils:java-diff-utils", version.ref = "java-diff-utils" }
+kover = { module = "org.jetbrains.kotlinx.kover:org.jetbrains.kotlinx.kover.gradle.plugin", version.ref = "kover" }
 
 [plugins]
 dokka = { id = "org.jetbrains.dokka", version.ref = "dokka" }
