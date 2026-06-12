@@ -5,7 +5,7 @@ kover = "0.9.8"
 knit = "0.5.0"
 publish="0.36.0"
 okio="3.16.0"
-kotlinpoet="2.2.0"
+kotlinpoet="2.3.0"
 agp = "8.13.0"
 test-compile = "0.12.1"
 testballoon="1.0.0-K2.4.0"
@@ -19,7 +19,7 @@ java-diff-utils = "4.15"
 compile-testing = { module = "dev.zacsweers.kctfork:core", version.ref = "test-compile" }
 gradle = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
-kotlinpoet = { module = "com.squareup:kotlinpoet", version="2.2.0" }
+kotlinpoet = { module = "com.squareup:kotlinpoet", version="2.3.0" }
 test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 datetime =  { module="org.jetbrains.kotlinx:kotlinx-datetime", version="0.7.1" }
