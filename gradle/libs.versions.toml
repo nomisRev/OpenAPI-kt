@@ -12,7 +12,7 @@ testballoon="1.0.0-K2.4.0"
 resources = "0.15.0"
 serialization="1.10.0"
 gratatouille = "0.2.3"
-coroutines = "1.10.1"
+coroutines = "1.11.0"
 java-diff-utils = "4.15"
 
 [libraries]
