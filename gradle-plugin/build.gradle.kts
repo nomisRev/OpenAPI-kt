@@ -13,6 +13,15 @@ publishing {
     }
 }
 
+// Vanniktech creates a `maven` publication from the same component as `pluginMaven`,
+// so both signing tasks produce .asc files for the same jars. Gradle 9.5+ flags
+// publishMavenPublicationToMavenCentralRepository for consuming outputs of
+// signPluginMavenPublication without declaring a dependency. mustRunAfter makes
+// the ordering explicit across all sign/publish task pairs.
+tasks.withType<AbstractPublishToMaven>().configureEach {
+    dependsOn(tasks.withType<Sign>())
+}
+
 gratatouille {
     pluginMarker("io.github.nomisrev.openapi")
 }
