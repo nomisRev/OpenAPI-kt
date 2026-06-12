@@ -1,7 +1,6 @@
 config.set({
-    client: {
-        mocha: {
-            // We put a large timeout here so we can adjust it in the tests themselves.
+    "client": {
+        "mocha": {
             timeout: 60000
         }
     }
