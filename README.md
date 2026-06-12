@@ -33,4 +33,4 @@ Then run the following command to generate the code, but it will also automatica
 ./gradlew generateOpenApi
 ```
 
-This will generate a `io.github.nomisrev.openapi` package with the generated code, in your `/build/generated` directory.
+This will generate a `io.github.nomisrev.youtrack` package with the generated code, in your `/build/generated` directory.
