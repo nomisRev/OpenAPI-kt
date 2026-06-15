@@ -105,33 +105,55 @@ fun Model.Primitive.Boolean.Companion.all() = listOf(
 )
 
 data class SchemaNumberConstraints(
-    val exclusiveMinimum: Boolean?,
+    val exclusiveMinimum: Schema.ExclusiveLimit?,
     val minimum: Double?,
-    val exclusiveMaximum: Boolean?,
+    val exclusiveMaximum: Schema.ExclusiveLimit?,
     val maximum: Double?,
     val multipleOf: Double?,
 )
 
-@Suppress("ComplexCondition")
-fun Constraints.Number.Companion.all() = listOf(true, false, null).product(
-    listOf(-1000.0, null),
-    listOf(true, false, null),
-    listOf(1000.0, null),
-    listOf(2.0, null)
-) { eMin, min, eMax, max, multipleOf ->
-    if (eMin == null && min == null && eMax == null && max == null && multipleOf == null) SchemaNumberConstraints(
-        eMin,
-        min,
-        eMax,
-        max,
-        multipleOf
-    ) expect null
-    else SchemaNumberConstraints(eMin, min, eMax, max, multipleOf) expect Constraints.Number(
-        eMin ?: false,
-        min,
-        eMax ?: false,
-        max,
-        multipleOf
+fun Constraints.Number.Companion.all(): List<Expect<SchemaNumberConstraints, Constraints.Number?>> {
+    fun bound(value: Double, exclusive: Boolean): Constraints.Number.Bound =
+        Constraints.Number.Bound(value, exclusive)
+
+    return listOf(
+        SchemaNumberConstraints(null, null, null, null, null) expect null,
+        SchemaNumberConstraints(null, -1000.0, null, null, null) expect
+                Constraints.Number(bound(-1000.0, exclusive = false), null, null),
+        SchemaNumberConstraints(Schema.ExclusiveLimit.BooleanValue(true), -1000.0, null, null, null) expect
+                Constraints.Number(bound(-1000.0, exclusive = true), null, null),
+        SchemaNumberConstraints(Schema.ExclusiveLimit.BooleanValue(false), -1000.0, null, null, null) expect
+                Constraints.Number(bound(-1000.0, exclusive = false), null, null),
+        SchemaNumberConstraints(Schema.ExclusiveLimit.NumberValue(-1000.0), null, null, null, null) expect
+                Constraints.Number(bound(-1000.0, exclusive = true), null, null),
+        SchemaNumberConstraints(Schema.ExclusiveLimit.NumberValue(-1000.0), 0.0, null, null, null) expect
+                Constraints.Number(bound(0.0, exclusive = false), null, null),
+        SchemaNumberConstraints(Schema.ExclusiveLimit.NumberValue(0.0), -1000.0, null, null, null) expect
+                Constraints.Number(bound(0.0, exclusive = true), null, null),
+        SchemaNumberConstraints(null, null, null, 1000.0, null) expect
+                Constraints.Number(null, bound(1000.0, exclusive = false), null),
+        SchemaNumberConstraints(null, null, Schema.ExclusiveLimit.BooleanValue(true), 1000.0, null) expect
+                Constraints.Number(null, bound(1000.0, exclusive = true), null),
+        SchemaNumberConstraints(null, null, Schema.ExclusiveLimit.BooleanValue(false), 1000.0, null) expect
+                Constraints.Number(null, bound(1000.0, exclusive = false), null),
+        SchemaNumberConstraints(null, null, Schema.ExclusiveLimit.NumberValue(1000.0), null, null) expect
+                Constraints.Number(null, bound(1000.0, exclusive = true), null),
+        SchemaNumberConstraints(null, null, Schema.ExclusiveLimit.NumberValue(1000.0), 0.0, null) expect
+                Constraints.Number(null, bound(0.0, exclusive = false), null),
+        SchemaNumberConstraints(null, null, Schema.ExclusiveLimit.NumberValue(0.0), 1000.0, null) expect
+                Constraints.Number(null, bound(0.0, exclusive = true), null),
+        SchemaNumberConstraints(
+            Schema.ExclusiveLimit.BooleanValue(true),
+            -1000.0,
+            Schema.ExclusiveLimit.BooleanValue(true),
+            1000.0,
+            2.0,
+        ) expect Constraints.Number(
+            bound(-1000.0, exclusive = true),
+            bound(1000.0, exclusive = true),
+            2.0,
+        ),
+        SchemaNumberConstraints(null, null, null, null, 2.0) expect Constraints.Number(null, null, 2.0),
     )
 }
 

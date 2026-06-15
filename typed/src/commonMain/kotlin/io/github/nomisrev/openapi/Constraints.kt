@@ -7,24 +7,26 @@ import kotlinx.serialization.Serializable
 sealed interface Constraints {
     @Serializable
     data class Number(
-        val exclusiveMinimum: Boolean?,
-        val minimum: Double?,
-        val exclusiveMaximum: Boolean?,
-        val maximum: Double?,
+        val minimum: Bound?,
+        val maximum: Bound?,
         val multipleOf: Double?,
     ) : Constraints {
+        @Serializable
+        data class Bound(
+            val value: Double,
+            val exclusive: Boolean,
+        )
+
         companion object {
             operator fun invoke(schema: Schema): Number? {
-                val hasValidation =
-                    schema.exclusiveMinimum != null || schema.minimum != null || schema.maximum != null ||
-                            schema.multipleOf != null || schema.exclusiveMaximum != null
+                val minimum = schema.effectiveMinimum()
+                val maximum = schema.effectiveMaximum()
+                val hasValidation = minimum != null || maximum != null || schema.multipleOf != null
 
                 return if (hasValidation)
                     Number(
-                        schema.exclusiveMinimum ?: false,
-                        schema.minimum,
-                        schema.exclusiveMaximum ?: false,
-                        schema.maximum,
+                        minimum,
+                        maximum,
                         schema.multipleOf,
                     )
                 else null
@@ -83,4 +85,50 @@ sealed interface Constraints {
                 else null
         }
     }
+}
+
+internal fun Schema.effectiveMinimum(): Constraints.Number.Bound? {
+    val inclusive = minimum?.let { Constraints.Number.Bound(it, exclusive = false) }
+    val exclusive = when (val exclusive = exclusiveMinimum) {
+        is Schema.ExclusiveLimit.BooleanValue ->
+            if (exclusive.value) minimum?.let { Constraints.Number.Bound(it, exclusive = true) } else null
+
+        is Schema.ExclusiveLimit.NumberValue -> Constraints.Number.Bound(exclusive.value, exclusive = true)
+        null -> null
+    }
+    return mergeMinimumBound(inclusive, exclusive)
+}
+
+internal fun Schema.effectiveMaximum(): Constraints.Number.Bound? {
+    val inclusive = maximum?.let { Constraints.Number.Bound(it, exclusive = false) }
+    val exclusive = when (val exclusive = exclusiveMaximum) {
+        is Schema.ExclusiveLimit.BooleanValue ->
+            if (exclusive.value) maximum?.let { Constraints.Number.Bound(it, exclusive = true) } else null
+
+        is Schema.ExclusiveLimit.NumberValue -> Constraints.Number.Bound(exclusive.value, exclusive = true)
+        null -> null
+    }
+    return mergeMaximumBound(inclusive, exclusive)
+}
+
+internal fun mergeMinimumBound(
+    a: Constraints.Number.Bound?,
+    b: Constraints.Number.Bound?,
+): Constraints.Number.Bound? = when {
+    a == null -> b
+    b == null -> a
+    a.value > b.value -> a
+    b.value > a.value -> b
+    else -> Constraints.Number.Bound(a.value, exclusive = a.exclusive || b.exclusive)
+}
+
+internal fun mergeMaximumBound(
+    a: Constraints.Number.Bound?,
+    b: Constraints.Number.Bound?,
+): Constraints.Number.Bound? = when {
+    a == null -> b
+    b == null -> a
+    a.value < b.value -> a
+    b.value < a.value -> b
+    else -> Constraints.Number.Bound(a.value, exclusive = a.exclusive || b.exclusive)
 }

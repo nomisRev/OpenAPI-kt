@@ -6,6 +6,8 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.combine
 import io.github.nomisrev.openapi.merge
+import io.github.nomisrev.openapi.mergeMaximumBound
+import io.github.nomisrev.openapi.mergeMinimumBound
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
@@ -173,10 +175,8 @@ private fun <A> let(a: A?, b: A?, block: (A, A) -> A): A? =
 
 private fun Constraints.Number?.merge(other: Constraints.Number?): Constraints.Number? = let(this, other) { a, b ->
     Constraints.Number(
-        minimum = let(a.minimum, b.minimum, ::maxOf),
-        maximum = let(a.maximum, b.maximum, ::minOf),
-        exclusiveMinimum = a.exclusiveMinimum ?: false || b.exclusiveMinimum ?: false,
-        exclusiveMaximum = a.exclusiveMaximum ?: false || b.exclusiveMaximum ?: false,
+        minimum = mergeMinimumBound(a.minimum, b.minimum),
+        maximum = mergeMaximumBound(a.maximum, b.maximum),
         multipleOf = a.multipleOf ?: b.multipleOf // TODO validate anything? calculate common denominator?
     )
 }

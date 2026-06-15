@@ -117,6 +117,56 @@ class OpenAPITest {
     }
 
     @Test
+    fun `3_0 spec preserves boolean exclusive bounds`() {
+        val spec = OpenAPI.fromJson(
+            """
+            {
+              "openapi": "3.0.3",
+              "info": {"title": "Pets API", "version": "1.0.0"},
+              "paths": {},
+              "components": {
+                "schemas": {
+                  "Age": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "exclusiveMinimum": true
+                  }
+                }
+              }
+            }
+            """.trimIndent()
+        )
+
+        val schema = assertIs<ReferenceOr.Value<Schema>>(spec.components.schemas["Age"]).value
+        assertEquals(0.0, schema.minimum)
+        assertEquals(Schema.ExclusiveLimit.BooleanValue(true), schema.exclusiveMinimum)
+    }
+
+    @Test
+    fun `3_1 spec preserves numeric exclusive bounds`() {
+        val spec = OpenAPI.fromJson(
+            """
+            {
+              "openapi": "3.1.0",
+              "info": {"title": "Pets API", "version": "1.0.0"},
+              "paths": {},
+              "components": {
+                "schemas": {
+                  "Age": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  }
+                }
+              }
+            }
+            """.trimIndent()
+        )
+
+        val schema = assertIs<ReferenceOr.Value<Schema>>(spec.components.schemas["Age"]).value
+        assertEquals(Schema.ExclusiveLimit.NumberValue(0.0), schema.exclusiveMinimum)
+    }
+
+    @Test
     fun `spec with all top level fields deserializes`() {
         val spec = OpenAPI.fromJson(allTopLevelFieldsSpecJson)
 

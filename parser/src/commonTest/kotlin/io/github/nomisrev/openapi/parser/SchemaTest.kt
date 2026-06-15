@@ -1,9 +1,13 @@
 package io.github.nomisrev.openapi.parser
 
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -165,8 +169,60 @@ class SchemaTest {
     fun `json exclusiveMinimum and exclusiveMaximum as booleans deserialize`() {
         val schema =
             Schema.fromJson("""{"type":"number","minimum":0.0,"exclusiveMinimum":true,"maximum":100.0,"exclusiveMaximum":false}""")
-        assertEquals(true, schema.exclusiveMinimum)
-        assertEquals(false, schema.exclusiveMaximum)
+        assertEquals(Schema.ExclusiveLimit.BooleanValue(true), schema.exclusiveMinimum)
+        assertEquals(Schema.ExclusiveLimit.BooleanValue(false), schema.exclusiveMaximum)
+    }
+
+    @Test
+    fun `json exclusiveMinimum and exclusiveMaximum as numbers deserialize`() {
+        val schema = Schema.fromJson("""{"type":"number","exclusiveMinimum":0.0,"exclusiveMaximum":100.0}""")
+        assertEquals(Schema.ExclusiveLimit.NumberValue(0.0), schema.exclusiveMinimum)
+        assertEquals(Schema.ExclusiveLimit.NumberValue(100.0), schema.exclusiveMaximum)
+    }
+
+    @Test
+    fun `yaml exclusiveMinimum and exclusiveMaximum as booleans deserialize`() {
+        val schema = Schema.fromYaml(
+            """
+            type: number
+            minimum: 0.0
+            exclusiveMinimum: true
+            maximum: 100.0
+            exclusiveMaximum: false
+            """.trimIndent()
+        )
+        assertEquals(Schema.ExclusiveLimit.BooleanValue(true), schema.exclusiveMinimum)
+        assertEquals(Schema.ExclusiveLimit.BooleanValue(false), schema.exclusiveMaximum)
+    }
+
+    @Test
+    fun `yaml exclusiveMinimum and exclusiveMaximum as numbers deserialize`() {
+        val schema = Schema.fromYaml(
+            """
+            type: number
+            exclusiveMinimum: 0.0
+            exclusiveMaximum: 100.0
+            """.trimIndent()
+        )
+        assertEquals(Schema.ExclusiveLimit.NumberValue(0.0), schema.exclusiveMinimum)
+        assertEquals(Schema.ExclusiveLimit.NumberValue(100.0), schema.exclusiveMaximum)
+    }
+
+    @Test
+    fun `json exclusive bounds preserve boolean values when encoded`() {
+        val schema =
+            Schema.fromJson("""{"type":"number","minimum":0.0,"exclusiveMinimum":true,"maximum":100.0,"exclusiveMaximum":false}""")
+        val json = Json.parseToJsonElement(schema.toString()).jsonObject
+        assertEquals(true, (json["exclusiveMinimum"] as JsonPrimitive).booleanOrNull)
+        assertEquals(false, (json["exclusiveMaximum"] as JsonPrimitive).booleanOrNull)
+    }
+
+    @Test
+    fun `json exclusive bounds preserve number values when encoded`() {
+        val schema = Schema.fromJson("""{"type":"number","exclusiveMinimum":0.0,"exclusiveMaximum":100.0}""")
+        val json = Json.parseToJsonElement(schema.toString()).jsonObject
+        assertEquals(0.0, (json["exclusiveMinimum"] as JsonPrimitive).doubleOrNull)
+        assertEquals(100.0, (json["exclusiveMaximum"] as JsonPrimitive).doubleOrNull)
     }
 
     @Test

@@ -16,6 +16,11 @@ class IntegrationTest {
         OpenAPI.fromYaml(loadResource("keycloak.yml"))
     }
 
+    @Test
+    fun mistral() {
+        OpenAPI.fromYaml(loadResource("mistral.yaml"))
+    }
+
 //    @Test
 //    fun cloufdlare() {
 //        val spec = OpenAPI.fromJson(loadResource("cloudflare.json"))
