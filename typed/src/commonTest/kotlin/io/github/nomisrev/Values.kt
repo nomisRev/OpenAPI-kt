@@ -128,6 +128,8 @@ fun Constraints.Number.Companion.all(): List<Expect<SchemaNumberConstraints, Con
                 Constraints.Number(bound(-1000.0, exclusive = true), null, null),
         SchemaNumberConstraints(Schema.ExclusiveLimit.NumberValue(-1000.0), 0.0, null, null, null) expect
                 Constraints.Number(bound(0.0, exclusive = false), null, null),
+        SchemaNumberConstraints(Schema.ExclusiveLimit.NumberValue(-1000.0), -1000.0, null, null, null) expect
+                Constraints.Number(bound(-1000.0, exclusive = true), null, null),
         SchemaNumberConstraints(Schema.ExclusiveLimit.NumberValue(0.0), -1000.0, null, null, null) expect
                 Constraints.Number(bound(0.0, exclusive = true), null, null),
         SchemaNumberConstraints(null, null, null, 1000.0, null) expect
@@ -140,6 +142,8 @@ fun Constraints.Number.Companion.all(): List<Expect<SchemaNumberConstraints, Con
                 Constraints.Number(null, bound(1000.0, exclusive = true), null),
         SchemaNumberConstraints(null, null, Schema.ExclusiveLimit.NumberValue(1000.0), 0.0, null) expect
                 Constraints.Number(null, bound(0.0, exclusive = false), null),
+        SchemaNumberConstraints(null, null, Schema.ExclusiveLimit.NumberValue(1000.0), 1000.0, null) expect
+                Constraints.Number(null, bound(1000.0, exclusive = true), null),
         SchemaNumberConstraints(null, null, Schema.ExclusiveLimit.NumberValue(0.0), 1000.0, null) expect
                 Constraints.Number(null, bound(0.0, exclusive = true), null),
         SchemaNumberConstraints(
