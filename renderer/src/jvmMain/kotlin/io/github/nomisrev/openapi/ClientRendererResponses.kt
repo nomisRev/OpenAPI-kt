@@ -1,4 +1,5 @@
 @file:Suppress("TooManyFunctions")
+
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.ClassName
@@ -52,11 +53,13 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
     inlineModelScope: OperationInlineModelScope,
 ): List<TypeSpec> {
     val strategy = returns.contentTypeStrategy() as? ContentTypeStrategy.SeparateMethods ?: return emptyList()
-    val responseInterfaces = strategy.successContentTypes.fold(linkedMapOf<ContentType, ClassName>()) { acc, contentType ->
-        val simpleName = contentTypeResponseTypeName(contentType, acc.values.mapTo(mutableSetOf()) { it.simpleName })
-        acc[contentType] = methodClassName.nestedClass(simpleName)
-        acc
-    }
+    val responseInterfaces =
+        strategy.successContentTypes.fold(linkedMapOf<ContentType, ClassName>()) { acc, contentType ->
+            val simpleName =
+                contentTypeResponseTypeName(contentType, acc.values.mapTo(mutableSetOf()) { it.simpleName })
+            acc[contentType] = methodClassName.nestedClass(simpleName)
+            acc
+        }
     val hasMultipleStatuses = returns.responses.size + (if (returns.default != null) 1 else 0) > 1
     val allResponseInterfaces = responseInterfaces.values.toList()
     val specs = mutableListOf<TypeSpec>()
@@ -352,6 +355,7 @@ private fun buildSealedResponseCaseTypeSpec(
             inlineTypeSpec != null -> responseClassName.nestedClass(
                 bodyTypeName
             )
+
             else -> inlineModelScope.remapResponseType(model, config)
         }
         val caseBuilder = TypeSpec.classBuilder(caseName)
@@ -589,8 +593,8 @@ private fun buildSharedResponseCaseTypeSpec(
     val firstSuperinterface = requireNotNull(superinterfaces.firstOrNull()) {
         "Shared response cases require at least one success interface"
     }
-    if (body is Route.ReturnBody.Raw) {
-        return TypeSpec.classBuilder(caseName)
+    return if (body is Route.ReturnBody.Raw) {
+        TypeSpec.classBuilder(caseName)
             .addModifiers(KModifier.DATA)
             .primaryConstructor(
                 FunSpec.constructorBuilder()
@@ -604,64 +608,65 @@ private fun buildSharedResponseCaseTypeSpec(
             )
             .apply { superinterfaces.forEach(::addSuperinterface) }
             .build()
-    }
-    val model = (body as Route.ReturnBody.Typed).model
-    val directInlineCase = if (model.isRouteInlineModel()) {
-        buildInlineResponseCaseTypeSpec(
-            model = model,
-            config = config,
-            responseClassName = firstSuperinterface as ClassName,
-            caseName = caseName,
-            externalTypeNames = inlineModelScope.externalTypeNames(),
-        )
     } else {
-        null
-    }
-    if (directInlineCase != null) {
-        return directInlineCase.toBuilder().apply {
-            superinterfaces.drop(1).forEach(::addSuperinterface)
-        }.build()
-    }
-
-    val caseClassName = methodClassName.nestedClass(caseName)
-    val bodyTypeName = bodyTypeName(
-        statusCode = statusCode,
-        contentType = contentType,
-        hasMultipleStatuses = hasMultipleStatuses,
-        hasMultipleContentTypes = hasMultipleContentTypes,
-    )
-    val inlineTypeSpec = if (model.isRouteInlineModel()) {
-        buildInlineResponseBodyTypeSpec(
-            model = model,
-            config = config,
-            ownerClassName = caseClassName,
-            nameOverride = bodyTypeName,
-            externalTypeNames = inlineModelScope.externalTypeNames(),
-        )
-    } else {
-        null
-    }
-    val typeName = when {
-        inlineTypeSpec != null -> caseClassName.nestedClass(bodyTypeName)
-        else -> inlineModelScope.remapResponseType(model, config)
-    }
-    return TypeSpec.classBuilder(caseName)
-        .addModifiers(KModifier.DATA)
-        .primaryConstructor(
-            FunSpec.constructorBuilder()
-                .addParameter("value", typeName)
-                .build()
-        )
-        .addProperty(
-            PropertySpec.builder("value", typeName)
-                .initializer("value")
-                .build()
-        )
-        .apply {
-            superinterfaces.forEach(::addSuperinterface)
-            inlineTypeSpec?.let(::addType)
+        val model = (body as Route.ReturnBody.Typed).model
+        val directInlineCase = if (model.isRouteInlineModel()) {
+            buildInlineResponseCaseTypeSpec(
+                model = model,
+                config = config,
+                responseClassName = firstSuperinterface as ClassName,
+                caseName = caseName,
+                externalTypeNames = inlineModelScope.externalTypeNames(),
+            )
+        } else {
+            null
         }
-        .build()
+        if (directInlineCase != null) {
+            return directInlineCase.toBuilder().apply {
+                superinterfaces.drop(1).forEach(::addSuperinterface)
+            }.build()
+        }
+
+        val caseClassName = methodClassName.nestedClass(caseName)
+        val bodyTypeName = bodyTypeName(
+            statusCode = statusCode,
+            contentType = contentType,
+            hasMultipleStatuses = hasMultipleStatuses,
+            hasMultipleContentTypes = hasMultipleContentTypes,
+        )
+        val inlineTypeSpec = if (model.isRouteInlineModel()) {
+            buildInlineResponseBodyTypeSpec(
+                model = model,
+                config = config,
+                ownerClassName = caseClassName,
+                nameOverride = bodyTypeName,
+                externalTypeNames = inlineModelScope.externalTypeNames(),
+            )
+        } else {
+            null
+        }
+        val typeName = when {
+            inlineTypeSpec != null -> caseClassName.nestedClass(bodyTypeName)
+            else -> inlineModelScope.remapResponseType(model, config)
+        }
+        TypeSpec.classBuilder(caseName)
+            .addModifiers(KModifier.DATA)
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter("value", typeName)
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder("value", typeName)
+                    .initializer("value")
+                    .build()
+            )
+            .apply {
+                superinterfaces.forEach(::addSuperinterface)
+                inlineTypeSpec?.let(::addType)
+            }
+            .build()
+    }
 }
 
 private fun buildSharedNoContentCaseTypeSpec(
