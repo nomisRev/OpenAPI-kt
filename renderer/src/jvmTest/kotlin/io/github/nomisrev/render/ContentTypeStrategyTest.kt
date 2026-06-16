@@ -107,7 +107,7 @@ class ContentTypeStrategyTest {
         assertEquals(
             io.github.nomisrev.openapi.ErrorCaseStrategy.SingleContentType(
                 contentType = ContentType.Application.Json,
-                model = stringModel(),
+                body = Route.ReturnBody.Typed(stringModel()),
             ),
             classifyErrorStatus(
                 HttpStatusCode.BadRequest,
@@ -117,8 +117,8 @@ class ContentTypeStrategyTest {
         assertEquals(
             io.github.nomisrev.openapi.ErrorCaseStrategy.MultipleContentTypes(
                 variants = listOf(
-                    ContentType.Application.Json to stringModel(),
-                    ContentType.parse("application/scim+json") to referenceModel("ScimError"),
+                    ContentType.Application.Json to Route.ReturnBody.Typed(stringModel()),
+                    ContentType.parse("application/scim+json") to Route.ReturnBody.Typed(referenceModel("ScimError")),
                 ),
             ),
             classifyErrorStatus(

@@ -68,15 +68,14 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
 
         for ([statusCode, returnType] in returns.responses.entries.sortedBy { it.key.value }) {
             if (!statusCode.isSuccessStatusCode()) continue
-            val model = returnType.types[contentType] ?: continue
+            val body = returnType.body(contentType) ?: continue
             val rendering = buildMultiContentTypeResponseCaseTypeSpec(
                 config = config,
                 responseClassName = responseClassName,
                 statusCode = statusCode,
                 contentType = contentType,
-                model = model,
+                body = body,
                 hasMultipleStatuses = hasMultipleStatuses,
-                hasMultipleContentTypes = true,
                 inlineModelScope = inlineModelScope,
             )
             rendering.inlineTypeSpec?.let(builder::addType)
@@ -88,7 +87,7 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
 
     for ([statusCode, returnType] in returns.responses.entries.sortedBy { it.key.value }) {
         if (statusCode.isSuccessStatusCode()) {
-            if (returnType.types.isEmpty()) {
+            if (returnType.contentTypes().isEmpty()) {
                 specs += buildSharedNoContentCaseTypeSpec(
                     caseName = statusCode.toCaseName(),
                     superinterfaces = allResponseInterfaces,
@@ -113,7 +112,7 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
                     caseName = statusCode.toCaseName(),
                     statusCode = statusCode,
                     contentType = errorStrategy.contentType,
-                    model = errorStrategy.model,
+                    body = errorStrategy.body,
                     hasMultipleStatuses = hasMultipleStatuses,
                     hasMultipleContentTypes = false,
                     inlineModelScope = inlineModelScope,
@@ -121,7 +120,7 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
             }
 
             is ErrorCaseStrategy.MultipleContentTypes -> {
-                errorStrategy.variants.forEach { [contentType, model] ->
+                errorStrategy.variants.forEach { [contentType, body] ->
                     val caseName = "${contentTypeToIdentifier(contentType)}${statusCode.toCaseName()}"
                     specs += buildSharedResponseCaseTypeSpec(
                         config = config,
@@ -130,7 +129,7 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
                         caseName = caseName,
                         statusCode = statusCode,
                         contentType = contentType,
-                        model = model,
+                        body = body,
                         hasMultipleStatuses = hasMultipleStatuses,
                         hasMultipleContentTypes = true,
                         inlineModelScope = inlineModelScope,
@@ -194,6 +193,24 @@ private data class SealedResponseDefaultRendering(
     val inlineTypeSpec: TypeSpec?,
 )
 
+private fun buildRawResponseCaseTypeSpec(
+    caseName: String,
+    responseClassName: ClassName,
+): TypeSpec = TypeSpec.classBuilder(caseName)
+    .addModifiers(KModifier.DATA)
+    .primaryConstructor(
+        FunSpec.constructorBuilder()
+            .addParameter("value", HttpResponseType)
+            .build()
+    )
+    .addProperty(
+        PropertySpec.builder("value", HttpResponseType)
+            .initializer("value")
+            .build()
+    )
+    .addSuperinterface(responseClassName)
+    .build()
+
 @Suppress("UnsafeCallOnNullableType")
 internal fun Route.invokeReturnType(
     config: RenderConfig,
@@ -203,6 +220,7 @@ internal fun Route.invokeReturnType(
 ): TypeName =
     when {
         returns.isSingleUnitResponse() -> com.squareup.kotlinpoet.UNIT
+        returns.isSingleDirectRawResponse() -> HttpResponseType
         returns.isSingleDirectModelResponse() ->
             inlineModelScope.remapResponseType(requireNotNull(returns.singlePreferredModelOrNull(contentType)), config)
 
@@ -214,14 +232,22 @@ internal fun Route.invokeReturnType(
 
 internal fun Route.Returns.isSingleUnitResponse(): Boolean {
     if (needsSealedInterface()) return false
-    val model = singlePreferredModelOrNull()
-    return model == null || model is Model.Primitive.Unit
+    return when (val body = singlePreferredBodyOrNull()) {
+        null -> true
+        is Route.ReturnBody.Typed -> body.model is Model.Primitive.Unit
+        is Route.ReturnBody.Raw -> false
+    }
 }
 
 internal fun Route.Returns.isSingleDirectModelResponse(): Boolean {
     if (needsSealedInterface()) return false
     val model = singlePreferredModelOrNull()
     return model != null && model !is Model.Primitive.Unit && !model.isRouteInlineModel()
+}
+
+internal fun Route.Returns.isSingleDirectRawResponse(): Boolean {
+    if (needsSealedInterface()) return false
+    return singlePreferredBodyOrNull() is Route.ReturnBody.Raw
 }
 
 private fun Route.buildSealedResponseTypeSpec(
@@ -274,8 +300,14 @@ private fun buildSealedResponseCaseTypeSpec(
     inlineModelScope: OperationInlineModelScope,
 ): SealedResponseCaseRendering {
     val caseName = statusCode.toCaseName()
-    val model = returnType.preferredModel()
-    return if (model == null || model is Model.Primitive.Unit) {
+    val body = returnType.preferredBody()
+    val model = (body as? Route.ReturnBody.Typed)?.model
+    return if (body is Route.ReturnBody.Raw) {
+        SealedResponseCaseRendering(
+            caseTypeSpec = buildRawResponseCaseTypeSpec(caseName, responseClassName),
+            inlineTypeSpec = null,
+        )
+    } else if (model == null || model is Model.Primitive.Unit) {
         val caseBuilder = TypeSpec.objectBuilder(caseName)
             .addModifiers(KModifier.DATA)
             .addSuperinterface(responseClassName)
@@ -284,7 +316,7 @@ private fun buildSealedResponseCaseTypeSpec(
             inlineTypeSpec = null,
         )
     } else {
-        val hasMultipleContentTypes = returnType.types.size > 1
+        val hasMultipleContentTypes = returnType.contentTypes().size > 1
         if (model.isRouteInlineModel() && !hasMultipleContentTypes) {
             val caseTypeSpec = buildInlineResponseCaseTypeSpec(
                 model = model,
@@ -404,7 +436,8 @@ private fun buildSealedResponseDefaultTypeSpec(
     defaultReturnType: Route.ReturnType,
     inlineModelScope: OperationInlineModelScope,
 ): SealedResponseDefaultRendering {
-    val model = defaultReturnType.preferredModel()
+    val body = defaultReturnType.preferredBody()
+    val model = (body as? Route.ReturnBody.Typed)?.model
     val bodyTypeName = defaultBodyTypeName(
         contentType = null,
         hasMultipleContentTypes = false,
@@ -439,7 +472,14 @@ private fun buildSealedResponseDefaultTypeSpec(
             .build()
     )
 
-    if (model != null && model !is Model.Primitive.Unit) {
+    if (body is Route.ReturnBody.Raw) {
+        constructorBuilder.addParameter("value", HttpResponseType)
+        props.add(
+            PropertySpec.builder("value", HttpResponseType)
+                .initializer("value")
+                .build()
+        )
+    } else if (model != null && model !is Model.Primitive.Unit) {
         val typeName = requireNotNull(valueType)
         constructorBuilder.addParameter("value", typeName)
         props.add(
@@ -463,12 +503,18 @@ private fun buildMultiContentTypeResponseCaseTypeSpec(
     responseClassName: ClassName,
     statusCode: HttpStatusCode,
     contentType: ContentType,
-    model: Model,
+    body: Route.ReturnBody,
     hasMultipleStatuses: Boolean,
-    hasMultipleContentTypes: Boolean,
     inlineModelScope: OperationInlineModelScope,
 ): SealedResponseCaseRendering {
     val caseName = statusCode.toCaseName()
+    if (body is Route.ReturnBody.Raw) {
+        return SealedResponseCaseRendering(
+            caseTypeSpec = buildRawResponseCaseTypeSpec(caseName, responseClassName),
+            inlineTypeSpec = null,
+        )
+    }
+    val model = (body as Route.ReturnBody.Typed).model
     val directInlineCase = if (model.isRouteInlineModel()) {
         buildInlineResponseCaseTypeSpec(
             model = model,
@@ -491,7 +537,7 @@ private fun buildMultiContentTypeResponseCaseTypeSpec(
         statusCode = statusCode,
         contentType = contentType,
         hasMultipleStatuses = hasMultipleStatuses,
-        hasMultipleContentTypes = hasMultipleContentTypes,
+        hasMultipleContentTypes = true,
     )
     val inlineTypeSpec = if (model.isRouteInlineModel()) {
         buildInlineResponseBodyTypeSpec(
@@ -535,7 +581,7 @@ private fun buildSharedResponseCaseTypeSpec(
     caseName: String,
     statusCode: HttpStatusCode,
     contentType: ContentType,
-    model: Model,
+    body: Route.ReturnBody,
     hasMultipleStatuses: Boolean,
     hasMultipleContentTypes: Boolean,
     inlineModelScope: OperationInlineModelScope,
@@ -543,6 +589,23 @@ private fun buildSharedResponseCaseTypeSpec(
     val firstSuperinterface = requireNotNull(superinterfaces.firstOrNull()) {
         "Shared response cases require at least one success interface"
     }
+    if (body is Route.ReturnBody.Raw) {
+        return TypeSpec.classBuilder(caseName)
+            .addModifiers(KModifier.DATA)
+            .primaryConstructor(
+                FunSpec.constructorBuilder()
+                    .addParameter("value", HttpResponseType)
+                    .build()
+            )
+            .addProperty(
+                PropertySpec.builder("value", HttpResponseType)
+                    .initializer("value")
+                    .build()
+            )
+            .apply { superinterfaces.forEach(::addSuperinterface) }
+            .build()
+    }
+    val model = (body as Route.ReturnBody.Typed).model
     val directInlineCase = if (model.isRouteInlineModel()) {
         buildInlineResponseCaseTypeSpec(
             model = model,
@@ -619,11 +682,12 @@ private fun buildMultiContentTypeDefaultTypeSpec(
     superinterfaces: List<TypeName>,
     inlineModelScope: OperationInlineModelScope,
 ): SealedResponseDefaultRendering {
-    val model = defaultReturnType.preferredModel()
+    val body = defaultReturnType.preferredBody()
+    val model = (body as? Route.ReturnBody.Typed)?.model
     val defaultClassName = methodClassName.nestedClass("Default")
     val bodyTypeName = defaultBodyTypeName(
         contentType = null,
-        hasMultipleContentTypes = defaultReturnType.types.size > 1,
+        hasMultipleContentTypes = defaultReturnType.contentTypes().size > 1,
     )
     val inlineTypeSpec = if (model != null && model.isRouteInlineModel()) {
         buildInlineResponseBodyTypeSpec(
@@ -657,7 +721,14 @@ private fun buildMultiContentTypeDefaultTypeSpec(
             .build()
     )
 
-    if (model != null && model !is Model.Primitive.Unit) {
+    if (body is Route.ReturnBody.Raw) {
+        constructorBuilder.addParameter("value", HttpResponseType)
+        props.add(
+            PropertySpec.builder("value", HttpResponseType)
+                .initializer("value")
+                .build()
+        )
+    } else if (model != null && model !is Model.Primitive.Unit) {
         val typeName = requireNotNull(valueType)
         constructorBuilder.addParameter("value", typeName)
         props.add(
@@ -675,8 +746,11 @@ private fun buildMultiContentTypeDefaultTypeSpec(
     )
 }
 
+internal fun Route.Returns.singlePreferredBodyOrNull(): Route.ReturnBody? =
+    (responses.values.firstOrNull() ?: default)?.preferredBody()
+
 internal fun Route.Returns.singlePreferredModelOrNull(): Model? =
-    (responses.values.firstOrNull() ?: default)?.preferredModel()
+    (singlePreferredBodyOrNull() as? Route.ReturnBody.Typed)?.model
 
 private fun Route.Returns.singlePreferredModelOrNull(contentType: ContentType?): Model? {
     if (contentType == null || contentTypeStrategy() !is ContentTypeStrategy.SeparateMethods) {
@@ -685,11 +759,6 @@ private fun Route.Returns.singlePreferredModelOrNull(contentType: ContentType?):
     return responses.entries
         .asSequence()
         .filter { it.key.isSuccessStatusCode() }
-        .mapNotNull { [_, returnType] ->
-            returnType.types.entries.firstOrNull { [candidate, _] ->
-                candidate.match(contentType) || contentType.match(candidate)
-            }?.value
-        }
-        .firstOrNull()
+        .firstNotNullOfOrNull { [_, returnType] -> (returnType.body(contentType) as? Route.ReturnBody.Typed)?.model }
         ?: singlePreferredModelOrNull()
 }
