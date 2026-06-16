@@ -5,6 +5,7 @@ import io.github.nomisrev.all
 import io.github.nomisrev.api
 import io.github.nomisrev.assertEq
 import io.github.nomisrev.expect
+import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.AdditionalProperties
@@ -57,6 +58,198 @@ val allOfSpec by testSuite {
             ReferenceOr.schema("AB").toModel(NamingContext.reference("AB", SchemaContext.Null), SchemaContext.Write)
         }
         assertEq(expected, actual)
+    }
+
+    test("allOf numeric lower bound keeps stronger inclusive minimum") {
+        val actual = registry(api) {
+            ReferenceOr.value(
+                Schema(
+                    allOf = listOf(
+                        ReferenceOr.value(
+                            Schema.number.copy(
+                                minimum = 0.0,
+                                exclusiveMinimum = Schema.ExclusiveLimit.BooleanValue(true),
+                            )
+                        ),
+                        ReferenceOr.value(Schema.number.copy(minimum = 10.0))
+                    )
+                )
+            ).toModel(NamingContext.path("test"), SchemaContext.Write)
+        }
+
+        assertEq(
+            Model.Primitive.Double(
+                null,
+                null,
+                Constraints.Number(
+                    Constraints.Number.Bound(10.0, exclusive = false),
+                    null,
+                    null,
+                ),
+                false,
+                null,
+            ),
+            actual
+        )
+    }
+
+    test("allOf numeric lower bound keeps exclusivity for equal minimums") {
+        val actual = registry(api) {
+            ReferenceOr.value(
+                Schema(
+                    allOf = listOf(
+                        ReferenceOr.value(Schema.number.copy(minimum = 10.0)),
+                        ReferenceOr.value(
+                            Schema.number.copy(
+                                minimum = 10.0,
+                                exclusiveMinimum = Schema.ExclusiveLimit.BooleanValue(true),
+                            )
+                        )
+                    )
+                )
+            ).toModel(NamingContext.path("test"), SchemaContext.Write)
+        }
+
+        assertEq(
+            Model.Primitive.Double(
+                null,
+                null,
+                Constraints.Number(
+                    Constraints.Number.Bound(10.0, exclusive = true),
+                    null,
+                    null,
+                ),
+                false,
+                null,
+            ),
+            actual
+        )
+    }
+
+    test("allOf numeric lower bound keeps stronger numeric exclusive minimum") {
+        val actual = registry(api) {
+            ReferenceOr.value(
+                Schema(
+                    allOf = listOf(
+                        ReferenceOr.value(Schema.number.copy(minimum = 0.0)),
+                        ReferenceOr.value(
+                            Schema.number.copy(exclusiveMinimum = Schema.ExclusiveLimit.NumberValue(10.0))
+                        )
+                    )
+                )
+            ).toModel(NamingContext.path("test"), SchemaContext.Write)
+        }
+
+        assertEq(
+            Model.Primitive.Double(
+                null,
+                null,
+                Constraints.Number(
+                    Constraints.Number.Bound(10.0, exclusive = true),
+                    null,
+                    null,
+                ),
+                false,
+                null,
+            ),
+            actual
+        )
+    }
+
+    test("allOf numeric upper bound keeps stronger inclusive maximum") {
+        val actual = registry(api) {
+            ReferenceOr.value(
+                Schema(
+                    allOf = listOf(
+                        ReferenceOr.value(
+                            Schema.number.copy(
+                                maximum = 100.0,
+                                exclusiveMaximum = Schema.ExclusiveLimit.BooleanValue(true),
+                            )
+                        ),
+                        ReferenceOr.value(Schema.number.copy(maximum = 90.0))
+                    )
+                )
+            ).toModel(NamingContext.path("test"), SchemaContext.Write)
+        }
+
+        assertEq(
+            Model.Primitive.Double(
+                null,
+                null,
+                Constraints.Number(
+                    null,
+                    Constraints.Number.Bound(90.0, exclusive = false),
+                    null,
+                ),
+                false,
+                null,
+            ),
+            actual
+        )
+    }
+
+    test("allOf numeric upper bound keeps exclusivity for equal maximums") {
+        val actual = registry(api) {
+            ReferenceOr.value(
+                Schema(
+                    allOf = listOf(
+                        ReferenceOr.value(Schema.number.copy(maximum = 100.0)),
+                        ReferenceOr.value(
+                            Schema.number.copy(
+                                maximum = 100.0,
+                                exclusiveMaximum = Schema.ExclusiveLimit.BooleanValue(true),
+                            )
+                        )
+                    )
+                )
+            ).toModel(NamingContext.path("test"), SchemaContext.Write)
+        }
+
+        assertEq(
+            Model.Primitive.Double(
+                null,
+                null,
+                Constraints.Number(
+                    null,
+                    Constraints.Number.Bound(100.0, exclusive = true),
+                    null,
+                ),
+                false,
+                null,
+            ),
+            actual
+        )
+    }
+
+    test("allOf numeric upper bound keeps stronger numeric exclusive maximum") {
+        val actual = registry(api) {
+            ReferenceOr.value(
+                Schema(
+                    allOf = listOf(
+                        ReferenceOr.value(Schema.number.copy(maximum = 200.0)),
+                        ReferenceOr.value(
+                            Schema.number.copy(exclusiveMaximum = Schema.ExclusiveLimit.NumberValue(100.0))
+                        )
+                    )
+                )
+            ).toModel(NamingContext.path("test"), SchemaContext.Write)
+        }
+
+        assertEq(
+            Model.Primitive.Double(
+                null,
+                null,
+                Constraints.Number(
+                    null,
+                    Constraints.Number.Bound(100.0, exclusive = true),
+                    null,
+                ),
+                false,
+                null,
+            ),
+            actual
+        )
     }
 
     test("allOf enum intersection remains enum") {

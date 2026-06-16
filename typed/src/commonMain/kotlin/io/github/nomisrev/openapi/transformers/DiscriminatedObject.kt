@@ -4,8 +4,12 @@ package io.github.nomisrev.openapi.transformers
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.effectiveMaximum
+import io.github.nomisrev.openapi.effectiveMinimum
 import io.github.nomisrev.openapi.enumLikeValues
 import io.github.nomisrev.openapi.merge
+import io.github.nomisrev.openapi.mergeMaximumBound
+import io.github.nomisrev.openapi.mergeMinimumBound
 import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.parser.AdditionalProperties.Allowed
 import io.github.nomisrev.openapi.routes.SchemaContext
@@ -361,14 +365,22 @@ fun Schema.mergeCommon(other: Schema): Schema = copy(
     default = default ?: other.default
 )
 
-fun Schema.numberConstraints(other: Schema): Schema =
-    copy(
-        minimum = let(minimum, other.minimum, ::maxOf),
-        maximum = let(maximum, other.maximum, ::minOf),
-        exclusiveMinimum = exclusiveMinimum ?: false || other.exclusiveMinimum ?: false,
-        exclusiveMaximum = exclusiveMaximum ?: false || other.exclusiveMaximum ?: false,
+fun Schema.numberConstraints(other: Schema): Schema {
+    val minimumBound = mergeMinimumBound(effectiveMinimum(), other.effectiveMinimum())
+    val maximumBound = mergeMaximumBound(effectiveMaximum(), other.effectiveMaximum())
+
+    return copy(
+        minimum = minimumBound?.takeUnless { it.exclusive }?.value,
+        exclusiveMinimum = minimumBound?.takeIf { it.exclusive }?.let {
+            Schema.ExclusiveLimit.NumberValue(it.value)
+        },
+        maximum = maximumBound?.takeUnless { it.exclusive }?.value,
+        exclusiveMaximum = maximumBound?.takeIf { it.exclusive }?.let {
+            Schema.ExclusiveLimit.NumberValue(it.value)
+        },
         multipleOf = multipleOf ?: other.multipleOf // TODO
     )
+}
 
 fun Schema.mergeTextConstraints(other: Schema): Schema =
     copy(

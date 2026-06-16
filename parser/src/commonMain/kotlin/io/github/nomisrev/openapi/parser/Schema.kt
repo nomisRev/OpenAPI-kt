@@ -8,6 +8,7 @@ import com.charleskorn.kaml.YamlNull
 import com.charleskorn.kaml.YamlScalar
 import com.charleskorn.kaml.YamlTaggedNode
 import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
+import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -26,6 +27,10 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.boolean
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.double
+import kotlinx.serialization.json.doubleOrNull
 
 /**
  * The Schema Object allows the definition of input and output data types. These types can be
@@ -63,9 +68,9 @@ public data class Schema(
     val format: String? = null,
     val items: ReferenceOr<Schema>? = null,
     val maximum: Double? = null,
-    val exclusiveMaximum: Boolean? = null,
+    val exclusiveMaximum: ExclusiveLimit? = null,
     val minimum: Double? = null,
-    val exclusiveMinimum: Boolean? = null,
+    val exclusiveMinimum: ExclusiveLimit? = null,
     val maxLength: Int? = null,
     val minLength: Int? = null,
     val pattern: String? = null,
@@ -103,6 +108,56 @@ public data class Schema(
         val propertyName: String,
         val mapping: Map<String, String>? = null,
     )
+
+    @Serializable(with = ExclusiveLimit.Serializer::class)
+    public sealed interface ExclusiveLimit {
+        @Serializable
+        @JvmInline
+        public value class BooleanValue(public val value: Boolean) : ExclusiveLimit
+
+        @Serializable
+        @JvmInline
+        public value class NumberValue(public val value: Double) : ExclusiveLimit
+
+        public object Serializer : KSerializer<ExclusiveLimit> {
+            @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+            override val descriptor: SerialDescriptor =
+                buildSerialDescriptor("io.github.nomisrev.openapi.Schema.ExclusiveLimit", SerialKind.CONTEXTUAL)
+
+            override fun deserialize(decoder: Decoder): ExclusiveLimit =
+                when (decoder) {
+                    is JsonDecoder -> {
+                        when (val json = decoder.decodeSerializableValue(JsonElement.serializer())) {
+                            is JsonPrimitive if !json.isString && json.booleanOrNull != null -> BooleanValue(json.boolean)
+                            is JsonPrimitive if !json.isString && json.doubleOrNull != null -> NumberValue(json.double)
+                            else -> throw SerializationException("Schema.ExclusiveLimit can only be a boolean or a number")
+                        }
+                    }
+
+                    is YamlInput -> {
+                        when (val node = decoder.decodeSerializableValue(YamlNode.serializer())) {
+                            is YamlScalar ->
+                                node.content.toBooleanStrictOrNull()?.let(::BooleanValue)
+                                    ?: node.content.toDoubleOrNull()?.let(::NumberValue)
+                                    ?: throw SerializationException(
+                                        "Schema.ExclusiveLimit can only be a boolean or a number"
+                                    )
+
+                            else -> throw SerializationException("Schema.ExclusiveLimit can only be a boolean or a number")
+                        }
+                    }
+
+                    else -> error("This $decoder is not supported")
+                }
+
+            override fun serialize(encoder: Encoder, value: ExclusiveLimit) {
+                when (value) {
+                    is BooleanValue -> encoder.encodeBoolean(value.value)
+                    is NumberValue -> encoder.encodeDouble(value.value)
+                }
+            }
+        }
+    }
 
     @Serializable(with = Type.Serializer::class)
     public sealed interface Type {

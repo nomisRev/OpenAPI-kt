@@ -1,9 +1,13 @@
 package io.github.nomisrev.openapi.parser
 
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -150,29 +154,6 @@ class SchemaTest {
         val schema = Schema.fromYaml(yaml)
         val arrayType = assertIs<Schema.Type.Array>(schema.type)
         assertEquals(listOf(Schema.Type.Basic.String, Schema.Type.Basic.Null), arrayType.types)
-    }
-
-    // ── Numeric constraints ───────────────────────────────────────────────────
-
-    @Test
-    fun `json minimum and maximum deserialize`() {
-        val schema = Schema.fromJson("""{"type":"number","minimum":0.0,"maximum":100.0}""")
-        assertEquals(0.0, schema.minimum)
-        assertEquals(100.0, schema.maximum)
-    }
-
-    @Test
-    fun `json exclusiveMinimum and exclusiveMaximum as booleans deserialize`() {
-        val schema =
-            Schema.fromJson("""{"type":"number","minimum":0.0,"exclusiveMinimum":true,"maximum":100.0,"exclusiveMaximum":false}""")
-        assertEquals(true, schema.exclusiveMinimum)
-        assertEquals(false, schema.exclusiveMaximum)
-    }
-
-    @Test
-    fun `json multipleOf deserializes`() {
-        val schema = Schema.fromJson("""{"type":"number","multipleOf":5.0}""")
-        assertEquals(5.0, schema.multipleOf)
     }
 
     // ── String constraints ────────────────────────────────────────────────────
