@@ -19,6 +19,7 @@ private val InstantType = ClassName("kotlin.time", "Instant")
 private val JsonElementType = ClassName("kotlinx.serialization.json", "JsonElement")
 private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")
 private val ListType = ClassName("kotlin.collections", "List")
+internal val HttpResponseType = ClassName("io.ktor.client.statement", "HttpResponse")
 
 @Suppress("CyclomaticComplexMethod")
 fun Model.toTypeName(config: RenderConfig): TypeName = when (this) {

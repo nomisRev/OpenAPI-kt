@@ -19,11 +19,11 @@ internal sealed interface ErrorCaseStrategy {
 
     data class SingleContentType(
         val contentType: ContentType,
-        val model: Model,
+        val body: Route.ReturnBody,
     ) : ErrorCaseStrategy
 
     data class MultipleContentTypes(
-        val variants: List<Pair<ContentType, Model>>,
+        val variants: List<Pair<ContentType, Route.ReturnBody>>,
     ) : ErrorCaseStrategy
 }
 
@@ -92,7 +92,7 @@ internal fun Route.Returns.contentTypeStrategy(): ContentTypeStrategy {
     val successContentTypes = responses.entries
         .asSequence()
         .filter { it.key.isSuccessStatusCode() }
-        .flatMap { [_, returnType] -> returnType.types.keys.asSequence().map(ContentType::normalizedForComparison) }
+        .flatMap { [_, returnType] -> returnType.contentTypes().asSequence().map(ContentType::normalizedForComparison) }
         .distinct()
         .toList()
     return if (successContentTypes.size <= 1) {
@@ -102,30 +102,35 @@ internal fun Route.Returns.contentTypeStrategy(): ContentTypeStrategy {
     }
 }
 
-internal fun Route.ReturnType.preferredModel(): Model? {
-    if (types.isEmpty()) return null
+internal fun Route.ReturnType.contentTypes(): List<ContentType> =
+    (types.keys + rawContentTypes).toList()
+
+internal fun Route.ReturnType.preferredBody(): Route.ReturnBody? {
     val jsonEntry = types.entries.firstOrNull { ContentType.Application.Json.match(it.key) }
-    return jsonEntry?.value ?: types.values.first()
+    if (jsonEntry != null) return Route.ReturnBody.Typed(jsonEntry.value)
+    val typed = types.values.firstOrNull()
+    if (typed != null) return Route.ReturnBody.Typed(typed)
+    return rawContentTypes.firstOrNull()?.let { Route.ReturnBody.Raw }
 }
 
 internal fun classifyErrorStatus(
     statusCode: HttpStatusCode,
     returnType: Route.ReturnType,
 ): ErrorCaseStrategy {
-    if (statusCode.value in NO_CONTENT_STATUS_CODE || returnType.types.isEmpty()) {
+    if (statusCode.value in NO_CONTENT_STATUS_CODE || returnType.contentTypes().isEmpty()) {
         return ErrorCaseStrategy.NoContent
     }
 
-    val variants = returnType.types.entries
+    val variants = returnType.bodies()
         .asSequence()
-        .map { [contentType, model] -> contentType.normalizedForComparison() to model }
+        .map { [contentType, body] -> contentType.normalizedForComparison() to body }
         .distinctBy { it.first }
         .toList()
     return when (variants.size) {
         0 -> ErrorCaseStrategy.NoContent
         1 -> ErrorCaseStrategy.SingleContentType(
             contentType = variants.single().first,
-            model = variants.single().second,
+            body = variants.single().second,
         )
 
         else -> ErrorCaseStrategy.MultipleContentTypes(variants)
