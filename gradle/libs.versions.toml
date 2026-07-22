@@ -1,7 +1,7 @@
 [versions]
 dokka = "2.2.0"
 kotlin = "2.4.10"
-kover = "0.9.8"
+kover = "0.9.9"
 knit = "0.5.1"
 publish="0.37.0"
 okio="3.16.0"
