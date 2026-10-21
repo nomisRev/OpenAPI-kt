@@ -13,7 +13,7 @@ resources = "0.16.2"
 serialization="1.11.0"
 gratatouille = "0.2.3"
 coroutines = "1.11.0"
-java-diff-utils = "4.17"
+java-diff-utils = "4.18"
 
 [libraries]
 compile-testing = { module = "dev.zacsweers.kctfork:core", version.ref = "test-compile" }
