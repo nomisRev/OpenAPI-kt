@@ -211,8 +211,30 @@ data class Route(
         val extensions: Map<String, JsonElement>,
     )
 
+    sealed interface ReturnBody {
+        data class Typed(val model: Model) : ReturnBody
+        data object Raw : ReturnBody
+    }
+
     // Required
-    data class ReturnType(val types: Map<ContentType, Model>, val extensions: Map<String, JsonElement>)
+    data class ReturnType(
+        val types: Map<ContentType, Model>,
+        val rawContentTypes: Set<ContentType> = emptySet(),
+        val extensions: Map<String, JsonElement>,
+    ) {
+        fun body(contentType: ContentType): ReturnBody? =
+            types[contentType]?.let(ReturnBody::Typed)
+                ?: types.entries
+                    .firstOrNull { [candidate, _] -> candidate.match(contentType) || contentType.match(candidate) }
+                    ?.let { [_, model] -> ReturnBody.Typed(model) }
+                ?: rawContentTypes
+                    .firstOrNull { candidate -> candidate.match(contentType) || contentType.match(candidate) }
+                    ?.let { ReturnBody.Raw }
+
+        fun bodies(): List<Pair<ContentType, ReturnBody>> =
+            types.entries.map { [contentType, model] -> contentType to ReturnBody.Typed(model) } +
+                    rawContentTypes.map { contentType -> contentType to ReturnBody.Raw }
+    }
 }
 
 private fun Bodies?.nested(): Set<Model> =

@@ -2330,6 +2330,68 @@ val clientSpec by testSuite {
         "client/inline-union-case-with-nested-enum"
     )
 
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/audio": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "Raw audio stream",
+                    "content": {
+                      "audio/wav": {}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/raw-single-response"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/reports": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  },
+                  "400": {
+                    "description": "Bad request raw audio diagnostics",
+                    "content": {
+                      "audio/wav": {}
+                    }
+                  },
+                  "default": {
+                    "description": "Fallback image",
+                    "content": {
+                      "image/png": {}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/raw-error-and-default-response"
+    )
+
     test("ambiguous form overload emits warning and is omitted when json body is available") {
         val json = """
         {
