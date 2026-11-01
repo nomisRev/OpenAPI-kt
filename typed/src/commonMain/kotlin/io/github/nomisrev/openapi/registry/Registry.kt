@@ -79,14 +79,21 @@ class Registry(
             is ReferenceOr.Reference -> peek(ref)
         }
 
-        override suspend fun peek(ref: String): Schema {
+        override suspend fun peek(ref: String): Schema = peek(ref, emptySet())
+
+        private tailrec suspend fun peek(ref: String, visited: Set<String>): Schema {
+            check(ref !in visited) {
+                "Cyclic schema aliases: ${visited.joinToString(" -> ")} -> $ref"
+            }
+            if (ref == "#") return currentAnchor?.second
+                ?: error("Cannot resolve top-level schema without anchor.")
+            if (!ref.startsWith("#")) return remoteSchema(ref)
             val name = ref.schemaName()
-            val schema = when (val nested = openAPI.components.schemas[name]) {
-                is ReferenceOr.Reference -> remoteSchema(nested.ref)
+            return when (val nested = openAPI.components.schemas[name]) {
+                is ReferenceOr.Reference -> peek(nested.ref, visited + ref)
                 is ReferenceOr.Value<Schema> -> nested.value
                 null -> error("Schema $name not found in ${openAPI.components.schemas.keys}.")
             }
-            return schema
         }
 
         /**
@@ -213,11 +220,7 @@ class Registry(
             block(this@ScopeImpl, ResolvedSchema.Recursive(currentAnchor.first, currentAnchor.second))
         } else {
             val name = ref.drop("#/components/schemas/".length)
-            val schema = when (val nested = openAPI.components.schemas[name]) {
-                is ReferenceOr.Reference -> remoteSchema(nested.ref)
-                is ReferenceOr.Value<Schema> -> nested.value
-                null -> error("Schema $name could not be found in ${openAPI.components.schemas.keys}.")
-            }
+            val schema = peek(ref)
             val contextSpecific = this.readOnly == true || this.writeOnly == true || schema.readOrWriteOnly()
             val schemaContext = if (contextSpecific) context else SchemaContext.Null
             val reference = NamingContext.Reference(name, schemaContext)
