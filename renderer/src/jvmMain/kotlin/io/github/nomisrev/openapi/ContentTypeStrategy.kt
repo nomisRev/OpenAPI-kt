@@ -1,6 +1,7 @@
 @file:Suppress("TooManyFunctions")
 package io.github.nomisrev.openapi
 
+import io.github.nomisrev.openapi.parser.StatusCodeOrRange
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.Route.Bodies
 import io.ktor.http.ContentType
@@ -12,6 +13,39 @@ internal sealed interface ContentTypeStrategy {
     data class SeparateMethods(
         val successContentTypes: List<ContentType>,
     ) : ContentTypeStrategy
+}
+
+internal sealed interface ResponseStatus {
+    val returnType: Route.ReturnType
+    val caseName: String
+    val isSuccessStatusCode: Boolean
+    val statusCode: HttpStatusCode?
+    val matchingRange: IntRange?
+
+    data class Exact(
+        override val statusCode: HttpStatusCode,
+        override val returnType: Route.ReturnType,
+    ) : ResponseStatus {
+        override val caseName: String get() = statusCode.toCaseName()
+        override val isSuccessStatusCode: Boolean get() = statusCode.isSuccessStatusCode()
+        override val matchingRange: IntRange? get() = null
+    }
+
+    data class Range(
+        val responseRange: StatusCodeOrRange.Range,
+        override val returnType: Route.ReturnType,
+    ) : ResponseStatus {
+        private val hundredRange: IntRange
+            get() {
+                val start = responseRange.value.first().digitToInt() * 100
+                return start..(start + 99)
+            }
+
+        override val caseName: String get() = "Status${responseRange.value}"
+        override val isSuccessStatusCode: Boolean get() = responseRange.value.startsWith('2')
+        override val statusCode: HttpStatusCode? get() = null
+        override val matchingRange: IntRange get() = hundredRange
+    }
 }
 
 internal sealed interface ErrorCaseStrategy {
@@ -89,10 +123,12 @@ internal fun defaultBodyTypeName(
     }
 
 internal fun Route.Returns.contentTypeStrategy(): ContentTypeStrategy {
-    val successContentTypes = responses.entries
+    val successContentTypes = responseStatuses()
         .asSequence()
-        .filter { it.key.isSuccessStatusCode() }
-        .flatMap { [_, returnType] -> returnType.types.keys.asSequence().map(ContentType::normalizedForComparison) }
+        .filter { it.isSuccessStatusCode }
+        .flatMap { status ->
+            status.returnType.types.keys.asSequence().map(ContentType::normalizedForComparison)
+        }
         .distinct()
         .toList()
     return if (successContentTypes.size <= 1) {
@@ -102,11 +138,18 @@ internal fun Route.Returns.contentTypeStrategy(): ContentTypeStrategy {
     }
 }
 
+internal fun Route.Returns.responseStatuses(): List<ResponseStatus> =
+    responses.map { [statusCode, returnType] -> ResponseStatus.Exact(statusCode, returnType) } +
+        responseRanges.map { [range, returnType] -> ResponseStatus.Range(range, returnType) }
+
 internal fun Route.ReturnType.preferredModel(): Model? {
     if (types.isEmpty()) return null
     val jsonEntry = types.entries.firstOrNull { ContentType.Application.Json.match(it.key) }
     return jsonEntry?.value ?: types.values.first()
 }
+
+internal fun Route.ReturnType.modelForContentType(contentType: ContentType): Model? =
+    types.entries.firstOrNull { it.key.match(contentType) || contentType.match(it.key) }?.value
 
 internal fun classifyErrorStatus(
     statusCode: HttpStatusCode,

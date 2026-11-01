@@ -5,6 +5,7 @@ import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Response
+import io.github.nomisrev.openapi.parser.StatusCodeOrRange
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.toModel
 import io.ktor.http.ContentType
@@ -17,14 +18,22 @@ suspend fun resolveReturns(
     segments: List<PathSegment>,
     method: HttpMethod,
     operation: Operation,
-): Route.Returns =
-    Route.Returns(
+): Route.Returns {
+    val exactResponses = operation.responses.responses.filterKeys { it is StatusCodeOrRange.Code }
+    val responseRanges = operation.responses.responses.filterKeys { it is StatusCodeOrRange.Range }
+    return Route.Returns(
         default = operation.responses.default?.resolve()?.toReturnType(path, segments, method),
-        responses = operation.responses.responses.entries.associate { [code, response] ->
-            Pair(HttpStatusCode.fromValue(code), response.resolve().toReturnType(path, segments, method))
+        responses = exactResponses.entries.associate { entry ->
+            val statusCode = (entry.key as StatusCodeOrRange.Code).value
+            HttpStatusCode.fromValue(statusCode) to entry.value.resolve().toReturnType(path, segments, method)
+        },
+        responseRanges = responseRanges.entries.associate { entry ->
+            val range = entry.key as StatusCodeOrRange.Range
+            range to entry.value.resolve().toReturnType(path, segments, method)
         },
         extensions = operation.responses.extensions
     )
+}
 
 context(ctx: Registry)
 private suspend fun Response.toReturnType(

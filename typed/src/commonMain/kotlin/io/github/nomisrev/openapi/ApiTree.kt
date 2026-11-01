@@ -90,7 +90,10 @@ private fun Route.Returns.topLevelNames(): Set<NamingContext.Reference> {
     val responsesNested = responses.values.flatMapTo(mutableSetOf()) { returnType ->
         returnType.types.values.flatMap { it.topLevelNames() }
     }
-    return defaultNested + responsesNested
+    val responseRangesNested = responseRanges.values.flatMapTo(mutableSetOf()) { returnType ->
+        returnType.types.values.flatMap { it.topLevelNames() }
+    }
+    return defaultNested + responsesNested + responseRangesNested
 }
 
 private fun List<Route.Input>.topLevelNames(): Set<NamingContext.Reference> =

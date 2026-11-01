@@ -416,6 +416,7 @@ private fun Route.buildSealedOperationBody(
 
     code.beginControlFlow("return when (response.status.value)")
     addSealedResponseStatusCases(code, methodClassName)
+    addSealedResponseRangeCases(code, methodClassName)
     addSealedResponseDefaultCase(code, methodClassName)
     code.endControlFlow()
     return code.build()
@@ -451,6 +452,7 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
 
     code.beginControlFlow("return when (response.status.value)")
     addMultiContentTypeSealedResponseStatusCases(code, methodClassName, contentType)
+    addMultiContentTypeSealedResponseRangeCases(code, methodClassName, contentType)
     addMultiContentTypeSealedResponseDefaultCase(code, methodClassName, contentType)
     code.endControlFlow()
     return code.build()
@@ -511,6 +513,19 @@ private fun Route.addSealedResponseStatusCases(code: CodeBlock.Builder, methodCl
     }
 }
 
+private fun Route.addSealedResponseRangeCases(code: CodeBlock.Builder, methodClassName: ClassName) {
+    val responseClassName = methodClassName.nestedClass("Response")
+    for ([range, returnType] in returns.responseRanges) {
+        val status = ResponseStatus.Range(range, returnType)
+        val caseClassName = responseClassName.nestedClass(status.caseName)
+        code.addStatement(
+            "in %L -> %L",
+            requireNotNull(status.matchingRange),
+            buildRangeResponseCaseExpression(caseClassName, status.caseName, status, returnType.preferredModel()),
+        )
+    }
+}
+
 private fun Route.addSealedResponseDefaultCase(code: CodeBlock.Builder, methodClassName: ClassName) {
     val responseClassName = methodClassName.nestedClass("Response")
     if (returns.default != null) {
@@ -538,7 +553,24 @@ private fun Route.addMultiContentTypeSealedResponseStatusCases(
     val responseClassName = methodClassName.nestedClass(contentTypeResponseTypeName(contentType))
     for ([statusCode, returnTypeEntry] in returns.responses.entries.sortedBy { it.key.value }) {
         if (statusCode.isSuccessStatusCode()) {
-            val model = returnTypeEntry.types[contentType] ?: continue
+            val model = returnTypeEntry.types[contentType]
+            if (model == null) {
+                if (returnTypeEntry.types.isEmpty()) {
+                    code.addStatement(
+                        "%L -> %T",
+                        statusCode.value,
+                        methodClassName.nestedClass(statusCode.toCaseName()),
+                    )
+                } else if (returns.responseRanges.isNotEmpty()) {
+                    code.addStatement(
+                        "%L -> throw %T(response, %S)",
+                        statusCode.value,
+                        ResponseExceptionType,
+                        "",
+                    )
+                }
+                continue
+            }
             val caseClassName = responseClassName.nestedClass(statusCode.toCaseName())
             if (model is Model.Primitive.Unit) {
                 code.addStatement("%L -> %T", statusCode.value, caseClassName)
@@ -571,6 +603,102 @@ private fun Route.addMultiContentTypeSealedResponseStatusCases(
             }
         }
     }
+}
+
+private fun Route.addMultiContentTypeSealedResponseRangeCases(
+    code: CodeBlock.Builder,
+    methodClassName: ClassName,
+    contentType: ContentType,
+) {
+    val responseClassName = methodClassName.nestedClass(contentTypeResponseTypeName(contentType))
+    for ([range, returnType] in returns.responseRanges) {
+        val status = ResponseStatus.Range(range, returnType)
+        val matchingRange = requireNotNull(status.matchingRange)
+        if (status.isSuccessStatusCode) {
+            if (returnType.types.isEmpty()) {
+                val caseClassName = methodClassName.nestedClass(status.caseName)
+                code.addStatement(
+                    "in %L -> %L",
+                    matchingRange,
+                    buildRangeResponseCaseExpression(caseClassName, status.caseName, status, null),
+                )
+            } else {
+                val caseClassName = responseClassName.nestedClass(status.caseName)
+                code.addStatement(
+                    "in %L -> %L",
+                    matchingRange,
+                    buildRangeResponseCaseExpression(
+                        caseClassName,
+                        status.caseName,
+                        status,
+                        returnType.modelForContentType(contentType),
+                    ),
+                )
+            }
+            continue
+        }
+
+        val variants = returnType.types.entries.toList()
+        when {
+            variants.isEmpty() -> {
+                val caseClassName = methodClassName.nestedClass(status.caseName)
+                code.addStatement(
+                    "in %L -> %L",
+                    matchingRange,
+                    buildRangeResponseCaseExpression(caseClassName, status.caseName, status, null),
+                )
+            }
+
+            variants.size == 1 -> {
+                val caseClassName = methodClassName.nestedClass(status.caseName)
+                code.addStatement(
+                    "in %L -> %L",
+                    matchingRange,
+                    buildRangeResponseCaseExpression(caseClassName, status.caseName, status, variants.single().value),
+                )
+            }
+
+            else -> code.add(
+                buildMultiCTRangeErrorDispatch(
+                    methodClassName = methodClassName,
+                    status = status,
+                    variants = variants,
+                )
+            )
+        }
+    }
+}
+
+private fun buildMultiCTRangeErrorDispatch(
+    methodClassName: ClassName,
+    status: ResponseStatus.Range,
+    variants: List<Map.Entry<ContentType, Model>>,
+): CodeBlock {
+    val preferredVariant = variants.firstOrNull { ContentType.Application.Json.match(it.key) } ?: variants.first()
+    val code = CodeBlock.builder()
+    code.add("in %L -> run {\n", requireNotNull(status.matchingRange))
+    code.indent()
+    code.addStatement("val ct = response.%M()", ContentTypeFunMember)
+    code.beginControlFlow("when")
+    for ([errorContentType, errorModel] in variants) {
+        val caseName = "${contentTypeToIdentifier(errorContentType)}${status.caseName}"
+        val caseClassName = methodClassName.nestedClass(caseName)
+        code.addStatement(
+            "ct?.match(%L) == true -> %L",
+            errorContentType.toContentTypeCodeBlock(),
+            buildRangeResponseCaseExpression(caseClassName, caseName, status, errorModel),
+        )
+    }
+    val preferredCaseName = "${contentTypeToIdentifier(preferredVariant.key)}${status.caseName}"
+    val preferredCaseClassName = methodClassName.nestedClass(preferredCaseName)
+    code.addStatement(
+        "else -> %L",
+        buildRangeResponseCaseExpression(preferredCaseClassName, preferredCaseName, status, preferredVariant.value),
+    )
+    code.endControlFlow()
+    code.unindent()
+    code.add("}\n")
+    return code.build()
 }
 
 private fun buildMultiCTErrorDispatch(
@@ -638,6 +766,37 @@ private fun buildResponseCaseExpression(
 
         else -> CodeBlock.of("%T(response.%M())", caseClassName, BodyMember)
     }
+
+private fun buildRangeResponseCaseExpression(
+    caseClassName: ClassName,
+    caseName: String,
+    status: ResponseStatus.Range,
+    model: Model?,
+): CodeBlock {
+    if (model == null || model is Model.Primitive.Unit) {
+        return CodeBlock.of("%T(response.status)", caseClassName)
+    }
+
+    val body = if (model.isRouteInlineModel() && model !is Model.Collection) {
+        CodeBlock.of("response.%M<%T>()", BodyMember, caseClassName.nestedClass("${caseName}Body"))
+    } else {
+        CodeBlock.of("response.%M()", BodyMember)
+    }
+    val range = requireNotNull(status.matchingRange)
+    val noContentChecks = listOf(204, 304).filter(range::contains)
+    if (noContentChecks.isEmpty()) {
+        return CodeBlock.of("%T(response.status, %L)", caseClassName, body)
+    }
+
+    val noContentCondition = noContentChecks.joinToString(" || ") { "response.status.value == $it" }
+    return CodeBlock.of(
+        "if (%L) %T(response.status, null) else %T(response.status, %L)",
+        noContentCondition,
+        caseClassName,
+        caseClassName,
+        body,
+    )
+}
 
 private fun Route.hasRequestConfig(includeBody: Boolean): Boolean {
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }

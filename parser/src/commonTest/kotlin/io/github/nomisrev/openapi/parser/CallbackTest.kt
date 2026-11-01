@@ -35,11 +35,11 @@ class CallbackTest {
         val successPath = assertNotNull(callback.value["{\$request.body#/successUrl}"])
         val successPost = assertNotNull(successPath.post)
         assertEquals("onSuccess", successPost.operationId)
-        assertTrue(successPost.responses.responses.containsKey(200))
+        assertTrue(successPost.responses.responses.containsKey(StatusCodeOrRange.Code(200)))
 
         val failurePath = assertNotNull(callback.value["{\$request.body#/failureUrl}"])
         val failureGet = assertNotNull(failurePath.get)
         assertEquals("onFailure", failureGet.operationId)
-        assertTrue(failureGet.responses.responses.containsKey(202))
+        assertTrue(failureGet.responses.responses.containsKey(StatusCodeOrRange.Code(202)))
     }
 }

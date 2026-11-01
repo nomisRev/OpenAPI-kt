@@ -132,9 +132,8 @@ private fun Route.responseCollectionItemCandidates(
 ): List<OperationInlineModelCandidate> {
     var sourceOrder = sourceOrderStart
     return buildList {
-        returns.responses.entries
-            .sortedBy { it.key.value }
-            .forEach { [_, returnType] ->
+        (returns.responses.values + returns.responseRanges.values)
+            .forEach { returnType ->
                 returnType.types.entries
                     .sortedBy { it.key.toString() }
                     .forEach { [_, model] ->

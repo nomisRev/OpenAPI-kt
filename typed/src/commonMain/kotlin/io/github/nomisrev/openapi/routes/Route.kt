@@ -12,6 +12,7 @@ import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.StatusCodeOrRange
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.Route.Bodies
 import io.github.nomisrev.openapi.routes.Route.Body
@@ -209,6 +210,7 @@ data class Route(
         val default: ReturnType?,
         val responses: Map<HttpStatusCode, ReturnType>,
         val extensions: Map<String, JsonElement>,
+        val responseRanges: Map<StatusCodeOrRange.Range, ReturnType> = emptyMap(),
     )
 
     // Required
@@ -231,7 +233,10 @@ private fun Returns.nested(): Set<Model> {
     val responsesNested = responses.values.flatMapTo(mutableSetOf()) { returnType ->
         returnType.types.values.mapNotNull { it.nestedOrNull() }
     }
-    return defaultNested + responsesNested
+    val responseRangesNested = responseRanges.values.flatMapTo(mutableSetOf()) { returnType ->
+        returnType.types.values.mapNotNull { it.nestedOrNull() }
+    }
+    return defaultNested + responsesNested + responseRangesNested
 }
 
 private fun List<Input>.nested(): Set<Model> =

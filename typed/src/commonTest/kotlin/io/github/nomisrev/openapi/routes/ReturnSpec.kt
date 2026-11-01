@@ -12,6 +12,7 @@ import io.github.nomisrev.openapi.parser.Responses
 import io.github.nomisrev.openapi.parser.Response
 import io.github.nomisrev.openapi.parser.MediaType
 import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.StatusCodeOrRange
 import io.github.nomisrev.openapi.registry.Registry
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
@@ -27,7 +28,7 @@ val ReturnSpec by testSuite(testConfig = TestConfig.disable()) {
                     get = Operation(
                         responses = Responses(
                             responses = mapOf(
-                                200 to ReferenceOr.Value(
+                                StatusCodeOrRange.Code(200) to ReferenceOr.Value(
                                     Response(
                                         description = "OK",
                                         content = mapOf(
@@ -65,7 +66,7 @@ val ReturnSpec by testSuite(testConfig = TestConfig.disable()) {
                     get = Operation(
                         responses = Responses(
                             responses = mapOf(
-                                200 to ReferenceOr.Value(
+                                StatusCodeOrRange.Code(200) to ReferenceOr.Value(
                                     Response(
                                         description = "OK",
                                         content = mapOf(

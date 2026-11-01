@@ -19,6 +19,64 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/widgets": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": { "schema": { "type": "string" } }
+                    }
+                  },
+                  "2XX": {
+                    "description": "Successful response range",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "string" },
+                            "version": { "type": "integer", "format": "int32" }
+                          },
+                          "required": ["id"]
+                        }
+                      },
+                      "application/xml": { "schema": { "type": "string" } }
+                    }
+                  },
+                  "4XX": { "description": "Client error range" },
+                  "5XX": {
+                    "description": "Server error range",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": { "message": { "type": "string" } }
+                        }
+                      }
+                    }
+                  },
+                  "default": {
+                    "description": "Unexpected response",
+                    "content": {
+                      "text/plain": { "schema": { "type": "string" } }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-ranges"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/pets": {
               "get": {
                 "responses": { "200": { "description": "OK" } }

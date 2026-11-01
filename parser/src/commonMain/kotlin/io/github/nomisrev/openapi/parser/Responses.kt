@@ -7,9 +7,9 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.SealedSerializationApi
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
@@ -25,11 +25,25 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 
+public sealed interface StatusCodeOrRange {
+  /** An exact HTTP status code. */
+  @JvmInline
+  public value class Code(public val value: Int) : StatusCodeOrRange
+
+  /** A response-code range such as `5XX`. */
+  @JvmInline
+  public value class Range(public val value: String) : StatusCodeOrRange {
+    init {
+      require(value.isResponseCodeRange()) { "$value is not a valid response code range" }
+    }
+  }
+}
+
 /**
- * A container for the expected responses of an operation. The container maps a HTTP response code
- * to the expected response. It is not expected from the documentation to necessarily cover all
- * possible HTTP response codes, since they may not be known in advance. However, it is expected
- * from the documentation to cover a successful operation response and any known errors.
+ * A container for the expected responses of an operation. The container maps HTTP response codes
+ * or ranges to their expected responses. It is not expected from the documentation to necessarily
+ * cover all possible HTTP response codes, since they may not be known in advance. However, it is
+ * expected from the documentation to cover a successful operation response and any known errors.
  */
 @Serializable(with = Responses.Companion.Serializer::class)
 public data class Responses(
@@ -39,10 +53,10 @@ public data class Responses(
    */
   public val default: ReferenceOr<Response>? = null,
   /**
-   * Any HTTP status code can be used as the property name (one property per HTTP status code).
-   * Describes the expected response for those HTTP status codes.
+   * Maps exact HTTP status codes and status-code ranges to their expected responses.
    */
-  public val responses: Map<Int, ReferenceOr<Response>>,
+  public val responses: Map<StatusCodeOrRange, ReferenceOr<Response>>,
+
   /**
    * Any additional external documentation for this OpenAPI document. The key is the name of the
    * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
@@ -54,21 +68,28 @@ public data class Responses(
   public constructor(
     statusCode: Int,
     response: Response,
-  ) : this(null, mapOf(statusCode to ReferenceOr.Value(response)))
+  ) : this(null, mapOf(StatusCodeOrRange.Code(statusCode) to ReferenceOr.Value(response)))
 
   public constructor(
     head: Pair<Int, ReferenceOr<Response>>,
     vararg responses: Pair<Int, ReferenceOr<Response>>,
-  ) : this(null, mapOf(head) + responses)
+  ) : this(
+    null,
+    (listOf(head) + responses).associate { (statusCode, response) ->
+      StatusCodeOrRange.Code(statusCode) to response
+    },
+  )
 
   public operator fun plus(other: Responses): Responses =
-    Responses(other.default ?: default, responses + other.responses)
+    Responses(
+      default = other.default ?: default,
+      responses = responses + other.responses,
+    )
 
   public companion object {
     internal object Serializer : KSerializer<Responses> {
       override val descriptor: SerialDescriptor = ResponsesDescriptor
       private val responseSerializer = ReferenceOr.serializer(Response.serializer())
-      private val responsesSerializer = MapSerializer(Int.serializer(), responseSerializer)
 
       override fun deserialize(decoder: Decoder): Responses =
         when {
@@ -78,11 +99,13 @@ public data class Responses(
               if (json.contains("default"))
                 decoder.json.decodeFromJsonElement(responseSerializer, json.getValue("default"))
               else null
-            val responsesJs = json.filterNot { it.key.startsWith("x-") || it.key == "default" }
-            val responses =
-              if (responsesJs.isNotEmpty())
-                decoder.json.decodeFromJsonElement(responsesSerializer, JsonObject(responsesJs))
-              else emptyMap()
+            val responses = buildMap {
+              json.forEach { (key, value) ->
+                if (!key.startsWith("x-") && key != "default") {
+                  put(key.toStatusCodeOrRange(), decoder.json.decodeFromJsonElement(responseSerializer, value))
+                }
+              }
+            }
             val extensions = json.filter { it.key.startsWith("x-") }
             Responses(default, responses, extensions)
           }
@@ -93,17 +116,17 @@ public data class Responses(
               node.getOrNull("default")?.let {
                 decoder.yaml.decodeFromYamlNode(responseSerializer, it)
               }
-            val responsesJs =
-              node.entries.filterNot {
-                it.key.content.startsWith("x-") || it.key.content == "default"
+            val responses = buildMap {
+              node.entries.forEach { (key, value) ->
+                val propertyName = key.content
+                if (!propertyName.startsWith("x-") && propertyName != "default") {
+                  put(
+                    propertyName.toStatusCodeOrRange(),
+                    decoder.yaml.decodeFromYamlNode(responseSerializer, value),
+                  )
+                }
               }
-            val responses =
-              if (responsesJs.isNotEmpty())
-                decoder.yaml.decodeFromYamlNode(
-                  responsesSerializer,
-                  YamlMap(responsesJs, node.path),
-                )
-              else emptyMap()
+            }
             val extensions = buildMap {
               node.entries.forEach { (key, value) ->
                 if (key.content.startsWith("x-")) {
@@ -119,15 +142,19 @@ public data class Responses(
 
       override fun serialize(encoder: Encoder, value: Responses) {
         encoder as JsonEncoder
-        val default =
-          value.default?.let {
-            encoder.json
-              .encodeToJsonElement(ReferenceOr.serializer(Response.serializer()), it)
-              .jsonObject
+        val responses = buildMap {
+          value.responses.forEach { (statusCodeOrRange, response) ->
+            put(
+              statusCodeOrRange.toPropertyName(),
+              encoder.json.encodeToJsonElement(responseSerializer, response),
+            )
           }
-        val responses =
-          encoder.json.encodeToJsonElement(responsesSerializer, value.responses).jsonObject
-        val json = JsonObject((default.orEmpty()) + responses + value.extensions)
+          value.default?.let {
+            put("default", encoder.json.encodeToJsonElement(responseSerializer, it))
+          }
+          putAll(value.extensions)
+        }
+        val json = JsonObject(responses)
         encoder.encodeSerializableValue(JsonElement.serializer(), json)
       }
     }
@@ -139,14 +166,17 @@ private object ResponsesDescriptor : SerialDescriptor {
   override val serialName: String = "arrow.endpoint.docs.openapi.Responses"
   override val kind: SerialKind = StructureKind.MAP
   override val elementsCount: Int = 2
-  private val keyDescriptor: SerialDescriptor = Int.serializer().descriptor
+  private val keyDescriptor: SerialDescriptor = String.serializer().descriptor
   private val valueDescriptor: SerialDescriptor =
     ReferenceOr.serializer(Response.serializer()).descriptor
 
   override fun getElementName(index: Int): String = index.toString()
 
   override fun getElementIndex(name: String): Int =
-    name.toIntOrNull() ?: throw IllegalArgumentException("$name is not a valid list index")
+    when (val statusCodeOrRange = name.toStatusCodeOrRange()) {
+      is StatusCodeOrRange.Code -> statusCodeOrRange.value
+      is StatusCodeOrRange.Range -> statusCodeOrRange.value.substring(0, 1).toInt()
+    }
 
   override fun isElementOptional(index: Int): Boolean {
     require(index >= 0) { "Illegal index $index, $serialName expects only non-negative indices" }
@@ -185,3 +215,17 @@ private object ResponsesDescriptor : SerialDescriptor {
 
   override fun toString(): String = "$serialName($keyDescriptor, $valueDescriptor)"
 }
+
+private fun String.isResponseCodeRange(): Boolean =
+  length == 3 && first() in '1'..'5' && substring(1) == "XX"
+
+private fun String.toStatusCodeOrRange(): StatusCodeOrRange =
+  toIntOrNull()?.let(StatusCodeOrRange::Code)
+    ?: if (isResponseCodeRange()) StatusCodeOrRange.Range(this)
+    else throw SerializationException("$this is not a valid response code or range")
+
+private fun StatusCodeOrRange.toPropertyName(): String =
+  when (this) {
+    is StatusCodeOrRange.Code -> value.toString()
+    is StatusCodeOrRange.Range -> value
+  }

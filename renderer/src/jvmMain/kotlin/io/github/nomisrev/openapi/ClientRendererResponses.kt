@@ -14,8 +14,8 @@ import io.ktor.http.HttpStatusCode
 private val HttpStatusCodeType = ClassName("io.ktor.http", "HttpStatusCode")
 
 internal fun Route.Returns.needsSealedInterface(): Boolean {
-    val totalCases = responses.size + (if (default != null) 1 else 0)
-    return totalCases > 1
+    val totalCases = responses.size + responseRanges.size + (if (default != null) 1 else 0)
+    return responseRanges.isNotEmpty() || totalCases > 1
 }
 
 internal fun Route.buildResponseTypeSpec(
@@ -57,7 +57,8 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
         acc[contentType] = methodClassName.nestedClass(simpleName)
         acc
     }
-    val hasMultipleStatuses = returns.responses.size + (if (returns.default != null) 1 else 0) > 1
+    val hasMultipleStatuses = returns.responses.size + returns.responseRanges.size +
+            (if (returns.default != null) 1 else 0) > 1
     val allResponseInterfaces = responseInterfaces.values.toList()
     val specs = mutableListOf<TypeSpec>()
 
@@ -81,6 +82,20 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
             )
             rendering.inlineTypeSpec?.let(builder::addType)
             builder.addType(rendering.caseTypeSpec)
+        }
+
+        for ([range, returnType] in returns.responseRanges) {
+            if (!range.value.startsWith('2') || returnType.types.isEmpty()) continue
+            builder.addType(
+                buildRangeResponseCaseTypeSpec(
+                    config = config,
+                    ownerClassName = responseClassName,
+                    caseName = ResponseStatus.Range(range, returnType).caseName,
+                    model = returnType.modelForContentType(contentType),
+                    superinterfaces = listOf(responseClassName),
+                    inlineModelScope = inlineModelScope,
+                )
+            )
         }
 
         specs += builder.build()
@@ -136,6 +151,51 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
                         inlineModelScope = inlineModelScope,
                     )
                 }
+            }
+        }
+    }
+
+    for ([range, returnType] in returns.responseRanges) {
+        val responseStatus = ResponseStatus.Range(range, returnType)
+        if (responseStatus.isSuccessStatusCode) {
+            if (returnType.types.isEmpty()) {
+                specs += buildRangeResponseCaseTypeSpec(
+                    config = config,
+                    ownerClassName = methodClassName,
+                    caseName = responseStatus.caseName,
+                    model = null,
+                    superinterfaces = allResponseInterfaces,
+                    inlineModelScope = inlineModelScope,
+                )
+            }
+            continue
+        }
+
+        val variants = returnType.types.entries.toList()
+        if (variants.isEmpty()) {
+            specs += buildRangeResponseCaseTypeSpec(
+                config = config,
+                ownerClassName = methodClassName,
+                caseName = responseStatus.caseName,
+                model = null,
+                superinterfaces = allResponseInterfaces,
+                inlineModelScope = inlineModelScope,
+            )
+        } else {
+            variants.forEach { [contentType, model] ->
+                val caseName = if (variants.size == 1) {
+                    responseStatus.caseName
+                } else {
+                    "${contentTypeToIdentifier(contentType)}${responseStatus.caseName}"
+                }
+                specs += buildRangeResponseCaseTypeSpec(
+                    config = config,
+                    ownerClassName = methodClassName,
+                    caseName = caseName,
+                    model = model,
+                    superinterfaces = allResponseInterfaces,
+                    inlineModelScope = inlineModelScope,
+                )
             }
         }
     }
@@ -230,7 +290,8 @@ private fun Route.buildSealedResponseTypeSpec(
     inlineModelScope: OperationInlineModelScope,
 ): TypeSpec {
     val responseClassName = methodClassName.nestedClass("Response")
-    val hasMultipleStatuses = returns.responses.size + (if (returns.default != null) 1 else 0) > 1
+    val hasMultipleStatuses = returns.responses.size + returns.responseRanges.size +
+            (if (returns.default != null) 1 else 0) > 1
 
     val builder = TypeSpec.interfaceBuilder("Response")
         .addModifiers(KModifier.SEALED)
@@ -248,6 +309,19 @@ private fun Route.buildSealedResponseTypeSpec(
         )
         rendering.inlineTypeSpec?.let(builder::addType)
         builder.addType(rendering.caseTypeSpec)
+    }
+
+    for ([range, returnType] in returns.responseRanges) {
+        builder.addType(
+            buildRangeResponseCaseTypeSpec(
+                config = config,
+                ownerClassName = responseClassName,
+                caseName = ResponseStatus.Range(range, returnType).caseName,
+                model = returnType.preferredModel(),
+                superinterfaces = listOf(responseClassName),
+                inlineModelScope = inlineModelScope,
+            )
+        )
     }
 
     returns.default?.let { defaultReturnType ->
@@ -340,6 +414,61 @@ private fun buildSealedResponseCaseTypeSpec(
             inlineTypeSpec = inlineTypeSpec,
         )
     }
+}
+
+private fun buildRangeResponseCaseTypeSpec(
+    config: RenderConfig,
+    ownerClassName: ClassName,
+    caseName: String,
+    model: Model?,
+    superinterfaces: List<TypeName>,
+    inlineModelScope: OperationInlineModelScope,
+): TypeSpec {
+    val caseClassName = ownerClassName.nestedClass(caseName)
+    val bodyTypeName = "${caseName}Body"
+    val inlineTypeSpec = if (model != null && model.isRouteInlineModel() && model !is Model.Primitive.Unit) {
+        buildInlineResponseBodyTypeSpec(
+            model = model,
+            config = config,
+            ownerClassName = caseClassName,
+            nameOverride = bodyTypeName,
+            externalTypeNames = inlineModelScope.externalTypeNames(),
+        )
+    } else {
+        null
+    }
+    val valueType = when {
+        inlineTypeSpec != null -> caseClassName.nestedClass(bodyTypeName)
+        model != null && model !is Model.Primitive.Unit -> inlineModelScope.remapResponseType(model, config)
+        else -> null
+    }?.copy(nullable = true)
+
+    val constructor = FunSpec.constructorBuilder()
+    val builder = TypeSpec.classBuilder(caseName)
+        .addModifiers(KModifier.DATA)
+
+    constructor.addParameter("status", HttpStatusCodeType)
+    builder.addProperty(
+        PropertySpec.builder("status", HttpStatusCodeType)
+            .initializer("status")
+            .build()
+    )
+    if (valueType != null) {
+        constructor.addParameter("value", valueType)
+        builder.addProperty(
+            PropertySpec.builder("value", valueType)
+                .initializer("value")
+                .build()
+        )
+    }
+
+    return builder
+        .primaryConstructor(constructor.build())
+        .apply {
+            superinterfaces.forEach(::addSuperinterface)
+            inlineTypeSpec?.let(::addType)
+        }
+        .build()
 }
 
 private fun buildInlineResponseCaseTypeSpec(
@@ -676,16 +805,17 @@ private fun buildMultiContentTypeDefaultTypeSpec(
 }
 
 internal fun Route.Returns.singlePreferredModelOrNull(): Model? =
-    (responses.values.firstOrNull() ?: default)?.preferredModel()
+    (responses.values.firstOrNull() ?: responseRanges.values.firstOrNull() ?: default)?.preferredModel()
 
 private fun Route.Returns.singlePreferredModelOrNull(contentType: ContentType?): Model? {
     if (contentType == null || contentTypeStrategy() !is ContentTypeStrategy.SeparateMethods) {
         return singlePreferredModelOrNull()
     }
-    return responses.entries
+    return responseStatuses()
         .asSequence()
-        .filter { it.key.isSuccessStatusCode() }
-        .mapNotNull { [_, returnType] ->
+        .filter { it.isSuccessStatusCode }
+        .mapNotNull { status ->
+            val returnType = status.returnType
             returnType.types.entries.firstOrNull { [candidate, _] ->
                 candidate.match(contentType) || contentType.match(candidate)
             }?.value

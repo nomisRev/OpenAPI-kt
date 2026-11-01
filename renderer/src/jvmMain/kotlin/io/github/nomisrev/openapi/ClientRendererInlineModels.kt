@@ -41,7 +41,7 @@ internal fun PathNode.hasInlineNonDiscriminatedResponseUnion(): Boolean =
 
 internal fun Iterable<Route>.hasInlineNonDiscriminatedResponseUnion(): Boolean =
     any { route ->
-        route.returns.responses.values.any { returnType ->
+        (route.returns.responses.values + route.returns.responseRanges.values).any { returnType ->
             returnType.types.values.any(Model::containsInlineNonDiscriminatedUnion)
         } || route.returns.default?.types.orEmpty().values.any(Model::containsInlineNonDiscriminatedUnion)
     }

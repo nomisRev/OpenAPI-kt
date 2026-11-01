@@ -4,9 +4,12 @@ import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Response
 import io.github.nomisrev.openapi.parser.Responses
 import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.StatusCodeOrRange
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -22,7 +25,7 @@ class ResponsesSerializerTest {
         val responses = OpenAPI.Json.decodeFromString(Responses.serializer(), json)
         assertNull(responses.default)
         assertEquals(1, responses.responses.size)
-        val r200 = assertIs<ReferenceOr.Value<Response>>(responses.responses[200])
+        val r200 = assertIs<ReferenceOr.Value<Response>>(responses.responses[StatusCodeOrRange.Code(200)])
         assertEquals("OK", r200.value.description)
     }
 
@@ -37,12 +40,54 @@ class ResponsesSerializerTest {
         """.trimIndent()
         val responses = OpenAPI.Json.decodeFromString(Responses.serializer(), json)
         assertEquals(3, responses.responses.size)
-        val r200 = assertIs<ReferenceOr.Value<Response>>(responses.responses[200])
+        val r200 = assertIs<ReferenceOr.Value<Response>>(responses.responses[StatusCodeOrRange.Code(200)])
         assertEquals("OK", r200.value.description)
-        val r404 = assertIs<ReferenceOr.Value<Response>>(responses.responses[404])
+        val r404 = assertIs<ReferenceOr.Value<Response>>(responses.responses[StatusCodeOrRange.Code(404)])
         assertEquals("Not Found", r404.value.description)
-        val r500 = assertIs<ReferenceOr.Value<Response>>(responses.responses[500])
+        val r500 = assertIs<ReferenceOr.Value<Response>>(responses.responses[StatusCodeOrRange.Code(500)])
         assertEquals("Internal Server Error", r500.value.description)
+    }
+
+    @Test
+    fun `json response code ranges remain distinct from exact status codes`() {
+        val json = """{"200":{"description":"OK"},"500":{"description":"Exact server error"},"4XX":{"${"$"}ref":"#/components/responses/ClientError"},"5XX":{"description":"Server error"}}"""
+        val responses = OpenAPI.Json.decodeFromString(Responses.serializer(), json)
+
+        assertEquals(
+            setOf(
+                StatusCodeOrRange.Code(200),
+                StatusCodeOrRange.Code(500),
+                StatusCodeOrRange.Range("4XX"),
+                StatusCodeOrRange.Range("5XX"),
+            ),
+            responses.responses.keys,
+        )
+        assertEquals("OK", (responses.responses.getValue(StatusCodeOrRange.Code(200)) as ReferenceOr.Value).value.description)
+        assertEquals(
+            "Exact server error",
+            (responses.responses.getValue(StatusCodeOrRange.Code(500)) as ReferenceOr.Value).value.description,
+        )
+        assertEquals(
+            "Server error",
+            (responses.responses.getValue(StatusCodeOrRange.Range("5XX")) as ReferenceOr.Value).value.description,
+        )
+        assertEquals(
+            "#/components/responses/ClientError",
+            (responses.responses.getValue(StatusCodeOrRange.Range("4XX")) as ReferenceOr.Reference).ref,
+        )
+    }
+
+    @Test
+    fun `json invalid response code range is rejected`() {
+        listOf("6XX", "invalid").forEach { key ->
+            assertFailsWith<SerializationException> {
+                OpenAPI.Json.decodeFromString(
+                    Responses.serializer(),
+                    """{"$key":{"description":"Invalid"}}""",
+                )
+            }
+        }
+        assertFailsWith<IllegalArgumentException> { StatusCodeOrRange.Range("6XX") }
     }
 
     // ── JSON "default" response ───────────────────────────────────────────────
@@ -79,7 +124,7 @@ class ResponsesSerializerTest {
         val responses = OpenAPI.Json.decodeFromString(Responses.serializer(), json)
         assertNotNull(responses.default)
         assertEquals(1, responses.responses.size)
-        assertNotNull(responses.responses[200])
+        assertNotNull(responses.responses[StatusCodeOrRange.Code(200)])
     }
 
     // ── JSON extensions ───────────────────────────────────────────────────────
@@ -115,7 +160,7 @@ class ResponsesSerializerTest {
     fun `json x- keys are excluded from responses map`() {
         val json = """{"200":{"description":"OK"},"x-foo":"bar"}"""
         val responses = OpenAPI.Json.decodeFromString(Responses.serializer(), json)
-        assertEquals(setOf(200), responses.responses.keys)
+        assertEquals(setOf(StatusCodeOrRange.Code(200)), responses.responses.keys)
     }
 
     // ── JSON empty responses ──────────────────────────────────────────────────
@@ -135,10 +180,50 @@ class ResponsesSerializerTest {
     fun `responses with only status codes serializes to flat json object with int keys`() {
         val responses = Responses(
             default = null,
-            responses = mapOf(200 to ReferenceOr.Value(Response(description = "OK"))),
+            responses = mapOf(StatusCodeOrRange.Code(200) to ReferenceOr.Value(Response(description = "OK"))),
         )
         val json = OpenAPI.Json.encodeToString(Responses.serializer(), responses)
         assertTrue(json.contains("\"200\""), "Expected '200' key in: $json")
+    }
+
+    @Test
+    fun `json responses with ranges and default round trip`() {
+        val responses = Responses(
+            default = ReferenceOr.Value(Response(description = "Fallback")),
+            responses = mapOf(
+                StatusCodeOrRange.Code(200) to ReferenceOr.Value(Response(description = "OK")),
+                StatusCodeOrRange.Code(500) to ReferenceOr.Value(Response(description = "Exact server error")),
+                StatusCodeOrRange.Range("5XX") to ReferenceOr.Value(Response(description = "Server error")),
+            ),
+            extensions = mapOf("x-source" to JsonPrimitive("test")),
+        )
+
+        val json = OpenAPI.Json.encodeToString(Responses.serializer(), responses)
+
+        assertEquals(responses, OpenAPI.Json.decodeFromString(Responses.serializer(), json))
+    }
+
+    @Test
+    fun `adding responses merges exact codes and ranges`() {
+        val responses = Responses(
+            responses = mapOf(
+                StatusCodeOrRange.Code(200) to ReferenceOr.Value(Response(description = "OK")),
+                StatusCodeOrRange.Range("4XX") to ReferenceOr.Value(Response(description = "Client error")),
+            ),
+        ) + Responses(
+            responses = mapOf(
+                StatusCodeOrRange.Range("5XX") to ReferenceOr.Value(Response(description = "Server error")),
+            ),
+        )
+
+        assertEquals(
+            setOf(
+                StatusCodeOrRange.Code(200),
+                StatusCodeOrRange.Range("4XX"),
+                StatusCodeOrRange.Range("5XX"),
+            ),
+            responses.responses.keys,
+        )
     }
 
     // ── YAML integer status codes ─────────────────────────────────────────────
@@ -151,7 +236,7 @@ class ResponsesSerializerTest {
         """.trimIndent()
         val responses = OpenAPI.Yaml.decodeFromString(Responses.serializer(), yaml)
         assertNull(responses.default)
-        val r200 = assertIs<ReferenceOr.Value<Response>>(responses.responses[200])
+        val r200 = assertIs<ReferenceOr.Value<Response>>(responses.responses[StatusCodeOrRange.Code(200)])
         assertEquals("OK", r200.value.description)
     }
 
@@ -165,10 +250,36 @@ class ResponsesSerializerTest {
         """.trimIndent()
         val responses = OpenAPI.Yaml.decodeFromString(Responses.serializer(), yaml)
         assertEquals(2, responses.responses.size)
-        val r200 = assertIs<ReferenceOr.Value<Response>>(responses.responses[200])
+        val r200 = assertIs<ReferenceOr.Value<Response>>(responses.responses[StatusCodeOrRange.Code(200)])
         assertEquals("OK", r200.value.description)
-        val r404 = assertIs<ReferenceOr.Value<Response>>(responses.responses[404])
+        val r404 = assertIs<ReferenceOr.Value<Response>>(responses.responses[StatusCodeOrRange.Code(404)])
         assertEquals("Not Found", r404.value.description)
+    }
+
+    @Test
+    fun `yaml response code range deserializes`() {
+        val responses = OpenAPI.Yaml.decodeFromString(
+            Responses.serializer(),
+            """
+                200:
+                  description: Exact success
+                2XX:
+                  description: Success
+            """.trimIndent(),
+        )
+
+        assertEquals(
+            setOf(StatusCodeOrRange.Code(200), StatusCodeOrRange.Range("2XX")),
+            responses.responses.keys,
+        )
+        assertEquals(
+            "Exact success",
+            (responses.responses.getValue(StatusCodeOrRange.Code(200)) as ReferenceOr.Value).value.description,
+        )
+        assertEquals(
+            "Success",
+            (responses.responses.getValue(StatusCodeOrRange.Range("2XX")) as ReferenceOr.Value).value.description,
+        )
     }
 
     // ── YAML "default" response ───────────────────────────────────────────────
@@ -198,7 +309,7 @@ class ResponsesSerializerTest {
         val responses = OpenAPI.Yaml.decodeFromString(Responses.serializer(), yaml)
         assertNotNull(responses.default)
         assertEquals(1, responses.responses.size)
-        assertNotNull(responses.responses[200])
+        assertNotNull(responses.responses[StatusCodeOrRange.Code(200)])
     }
 
     // ── YAML extensions ───────────────────────────────────────────────────────

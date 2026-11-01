@@ -123,7 +123,9 @@ class OperationTest {
 
         // responses — 200 + default
         assertEquals(1, op.responses.responses.size)
-        val response200 = assertIs<ReferenceOr.Value<Response>>(assertNotNull(op.responses.responses[200])).value
+        val response200 = assertIs<ReferenceOr.Value<Response>>(
+            assertNotNull(op.responses.responses[StatusCodeOrRange.Code(200)])
+        ).value
         assertEquals("A list of pets", response200.description)
         val defaultResponse = assertIs<ReferenceOr.Value<Response>>(assertNotNull(op.responses.default)).value
         assertEquals("Unexpected error", defaultResponse.description)
@@ -358,10 +360,22 @@ class OperationTest {
 
         val op = decode(json)
         assertEquals(4, op.responses.responses.size)
-        assertEquals("Success", assertIs<ReferenceOr.Value<Response>>(op.responses.responses[200]).value.description)
-        assertEquals("Created", assertIs<ReferenceOr.Value<Response>>(op.responses.responses[201]).value.description)
-        assertEquals("Not Found", assertIs<ReferenceOr.Value<Response>>(op.responses.responses[404]).value.description)
-        assertEquals("Server Error", assertIs<ReferenceOr.Value<Response>>(op.responses.responses[500]).value.description)
+        assertEquals(
+            "Success",
+            assertIs<ReferenceOr.Value<Response>>(op.responses.responses[StatusCodeOrRange.Code(200)]).value.description,
+        )
+        assertEquals(
+            "Created",
+            assertIs<ReferenceOr.Value<Response>>(op.responses.responses[StatusCodeOrRange.Code(201)]).value.description,
+        )
+        assertEquals(
+            "Not Found",
+            assertIs<ReferenceOr.Value<Response>>(op.responses.responses[StatusCodeOrRange.Code(404)]).value.description,
+        )
+        assertEquals(
+            "Server Error",
+            assertIs<ReferenceOr.Value<Response>>(op.responses.responses[StatusCodeOrRange.Code(500)]).value.description,
+        )
     }
 
     @Test
@@ -375,7 +389,9 @@ class OperationTest {
         """.trimIndent()
 
         val op = decode(json)
-        val ref = assertIs<ReferenceOr.Reference>(assertNotNull(op.responses.responses[200]))
+        val ref = assertIs<ReferenceOr.Reference>(
+            assertNotNull(op.responses.responses[StatusCodeOrRange.Code(200)])
+        )
         assertEquals("#/components/responses/SuccessResponse", ref.ref)
     }
 
