@@ -12,7 +12,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 
 internal fun YamlMap.getOrNull(key: String): YamlNode? =
-  entries.firstNotNullOfOrNull { (scalar, node) -> if (scalar.content == key) node else null }
+  entries.firstNotNullOfOrNull { [scalar, node] -> if (scalar.content == key) node else null }
 
 internal fun YamlNode.toJsonElement(): JsonElement =
   when (this) {

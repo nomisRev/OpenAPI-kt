@@ -76,7 +76,7 @@ val routeSpec by testSuite {
 
         return OpenAPI(
             info = Info("Test", "1.0"),
-            paths = Paths(mapOf(path to pathItem)),
+            paths = [path to pathItem],
             components = components,
         )
     }

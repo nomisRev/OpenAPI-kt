@@ -30,9 +30,9 @@ internal open class KSerializerWithExtensions<T>(
         val value =
           decoder.json.decodeFromJsonElement(
             serializer,
-            JsonObject(jsObject.jsonObject.filterNot { (key, _) -> key.startsWith("x-") }),
+            JsonObject(jsObject.jsonObject.filterNot { [key, _] -> key.startsWith("x-") }),
           )
-        val extensions = jsObject.jsonObject.filter { (key, _) -> key.startsWith("x-") }
+        val extensions = jsObject.jsonObject.filter { [key, _] -> key.startsWith("x-") }
         withExtensions(value, extensions)
       }
 

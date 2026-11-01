@@ -1,5 +1,3 @@
-import java.time.Duration
-
 plugins {
     id(libs.plugins.multiplatform.get().pluginId)
     alias(libs.plugins.serialization)
@@ -10,7 +8,14 @@ plugins {
 }
 
 kotlin {
-    compilerOptions {
+    compilerOptions{
+        freeCompilerArgs.addAll(listOfNotNull(
+            "-Xcontext-sensitive-resolution",
+            "-Xreturn-value-checker=full",
+            "-Xname-based-destructuring=complete",
+            "-Xcollection-literals",
+            "-Xdebug".takeIf { System.getProperty("idea.active") == "true" }
+        ))
         allWarningsAsErrors = true
         extraWarnings = true
         progressiveMode = true

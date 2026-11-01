@@ -24,12 +24,12 @@ public data class Paths(
     /** Specification extensions (beginning with x-), with arbitrary JSON values. */
     public val extensions: Map<String, JsonElement> = emptyMap(),
 ) {
-    public constructor(
-        head: Pair<String, PathItem>,
-        vararg paths: Pair<String, PathItem>
-    ) : this(mapOf(head, *paths))
-
     public companion object {
+        public operator fun of(
+            head: Pair<String, PathItem>,
+            vararg paths: Pair<String, PathItem>
+        ): Paths = Paths(mapOf(head, *paths), emptyMap())
+
         internal object Serializer : KSerializer<Paths> {
             private val pathsSerializer = MapSerializer(String.serializer(), PathItem.serializer())
             private val serializer = MapSerializer(String.serializer(), JsonElementWithYamlSerializer)
@@ -66,7 +66,7 @@ public data class Paths(
             override fun serialize(encoder: Encoder, value: Paths) {
                 val paths =
                     buildMap {
-                        value.paths.forEach { (path, pathItem) ->
+                        value.paths.forEach { [path, pathItem] ->
                             put(path, OpenAPI.Json.encodeToJsonElement(PathItem.serializer(), pathItem))
                         }
                         putAll(value.extensions)

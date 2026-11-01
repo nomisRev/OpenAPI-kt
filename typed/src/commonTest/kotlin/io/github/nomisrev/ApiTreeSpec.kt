@@ -52,6 +52,7 @@ val apiTreeSpec by testSuite {
     fun literal(name: String): PathSegment = PathSegment.Literal(name)
     fun fixed(wireValue: String, sourceName: String = "workflowId"): PathSegment =
         PathSegment.FixedValue(wireValue, sourceName)
+
     fun param(name: String): PathSegment = PathSegment.Parameter(name, stringType)
     fun intParam(name: String): PathSegment = PathSegment.Parameter(name, intType)
     fun scalarWrapper(name: String, model: Model): Model.Object =
@@ -153,7 +154,12 @@ val apiTreeSpec by testSuite {
     test("buildTree root-level operation") {
         val getRoot = route(HttpMethod.Get)
         assertEquals(
-            ApiTree(name = "Root", operations = mapOf(HttpMethod.Get to getRoot), children = emptyList(), servers = emptyList()),
+            ApiTree(
+                name = "Root",
+                operations = mapOf(HttpMethod.Get to getRoot),
+                children = emptyList(),
+                servers = emptyList()
+            ),
             listOf(getRoot).buildTree("Root"),
         )
     }
@@ -515,7 +521,7 @@ val apiTreeSpec by testSuite {
         )
         val api = OpenAPI(
             info = Info("Workflows", "1.0"),
-            paths = Paths(mapOf(
+            paths = [
                 "/workflows/{workflowId}/runs" to PathItem(
                     get = Operation(
                         parameters = listOf(enumPathParameter),
@@ -527,7 +533,7 @@ val apiTreeSpec by testSuite {
                         responses = Responses(204, Response())
                     )
                 ),
-            )),
+            ],
         )
 
         val error = assertFailsWith<IllegalArgumentException> {
@@ -629,7 +635,7 @@ val apiTreeSpec by testSuite {
     test("toApiTree keeps referenced models reachable from overloaded request body cases") {
         val api = OpenAPI(
             info = Info("Test", "1.0"),
-            paths = Paths(mapOf(
+            paths = [
                 "/pets" to PathItem(
                     post = Operation(
                         requestBody = ReferenceOr.value(
@@ -652,7 +658,7 @@ val apiTreeSpec by testSuite {
                         responses = Responses(200, Response())
                     )
                 )
-            )),
+            ],
             components = Components(
                 schemas = mapOf(
                     "CreatePet" to ReferenceOr.value(
@@ -714,7 +720,7 @@ val apiTreeSpec by testSuite {
     test("toApiTree does not keep referenced enum models that are fully unrolled from path params") {
         val api = OpenAPI(
             info = Info("Test", "1.0"),
-            paths = Paths(mapOf(
+            paths = [
                 "/workflows/{workflowId}" to PathItem(
                     get = Operation(
                         parameters = listOf(
@@ -729,7 +735,7 @@ val apiTreeSpec by testSuite {
                         responses = Responses(200, Response())
                     )
                 )
-            )),
+            ],
             components = Components(
                 schemas = mapOf(
                     "WorkflowState" to ReferenceOr.value(

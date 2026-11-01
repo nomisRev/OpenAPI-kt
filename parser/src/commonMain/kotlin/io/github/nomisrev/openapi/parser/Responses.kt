@@ -24,6 +24,7 @@ import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
+import kotlin.jvm.JvmInline
 
 public sealed interface StatusCodeOrRange {
   /** An exact HTTP status code. */
@@ -75,7 +76,7 @@ public data class Responses(
     vararg responses: Pair<Int, ReferenceOr<Response>>,
   ) : this(
     null,
-    (listOf(head) + responses).associate { (statusCode, response) ->
+    (listOf(head) + responses).associate { [statusCode, response] ->
       StatusCodeOrRange.Code(statusCode) to response
     },
   )
@@ -143,7 +144,7 @@ public data class Responses(
       override fun serialize(encoder: Encoder, value: Responses) {
         encoder as JsonEncoder
         val responses = buildMap {
-          value.responses.forEach { (statusCodeOrRange, response) ->
+          value.responses.forEach { [statusCodeOrRange, response] ->
             put(
               statusCodeOrRange.toPropertyName(),
               encoder.json.encodeToJsonElement(responseSerializer, response),

@@ -14,6 +14,7 @@ kotlin {
             "-Xcontext-sensitive-resolution",
             "-Xreturn-value-checker=full",
             "-Xname-based-destructuring=complete",
+            "-Xcollection-literals",
             "-Xdebug".takeIf { System.getProperty("idea.active") == "true" }
         ))
         allWarningsAsErrors = true

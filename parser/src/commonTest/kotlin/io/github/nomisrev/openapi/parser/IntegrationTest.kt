@@ -13,12 +13,12 @@ class IntegrationTest {
 
     @Test
     fun keycloak() {
-        OpenAPI.fromYaml(loadResource("keycloak.yml"))
+        val _ = OpenAPI.fromYaml(loadResource("keycloak.yml"))
     }
 
     @Test
     fun mistral() {
-        OpenAPI.fromYaml(loadResource("mistral.yaml"))
+        val _ = OpenAPI.fromYaml(loadResource("mistral.yaml"))
     }
 
 //    @Test
@@ -31,36 +31,36 @@ class IntegrationTest {
 
     @Test
     fun `petstore 3_0 parses successfully`() {
-        val spec = OpenAPI.fromYaml(loadResource("petstore-3.0.yaml"))
+        val (openapi, info, paths, components) = OpenAPI.fromYaml(loadResource("petstore-3.0.yaml"))
 
-        assertTrue(spec.info.title.isNotBlank())
-        assertTrue(spec.info.version.isNotBlank())
-        assertEquals("Swagger Petstore", spec.info.title)
-        assertEquals("1.0.0", spec.info.version)
-        assertEquals("3.0.0", spec.openapi)
+        assertTrue(info.title.isNotBlank())
+        assertTrue(info.version.isNotBlank())
+        assertEquals("Swagger Petstore", info.title)
+        assertEquals("1.0.0", info.version)
+        assertEquals("3.0.0", openapi)
 
-        assertTrue(spec.paths.paths.isNotEmpty())
-        assertEquals(2, spec.paths.paths.size)
-        assertTrue(spec.paths.paths.containsKey("/pets"))
-        assertTrue(spec.paths.paths.containsKey("/pets/{petId}"))
+        assertTrue(paths.paths.isNotEmpty())
+        assertEquals(2, paths.paths.size)
+        assertTrue(paths.paths.containsKey("/pets"))
+        assertTrue(paths.paths.containsKey("/pets/{petId}"))
 
-        val schemas = spec.components.schemas
+        val schemas = components.schemas
         assertTrue(schemas.isNotEmpty())
         assertEquals(3, schemas.size)
         assertTrue(schemas.containsKey("Pet"))
         assertTrue(schemas.containsKey("Pets"))
         assertTrue(schemas.containsKey("Error"))
 
-        val listPets = spec.paths.paths["/pets"]?.get
+        val listPets = paths.paths["/pets"]?.get
         assertNotNull(listPets)
         assertEquals("listPets", listPets.operationId)
         assertEquals(1, listPets.parameters.size)
 
-        val getPetById = spec.paths.paths["/pets/{petId}"]?.get
+        val getPetById = paths.paths["/pets/{petId}"]?.get
         assertNotNull(getPetById)
         assertEquals("showPetById", getPetById.operationId)
 
-        val createPets = spec.paths.paths["/pets"]?.post
+        val createPets = paths.paths["/pets"]?.post
         assertNotNull(createPets)
         assertEquals("createPets", createPets.operationId)
         assertNotNull(createPets.requestBody)
@@ -70,17 +70,17 @@ class IntegrationTest {
 
     @Test
     fun `stripe parses successfully`() {
-        val spec = OpenAPI.fromJson(loadResource("stripe.json"))
+        val (openapi, info, paths, components) = OpenAPI.fromJson(loadResource("stripe.json"))
 
-        assertTrue(spec.info.title.isNotBlank())
-        assertTrue(spec.info.version.isNotBlank())
-        assertEquals("Stripe API", spec.info.title)
-        assertEquals("3.0.0", spec.openapi)
+        assertTrue(info.title.isNotBlank())
+        assertTrue(info.version.isNotBlank())
+        assertEquals("Stripe API", info.title)
+        assertEquals("3.0.0", openapi)
 
-        assertTrue(spec.paths.paths.isNotEmpty())
-        assertTrue(spec.paths.paths.size > 400)
+        assertTrue(paths.paths.isNotEmpty())
+        assertTrue(paths.paths.size > 400)
 
-        val schemas = spec.components.schemas
+        val schemas = components.schemas
         assertTrue(schemas.isNotEmpty())
         assertTrue(schemas.size > 1000)
     }
@@ -89,17 +89,17 @@ class IntegrationTest {
 
     @Test
     fun `github parses successfully`() {
-        val spec = OpenAPI.fromJson(loadResource("github.json"))
+        val (openapi, info, paths, components) = OpenAPI.fromJson(loadResource("github.json"))
 
-        assertTrue(spec.info.title.isNotBlank())
-        assertTrue(spec.info.version.isNotBlank())
-        assertEquals("GitHub v3 REST API", spec.info.title)
-        assertEquals("3.0.3", spec.openapi)
+        assertTrue(info.title.isNotBlank())
+        assertTrue(info.version.isNotBlank())
+        assertEquals("GitHub v3 REST API", info.title)
+        assertEquals("3.0.3", openapi)
 
-        assertTrue(spec.paths.paths.isNotEmpty())
-        assertTrue(spec.paths.paths.size > 700)
+        assertTrue(paths.paths.isNotEmpty())
+        assertTrue(paths.paths.size > 700)
 
-        val schemas = spec.components.schemas
+        val schemas = components.schemas
         assertTrue(schemas.isNotEmpty())
         assertTrue(schemas.size > 900)
     }
@@ -108,17 +108,17 @@ class IntegrationTest {
 
     @Test
     fun `youtrack parses successfully`() {
-        val spec = OpenAPI.fromJson(loadResource("youtrack.json"))
+        val (openapi, info, paths, components) = OpenAPI.fromJson(loadResource("youtrack.json"))
 
-        assertTrue(spec.info.title.isNotBlank())
-        assertTrue(spec.info.version.isNotBlank())
-        assertEquals("YouTrack REST API", spec.info.title)
-        assertEquals("3.0.1", spec.openapi)
+        assertTrue(info.title.isNotBlank())
+        assertTrue(info.version.isNotBlank())
+        assertEquals("YouTrack REST API", info.title)
+        assertEquals("3.0.1", openapi)
 
-        assertTrue(spec.paths.paths.isNotEmpty())
-        assertTrue(spec.paths.paths.size > 100)
+        assertTrue(paths.paths.isNotEmpty())
+        assertTrue(paths.paths.size > 100)
 
-        val schemas = spec.components.schemas
+        val schemas = components.schemas
         assertTrue(schemas.isNotEmpty())
         assertTrue(schemas.size > 200)
     }
@@ -127,17 +127,17 @@ class IntegrationTest {
 
     @Test
     fun `openai parses successfully`() {
-        val spec = OpenAPI.fromYaml(loadResource("openai.yaml"))
+        val (openapi, info, paths, components) = OpenAPI.fromYaml(loadResource("openai.yaml"))
 
-        assertTrue(spec.info.title.isNotBlank())
-        assertTrue(spec.info.version.isNotBlank())
-        assertEquals("OpenAI API", spec.info.title)
-        assertEquals("3.1.0", spec.openapi)
+        assertTrue(info.title.isNotBlank())
+        assertTrue(info.version.isNotBlank())
+        assertEquals("OpenAI API", info.title)
+        assertEquals("3.1.0", openapi)
 
-        assertTrue(spec.paths.paths.isNotEmpty())
-        assertTrue(spec.paths.paths.size > 50)
+        assertTrue(paths.paths.isNotEmpty())
+        assertTrue(paths.paths.size > 50)
 
-        val schemas = spec.components.schemas
+        val schemas = components.schemas
         assertTrue(schemas.isNotEmpty())
     }
 

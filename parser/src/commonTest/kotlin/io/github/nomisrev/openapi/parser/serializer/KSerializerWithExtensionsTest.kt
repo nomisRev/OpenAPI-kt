@@ -223,6 +223,7 @@ class KSerializerWithExtensionsTest {
     // ─────────────────────────────────────────────────────────────────────────
 
     @Suppress("NullableToStringCall")
+    @IgnorableReturnValue
     private fun assertSchemaType(mediaType: MediaType, expected: Schema.Type): Schema {
         val value = mediaType.schema as? ReferenceOr.Value<Schema>
             ?: error("Expected ReferenceOr.Value<Schema>, got ${mediaType.schema}")

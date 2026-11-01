@@ -39,7 +39,7 @@ val ResponseRangeSpec by testSuite {
         )
         val openAPI = OpenAPI(
             info = Info(title = "Test", version = "1.0.0"),
-            paths = Paths(mapOf(
+            paths = [
                 "/test" to PathItem(
                     get = Operation(
                         responses = Responses(
@@ -69,7 +69,7 @@ val ResponseRangeSpec by testSuite {
                         ),
                     ),
                 ),
-            )),
+            ],
             components = Components(
                 schemas = mapOf("ErrorPayload" to ReferenceOr.Value(errorPayload)),
                 responses = mapOf(
