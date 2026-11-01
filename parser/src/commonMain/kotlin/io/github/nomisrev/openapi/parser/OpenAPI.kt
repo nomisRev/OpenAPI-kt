@@ -29,7 +29,7 @@ public data class OpenAPI(
   /** An array of Server Objects, which provide connectivity information to a target server. */
   public val servers: List<Server> = listOf(Server(url = "/")),
   /** The available paths and operations for the API. */
-  public val paths: Map<String, PathItem> = emptyMap(),
+  public val paths: Paths = Paths(),
   /**
    * The incoming webhooks that MAY be received as part of this API and that the API consumer MAY
    * choose to implement. Closely related to the callbacks feature, this section describes requests

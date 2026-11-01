@@ -19,7 +19,9 @@ object OpenApiPreprocessors {
 
     fun excludePaths(paths: Set<String>): OpenApiPreprocessor = OpenApiPreprocessor { openApi ->
         if (paths.isEmpty()) openApi
-        else openApi.copy(paths = openApi.paths.filterKeys { path -> path !in paths })
+        else openApi.copy(
+            paths = openApi.paths.copy(paths = openApi.paths.paths.filterKeys { path -> path !in paths })
+        )
     }
 }
 

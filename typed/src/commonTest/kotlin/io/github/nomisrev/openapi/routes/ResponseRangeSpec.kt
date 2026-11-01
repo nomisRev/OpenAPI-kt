@@ -9,6 +9,7 @@ import io.github.nomisrev.openapi.parser.MediaType
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.PathItem
+import io.github.nomisrev.openapi.parser.Paths
 import io.github.nomisrev.openapi.parser.Response
 import io.github.nomisrev.openapi.parser.Responses
 import io.github.nomisrev.openapi.parser.ReferenceOr
@@ -38,7 +39,7 @@ val ResponseRangeSpec by testSuite {
         )
         val openAPI = OpenAPI(
             info = Info(title = "Test", version = "1.0.0"),
-            paths = mapOf(
+            paths = Paths(mapOf(
                 "/test" to PathItem(
                     get = Operation(
                         responses = Responses(
@@ -68,7 +69,7 @@ val ResponseRangeSpec by testSuite {
                         ),
                     ),
                 ),
-            ),
+            )),
             components = Components(
                 schemas = mapOf("ErrorPayload" to ReferenceOr.Value(errorPayload)),
                 responses = mapOf(

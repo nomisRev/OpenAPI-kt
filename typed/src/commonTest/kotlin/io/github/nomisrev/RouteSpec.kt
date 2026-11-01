@@ -13,6 +13,7 @@ import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.PathItem
+import io.github.nomisrev.openapi.parser.Paths
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.RequestBody
 import io.github.nomisrev.openapi.parser.Response
@@ -75,7 +76,7 @@ val routeSpec by testSuite {
 
         return OpenAPI(
             info = Info("Test", "1.0"),
-            paths = mapOf(path to pathItem),
+            paths = Paths(mapOf(path to pathItem)),
             components = components,
         )
     }

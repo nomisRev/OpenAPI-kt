@@ -8,6 +8,7 @@ import io.github.nomisrev.openapi.parser.Info
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.PathItem
+import io.github.nomisrev.openapi.parser.Paths
 import io.github.nomisrev.openapi.parser.Responses
 import io.github.nomisrev.openapi.parser.Response
 import io.github.nomisrev.openapi.parser.MediaType
@@ -23,7 +24,7 @@ val ReturnSpec by testSuite(testConfig = TestConfig.disable()) {
     test("resolveReturns handles null schema with ByteArray for audio/wav") {
         val openAPI = OpenAPI(
             info = Info(title = "Test", version = "1.0.0"),
-            paths = mapOf(
+            paths = Paths(mapOf(
                 "/test" to PathItem(
                     get = Operation(
                         responses = Responses(
@@ -40,7 +41,7 @@ val ReturnSpec by testSuite(testConfig = TestConfig.disable()) {
                         )
                     )
                 )
-            )
+            ))
         )
 
         Registry(openAPI).use { registry ->
@@ -49,7 +50,7 @@ val ReturnSpec by testSuite(testConfig = TestConfig.disable()) {
                     path = "/test",
                     segments = emptyList(),
                     method = HttpMethod.Get,
-                    operation = openAPI.paths["/test"]!!.get!!
+                    operation = openAPI.paths.paths["/test"]!!.get!!
                 )
                 val returnType = returns.responses[HttpStatusCode.OK]!!
                 val model = returnType.types[ContentType.parse("audio/wav")]!!
@@ -61,7 +62,7 @@ val ReturnSpec by testSuite(testConfig = TestConfig.disable()) {
     test("resolveReturns handles null schema with FreeFormJson for application/json") {
         val openAPI = OpenAPI(
             info = Info(title = "Test", version = "1.0.0"),
-            paths = mapOf(
+            paths = Paths(mapOf(
                 "/test" to PathItem(
                     get = Operation(
                         responses = Responses(
@@ -78,7 +79,7 @@ val ReturnSpec by testSuite(testConfig = TestConfig.disable()) {
                         )
                     )
                 )
-            )
+            ))
         )
 
         Registry(openAPI).use { registry ->
@@ -87,7 +88,7 @@ val ReturnSpec by testSuite(testConfig = TestConfig.disable()) {
                     path = "/test",
                     segments = emptyList(),
                     method = HttpMethod.Get,
-                    operation = openAPI.paths["/test"]!!.get!!
+                    operation = openAPI.paths.paths["/test"]!!.get!!
                 )
                 val returnType = returns.responses[HttpStatusCode.OK]!!
                 val model = returnType.types[ContentType.Application.Json]!!

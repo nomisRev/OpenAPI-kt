@@ -94,7 +94,7 @@ class OpenAPITest {
         assertEquals("3.0.3", spec.openapi)
         assertEquals("Pets API", spec.info.title)
         assertEquals("1.0.0", spec.info.version)
-        assertTrue(spec.paths.isEmpty())
+        assertTrue(spec.paths.paths.isEmpty())
         assertTrue(spec.webhooks.isEmpty())
     }
 
@@ -113,7 +113,7 @@ class OpenAPITest {
         assertEquals("3.1.0", spec.openapi)
         assertEquals("Pets API", spec.info.title)
         assertEquals("1.0.0", spec.info.version)
-        assertTrue(spec.paths.isEmpty())
+        assertTrue(spec.paths.paths.isEmpty())
     }
 
     @Test
@@ -173,7 +173,7 @@ class OpenAPITest {
         assertEquals("3.1.0", spec.openapi)
         assertEquals("Example API", spec.info.title)
         assertEquals("https://api.example.com", spec.servers.single().url)
-        assertTrue(spec.paths.containsKey("/pets"))
+        assertTrue(spec.paths.paths.containsKey("/pets"))
         assertTrue(spec.webhooks.containsKey("petCreated"))
         assertTrue(spec.components.schemas.containsKey("Pet"))
         assertTrue(spec.components.responses.containsKey("NotFound"))

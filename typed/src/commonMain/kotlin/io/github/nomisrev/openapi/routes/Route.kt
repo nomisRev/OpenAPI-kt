@@ -31,7 +31,7 @@ import kotlin.collections.orEmpty
 
 context(ctx: Registry)
 suspend fun OpenAPI.toRoutes(): List<Route> =
-    paths.entries.flatMap { [path, pathItem] ->
+    paths.paths.entries.flatMap { [path, pathItem] ->
         val pathParams = pathItem.parameters
         listOfNotNull(
             pathItem.get?.let { toRoute(path, HttpMethod.Get, it.withParams(pathParams)) },

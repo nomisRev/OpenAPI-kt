@@ -16,6 +16,7 @@ import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.PathItem
+import io.github.nomisrev.openapi.parser.Paths
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.RequestBody
 import io.github.nomisrev.openapi.parser.Response
@@ -26,6 +27,7 @@ import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
@@ -513,7 +515,7 @@ val apiTreeSpec by testSuite {
         )
         val api = OpenAPI(
             info = Info("Workflows", "1.0"),
-            paths = mapOf(
+            paths = Paths(mapOf(
                 "/workflows/{workflowId}/runs" to PathItem(
                     get = Operation(
                         parameters = listOf(enumPathParameter),
@@ -525,7 +527,7 @@ val apiTreeSpec by testSuite {
                         responses = Responses(204, Response())
                     )
                 ),
-            ),
+            )),
         )
 
         val error = assertFailsWith<IllegalArgumentException> {
@@ -627,7 +629,7 @@ val apiTreeSpec by testSuite {
     test("toApiTree keeps referenced models reachable from overloaded request body cases") {
         val api = OpenAPI(
             info = Info("Test", "1.0"),
-            paths = mapOf(
+            paths = Paths(mapOf(
                 "/pets" to PathItem(
                     post = Operation(
                         requestBody = ReferenceOr.value(
@@ -650,7 +652,7 @@ val apiTreeSpec by testSuite {
                         responses = Responses(200, Response())
                     )
                 )
-            ),
+            )),
             components = Components(
                 schemas = mapOf(
                     "CreatePet" to ReferenceOr.value(
@@ -675,25 +677,33 @@ val apiTreeSpec by testSuite {
     test("toApiTree applies OpenAPI preprocessors before building routes") {
         val api = OpenAPI(
             info = Info("Test", "1.0"),
-            paths = mapOf(
-                "/pets" to PathItem(
-                    get = Operation(
-                        responses = Responses(200, Response())
-                    )
+            paths = Paths(
+                mapOf(
+                    "/pets" to PathItem(
+                        get = Operation(
+                            responses = Responses(200, Response())
+                        )
+                    ),
+                    "/responses/{response_id}/input_items" to PathItem(
+                        get = Operation(
+                            responses = Responses(200, Response())
+                        )
+                    ),
                 ),
-                "/responses/{response_id}/input_items" to PathItem(
-                    get = Operation(
-                        responses = Responses(200, Response())
-                    )
-                ),
+                extensions = mapOf("x-context" to JsonPrimitive("preserved")),
             ),
         )
 
+        val preprocessor = OpenApiPreprocessors.excludePaths(
+            setOf("/responses/{response_id}/input_items")
+        )
+        val filtered = preprocessor.preprocess(api)
+        assertEquals(setOf("/pets"), filtered.paths.paths.keys)
+        assertEquals(JsonPrimitive("preserved"), filtered.paths.extensions["x-context"])
+
         val tree = api.toApiTree(
             name = "Pets",
-            preprocessor = OpenApiPreprocessors.excludePaths(
-                setOf("/responses/{response_id}/input_items")
-            ),
+            preprocessor = preprocessor,
         )
 
         assertEquals("Pets", tree.name)
@@ -704,7 +714,7 @@ val apiTreeSpec by testSuite {
     test("toApiTree does not keep referenced enum models that are fully unrolled from path params") {
         val api = OpenAPI(
             info = Info("Test", "1.0"),
-            paths = mapOf(
+            paths = Paths(mapOf(
                 "/workflows/{workflowId}" to PathItem(
                     get = Operation(
                         parameters = listOf(
@@ -719,7 +729,7 @@ val apiTreeSpec by testSuite {
                         responses = Responses(200, Response())
                     )
                 )
-            ),
+            )),
             components = Components(
                 schemas = mapOf(
                     "WorkflowState" to ReferenceOr.value(
