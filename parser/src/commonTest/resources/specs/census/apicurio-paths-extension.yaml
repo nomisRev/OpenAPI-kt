@@ -1,0 +1,6 @@
+openapi: 3.0.2
+info:
+  title: Census regression
+  version: "1"
+paths:
+  x-codegen-contextRoot: /apis/registry/v2

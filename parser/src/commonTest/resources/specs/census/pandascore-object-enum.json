@@ -1,0 +1,20 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Census regression",
+    "version": "1"
+  },
+  "paths": {},
+  "components": {
+    "schemas": {
+      "Value": {
+        "type": "object",
+        "enum": [
+          {
+            "id": 1
+          }
+        ]
+      }
+    }
+  }
+}
