@@ -11,6 +11,7 @@ import io.github.nomisrev.openapi.contentTypeToIdentifier
 import io.github.nomisrev.openapi.contentTypeToMethodName
 import io.github.nomisrev.openapi.contentTypeStrategy
 import io.github.nomisrev.openapi.detectSignatureClashes
+import io.github.nomisrev.openapi.preferredBody
 import io.github.nomisrev.openapi.toKotlinSignature
 import io.github.nomisrev.openapi.toTypeName
 import io.github.nomisrev.openapi.routes.Route
@@ -89,12 +90,27 @@ class ContentTypeStrategyTest {
     }
 
     @Test
+    fun `preferred body falls back to raw content when no typed response body exists`() {
+        assertEquals(
+            Route.ReturnBody.Raw,
+            rawReturnType(ContentType.parse("audio/wav")).preferredBody(),
+        )
+    }
+
+    @Test
     fun `error case classification covers no content single and multiple content types`() {
         assertEquals(
             io.github.nomisrev.openapi.ErrorCaseStrategy.NoContent,
             classifyErrorStatus(
                 HttpStatusCode.NoContent,
                 returnType(ContentType.Application.Json to stringModel()),
+            ),
+        )
+        assertEquals(
+            io.github.nomisrev.openapi.ErrorCaseStrategy.NoContent,
+            classifyErrorStatus(
+                HttpStatusCode.BadRequest,
+                Route.ReturnType(types = emptyMap(), extensions = emptyMap()),
             ),
         )
         assertEquals(
@@ -107,7 +123,7 @@ class ContentTypeStrategyTest {
         assertEquals(
             io.github.nomisrev.openapi.ErrorCaseStrategy.SingleContentType(
                 contentType = ContentType.Application.Json,
-                model = stringModel(),
+                body = Route.ReturnBody.Typed(stringModel()),
             ),
             classifyErrorStatus(
                 HttpStatusCode.BadRequest,
@@ -115,10 +131,20 @@ class ContentTypeStrategyTest {
             ),
         )
         assertEquals(
+            io.github.nomisrev.openapi.ErrorCaseStrategy.SingleContentType(
+                contentType = ContentType.parse("audio/wav"),
+                body = Route.ReturnBody.Raw,
+            ),
+            classifyErrorStatus(
+                HttpStatusCode.BadRequest,
+                rawReturnType(ContentType.parse("audio/wav")),
+            ),
+        )
+        assertEquals(
             io.github.nomisrev.openapi.ErrorCaseStrategy.MultipleContentTypes(
                 variants = listOf(
-                    ContentType.Application.Json to stringModel(),
-                    ContentType.parse("application/scim+json") to referenceModel("ScimError"),
+                    ContentType.Application.Json to Route.ReturnBody.Typed(stringModel()),
+                    ContentType.parse("application/scim+json") to Route.ReturnBody.Typed(referenceModel("ScimError")),
                 ),
             ),
             classifyErrorStatus(
@@ -298,6 +324,13 @@ class ContentTypeStrategyTest {
     private fun returnType(vararg entries: Pair<ContentType, Model>): Route.ReturnType =
         Route.ReturnType(
             types = mapOf(*entries),
+            extensions = emptyMap(),
+        )
+
+    private fun rawReturnType(vararg contentTypes: ContentType): Route.ReturnType =
+        Route.ReturnType(
+            types = emptyMap(),
+            rawContentTypes = setOf(*contentTypes),
             extensions = emptyMap(),
         )
 
