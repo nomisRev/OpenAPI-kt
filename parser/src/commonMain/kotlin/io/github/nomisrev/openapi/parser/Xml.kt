@@ -15,7 +15,7 @@ public data class Xml(
    * within the list. When defined alongside type being array (outside the items), it will affect
    * the wrapping element and only if wrapped is true. If wrapped is false, it will be ignored.
    */
-  val name: String,
+  val name: String? = null,
   /** The URL of the namespace definition. Value SHOULD be in the form of a URL. */
   val namespace: String? = null,
   /** The prefix to be used for the name. */

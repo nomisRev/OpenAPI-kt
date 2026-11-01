@@ -6,6 +6,32 @@ import kotlin.test.assertNull
 
 class XmlTest {
 
+    @Test
+    fun `json schema xml attribute without name deserializes`() {
+        val schema = Schema.fromJson("""{"type":"string","xml":{"attribute":true}}""")
+
+        assertEquals(Xml(attribute = true), schema.xml)
+        assertNull(schema.xml?.name)
+    }
+
+    @Test
+    fun `yaml schema xml attribute without name deserializes`() {
+        val schema = Schema.fromYaml("""
+            type: string
+            xml:
+              attribute: true
+        """.trimIndent())
+
+        assertEquals(Xml(attribute = true), schema.xml)
+        assertNull(schema.xml?.name)
+    }
+
+    @Test
+    fun `empty xml object deserializes in json and yaml`() {
+        assertEquals(Xml(), decode("{}"))
+        assertEquals(Xml(), OpenAPI.Yaml.decodeFromString(Xml.serializer(), "{}"))
+    }
+
     // ── Helper ────────────────────────────────────────────────────────────────
 
     private fun decode(json: String): Xml =
