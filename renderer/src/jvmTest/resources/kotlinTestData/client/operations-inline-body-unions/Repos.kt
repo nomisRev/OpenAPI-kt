@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.operations.`inline`.body.unions
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -58,10 +59,11 @@ public class Repos internal constructor(
             body: String? = null,
             milestone: Milestone? = null,
           ) {
-            client.post("/repos/$owner/$repo/issues") {
+            val response = client.post("/repos/$owner/$repo/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseString(title), body = body, milestone = milestone))
             }
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
 
           public suspend operator fun invoke(
@@ -69,10 +71,11 @@ public class Repos internal constructor(
             body: String? = null,
             milestone: Milestone? = null,
           ) {
-            client.post("/repos/$owner/$repo/issues") {
+            val response = client.post("/repos/$owner/$repo/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseLong(title), body = body, milestone = milestone))
             }
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
 
           @Serializable(with = Milestone.Serializer::class)

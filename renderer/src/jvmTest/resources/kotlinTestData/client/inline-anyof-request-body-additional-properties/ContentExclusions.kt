@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.`inline`.anyof.request.body.additional.properties
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -36,10 +37,11 @@ public class ContentExclusions internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Body) {
-      client.put("/content-exclusions") {
+      val response = client.put("/content-exclusions") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
+      if (response.status.value != 204) throw ResponseException(response, "")
     }
 
     @OptIn(ExperimentalSerializationApi::class)

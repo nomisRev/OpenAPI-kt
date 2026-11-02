@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.`inline`.union.case.with.nested.`enum`
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -52,10 +53,11 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(source: Source? = null) {
-            client.put("/repos/$owner/$repo/pages") {
+            val response = client.put("/repos/$owner/$repo/pages") {
               contentType(ContentType.Application.Json)
               setBody(Body(source = source))
             }
+            if (response.status.value != 204) throw ResponseException(response, "")
           }
 
           @Serializable(with = Source.Serializer::class)

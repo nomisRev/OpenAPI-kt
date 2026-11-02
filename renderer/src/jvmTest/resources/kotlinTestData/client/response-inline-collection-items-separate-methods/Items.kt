@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.client.response.`inline`.collection.items
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.http.ContentType
@@ -18,13 +19,21 @@ public class Items internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend fun json(): List<Id> = client.get("/items") {
-      `header`(HttpHeaders.Accept, ContentType.Application.Json)
-    }.body()
+    public suspend fun json(): List<Id> {
+      val response = client.get("/items") {
+        `header`(HttpHeaders.Accept, ContentType.Application.Json)
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
-    public suspend fun xml(): List<Name> = client.get("/items") {
-      `header`(HttpHeaders.Accept, ContentType.Application.Xml)
-    }.body()
+    public suspend fun xml(): List<Name> {
+      val response = client.get("/items") {
+        `header`(HttpHeaders.Accept, ContentType.Application.Xml)
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
     @Serializable
     public data class Id(

@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.deep.nesting
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import kotlin.Long
 import kotlin.String
@@ -47,7 +48,8 @@ public class A internal constructor(
               private val e: Long,
             ) {
               public suspend operator fun invoke() {
-                client.get("/a/b/$c/d/$e/f")
+                val response = client.get("/a/b/$c/d/$e/f")
+                if (response.status.value != 200) throw ResponseException(response, "")
               }
             }
           }

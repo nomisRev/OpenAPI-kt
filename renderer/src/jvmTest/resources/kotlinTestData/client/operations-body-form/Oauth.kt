@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.operations.body.form
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.Parameters
@@ -25,13 +26,14 @@ public class Oauth internal constructor(
         code: String,
         redirectUri: String,
       ) {
-        client.post("/oauth/token") {
+        val response = client.post("/oauth/token") {
           setBody(Parameters.build {
             append("grant_type", grantType)
             append("code", code)
             append("redirect_uri", redirectUri)
           }.formUrlEncode())
         }
+        if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
   }

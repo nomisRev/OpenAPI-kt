@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.primitive.input.`object`.guard
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.parameter
 import kotlin.String
@@ -15,9 +16,10 @@ public class Tags internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(filter: Filter? = null) {
-      client.get("/tags") {
+      val response = client.get("/tags") {
         filter?.let { parameter("filter", it) }
       }
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
 
     @Serializable

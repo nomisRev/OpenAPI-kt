@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.operations.body.json
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -15,10 +16,11 @@ public class Pets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: CreatePetRequest) {
-      client.post("/pets") {
+      val response = client.post("/pets") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
   }
 }

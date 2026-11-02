@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.client.operations.`inline`.method.uniquen
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -24,7 +25,11 @@ public class Widgets internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(): Response = client.get("/widgets").body()
+    public suspend operator fun invoke(): Response {
+      val response = client.get("/widgets")
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
     @OptIn(ExperimentalSerializationApi::class)
     @Serializable
@@ -38,10 +43,14 @@ public class Widgets internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(name: String): Response = client.post("/widgets") {
-      contentType(ContentType.Application.Json)
-      setBody(Body(name = name))
-    }.body()
+    public suspend operator fun invoke(name: String): Response {
+      val response = client.post("/widgets") {
+        contentType(ContentType.Application.Json)
+        setBody(Body(name = name))
+      }
+      if (response.status.value != 201) throw ResponseException(response, "")
+      return response.body()
+    }
 
     @Serializable
     internal data class Body(

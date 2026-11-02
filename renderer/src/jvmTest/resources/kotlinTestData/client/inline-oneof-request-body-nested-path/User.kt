@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.client.`inline`.oneof.request.body.nested
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -29,15 +30,23 @@ public class User internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: RepositoryIdAndRef): String = client.post("/user/codespaces") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
+      public suspend operator fun invoke(body: RepositoryIdAndRef): String {
+        val response = client.post("/user/codespaces") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 201) throw ResponseException(response, "")
+        return response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
+      }
 
-      public suspend operator fun invoke(body: PullRequest): String = client.post("/user/codespaces") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
+      public suspend operator fun invoke(body: PullRequest): String {
+        val response = client.post("/user/codespaces") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 201) throw ResponseException(response, "")
+        return response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
+      }
 
       @OptIn(ExperimentalSerializationApi::class)
       @Serializable

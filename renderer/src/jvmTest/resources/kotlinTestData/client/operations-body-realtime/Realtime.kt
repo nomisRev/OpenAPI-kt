@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.client.operations.body.realtime
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.post
@@ -27,19 +28,27 @@ public class Realtime internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(sdp: String, session: RealtimeCallCreateRequest.Session? = null): String = client.post("/realtime/calls") {
-        setBody(MultiPartFormDataContent(formData {
-          append("sdp", sdp, headersOf(HttpHeaders.ContentType, "application/sdp"))
-          if (session != null) {
-            append("session", Json.encodeToString(RealtimeCallCreateRequest.Session.serializer(), session), headersOf(HttpHeaders.ContentType, "application/json"))
-          }
-        }))
-      }.body()
+      public suspend operator fun invoke(sdp: String, session: RealtimeCallCreateRequest.Session? = null): String {
+        val response = client.post("/realtime/calls") {
+          setBody(MultiPartFormDataContent(formData {
+            append("sdp", sdp, headersOf(HttpHeaders.ContentType, "application/sdp"))
+            if (session != null) {
+              append("session", Json.encodeToString(RealtimeCallCreateRequest.Session.serializer(), session), headersOf(HttpHeaders.ContentType, "application/json"))
+            }
+          }))
+        }
+        if (response.status.value != 201) throw ResponseException(response, "")
+        return response.body()
+      }
 
-      public suspend operator fun invoke(body: String): String = client.post("/realtime/calls") {
-        contentType(ContentType("application", "sdp"))
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: String): String {
+        val response = client.post("/realtime/calls") {
+          contentType(ContentType("application", "sdp"))
+          setBody(body)
+        }
+        if (response.status.value != 201) throw ResponseException(response, "")
+        return response.body()
+      }
 
       public object Body {
         @Serializable

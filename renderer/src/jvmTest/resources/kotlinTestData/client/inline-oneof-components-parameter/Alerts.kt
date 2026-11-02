@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.`inline`.oneof.components.parameter
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.parameter
 import kotlin.OptIn
@@ -31,9 +32,10 @@ public class Alerts internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(has: Has? = null) {
-      client.get("/alerts") {
+      val response = client.get("/alerts") {
         has?.let { parameter("has", it) }
       }
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
 
     @Serializable(with = Has.Serializer::class)

@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.operations.`inline`.oneof.parameter
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.parameter
 import kotlin.OptIn
@@ -34,11 +35,12 @@ public class Advisories internal constructor(
       cveId: String? = null,
       cwes: Cwes? = null,
     ) {
-      client.get("/advisories") {
+      val response = client.get("/advisories") {
         ghsaId?.let { parameter("ghsa_id", it) }
         cveId?.let { parameter("cve_id", it) }
         cwes?.let { parameter("cwes", it) }
       }
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
 
     @Serializable(with = Cwes.Serializer::class)

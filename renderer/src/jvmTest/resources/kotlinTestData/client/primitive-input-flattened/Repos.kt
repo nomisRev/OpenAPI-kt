@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.primitive.input.flattened
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.client.request.cookie
@@ -33,11 +34,12 @@ public class Repos internal constructor(
         toolName: String? = null,
         session: Instant? = null,
       ) {
-        client.get("/repos/$alertNumber") {
+        val response = client.get("/repos/$alertNumber") {
           toolName?.let { parameter("tool_name", it) }
           `header`("X-Request-Id", xRequestId.toString())
           session?.let { cookie("session", it.toString()) }
         }
+        if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
   }

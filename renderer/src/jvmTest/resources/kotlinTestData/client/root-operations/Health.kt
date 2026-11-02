@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.root.operations
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 
 public class Health internal constructor(
@@ -12,7 +13,8 @@ public class Health internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      client.get("/health")
+      val response = client.get("/health")
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
   }
 }

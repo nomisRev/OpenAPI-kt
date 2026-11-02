@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.client.`inline`.anyof.response.nested.pat
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import kotlin.OptIn
 import kotlin.String
@@ -47,7 +48,11 @@ public class Repos internal constructor(
           private val owner: String,
           private val repo: String,
         ) {
-          public suspend operator fun invoke(): Response = client.get("/repos/$owner/$repo/interaction-limits").body()
+          public suspend operator fun invoke(): Response {
+            val response = client.get("/repos/$owner/$repo/interaction-limits")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable(with = Response.Serializer::class)
           public sealed interface Response {

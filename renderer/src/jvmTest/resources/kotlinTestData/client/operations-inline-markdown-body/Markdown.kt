@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.client.operations.`inline`.markdown.body
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -25,10 +26,14 @@ public class Markdown internal constructor(
       text: String,
       mode: Mode? = null,
       context: String? = null,
-    ): String = client.post("/markdown") {
-      contentType(ContentType.Application.Json)
-      setBody(Body(text = text, mode = mode, context = context))
-    }.body()
+    ): String {
+      val response = client.post("/markdown") {
+        contentType(ContentType.Application.Json)
+        setBody(Body(text = text, mode = mode, context = context))
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
     @Serializable
     public enum class Mode(

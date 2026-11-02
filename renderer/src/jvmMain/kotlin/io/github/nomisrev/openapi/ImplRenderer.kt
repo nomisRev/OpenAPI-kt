@@ -300,13 +300,11 @@ private data class OperationRequestInvocationContext(
     val pathLiteral: String,
     val needsRequestConfig: Boolean,
     val bodyMayBeNull: Boolean,
-    val returnBody: CodeBlock = CodeBlock.of("%M()", BodyMember),
 )
 
 private enum class OperationRequestInvocationStyle {
     ResponseBinding,
     StatementOnly,
-    ReturnBody,
 }
 
 private fun Route.operationRequestInvocationContext(
@@ -349,9 +347,6 @@ private fun CodeBlock.Builder.addRequestInvocation(
 
             OperationRequestInvocationStyle.StatementOnly ->
                 addStatement("client.%L(%L)", request.httpMethodName, request.pathLiteral)
-
-            OperationRequestInvocationStyle.ReturnBody ->
-                addStatement("return client.%L(%L).%L", request.httpMethodName, request.pathLiteral, request.returnBody)
         }
         return
     }
@@ -362,11 +357,6 @@ private fun CodeBlock.Builder.addRequestInvocation(
 
         OperationRequestInvocationStyle.StatementOnly ->
             beginControlFlow("client.%L(%L)", request.httpMethodName, request.pathLiteral)
-
-        OperationRequestInvocationStyle.ReturnBody -> {
-            add("return client.%L(%L) {\n", request.httpMethodName, request.pathLiteral)
-            indent()
-        }
     }
 
     route.addRequestConfigCode(
@@ -381,15 +371,7 @@ private fun CodeBlock.Builder.addRequestInvocation(
         requestType = requestType,
     )
 
-    when (style) {
-        OperationRequestInvocationStyle.ResponseBinding,
-        OperationRequestInvocationStyle.StatementOnly -> endControlFlow()
-
-        OperationRequestInvocationStyle.ReturnBody -> {
-            unindent()
-            add("}.%L\n", request.returnBody)
-        }
-    }
+    endControlFlow()
 }
 
 private fun Route.buildSealedOperationBody(
@@ -463,6 +445,12 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
     return code.build()
 }
 
+/**
+ * Body for an operation with at most one declared response, which returns its payload directly. Like the
+ * sealed path's `else -> throw ResponseException(...)`, a status other than the single declared one throws
+ * before the body is decoded, independent of the client's `expectSuccess`. A lone `default` matches every
+ * status, so it needs no check.
+ */
 private fun Route.buildDirectOperationBody(
     config: RenderConfig,
     method: HttpMethod,
@@ -475,38 +463,43 @@ private fun Route.buildDirectOperationBody(
 ): CodeBlock {
     val code = CodeBlock.builder()
     val model = returns.singlePreferredModelOrNull()
-    val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType).copy(
-        returnBody = bodyCall(
-            model = returns.singlePreferredModelOrNull(contentType),
-            contentType = contentType ?: returns.singlePreferredContentTypeOrNull(),
-        ),
+    val returnsBody = model != null && model !is Model.Primitive.Unit
+    val declaredStatus = returns.responses.keys.singleOrNull()
+    val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType)
+
+    code.addRequestInvocation(
+        route = this,
+        request = request,
+        style = if (returnsBody || declaredStatus != null) {
+            OperationRequestInvocationStyle.ResponseBinding
+        } else {
+            OperationRequestInvocationStyle.StatementOnly
+        },
+        config = config,
+        includeBody = includeBody,
+        selectedBody = selectedBody,
+        bodyExpr = bodyExpr,
+        bodyGuard = bodyGuard,
+        acceptContentType = contentType,
+        requestType = requestType,
     )
 
-    if (model == null || model is Model.Primitive.Unit) {
-        code.addRequestInvocation(
-            route = this,
-            request = request,
-            style = OperationRequestInvocationStyle.StatementOnly,
-            config = config,
-            includeBody = includeBody,
-            selectedBody = selectedBody,
-            bodyExpr = bodyExpr,
-            bodyGuard = bodyGuard,
-            acceptContentType = contentType,
-            requestType = requestType,
+    if (declaredStatus != null) {
+        code.addStatement(
+            "if (response.status.value != %L) throw %T(response, %S)",
+            declaredStatus.value,
+            ResponseExceptionType,
+            "",
         )
-    } else {
-        code.addRequestInvocation(
-            route = this,
-            request = request,
-            style = OperationRequestInvocationStyle.ReturnBody,
-            config = config,
-            includeBody = includeBody,
-            selectedBody = selectedBody,
-            bodyExpr = bodyExpr,
-            bodyGuard = bodyGuard,
-            acceptContentType = contentType,
-            requestType = requestType,
+    }
+
+    if (returnsBody) {
+        code.addStatement(
+            "return %L",
+            responseBody(
+                model = returns.singlePreferredModelOrNull(contentType),
+                contentType = contentType ?: returns.singlePreferredContentTypeOrNull(),
+            ),
         )
     }
 

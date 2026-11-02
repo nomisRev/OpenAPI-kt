@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.client.`inline`.oneof.request.body.collec
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -63,34 +64,58 @@ public class Repos internal constructor(
               private val repo: String,
               private val issueNumber: Long,
             ) {
-              public suspend operator fun invoke(): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels").body()
+              public suspend operator fun invoke(): List<Name> {
+                val response = client.put("/repos/$owner/$repo/issues/$issueNumber/labels")
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
-              public suspend operator fun invoke(body: LabelsStrings): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
-                contentType(ContentType.Application.Json)
-                setBody(body)
-              }.body()
+              public suspend operator fun invoke(body: LabelsStrings): List<Name> {
+                val response = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                  contentType(ContentType.Application.Json)
+                  setBody(body)
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @JvmName("StringList")
-              public suspend operator fun invoke(body: List<String>): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
-                contentType(ContentType.Application.Json)
-                setBody(body)
-              }.body()
+              public suspend operator fun invoke(body: List<String>): List<Name> {
+                val response = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                  contentType(ContentType.Application.Json)
+                  setBody(body)
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
-              public suspend operator fun invoke(body: LabelsNames): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
-                contentType(ContentType.Application.Json)
-                setBody(body)
-              }.body()
+              public suspend operator fun invoke(body: LabelsNames): List<Name> {
+                val response = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                  contentType(ContentType.Application.Json)
+                  setBody(body)
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @JvmName("NameList")
-              public suspend operator fun invoke(body: List<Name>): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
-                contentType(ContentType.Application.Json)
-                setBody(body)
-              }.body()
+              public suspend operator fun invoke(body: List<Name>): List<Name> {
+                val response = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                  contentType(ContentType.Application.Json)
+                  setBody(body)
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
-              public suspend operator fun invoke(body: String): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
-                contentType(ContentType.Application.Json)
-                setBody(JsonPrimitive(body))
-              }.body()
+              public suspend operator fun invoke(body: String): List<Name> {
+                val response = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
+                  contentType(ContentType.Application.Json)
+                  setBody(JsonPrimitive(body))
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @OptIn(ExperimentalSerializationApi::class)
               @Serializable

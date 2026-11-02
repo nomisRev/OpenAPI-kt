@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.client.json.string.bodies
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.http.ContentType
@@ -18,12 +19,20 @@ public class Notes internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend fun json(): String = client.get("/notes") {
-      `header`(HttpHeaders.Accept, ContentType.Application.Json)
-    }.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
+    public suspend fun json(): String {
+      val response = client.get("/notes") {
+        `header`(HttpHeaders.Accept, ContentType.Application.Json)
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
+    }
 
-    public suspend fun textPlain(): String = client.get("/notes") {
-      `header`(HttpHeaders.Accept, ContentType.Text.Plain)
-    }.body()
+    public suspend fun textPlain(): String {
+      val response = client.get("/notes") {
+        `header`(HttpHeaders.Accept, ContentType.Text.Plain)
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 }

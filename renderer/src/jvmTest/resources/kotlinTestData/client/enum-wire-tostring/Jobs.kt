@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.`enum`.wire.tostring
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -20,9 +21,10 @@ public class Jobs internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(status: Status? = null) {
-      client.get("/jobs") {
+      val response = client.get("/jobs") {
         status?.let { parameter("status", it.toString()) }
       }
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
 
     @Serializable
@@ -36,11 +38,12 @@ public class Jobs internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(mode: Body.Mode) {
-      client.post("/jobs") {
+      val response = client.post("/jobs") {
         setBody(Parameters.build {
           append("mode", mode.toString())
         }.formUrlEncode())
       }
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
 
     public object Body {

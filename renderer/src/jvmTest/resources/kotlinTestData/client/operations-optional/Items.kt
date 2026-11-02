@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.operations.optional
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.client.request.cookie
@@ -23,13 +24,14 @@ public class Items internal constructor(
       xTraceId: String? = null,
       preference: String? = null,
     ) {
-      client.get("/items") {
+      val response = client.get("/items") {
         parameter("query", query)
         limit?.let { parameter("limit", it) }
         `header`("X-Request-Id", xRequestId)
         xTraceId?.let { `header`("X-Trace-Id", it) }
         preference?.let { cookie("preference", it) }
       }
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
   }
 }

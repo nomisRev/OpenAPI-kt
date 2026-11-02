@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.client.response.single
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import kotlin.String
 import kotlin.collections.List
@@ -14,6 +15,10 @@ public class Pets internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(): List<String> = client.get("/pets").body()
+    public suspend operator fun invoke(): List<String> {
+      val response = client.get("/pets")
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 }

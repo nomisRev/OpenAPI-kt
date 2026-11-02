@@ -25,9 +25,13 @@ public class Items internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(limit: Int? = null): List<String> = client.get("/items") {
-      limit?.let { parameter("limit", it) }
-    }.body()
+    public suspend operator fun invoke(limit: Int? = null): List<String> {
+      val response = client.get("/items") {
+        limit?.let { parameter("limit", it) }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class Post internal constructor(

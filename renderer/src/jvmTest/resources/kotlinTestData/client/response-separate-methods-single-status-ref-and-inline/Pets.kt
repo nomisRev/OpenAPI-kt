@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.client.response.separate.methods.single.s
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.http.ContentType
@@ -17,13 +18,21 @@ public class Pets internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend fun json(): Pet = client.get("/pets") {
-      `header`(HttpHeaders.Accept, ContentType.Application.Json)
-    }.body()
+    public suspend fun json(): Pet {
+      val response = client.get("/pets") {
+        `header`(HttpHeaders.Accept, ContentType.Application.Json)
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
-    public suspend fun xml(): XmlResponse = client.get("/pets") {
-      `header`(HttpHeaders.Accept, ContentType.Application.Xml)
-    }.body()
+    public suspend fun xml(): XmlResponse {
+      val response = client.get("/pets") {
+        `header`(HttpHeaders.Accept, ContentType.Application.Xml)
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
     @Serializable
     public data class XmlResponse(

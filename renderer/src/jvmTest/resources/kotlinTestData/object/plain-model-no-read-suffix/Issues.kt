@@ -3,6 +3,7 @@ package io.github.nomisrev.render.test.`object`.plain.model.no.read.suffix
 import io.github.nomisrev.render.test.object_.plain.model.no.read.suffix.IssueKey
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import kotlin.String
 
@@ -21,7 +22,11 @@ public class Issues internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(): IssueKey = client.get("/issues/$id").body()
+      public suspend operator fun invoke(): IssueKey {
+        val response = client.get("/issues/$id")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 }

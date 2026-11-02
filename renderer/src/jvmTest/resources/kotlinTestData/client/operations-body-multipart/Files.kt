@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.operations.body.multipart
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.post
@@ -17,12 +18,13 @@ public class Files internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(`file`: ByteArray, purpose: String) {
-      client.post("/files") {
+      val response = client.post("/files") {
         setBody(MultiPartFormDataContent(formData {
           append("file", file)
           append("purpose", purpose)
         }))
       }
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
   }
 }

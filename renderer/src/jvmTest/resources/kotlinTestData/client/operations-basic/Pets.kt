@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.operations.basic
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -20,7 +21,8 @@ public class Pets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      client.get("/pets")
+      val response = client.get("/pets")
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
   }
 
@@ -28,10 +30,11 @@ public class Pets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      client.post("/pets") {
+      val response = client.post("/pets") {
         contentType(ContentType.Application.Json)
         setBody(JsonPrimitive(body))
       }
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
   }
 }

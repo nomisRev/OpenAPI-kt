@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.operations.params
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.client.request.cookie
@@ -20,11 +21,12 @@ public class Search internal constructor(
       xApiKey: String,
       session: String,
     ) {
-      client.get("/search") {
+      val response = client.get("/search") {
         parameter("query", query)
         `header`("X-Api-Key", xApiKey)
         cookie("session", session)
       }
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
   }
 }

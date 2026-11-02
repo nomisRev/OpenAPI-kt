@@ -1,6 +1,7 @@
 package io.github.nomisrev.render.test.client.operations.`inline`.shared.parameter
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
@@ -32,9 +33,10 @@ public class Items internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(status: Status? = Status.All) {
-      client.get("/items") {
+      val response = client.get("/items") {
         status?.let { parameter("status", it.value) }
       }
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
   }
 
@@ -42,9 +44,10 @@ public class Items internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(status: Status? = Status.All) {
-      client.post("/items") {
+      val response = client.post("/items") {
         status?.let { parameter("status", it.value) }
       }
+      if (response.status.value != 204) throw ResponseException(response, "")
     }
   }
 }

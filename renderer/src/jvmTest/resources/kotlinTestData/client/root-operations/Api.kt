@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.client.root.operations
 
 import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
 import io.ktor.client.request.`get`
@@ -37,7 +38,8 @@ public class Api internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      client.get("/")
+      val response = client.get("/")
+      if (response.status.value != 200) throw ResponseException(response, "")
     }
   }
 }
