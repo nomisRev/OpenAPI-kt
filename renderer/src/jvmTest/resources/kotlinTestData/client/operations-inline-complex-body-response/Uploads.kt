@@ -7,12 +7,14 @@ import io.ktor.client.request.forms.formData
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.JsonConvertException
 import kotlin.Boolean
 import kotlin.ByteArray
 import kotlin.Int
 import kotlin.String
 import kotlin.collections.List
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Uploads internal constructor(
   private val client: HttpClient,
@@ -46,7 +48,7 @@ public class Uploads internal constructor(
           }))
         }
         return when (response.status.value) {
-          201 -> Response.Created(response.body())
+          201 -> Response.Created(response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") })
           207 -> Response.`Multi-status`(response.body())
           422 -> Response.UnprocessableEntity(response.body())
           else -> Response.Default(response.status, response.body())

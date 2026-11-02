@@ -8,7 +8,9 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.serialization.JsonConvertException
 import kotlin.String
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Markdown internal constructor(
   private val client: HttpClient,
@@ -22,7 +24,7 @@ public class Markdown internal constructor(
       `header`(HttpHeaders.Accept, ContentType.Application.Json)
       contentType(requestType.contentType)
       setBody(body)
-    }.body()
+    }.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
 
     public suspend fun xml(body: String, requestType: RequestType): String = client.post("/markdown") {
       `header`(HttpHeaders.Accept, ContentType.Application.Xml)

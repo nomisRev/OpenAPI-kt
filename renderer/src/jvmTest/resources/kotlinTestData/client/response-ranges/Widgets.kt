@@ -8,9 +8,11 @@ import io.ktor.client.request.`header`
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
+import io.ktor.serialization.JsonConvertException
 import kotlin.Int
 import kotlin.String
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Widgets internal constructor(
   private val client: HttpClient,
@@ -25,7 +27,7 @@ public class Widgets internal constructor(
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
       }
       return when (response.status.value) {
-        200 -> JsonResponse.Ok(response.body())
+        200 -> JsonResponse.Ok(response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") })
         in 200..299 -> if (response.status.value == 204) JsonResponse.Status2XX(response.status, null) else JsonResponse.Status2XX(response.status, response.body<JsonResponse.Status2XX.Status2XXBody>())
         in 400..499 -> Status4XX(response.status)
         in 500..599 -> Status5XX(response.status, response.body<Status5XX.Status5XXBody>())

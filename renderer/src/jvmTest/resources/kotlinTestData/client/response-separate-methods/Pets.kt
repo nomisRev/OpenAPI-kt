@@ -8,8 +8,10 @@ import io.ktor.client.request.`header`
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.serialization.JsonConvertException
 import kotlin.Int
 import kotlin.String
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Pets internal constructor(
   private val client: HttpClient,
@@ -31,12 +33,12 @@ public class Pets internal constructor(
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
         }
         return when (response.status.value) {
-          200 -> JsonResponse.Ok(response.body())
+          200 -> JsonResponse.Ok(response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") })
           404 -> run {
             val ct = response.contentType()
             when {
               ct?.match(ContentType.Application.Json) == true -> JsonNotFound(response.body())
-              ct?.match(ContentType("application", "scim+json")) == true -> ScimJsonNotFound(response.body())
+              ct?.match(ContentType("application", "scim+json")) == true -> ScimJsonNotFound(response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") })
               else -> JsonNotFound(response.body())
             }
           }
@@ -54,7 +56,7 @@ public class Pets internal constructor(
             val ct = response.contentType()
             when {
               ct?.match(ContentType.Application.Json) == true -> JsonNotFound(response.body())
-              ct?.match(ContentType("application", "scim+json")) == true -> ScimJsonNotFound(response.body())
+              ct?.match(ContentType("application", "scim+json")) == true -> ScimJsonNotFound(response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") })
               else -> JsonNotFound(response.body())
             }
           }

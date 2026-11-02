@@ -6,10 +6,12 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.serialization.JsonConvertException
 import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
 
 public class User internal constructor(
   private val client: HttpClient,
@@ -27,12 +29,12 @@ public class User internal constructor(
       public suspend operator fun invoke(body: RepositoryIdAndRef): String = client.post("/user/codespaces") {
         contentType(ContentType.Application.Json)
         setBody(body)
-      }.body()
+      }.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
 
       public suspend operator fun invoke(body: PullRequest): String = client.post("/user/codespaces") {
         contentType(ContentType.Application.Json)
         setBody(body)
-      }.body()
+      }.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
 
       @Serializable
       public data class RepositoryIdAndRef(

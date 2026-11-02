@@ -11,6 +11,7 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Repos internal constructor(
   private val client: HttpClient,
@@ -85,7 +86,7 @@ public class Repos internal constructor(
 
               public suspend operator fun invoke(body: String): List<Name> = client.put("/repos/$owner/$repo/issues/$issueNumber/labels") {
                 contentType(ContentType.Application.Json)
-                setBody(body)
+                setBody(JsonPrimitive(body))
               }.body()
 
               @Serializable

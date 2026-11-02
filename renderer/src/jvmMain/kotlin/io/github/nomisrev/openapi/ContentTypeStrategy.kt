@@ -148,6 +148,12 @@ internal fun Route.ReturnType.preferredModel(): Model? {
     return jsonEntry?.value ?: types.values.first()
 }
 
+/** The media type of [preferredModel]. */
+internal fun Route.ReturnType.preferredContentType(): ContentType? {
+    if (types.isEmpty()) return null
+    return types.keys.firstOrNull { ContentType.Application.Json.match(it) } ?: types.keys.first()
+}
+
 internal fun Route.ReturnType.modelForContentType(contentType: ContentType): Model? =
     types.entries.firstOrNull { it.key.match(contentType) || contentType.match(it.key) }?.value
 

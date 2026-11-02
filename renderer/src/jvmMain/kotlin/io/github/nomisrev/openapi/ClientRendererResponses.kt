@@ -854,7 +854,11 @@ private fun buildMultiContentTypeDefaultTypeSpec(
 internal fun Route.Returns.singlePreferredModelOrNull(): Model? =
     (responses.values.firstOrNull() ?: responseRanges.values.firstOrNull() ?: default)?.preferredModel()
 
-private fun Route.Returns.singlePreferredModelOrNull(contentType: ContentType?): Model? {
+/** The media type of [singlePreferredModelOrNull]. */
+internal fun Route.Returns.singlePreferredContentTypeOrNull(): ContentType? =
+    (responses.values.firstOrNull() ?: responseRanges.values.firstOrNull() ?: default)?.preferredContentType()
+
+internal fun Route.Returns.singlePreferredModelOrNull(contentType: ContentType?): Model? {
     if (contentType == null || contentTypeStrategy() !is ContentTypeStrategy.SeparateMethods) {
         return singlePreferredModelOrNull()
     }

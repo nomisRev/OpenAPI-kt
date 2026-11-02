@@ -234,7 +234,7 @@ private fun TypeSpec.Builder.addOperationInvokeFunctionsForContentType(
                     sharedInlineParameterKeys = context.sharedInlineParameterKeys,
                     usesNestedBodyType = false,
                     inlineModelScope = context.inlineModelScope,
-                    selectedBody = requestBodyStrategy.clashing.first().body,
+                    clashingVariants = requestBodyStrategy.clashing,
                     functionName = functionName,
                     operator = operator,
                     contentType = contentType,
@@ -442,10 +442,10 @@ private fun Route.toInvokeFunSpecWithRequestType(
     sharedInlineParameterKeys: Set<String>,
     usesNestedBodyType: Boolean,
     inlineModelScope: OperationInlineModelScope,
+    clashingVariants: List<Route.Bodies.Variant>,
     functionName: String = "invoke",
     operator: Boolean = true,
     contentType: ContentType? = null,
-    selectedBody: Route.Body? = body?.defaultOrNull(),
 ): FunSpec {
     val builder = operationFunBuilder(functionName, operator)
         .addDeprecatedIfNeeded()
@@ -455,7 +455,8 @@ private fun Route.toInvokeFunSpecWithRequestType(
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
     val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
 
-    val bodyParams = selectedBody?.toInvokeParameterSpecs(
+    val selectedBody = clashingVariants.first().body
+    val bodyParams = selectedBody.toInvokeParameterSpecs(
         config = config,
         methodClassName = methodClassName,
         usesNestedBodyType = usesNestedBodyType,
@@ -472,11 +473,9 @@ private fun Route.toInvokeFunSpecWithRequestType(
         builder.addParameter(parameter)
         signatureTypes += parameter.type
     }
-    if (bodyParams != null) {
-        bodyParams.forEach { parameter ->
-            builder.addParameter(parameter)
-            signatureTypes += parameter.type
-        }
+    bodyParams?.forEach { parameter ->
+        builder.addParameter(parameter)
+        signatureTypes += parameter.type
     }
 
     val requestTypeParameter = ParameterSpec.builder("requestType", methodClassName.nestedClass("RequestType")).build()
@@ -505,7 +504,7 @@ private fun Route.toInvokeFunSpecWithRequestType(
                 methodClassName,
                 selectedBody = selectedBody,
                 contentType = contentType,
-                requestTypeContentType = CodeBlock.of("requestType.contentType"),
+                requestType = RequestTypeArgument(methodClassName.nestedClass("RequestType"), clashingVariants),
             )
         )
         .build()
@@ -637,7 +636,12 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     val returnType = invokeReturnType(config, methodClassName, inlineModelScope, contentType)
     builder.returns(returnType)
     builder.addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
-    builder.addCode(buildOperationBody(config, method, methodClassName, contentType = contentType))
+    val overloadedBody = body?.defaultOrNull() as? Route.Body.OverloadedBody
+    val caseModel = overloadedBody?.cases
+        ?.firstOrNull { inlineModelScope.remap(it.model.toTypeName(config)) == bodyTypeName }
+        ?.model
+    val bodyExpr = setBodyArgument(caseModel, overloadedBody?.contentType, "body")
+    builder.addCode(buildOperationBody(config, method, methodClassName, bodyExpr = bodyExpr, contentType = contentType))
     return builder.build()
 }
 

@@ -2603,6 +2603,114 @@ val clientSpec by testSuite {
         "client/inline-union-case-with-nested-enum"
     )
 
+    // Ktor's ContentNegotiation ignores String bodies, so `body<String>()` / `setBody(String)` bypass the
+    // JSON converter. A `type: string` body under a JSON content type must still be a JSON string on the wire.
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/names": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "application/json": { "schema": { "type": "string" } } }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "application/json": { "schema": { "type": "string" } } }
+                  }
+                }
+              },
+              "put": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "text/plain": { "schema": { "type": "string" } } }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "text/plain": { "schema": { "type": "string" } } }
+                  }
+                }
+              }
+            },
+            "/claims": {
+              "post": {
+                "requestBody": {
+                  "content": { "application/json": { "schema": { "type": "string" } } }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Created",
+                    "content": { "application/json": { "schema": { "type": ["string", "null"] } } }
+                  },
+                  "409": {
+                    "description": "Conflict",
+                    "content": { "application/problem+json": { "schema": { "type": "string" } } }
+                  },
+                  "5XX": {
+                    "description": "Server error",
+                    "content": { "application/json": { "schema": { "type": "string" } } }
+                  },
+                  "default": {
+                    "description": "Unexpected",
+                    "content": { "application/json": { "schema": { "type": "string" } } }
+                  }
+                }
+              }
+            },
+            "/drafts": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": { "schema": { "type": "string" } },
+                    "text/plain": { "schema": { "type": "string" } }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/tags": {
+              "put": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "oneOf": [
+                          { "type": "string" },
+                          { "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"] }
+                        ]
+                      }
+                    }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/notes": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": { "schema": { "type": "string" } },
+                      "text/plain": { "schema": { "type": "string" } }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/json-string-bodies"
+    )
+
     test("ambiguous form overload emits warning and is omitted when json body is available") {
         val json = """
         {

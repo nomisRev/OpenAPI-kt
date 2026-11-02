@@ -24,6 +24,9 @@ private val MultiPartFormDataContentType =
 private val ParametersType = ClassName("io.ktor.http", "Parameters")
 private val JsonType = ClassName("kotlinx.serialization.json", "Json")
 private val ResponseExceptionType = ClassName("io.ktor.client.plugins", "ResponseException")
+private val JsonPrimitiveType = ClassName("kotlinx.serialization.json", "JsonPrimitive")
+private val JsonNullType = ClassName("kotlinx.serialization.json", "JsonNull")
+private val JsonConvertExceptionType = ClassName("io.ktor.serialization", "JsonConvertException")
 
 private val BodyMember = MemberName("io.ktor.client.call", "body")
 private val ParameterMember = MemberName("io.ktor.client.request", "parameter")
@@ -250,7 +253,7 @@ internal fun Route.buildOperationBody(
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
     contentType: ContentType? = null,
-    requestTypeContentType: CodeBlock? = null,
+    requestType: RequestTypeArgument? = null,
 ): CodeBlock {
     return if (returns.needsSealedInterface()) {
         if (contentType != null && returns.contentTypeStrategy() is ContentTypeStrategy.SeparateMethods) {
@@ -263,7 +266,7 @@ internal fun Route.buildOperationBody(
                 selectedBody = selectedBody,
                 bodyExpr = bodyExpr,
                 bodyGuard = bodyGuard,
-                requestTypeContentType = requestTypeContentType,
+                requestType = requestType,
             )
         } else {
             buildSealedOperationBody(
@@ -275,7 +278,7 @@ internal fun Route.buildOperationBody(
                 bodyExpr,
                 bodyGuard,
                 contentType,
-                requestTypeContentType,
+                requestType,
             )
         }
     } else {
@@ -287,7 +290,7 @@ internal fun Route.buildOperationBody(
             bodyExpr,
             bodyGuard,
             contentType,
-            requestTypeContentType,
+            requestType,
         )
     }
 }
@@ -297,6 +300,7 @@ private data class OperationRequestInvocationContext(
     val pathLiteral: String,
     val needsRequestConfig: Boolean,
     val bodyMayBeNull: Boolean,
+    val returnBody: CodeBlock = CodeBlock.of("%M()", BodyMember),
 )
 
 private enum class OperationRequestInvocationStyle {
@@ -336,7 +340,7 @@ private fun CodeBlock.Builder.addRequestInvocation(
     bodyExpr: CodeBlock?,
     bodyGuard: String?,
     acceptContentType: ContentType?,
-    requestTypeContentType: CodeBlock?,
+    requestType: RequestTypeArgument?,
 ) {
     if (!request.needsRequestConfig) {
         when (style) {
@@ -347,7 +351,7 @@ private fun CodeBlock.Builder.addRequestInvocation(
                 addStatement("client.%L(%L)", request.httpMethodName, request.pathLiteral)
 
             OperationRequestInvocationStyle.ReturnBody ->
-                addStatement("return client.%L(%L).%M()", request.httpMethodName, request.pathLiteral, BodyMember)
+                addStatement("return client.%L(%L).%L", request.httpMethodName, request.pathLiteral, request.returnBody)
         }
         return
     }
@@ -374,7 +378,7 @@ private fun CodeBlock.Builder.addRequestInvocation(
         bodyExpr = bodyExpr,
         bodyGuard = bodyGuard,
         acceptContentType = acceptContentType,
-        requestTypeContentType = requestTypeContentType,
+        requestType = requestType,
     )
 
     when (style) {
@@ -383,7 +387,7 @@ private fun CodeBlock.Builder.addRequestInvocation(
 
         OperationRequestInvocationStyle.ReturnBody -> {
             unindent()
-            add("}.%M()\n", BodyMember)
+            add("}.%L\n", request.returnBody)
         }
     }
 }
@@ -397,7 +401,7 @@ private fun Route.buildSealedOperationBody(
     bodyExpr: CodeBlock?,
     bodyGuard: String?,
     contentType: ContentType?,
-    requestTypeContentType: CodeBlock?,
+    requestType: RequestTypeArgument?,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType)
@@ -412,7 +416,7 @@ private fun Route.buildSealedOperationBody(
         bodyExpr = bodyExpr,
         bodyGuard = bodyGuard,
         acceptContentType = contentType,
-        requestTypeContentType = requestTypeContentType,
+        requestType = requestType,
     )
 
     code.beginControlFlow("return when (response.status.value)")
@@ -433,7 +437,7 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
     selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
     bodyGuard: String?,
-    requestTypeContentType: CodeBlock?,
+    requestType: RequestTypeArgument?,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType)
@@ -448,7 +452,7 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
         bodyExpr = bodyExpr,
         bodyGuard = bodyGuard,
         acceptContentType = contentType,
-        requestTypeContentType = requestTypeContentType,
+        requestType = requestType,
     )
 
     code.beginControlFlow("return when (response.status.value)")
@@ -467,12 +471,17 @@ private fun Route.buildDirectOperationBody(
     bodyExpr: CodeBlock?,
     bodyGuard: String?,
     contentType: ContentType?,
-    requestTypeContentType: CodeBlock?,
+    requestType: RequestTypeArgument?,
 ): CodeBlock {
     val code = CodeBlock.builder()
-    val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType)
-
     val model = returns.singlePreferredModelOrNull()
+    val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType).copy(
+        returnBody = bodyCall(
+            model = returns.singlePreferredModelOrNull(contentType),
+            contentType = contentType ?: returns.singlePreferredContentTypeOrNull(),
+        ),
+    )
+
     if (model == null || model is Model.Primitive.Unit) {
         code.addRequestInvocation(
             route = this,
@@ -484,7 +493,7 @@ private fun Route.buildDirectOperationBody(
             bodyExpr = bodyExpr,
             bodyGuard = bodyGuard,
             acceptContentType = contentType,
-            requestTypeContentType = requestTypeContentType,
+            requestType = requestType,
         )
     } else {
         code.addRequestInvocation(
@@ -497,7 +506,7 @@ private fun Route.buildDirectOperationBody(
             bodyExpr = bodyExpr,
             bodyGuard = bodyGuard,
             acceptContentType = contentType,
-            requestTypeContentType = requestTypeContentType,
+            requestType = requestType,
         )
     }
 
@@ -510,7 +519,11 @@ private fun Route.addSealedResponseStatusCases(code: CodeBlock.Builder, methodCl
         val caseName = statusCode.toCaseName()
         val caseClassName = responseClassName.nestedClass(caseName)
         val model = returnTypeEntry.preferredModel()
-        code.addStatement("%L -> %L", statusCode.value, buildResponseCaseExpression(caseClassName, model))
+        code.addStatement(
+            "%L -> %L",
+            statusCode.value,
+            buildResponseCaseExpression(caseClassName, model, returnTypeEntry.preferredContentType()),
+        )
     }
 }
 
@@ -522,7 +535,13 @@ private fun Route.addSealedResponseRangeCases(code: CodeBlock.Builder, methodCla
         code.addStatement(
             "in %L -> %L",
             requireNotNull(status.matchingRange),
-            buildRangeResponseCaseExpression(caseClassName, status.caseName, status, returnType.preferredModel()),
+            buildRangeResponseCaseExpression(
+                caseClassName,
+                status.caseName,
+                status,
+                returnType.preferredModel(),
+                returnType.preferredContentType(),
+            ),
         )
     }
 }
@@ -533,7 +552,11 @@ private fun Route.addSealedResponseDefaultCase(code: CodeBlock.Builder, methodCl
         val defaultClassName = responseClassName.nestedClass("Default")
         val defaultModel = returns.default!!.preferredModel()
         if (defaultModel != null && defaultModel !is Model.Primitive.Unit) {
-            code.addStatement("else -> %T(response.status, response.%M())", defaultClassName, BodyMember)
+            code.addStatement(
+                "else -> %T(response.status, %L)",
+                defaultClassName,
+                responseBody(defaultModel, returns.default!!.preferredContentType()),
+            )
         } else {
             code.addStatement("else -> %T(response.status)", defaultClassName)
         }
@@ -578,7 +601,12 @@ private fun Route.addMultiContentTypeSealedResponseStatusCases(
             } else if (model.isRouteInlineModel() && model !is Model.Collection) {
                 code.addStatement("%L -> response.%M<%T>()", statusCode.value, BodyMember, caseClassName)
             } else {
-                code.addStatement("%L -> %T(response.%M())", statusCode.value, caseClassName, BodyMember)
+                code.addStatement(
+                    "%L -> %T(%L)",
+                    statusCode.value,
+                    caseClassName,
+                    responseBody(model, contentType),
+                )
             }
             continue
         }
@@ -595,7 +623,7 @@ private fun Route.addMultiContentTypeSealedResponseStatusCases(
                 code.addStatement(
                     "%L -> %L",
                     statusCode.value,
-                    buildResponseCaseExpression(caseClassName, errorStrategy.model),
+                    buildResponseCaseExpression(caseClassName, errorStrategy.model, errorStrategy.contentType),
                 )
             }
 
@@ -621,7 +649,7 @@ private fun Route.addMultiContentTypeSealedResponseRangeCases(
                 code.addStatement(
                     "in %L -> %L",
                     matchingRange,
-                    buildRangeResponseCaseExpression(caseClassName, status.caseName, status, null),
+                    buildRangeResponseCaseExpression(caseClassName, status.caseName, status, null, null),
                 )
             } else {
                 val caseClassName = responseClassName.nestedClass(status.caseName)
@@ -633,6 +661,7 @@ private fun Route.addMultiContentTypeSealedResponseRangeCases(
                         status.caseName,
                         status,
                         returnType.modelForContentType(contentType),
+                        contentType,
                     ),
                 )
             }
@@ -646,7 +675,7 @@ private fun Route.addMultiContentTypeSealedResponseRangeCases(
                 code.addStatement(
                     "in %L -> %L",
                     matchingRange,
-                    buildRangeResponseCaseExpression(caseClassName, status.caseName, status, null),
+                    buildRangeResponseCaseExpression(caseClassName, status.caseName, status, null, null),
                 )
             }
 
@@ -655,7 +684,13 @@ private fun Route.addMultiContentTypeSealedResponseRangeCases(
                 code.addStatement(
                     "in %L -> %L",
                     matchingRange,
-                    buildRangeResponseCaseExpression(caseClassName, status.caseName, status, variants.single().value),
+                    buildRangeResponseCaseExpression(
+                        caseClassName,
+                        status.caseName,
+                        status,
+                        variants.single().value,
+                        variants.single().key,
+                    ),
                 )
             }
 
@@ -687,14 +722,20 @@ private fun buildMultiCTRangeErrorDispatch(
         code.addStatement(
             "ct?.match(%L) == true -> %L",
             errorContentType.toContentTypeCodeBlock(),
-            buildRangeResponseCaseExpression(caseClassName, caseName, status, errorModel),
+            buildRangeResponseCaseExpression(caseClassName, caseName, status, errorModel, errorContentType),
         )
     }
     val preferredCaseName = "${contentTypeToIdentifier(preferredVariant.key)}${status.caseName}"
     val preferredCaseClassName = methodClassName.nestedClass(preferredCaseName)
     code.addStatement(
         "else -> %L",
-        buildRangeResponseCaseExpression(preferredCaseClassName, preferredCaseName, status, preferredVariant.value),
+        buildRangeResponseCaseExpression(
+            preferredCaseClassName,
+            preferredCaseName,
+            status,
+            preferredVariant.value,
+            preferredVariant.key,
+        ),
     )
     code.endControlFlow()
     code.unindent()
@@ -719,14 +760,14 @@ private fun buildMultiCTErrorDispatch(
         code.addStatement(
             "ct?.match(%L) == true -> %L",
             errorContentType.toContentTypeCodeBlock(),
-            buildResponseCaseExpression(caseClassName, errorModel),
+            buildResponseCaseExpression(caseClassName, errorModel, errorContentType),
         )
     }
     val preferredCaseName = "${contentTypeToIdentifier(preferredVariant.first)}${statusCode.toCaseName()}"
     val preferredCaseClassName = methodClassName.nestedClass(preferredCaseName)
     code.addStatement(
         "else -> %L",
-        buildResponseCaseExpression(preferredCaseClassName, preferredVariant.second),
+        buildResponseCaseExpression(preferredCaseClassName, preferredVariant.second, preferredVariant.first),
     )
     code.endControlFlow()
     code.unindent()
@@ -742,8 +783,14 @@ private fun Route.addMultiContentTypeSealedResponseDefaultCase(
     if (returns.default != null) {
         val defaultClassName = methodClassName.nestedClass("Default")
         val defaultModel = returns.default!!.types[contentType] ?: returns.default!!.preferredModel()
+        val defaultContentType =
+            if (returns.default!!.types[contentType] != null) contentType else returns.default!!.preferredContentType()
         if (defaultModel != null && defaultModel !is Model.Primitive.Unit) {
-            code.addStatement("else -> %T(response.status, response.%M())", defaultClassName, BodyMember)
+            code.addStatement(
+                "else -> %T(response.status, %L)",
+                defaultClassName,
+                responseBody(defaultModel, defaultContentType),
+            )
         } else {
             code.addStatement("else -> %T(response.status)", defaultClassName)
         }
@@ -759,20 +806,23 @@ private fun Route.addMultiContentTypeSealedResponseDefaultCase(
 private fun buildResponseCaseExpression(
     caseClassName: ClassName,
     model: Model?,
+    contentType: ContentType?,
 ): CodeBlock =
     when {
         model == null || model is Model.Primitive.Unit -> CodeBlock.of("%T", caseClassName)
         model.isRouteInlineModel() && model !is Model.Collection ->
             CodeBlock.of("response.%M<%T>()", BodyMember, caseClassName)
 
-        else -> CodeBlock.of("%T(response.%M())", caseClassName, BodyMember)
+        else -> CodeBlock.of("%T(%L)", caseClassName, responseBody(model, contentType))
     }
 
+@Suppress("LongParameterList")
 private fun buildRangeResponseCaseExpression(
     caseClassName: ClassName,
     caseName: String,
     status: ResponseStatus.Range,
     model: Model?,
+    contentType: ContentType?,
 ): CodeBlock {
     if (model == null || model is Model.Primitive.Unit) {
         return CodeBlock.of("%T(response.status)", caseClassName)
@@ -781,7 +831,7 @@ private fun buildRangeResponseCaseExpression(
     val body = if (model.isRouteInlineModel() && model !is Model.Collection) {
         CodeBlock.of("response.%M<%T>()", BodyMember, caseClassName.nestedClass("${caseName}Body"))
     } else {
-        CodeBlock.of("response.%M()", BodyMember)
+        responseBody(model, contentType)
     }
     val range = requireNotNull(status.matchingRange)
     val noContentChecks = listOf(204, 304).filter(range::contains)
@@ -814,7 +864,7 @@ private fun Route.addRequestConfigCode(
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
     acceptContentType: ContentType? = null,
-    requestTypeContentType: CodeBlock? = null,
+    requestType: RequestTypeArgument? = null,
 ) {
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
 
@@ -871,7 +921,7 @@ private fun Route.addRequestConfigCode(
             bodyMayBeNull = bodyMayBeNull,
             bodyExpr = bodyExpr,
             bodyGuard = bodyGuard,
-            requestTypeContentType = requestTypeContentType,
+            requestType = requestType,
         )
     }
 }
@@ -917,17 +967,25 @@ private fun addBodyCode(
     bodyMayBeNull: Boolean,
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
-    requestTypeContentType: CodeBlock? = null,
+    requestType: RequestTypeArgument? = null,
 ) {
     when (body) {
         is Route.Body.SetBody -> {
-            val contentType = requestTypeContentType ?: body.contentType.toContentTypeCodeBlock()
-            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard)
+            val contentType = requestType?.contentTypeCode ?: body.contentType.toContentTypeCodeBlock()
+            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard) { value ->
+                if (requestType == null) {
+                    addStatement("%M(%L)", SetBodyMember, setBodyArgument(body.type, body.contentType, value))
+                } else {
+                    addRequestTypeSetBody(requestType, value)
+                }
+            }
         }
 
         is Route.Body.OverloadedBody -> {
-            val contentType = requestTypeContentType ?: body.contentType.toContentTypeCodeBlock()
-            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard)
+            val contentType = requestType?.contentTypeCode ?: body.contentType.toContentTypeCodeBlock()
+            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard) { value ->
+                addStatement("%M(%L)", SetBodyMember, value)
+            }
         }
 
         is Route.Body.FormUrlEncoded -> code.addFormUrlEncodedBodyCode(body)
@@ -936,12 +994,33 @@ private fun addBodyCode(
     }
 }
 
+/**
+ * `setBody(…)` for a body whose content type is chosen at runtime through `requestType`: the clashing variants share
+ * one Kotlin signature, but a `String` must still become a JSON string for the JSON media types among them.
+ */
+private fun CodeBlock.Builder.addRequestTypeSetBody(requestType: RequestTypeArgument, value: String) {
+    val arguments = requestType.variants.map { variant ->
+        val model = (variant.body as? Route.Body.SetBody)?.type
+        setBodyArgument(model, variant.contentType, value)
+    }
+    if (arguments.distinct().size == 1) {
+        addStatement("%M(%L)", SetBodyMember, arguments.first())
+        return
+    }
+    beginControlFlow("when (requestType)")
+    for ([name, argument] in requestType.constantNames.zip(arguments)) {
+        addStatement("%T.%N -> %M(%L)", requestType.enumClassName, name, SetBodyMember, argument)
+    }
+    endControlFlow()
+}
+
 @Suppress("CanBeNonNullable")
 private fun CodeBlock.Builder.addSetLikeBodyCode(
     contentType: CodeBlock,
     bodyExpr: CodeBlock?,
     bodyMayBeNull: Boolean,
     bodyGuard: String?,
+    setBody: CodeBlock.Builder.(value: String) -> Unit,
 ) {
     if (bodyExpr != null) {
         if (bodyMayBeNull && bodyGuard != null) {
@@ -955,11 +1034,11 @@ private fun CodeBlock.Builder.addSetLikeBodyCode(
         }
     } else if (!bodyMayBeNull) {
         addStatement("%M(%L)", ContentTypeFunMember, contentType)
-        addStatement("%M(body)", SetBodyMember)
+        setBody("body")
     } else {
         beginControlFlow("body?.let")
         addStatement("%M(%L)", ContentTypeFunMember, contentType)
-        addStatement("%M(it)", SetBodyMember)
+        setBody("it")
         endControlFlow()
     }
 }
@@ -1046,6 +1125,36 @@ private fun Route.Body.Multipart.FormData.multipartValueExpr(config: RenderConfi
 
         else -> CodeBlock.of("%L", type.wireValueExpr(paramName))
     }
+
+/**
+ * Ktor's `ContentNegotiation` never converts `String`: it is one of its default ignored types, so `body<String>()`
+ * returns the raw payload and `setBody(String)` sends it verbatim. A `type: string` body under a JSON media type is
+ * a JSON string literal on the wire, so it is exchanged as a [JsonPrimitiveType] instead, which the client's own
+ * JSON converter encodes and decodes.
+ */
+private fun Model?.isJsonStringBody(contentType: ContentType?): Boolean =
+    this is Model.Primitive.String && contentType?.isJsonLike() == true
+
+/** `setBody(…)` argument for a request body of [model] sent as [contentType]. */
+internal fun setBodyArgument(model: Model?, contentType: ContentType?, value: String): CodeBlock =
+    if (model.isJsonStringBody(contentType)) CodeBlock.of("%T(%L)", JsonPrimitiveType, value)
+    else CodeBlock.of("%L", value)
+
+/** The `body()` call, without receiver, decoding a response of [model] received as [contentType]. */
+private fun bodyCall(model: Model?, contentType: ContentType?): CodeBlock {
+    if (model == null || !model.isJsonStringBody(contentType)) return CodeBlock.of("%M()", BodyMember)
+    val nullCase = if (model.isNullable) CodeBlock.of("if (it is %T) null else ", JsonNullType) else CodeBlock.of("")
+    return CodeBlock.of(
+        "%M<%T>().let { %Lif (it.isString) it.content else throw %T(\"Illegal input: expected a JSON string but was \$it\") }",
+        BodyMember,
+        JsonPrimitiveType,
+        nullCase,
+        JsonConvertExceptionType,
+    )
+}
+
+private fun responseBody(model: Model?, contentType: ContentType?): CodeBlock =
+    CodeBlock.of("response.%L", bodyCall(model, contentType))
 
 private fun ContentType.isJsonLike(): Boolean =
     ContentType.Application.Json.match(this) || contentSubtype.endsWith("+json")

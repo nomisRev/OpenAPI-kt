@@ -9,9 +9,11 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.serialization.JsonConvertException
 import kotlin.Int
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Items internal constructor(
   private val client: HttpClient,
@@ -34,10 +36,10 @@ public class Items internal constructor(
     public suspend operator fun invoke(body: String): Response {
       val response = client.post("/items") {
         contentType(ContentType.Application.Json)
-        setBody(body)
+        setBody(JsonPrimitive(body))
       }
       return when (response.status.value) {
-        201 -> Response.Created(response.body())
+        201 -> Response.Created(response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") })
         400 -> Response.BadRequest(response.body())
         else -> throw ResponseException(response, "")
       }

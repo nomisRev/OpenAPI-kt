@@ -7,6 +7,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlin.String
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Pets internal constructor(
   private val client: HttpClient,
@@ -29,7 +30,7 @@ public class Pets internal constructor(
     public suspend operator fun invoke(body: String) {
       client.post("/pets") {
         contentType(ContentType.Application.Json)
-        setBody(body)
+        setBody(JsonPrimitive(body))
       }
     }
   }

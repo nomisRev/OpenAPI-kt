@@ -50,6 +50,22 @@ private data class FlattenedBodyOverloadContext(
     val bodyMayBeNull: Boolean,
 )
 
+/** The `requestType` argument choosing among request bodies whose Kotlin signatures clash. */
+internal data class RequestTypeArgument(
+    val enumClassName: ClassName,
+    val variants: List<Route.Bodies.Variant>,
+) {
+    val contentTypeCode: CodeBlock get() = CodeBlock.of("requestType.contentType")
+    val constantNames: List<String> get() = requestTypeConstantNames(variants)
+}
+
+private fun requestTypeConstantNames(clashingVariants: List<Route.Bodies.Variant>): List<String> {
+    val emittedNames = mutableSetOf<String>()
+    return clashingVariants.map { variant ->
+        contentTypeToIdentifier(variant.contentType, emittedNames).also(emittedNames::add)
+    }
+}
+
 internal fun buildRequestTypeEnum(clashingVariants: List<Route.Bodies.Variant>): TypeSpec {
     val builder = TypeSpec.enumBuilder("RequestType")
         .primaryConstructor(
@@ -63,10 +79,7 @@ internal fun buildRequestTypeEnum(clashingVariants: List<Route.Bodies.Variant>):
                 .build()
         )
 
-    val emittedNames = mutableSetOf<String>()
-    clashingVariants.forEach { variant ->
-        val enumName = contentTypeToIdentifier(variant.contentType, emittedNames)
-        emittedNames += enumName
+    for ([variant, enumName] in clashingVariants.zip(requestTypeConstantNames(clashingVariants))) {
         builder.addEnumConstant(
             enumName,
             TypeSpec.anonymousClassBuilder()
