@@ -40,18 +40,28 @@ private suspend fun Response.toReturnType(
     path: String,
     segments: List<PathSegment>,
     method: HttpMethod,
-): Route.ReturnType = Route.ReturnType(
-    types = content.entries.associate { [contentType, mediaType] ->
-        val schema = requireNotNull(mediaType.schema) {
-            "Response without $mediaType schema for ${method.value} $path. $this"
+): Route.ReturnType {
+    val name = NamingContext.path(segments, method).nest(NamingContext.Response)
+    content.forEach { [contentType, mediaType] ->
+        require(mediaType.schema != null || mediaType.itemSchema != null) {
+            "Response without $mediaType schema for ${method.value} $path ($contentType). $this"
         }
-        Pair(
-            ContentType.parse(contentType),
-            schema.toModel(NamingContext.path(segments, method).nest(NamingContext.Response), SchemaContext.Read)
-        )
-    },
-    extensions = extensions
-)
+    }
+    return Route.ReturnType(
+        types = content.entries.mapNotNull { [contentType, mediaType] ->
+            mediaType.schema?.let { schema ->
+                Pair(ContentType.parse(contentType), schema.toModel(name, SchemaContext.Read))
+            }
+        }.toMap(),
+        extensions = extensions,
+        streams = content.entries.mapNotNull { [contentType, mediaType] ->
+            mediaType.itemSchema?.let { itemSchema ->
+                val parsed = ContentType.parse(contentType)
+                Pair(parsed, itemSchema.toStream(parsed, name))
+            }
+        }.toMap(),
+    )
+}
 
 // TODO Move to Registry and support top-level schemas.
 context(ctx: Registry)

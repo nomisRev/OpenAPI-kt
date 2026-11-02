@@ -213,8 +213,23 @@ data class Route(
         val responseRanges: Map<StatusCodeOrRange.Range, ReturnType> = emptyMap(),
     )
 
-    // Required
-    data class ReturnType(val types: Map<ContentType, Model>, val extensions: Map<String, JsonElement>)
+    /**
+     * The content of a response, per media type.
+     *
+     * @property types the models of media types that declare a `schema`, describing the complete content.
+     * @property streams OpenAPI 3.2: the media types that declare an `itemSchema`, describing every item of a
+     * sequential media type such as `application/jsonl` or `text/event-stream`. A media type that declares both
+     * `schema` and `itemSchema` appears in both maps, since they describe the same content at different levels.
+     */
+    data class ReturnType(
+        val types: Map<ContentType, Model>,
+        val extensions: Map<String, JsonElement>,
+        val streams: Map<ContentType, Stream> = emptyMap(),
+    ) {
+        /** All models of this response: whole-content models and every model referenced by [streams]. */
+        val models: List<Model>
+            get() = types.values + streams.values.flatMap(Stream::models)
+    }
 }
 
 private fun Bodies?.nested(): Set<Model> =
@@ -229,12 +244,12 @@ private fun Bodies?.nested(): Set<Model> =
     }
 
 private fun Returns.nested(): Set<Model> {
-    val defaultNested = default?.types?.values.orEmpty().mapNotNullTo(mutableSetOf()) { it.nestedOrNull() }
+    val defaultNested = default?.models.orEmpty().mapNotNullTo(mutableSetOf()) { it.nestedOrNull() }
     val responsesNested = responses.values.flatMapTo(mutableSetOf()) { returnType ->
-        returnType.types.values.mapNotNull { it.nestedOrNull() }
+        returnType.models.mapNotNull { it.nestedOrNull() }
     }
     val responseRangesNested = responseRanges.values.flatMapTo(mutableSetOf()) { returnType ->
-        returnType.types.values.mapNotNull { it.nestedOrNull() }
+        returnType.models.mapNotNull { it.nestedOrNull() }
     }
     return defaultNested + responsesNested + responseRangesNested
 }

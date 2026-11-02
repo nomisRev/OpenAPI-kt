@@ -86,12 +86,12 @@ private fun Route.Bodies?.topLevelNames(): Set<NamingContext.Reference> =
     }
 
 private fun Route.Returns.topLevelNames(): Set<NamingContext.Reference> {
-    val defaultNested = default?.types?.values.orEmpty().flatMapTo(mutableSetOf()) { it.topLevelNames() }
+    val defaultNested = default?.models.orEmpty().flatMapTo(mutableSetOf()) { it.topLevelNames() }
     val responsesNested = responses.values.flatMapTo(mutableSetOf()) { returnType ->
-        returnType.types.values.flatMap { it.topLevelNames() }
+        returnType.models.flatMap { it.topLevelNames() }
     }
     val responseRangesNested = responseRanges.values.flatMapTo(mutableSetOf()) { returnType ->
-        returnType.types.values.flatMap { it.topLevelNames() }
+        returnType.models.flatMap { it.topLevelNames() }
     }
     return defaultNested + responsesNested + responseRangesNested
 }
@@ -314,6 +314,7 @@ private fun Route.Returns.normalizedForConcreteCollision(): Route.Returns = copy
 private fun Route.ReturnType.normalizedForConcreteCollision(): Route.ReturnType = copy(
     types = types.mapValues { [_, model] -> model.normalizedForCompatibility() },
     extensions = emptyMap(),
+    streams = streams.mapValues { [_, stream] -> stream.mapModels { it.normalizedForCompatibility() } },
 )
 
 private fun Route.concreteCollisionDescription(): String = buildString {
@@ -361,6 +362,10 @@ private fun Route.ReturnType.concreteCollisionDescription(): String =
         .sortedBy { it.key.toString() }
         .joinToString(prefix = "[", postfix = "]") { [contentType, model] ->
             "$contentType:${model.compatibilityDescription()}"
+        } + streams.entries
+        .sortedBy { it.key.toString() }
+        .joinToString(prefix = "[", postfix = "]") { [contentType, stream] ->
+            "$contentType:${stream::class.simpleName}(${stream.models.joinToString { it.compatibilityDescription() }})"
         }
 
 private fun Model.normalizedForCompatibility(): Model = when (this) {
