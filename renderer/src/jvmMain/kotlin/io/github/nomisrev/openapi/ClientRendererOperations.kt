@@ -567,6 +567,7 @@ private fun Route.toInvokeFunSpecForFlattenedBody(
             method = method,
             methodClassName = methodClassName,
             overload = overload,
+            contentType = contentType,
         )
     )
     return builder.build()

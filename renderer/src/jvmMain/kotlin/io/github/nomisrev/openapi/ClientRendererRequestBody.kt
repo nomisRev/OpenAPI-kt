@@ -328,6 +328,7 @@ internal fun Route.buildFlattenedBodyOperationBody(
     method: io.ktor.http.HttpMethod,
     methodClassName: ClassName,
     overload: FlattenedBodyOverload,
+    contentType: ContentType? = null,
 ): CodeBlock {
     val bodyClassName = methodClassName.nestedClass("Body")
     val bodyExpr = if (!overload.bodyHasConstructorArgs) {
@@ -347,6 +348,7 @@ internal fun Route.buildFlattenedBodyOperationBody(
             method = method,
             methodClassName = methodClassName,
             includeBody = false,
+            contentType = contentType,
         )
     }
     return buildOperationBody(
@@ -355,6 +357,7 @@ internal fun Route.buildFlattenedBodyOperationBody(
         methodClassName = methodClassName,
         bodyExpr = bodyExpr,
         bodyGuard = bodyGuard,
+        contentType = contentType,
     )
 }
 
