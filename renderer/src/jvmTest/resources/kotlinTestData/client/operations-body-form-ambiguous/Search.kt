@@ -5,7 +5,10 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Search internal constructor(
@@ -23,14 +26,18 @@ public class Search internal constructor(
       }
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Filters(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val status: String? = null,
     )
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     internal data class Body(
       public val query: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val filters: Filters? = null,
     )
   }

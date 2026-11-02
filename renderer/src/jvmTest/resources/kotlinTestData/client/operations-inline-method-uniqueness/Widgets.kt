@@ -8,7 +8,10 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlin.Int
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Widgets internal constructor(
@@ -23,9 +26,11 @@ public class Widgets internal constructor(
   ) {
     public suspend operator fun invoke(): Response = client.get("/widgets").body()
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Response(
       public val id: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val version: Int? = null,
     )
   }

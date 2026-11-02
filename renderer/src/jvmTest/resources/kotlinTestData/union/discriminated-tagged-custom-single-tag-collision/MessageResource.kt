@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.union.discriminated.tagged.custom.single.
 
 import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -45,11 +46,13 @@ public sealed interface MessageResource {
     }
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class OutputMessage(
     public val type: Type,
     public val role: Role,
     public val content: String,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val phase: String? = null,
   ) : MessageResource {
     @Serializable

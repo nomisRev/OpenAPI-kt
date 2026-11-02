@@ -10,7 +10,10 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.JsonConvertException
 import kotlin.Int
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -57,9 +60,11 @@ public class Widgets internal constructor(
         public val status: HttpStatusCode,
         public val `value`: Status2XXBody?,
       ) : JsonResponse {
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Status2XXBody(
           public val id: String,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val version: Int? = null,
         )
       }
@@ -82,8 +87,10 @@ public class Widgets internal constructor(
       public val `value`: Status5XXBody?,
     ) : JsonResponse,
         XmlResponse {
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class Status5XXBody(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val message: String? = null,
       )
     }

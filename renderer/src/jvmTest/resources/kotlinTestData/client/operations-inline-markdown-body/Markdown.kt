@@ -6,7 +6,10 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -38,10 +41,13 @@ public class Markdown internal constructor(
       ;
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     internal data class Body(
       public val text: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val mode: Mode? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val context: String? = null,
     )
   }

@@ -7,9 +7,12 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmName
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonPrimitive
 
@@ -89,13 +92,17 @@ public class Repos internal constructor(
                 setBody(JsonPrimitive(body))
               }.body()
 
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class LabelsStrings(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val labels: List<String>? = null,
               )
 
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class LabelsNames(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val labels: List<Name>? = null,
               )
 

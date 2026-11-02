@@ -11,7 +11,10 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
 import kotlin.Int
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 public class Pets internal constructor(
@@ -48,9 +51,11 @@ public class Pets internal constructor(
       }
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     internal data class Body(
       public val name: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val tag: String? = null,
     )
 

@@ -5,6 +5,7 @@ import kotlin.Int
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -21,6 +22,7 @@ import kotlinx.serialization.json.jsonObject
 
 @Serializable(with = ProtectionRules.Serializer::class)
 public sealed interface ProtectionRules {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class IdAndNodeIdAndTypeAndWaitTimer(
     public val id: Int,
@@ -28,9 +30,11 @@ public sealed interface ProtectionRules {
     public val nodeId: String,
     public val type: String,
     @SerialName("wait_timer")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val waitTimer: Int? = null,
   ) : ProtectionRules
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class IdAndNodeIdAndTypeAndPreventSelfReviewAndReviewers(
     public val id: Int,
@@ -38,7 +42,9 @@ public sealed interface ProtectionRules {
     public val nodeId: String,
     public val type: String,
     @SerialName("prevent_self_review")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val preventSelfReview: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val reviewers: List<String>? = null,
   ) : ProtectionRules
 

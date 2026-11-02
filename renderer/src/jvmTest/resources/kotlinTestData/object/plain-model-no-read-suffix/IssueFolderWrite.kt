@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.object_.plain.model.no.read.suffix
 
 import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -16,8 +17,10 @@ public sealed interface IssueFolderWrite {
   public data object Default : IssueFolderWrite
 
   @SerialName("Project")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Project(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val shortName: String? = null,
   ) : IssueFolderWrite
 }

@@ -5,6 +5,7 @@ import kotlin.Int
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.Map
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.KeepGeneratedSerializer
@@ -25,6 +26,7 @@ import kotlinx.serialization.json.JsonObject
 public data class AdditionalSerializer(
   @SerialName("snake_case")
   public val snakeCase: String,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val optionalFlag: Boolean? = null,
   public val requiredNullable: String?,
   public val additional: Map<String, Int>? = null,

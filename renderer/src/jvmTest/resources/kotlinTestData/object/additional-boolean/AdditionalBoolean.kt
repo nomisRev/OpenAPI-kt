@@ -3,6 +3,7 @@ package io.github.nomisrev.render.test.object_.additional.boolean
 import kotlin.Int
 import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.KeepGeneratedSerializer
@@ -20,6 +21,7 @@ import kotlinx.serialization.json.JsonObject
 @Serializable(with = AdditionalBoolean.Serializer::class)
 public data class AdditionalBoolean(
   public val name: String,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val age: Int? = null,
   public val additional: JsonObject? = null,
 ) {

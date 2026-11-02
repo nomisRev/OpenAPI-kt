@@ -75,6 +75,18 @@ class SeparateMethodsFlattenedBodyRuntimeTest {
         assertEquals("""{"name":"Rex","tag":"dog"}""", request.body)
     }
 
+    /** `tag` is optional but not nullable: unset, it must be omitted rather than sent as `null`. */
+    @Test
+    fun unsetOptionalBodyPropertyIsOmittedWithKtorDefaultJson() = runBlocking {
+        val requests = mutableListOf<Recorded>()
+        val pets = client(HttpStatusCode.Created, ContentType.Application.Json, "42", requests)
+
+        pets.post.json(name = "Rex")
+        pets.post.textPlain(name = "Rex")
+
+        assertEquals(listOf("""{"name":"Rex"}""", """{"name":"Rex"}"""), requests.map { it.body })
+    }
+
     @Test
     fun declaredErrorIsReturnedFromBothMethods() = runBlocking {
         val requests = mutableListOf<Recorded>()

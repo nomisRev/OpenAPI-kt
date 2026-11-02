@@ -9,6 +9,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -118,10 +119,13 @@ public class Repos internal constructor(
             }
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             public val title: Title,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val body: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val milestone: Milestone? = null,
           ) {
             @Serializable(with = Title.Serializer::class)

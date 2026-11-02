@@ -20,6 +20,7 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.TypeVariableName
 import com.squareup.kotlinpoet.WildcardTypeName
+import com.squareup.kotlinpoet.asClassName
 import com.squareup.kotlinpoet.joinToCode
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
@@ -42,6 +43,8 @@ private val SerialDescriptorType = ClassName("kotlinx.serialization.descriptors"
 private val DecoderType = ClassName("kotlinx.serialization.encoding", "Decoder")
 private val EncoderType = ClassName("kotlinx.serialization.encoding", "Encoder")
 private val OptInType = ClassName("kotlin", "OptIn")
+private val EncodeDefaultType = ClassName("kotlinx.serialization", "EncodeDefault")
+private val EncodeDefaultModeType = EncodeDefaultType.nestedClass("Mode")
 private val MapType = ClassName("kotlin.collections", "Map")
 internal val SerializerMember = MemberName("kotlinx.serialization.builtins", "serializer")
 internal val NullableMember = MemberName("kotlinx.serialization.builtins", "nullable")
@@ -139,20 +142,22 @@ fun Model.Object.toTypeSpec(
         ?.takeIf { it.isNotBlank() }
         ?.let { builder.addKdoc("%L\n", it.escapeForKdoc()) }
 
-    if (allProperties.any { it.usesUuid }) {
+    // `@OptIn` is not repeatable, so every marker this class needs goes into a single annotation.
+    // `@EncodeDefault` is experimental before kotlinx.serialization 1.11.
+    val optInMarkers = listOfNotNull(
+        ExperimentalUuidApiType.takeIf { allProperties.any { it.usesUuid } },
+        ExperimentalSerializationApi::class.asClassName()
+            .takeIf { additionalProperty != null || allProperties.any { it.usesEncodeDefault } },
+    )
+    if (optInMarkers.isNotEmpty()) {
         builder.addAnnotation(
             AnnotationSpec.builder(OptInType)
-                .addMember("%T::class", ExperimentalUuidApiType)
+                .apply { optInMarkers.forEach { addMember("%T::class", it) } }
                 .build()
         )
     }
 
     if (additionalProperty != null) {
-        builder.addAnnotation(
-            AnnotationSpec.builder(OptInType)
-                .addMember("%T::class", ExperimentalSerializationApi::class)
-                .build()
-        )
         builder.addAnnotation(AnnotationSpec.builder(KeepGeneratedSerializerType).build())
         builder.addAnnotation(
             AnnotationSpec.builder(Serializable::class)
@@ -230,6 +235,7 @@ private data class RenderedProperty(
     val parameter: ParameterSpec,
     val property: PropertySpec,
     val usesUuid: Boolean,
+    val usesEncodeDefault: Boolean = false,
 )
 
 private sealed interface AdditionalPropertyKind {
@@ -267,6 +273,10 @@ private fun renderProperty(
         renderedClassName = effectiveClassName,
         externalTypeNames = externalTypeNames,
     )
+    // An optional property that is not nullable renders as `T? = null`, but `null` is not a valid value on
+    // the wire: when unset it must be omitted. `@EncodeDefault(NEVER)` makes that independent of the user's
+    // `Json { encodeDefaults }`, which is `true` in Ktor's `DefaultJson`.
+    val omitWhenUnset = !property.isRequired && !property.model.isNullable
 
     val parameter = ParameterSpec.builder(paramName, typeName)
         .apply {
@@ -287,6 +297,13 @@ private fun renderProperty(
             if (property.isRequired && literalDefault != null) {
                 addAnnotation(Required::class)
             }
+            if (omitWhenUnset) {
+                addAnnotation(
+                    AnnotationSpec.builder(EncodeDefaultType)
+                        .addMember("%T.%L", EncodeDefaultModeType, "NEVER")
+                        .build()
+                )
+            }
 
             when {
                 !property.isRequired -> defaultValue(CodeBlock.of("null"))
@@ -302,7 +319,7 @@ private fun renderProperty(
         .initializer(paramName)
         .build()
 
-    return RenderedProperty(jsonName, parameter, property, typeName.usesExperimentalUuid())
+    return RenderedProperty(jsonName, parameter, property, typeName.usesExperimentalUuid(), omitWhenUnset)
 }
 
 private fun Model.Object.renderAdditionalProperty(config: RenderConfig): RenderedAdditionalProperty? =
