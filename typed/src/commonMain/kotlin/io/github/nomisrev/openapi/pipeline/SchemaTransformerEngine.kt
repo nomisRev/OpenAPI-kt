@@ -22,6 +22,7 @@ import io.github.nomisrev.openapi.pipeline.plugins.typed.EnumPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.ObjectPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.PrimitivePlugin
 import io.github.nomisrev.openapi.pipeline.plugins.typed.TypeArrayPlugin
+import io.github.nomisrev.openapi.pipeline.plugins.typed.flattenSingleTypeArray
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
@@ -39,6 +40,16 @@ class SchemaTransformerEngine internal constructor(
         schema: ResolvedSchema,
         context: SchemaContext,
         resolveReference: Boolean = true
+    ): Model =
+        // `type: [X, "null"]` is `type: X, nullable: true`: normalise it before any pre-check or plugin reads `type`.
+        transformNormalized(ctx, registry, schema.flattenSingleTypeArray(), context, resolveReference)
+
+    private suspend fun transformNormalized(
+        ctx: Registry.Scope,
+        registry: Registry,
+        schema: ResolvedSchema,
+        context: SchemaContext,
+        resolveReference: Boolean
     ): Model = with(ctx) {
         // Pre-checks
         if (schema is ResolvedSchema.Reference && !resolveReference) {

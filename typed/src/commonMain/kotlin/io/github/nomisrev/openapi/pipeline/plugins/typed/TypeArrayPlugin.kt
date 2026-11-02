@@ -13,6 +13,26 @@ import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.transformers.union
 
+/**
+ * An OpenAPI 3.1 type array with a single non-null type, `type: [X, "null"]` (in any order) or `type: [X]`,
+ * means exactly `type: X` (with `nullable: true` when `"null"` is listed), like OpenAPI 3.0's `nullable`
+ * and `anyOf: [X, {type: null}]`. Rewriting it to that form lets every plugin model it as `X?`, keeping
+ * `format`, `enum`, `properties` and `items`, instead of a one-case union of a bare `Schema(type = X)`.
+ * Type arrays with several non-null types are left to [TypeArrayPlugin].
+ */
+internal fun ResolvedSchema.flattenSingleTypeArray(): ResolvedSchema {
+    val type = schema.type as? Schema.Type.Array ?: return this
+    val nonNull = type.types.filterNot { it == Schema.Type.Basic.Null }
+    val single = nonNull.distinct().singleOrNull() ?: return this
+    val hasNull = nonNull.size != type.types.size
+    val flattened = schema.copy(type = single, nullable = if (hasNull) true else schema.nullable)
+    return when (this) {
+        is ResolvedSchema.Recursive -> copy(schema = flattened)
+        is ResolvedSchema.Reference -> copy(schema = flattened)
+        is ResolvedSchema.Value -> copy(schema = flattened)
+    }
+}
+
 object TypeArrayPlugin : SchemaTransformerPlugin {
     override val key: PluginKey = PluginKeys.TypeArray
     override val phase: Phase = Phase.TYPED
