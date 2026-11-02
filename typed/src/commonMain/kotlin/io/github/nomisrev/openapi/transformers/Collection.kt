@@ -20,6 +20,7 @@ suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
             fun wrapIfNeeded(inner: Model?): Model = when (inner) {
                 is Model.ContextHolder if inner.context.isTopLevel() && inner.context != name -> inner
                 is Model.Collection -> inner.copy(inner = wrapIfNeeded(inner.inner))
+                is Model.Dictionary -> inner.copy(inner = wrapIfNeeded(inner.inner))
                 is Model.ContextHolder -> when (inner) {
                     is Model.DiscriminatedObject -> error("Discriminated objects are not supported inline")
                     is Model.Reference -> error("References are not supported inline")
@@ -104,6 +105,7 @@ private fun Model.normalizeCollectionItemWrapper(): Model = when (this) {
         if (value is Model.FreeFormJson && isScalarWrapper) copy(isScalarWrapper = false) else this
     }
     is Model.Collection -> copy(inner = inner.normalizeCollectionItemWrapper())
+    is Model.Dictionary -> copy(inner = inner.normalizeCollectionItemWrapper())
     else -> this
 }
 
@@ -113,6 +115,7 @@ private fun Model.prependContextIfInline(prefix: NamingContext.Nested): Model = 
     is Model.OneOf if !context.isTopLevel() -> copy(context = context.prepend(prefix))
     is Model.AnyOf if !context.isTopLevel() -> copy(context = context.prepend(prefix))
     is Model.Collection -> copy(inner = inner.prependContextIfInline(prefix))
+    is Model.Dictionary -> copy(inner = inner.prependContextIfInline(prefix))
 
     is Model.ByteArray,
     is Model.Date,

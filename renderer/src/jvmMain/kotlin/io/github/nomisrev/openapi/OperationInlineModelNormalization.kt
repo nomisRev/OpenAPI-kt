@@ -9,6 +9,7 @@ internal val SharedNamingContext = NamingContext.reference("Shared", SchemaConte
 internal fun Model.normalizedForSharingKey(): Model =
     when (this) {
         is Model.Collection -> normalizedForSharingKey()
+        is Model.Dictionary -> copy(inner = inner.normalizedForSharingKey(), description = null, title = null)
         is Model.DiscriminatedObject -> normalizedForSharingKey()
         is Model.Enum -> normalizedForSharingKey()
         is Model.Object -> normalizedForSharingKey()

@@ -136,6 +136,7 @@ internal fun Model.Union.Case.renderNonDiscriminatedCase(
         is Model.DiscriminatedObject,
         is Model.ByteArray,
         is Model.Collection,
+        is Model.Dictionary,
         is Model.Date,
         is Model.DateTime,
         is Model.FreeFormJson,

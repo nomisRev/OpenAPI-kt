@@ -46,6 +46,11 @@ private fun Model.contextComparisonKey(splitNames: Set<String>): String =
 private fun Model.normalizedForContextComparison(splitNames: Set<String>): Model =
     when (this) {
         is Model.Collection -> normalizedForContextComparison(splitNames)
+        is Model.Dictionary -> copy(
+            inner = inner.normalizedForContextComparison(splitNames),
+            description = null,
+            title = null,
+        )
         is Model.DiscriminatedObject -> normalizedForContextComparison(splitNames)
         is Model.Enum -> normalizedForContextComparison(splitNames)
         is Model.Object -> normalizedForContextComparison(splitNames)

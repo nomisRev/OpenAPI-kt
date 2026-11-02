@@ -10,6 +10,7 @@ internal fun Model.needsJsonObjectImport(): Boolean = when (this) {
     is Model.DiscriminatedObject -> subtypes.any { subtype -> subtype.inline.any { it.needsJsonObjectImport() } }
     is Model.Enum -> inner.nestedOrNull()?.needsJsonObjectImport() == true
     is Model.Collection -> inner.nestedOrNull()?.needsJsonObjectImport() == true
+    is Model.Dictionary -> inner.nestedOrNull()?.needsJsonObjectImport() == true
 
     is Model.ByteArray,
     is Model.Date,

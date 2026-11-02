@@ -34,6 +34,7 @@ fun Model.default(default: Model.Default<*>?): Model = when (this) {
     is Model.DateTime,
     is Model.Date,
     is Model.Object,
+    is Model.Dictionary,
     is Model.FreeFormJson,
     is Model.ByteArray -> this
 }
@@ -50,6 +51,7 @@ fun Model.context(block: (NamingContext) -> NamingContext): Model = when (this) 
 
     is Model.ByteArray,
     is Model.Collection,
+    is Model.Dictionary,
     is Model.Date,
     is Model.DateTime,
     is Model.FreeFormJson,

@@ -374,6 +374,7 @@ private suspend fun Model.closedEnumOrNull(): Model.Enum? = when (this) {
 
     is Model.ByteArray,
     is Model.Collection,
+    is Model.Dictionary,
     is Model.Date,
     is Model.DateTime,
     is Model.DiscriminatedObject,
@@ -416,6 +417,7 @@ private fun Model.Union.rebuildDynamicPathSegment(
 
         is Model.ByteArray,
         is Model.Collection,
+        is Model.Dictionary,
         is Model.Date,
         is Model.DateTime,
         is Model.DiscriminatedObject,

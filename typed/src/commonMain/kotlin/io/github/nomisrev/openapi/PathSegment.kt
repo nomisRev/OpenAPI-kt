@@ -65,6 +65,7 @@ internal fun Model.toPathSegment(paramName: String): PathSegment = when (this) {
     is Model.Union -> toPathSegmentOrOverload(paramName)
     is Model.ByteArray,
     is Model.Collection,
+    is Model.Dictionary,
     is Model.Date,
     is Model.DateTime,
     is Model.DiscriminatedObject,

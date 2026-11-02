@@ -578,6 +578,8 @@ internal fun Model.deserializationPriority(): Int = when (this) {
     is Model.Union -> UNION_PRIORITY
     is Model.Enum -> ENUM_PRIORITY
     is Model.Collection -> COLLECTION_PRIORITY
+    // A map accepts any JSON object whose values match, like an object with only typed additional properties.
+    is Model.Dictionary -> OBJECT_WITH_TYPED_ADDITIONAL_PROPERTIES_PRIORITY
     is Model.Reference -> REFERENCE_PRIORITY
     is Model.Primitive.Int -> PRIMITIVE_INT_PRIORITY
     is Model.Primitive.Long -> PRIMITIVE_LONG_PRIORITY

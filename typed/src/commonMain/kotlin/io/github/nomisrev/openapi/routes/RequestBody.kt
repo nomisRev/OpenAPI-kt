@@ -227,6 +227,7 @@ private suspend fun Model.isSafeFormUrlEncodedField(
 
     is Model.ByteArray,
     is Model.Collection,
+    is Model.Dictionary,
     is Model.DiscriminatedObject,
     is Model.FreeFormJson,
     is Model.OneOf,

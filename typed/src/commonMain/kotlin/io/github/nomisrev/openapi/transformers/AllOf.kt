@@ -77,6 +77,14 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
         title = title ?: other.title
     )
 
+    is Model.Dictionary if other is Model.Dictionary -> Model.Dictionary(
+        inner = inner.merge(other.inner, name),
+        description = description ?: other.description,
+        constraint = constraint.merge(other.constraint),
+        isNullable = isNullable || other.isNullable,
+        title = title ?: other.title
+    )
+
     is Model.Object if other is Model.FreeFormJson -> copy(
         additionalProperties =
             additionalProperties.merge(Model.Object.AdditionalProperties.Allowed(true), context)
@@ -100,6 +108,7 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
     }
 
     is Model.Collection,
+    is Model.Dictionary,
     is Model.Enum,
     is Model.DiscriminatedObject,
     is Model.Object,

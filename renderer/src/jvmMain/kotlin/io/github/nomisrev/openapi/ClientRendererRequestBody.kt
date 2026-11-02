@@ -397,6 +397,7 @@ private fun Model.flattenedPrimitiveUnionCaseName(): String = when (this) {
     is Model.Uuid -> "CaseUuid"
 
     is Model.Collection,
+    is Model.Dictionary,
     is Model.DiscriminatedObject,
     is Model.Enum,
     is Model.FreeFormJson,

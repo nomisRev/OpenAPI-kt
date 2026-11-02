@@ -186,6 +186,7 @@ private fun TypeSpec.Builder.addOverloadedNavigationMembers(
             is Model.Enum -> requireNotNull(enumClassNames[case])
             is Model.ByteArray,
             is Model.Collection,
+            is Model.Dictionary,
             is Model.Date,
             is Model.DateTime,
             is Model.DiscriminatedObject,
@@ -1058,6 +1059,7 @@ private fun Model.isJsonLikeMultipartModel(): Boolean = when (this) {
     is Model.Uuid -> false
 
     is Model.Collection,
+    is Model.Dictionary,
     is Model.DiscriminatedObject,
     is Model.FreeFormJson,
     is Model.Object,

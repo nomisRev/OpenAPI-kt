@@ -44,6 +44,7 @@ private fun ApiTree.additionalFiles(config: RenderConfig): List<FileSpec> {
 
 private fun Model.toFileSpecOrNull(config: RenderConfig): FileSpec? = when (this) {
     is Model.Collection -> inner.toFileSpecOrNull(config)
+    is Model.Dictionary -> inner.toFileSpecOrNull(config)
     is Model.DiscriminatedObject -> toFileSpec(config)
     is Model.Enum -> toFileSpec(config)
     is Model.Object -> toFileSpec(config)
@@ -59,6 +60,7 @@ private fun Model.toFileSpecOrNull(config: RenderConfig): FileSpec? = when (this
 
 private fun Model.requiresSerializationUtils(): Boolean = when (this) {
     is Model.Collection -> inner.requiresSerializationUtils()
+    is Model.Dictionary -> inner.requiresSerializationUtils()
     is Model.DiscriminatedObject ->
         abstractProperties.values.any { it.model.requiresSerializationUtils() } ||
                 subtypes.any(Model.Object::requiresSerializationUtils)

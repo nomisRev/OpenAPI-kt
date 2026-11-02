@@ -68,6 +68,7 @@ private fun Model.containsInlineNonDiscriminatedUnion(): Boolean =
                         ?.containsInlineNonDiscriminatedUnion() == true)
 
         is Model.Collection -> inner.containsInlineNonDiscriminatedUnion()
+        is Model.Dictionary -> inner.containsInlineNonDiscriminatedUnion()
         is Model.DiscriminatedObject ->
             abstractProperties.values.any { it.model.containsInlineNonDiscriminatedUnion() } ||
                     subtypes.any { subtype ->
@@ -113,6 +114,7 @@ internal fun Model.toInlineOperationTypeSpecOrNull(
         is Model.DiscriminatedObject,
         is Model.ByteArray,
         is Model.Collection,
+        is Model.Dictionary,
         is Model.Date,
         is Model.DateTime,
         is Model.FreeFormJson,

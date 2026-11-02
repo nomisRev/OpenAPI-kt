@@ -34,6 +34,7 @@ sealed interface Model {
     ) = when (this) {
         is ByteArray -> copy(description = description, isNullable = isNullable, title = title)
         is Collection -> copy(description = description, isNullable = isNullable, title = title)
+        is Dictionary -> copy(description = description, isNullable = isNullable, title = title)
         is Date -> copy(description = description, isNullable = isNullable, title = title)
         is DateTime -> copy(description = description, isNullable = isNullable, title = title)
         is DiscriminatedObject -> copy(description = description, isNullable = isNullable, title = title)
@@ -258,6 +259,21 @@ sealed interface Model {
         val default: Default<List<String>>?,
         override val description: String?,
         val constraint: Constraints.Collection?,
+        override val isNullable: Boolean,
+        override val title: String?
+    ) : Model
+
+    /**
+     * A map: a `type: object` schema whose only content is a schema-typed `additionalProperties`.
+     * On the wire it is a JSON object with arbitrary keys whose values all match [inner],
+     * e.g. `{"a": "x", "b": "y"}`, so it maps to `Map<String, inner>`.
+     */
+    @SerialName("Dictionary")
+    @Serializable
+    data class Dictionary(
+        val inner: Model,
+        override val description: String?,
+        val constraint: Constraints.Object?,
         override val isNullable: Boolean,
         override val title: String?
     ) : Model

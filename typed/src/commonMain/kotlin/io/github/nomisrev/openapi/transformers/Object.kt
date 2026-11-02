@@ -121,15 +121,14 @@ internal suspend fun ResolvedSchema.buildTypedAdditionalPropertiesModel(
                 schema.title,
                 mapOf(
                     "values" to Model.Object.Property(
-                        Model.Collection(
+                        Model.Dictionary(
                             inner = ap.value.toModel(name.nest(NamingContext.AdditionalProperties), context),
-                            default = Model.Default.Value(emptyList()),
                             description = null,
-                            title = null,
-                            constraint = null,
+                            constraint = Constraints.Object(schema),
                             isNullable = false,
+                            title = null,
                         ),
-                        false
+                        true
                     )
                 ),
                 Model.Object.AdditionalProperties.False,
@@ -138,11 +137,10 @@ internal suspend fun ResolvedSchema.buildTypedAdditionalPropertiesModel(
             )
 
         is ResolvedSchema.Value ->
-            Model.Collection(
+            Model.Dictionary(
                 inner = ap.value.toModel(name, context),
-                default = Model.Default.Value(emptyList()),
                 description = description(),
-                constraint = null,
+                constraint = Constraints.Object(schema),
                 isNullable = isNullable,
                 title = schema.title
             )

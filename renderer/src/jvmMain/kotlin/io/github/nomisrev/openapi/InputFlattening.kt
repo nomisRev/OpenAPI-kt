@@ -40,6 +40,7 @@ private fun Model.flattenedScalarInputModel(): Model? = when (this) {
     }
 
     is Model.Collection,
+    is Model.Dictionary,
     is Model.DiscriminatedObject,
     is Model.Enum,
     is Model.FreeFormJson,

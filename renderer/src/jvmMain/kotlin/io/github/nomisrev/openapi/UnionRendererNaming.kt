@@ -29,6 +29,7 @@ internal fun Model.Union.Case.caseSimpleName(
             is Model.Uuid -> "CaseUuid"
             is Model.FreeFormJson -> "CaseJsonElement"
             is Model.Collection -> caseModel.collectionCaseSimpleName(config)
+            is Model.Dictionary -> "Case${caseModel.inner.collectionEntryName(config)}Map"
             is Model.Object -> {
                 val name = caseModel.context.toClassName(config).simpleName
                 if (caseModel.context.isTopLevel()) "Case$name" else name
@@ -74,6 +75,7 @@ internal fun Model.collectionEntryName(config: RenderConfig): String =
         is Model.Uuid -> "Uuids"
         is Model.FreeFormJson -> "JsonElements"
         is Model.Collection -> "${inner.collectionEntryName(config)}List"
+        is Model.Dictionary -> "${inner.collectionEntryName(config)}Map"
         is Model.Reference -> "${context.toClassName(config).simpleName}List"
         is Model.Object -> "${context.toClassName(config).simpleName}List"
         is Model.Enum -> "${context.toClassName(config).simpleName}List"

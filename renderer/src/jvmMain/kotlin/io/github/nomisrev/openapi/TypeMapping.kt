@@ -19,6 +19,7 @@ private val InstantType = ClassName("kotlin.time", "Instant")
 private val JsonElementType = ClassName("kotlinx.serialization.json", "JsonElement")
 private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")
 private val ListType = ClassName("kotlin.collections", "List")
+private val MapType = ClassName("kotlin.collections", "Map")
 
 @Suppress("CyclomaticComplexMethod")
 fun Model.toTypeName(config: RenderConfig): TypeName = when (this) {
@@ -27,6 +28,8 @@ fun Model.toTypeName(config: RenderConfig): TypeName = when (this) {
             if (inner is Model.FreeFormJson) JsonArrayType
             else ListType.parameterizedBy(inner.toTypeName(config))
         }
+
+        is Model.Dictionary -> MapType.parameterizedBy(STRING, inner.toTypeName(config))
 
         is Model.Date -> LocalDateType
         is Model.DateTime -> InstantType

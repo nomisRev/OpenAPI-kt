@@ -370,6 +370,7 @@ private fun Route.ReturnType.concreteCollisionDescription(): String =
 
 private fun Model.normalizedForCompatibility(): Model = when (this) {
     is Model.Collection -> normalizedForCompatibility()
+    is Model.Dictionary -> copy(inner = inner.normalizedForCompatibility(), description = null, title = null)
     is Model.DiscriminatedObject -> normalizedForCompatibility()
     is Model.Enum -> normalizedForCompatibility()
     is Model.Object -> normalizedForCompatibility()
@@ -493,6 +494,7 @@ private fun Model.compatibilityDescription(): String {
     return when (this) {
         is Model.ByteArray -> "ByteArray$suffix"
         is Model.Collection -> "List<${inner.compatibilityDescription()}>$suffix"
+        is Model.Dictionary -> "Map<String, ${inner.compatibilityDescription()}>$suffix"
         is Model.Date -> "Date$suffix"
         is Model.DateTime -> "DateTime$suffix"
         is Model.DiscriminatedObject -> "DiscriminatedObject(discriminator=$discriminator)$suffix"

@@ -46,6 +46,7 @@ private val MapType = ClassName("kotlin.collections", "Map")
 internal val SerializerMember = MemberName("kotlinx.serialization.builtins", "serializer")
 internal val NullableMember = MemberName("kotlinx.serialization.builtins", "nullable")
 internal val ListSerializerMember = MemberName("kotlinx.serialization.builtins", "ListSerializer")
+internal val MapSerializerMember = MemberName("kotlinx.serialization.builtins", "MapSerializer")
 internal val ByteArraySerializerMember = MemberName("kotlinx.serialization.builtins", "ByteArraySerializer")
 
 @Suppress("CyclomaticComplexMethod", "LongMethod")
@@ -194,6 +195,7 @@ fun Model.Object.toTypeSpec(
 
                 is Model.ByteArray,
                 is Model.Collection,
+                is Model.Dictionary,
                 is Model.Date,
                 is Model.DateTime,
                 is Model.DiscriminatedObject,
@@ -496,6 +498,14 @@ internal fun Model.nonNullableSerializerCode(
                 )
             }
 
+        is Model.Dictionary -> CodeBlock.of(
+            "%M(%T.%M(), %L)",
+            MapSerializerMember,
+            String::class,
+            SerializerMember,
+            inner.serializerCode(config, originalClassName, className, externalTypeNames)
+        )
+
         is Model.Object,
         is Model.Enum,
         is Model.Reference,
@@ -560,6 +570,7 @@ internal fun Model.defaultLiteral(
         is Model.ByteArray,
         is Model.Date,
         is Model.DateTime,
+        is Model.Dictionary,
         is Model.DiscriminatedObject,
         is Model.FreeFormJson,
         is Model.Object,

@@ -70,13 +70,12 @@ val objectSpec by testSuite {
         Schema(
             type = Type.Basic.Object,
             additionalProperties = PSchema(ReferenceOr.value(schema)),
-        ) expect Model.Collection(
+        ) expect Model.Dictionary(
             inner = model,
-            Model.Default.Value(emptyList()),
-            null,
-            null,
-            false,
-            null
+            description = null,
+            constraint = null,
+            isNullable = false,
+            title = null
         )
     } + description.product(listOf(true, false, null)) { description, isNullable ->
         Schema(
@@ -113,21 +112,47 @@ val objectSpec by testSuite {
         Model.Primitive.all().map { [schema, model] ->
             val api = api.reference("Top", schema)
             val actualSchema = Schema(type = Type.Basic.Object, additionalProperties = PSchema(schema("Top")))
-            val expectedModel = Model.Collection(
-                Model.Object.value(
+            val expectedModel = Model.Dictionary(
+                inner = Model.Object.value(
                     NamingContext.Reference("Top", SchemaContext.Null),
                     model,
                     isScalarWrapper = true,
                 ),
-                Model.Default.Value(emptyList()),
-                null,
-                null,
-                false,
-                null
+                description = null,
+                constraint = null,
+                isNullable = false,
+                title = null
             )
             ExpectedApi(actualSchema, expectedModel, api, listOf(NamingContext.Reference("Top", SchemaContext.Null)))
         }
     ) { schema -> Value(NamingContext.path("Test"), schema) }
+
+    verifyAll(
+        "Referenced map is a transparent wrapper around a Dictionary",
+        Model.Primitive.all().map { [innerSchema, model] ->
+            val schema = Schema(type = Type.Basic.Object, additionalProperties = PSchema(ReferenceOr.value(innerSchema)))
+            val expected = Model.Object(
+                context = NamingContext.reference("Labels", SchemaContext.Null),
+                description = null,
+                title = null,
+                properties = mapOf(
+                    "values" to Model.Object.Property(
+                        Model.Dictionary(model, description = null, constraint = null, isNullable = false, title = null),
+                        true
+                    )
+                ),
+                additionalProperties = Model.Object.AdditionalProperties.False,
+                isNullable = false,
+                isTransparentWrapper = true,
+            )
+            ExpectedApi(
+                schema,
+                expected,
+                api.reference("Labels", schema),
+                listOf(NamingContext.Reference("Labels", SchemaContext.Null))
+            )
+        }
+    ) { schema -> ResolvedSchema.Reference(NamingContext.Reference("Labels", SchemaContext.Null), schema) }
 
     val objNames = sequenceOf(NamingContext.path("test")).forever()
 
@@ -355,7 +380,7 @@ val objectSpec by testSuite {
                 )
             )
         )
-        val expected = Model.Collection(
+        val expected = Model.Dictionary(
             inner = Model.Object(
                 context = NamingContext.reference("test", SchemaContext.Null),
                 description = null,
@@ -369,7 +394,6 @@ val objectSpec by testSuite {
             ),
             description = null,
             title = null,
-            default = Model.Default.Value(emptyList()),
             constraint = null,
             isNullable = false
         )

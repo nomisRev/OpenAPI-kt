@@ -26,6 +26,7 @@ internal class OperationInlineModelScope(
             is Model.ByteArray,
             is Model.Date,
             is Model.DateTime,
+            is Model.Dictionary,
             is Model.DiscriminatedObject,
             is Model.Enum,
             is Model.FreeFormJson,
@@ -371,6 +372,7 @@ private fun StandaloneInlineType.toTypeSpec(
 
         is Model.ByteArray,
         is Model.Collection,
+        is Model.Dictionary,
         is Model.Date,
         is Model.DateTime,
         is Model.DiscriminatedObject,

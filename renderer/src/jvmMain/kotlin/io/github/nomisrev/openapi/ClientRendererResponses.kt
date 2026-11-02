@@ -565,6 +565,7 @@ private fun buildInlineResponseBodyTypeSpec(
 
         is Model.ByteArray,
         is Model.Collection,
+        is Model.Dictionary,
         is Model.Date,
         is Model.DateTime,
         is Model.FreeFormJson,

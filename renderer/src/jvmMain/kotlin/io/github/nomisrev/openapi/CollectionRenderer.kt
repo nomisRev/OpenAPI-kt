@@ -46,6 +46,7 @@ private fun Model.collectionEntryLiteral(raw: String, config: RenderConfig): Cod
 
         is Model.ByteArray,
         is Model.Collection,
+        is Model.Dictionary,
         is Model.Date,
         is Model.DateTime,
         is Model.DiscriminatedObject,

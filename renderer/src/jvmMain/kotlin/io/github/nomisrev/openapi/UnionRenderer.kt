@@ -185,7 +185,13 @@ private fun Model.Union.collectionNestedTypeSpecs(
     externalTypeNames: Map<ClassName, TypeName>,
 ): List<TypeSpec> =
     cases.asSequence()
-        .mapNotNull { (it.model as? Model.Collection)?.inner?.nestedOrNull() }
+        .mapNotNull { case ->
+            when (val model = case.model) {
+                is Model.Collection -> model.inner.nestedOrNull()
+                is Model.Dictionary -> model.inner.nestedOrNull()
+                else -> null
+            }
+        }
         .filterIsInstance<Model.ContextHolder>()
         .distinctBy { it.context.toClassName(config).canonicalName }
         .mapNotNull { model ->
