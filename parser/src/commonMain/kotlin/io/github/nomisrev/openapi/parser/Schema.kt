@@ -12,6 +12,7 @@ import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.KeepGeneratedSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
@@ -40,8 +41,16 @@ import kotlinx.serialization.json.doubleOrNull
  * and [JSON Schema Validation](https://tools.ietf.org/html/draft-wright-json-schema-validation-00).
  * Unless stated otherwise, the property definitions follow the JSON Schema.
  */
-@Serializable
+@OptIn(ExperimentalSerializationApi::class)
+@KeepGeneratedSerializer
+@Serializable(with = Schema.Serializer::class)
 public data class Schema(
+    /**
+     * JSON Schema boolean schema (OpenAPI 3.1): the literal `true` accepts any instance, `false`
+     * accepts none. When set, the schema was written as a bare boolean and all other keywords are
+     * absent; it encodes back to the bare boolean.
+     */
+    val booleanSchema: Boolean? = null,
     val title: String? = null,
     val description: ReferenceOr<String>? = null,
     /** required is an object-level attribute, not a property attribute. */
@@ -96,11 +105,51 @@ public data class Schema(
         public fun list(schema: Schema): Schema = Schema(type = Type.Basic.Array, items = ReferenceOr.value(schema))
         public fun list(schema: ReferenceOr<Schema>): Schema = Schema(type = Type.Basic.Array, items = schema)
 
+        // Bare booleans are handled up front so object schemas keep the lenient streaming decoder.
         public fun fromJson(json: String): Schema =
-            OpenAPI.Json.decodeFromString(serializer(), json)
+            json.trim().toBooleanStrictOrNull()?.let { Schema(booleanSchema = it) }
+                ?: OpenAPI.Json.decodeFromString(generatedSerializer(), json)
 
         public fun fromYaml(yaml: String): Schema =
             OpenAPI.Yaml.decodeFromString(serializer(), yaml)
+    }
+
+    /**
+     * Decodes a bare JSON/YAML boolean into `Schema(booleanSchema = b)` and encodes it back to the
+     * bare boolean; every other schema goes through the generated serializer.
+     */
+    internal object Serializer : KSerializer<Schema> {
+        @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
+        override val descriptor: SerialDescriptor =
+            buildSerialDescriptor("io.github.nomisrev.openapi.Schema", SerialKind.CONTEXTUAL)
+
+        override fun deserialize(decoder: Decoder): Schema =
+            when (decoder) {
+                is JsonDecoder -> {
+                    val json = decoder.decodeSerializableValue(JsonElement.serializer())
+                    when {
+                        json is JsonPrimitive && !json.isString && json.booleanOrNull != null ->
+                            Schema(booleanSchema = json.boolean)
+
+                        else -> decoder.json.decodeFromJsonElement(generatedSerializer(), json)
+                    }
+                }
+
+                is YamlInput -> {
+                    val node = decoder.decodeSerializableValue(YamlNode.serializer())
+                    val boolean = (node as? YamlScalar)?.content?.toBooleanStrictOrNull()
+                    if (boolean != null) Schema(booleanSchema = boolean)
+                    else decoder.yaml.decodeFromYamlNode(generatedSerializer(), node)
+                }
+
+                else -> error("Unknown decoder ($decoder) cannot deserialise Schema.")
+            }
+
+        override fun serialize(encoder: Encoder, value: Schema) {
+            val booleanSchema = value.booleanSchema
+            if (booleanSchema != null) encoder.encodeBoolean(booleanSchema)
+            else encoder.encodeSerializableValue(generatedSerializer(), value)
+        }
     }
 
     @Serializable
