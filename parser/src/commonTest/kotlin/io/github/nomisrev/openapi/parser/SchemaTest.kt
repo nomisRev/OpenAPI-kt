@@ -354,7 +354,7 @@ class SchemaTest {
         val schema =
             Schema.fromJson("""{
                 |   "discriminator":{
-                |       "propertyName":"petType"
+                |       "propertyName":"petType",
                 |       "mapping":{
                 |           "dog":"#/components/schemas/Dog",
                 |           "cat":"#/components/schemas/Cat"

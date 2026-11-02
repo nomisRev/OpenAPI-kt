@@ -112,10 +112,8 @@ public data class Schema(
         public fun list(schema: Schema): Schema = Schema(type = Type.Basic.Array, items = ReferenceOr.value(schema))
         public fun list(schema: ReferenceOr<Schema>): Schema = Schema(type = Type.Basic.Array, items = schema)
 
-        // Bare booleans are handled up front so object schemas keep the lenient streaming decoder.
         public fun fromJson(json: String): Schema =
-            json.trim().toBooleanStrictOrNull()?.let { Schema(booleanSchema = it) }
-                ?: OpenAPI.Json.decodeFromString(generatedSerializer(), json)
+            OpenAPI.Json.decodeFromString(serializer(), json)
 
         public fun fromYaml(yaml: String): Schema =
             OpenAPI.Yaml.decodeFromString(serializer(), yaml)

@@ -89,4 +89,49 @@ class BooleanSchemaTest {
         assertEquals(JsonPrimitive(false), obj.getValue("items"))
         assertEquals(schema, json(encoded))
     }
+
+    /** Decodes [schema] as it would appear inside a full document, under `components.schemas`. */
+    private fun jsonInDocument(schema: String): Schema {
+        val document =
+            """{"openapi":"3.1.0","info":{"title":"t","version":"1"},"paths":{},"components":{"schemas":{"S":$schema}}}"""
+        return assertIs<ReferenceOr.Value<Schema>>(OpenAPI.fromJson(document).components.schemas["S"]).value
+    }
+
+    private fun assertFromJsonMatchesDocument(schema: String) {
+        val standalone = runCatching { json(schema) }
+        val inDocument = runCatching { jsonInDocument(schema) }
+        assertEquals(
+            inDocument.isSuccess,
+            standalone.isSuccess,
+            "Schema.fromJson and OpenAPI.fromJson disagree on whether <$schema> decodes: " +
+                "standalone=$standalone, inDocument=$inDocument",
+        )
+        assertEquals(inDocument.getOrNull(), standalone.getOrNull())
+    }
+
+    @Test
+    fun `fromJson decodes boolean schemas like a full document`() {
+        assertFromJsonMatchesDocument("true")
+        assertFromJsonMatchesDocument("  false\n")
+        // Unquoted literal accepted by the lenient OpenAPI.Json, decoded as a boolean by Schema.Serializer.
+        assertFromJsonMatchesDocument("TRUE")
+    }
+
+    @Test
+    fun `fromJson decodes object schemas like a full document`() {
+        assertFromJsonMatchesDocument("""{"type":"string"}""")
+        assertFromJsonMatchesDocument("""{"discriminator":{"propertyName":"petType","mapping":{"dog":"#/d"}}}""")
+    }
+
+    @Test
+    fun `fromJson rejects malformed json like a full document`() {
+        // Missing comma between "propertyName" and "mapping".
+        assertFromJsonMatchesDocument("""{"discriminator":{"propertyName":"petType" "mapping":{"dog":"#/d"}}}""")
+    }
+
+    @Test
+    fun `fromJson decodes like fromYaml`() {
+        assertEquals(yaml("  false\n"), json("  false\n"))
+        assertEquals(yaml("""{"type": "string", "items": false}"""), json("""{"type": "string", "items": false}"""))
+    }
 }
