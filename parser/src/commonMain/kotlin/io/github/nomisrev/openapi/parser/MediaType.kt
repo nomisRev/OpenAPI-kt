@@ -38,6 +38,24 @@ public data class MediaType(
    */
   public val encoding: Map<String, Encoding> = emptyMap(),
   /**
+   * OpenAPI 3.2: the schema describing each item within a sequential media type (for example
+   * `application/jsonl`, `application/x-ndjson`, `application/json-seq`, `text/event-stream` or
+   * `multipart/mixed`). Unlike [schema], which describes the complete content, this applies to
+   * every individual item of the sequence.
+   */
+  public val itemSchema: ReferenceOr<Schema>? = null,
+  /**
+   * OpenAPI 3.2: a single Encoding Object applied to each item of a sequential multipart media
+   * type. Mutually exclusive with [encoding].
+   */
+  public val itemEncoding: Encoding? = null,
+  /**
+   * OpenAPI 3.2: positional Encoding Objects applied to the leading parts of a multipart media type,
+   * in order. Parts beyond this list are covered by [itemEncoding], if present. Mutually exclusive
+   * with [encoding].
+   */
+  public val prefixEncoding: List<Encoding> = emptyList(),
+  /**
    * Any additional external documentation for this OpenAPI document. The key is the name of the
    * extension (beginning with x-), and the value is the data. The value can be a [JsonNull],
    * [JsonPrimitive], [JsonArray] or [JsonObject].

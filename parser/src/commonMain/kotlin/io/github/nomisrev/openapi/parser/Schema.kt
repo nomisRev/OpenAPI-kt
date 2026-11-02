@@ -93,6 +93,13 @@ public data class Schema(
     @SerialName("\$id") val id: String? = null,
     @SerialName("\$anchor") val anchor: String? = null,
     @SerialName("\$recursiveAnchor") val recursiveAnchor: Boolean? = null,
+    /**
+     * JSON Schema 2020-12: the media type of the contents of a string instance, e.g.
+     * `application/json` for the `data` field of a Server-Sent Event.
+     */
+    val contentMediaType: String? = null,
+    /** JSON Schema 2020-12: the schema of the decoded string contents, see [contentMediaType]. */
+    val contentSchema: ReferenceOr<Schema>? = null,
 ) {
     public companion object {
         public val string: Schema = Schema(type = Type.Basic.String)
