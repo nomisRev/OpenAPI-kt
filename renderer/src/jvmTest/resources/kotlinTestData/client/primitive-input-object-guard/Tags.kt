@@ -4,7 +4,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.request.`get`
 import io.ktor.client.request.parameter
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
 public class Tags internal constructor(
@@ -21,9 +20,8 @@ public class Tags internal constructor(
       }
     }
 
-    @JvmInline
     @Serializable
-    public value class Filter(
+    public data class Filter(
       public val `value`: String,
     )
   }

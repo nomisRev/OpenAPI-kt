@@ -2,7 +2,6 @@ package io.github.nomisrev.render.test.union.discriminated.tagged.custom.nested.
 
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -42,17 +41,15 @@ public sealed interface InputItem {
   @JsonClassDiscriminator("type")
   @Serializable
   public sealed interface Item : InputItem {
-    @JvmInline
     @SerialName("message")
     @Serializable
-    public value class Message(
+    public data class Message(
       public val content: String,
     ) : Item
 
-    @JvmInline
     @SerialName("function_call")
     @Serializable
-    public value class FunctionCall(
+    public data class FunctionCall(
       @SerialName("call_id")
       public val callId: String,
     ) : Item

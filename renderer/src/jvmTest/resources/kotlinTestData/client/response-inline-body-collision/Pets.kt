@@ -6,7 +6,6 @@ import io.ktor.client.request.`get`
 import io.ktor.http.HttpStatusCode
 import kotlin.Int
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
 public class Pets internal constructor(
@@ -39,9 +38,8 @@ public class Pets internal constructor(
         public val retryAfter: Int,
       ) : Response
 
-      @JvmInline
       @Serializable
-      public value class DefaultBody(
+      public data class DefaultBody(
         public val fallbackMessage: String,
       )
 

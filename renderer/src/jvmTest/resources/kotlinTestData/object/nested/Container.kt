@@ -2,7 +2,6 @@ package io.github.nomisrev.render.test.object_.nested
 
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -12,15 +11,13 @@ public data class Container(
   public val sort: Sort,
   public val children: List<Children>,
 ) {
-  @JvmInline
   @Serializable
-  public value class Child(
+  public data class Child(
     public val name: String,
   )
 
-  @JvmInline
   @Serializable
-  public value class Children(
+  public data class Children(
     public val id: String,
   )
 

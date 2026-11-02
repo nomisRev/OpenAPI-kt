@@ -102,8 +102,9 @@ val collectionSpec by testSuite {
                         true
                     )
                 ),
-                additionalProperties = false,
-                isNullable = false
+                additionalProperties = Model.Object.AdditionalProperties.False,
+                isNullable = false,
+                isTransparentWrapper = true,
             )
 
             ExpectedApi(
@@ -129,8 +130,9 @@ val collectionSpec by testSuite {
                         true
                     )
                 ),
-                additionalProperties = false,
-                isNullable = false
+                additionalProperties = Model.Object.AdditionalProperties.False,
+                isNullable = false,
+                isTransparentWrapper = true,
             )
             ExpectedApi(
                 schema,
@@ -167,8 +169,9 @@ val collectionSpec by testSuite {
                             true
                         )
                     ),
-                    additionalProperties = false,
-                    isNullable = true
+                    additionalProperties = Model.Object.AdditionalProperties.False,
+                    isNullable = true,
+                    isTransparentWrapper = true,
                 ),
                 api = api.reference(
                     "Collection",
@@ -283,8 +286,9 @@ val collectionSpec by testSuite {
                 true
             )
         ),
-        false,
-        false
+        Model.Object.AdditionalProperties.False,
+        isNullable = false,
+        isTransparentWrapper = true,
     )
 
 

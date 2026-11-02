@@ -7,7 +7,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -120,9 +119,8 @@ public class Repos internal constructor(
             }
           }
 
-          @JvmInline
           @Serializable
-          internal value class Body(
+          internal data class Body(
             public val source: Source? = null,
           )
         }

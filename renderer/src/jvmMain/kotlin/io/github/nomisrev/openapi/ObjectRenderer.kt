@@ -91,10 +91,11 @@ fun Model.Object.toTypeSpec(
 
         allProperties.isEmpty() -> TypeSpec.objectBuilder(simpleName).addModifiers(KModifier.DATA)
 
-        // A schema that originally had multiple properties but had all-but-one stripped by the
-        // Read/Write context split must render as a `data class`, not a `@JvmInline value class`.
-        // The `value class` optimisation only applies to schemas that are single-field *by design*.
-        allProperties.size == 1 && additionalProperty == null && !hadPropertiesBeforeStripping -> {
+        // Only synthetic wrappers around non-object schemas (scalars, arrays, maps, free-form JSON)
+        // render as a `value class`: kotlinx.serialization encodes a value class as its bare
+        // underlying value, which is exactly their wire format. A real object schema with a single
+        // property is `{"name": value}` on the wire and falls through to `data class` below.
+        isTransparentWrapper && allProperties.size == 1 && additionalProperty == null -> {
             TypeSpec.classBuilder(simpleName)
                 .addModifiers(KModifier.VALUE)
                 .primaryConstructor(

@@ -18,17 +18,15 @@ public value class ModerationInputs(
   @JsonClassDiscriminator("type")
   @Serializable
   public sealed interface Item {
-    @JvmInline
     @SerialName("image_url")
     @Serializable
-    public value class ImageUrl(
+    public data class ImageUrl(
       public val url: String,
     ) : Item
 
-    @JvmInline
     @SerialName("text")
     @Serializable
-    public value class Text(
+    public data class Text(
       public val text: String,
     ) : Item
   }

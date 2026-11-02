@@ -60,8 +60,9 @@ suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
                         true
                     )
                 ),
-                additionalProperties = false,
-                isNullable
+                additionalProperties = Model.Object.AdditionalProperties.False,
+                isNullable = isNullable,
+                isTransparentWrapper = true,
             )
         }
     }

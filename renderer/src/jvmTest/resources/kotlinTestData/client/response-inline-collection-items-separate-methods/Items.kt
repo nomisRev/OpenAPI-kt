@@ -8,7 +8,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
 public class Items internal constructor(
@@ -27,15 +26,13 @@ public class Items internal constructor(
       `header`(HttpHeaders.Accept, ContentType.Application.Xml)
     }.body()
 
-    @JvmInline
     @Serializable
-    public value class Id(
+    public data class Id(
       public val id: String,
     )
 
-    @JvmInline
     @Serializable
-    public value class Name(
+    public data class Name(
       public val name: String,
     )
   }

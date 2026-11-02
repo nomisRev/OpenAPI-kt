@@ -56,15 +56,13 @@ public class ContentExclusions internal constructor(
           public val `value`: String,
         ) : AdditionalProperties
 
-        @JvmInline
         @Serializable
-        public value class IfAnyMatchStrings(
+        public data class IfAnyMatchStrings(
           public val ifAnyMatch: List<String>,
         ) : AdditionalProperties
 
-        @JvmInline
         @Serializable
-        public value class IfNoneMatchStrings(
+        public data class IfNoneMatchStrings(
           public val ifNoneMatch: List<String>,
         ) : AdditionalProperties
 

@@ -6,7 +6,6 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
 public class Items internal constructor(
@@ -27,15 +26,13 @@ public class Items internal constructor(
     }
 
     public sealed interface Response {
-      @JvmInline
       @Serializable
-      public value class Id(
+      public data class Id(
         public val id: String,
       )
 
-      @JvmInline
       @Serializable
-      public value class Name(
+      public data class Name(
         public val name: String,
       )
 

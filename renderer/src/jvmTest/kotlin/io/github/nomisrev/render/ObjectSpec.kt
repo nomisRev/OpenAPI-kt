@@ -35,6 +35,49 @@ val objectSpec by testSuite {
         "object/valueclass"
     )
 
+    // A single-property object is still a JSON object on the wire: `{"message":"x"}`, never `"x"`.
+    // SingleFieldObjectRoundTripTest encodes/decodes these generated models with kotlinx.serialization.
+    modelTest(
+        """
+        |"SingleRequired": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "message": { "type": "string" }
+        |  },
+        |  "required": ["message"]
+        |}
+        """.trimMargin(),
+        "object/single-field-required"
+    )
+
+    modelTest(
+        """
+        |"SingleOptional": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "message": { "type": "string" }
+        |  }
+        |}
+        """.trimMargin(),
+        "object/single-field-optional"
+    )
+
+    modelTest(
+        """
+        |"SingleRenamed": {
+        |  "type": "object",
+        |  "additionalProperties": false,
+        |  "properties": {
+        |    "error_message": { "type": "string" }
+        |  },
+        |  "required": ["error_message"]
+        |}
+        """.trimMargin(),
+        "object/single-field-renamed"
+    )
+
     modelTest(
         """
         |"Empty": {

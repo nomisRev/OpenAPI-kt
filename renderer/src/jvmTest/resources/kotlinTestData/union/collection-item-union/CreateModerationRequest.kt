@@ -20,9 +20,8 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 
-@JvmInline
 @Serializable
-public value class CreateModerationRequest(
+public data class CreateModerationRequest(
   public val input: Input,
 ) {
   @Serializable(with = Input.Serializer::class)
@@ -49,17 +48,15 @@ public value class CreateModerationRequest(
     @JsonClassDiscriminator("type")
     @Serializable
     public sealed interface ImageUrlOrText {
-      @JvmInline
       @SerialName("image_url")
       @Serializable
-      public value class ImageUrl(
+      public data class ImageUrl(
         public val url: String,
       ) : ImageUrlOrText
 
-      @JvmInline
       @SerialName("text")
       @Serializable
-      public value class Text(
+      public data class Text(
         public val text: String,
       ) : ImageUrlOrText
     }

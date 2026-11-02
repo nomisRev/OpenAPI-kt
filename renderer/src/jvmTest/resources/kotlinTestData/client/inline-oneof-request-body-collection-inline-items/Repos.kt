@@ -9,7 +9,6 @@ import io.ktor.http.contentType
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlin.jvm.JvmName
 import kotlinx.serialization.Serializable
 
@@ -89,21 +88,18 @@ public class Repos internal constructor(
                 setBody(body)
               }.body()
 
-              @JvmInline
               @Serializable
-              public value class LabelsStrings(
+              public data class LabelsStrings(
                 public val labels: List<String>? = null,
               )
 
-              @JvmInline
               @Serializable
-              public value class LabelsNames(
+              public data class LabelsNames(
                 public val labels: List<Name>? = null,
               )
 
-              @JvmInline
               @Serializable
-              public value class Name(
+              public data class Name(
                 public val name: String,
               )
             }

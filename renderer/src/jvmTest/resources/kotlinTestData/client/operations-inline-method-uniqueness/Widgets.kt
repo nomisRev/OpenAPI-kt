@@ -9,7 +9,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlin.Int
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
 public class Widgets internal constructor(
@@ -39,9 +38,8 @@ public class Widgets internal constructor(
       setBody(Body(name = name))
     }.body()
 
-    @JvmInline
     @Serializable
-    internal value class Body(
+    internal data class Body(
       public val name: String,
     )
 

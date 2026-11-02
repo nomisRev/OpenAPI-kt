@@ -8,7 +8,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlin.Long
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -42,9 +41,8 @@ public class User internal constructor(
         public val ref: String? = null,
       )
 
-      @JvmInline
       @Serializable
-      public value class PullRequest(
+      public data class PullRequest(
         @SerialName("pull_request")
         public val pullRequest: PullRequest,
       ) {

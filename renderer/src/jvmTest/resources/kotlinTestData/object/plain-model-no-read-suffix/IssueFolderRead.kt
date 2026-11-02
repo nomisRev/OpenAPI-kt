@@ -2,7 +2,6 @@ package io.github.nomisrev.render.test.object_.plain.model.no.read.suffix
 
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -14,10 +13,9 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface IssueFolderRead {
   public val id: String?
 
-  @JvmInline
   @SerialName("IssueFolder")
   @Serializable
-  public value class Default(
+  public data class Default(
     override val id: String? = null,
   ) : IssueFolderRead
 

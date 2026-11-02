@@ -2,7 +2,6 @@ package io.github.nomisrev.render.test.union.discriminated.inferred.openai.conte
 
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,17 +11,15 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("type")
 @Serializable
 public sealed interface ChatCompletionRequestUserMessageContentPart {
-  @JvmInline
   @SerialName("text")
   @Serializable
-  public value class Text(
+  public data class Text(
     public val text: String,
   ) : ChatCompletionRequestUserMessageContentPart
 
-  @JvmInline
   @SerialName("image_url")
   @Serializable
-  public value class ImageUrl(
+  public data class ImageUrl(
     public val url: String,
   ) : ChatCompletionRequestUserMessageContentPart
 }

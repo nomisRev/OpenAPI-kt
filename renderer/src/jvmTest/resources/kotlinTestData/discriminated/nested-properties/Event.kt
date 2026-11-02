@@ -6,7 +6,6 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -18,10 +17,9 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface Event {
   public val id: Long
 
-  @JvmInline
   @SerialName("user")
   @Serializable
-  public value class User(
+  public data class User(
     override val id: Long,
   ) : Event
 
@@ -43,9 +41,8 @@ public sealed interface Event {
       public val source: String,
       public val metadata: Metadata,
     ) {
-      @JvmInline
       @Serializable
-      public value class Metadata(
+      public data class Metadata(
         public val attempt: Int,
       )
     }

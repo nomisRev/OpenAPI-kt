@@ -3,7 +3,6 @@ package io.github.nomisrev.render.test.union.discriminated.anyof.openai.speech
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,10 +12,9 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 @JsonClassDiscriminator("type")
 @Serializable
 public sealed interface CreateSpeechResponseStreamEvent {
-  @JvmInline
   @SerialName("speech.audio.delta")
   @Serializable
-  public value class SpeechAudioDelta(
+  public data class SpeechAudioDelta(
     public val audio: String,
   ) : CreateSpeechResponseStreamEvent
 

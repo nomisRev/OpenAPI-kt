@@ -5,7 +5,6 @@ import io.ktor.client.call.body
 import io.ktor.client.request.`get`
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
 public class Names internal constructor(
@@ -18,9 +17,8 @@ public class Names internal constructor(
   ) {
     public suspend operator fun invoke(): List<Name> = client.get("/names").body()
 
-    @JvmInline
     @Serializable
-    public value class Name(
+    public data class Name(
       public val name: String,
     )
   }

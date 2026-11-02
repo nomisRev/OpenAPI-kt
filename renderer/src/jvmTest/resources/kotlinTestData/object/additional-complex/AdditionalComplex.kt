@@ -4,7 +4,6 @@ import kotlin.Boolean
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.Map
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.KeepGeneratedSerializer
@@ -24,9 +23,8 @@ public data class AdditionalComplex(
   public val name: String,
   public val additional: Map<String, AdditionalProperties>? = null,
 ) {
-  @JvmInline
   @Serializable
-  public value class AdditionalProperties(
+  public data class AdditionalProperties(
     public val enabled: Boolean,
   )
 

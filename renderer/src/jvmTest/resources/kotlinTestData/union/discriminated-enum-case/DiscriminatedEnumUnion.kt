@@ -2,7 +2,6 @@ package io.github.nomisrev.render.test.union.discriminated.`enum`.case
 
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -31,9 +30,8 @@ public sealed interface DiscriminatedEnumUnion {
     ;
   }
 
-  @JvmInline
   @Serializable
-  public value class Manual(
+  public data class Manual(
     public val kind: String,
   ) : DiscriminatedEnumUnion
 

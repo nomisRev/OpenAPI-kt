@@ -6,7 +6,6 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
 public class Search internal constructor(
@@ -24,9 +23,8 @@ public class Search internal constructor(
       }
     }
 
-    @JvmInline
     @Serializable
-    public value class Filters(
+    public data class Filters(
       public val status: String? = null,
     )
 

@@ -285,6 +285,14 @@ sealed interface Model {
          * at public input boundaries such as path/query/header/cookie parameters.
          */
         val isScalarWrapper: Boolean = false,
+        /**
+         * `true` when this object is a synthetic wrapper the typed layer creates to give a named,
+         * non-object schema (a referenced scalar, array, map or free-form JSON schema) a Kotlin type.
+         * Its single property *is* the wire value, so it serializes as that bare value (a
+         * `value class`). A `type: object` schema from the spec never sets this, even when it has
+         * exactly one property: on the wire it is a JSON object `{"name": value}`.
+         */
+        val isTransparentWrapper: Boolean = false,
     ) : Model, ContextHolder {
         val inline: Set<Model> =
             properties.mapNotNullTo(mutableSetOf()) { [_, prop] -> prop.model.nestedOrNull() } +
@@ -344,6 +352,7 @@ sealed interface Model {
                 additionalProperties = AdditionalProperties.Allowed(false),
                 property.isNullable,
                 isScalarWrapper = isScalarWrapper,
+                isTransparentWrapper = true,
             )
         }
     }

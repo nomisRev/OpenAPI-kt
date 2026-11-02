@@ -20,9 +20,8 @@ import kotlinx.serialization.json.JsonElement
 
 @Serializable(with = Union.Serializer::class)
 public sealed interface Union {
-  @JvmInline
   @Serializable
-  public value class Id(
+  public data class Id(
     public val id: Int,
   ) : Union
 

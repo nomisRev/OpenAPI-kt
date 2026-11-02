@@ -3,7 +3,6 @@ package io.github.nomisrev.render.test.union.discriminated.tagged.custom.partial
 import kotlin.Boolean
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -36,9 +35,8 @@ public sealed interface Pet {
     }
   }
 
-  @JvmInline
   @Serializable
-  public value class Barks(
+  public data class Barks(
     public val barks: Boolean,
   ) : Pet
 

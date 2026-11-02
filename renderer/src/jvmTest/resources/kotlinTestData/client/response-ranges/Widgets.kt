@@ -10,7 +10,6 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import kotlin.Int
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
 public class Widgets internal constructor(
@@ -81,9 +80,8 @@ public class Widgets internal constructor(
       public val `value`: Status5XXBody?,
     ) : JsonResponse,
         XmlResponse {
-      @JvmInline
       @Serializable
-      public value class Status5XXBody(
+      public data class Status5XXBody(
         public val message: String? = null,
       )
     }

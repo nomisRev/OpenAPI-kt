@@ -1,10 +1,8 @@
 package io.github.nomisrev.render.test.object_.shared.`enum`.no.read.write.split
 
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
-@JvmInline
 @Serializable
-public value class RepositoryAdvisoryCreate(
+public data class RepositoryAdvisoryCreate(
   public val ecosystem: SecurityAdvisoryEcosystems,
 )

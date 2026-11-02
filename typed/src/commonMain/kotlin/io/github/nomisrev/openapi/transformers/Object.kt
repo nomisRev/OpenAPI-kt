@@ -133,7 +133,8 @@ internal suspend fun ResolvedSchema.buildTypedAdditionalPropertiesModel(
                     )
                 ),
                 Model.Object.AdditionalProperties.False,
-                isNullable
+                isNullable,
+                isTransparentWrapper = true,
             )
 
         is ResolvedSchema.Value ->

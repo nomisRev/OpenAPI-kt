@@ -3,7 +3,6 @@ package io.github.nomisrev.render.test.discriminated.basic
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,10 +14,9 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface User {
   public val id: Long
 
-  @JvmInline
   @SerialName("anonymous")
   @Serializable
-  public value class Anonymous(
+  public data class Anonymous(
     override val id: Long,
   ) : User
 
