@@ -263,6 +263,9 @@ internal fun Route.invokeReturnType(
 ): TypeName =
     when {
         returns.isSingleUnitResponse() -> com.squareup.kotlinpoet.UNIT
+        contentType != null && returns.isSeparateMethodsDirectResponse() ->
+            separateMethodDirectReturnType(config, methodClassName, inlineModelScope, contentType)
+
         returns.isSingleDirectModelResponse() ->
             inlineModelScope.remapResponseType(requireNotNull(returns.singlePreferredModelOrNull(contentType)), config)
 
@@ -276,6 +279,49 @@ internal fun Route.Returns.isSingleUnitResponse(): Boolean {
     if (needsSealedInterface()) return false
     val model = singlePreferredModelOrNull()
     return model == null || model is Model.Primitive.Unit
+}
+
+/**
+ * One method per success content type, but only a single success status (no ranges, no default):
+ * every method returns its own content type's payload directly, without a sealed response wrapper.
+ */
+internal fun Route.Returns.isSeparateMethodsDirectResponse(): Boolean =
+    !needsSealedInterface() && contentTypeStrategy() is ContentTypeStrategy.SeparateMethods
+
+/**
+ * The inline type a [isSeparateMethodsDirectResponse] method returns for [contentType], named
+ * `<ContentType>Response` like the per-content-type sealed wrapper it replaces, or `null` when that
+ * content type's payload is not an inline model and is returned as-is.
+ */
+internal fun Route.separateMethodDirectInlineTypeSpecOrNull(
+    config: RenderConfig,
+    methodClassName: ClassName,
+    inlineModelScope: OperationInlineModelScope,
+    contentType: ContentType,
+): TypeSpec? {
+    val model = returns.singlePreferredModelOrNull(contentType) ?: return null
+    if (!model.isRouteInlineModel()) return null
+    return model.toInlineOperationTypeSpecOrNull(
+        config = config,
+        ownerClassName = methodClassName,
+        nameOverride = contentTypeResponseTypeName(contentType),
+        externalTypeNames = inlineModelScope.externalTypeNames(),
+    )
+}
+
+private fun Route.separateMethodDirectReturnType(
+    config: RenderConfig,
+    methodClassName: ClassName,
+    inlineModelScope: OperationInlineModelScope,
+    contentType: ContentType,
+): TypeName {
+    val model = requireNotNull(returns.singlePreferredModelOrNull(contentType))
+    val inlineTypeSpec = separateMethodDirectInlineTypeSpecOrNull(config, methodClassName, inlineModelScope, contentType)
+    return when {
+        inlineTypeSpec != null -> methodClassName.nestedClass(contentTypeResponseTypeName(contentType))
+        model is Model.Primitive.Unit -> com.squareup.kotlinpoet.UNIT
+        else -> inlineModelScope.remapResponseType(model, config)
+    }
 }
 
 internal fun Route.Returns.isSingleDirectModelResponse(): Boolean {

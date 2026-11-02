@@ -155,7 +155,16 @@ private fun TypeSpec.Builder.addOperationResponseType(context: OperationTypeSpec
         }
 
         is ContentTypeStrategy.SeparateMethods -> {
-            if (!context.route.returns.isSingleDirectModelResponse()) {
+            if (context.route.returns.isSeparateMethodsDirectResponse()) {
+                strategy.successContentTypes.forEach { contentType ->
+                    context.route.separateMethodDirectInlineTypeSpecOrNull(
+                        config = context.config,
+                        methodClassName = context.methodClassName,
+                        inlineModelScope = context.inlineModelScope,
+                        contentType = contentType,
+                    )?.let(::addType)
+                }
+            } else {
                 context.route.buildMultiContentTypeResponseSpecs(
                     config = context.config,
                     methodClassName = context.methodClassName,

@@ -1585,6 +1585,169 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/pets": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "integer", "format": "int64" },
+                            "name": { "type": "string" }
+                          },
+                          "required": ["id", "name"]
+                        }
+                      },
+                      "text/plain": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-separate-methods-single-status-inline"
+    )
+
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "${'$'}ref": "#/components/schemas/Pet" }
+                      },
+                      "text/plain": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Pet": {
+                "type": "object",
+                "properties": {
+                  "id": { "type": "integer", "format": "int64" },
+                  "name": { "type": "string" }
+                },
+                "required": ["id", "name"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-separate-methods-single-status-ref"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "type": "object",
+                          "properties": {
+                            "id": { "type": "integer", "format": "int64" },
+                            "name": { "type": "string" }
+                          },
+                          "required": ["id", "name"]
+                        }
+                      },
+                      "text/plain": {
+                        "schema": { "type": "string" }
+                      }
+                    }
+                  },
+                  "404": {
+                    "description": "Not Found",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "integer", "format": "int32" }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-separate-methods-single-status-inline-with-error"
+    )
+
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "${'$'}ref": "#/components/schemas/Pet" }
+                      },
+                      "application/xml": {
+                        "schema": {
+                          "type": "object",
+                          "properties": { "id": { "type": "integer", "format": "int64" } },
+                          "required": ["id"]
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Pet": {
+                "type": "object",
+                "properties": { "id": { "type": "integer", "format": "int64" } },
+                "required": ["id"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/response-separate-methods-single-status-ref-and-inline"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/pets/{petId}": {
               "get": {
                 "parameters": [
