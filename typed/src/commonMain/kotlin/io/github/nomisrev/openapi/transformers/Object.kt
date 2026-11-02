@@ -10,6 +10,7 @@ import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
+import io.github.nomisrev.openapi.registry.booleanSchema
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.readOnly
 import io.github.nomisrev.openapi.registry.resolve
@@ -30,7 +31,10 @@ suspend fun ResolvedSchema.toObject(
     // we need to flag this so the renderer can emit a `data class` rather than a `data object`
     // (zero properties) or a `value class` (single property), since those would be semantically
     // wrong for schemas that were designed to have multiple fields.
-    val hadPropertiesBeforeStripping = properties.isNotEmpty() && filteredProperties.size < properties.size
+    // Properties with the boolean schema `false` can never be present, so they are not fields by
+    // design rather than stripped, see [properties].
+    val possibleProperties = properties.count { [_, schema] -> schema.booleanSchema() != false }
+    val hadPropertiesBeforeStripping = possibleProperties > 0 && filteredProperties.size < possibleProperties
 
     return Model.Object(
         context = name,
@@ -58,6 +62,15 @@ suspend fun ResolvedSchema.properties(
     context: SchemaContext
 ): Map<String, Model.Object.Property> = buildMap {
     properties.forEach { [name, refOrSchema] ->
+        // A property with the boolean schema `false` can never be present: it is not a field.
+        // If it is also required, no object can satisfy the schema.
+        if (refOrSchema.booleanSchema() == false) {
+            require(name !in schema.required) {
+                "Property '$name' of schema ${this@properties.name} is required but has the boolean schema `false`, " +
+                        "so no object can satisfy it."
+            }
+            return@forEach
+        }
         refOrSchema.takeIf(context)
             ?.resolve(this@properties.name.nest(NamingContext.ObjectProperty(name)), context) { scope, propSchema ->
                 val model = scope.registry().engine.transform(scope, scope.registry(), propSchema, context, false)
@@ -68,7 +81,7 @@ suspend fun ResolvedSchema.properties(
 
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.additionalProperties(context: SchemaContext) =
-    when (val ap = schema.additionalProperties) {
+    when (val ap = schema.additionalProperties.withoutBooleanSchema()) {
         is Allowed -> Model.Object.AdditionalProperties.Allowed(ap.value)
         null -> Model.Object.AdditionalProperties.Allowed(false)
         is PSchema -> Model.Object.AdditionalProperties.Schema(
@@ -78,10 +91,21 @@ private suspend fun ResolvedSchema.additionalProperties(context: SchemaContext) 
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.objectWithoutProperties(context: SchemaContext): Model? =
-    when (val ap = schema.additionalProperties) {
+    when (val ap = schema.additionalProperties.withoutBooleanSchema()) {
         null -> null
         is PSchema -> buildTypedAdditionalPropertiesModel(context, ap)
         is Allowed -> if (ap.value) null else buildAllowedAdditionalPropertiesModel()
+    }
+
+/**
+ * `additionalProperties` given as a schema that is a boolean schema (e.g. a `$ref` to a component
+ * that is `true` or `false`) means the same as `additionalProperties: true/false`.
+ */
+context(ctx: Registry.Scope)
+private suspend fun AdditionalProperties?.withoutBooleanSchema(): AdditionalProperties? =
+    when (this) {
+        is PSchema -> value.booleanSchema()?.let(::Allowed) ?: this
+        is Allowed, null -> this
     }
 
 context(ctx: Registry.Scope)

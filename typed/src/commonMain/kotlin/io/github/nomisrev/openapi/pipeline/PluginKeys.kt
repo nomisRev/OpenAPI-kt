@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi.pipeline
 
 object PluginKeys {
+    val BooleanSchema = PluginKey("boolean-schema")
     val DiscriminatedSubtype = PluginKey("discriminated-subtype")
     val DiscriminatedObject = PluginKey("discriminated-object")
     val Fallback = PluginKey("fallback")

@@ -45,6 +45,20 @@ val objectSpec by testSuite {
         "object/dataobject"
     )
 
+    // codat: a property whose schema is the boolean schema `false` can never be present,
+    // so it is not a field of the generated model.
+    modelTest(
+        """
+        |"Value": {
+        |  "type": "object",
+        |  "properties": {
+        |    "additionalProperties": false
+        |  }
+        |}
+        """.trimMargin(),
+        "object/forbidden-property"
+    )
+
     modelTest(
         """
         |"Nullability": {

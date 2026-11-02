@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi.pipeline
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.pipeline.plugins.boolean.BooleanSchemaPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.composite.AllOfNullableFlattenPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.composite.AllOfPlugin
 import io.github.nomisrev.openapi.pipeline.plugins.composite.AnyOfNullableFlattenPlugin
@@ -110,6 +111,7 @@ class SchemaTransformerEngineBuilder {
     private val interceptors = mutableListOf<ModelInterceptor>()
 
     fun defaults() {
+        addFirst(Phase.REFERENCE, BooleanSchemaPlugin)
         addFirst(Phase.REFERENCE, DiscriminatedSubtypePlugin)
         addFirst(Phase.REFERENCE, DiscriminatedObjectPlugin)
         addFirst(Phase.COMPOSITE, AllOfNullableFlattenPlugin)

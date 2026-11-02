@@ -105,3 +105,10 @@ suspend fun ResolvedSchema.description(): String? = with(ctx) {
         is ResolvedSchema.Recursive -> this@description.schema.description.get()
     }
 }
+
+/**
+ * The JSON Schema boolean schema (`true` accepts any value, `false` accepts none) this schema is,
+ * following a `$ref`, or `null` when it is a regular schema.
+ */
+context(ctx: Registry.Scope)
+suspend fun ReferenceOr<Schema>.booleanSchema(): Boolean? = peek().booleanSchema
