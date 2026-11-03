@@ -61,7 +61,8 @@ suspend fun ResolvedSchema.isAllOfNullableType(): Boolean = with(ctx) {
 /**
  * Whether this schema's model is nullable: `nullable: true`, a `type` array listing `"null"`, an `anyOf`/`oneOf`/`allOf` with a `null` branch, which the composite nullable-flatten plugins model
  * as a nullable `X?`, or a single-`$ref` alias `anyOf`/`oneOf`/`allOf: [{$ref: X}]` of a nullable X, which models
- * X's (nullable) schema. A `$ref` that is not resolved (a property, a recursive reference) must use this so
+ * X's (nullable) schema, or a discriminated `anyOf`/`oneOf` with a member that permits `null`
+ * ([hasNullableDiscriminatedMember]). A `$ref` that is not resolved (a property, a recursive reference) must use this so
  * the use site is nullable exactly when the referenced model is.
  */
 context(ctx: Registry.Scope)
@@ -74,9 +75,30 @@ private suspend fun Schema.isNullableModel(visited: Set<String>): Boolean {
     if (!compositeTakesPrecedence()) return false
     val composites = listOfNotNull(allOf, anyOf, oneOf)
     if (composites.flatten().any { it.peek().isNull() }) return true
+    if (hasNullableDiscriminatedMember(visited)) return true
     val target = composites.singleOrNull()?.singleOrNull() as? ReferenceOr.Reference ?: return false
     return target.ref !in visited && target.peek().isNullableModel(visited + target.ref)
 }
+
+/**
+ * Whether this is a discriminated `anyOf`/`oneOf` (it has a `discriminator`) with a member that permits `null`, such
+ * as a `$ref` to `oneOf: [{$ref: Cat}, {type: null}]`. `null` carries no discriminator, so it cannot be one of the
+ * union's cases: the union itself is nullable, and the member is modelled as its non-null case.
+ */
+context(ctx: Registry.Scope)
+suspend fun ResolvedSchema.hasNullableDiscriminatedMember(): Boolean =
+    schema.hasNullableDiscriminatedMember(emptySet())
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.hasNullableDiscriminatedMember(visited: Set<String>): Boolean =
+    discriminator != null && listOfNotNull(anyOf, oneOf).flatten().any { member ->
+        when (member) {
+            is ReferenceOr.Reference ->
+                member.ref !in visited && member.peek().isNullableModel(visited + member.ref)
+
+            is ReferenceOr.Value<Schema> -> member.value.isNullableModel(visited)
+        }
+    }
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.Reference.isObjectWithDiscriminator(): Boolean =

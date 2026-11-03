@@ -17,6 +17,7 @@ import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.schemaName
+import io.github.nomisrev.openapi.registry.hasNullableDiscriminatedMember
 import io.github.nomisrev.openapi.registry.isNull
 import io.github.nomisrev.openapi.toPascalCase
 
@@ -43,7 +44,7 @@ suspend fun ResolvedSchema.buildOneOf(
         description(),
         schema.title,
         dispatch,
-        isNullable
+        isNullable || hasNullableDiscriminatedMember()
     )
 }
 
@@ -62,7 +63,7 @@ suspend fun ResolvedSchema.buildAnyOf(
         description(),
         schema.title,
         dispatch,
-        isNullable
+        isNullable || hasNullableDiscriminatedMember()
     )
 }
 
@@ -244,13 +245,46 @@ private suspend fun Schema.normalizedDiscriminatedUnionCase(
     discriminatorField: String,
     caseDiscriminator: String?,
 ): Schema =
-    flattenAllOfForUnionDiscriminator()
+    withoutNull()
+        .flattenAllOfForUnionDiscriminator()
         .stripTagOnlyDiscriminatorProperty(discriminatorField, caseDiscriminator)
         .hoistSingleRemainingObjectProperty()
 
 context(ctx: Registry.Scope)
 private suspend fun Schema.normalizedTaggedCustomUnionCase(): Schema =
-    flattenAllOfForUnionDiscriminator()
+    withoutNull().flattenAllOfForUnionDiscriminator()
+
+/**
+ * The non-null part of a discriminated union member: `null` carries no discriminator, so a member that permits it
+ * (`nullable: true`, `type: [T, null]`, or a `null` branch) is the case of its non-null schema, and the union is
+ * nullable instead ([io.github.nomisrev.openapi.registry.hasNullableDiscriminatedMember]). A member that only
+ * wraps a single schema next to its `null`, `oneOf: [{$ref: Cat}, {type: null}]`, is that schema.
+ */
+context(ctx: Registry.Scope)
+private suspend fun Schema.withoutNull(visited: Set<String> = emptySet()): Schema {
+    val type = type
+    val nonNullType = if (type is Type.Array) type.types.filter { it != Type.Basic.Null } else null
+    val nonNullBranches = listOf(allOf, anyOf, oneOf).map { branches -> branches?.filterNot { it.peek().isNull() } }
+    val [nonNullAllOf, nonNullAnyOf, nonNullOneOf] = nonNullBranches
+    val permitsNull = nullable == true ||
+            (type is Type.Array && nonNullType?.size != type.types.size) ||
+            nonNullBranches != listOf(allOf, anyOf, oneOf)
+    if (!permitsNull) return this
+
+    val stripped = copy(
+        nullable = null,
+        type = nonNullType?.let { it.singleOrNull() ?: Type.Array(it) } ?: type,
+        allOf = nonNullAllOf,
+        anyOf = nonNullAnyOf,
+        oneOf = nonNullOneOf,
+    )
+    val single = nonNullBranches.filterNotNull().singleOrNull()?.singleOrNull()
+    val ref = (single as? ReferenceOr.Reference)?.ref
+    val onlyWrapsSingle = single != null && ref !in visited &&
+            (stripped.type == null || stripped.type == Type.Basic.Object) &&
+            stripped.copy(allOf = null, anyOf = null, oneOf = null).isEmpty()
+    return if (onlyWrapsSingle) single.peek().withoutNull(visited + listOfNotNull(ref)) else stripped
+}
 
 context(ctx: Registry.Scope)
 private suspend fun Schema.flattenAllOfForUnionDiscriminator(): Schema =
