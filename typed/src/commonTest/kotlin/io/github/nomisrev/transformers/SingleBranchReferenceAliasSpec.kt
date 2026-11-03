@@ -53,9 +53,7 @@ val singleBranchReferenceAliasSpec by testSuite {
 
     targets.forEach { [kind, target] ->
         singleBranches.forEach { [label, alias] ->
-            // `allOf: [{$ref: X}]` to a primitive or collection models the bare value instead of an `Alias` wrapper while
-            // properties still reference `Alias` (a separate bug), so only the nullable variant is compared for those.
-            if (kind == "object" || kind == "enum") test("Component $label to $kind models like allOf: [\$ref X]") {
+            test("Component $label to $kind models like allOf: [\$ref X]") {
                 assertEq(aliasModel(Schema(allOf = listOf(ReferenceOr.schema("X"))), target), aliasModel(alias, target))
             }
 
@@ -101,6 +99,55 @@ val singleBranchReferenceAliasSpec by testSuite {
             assertTrue(
                 inline is Model.Object && inline.context == NamingContext.reference("X", SchemaContext.Null),
                 "inline single-branch \$ref should be X: $inline"
+            )
+        }
+    }
+
+    val allOfAlias = Schema(allOf = listOf(ReferenceOr.schema("X")))
+    val scalarTargets = targets.filter { [kind, _] -> kind == "primitive" || kind == "collection" }
+
+    scalarTargets.forEach { [kind, target] ->
+        test("Component allOf: [\$ref X] to a $kind is a value wrapper named Alias, not X's bare $kind") {
+            val model = aliasModel(allOfAlias, target)
+            assertTrue(
+                model is Model.Object && model.isTransparentWrapper && model.context == aliasName && !model.isNullable,
+                "should be the non-null Alias value wrapper: $model"
+            )
+        }
+
+        test("Array items and map values referencing a component allOf: [\$ref X] to a $kind are the Alias wrapper") {
+            val openAPI = openAPI(allOfAlias, target)
+            val items =
+                (modelOf(Schema(type = Type.Basic.Array, items = ReferenceOr.schema("Alias")), openAPI) as Model.Collection).inner
+            val values = (modelOf(
+                Schema(type = Type.Basic.Object, additionalProperties = AdditionalProperties.PSchema(ReferenceOr.schema("Alias"))),
+                openAPI
+            ) as Model.Dictionary).inner
+            listOf(items, values).forEach { inner ->
+                assertTrue(
+                    inner is Model.Object && inner.isTransparentWrapper && !inner.isNullable && inner.context == aliasName,
+                    "should be the Alias wrapper, not X's bare $kind: $inner"
+                )
+            }
+        }
+
+        test("A property referencing a component allOf: [\$ref X], nullable: true to a $kind is a nullable Alias") {
+            val openAPI = openAPI(allOfAlias.copy(nullable = true), target)
+            val property = (modelOf(
+                Schema(type = Type.Basic.Object, properties = mapOf("alias" to ReferenceOr.schema("Alias")), required = listOf("alias")),
+                openAPI
+            ) as Model.Object).properties.getValue("alias").model
+            assertTrue(
+                property is Model.Reference && property.isNullable && property.context == aliasName,
+                "should be a nullable reference to Alias: $property"
+            )
+        }
+
+        test("Inline allOf: [\$ref X] (not a component) to a $kind is X's bare $kind") {
+            val inline = modelOf(allOfAlias, openAPI(allOfAlias, target))
+            assertTrue(
+                inline is Model.Primitive.String || inline is Model.Collection,
+                "inline allOf: [\$ref X] should be X's bare $kind: $inline"
             )
         }
     }

@@ -58,10 +58,10 @@ internal suspend fun ResolvedSchema.flattenedSingleNullableBranch(
 
 /**
  * Models the only (non-null) branch of a composite schema.
- * A named component whose only branch is a `$ref`, `anyOf`/`oneOf: [{$ref: X}]` or
- * `anyOf`/`oneOf`/`allOf: [{$ref: X}, {type: null}]`, is its own type named after the component, like the
- * `allOf: [{$ref: X}]` alias: model X's schema under the component's name. Resolving the `$ref` instead yields X's own
- * model, so X is generated twice and the component, which `$ref`s to it still name, never is.
+ * A named component whose only branch is a `$ref`, `anyOf`/`oneOf`/`allOf: [{$ref: X}]` or
+ * `anyOf`/`oneOf`/`allOf: [{$ref: X}, {type: null}]`, is its own type named after the component: model X's schema
+ * under the component's name. Resolving the `$ref` instead yields X's own model, so X is generated twice and the
+ * component, which `$ref`s to it still name, never is.
  * An inline (unnamed) single branch is X itself.
  */
 context(ctx: Registry.Scope)

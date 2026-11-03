@@ -11,6 +11,7 @@ import io.github.nomisrev.openapi.mergeMinimumBound
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.pipeline.plugins.composite.singleBranch
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
@@ -29,12 +30,21 @@ suspend fun ResolvedSchema.allOf(context: SchemaContext, allOf: List<ReferenceOr
         resolveAllOf(allOf, context)
     }
 
+/**
+ * A named component `allOf: [{$ref: X}]` is an alias of X with its own name, like `anyOf`/`oneOf: [{$ref: X}]`:
+ * X's schema modelled under the component's name, see [singleBranch]. Merging X's schema as an inline value instead
+ * models a primitive or collection X as its bare value, so the component, which `$ref`s to it still name, is never
+ * generated while array items, map values and bodies silently use the bare value.
+ */
 context(scope: Registry.Scope)
 private suspend fun ResolvedSchema.resolveAllOf(
     allOf: List<ReferenceOr<Schema>>,
     context: SchemaContext
-): Model = with(scope.registry()) {
-    ReferenceOr.value(allOf.map { it.peek() }.reduce { acc, or -> acc.merge(or) }).toModel(name, context)
+): Model = when (val single = allOf.singleOrNull()) {
+    is ReferenceOr.Reference if this is ResolvedSchema.Reference -> singleBranch(single, context)
+    else -> with(scope.registry()) {
+        ReferenceOr.value(allOf.map { it.peek() }.reduce { acc, or -> acc.merge(or) }).toModel(name, context)
+    }
 }
 
 context(scope: Registry.Scope)
