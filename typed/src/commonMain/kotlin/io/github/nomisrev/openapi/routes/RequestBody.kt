@@ -197,18 +197,12 @@ private fun ReferenceOr<RequestBody>.resolve(): RequestBody = when (this) {
     }
 }
 
+/**
+ * The schema of a request body, following local aliases (`Alias: {$ref: X}`) and failing on cyclic ones,
+ * like every other `$ref` the [Registry] resolves.
+ */
 context(ctx: Registry)
-private fun ReferenceOr<Schema>.resolveSchema(): Schema = when (this) {
-    is ReferenceOr.Value -> value
-    is ReferenceOr.Reference -> {
-        val referenceName = ref.drop("#/components/schemas/".length)
-        when (val schemas = ctx.openAPI.components.schemas[referenceName]) {
-            is ReferenceOr.Reference -> TODO("Remote schemas not supported yet.")
-            is ReferenceOr.Value<Schema> -> schemas.value
-            null -> error("Schema $referenceName could not be found in ${ctx.openAPI.components.schemas}.")
-        }
-    }
-}
+private suspend fun ReferenceOr<Schema>.resolveSchema(): Schema = with(ctx.scope()) { peek() }
 
 context(scope: Registry)
 private suspend fun Model.isSafeFormUrlEncodedField(

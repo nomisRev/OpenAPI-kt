@@ -151,4 +151,20 @@ val singleBranchReferenceAliasSpec by testSuite {
             )
         }
     }
+
+    // A bare `$ref` component, `Alias: {$ref: X}`, is the same alias as `allOf: [{$ref: X}]`.
+    fun bareAliasOpenAPI(target: Schema): OpenAPI = api.reference("X", target).let { openAPI ->
+        openAPI.copy(components = openAPI.components.copy(
+            schemas = openAPI.components.schemas + ("Alias" to ReferenceOr.schema("X"))
+        ))
+    }
+
+    targets.forEach { [kind, target] ->
+        test("Component bare \$ref X to $kind models like allOf: [\$ref X]") {
+            val bare = registry(bareAliasOpenAPI(target)) {
+                ReferenceOr.schema("Alias").toModel(aliasName, SchemaContext.Write)
+            }
+            assertEq(aliasModel(allOfAlias, target), bare)
+        }
+    }
 }

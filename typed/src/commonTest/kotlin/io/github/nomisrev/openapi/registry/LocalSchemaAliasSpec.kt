@@ -5,7 +5,10 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.SchemaContext
+import io.github.nomisrev.openapi.routes.toRoutes
+import io.ktor.http.ContentType
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertIs
@@ -92,6 +95,78 @@ val LocalSchemaAliasSpec by testSuite {
             )
             assertIs<Model.Collection>(order.properties.getValue("orderLineItems").model)
         }
+    }
+
+    // A bare `$ref` component, `Alias: {$ref: X}`, used as a request body. Request bodies resolved the component
+    // without following the alias and failed with `Remote schemas not supported yet.`, so no client could be
+    // generated for a spec using one, while the same alias as a property or response already resolved through `peek`.
+    suspend fun routes(api: OpenAPI): List<Route> = Registry(api).use { registry -> with(registry) { api.toRoutes() } }
+
+    suspend fun bodyModel(aliases: String, body: String, contentType: String = "application/json"): Route.Body =
+        routes(OpenAPI.fromJson(bareAliasDocument(aliases, body, contentType)))
+            .single().body.let { requireNotNull(it) { "Expected a request body" } }
+            .types.getValue(ContentType.parse(contentType))
+
+    val bareOwner = $$""""BareOwner": { "$ref": "#/components/schemas/Owner" }"""
+
+    test("a JSON request body that is a bare \$ref alias models the target under the alias name") {
+        val body = assertIs<Route.Body.SetBody>(bodyModel(bareOwner, "BareOwner"))
+        val model = assertIs<Model.Object>(body.type)
+        assertEquals(NamingContext.reference("BareOwner", SchemaContext.Null), model.context)
+        assertEquals(setOf("name"), model.properties.keys)
+        assertTrue(!model.isNullable)
+    }
+
+    test("a JSON request body that is a bare \$ref alias of a primitive is the alias value wrapper") {
+        val body = assertIs<Route.Body.SetBody>(
+            bodyModel($$""""BareLabel": { "$ref": "#/components/schemas/Label" }""", "BareLabel")
+        )
+        val model = assertIs<Model.Object>(body.type)
+        assertEquals(NamingContext.reference("BareLabel", SchemaContext.Null), model.context)
+        assertIs<Model.Primitive.String>(model.properties.values.single().model)
+    }
+
+    test("a JSON request body through an alias chain A -> B -> Owner models Owner under A's name") {
+        val aliases = $$""""ChainOwner": { "$ref": "#/components/schemas/BareOwner" }, $$bareOwner"""
+        val body = assertIs<Route.Body.SetBody>(bodyModel(aliases, "ChainOwner"))
+        val model = assertIs<Model.Object>(body.type)
+        assertEquals(NamingContext.reference("ChainOwner", SchemaContext.Null), model.context)
+        assertEquals(setOf("name"), model.properties.keys)
+    }
+
+    test("a JSON request body aliasing a nullable alias is the nullable alias type") {
+        val aliases = $$"""
+            "NullableChainOwner": { "$ref": "#/components/schemas/NullableOwner" },
+            "NullableOwner": { "anyOf": [{ "$ref": "#/components/schemas/Owner" }, { "type": "null" }] }
+        """
+        val body = assertIs<Route.Body.SetBody>(bodyModel(aliases, "NullableChainOwner"))
+        val model = assertIs<Model.Object>(body.type)
+        assertEquals(NamingContext.reference("NullableChainOwner", SchemaContext.Null), model.context)
+        assertTrue(model.isNullable, "should be nullable: $model")
+    }
+
+    test("a multipart request body that is a bare \$ref alias uses the target's properties") {
+        val body = assertIs<Route.Body.Multipart.Value>(bodyModel(bareOwner, "BareOwner", "multipart/form-data"))
+        assertEquals(listOf("name"), body.parameters.map { it.name })
+    }
+
+    test("a form-urlencoded request body that is a bare \$ref alias uses the target's properties") {
+        val body = assertIs<Route.Body.FormUrlEncoded>(
+            bodyModel(bareOwner, "BareOwner", "application/x-www-form-urlencoded")
+        )
+        assertEquals(listOf("name"), body.parameters.map { it.name })
+        assertTrue(body.isSupported)
+    }
+
+    test("a request body through cyclic aliases fails with a diagnostic instead of looping") {
+        val aliases = $$"""
+            "First": { "$ref": "#/components/schemas/Second" },
+            "Second": { "$ref": "#/components/schemas/First" }
+        """
+        val failure = assertFailsWith<IllegalStateException> { bodyModel(aliases, "First") }
+        assertTrue(failure.message.orEmpty().contains("Cyclic schema aliases"), "${failure.message}")
+        assertTrue(failure.message.orEmpty().contains("#/components/schemas/First"), "${failure.message}")
+        assertTrue(failure.message.orEmpty().contains("#/components/schemas/Second"), "${failure.message}")
     }
 }
 
@@ -363,6 +438,36 @@ private val papiNetAliasDocument = $$"""
         ],
         "type": "object"
       }
+    }
+  }
+}
+""".trimIndent()
+
+private fun bareAliasDocument(aliases: String, body: String, contentType: String): String = $$"""
+{
+  "openapi": "3.1.0",
+  "info": { "title": "Api", "version": "0.0.1" },
+  "paths": {
+    "/owners": {
+      "put": {
+        "requestBody": {
+          "required": true,
+          "content": { "$$contentType": { "schema": { "$ref": "#/components/schemas/$$body" } } }
+        },
+        "responses": { "204": { "description": "No Content" } }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Owner": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": { "name": { "type": "string" } },
+        "required": ["name"]
+      },
+      "Label": { "type": "string" },
+      $$aliases
     }
   }
 }
