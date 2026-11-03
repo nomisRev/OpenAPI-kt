@@ -49,4 +49,84 @@ val nullableAliasReferenceSpec by testSuite {
         """.trimMargin(),
         "object/nullable-alias-reference"
     )
+
+    // A named nullable alias of a referenced object, `anyOf`/`oneOf: [{$ref: Owner}, {type: null}]` (in any order),
+    // is its own type like the non-null `allOf: [{$ref: Owner}]` alias: a copy of `Owner` named after the alias, used
+    // as `Alias?` as a property, array item, map value, request body and response body. It must not generate `Owner`
+    // a second time, nor leave references to the alias pointing at a type that was never generated.
+    // `NullableRefAliasRoundTripTest` decodes these goldens.
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/owners": {
+              "put": {
+                "operationId": "putOwner",
+                "requestBody": {
+                  "required": true,
+                  "content": { "application/json": { "schema": { "$ref": "#/components/schemas/AnyOfRefAlias" } } }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/OneOfRefAlias" } } }
+                  }
+                }
+              }
+            },
+            "/holder": {
+              "get": {
+                "operationId": "getHolder",
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RefAliasHolder" } } }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "RefAliasHolder": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "anyOfRefAlias": { "$ref": "#/components/schemas/AnyOfRefAlias" },
+                  "nullFirstAnyOfRefAlias": { "$ref": "#/components/schemas/NullFirstAnyOfRefAlias" },
+                  "oneOfRefAlias": { "$ref": "#/components/schemas/OneOfRefAlias" },
+                  "nullFirstOneOfRefAlias": { "$ref": "#/components/schemas/NullFirstOneOfRefAlias" },
+                  "optionalAnyOfRefAlias": { "$ref": "#/components/schemas/AnyOfRefAlias" },
+                  "anyOfRefAliases": { "type": "array", "items": { "$ref": "#/components/schemas/AnyOfRefAlias" } },
+                  "anyOfRefAliasMap": { "type": "object", "additionalProperties": { "$ref": "#/components/schemas/AnyOfRefAlias" } },
+                  "owner": { "$ref": "#/components/schemas/Owner" }
+                },
+                "required": [
+                  "anyOfRefAlias",
+                  "nullFirstAnyOfRefAlias",
+                  "oneOfRefAlias",
+                  "nullFirstOneOfRefAlias",
+                  "anyOfRefAliases",
+                  "anyOfRefAliasMap",
+                  "owner"
+                ]
+              },
+              "AnyOfRefAlias": { "anyOf": [{ "$ref": "#/components/schemas/Owner" }, { "type": "null" }] },
+              "NullFirstAnyOfRefAlias": { "anyOf": [{ "type": "null" }, { "$ref": "#/components/schemas/Owner" }] },
+              "OneOfRefAlias": { "oneOf": [{ "$ref": "#/components/schemas/Owner" }, { "type": "null" }] },
+              "NullFirstOneOfRefAlias": { "oneOf": [{ "type": "null" }, { "$ref": "#/components/schemas/Owner" }] },
+              "Owner": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": { "name": { "type": "string" } },
+                "required": ["name"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/nullable-ref-alias"
+    )
 }

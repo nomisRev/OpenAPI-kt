@@ -121,4 +121,47 @@ val nullableAliasReferenceSpec by testSuite {
         val inner = (model as Model.Dictionary).inner
         assertTrue(inner.isNullable, "map values should be nullable: $inner")
     }
+
+    // A named nullable alias of a referenced object is its own nullable type, like `allOf: [{$ref: Owner}]` is its
+    // own (non-null) type: a copy of `Owner` named after the alias. Resolving it to `Owner` itself generated `Owner`
+    // twice and left `$ref`s to the alias pointing at a type that was never generated.
+    val refAliases: List<Pair<String, Schema>> = listOf(
+        "anyOf: [\$ref Owner, null]" to Schema(anyOf = listOf(ReferenceOr.schema("Owner"), nullSchema)),
+        "anyOf: [null, \$ref Owner]" to Schema(anyOf = listOf(nullSchema, ReferenceOr.schema("Owner"))),
+        "oneOf: [\$ref Owner, null]" to Schema(oneOf = listOf(ReferenceOr.schema("Owner"), nullSchema)),
+        "oneOf: [null, \$ref Owner]" to Schema(oneOf = listOf(nullSchema, ReferenceOr.schema("Owner"))),
+        "allOf: [\$ref Owner, null]" to Schema(allOf = listOf(ReferenceOr.schema("Owner"), nullSchema)),
+    )
+
+    suspend fun aliasModel(alias: Schema): Model =
+        registry(api.reference("Alias", alias).reference("Owner", owner)) {
+            ReferenceOr.schema("Alias").toModel(NamingContext.reference("Alias", SchemaContext.Null), SchemaContext.Write)
+        }
+
+    refAliases.forEach { [label, alias] ->
+        test("Component $label models as a nullable copy of Owner named Alias, like allOf: [\$ref Owner]") {
+            val nonNullAlias = aliasModel(Schema(allOf = listOf(ReferenceOr.schema("Owner"))))
+            assertTrue(
+                nonNullAlias is Model.Object && nonNullAlias.context == NamingContext.reference("Alias", SchemaContext.Null),
+                "Sanity: allOf: [\$ref Owner] should model as an object named Alias: $nonNullAlias"
+            )
+            assertEq(nonNullAlias.with(isNullable = true), aliasModel(alias))
+        }
+
+        test("Array items and map values referencing a component $label are the nullable Alias object") {
+            val openAPI = api.reference("Alias", alias).reference("Owner", owner)
+            val items = (modelOf(Schema(type = Type.Basic.Array, items = ReferenceOr.schema("Alias")), openAPI) as Model.Collection).inner
+            val values = (modelOf(
+                Schema(type = Type.Basic.Object, additionalProperties = AdditionalProperties.PSchema(ReferenceOr.schema("Alias"))),
+                openAPI
+            ) as Model.Dictionary).inner
+            listOf(items, values).forEach { inner ->
+                assertTrue(
+                    inner is Model.Object && inner.isNullable &&
+                        inner.context == NamingContext.reference("Alias", SchemaContext.Null),
+                    "should be the nullable Alias object, not Owner: $inner"
+                )
+            }
+        }
+    }
 }

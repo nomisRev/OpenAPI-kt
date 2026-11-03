@@ -34,6 +34,17 @@ internal suspend fun ResolvedSchema.flattenedSingleNullableBranch(
     branch: ReferenceOr<Schema>,
     context: SchemaContext,
 ): Model = when (branch) {
+    // A named component `anyOf`/`oneOf`/`allOf: [{$ref: X}, {type: null}]` is its own (nullable) type named after
+    // the component, like the non-null `allOf: [{$ref: X}]` alias: model X's schema under the component's name.
+    // Resolving the `$ref` instead yields X's own model, so X is generated twice and the component never is.
+    is ReferenceOr.Reference if this is ResolvedSchema.Reference -> ctx.registry().engine.transform(
+        ctx,
+        ctx.registry(),
+        ResolvedSchema.Reference(reference, branch.peek()),
+        context,
+        true
+    )
+
     is ReferenceOr.Reference -> branch.toModel(name, context)
     is ReferenceOr.Value<Schema> -> when (this) {
         is ResolvedSchema.Reference -> ctx.registry().engine.transform(
