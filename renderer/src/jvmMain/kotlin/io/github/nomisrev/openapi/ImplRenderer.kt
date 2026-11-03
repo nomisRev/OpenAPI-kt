@@ -919,6 +919,7 @@ private fun Route.addRequestConfigCode(
             bodyExpr = bodyExpr,
             bodyGuard = bodyGuard,
             requestType = requestType,
+            callerContentType = callerContentTypeArgumentOrNull(config, selectedBody),
         )
     }
 }
@@ -982,11 +983,15 @@ private fun addBodyCode(
     bodyExpr: CodeBlock? = null,
     bodyGuard: String? = null,
     requestType: RequestTypeArgument? = null,
+    callerContentType: CallerContentTypeArgument? = null,
 ) {
     when (body) {
         is Route.Body.SetBody -> {
-            val contentType = requestType?.contentTypeCode ?: body.contentType.toContentTypeCodeBlock()
-            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard) { value ->
+            val contentType = requestType?.contentTypeCode
+                ?: callerContentType?.let { CodeBlock.of("%N", it.name) }
+                ?: body.contentType.toContentTypeCodeBlock()
+            val check = callerContentType?.requireCode()
+            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard, check) { value ->
                 if (requestType == null) {
                     addStatement("%M(%L)", SetBodyMember, setBodyArgument(body.type, body.contentType, value))
                 } else {
@@ -997,7 +1002,7 @@ private fun addBodyCode(
 
         is Route.Body.OverloadedBody -> {
             val contentType = requestType?.contentTypeCode ?: body.contentType.toContentTypeCodeBlock()
-            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard) { value ->
+            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard, contentTypeCheck = null) { value ->
                 addStatement("%M(%L)", SetBodyMember, value)
             }
         }
@@ -1034,24 +1039,29 @@ private fun CodeBlock.Builder.addSetLikeBodyCode(
     bodyExpr: CodeBlock?,
     bodyMayBeNull: Boolean,
     bodyGuard: String?,
+    contentTypeCheck: CodeBlock?,
     setBody: CodeBlock.Builder.(value: String) -> Unit,
 ) {
+    fun setContentType() {
+        contentTypeCheck?.let(::add)
+        addStatement("%M(%L)", ContentTypeFunMember, contentType)
+    }
     if (bodyExpr != null) {
         if (bodyMayBeNull && bodyGuard != null) {
             beginControlFlow("if (%L)", bodyGuard)
-            addStatement("%M(%L)", ContentTypeFunMember, contentType)
+            setContentType()
             addStatement("%M(%L)", SetBodyMember, bodyExpr)
             endControlFlow()
         } else {
-            addStatement("%M(%L)", ContentTypeFunMember, contentType)
+            setContentType()
             addStatement("%M(%L)", SetBodyMember, bodyExpr)
         }
     } else if (!bodyMayBeNull) {
-        addStatement("%M(%L)", ContentTypeFunMember, contentType)
+        setContentType()
         setBody("body")
     } else {
         beginControlFlow("body?.let")
-        addStatement("%M(%L)", ContentTypeFunMember, contentType)
+        setContentType()
         setBody("it")
         endControlFlow()
     }

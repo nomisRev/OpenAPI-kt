@@ -195,8 +195,17 @@ internal fun classifyErrorStatus(
     }
 }
 
+/**
+ * How the request bodies of an operation become `invoke` overloads. Bodies with the same Kotlin signature clash and
+ * are chosen through a `RequestType` argument, except bodies whose media type the caller supplies
+ * ([Route.Body.SetBody.callerContentTypeRange]): those with the same signature are one overload, whose `contentType`
+ * argument may be in any of their ranges ([callerContentTypeArgumentOrNull]).
+ */
 internal fun Bodies.detectSignatureClashes(config: RenderConfig): RequestBodyStrategy {
-    val variants = variants()
+    val variants = variants().distinctBy { variant ->
+        if ((variant.body as? Route.Body.SetBody)?.callerContentTypeRange != null) variant.body.toKotlinSignature(config)
+        else variant
+    }
     return when (variants.size) {
         0 -> RequestBodyStrategy.SeparateOverloads(emptyList())
         1 -> RequestBodyStrategy.Single(variants.single())
@@ -216,7 +225,10 @@ internal fun Bodies.detectSignatureClashes(config: RenderConfig): RequestBodyStr
 
 internal fun Route.Body.toKotlinSignature(config: RenderConfig): String =
     when (this) {
-        is Route.Body.SetBody -> type.toTypeName(config).toString()
+        is Route.Body.SetBody ->
+            if (callerContentTypeRange == null) type.toTypeName(config).toString()
+            else "${type.toTypeName(config)}|${ContentType::class.qualifiedName}"
+
         is Route.Body.OverloadedBody -> type.toTypeName(config).toString()
 
         is Route.Body.FormUrlEncoded ->

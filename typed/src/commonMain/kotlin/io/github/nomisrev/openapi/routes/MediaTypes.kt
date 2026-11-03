@@ -31,8 +31,9 @@ fun ContentType.admitsJson(): Boolean = ContentType.Application.Json.match(witho
  * [model]: `application/octet-stream` (else `text/plain`) for bytes, `text/plain` (else a JSON string) for text, and
  * JSON for every other value, with the range's `charset` (text under the range of every `text` subtype with
  * `charset=iso-8859-1` is sent as `text/plain; charset=iso-8859-1`); other parameters of a range are not defined for
- * the media type chosen. The range itself is returned when it admits none of them (an object under any `image`
- * subtype), which the renderer reports instead of sending.
+ * the media type chosen. The range itself is returned when it admits none of them: bytes under it are then sent as
+ * the media type in the range the caller supplies (`Route.Body.SetBody.callerContentTypeRange`), and any other model
+ * (an object under any `image` subtype) is reported by the renderer instead of sent.
  */
 fun ContentType.requestContentType(model: Model): ContentType {
     if (!isWildcard()) return this

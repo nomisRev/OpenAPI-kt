@@ -190,7 +190,18 @@ data class Route(
             val type: Model,
             override val description: String?,
             override val extensions: Map<String, JsonElement>,
-        ) : Body
+        ) : Body {
+            /**
+             * The media type range the caller chooses this body's `Content-Type` in, or `null` when [contentType] is
+             * the media type the body is sent as. Bytes declared under a range that admits neither media type the
+             * client sends bytes as (`application/octet-stream`, `text/plain`; see [requestContentType]), such as
+             * any `image` subtype, are sent verbatim: only the caller knows whether they are a PNG or a JPEG, so the
+             * caller supplies the concrete media type within this range. A model other than bytes under such a range
+             * has no encoding as any of its media types and is not sendable.
+             */
+            val callerContentTypeRange: ContentType?
+                get() = contentType.takeIf { type is Model.ByteArray && it.isWildcard() }
+        }
 
         /**
          * A request body whose inline non-discriminated union has been marked for future overload

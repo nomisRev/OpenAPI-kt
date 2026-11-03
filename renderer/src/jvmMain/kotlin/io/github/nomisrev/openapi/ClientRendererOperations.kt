@@ -385,12 +385,13 @@ private fun Route.toInvokeFunSpec(
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
     val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
 
+    val callerContentType = callerContentTypeArgumentOrNull(config, selectedBody)
     val bodyParams = selectedBody?.toInvokeParameterSpecs(
         config = config,
         methodClassName = methodClassName,
         usesNestedBodyType = usesNestedBodyType,
         required = body?.required == true,
-    )
+    )?.plus(listOfNotNull(callerContentType?.parameterSpec))
     val bodyRequired = body?.required == true
 
     for (input in requiredParams) {

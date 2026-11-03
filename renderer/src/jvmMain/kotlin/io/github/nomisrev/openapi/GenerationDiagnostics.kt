@@ -79,7 +79,8 @@ private fun Route.requestBodyDiagnostics(): List<GenerationDiagnostic> {
         val prefix = "${method.value} $path ($contentType)"
         val reason =
             "declares its request body under a media type range that admits no media type the client produces for " +
-                "this body (JSON, text/plain, application/octet-stream), and a wildcard is not a valid Content-Type"
+                "this body (JSON, text/plain, application/octet-stream; only bytes are sent as a media type the caller " +
+                "supplies), and a wildcard is not a valid Content-Type"
         if (supportedVariants.isEmpty()) {
             GenerationDiagnostic(
                 severity = GenerationDiagnosticSeverity.Error,
@@ -137,11 +138,12 @@ private fun Route.Body.isSupportedForGeneration(): Boolean =
 /**
  * The media type range a body is still declared under after `typed` picked the concrete media type to send it as
  * (`Route.Body.SetBody.contentType`): a range none of whose media types the client produces for the body, such as an
- * object under the range of every `image` subtype.
+ * object under the range of every `image` subtype. Bytes under such a range are sent as the media type the caller
+ * supplies (`Route.Body.SetBody.callerContentTypeRange`).
  */
 private fun Route.Body.unsendableWildcardOrNull(): ContentType? {
     val contentType = when (this) {
-        is Route.Body.SetBody -> contentType
+        is Route.Body.SetBody -> contentType.takeIf { callerContentTypeRange == null }
         is Route.Body.OverloadedBody -> contentType
         is Route.Body.FormUrlEncoded,
         is Route.Body.Multipart -> null

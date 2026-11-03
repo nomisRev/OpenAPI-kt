@@ -19,6 +19,7 @@ import io.ktor.http.ContentType
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
 
 // A wildcard request body media type (`*/*`, `application/*`, `text/*`, ...) is a range the server accepts, never a
 // `Content-Type` a client can send: the body is a plain `setBody` body sent with the concrete media type, within that
@@ -75,6 +76,22 @@ val wildcardMediaTypeSpec by testSuite {
     test("an object body declared under a wildcard no producible media type matches keeps the declared range") {
         val body = assertIs<Route.Body.SetBody>(body("image/*", objectSchema))
         assertEquals(ContentType.Image.Any, body.contentType)
+    }
+
+    for (range in listOf("image/*", "video/*", "audio/*", "font/*")) {
+        test("a binary body declared under $range is sent with a media type in $range the caller supplies") {
+            val body = assertIs<Route.Body.SetBody>(body(range, binarySchema))
+            assertEquals(ContentType.parse(range), body.contentType)
+            assertEquals(ContentType.parse(range), body.callerContentTypeRange)
+        }
+    }
+
+    test("only a binary body under a range with no producible media type takes its media type from the caller") {
+        assertNull(assertIs<Route.Body.SetBody>(body("image/*", objectSchema)).callerContentTypeRange)
+        assertNull(assertIs<Route.Body.SetBody>(body("image/*", Schema.string)).callerContentTypeRange)
+        for (range in listOf("*/*", "application/*", "text/*", "image/png")) {
+            assertNull(assertIs<Route.Body.SetBody>(body(range, binarySchema)).callerContentTypeRange, range)
+        }
     }
 
     test("multipart/form-data and multipart/* bodies are multipart") {

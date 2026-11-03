@@ -3138,6 +3138,102 @@ val clientSpec by testSuite {
         "client/media-type-parameters"
     )
 
+    // A binary body declared under a media type range that admits neither `application/octet-stream` nor
+    // `text/plain` (`image/*`, `video/*`, `font/*`) is sent verbatim with the concrete media type the caller passes:
+    // only the caller knows whether its bytes are a PNG or a JPEG. The supplied media type is checked against the
+    // declared range(s) before the request is sent. Binary bodies under several such ranges share one overload, and
+    // the argument is renamed when an operation parameter already takes the name `contentType`.
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/avatars": {
+              "put": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "image/*": { "schema": { "type": "string", "format": "binary" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/thumbnails": {
+              "post": {
+                "parameters": [ { "name": "size", "in": "query", "schema": { "type": "integer" } } ],
+                "requestBody": {
+                  "content": { "image/*": { "schema": { "type": "string", "format": "binary" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/media": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "image/*": { "schema": { "type": "string", "format": "binary" } },
+                    "video/*": { "schema": { "type": "string", "format": "binary" } }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/documents": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": { "schema": { "$ref": "#/components/schemas/Pet" } },
+                    "image/*": { "schema": { "type": "string", "format": "binary" } }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/scans": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/octet-stream": { "schema": { "type": "string", "format": "binary" } },
+                    "application/pdf": { "schema": { "type": "string", "format": "binary" } },
+                    "image/*": { "schema": { "type": "string", "format": "binary" } }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/fonts": {
+              "post": {
+                "parameters": [
+                  { "name": "contentType", "in": "query", "required": true, "schema": { "type": "string" } }
+                ],
+                "requestBody": {
+                  "required": true,
+                  "content": { "font/*": { "schema": { "type": "string", "format": "binary" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Pet": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "tag": { "type": "string" }
+                },
+                "required": ["name"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/media-type-range-uploads"
+    )
+
     fun wildcardBodyApi(vararg content: Pair<String, String>): String = """
         {
           "openapi": "3.1.0",
@@ -3165,13 +3261,22 @@ val clientSpec by testSuite {
     )
     val objectSchema = """{ "type": "object", "properties": { "name": { "type": "string" } } }"""
 
-    test("a body under a wildcard media type no producible media type matches fails generation") {
-        for (schema in listOf(objectSchema, """{ "type": "string", "format": "binary" }""")) {
-            val error = assertFailsWith<IllegalArgumentException> {
-                OpenAPI.fromJson(wildcardBodyApi("image/*" to schema)).toApiTree().generateClient(wildcardConfig)
-            }
-            assertTrue(error.message.orEmpty().contains("PUT /images (image/*)"), error.message)
+    test("an object body under a wildcard media type no producible media type matches fails generation") {
+        val error = assertFailsWith<IllegalArgumentException> {
+            OpenAPI.fromJson(wildcardBodyApi("image/*" to objectSchema)).toApiTree().generateClient(wildcardConfig)
         }
+        assertTrue(error.message.orEmpty().contains("PUT /images (image/*)"), error.message)
+    }
+
+    test("a binary body under a wildcard media type no producible media type matches takes the caller's media type") {
+        val result = OpenAPI.fromJson(
+            wildcardBodyApi("image/*" to """{ "type": "string", "format": "binary" }""")
+        ).toApiTree().generateClientWithDiagnostics(wildcardConfig)
+
+        assertTrue(result.diagnostics.isEmpty(), result.diagnostics.toString())
+        val code = result.files.joinToString("\n") { it.toString() }
+        assertTrue("invoke(body: ByteArray, contentType: ContentType)" in code, code)
+        assertTrue("contentType(contentType)" in code, code)
     }
 
     test("a multipart boundary declared in the spec is never rendered") {

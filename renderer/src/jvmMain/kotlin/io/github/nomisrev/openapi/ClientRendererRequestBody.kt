@@ -60,6 +60,79 @@ internal data class RequestTypeArgument(
 }
 
 /**
+ * The `contentType` argument of an overload sending bytes declared under a media type range the client cannot pick a
+ * concrete media type from ([Route.Body.SetBody.callerContentTypeRange], such as the range of every `image` subtype):
+ * the caller passes the media type the bytes are, which must be in one of [ranges] and must not be a range itself. It
+ * has no default: when the client knows a media type in the range it can send bytes as, `typed` already sends them as
+ * it.
+ *
+ * The ranges are matched without their parameters, and their parameters are not added to the supplied media type: a
+ * parameter of a range is not defined for every media type in it, and the media type the caller passes, parameters
+ * included, is the one its bytes are.
+ */
+internal data class CallerContentTypeArgument(
+    val name: String,
+    val ranges: List<ContentType>,
+    val nullable: Boolean,
+) {
+    val parameterSpec: ParameterSpec
+        get() = ParameterSpec.builder(name, ContentTypeType.copy(nullable = nullable)).apply {
+            if (nullable) defaultValue(CodeBlock.of("null"))
+        }.build()
+
+    /** `require(…) { … }` rejecting a missing media type, one outside [ranges], or a range, before the request is sent. */
+    fun requireCode(): CodeBlock {
+        val matches = ranges
+            .map { range -> CodeBlock.of("%N.match(%L)", name, range.toContentTypeCodeBlock()) }
+            .joinToCode(separator = "·||·")
+            .let { if (ranges.size > 1) CodeBlock.of("(%L)", it) else it }
+        val conditions = listOfNotNull(
+            CodeBlock.of("%N·!=·null", name).takeIf { nullable },
+            matches,
+            CodeBlock.of("%N.contentSubtype·!=·%S", name, "*"),
+        ).joinToCode(separator = "·&&·")
+        // A string template naming the argument, with `·` so that KotlinPoet never wraps the line inside the literal.
+        val rangesText = ranges.joinToString(" or ")
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+            .replace("$", "\\$")
+        val message = "$name must be a media type in $rangesText, but was \$$name"
+        return CodeBlock.builder()
+            .beginControlFlow("require(%L)", conditions)
+            .addStatement("%L", "\"${message.replace(' ', '·')}\"")
+            .endControlFlow()
+            .build()
+    }
+}
+
+/**
+ * The [CallerContentTypeArgument] of the overload sending [selectedBody], which the body variants of this route with
+ * the same Kotlin signature share (see [detectSignatureClashes]).
+ */
+internal fun Route.callerContentTypeArgumentOrNull(
+    config: RenderConfig,
+    selectedBody: Route.Body?,
+): CallerContentTypeArgument? {
+    if ((selectedBody as? Route.Body.SetBody)?.callerContentTypeRange == null) return null
+    val signature = selectedBody.toKotlinSignature(config)
+    val ranges = body?.types?.values.orEmpty()
+        .filter { other -> other.toKotlinSignature(config) == signature }
+        .mapNotNull { other -> (other as? Route.Body.SetBody)?.callerContentTypeRange?.withoutParameters() }
+        .distinct()
+    return CallerContentTypeArgument(callerContentTypeParameterName(), ranges, nullable = body?.required != true)
+}
+
+/**
+ * `contentType`, unless a parameter of the operation already takes that name (a query parameter `content_type`), as
+ * the body argument and `requestType` already do: then `bodyContentType`, else a numbered `contentType`.
+ */
+private fun Route.callerContentTypeParameterName(): String {
+    val taken = parameters.mapTo(mutableSetOf("body", "requestType")) { it.name.toParamName() }
+    return (sequenceOf("contentType", "bodyContentType") + generateSequence(2) { it + 1 }.map { "contentType$it" })
+        .first { it !in taken }
+}
+
+/**
  * The media type this variant's body is sent as: the declared one, or for a body declared under a media type range,
  * the concrete media type in that range `typed` chose for its model. A multipart `boundary` is not the spec's: Ktor
  * generates the boundary it writes.
