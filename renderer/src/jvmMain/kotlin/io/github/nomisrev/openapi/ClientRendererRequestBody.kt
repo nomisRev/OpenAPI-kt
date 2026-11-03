@@ -61,14 +61,19 @@ internal data class RequestTypeArgument(
 
 /**
  * The media type this variant's body is sent as: the declared one, or for a body declared under a media type range,
- * the concrete media type in that range `typed` chose for its model.
+ * the concrete media type in that range `typed` chose for its model. A multipart `boundary` is not the spec's: Ktor
+ * generates the boundary it writes.
  */
 internal val Route.Bodies.Variant.sentContentType: ContentType
     get() = when (val body = body) {
         is Route.Body.SetBody -> body.contentType
         is Route.Body.OverloadedBody -> body.contentType
-        is Route.Body.FormUrlEncoded,
-        is Route.Body.Multipart -> contentType
+        is Route.Body.FormUrlEncoded -> contentType
+        is Route.Body.Multipart -> ContentType(
+            contentType.contentType,
+            contentType.contentSubtype,
+            contentType.parameters.filterNot { it.name.equals("boundary", ignoreCase = true) },
+        )
     }
 
 private fun requestTypeConstantNames(clashingVariants: List<Route.Bodies.Variant>): List<String> {

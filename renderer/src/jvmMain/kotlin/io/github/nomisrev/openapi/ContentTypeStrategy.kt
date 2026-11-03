@@ -127,9 +127,9 @@ internal fun Route.Returns.contentTypeStrategy(): ContentTypeStrategy {
         .asSequence()
         .filter { it.isSuccessStatusCode }
         .flatMap { status ->
-            status.returnType.types.keys.asSequence().map(ContentType::normalizedForComparison)
+            status.returnType.types.keys.asSequence()
         }
-        .distinct()
+        .distinctBy(ContentType::normalizedForComparison)
         .toList()
     return if (successContentTypes.size <= 1) {
         ContentTypeStrategy.SingleContentType
@@ -154,8 +154,22 @@ internal fun Route.ReturnType.preferredContentType(): ContentType? {
     return types.keys.firstOrNull { it.match(ContentType.Application.Json) } ?: types.keys.first()
 }
 
-internal fun Route.ReturnType.modelForContentType(contentType: ContentType): Model? =
-    types.entries.firstOrNull { it.key.match(contentType) || contentType.match(it.key) }?.value
+internal fun Route.ReturnType.modelForContentType(contentType: ContentType): Model? {
+    val mediaType = contentType.withoutParameters()
+    return types.entries.firstOrNull { [key, _] ->
+        val declared = key.withoutParameters()
+        declared.match(mediaType) || mediaType.match(declared)
+    }?.value
+}
+
+/**
+ * The model this response declares under [contentType]'s media type, parameters such as `charset` aside: one status
+ * may declare `application/json; charset=utf-8` and another `application/json`, both answering the same `Accept`.
+ */
+internal fun Route.ReturnType.modelForMediaType(contentType: ContentType): Model? {
+    val mediaType = contentType.normalizedForComparison()
+    return types.entries.firstOrNull { it.key.normalizedForComparison() == mediaType }?.value
+}
 
 internal fun classifyErrorStatus(
     statusCode: HttpStatusCode,

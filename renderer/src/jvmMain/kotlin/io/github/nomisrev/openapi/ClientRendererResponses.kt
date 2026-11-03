@@ -69,7 +69,7 @@ internal fun Route.buildMultiContentTypeResponseSpecs(
 
         for ([statusCode, returnType] in returns.responses.entries.sortedBy { it.key.value }) {
             if (!statusCode.isSuccessStatusCode()) continue
-            val model = returnType.types[contentType] ?: continue
+            val model = returnType.modelForMediaType(contentType) ?: continue
             val rendering = buildMultiContentTypeResponseCaseTypeSpec(
                 config = config,
                 responseClassName = responseClassName,
@@ -865,12 +865,7 @@ internal fun Route.Returns.singlePreferredModelOrNull(contentType: ContentType?)
     return responseStatuses()
         .asSequence()
         .filter { it.isSuccessStatusCode }
-        .mapNotNull { status ->
-            val returnType = status.returnType
-            returnType.types.entries.firstOrNull { [candidate, _] ->
-                candidate.match(contentType) || contentType.match(candidate)
-            }?.value
-        }
+        .mapNotNull { status -> status.returnType.modelForContentType(contentType) }
         .firstOrNull()
         ?: singlePreferredModelOrNull()
 }

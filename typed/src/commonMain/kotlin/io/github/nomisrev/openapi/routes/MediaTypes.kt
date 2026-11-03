@@ -29,7 +29,9 @@ fun ContentType.admitsJson(): Boolean = ContentType.Application.Json.match(witho
  * A concrete media type is sent as declared. A media type range only says which media types the server accepts and
  * is never a valid `Content-Type`, so the body is sent as the first media type in that range the client produces for
  * [model]: `application/octet-stream` (else `text/plain`) for bytes, `text/plain` (else a JSON string) for text, and
- * JSON for every other value. The range itself is returned when it admits none of them (an object under any `image`
+ * JSON for every other value, with the range's `charset` (text under the range of every `text` subtype with
+ * `charset=iso-8859-1` is sent as `text/plain; charset=iso-8859-1`); other parameters of a range are not defined for
+ * the media type chosen. The range itself is returned when it admits none of them (an object under any `image`
  * subtype), which the renderer reports instead of sending.
  */
 fun ContentType.requestContentType(model: Model): ContentType {
@@ -40,5 +42,8 @@ fun ContentType.requestContentType(model: Model): ContentType {
         else -> listOf(ContentType.Application.Json)
     }
     val range = withoutParameters()
-    return candidates.firstOrNull { it.match(range) } ?: this
+    val chosen = candidates.firstOrNull { it.match(range) } ?: return this
+    val charset = parameter("charset")
+    return if (charset == null || chosen == ContentType.Application.OctetStream) chosen
+    else chosen.withParameter("charset", charset)
 }

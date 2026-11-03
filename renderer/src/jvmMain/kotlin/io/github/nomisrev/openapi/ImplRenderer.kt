@@ -573,7 +573,7 @@ private fun Route.addMultiContentTypeSealedResponseStatusCases(
     val responseClassName = methodClassName.nestedClass(contentTypeResponseTypeName(contentType))
     for ([statusCode, returnTypeEntry] in returns.responses.entries.sortedBy { it.key.value }) {
         if (statusCode.isSuccessStatusCode()) {
-            val model = returnTypeEntry.types[contentType]
+            val model = returnTypeEntry.modelForMediaType(contentType)
             if (model == null) {
                 if (returnTypeEntry.types.isEmpty()) {
                     code.addStatement(
@@ -717,7 +717,7 @@ private fun buildMultiCTRangeErrorDispatch(
         val caseClassName = methodClassName.nestedClass(caseName)
         code.addStatement(
             "ct?.match(%L) == true -> %L",
-            errorContentType.toContentTypeCodeBlock(),
+            errorContentType.toResponseMatchCodeBlock(),
             buildRangeResponseCaseExpression(caseClassName, caseName, status, errorModel, errorContentType),
         )
     }
@@ -755,7 +755,7 @@ private fun buildMultiCTErrorDispatch(
         val caseClassName = methodClassName.nestedClass(caseName)
         code.addStatement(
             "ct?.match(%L) == true -> %L",
-            errorContentType.toContentTypeCodeBlock(),
+            errorContentType.toResponseMatchCodeBlock(),
             buildResponseCaseExpression(caseClassName, errorModel, errorContentType),
         )
     }
@@ -778,9 +778,10 @@ private fun Route.addMultiContentTypeSealedResponseDefaultCase(
 ) {
     if (returns.default != null) {
         val defaultClassName = methodClassName.nestedClass("Default")
-        val defaultModel = returns.default!!.types[contentType] ?: returns.default!!.preferredModel()
+        val defaultModel = returns.default!!.modelForMediaType(contentType) ?: returns.default!!.preferredModel()
         val defaultContentType =
-            if (returns.default!!.types[contentType] != null) contentType else returns.default!!.preferredContentType()
+            if (returns.default!!.modelForMediaType(contentType) != null) contentType
+            else returns.default!!.preferredContentType()
         if (defaultModel != null && defaultModel !is Model.Primitive.Unit) {
             code.addStatement(
                 "else -> %T(response.status, %L)",
@@ -923,13 +924,30 @@ private fun Route.addRequestConfigCode(
 }
 
 /**
- * Emits a KotlinPoet [CodeBlock] for `contentType(…)` matching the given [ContentType].
+ * Emits a KotlinPoet [CodeBlock] for the given [ContentType], parameters included: a declared
+ * `application/json; charset=utf-8` is `ContentType.Application.Json.withParameter("charset", "utf-8")`.
  *
  * Well-known Ktor named constants are preferred so the generated code is idiomatic.
  * Unknown types fall back to the `ContentType(contentType, subtype)` constructor.
  */
-@Suppress("CyclomaticComplexMethod")
 internal fun ContentType.toContentTypeCodeBlock(): CodeBlock {
+    val code = CodeBlock.builder().add(withoutParameters().toMediaTypeCodeBlock())
+    for (parameter in parameters) {
+        code.add(".withParameter(%S, %S)", parameter.name, parameter.value)
+    }
+    return code.build()
+}
+
+/**
+ * Emits the `ct?.match(…)` pattern a response declared as this [ContentType] is recognised by: its media type without
+ * parameters. Ktor's `match` requires every parameter of the pattern on the response's `Content-Type`, and a server
+ * that declares `application/json; charset=utf-8` may still send a bare `application/json` (or another charset, which
+ * Ktor decodes); the variants a dispatch tells apart already differ in their media type.
+ */
+private fun ContentType.toResponseMatchCodeBlock(): CodeBlock = withoutParameters().toContentTypeCodeBlock()
+
+@Suppress("CyclomaticComplexMethod")
+private fun ContentType.toMediaTypeCodeBlock(): CodeBlock {
     // Map to well-known Ktor ContentType named constants where possible.
     val namedSuffix: String? = when (this) {
         ContentType.Application.Json -> "Application.Json"

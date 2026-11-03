@@ -55,6 +55,16 @@ val wildcardMediaTypeSpec by testSuite {
         Case("application/*", binarySchema, "binary", ContentType.Application.OctetStream),
         Case("text/*", binarySchema, "binary", ContentType.Text.Plain),
         Case("*/*", Schema.integer, "integer", ContentType.Application.Json),
+        Case("text/*; charset=iso-8859-1", Schema.string, "string", ContentType.Text.Plain.withParameter("charset", "iso-8859-1")),
+        Case("*/*; charset=utf-8", objectSchema, "object", ContentType.Application.Json.withParameter("charset", "utf-8")),
+        Case("*/*; charset=utf-8", binarySchema, "binary", ContentType.Application.OctetStream),
+        Case("application/json; charset=utf-8", objectSchema, "object", ContentType.Application.Json.withParameter("charset", "utf-8")),
+        Case(
+            "application/vnd.api+json; ext=\"https://jsonapi.org/ext/atomic\"",
+            objectSchema,
+            "object",
+            ContentType("application", "vnd.api+json").withParameter("ext", "https://jsonapi.org/ext/atomic"),
+        ),
     )) {
         test("an ${case.kind} body declared under ${case.declared} is sent as ${case.sent}") {
             val body = assertIs<Route.Body.SetBody>(body(case.declared, case.schema))

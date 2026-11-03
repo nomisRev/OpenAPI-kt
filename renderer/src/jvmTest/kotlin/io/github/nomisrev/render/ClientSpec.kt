@@ -2989,6 +2989,155 @@ val clientSpec by testSuite {
         "client/wildcard-media-types"
     )
 
+    // Media type parameters declared in the spec are part of the media type the server expects and sends: a request
+    // body goes out with its declared `charset` (encoded in it) and other parameters such as JSON:API's `ext`, the
+    // `Accept` header asks for the declared media type with its parameters, and a response is matched on its media
+    // type whether or not the server labels it with the declared `charset`. A `multipart/form-data` `boundary` is
+    // the transport's, never copied from the spec.
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/pets": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "application/json; charset=utf-8": { "schema": { "$ref": "#/components/schemas/Pet" } } }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Created",
+                    "content": { "application/json; charset=utf-8": { "schema": { "$ref": "#/components/schemas/Pet" } } }
+                  }
+                }
+              }
+            },
+            "/notes": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "text/plain; charset=iso-8859-1": { "schema": { "type": "string" } } }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "text/plain; charset=iso-8859-1": { "schema": { "type": "string" } } }
+                  }
+                }
+              }
+            },
+            "/latin-notes": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "text/*; charset=iso-8859-1": { "schema": { "type": "string" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/operations": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/vnd.api+json; ext=\"https://jsonapi.org/ext/atomic\"": {
+                      "schema": { "$ref": "#/components/schemas/Pet" }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/vnd.api+json; ext=\"https://jsonapi.org/ext/atomic\"": {
+                        "schema": { "$ref": "#/components/schemas/Pet" }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/labels": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "text/plain; charset=utf-8": { "schema": { "type": "string" } },
+                    "text/csv; charset=iso-8859-1": { "schema": { "type": "string" } }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/uploads": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "multipart/form-data; boundary=spec-boundary": {
+                      "schema": {
+                        "type": "object",
+                        "properties": { "title": { "type": "string" } },
+                        "required": ["title"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/reports": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json; charset=utf-8": { "schema": { "$ref": "#/components/schemas/Pet" } },
+                      "text/csv; charset=utf-8": { "schema": { "type": "string" } }
+                    }
+                  },
+                  "400": {
+                    "description": "Bad Request",
+                    "content": {
+                      "application/problem+json; charset=utf-8": { "schema": { "$ref": "#/components/schemas/Problem" } },
+                      "text/plain; charset=utf-8": { "schema": { "type": "string" } }
+                    }
+                  },
+                  "4XX": {
+                    "description": "Client Error",
+                    "content": {
+                      "application/json; charset=utf-8": { "schema": { "$ref": "#/components/schemas/Problem" } },
+                      "text/plain; charset=utf-8": { "schema": { "type": "string" } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Pet": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "tag": { "type": "string" }
+                },
+                "required": ["name"]
+              },
+              "Problem": {
+                "type": "object",
+                "properties": { "title": { "type": "string" } },
+                "required": ["title"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/media-type-parameters"
+    )
+
     fun wildcardBodyApi(vararg content: Pair<String, String>): String = """
         {
           "openapi": "3.1.0",
@@ -3023,6 +3172,18 @@ val clientSpec by testSuite {
             }
             assertTrue(error.message.orEmpty().contains("PUT /images (image/*)"), error.message)
         }
+    }
+
+    test("a multipart boundary declared in the spec is never rendered") {
+        val schema = """{ "type": "object", "properties": { "title": { "type": "string" } }, "required": ["title"] }"""
+        val code = OpenAPI.fromJson(
+            wildcardBodyApi(
+                "multipart/form-data; boundary=spec-boundary" to schema,
+                "application/x-www-form-urlencoded" to schema,
+            )
+        ).toApiTree().generateClient(wildcardConfig).joinToString("\n") { it.toString() }
+        assertTrue("RequestType" in code, code)
+        assertTrue("spec-boundary" !in code, code)
     }
 
     test("a body under an unsendable wildcard media type is skipped with a warning when another body exists") {
