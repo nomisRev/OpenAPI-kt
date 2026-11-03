@@ -15,6 +15,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 
 @Serializable(with = TwoNullableMembers.Serializer::class)
 public sealed interface TwoNullableMembers {
@@ -44,11 +46,17 @@ public sealed interface TwoNullableMembers {
     override fun deserialize(decoder: Decoder): TwoNullableMembers {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        CaseNullableString::class to { CaseNullableString(decodeFromJsonElement(NullableString.serializer(), it)) },
-        CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
-      )
+      return when {
+        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+          value,
+          CaseNullableString::class to { CaseNullableString(decodeFromJsonElement(NullableString.serializer(), it)) },
+        )
+        value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+          value,
+          CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
+        )
+        else -> throw UnionSerializationException(value, emptyMap())
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: TwoNullableMembers) {

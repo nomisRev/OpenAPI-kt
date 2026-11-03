@@ -60,7 +60,7 @@ internal fun Model.Union.buildSerializerObject(
     externalTypeNames: Map<ClassName, TypeName>,
 ): TypeSpec {
     val declarationCases = cases.zip(renderedCases)
-    val orderedCases = declarationCases.sortedByDeserializationOrder()
+    val orderedCases = declarationCases.sortedByDeserializationOrder(config)
     val anyOfDispatchAnalysis = (this as? Model.AnyOf)?.uniqueKeyDispatchAnalysis()
 
     return TypeSpec.objectBuilder("Serializer")
@@ -184,14 +184,44 @@ private fun buildAttemptDeserializeCode(
     .add(buildAttemptDeserializeBody(config, originalClassName, className, orderedCases, externalTypeNames))
     .build()
 
+/**
+ * Returns the first of [orderedCases] that decodes `value`, trying only the cases whose JSON kind matches the value's
+ * (see [tokenKindDispatchOrNull]), so the result does not depend on the `Json` configuration or the declaration order.
+ */
 private fun buildAttemptDeserializeBody(
     config: RenderConfig,
     originalClassName: ClassName,
     className: ClassName,
     orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
     externalTypeNames: Map<ClassName, TypeName>,
+): CodeBlock {
+    fun attempt(cases: List<Pair<Model.Union.Case, RenderedUnionCase>>): CodeBlock =
+        buildAttemptDeserializeCall(config, originalClassName, className, cases, externalTypeNames)
+
+    val dispatch = orderedCases.tokenKindDispatchOrNull { [case, _] -> case.model.jsonTokenKinds(config) }
+        ?: return CodeBlock.builder().add("return ").add(attempt(orderedCases)).build()
+
+    return CodeBlock.builder()
+        .add("return when {\n")
+        .indent()
+        .apply {
+            dispatch.branches.forEach { branch -> add("%L -> ", branch.condition()).add(attempt(branch.cases)) }
+            if (dispatch.otherwise.isEmpty()) addStatement("else -> throw UnionSerializationException(value, emptyMap())")
+            else add("else -> ").add(attempt(dispatch.otherwise))
+        }
+        .unindent()
+        .add("}\n")
+        .build()
+}
+
+private fun buildAttemptDeserializeCall(
+    config: RenderConfig,
+    originalClassName: ClassName,
+    className: ClassName,
+    orderedCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
+    externalTypeNames: Map<ClassName, TypeName>,
 ): CodeBlock = CodeBlock.builder()
-    .add("return json.attemptDeserialize(\n")
+    .add("json.attemptDeserialize(\n")
     .indent()
     .addStatement("value,")
     .apply {
@@ -294,7 +324,7 @@ private fun buildTaggedCustomDeserializeCode(
                         config = config,
                         originalClassName = originalClassName,
                         className = className,
-                        orderedCases = untaggedCases.sortedByDeserializationOrder(),
+                        orderedCases = untaggedCases.sortedByDeserializationOrder(config),
                         externalTypeNames = externalTypeNames,
                     )
                 )
@@ -351,7 +381,7 @@ private fun buildTaggedCustomCollisionDispatchCode(
     collisionCases: List<Pair<Model.Union.Case, RenderedUnionCase>>,
     externalTypeNames: Map<ClassName, TypeName>,
 ): CodeBlock {
-    val orderedCollisionCases = collisionCases.sortedByDeserializationOrder()
+    val orderedCollisionCases = collisionCases.sortedByDeserializationOrder(config)
     val anyOfDispatchAnalysis = collisionCases.map { it.first }.uniqueKeyDispatchAnalysisOrNull()
 
     if (anyOfDispatchAnalysis == null) {
@@ -557,13 +587,18 @@ private fun buildSerializeFunction(
         .build()
 }
 
-internal fun List<Pair<Model.Union.Case, RenderedUnionCase>>.sortedByDeserializationOrder():
+internal fun List<Pair<Model.Union.Case, RenderedUnionCase>>.sortedByDeserializationOrder(config: RenderConfig):
     List<Pair<Model.Union.Case, RenderedUnionCase>> = sortedBy { [case, _] ->
-    case.model.deserializationPriority()
+    case.model.deserializationPriority(config)
 }
 
-internal fun Model.deserializationPriority(): Int = when (this) {
-    is Model.Object -> when (val ap = additionalProperties) {
+/**
+ * The order in which [buildAttemptDeserializeBody] tries the cases that accept the same JSON kind: most specific
+ * first, so an integer comes before a number, and an enum, `uuid`, `date` or `date-time` before a plain string.
+ */
+internal fun Model.deserializationPriority(config: RenderConfig): Int = when (this) {
+    // A wrapper around a non-object schema is its bare value on the wire, so it is as specific as that value.
+    is Model.Object -> transparentWrappedValueOrNull()?.deserializationPriority(config) ?: when (val ap = additionalProperties) {
         is Model.Object.AdditionalProperties.Allowed ->
             if (ap.value) OBJECT_WITH_ADDITIONAL_PROPERTIES_ALLOWED_PRIORITY
             else {
@@ -580,7 +615,12 @@ internal fun Model.deserializationPriority(): Int = when (this) {
     is Model.Collection -> COLLECTION_PRIORITY
     // A map accepts any JSON object whose values match, like an object with only typed additional properties.
     is Model.Dictionary -> OBJECT_WITH_TYPED_ADDITIONAL_PROPERTIES_PRIORITY
-    is Model.Reference -> REFERENCE_PRIORITY
+    // A reference to a schema that is not an object or array is as specific as that schema; object and array
+    // references keep their place after inline objects and collections.
+    is Model.Reference -> config.resolve(this)
+        ?.takeIf { target -> target.jsonTokenKinds(config).none { it == JsonTokenKind.Array || it == JsonTokenKind.Object } }
+        ?.deserializationPriority(config)
+        ?: REFERENCE_PRIORITY
     is Model.Primitive.Int -> PRIMITIVE_INT_PRIORITY
     is Model.Primitive.Long -> PRIMITIVE_LONG_PRIORITY
     is Model.Primitive.Float -> PRIMITIVE_FLOAT_PRIORITY

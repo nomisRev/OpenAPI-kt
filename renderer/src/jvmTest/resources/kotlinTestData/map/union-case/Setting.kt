@@ -18,6 +18,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable(with = Setting.Serializer::class)
 public sealed interface Setting {
@@ -47,11 +49,17 @@ public sealed interface Setting {
     override fun deserialize(decoder: Decoder): Setting {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        CaseIntsMap::class to { CaseIntsMap(decodeFromJsonElement(MapSerializer(String.serializer(), Int.serializer()), it)) },
-        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-      )
+      return when {
+        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+          value,
+          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+        )
+        value is JsonObject -> json.attemptDeserialize(
+          value,
+          CaseIntsMap::class to { CaseIntsMap(decodeFromJsonElement(MapSerializer(String.serializer(), Int.serializer()), it)) },
+        )
+        else -> throw UnionSerializationException(value, emptyMap())
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: Setting) {

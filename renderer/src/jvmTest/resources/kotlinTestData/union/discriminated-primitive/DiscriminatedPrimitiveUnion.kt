@@ -15,6 +15,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable(with = DiscriminatedPrimitiveUnion.Serializer::class)
 public sealed interface DiscriminatedPrimitiveUnion {
@@ -44,11 +46,17 @@ public sealed interface DiscriminatedPrimitiveUnion {
     override fun deserialize(decoder: Decoder): DiscriminatedPrimitiveUnion {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        CasePrimitiveEmployee::class to { CasePrimitiveEmployee(decodeFromJsonElement(PrimitiveEmployee.serializer(), it)) },
-        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-      )
+      return when {
+        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+          value,
+          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+        )
+        value is JsonObject -> json.attemptDeserialize(
+          value,
+          CasePrimitiveEmployee::class to { CasePrimitiveEmployee(decodeFromJsonElement(PrimitiveEmployee.serializer(), it)) },
+        )
+        else -> throw UnionSerializationException(value, emptyMap())
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: DiscriminatedPrimitiveUnion) {

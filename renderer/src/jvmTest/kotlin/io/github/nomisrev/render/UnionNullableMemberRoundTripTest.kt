@@ -169,13 +169,15 @@ class UnionNullableMemberRoundTripTest {
 
     @Test
     fun bodiesSendAndReceiveAValue() = runBlocking {
-        // Ktor's default `json()` is lenient, so a string case also accepts `1`: receive a string.
         val value = Fixture("\"received\"")
         assertEquals(
             AnyOfRefMember.CaseNullableString(NullableString("received")),
             value.api.value.put(RefMember.CaseNullableString(NullableString("x")))
         )
         assertEquals("\"x\"", value.sent.single())
+
+        // Ktor's default `json()` is lenient, yet `1` is the integer case, not the string case.
+        assertEquals(AnyOfRefMember.CaseLong(1), Fixture("1").api.value.put(RefMember.CaseLong(1)))
 
         val pet = Fixture("""{"type":"cat","meow":"received"}""")
         assertEquals(InferredPet.Cat("received"), pet.api.pet.put(InferredPet.Dog("sent")))

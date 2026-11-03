@@ -27,6 +27,7 @@ import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 public class ContentExclusions internal constructor(
   private val client: HttpClient,
@@ -83,12 +84,18 @@ public class ContentExclusions internal constructor(
           override fun deserialize(decoder: Decoder): AdditionalProperties {
             val value = decoder.decodeSerializableValue(JsonElement.serializer())
             val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            return json.attemptDeserialize(
-              value,
-              IfAnyMatchStrings::class to { decodeFromJsonElement(IfAnyMatchStrings.serializer(), it) },
-              IfNoneMatchStrings::class to { decodeFromJsonElement(IfNoneMatchStrings.serializer(), it) },
-              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-            )
+            return when {
+              value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                value,
+                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+              )
+              value is JsonObject -> json.attemptDeserialize(
+                value,
+                IfAnyMatchStrings::class to { decodeFromJsonElement(IfAnyMatchStrings.serializer(), it) },
+                IfNoneMatchStrings::class to { decodeFromJsonElement(IfNoneMatchStrings.serializer(), it) },
+              )
+              else -> throw UnionSerializationException(value, emptyMap())
+            }
           }
 
           override fun serialize(encoder: Encoder, `value`: AdditionalProperties) {

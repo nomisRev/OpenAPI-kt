@@ -32,8 +32,10 @@ fun ApiTree.renderWithDiagnostics(config: RenderConfig): GenerationResult {
     )
 }
 
-fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> =
-    models.mapNotNull { model -> model.toFileSpecOrNull(config) } + additionalFiles(config)
+fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> {
+    val modelsConfig = config.withNamedModels(models)
+    return models.mapNotNull { model -> model.toFileSpecOrNull(modelsConfig) } + additionalFiles(modelsConfig)
+}
 
 private fun ApiTree.additionalFiles(config: RenderConfig): List<FileSpec> {
     val needsSerializationUtils = models.any(Model::requiresSerializationUtils)

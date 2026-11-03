@@ -54,10 +54,13 @@ public sealed interface DiscriminatedEnumUnion {
       when(tag) {
         "manual" -> return json.decodeFromJsonElement(Manual.serializer(), value)
         else -> {
-          return json.attemptDeserialize(
-            value,
-            AscOrDesc::class to { decodeFromJsonElement(AscOrDesc.serializer(), it) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              AscOrDesc::class to { decodeFromJsonElement(AscOrDesc.serializer(), it) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
       }
     }
