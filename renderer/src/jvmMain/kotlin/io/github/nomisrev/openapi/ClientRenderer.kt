@@ -10,7 +10,7 @@ fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> =
         .files
 
 fun ApiTree.generateClientWithDiagnostics(config: RenderConfig): GenerationResult {
-    val diagnostics = requestBodyDiagnostics()
+    val diagnostics = generationDiagnostics()
     val filteredTree = withSupportedRequestBodiesOnly()
     return GenerationResult(
         files = filteredTree.generateClientFiles(config.withNamedModels(models)),

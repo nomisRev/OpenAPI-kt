@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.FileSpec
+import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.isWildcard
 import io.ktor.http.ContentType
@@ -38,7 +39,10 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
     )
 }
 
-internal fun ApiTree.requestBodyDiagnostics(): List<GenerationDiagnostic> =
+internal fun ApiTree.generationDiagnostics(): List<GenerationDiagnostic> =
+    requestBodyDiagnostics() + ignoredParameterDiagnostics()
+
+private fun ApiTree.requestBodyDiagnostics(): List<GenerationDiagnostic> =
     operations.values.flatMapTo(mutableListOf(), Route::requestBodyDiagnostics) +
         children.flatMapTo(mutableListOf(), PathNode::requestBodyDiagnostics)
 
@@ -184,4 +188,39 @@ private fun Route.Body.unsendableWildcardOrNull(): ContentType? {
         is Route.Body.Multipart -> null
     }
     return contentType?.takeIf { it.isWildcard() }
+}
+
+private fun ApiTree.ignoredParameterDiagnostics(): List<GenerationDiagnostic> =
+    operations.values.flatMapTo(mutableListOf(), Route::ignoredParameterDiagnostics) +
+        children.flatMapTo(mutableListOf(), PathNode::ignoredParameterDiagnostics)
+
+private fun PathNode.ignoredParameterDiagnostics(): List<GenerationDiagnostic> =
+    operations.values.flatMapTo(mutableListOf(), Route::ignoredParameterDiagnostics) +
+        children.flatMapTo(mutableListOf(), PathNode::ignoredParameterDiagnostics)
+
+/**
+ * OpenAPI says a header parameter named `Accept`, `Content-Type` or `Authorization` SHALL be ignored, so it is not an
+ * argument of the generated operation. Its definition can still carry information the client does not act on (the
+ * media types an upload accepts, that a request must be authorized), so the generator reports each one as a warning
+ * rather than dropping it silently.
+ */
+private fun Route.ignoredParameterDiagnostics(): List<GenerationDiagnostic> =
+    ignoredParameters.map { parameter ->
+        val allowed = parameter.schema?.valueOrNull()?.enum
+            ?.filterNotNull()
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { values -> " (declared values: ${values.joinToString(", ")})" }
+            .orEmpty()
+        GenerationDiagnostic(
+            severity = GenerationDiagnosticSeverity.Warning,
+            message =
+                "Ignoring header parameter ${parameter.name}$allowed of ${method.value} $path: OpenAPI ignores " +
+                    "a header parameter named Accept, Content-Type or Authorization; ${parameter.ignoredBecause()}.",
+        )
+    }
+
+private fun Parameter.ignoredBecause(): String = when {
+    name.equals("Content-Type", ignoreCase = true) -> "the Content-Type header is sent from the request body"
+    name.equals("Accept", ignoreCase = true) -> "the client chooses the Accept header from the declared responses"
+    else -> "authorization is described by security schemes and configured on the HttpClient"
 }

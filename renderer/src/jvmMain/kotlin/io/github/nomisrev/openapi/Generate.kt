@@ -23,7 +23,7 @@ fun ApiTree.render(config: RenderConfig): List<FileSpec> =
         .files
 
 fun ApiTree.renderWithDiagnostics(config: RenderConfig): GenerationResult {
-    val diagnostics = requestBodyDiagnostics()
+    val diagnostics = generationDiagnostics()
     val enrichedConfig = config.copy(contextSpecificNames = models.contextSpecificNames())
     val filteredTree = withSupportedRequestBodiesOnly()
     return GenerationResult(

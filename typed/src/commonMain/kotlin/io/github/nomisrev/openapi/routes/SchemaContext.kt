@@ -18,12 +18,21 @@ enum class SchemaContext {
     Write, Read, Null;
 }
 
+/**
+ * The parameters of an operation, including its path-level ones: [inputs] become arguments of the generated
+ * operation, [ignored] are the header parameters OpenAPI says SHALL be ignored (see [isIgnoredHeader]).
+ */
+data class ResolvedParameters(
+    val inputs: List<Route.Input>,
+    val ignored: List<Parameter>,
+)
+
 context(ctx: Registry)
 suspend fun resolveParameters(
     path: String,
     method: HttpMethod,
     operation: Operation,
-): List<Route.Input> {
+): ResolvedParameters {
     val pathParameters = extractPathParameters(path)
     val parameters = withMissingPathParameters(operation.parameters, pathParameters)
     val segments = parsePathSegments(path, emptyMap())
@@ -35,10 +44,23 @@ suspend fun resolveParameters(
         .reversed()
         .distinctBy { it.name to it.input }
         .reversed()
-    return deduplicated.map { parameter ->
-        parameter.toRouteInput(path, segments, method)
-    }
+    val [ignored, inputs] = deduplicated.partition(Parameter::isIgnoredHeader)
+    return ResolvedParameters(
+        inputs = inputs.map { parameter -> parameter.toRouteInput(path, segments, method) },
+        ignored = ignored,
+    )
 }
+
+/**
+ * OpenAPI Parameter Object: "If `in` is "header" and the `name` field is "Accept", "Content-Type" or "Authorization",
+ * the parameter definition SHALL be ignored." Header names are case-insensitive. The client sends `Content-Type` from
+ * the request body, `Accept` from the declared responses, and `Authorization` is described by security schemes, so
+ * none of them is an argument of the operation.
+ */
+val Parameter.isIgnoredHeader: Boolean
+    get() = input == Parameter.Input.Header && IgnoredHeaderNames.any { it.equals(name, ignoreCase = true) }
+
+private val IgnoredHeaderNames = listOf("Accept", "Content-Type", "Authorization")
 
 context(ctx: Registry)
 private suspend fun Parameter.toRouteInput(

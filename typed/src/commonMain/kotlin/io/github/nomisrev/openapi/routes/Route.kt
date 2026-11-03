@@ -91,7 +91,7 @@ private fun Operation.withParams(pathParams: List<ReferenceOr<io.github.nomisrev
 
 context(ctx: Registry)
 private suspend fun toRoute(path: String, method: HttpMethod, operation: Operation): Route {
-    val params = resolveParameters(path, method, operation)
+    val [params, ignoredParameters] = resolveParameters(path, method, operation)
     val pathParamTypes = params
         .filter { it.input == Parameter.Input.Path }
         .associate { it.name to it.type }
@@ -105,7 +105,8 @@ private suspend fun toRoute(path: String, method: HttpMethod, operation: Operati
         body = resolveBodies(path, segments, method, operation),
         returns = resolveReturns(path, segments, method, operation),
         extensions = operation.extensions,
-        deprecated = operation.deprecated
+        deprecated = operation.deprecated,
+        ignoredParameters = ignoredParameters,
     )
 }
 
@@ -118,6 +119,12 @@ data class Route(
     val returns: Returns,
     val extensions: Map<String, JsonElement>,
     val deprecated: Boolean,
+    /**
+     * The `Accept`, `Content-Type` and `Authorization` header parameters the operation declares, which OpenAPI says
+     * SHALL be ignored (see [isIgnoredHeader]). They are not [parameters]; they are kept so the generator can report
+     * what their definitions declared.
+     */
+    val ignoredParameters: List<Parameter> = emptyList(),
 ) {
     val path: String
         get() = segments.joinToString(separator = "/", prefix = "/") { segment ->
