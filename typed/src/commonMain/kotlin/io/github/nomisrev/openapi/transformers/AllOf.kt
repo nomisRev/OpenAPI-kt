@@ -43,8 +43,27 @@ private suspend fun ResolvedSchema.resolveAllOf(
 ): Model = when (val single = allOf.singleOrNull()) {
     is ReferenceOr.Reference if this is ResolvedSchema.Reference -> singleBranch(single, context)
     else -> with(scope.registry()) {
-        ReferenceOr.value(allOf.map { it.peek() }.reduce { acc, or -> acc.merge(or) }).toModel(name, context)
+        val merged = try {
+            allOf.map { it.peek() }.reduce { acc, or -> acc.merge(or) }
+        } catch (e: IllegalArgumentException) {
+            throw IllegalArgumentException("allOf members of '${name.describe()}' are incompatible: ${e.message}", e)
+        }
+        ReferenceOr.value(merged).toModel(name, context)
     }
+}
+
+/** The schema this naming context names, such as `Pet` or `Pet.owner`, for error messages. */
+private fun NamingContext.describe(): String {
+    val head = when (val head = head) {
+        is NamingContext.Reference -> head.name
+        is NamingContext.Path -> "${head.method.value} /${head.segments.joinToString("/") { it.name }}"
+    }
+    return (listOf(head) + nested.map { nested ->
+        when (nested) {
+            is NamingContext.ObjectProperty -> nested.name
+            else -> nested.toString()
+        }
+    }).joinToString(".")
 }
 
 context(scope: Registry.Scope)

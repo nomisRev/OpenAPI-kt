@@ -16,6 +16,7 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
+import io.github.nomisrev.openapi.pipeline.plugins.implicit.isImplicitCollection
 import io.github.nomisrev.openapi.registry.AllOfNullability
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
@@ -361,11 +362,24 @@ private suspend fun Schema.mergeNonNull(other: Schema): Schema = when {
     isObjectLike() && other.isObjectLike() -> mergeObject(other)
     isNonStructural() -> other.mergeCommon(this).mergeConstraints(this)
     other.isNonStructural() -> mergeCommon(other).mergeConstraints(other)
-    type != null && other.type != null && type != other.type -> throw IllegalArgumentException(
+    // A schema without `type` that shapes values (`items`, `properties`) is merged as the type it is modelled as.
+    type == null || other.type == null ->
+        copy(type = impliedType()).mergeNonNull(other.copy(type = other.impliedType()))
+
+    else -> throw IllegalArgumentException(
         "No value is both of type ${type.describe()} and of type ${other.type.describe()}."
     )
+}
 
-    else -> TODO("Merge not supported: $this, $other")
+/**
+ * The type a schema without `type` is modelled as, like the implicit plugins do: `items` is an array
+ * ([isImplicitCollection]), `properties` or `additionalProperties` an object. Only called for a schema that shapes
+ * values and is no `enum` or composite, which [mergeNonNull] merges before, so it always implies one of them.
+ */
+private fun Schema.impliedType(): Type = type ?: when {
+    isImplicitCollection() -> Type.Basic.Array
+    isObjectLike() -> Type.Basic.Object
+    else -> throw IllegalArgumentException("Cannot infer the type of $this.")
 }
 
 private fun Type?.describe(): String = when (this) {
