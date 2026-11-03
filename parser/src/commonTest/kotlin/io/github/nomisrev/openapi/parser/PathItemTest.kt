@@ -108,8 +108,7 @@ class PathItemTest {
 
     @Test
     fun `path item with ref field deserializes`() {
-        // PathItem.ref maps to JSON key "ref" (no SerialName override)
-        val json = """{"ref": "./pets.yaml#/paths/~1pets"}"""
+        val json = """{"${'$'}ref": "./pets.yaml#/paths/~1pets"}"""
         val pathItem = decode(json)
         assertEquals("./pets.yaml#/paths/~1pets", pathItem.ref)
     }
@@ -118,7 +117,7 @@ class PathItemTest {
     fun `path item with ref alongside operations deserializes`() {
         val json = """
             {
-              "ref": "./common.yaml#/paths/~1base",
+              "${'$'}ref": "./common.yaml#/paths/~1base",
               "get": {"responses": {"200": {"description": "OK"}}}
             }
         """.trimIndent()

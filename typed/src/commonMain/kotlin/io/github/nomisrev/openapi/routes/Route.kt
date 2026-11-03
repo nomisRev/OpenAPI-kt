@@ -11,9 +11,11 @@ import io.github.nomisrev.openapi.wireValue
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
+import io.github.nomisrev.openapi.parser.PathItem
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.StatusCodeOrRange
 import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.resolveComponent
 import io.github.nomisrev.openapi.routes.Route.Bodies
 import io.github.nomisrev.openapi.routes.Route.Body
 import io.github.nomisrev.openapi.routes.Route.Input
@@ -31,7 +33,8 @@ import kotlin.collections.orEmpty
 
 context(ctx: Registry)
 suspend fun OpenAPI.toRoutes(): List<Route> =
-    paths.paths.entries.flatMap { [path, pathItem] ->
+    paths.paths.entries.flatMap { [path, declared] ->
+        val pathItem = declared.resolve(path, components.pathItems)
         val pathParams = pathItem.parameters
         listOfNotNull(
             pathItem.get?.let { toRoute(path, HttpMethod.Get, it.withParams(pathParams)) },
@@ -46,6 +49,42 @@ suspend fun OpenAPI.toRoutes(): List<Route> =
     }.flatMap { route ->
         route.expandFiniteEnumPathSegments()
     }
+
+/**
+ * Resolves a path item that is a `$ref` to a `components.pathItems` entry, following aliases of path item components
+ * (see [resolveComponent]). OpenAPI leaves fields declared on both the referencing and the referenced path item
+ * undefined; the referencing item is the more specific one, so its own fields take precedence: its summary,
+ * description and servers replace the referenced ones, and its path-level parameters are added after the referenced
+ * ones, so one with the same `(name, in)` overrides the referenced one like an operation parameter overrides a
+ * path-level one (see [resolveParameters]). Operations are combined, and an operation declared on both fails rather
+ * than one of them being dropped.
+ */
+private fun PathItem.resolve(path: String, components: Map<String, ReferenceOr<PathItem>>): PathItem {
+    val ref = ref ?: return this
+    val target = ReferenceOr.Reference(ref).resolveComponent("pathItems", components)
+    fun Operation?.merge(method: String, referenced: Operation?): Operation? {
+        require(this == null || referenced == null) {
+            "Path $path declares $method both inline and in its referenced path item $ref."
+        }
+        return this ?: referenced
+    }
+    return PathItem(
+        ref = null,
+        summary = summary ?: target.summary,
+        description = description ?: target.description,
+        get = get.merge("get", target.get),
+        put = put.merge("put", target.put),
+        post = post.merge("post", target.post),
+        delete = delete.merge("delete", target.delete),
+        options = options.merge("options", target.options),
+        head = head.merge("head", target.head),
+        patch = patch.merge("patch", target.patch),
+        trace = trace.merge("trace", target.trace),
+        servers = servers ?: target.servers,
+        parameters = target.parameters + parameters,
+        extensions = target.extensions + extensions,
+    )
+}
 
 private fun Operation.withParams(pathParams: List<ReferenceOr<io.github.nomisrev.openapi.parser.Parameter>>): Operation =
     copy(parameters = pathParams + parameters)

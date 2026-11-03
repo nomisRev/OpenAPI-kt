@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi.parser
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -14,7 +15,7 @@ public data class PathItem(
    * format of a [PathItem]. In case a [PathItem] field appears both in the defined object and the
    * referenced object, the behavior is undefined.
    */
-  public val ref: String? = null,
+  @SerialName("\$ref") public val ref: String? = null,
   /** An optional, string summary, intended to apply to all operations in this path. */
   public val summary: String? = null,
   /**
