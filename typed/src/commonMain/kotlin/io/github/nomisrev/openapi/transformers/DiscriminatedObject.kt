@@ -81,7 +81,7 @@ suspend fun ResolvedSchema.toDiscriminatedObject(context: SchemaContext): Model.
             peeked.properties.orEmpty().filter { [_, refOrSchema] -> refOrSchema.takeIf(context) != null }
 
         val properties =
-            superProps.merge(peekedProperties) { _, a, b -> a.combine(b) }
+            superProps.merge(peekedProperties) { property, a, b -> combineProperty(property, a, b) }
                 .filter { [name, _] -> name != discriminator.propertyName }
 
         ResolvedSchema.Value(
@@ -147,50 +147,149 @@ private tailrec suspend fun ReferenceOr<Schema>.collectSuperTypeProperties(
             context,
             Pair(
                 properties.first + schema?.required.orEmpty(),
-                properties.second.merge(schemaProps) { _, a, b -> a.combine(b) }
+                properties.second.merge(schemaProps) { property, a, b -> combineProperty(property, a, b) }
             )
         )
     } else {
         Pair(
             properties.first + parentSchema.required,
-            parentSchema.properties.orEmpty().merge(properties.second) { _, a, b -> a.combine(b) }
+            parentSchema.properties.orEmpty().merge(properties.second) { property, a, b ->
+                combineProperty(property, a, b)
+            }
         )
     }
 }
+
+/**
+ * Merges the declarations of property [name] by two schemas an `allOf` combines. The property's value must validate
+ * against both declarations, so the result is their intersection, independent of the order the members list them in:
+ *  - two inline schemas are merged ([merge]): nullable only when both permit `null`, constraints intersect, and
+ *    `format`, `enum`, `readOnly` and `writeOnly` of either apply.
+ *  - a `$ref` stays that `$ref` when the inline schema only annotates, constrains or restates its type, and nullability
+ *    agrees. Constraints of the inline schema cannot change the referenced type, so they are not represented.
+ *    Otherwise the inline schema adds structure, or excludes `null` the referenced type permits, and the result is
+ *    the inline merge of the referenced schema with it.
+ *  - of two `$ref`s the one that extends the other (`allOf`, transitively) is kept, it validates against both.
+ *    Two `$ref`s that do not extend one another are an intersection of two named types no generated type expresses,
+ *    and are rejected rather than resolved by picking one.
+ * Declarations no value satisfies, such as `string` and `integer`, are rejected.
+ */
+context(ctx: Registry.Scope)
+private suspend fun combineProperty(
+    name: String,
+    first: ReferenceOr<Schema>,
+    second: ReferenceOr<Schema>,
+): ReferenceOr<Schema> =
+    try {
+        first.combine(second)
+    } catch (e: IllegalArgumentException) {
+        throw IllegalArgumentException("allOf members declare property '$name' incompatibly: ${e.message}", e)
+    }
 
 context(ctx: Registry.Scope)
 private suspend fun ReferenceOr<Schema>.combine(
     other: ReferenceOr<Schema>,
 ): ReferenceOr<Schema> = when (this) {
     is ReferenceOr.Reference -> when (other) {
-        is ReferenceOr.Value<Schema> -> {
-            require(other.value.isEmpty()) { "Cannot merge non-empty schema $other with reference $this" }
-            other
-        }
-
-        is ReferenceOr.Reference -> {
-            // TODO properly implement finding the right type
-            if (peek().allOf.orEmpty().contains(other)) other
-            else if (other.peek().allOf.orEmpty().contains(this)) this
-            else other //throw IllegalStateException("Cannot merge unrelated referenced schemas: $this, $other")
-        }
+        is ReferenceOr.Value<Schema> -> combine(other.value)
+        is ReferenceOr.Reference -> combine(other)
     }
 
     is ReferenceOr.Value<Schema> -> when (other) {
-        is ReferenceOr.Reference -> {
-            require(this.value.isEmpty()) { "Cannot merge non-empty schema $this with reference $other" }
-            other
-        }
+        is ReferenceOr.Reference -> other.combine(value)
+        is ReferenceOr.Value<Schema> -> ReferenceOr.value(value.merge(other.value))
+    }
+}
 
-        is ReferenceOr.Value<Schema> -> {
-            if (this.value.isEmpty()) other
-            else if (other.value.isEmpty()) this
-            else {
-                val result = this.value.merge(other.value)
-                ReferenceOr.value(result)
-            }
+context(ctx: Registry.Scope)
+private suspend fun ReferenceOr.Reference.combine(value: Schema): ReferenceOr<Schema> {
+    val target = peek()
+    val keepsNullability = listOf(this).allOfNullability().permitsNull() ==
+            listOf(this, ReferenceOr.value(value)).allOfNullability().permitsNull()
+    return if (keepsNullability && value.restates(target)) withAccess(value.readOnly, value.writeOnly)
+    else ReferenceOr.value(mergeTarget(target, value))
+}
+
+context(ctx: Registry.Scope)
+private suspend fun ReferenceOr.Reference.combine(other: ReferenceOr.Reference): ReferenceOr<Schema> {
+    if (ref == other.ref) return withAccess(other.readOnly, other.writeOnly)
+    val target = peek()
+    val otherTarget = other.peek()
+    val [specific, general] = when {
+        target == otherTarget || extends(other) -> this to other
+        other.extends(this) -> other to this
+        else -> throw IllegalArgumentException(
+            "${ref.schemaName()} and ${other.ref.schemaName()} do not extend one another, so a value of both is an " +
+                    "intersection of two named types that no generated type represents."
+        )
+    }
+    val keepsNullability = listOf(specific).allOfNullability().permitsNull() ==
+            listOf(specific, general).allOfNullability().permitsNull()
+    return if (keepsNullability) specific.withAccess(general.readOnly, general.writeOnly)
+    else ReferenceOr.value(
+        specific.mergeTarget(specific.peek(), general.peek()).let {
+            it.copy(readOnly = it.readOnly.or(general.readOnly), writeOnly = it.writeOnly.or(general.writeOnly))
+        }
+    )
+}
+
+context(ctx: Registry.Scope)
+private suspend fun ReferenceOr.Reference.mergeTarget(target: Schema, value: Schema): Schema =
+    try {
+        target.merge(value).let { it.copy(readOnly = it.readOnly.or(readOnly), writeOnly = it.writeOnly.or(writeOnly)) }
+    } catch (e: IllegalArgumentException) {
+        throw IllegalArgumentException("${ref.schemaName()} cannot be intersected with $value: ${e.message}", e)
+    }
+
+/** Whether this `$ref` extends [other]: lists it as an `allOf` member, directly or through members it extends. */
+context(ctx: Registry.Scope)
+private suspend fun ReferenceOr.Reference.extends(
+    other: ReferenceOr.Reference,
+    visited: Set<String> = setOf(ref),
+): Boolean = peek().allOf.orEmpty().filterIsInstance<ReferenceOr.Reference>().any { member ->
+    member.ref == other.ref || (member.ref !in visited && member.extends(other, visited + member.ref))
+}
+
+private fun ReferenceOr.Reference.withAccess(readOnly: Boolean?, writeOnly: Boolean?): ReferenceOr.Reference =
+    copy(readOnly = this.readOnly.or(readOnly), writeOnly = this.writeOnly.or(writeOnly))
+
+private fun Boolean?.or(other: Boolean?): Boolean? = if (this == true || other == true) true else this ?: other
+
+private fun AllOfNullability.permitsNull(): Boolean = this == AllOfNullability.Permits
+
+/**
+ * Whether this schema, next to [target], only annotates, constrains or restates [target]'s type: it declares no
+ * structure of its own (properties, items, an enum, composites) and its `type` and `format`, if any, are [target]'s.
+ */
+context(ctx: Registry.Scope)
+private suspend fun Schema.restates(target: Schema): Boolean =
+    properties == null &&
+            additionalProperties == null &&
+            items == null &&
+            enumLikeValues() == null &&
+            allOf.isNullOrEmpty() &&
+            anyOf.isNullOrEmpty() &&
+            oneOf.isNullOrEmpty() &&
+            not == null &&
+            discriminator == null &&
+            (format == null || format == target.format) &&
+            (nonNullType() == null || nonNullType() == target.nonNullType() ||
+                    (nonNullType() == Type.Basic.Object && target.nonNullType() == null &&
+                            target.isObjectLike(emptySet())))
+
+/** Whether this schema describes objects, itself or through an `allOf` member, like `allOf: [{$ref: Pet}, {...}]`. */
+context(ctx: Registry.Scope)
+private suspend fun Schema.isObjectLike(visited: Set<String>): Boolean =
+    isObjectLike() || allOf.orEmpty().any { member ->
+        when (member) {
+            is ReferenceOr.Reference -> member.ref !in visited && member.peek().isObjectLike(visited + member.ref)
+            is ReferenceOr.Value<Schema> -> member.value.isObjectLike(visited)
         }
     }
+
+private fun Schema.nonNullType(): Type? = when (val type = type) {
+    is Type.Array -> type.types.filter { it != Type.Basic.Null }.let { it.singleOrNull() ?: Type.Array(it) }
+    else -> type
 }
 
 private fun ReferenceOr<Schema>.isSubtype(mapping: Map<String, String>): Boolean =
@@ -244,18 +343,35 @@ private suspend fun Schema.mergeNonNull(other: Schema): Schema = when {
             .copy(items = let(items, other.items) { a, b -> a.combine(b) })
 
         Type.Basic.Object -> mergeObject(other)
-        Type.Basic.Number -> mergeCommon(other).numberConstraints(other) // TODO Select biggest format
+        Type.Basic.Number -> mergeCommon(other).numberConstraints(other)
         Type.Basic.Boolean -> mergeCommon(other)
-        Type.Basic.Integer -> mergeCommon(other).numberConstraints(other) // TODO Select biggest format
+        Type.Basic.Integer -> mergeCommon(other).numberConstraints(other)
         Type.Basic.Null -> mergeCommon(other)
         Type.Basic.String -> mergeCommon(other).mergeTextConstraints(other)
         is Type.Array -> mergeCommon(other)
     }
 
+    // Every integer is a number, so only integers satisfy both; the number's format (float, double) does not apply.
+    type == Type.Basic.Integer && other.type == Type.Basic.Number ->
+        mergeNonNull(other.copy(type = type, format = null))
+
+    type == Type.Basic.Number && other.type == Type.Basic.Integer ->
+        copy(type = other.type, format = null).mergeNonNull(other)
+
     isObjectLike() && other.isObjectLike() -> mergeObject(other)
-    isNonStructural() -> other.mergeCommon(this)
-    other.isNonStructural() -> mergeCommon(other)
+    isNonStructural() -> other.mergeCommon(this).mergeConstraints(this)
+    other.isNonStructural() -> mergeCommon(other).mergeConstraints(other)
+    type != null && other.type != null && type != other.type -> throw IllegalArgumentException(
+        "No value is both of type ${type.describe()} and of type ${other.type.describe()}."
+    )
+
     else -> TODO("Merge not supported: $this, $other")
+}
+
+private fun Type?.describe(): String = when (this) {
+    is Type.Basic -> value
+    is Type.Array -> types.joinToString(prefix = "[", postfix = "]") { it.value }
+    null -> "any"
 }
 
 context(ctx: Registry.Scope)
@@ -366,9 +482,36 @@ private fun mergedEnumDefault(
 
 fun Schema.mergeCommon(other: Schema): Schema = copy(
     type = type ?: other.type,
+    format = mergeFormat(format, other.format),
     description = description ?: other.description,
-    default = default ?: other.default
+    default = default ?: other.default,
+    readOnly = readOnly.or(other.readOnly),
+    writeOnly = writeOnly.or(other.writeOnly),
 )
+
+/**
+ * The format of a value that has both formats. The format decides the generated type (`date-time` is an `Instant`,
+ * `int32` an `Int`), so it is kept whichever schema declares it: an `int32` is also an `int64`, a `float` also a
+ * `double`, and other formats that differ, such as `date` and `date-time`, no value has both of.
+ */
+private fun mergeFormat(format: String?, other: String?): String? = when {
+    format == null || format == other -> other
+    other == null -> format
+    setOf(format, other) == setOf("int32", "int64") -> "int32"
+    setOf(format, other) == setOf("float", "double") -> "float"
+    else -> throw IllegalArgumentException("No value has both format '$format' and format '$other'.")
+}
+
+/** Intersects the constraints of [other], a schema that only constrains, with this one's. */
+private fun Schema.mergeConstraints(other: Schema): Schema =
+    numberConstraints(other)
+        .mergeTextConstraints(other)
+        .mergeObjectConstraints(other)
+        .copy(
+            minItems = let(minItems, other.minItems, ::maxOf),
+            maxItems = let(maxItems, other.maxItems, ::minOf),
+            uniqueItems = uniqueItems.or(other.uniqueItems),
+        )
 
 fun Schema.numberConstraints(other: Schema): Schema {
     val minimumBound = mergeMinimumBound(effectiveMinimum(), other.effectiveMinimum())
@@ -409,7 +552,9 @@ fun Schema.mergeCollectionConstraints(other: Schema): Schema =
 
 context(ctx: Registry.Scope)
 suspend fun Schema.mergeObject(other: Schema): Schema {
-    val properties = properties.orEmpty().merge(other.properties.orEmpty()) { _, a, b -> a.combine(b) }
+    val properties = properties.orEmpty().merge(other.properties.orEmpty()) { property, a, b ->
+        combineProperty(property, a, b)
+    }
 
     return mergeCommon(other)
         .mergeObjectConstraints(other)
