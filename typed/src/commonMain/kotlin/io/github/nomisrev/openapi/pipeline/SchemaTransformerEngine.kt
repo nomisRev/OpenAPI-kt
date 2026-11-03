@@ -72,7 +72,11 @@ class SchemaTransformerEngine internal constructor(
         }
 
         // Plugin chain
+        // A schema that permits `null` itself, `nullable: true` next to `allOf`/`anyOf`/`oneOf` included, models as a
+        // nullable model wherever it is resolved. Plugins that model it through another schema (a single `$ref` branch,
+        // merged `allOf` members) only see that schema's own nullability.
         val model = runChain(ctx, registry, schema, context, plugins)
+            .let { if (schema.isNullable && !it.isNullable) it.with(isNullable = true) else it }
 
         // Interceptor chain
         return interceptors.fold(model) { acc, interceptor ->

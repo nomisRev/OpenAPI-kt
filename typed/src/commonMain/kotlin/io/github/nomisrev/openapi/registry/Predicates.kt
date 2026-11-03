@@ -59,15 +59,24 @@ suspend fun ResolvedSchema.isAllOfNullableType(): Boolean = with(ctx) {
 }
 
 /**
- * Whether this schema's model is nullable: `nullable: true` (which `type: [X, "null"]` is normalised to),
- * or an `anyOf`/`oneOf`/`allOf` with a `null` branch, which the composite nullable-flatten plugins model
- * as a nullable `X?`. A `$ref` that is not resolved (a property, a recursive reference) must use this so
+ * Whether this schema's model is nullable: `nullable: true`, a `type` array listing `"null"`, an `anyOf`/`oneOf`/`allOf` with a `null` branch, which the composite nullable-flatten plugins model
+ * as a nullable `X?`, or a single-`$ref` alias `anyOf`/`oneOf`/`allOf: [{$ref: X}]` of a nullable X, which models
+ * X's (nullable) schema. A `$ref` that is not resolved (a property, a recursive reference) must use this so
  * the use site is nullable exactly when the referenced model is.
  */
 context(ctx: Registry.Scope)
-suspend fun ResolvedSchema.isNullableModel(): Boolean =
-    isNullable || (schema.compositeTakesPrecedence() &&
-            (isAnyOfNullableType() || isOneOfNullableType() || isAllOfNullableType()))
+suspend fun ResolvedSchema.isNullableModel(): Boolean = schema.isNullableModel(emptySet())
+
+context(ctx: Registry.Scope)
+private suspend fun Schema.isNullableModel(visited: Set<String>): Boolean {
+    val type = type
+    if (nullable == true || (type is Schema.Type.Array && Schema.Type.Basic.Null in type.types)) return true
+    if (!compositeTakesPrecedence()) return false
+    val composites = listOfNotNull(allOf, anyOf, oneOf)
+    if (composites.flatten().any { it.peek().isNull() }) return true
+    val target = composites.singleOrNull()?.singleOrNull() as? ReferenceOr.Reference ?: return false
+    return target.ref !in visited && target.peek().isNullableModel(visited + target.ref)
+}
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.Reference.isObjectWithDiscriminator(): Boolean =

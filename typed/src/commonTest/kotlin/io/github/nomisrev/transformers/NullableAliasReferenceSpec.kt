@@ -60,8 +60,7 @@ val nullableAliasReferenceSpec by testSuite {
     )
 
     nullableAliases.forEach { [label, alias] ->
-        // `allOf` ignores the `nullable` next to it in the component's own model; only its `$ref`s are checked here.
-        if (alias.allOf == null) test("Component $label is nullable on its own") {
+        test("Component $label is nullable on its own") {
             val definition = registry(api.reference("Alias", alias).reference("Owner", owner)) {
                 ReferenceOr.schema("Alias").toModel(NamingContext.reference("Alias", SchemaContext.Null), SchemaContext.Write)
             }
