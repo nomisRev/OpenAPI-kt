@@ -144,14 +144,14 @@ internal fun Route.Returns.responseStatuses(): List<ResponseStatus> =
 
 internal fun Route.ReturnType.preferredModel(): Model? {
     if (types.isEmpty()) return null
-    val jsonEntry = types.entries.firstOrNull { ContentType.Application.Json.match(it.key) }
+    val jsonEntry = types.entries.firstOrNull { it.key.match(ContentType.Application.Json) }
     return jsonEntry?.value ?: types.values.first()
 }
 
 /** The media type of [preferredModel]. */
 internal fun Route.ReturnType.preferredContentType(): ContentType? {
     if (types.isEmpty()) return null
-    return types.keys.firstOrNull { ContentType.Application.Json.match(it) } ?: types.keys.first()
+    return types.keys.firstOrNull { it.match(ContentType.Application.Json) } ?: types.keys.first()
 }
 
 internal fun Route.ReturnType.modelForContentType(contentType: ContentType): Model? =

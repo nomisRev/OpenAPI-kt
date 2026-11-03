@@ -59,6 +59,18 @@ internal data class RequestTypeArgument(
     val constantNames: List<String> get() = requestTypeConstantNames(variants)
 }
 
+/**
+ * The media type this variant's body is sent as: the declared one, or for a body declared under a media type range,
+ * the concrete media type in that range `typed` chose for its model.
+ */
+internal val Route.Bodies.Variant.sentContentType: ContentType
+    get() = when (val body = body) {
+        is Route.Body.SetBody -> body.contentType
+        is Route.Body.OverloadedBody -> body.contentType
+        is Route.Body.FormUrlEncoded,
+        is Route.Body.Multipart -> contentType
+    }
+
 private fun requestTypeConstantNames(clashingVariants: List<Route.Bodies.Variant>): List<String> {
     val emittedNames = mutableSetOf<String>()
     return clashingVariants.map { variant ->
@@ -83,7 +95,7 @@ internal fun buildRequestTypeEnum(clashingVariants: List<Route.Bodies.Variant>):
         builder.addEnumConstant(
             enumName,
             TypeSpec.anonymousClassBuilder()
-                .addSuperclassConstructorParameter("%L", variant.contentType.toContentTypeCodeBlock())
+                .addSuperclassConstructorParameter("%L", variant.sentContentType.toContentTypeCodeBlock())
                 .build()
         )
     }

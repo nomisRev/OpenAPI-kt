@@ -34,14 +34,15 @@ private suspend fun RequestBody.toBodies(
 ): Route.Bodies? {
     val typedBodies = content.entries.mapNotNull { [contentType, mediaType] ->
         val schema = mediaType.schema ?: return@mapNotNull null
+        val declared = ContentType.parse(contentType)
         val body = when {
-            ContentType.MultiPart.FormData.match(contentType) -> formDataToBody(segments, method, mediaType, schema)
-            ContentType.Application.FormUrlEncoded.match(contentType) ->
+            declared.isMultipartFormData() -> formDataToBody(segments, method, mediaType, schema)
+            declared.match(ContentType.Application.FormUrlEncoded) ->
                 formUrlEncoded(segments, method, mediaType, schema)
 
-            else -> toBody(segments, method, contentType, mediaType, schema)
+            else -> toBody(segments, method, declared, mediaType, schema)
         }
-        Pair(ContentType.parse(contentType), body)
+        Pair(declared, body)
     }.toMap()
 
     if (typedBodies.isEmpty()) {
@@ -59,6 +60,15 @@ private suspend fun RequestBody.toBodies(
         extensions = extensions
     )
 }
+
+/**
+ * `multipart/form-data`, or the range of every `multipart` subtype, of which only `form-data` has a form rendering.
+ * The declared media type is matched as a pattern: the any-media-type and any-`application`-subtype ranges also admit
+ * `multipart/form-data`, but a body declared under them is sent as the media type its model has
+ * ([requestContentType]), not as a form.
+ */
+private fun ContentType.isMultipartFormData(): Boolean =
+    match(ContentType.MultiPart.FormData) || (contentType == "multipart" && contentSubtype == "*")
 
 context(scope: Registry)
 private suspend fun RequestBody.formDataToBody(
@@ -114,13 +124,14 @@ context(scope: Registry)
 private suspend fun RequestBody.toBody(
     segments: List<PathSegment>,
     method: HttpMethod,
-    contentType: String,
+    declared: ContentType,
     mediaType: MediaType,
     schema: ReferenceOr<Schema>,
 ): Route.Body {
     val name = NamingContext.path(segments, method).nest(NamingContext.RouteBody)
     val resolvedSchema = schema.resolveSchema()
     val model = schema.toRequestBodyModel(name, SchemaContext.Write)
+    val contentType = declared.requestContentType(model)
     val hasExplicitDiscriminator = resolvedSchema.discriminator != null
     val isStructuralPathUnion =
         model is Model.Union &&
@@ -128,14 +139,14 @@ private suspend fun RequestBody.toBody(
                 model.dispatch is UnionDispatch.Structural
     return if (isStructuralPathUnion && !hasExplicitDiscriminator) {
         Route.Body.OverloadedBody(
-            contentType = ContentType.parse(contentType),
+            contentType = contentType,
             type = model,
             description = description,
             extensions = mediaType.extensions,
         )
     } else {
         Route.Body.SetBody(
-            contentType = ContentType.parse(contentType),
+            contentType = contentType,
             type = model,
             description = description,
             extensions = mediaType.extensions,

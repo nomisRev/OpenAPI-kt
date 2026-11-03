@@ -11,6 +11,8 @@ import io.github.nomisrev.openapi.contentTypeToIdentifier
 import io.github.nomisrev.openapi.contentTypeToMethodName
 import io.github.nomisrev.openapi.contentTypeStrategy
 import io.github.nomisrev.openapi.detectSignatureClashes
+import io.github.nomisrev.openapi.preferredContentType
+import io.github.nomisrev.openapi.preferredModel
 import io.github.nomisrev.openapi.toKotlinSignature
 import io.github.nomisrev.openapi.toTypeName
 import io.github.nomisrev.openapi.routes.Route
@@ -27,6 +29,21 @@ class ContentTypeStrategyTest {
         apiPackage = "io.github.nomisrev.render.test.api",
         targets = setOf(KmpTarget.JVM),
     )
+
+    @Test
+    fun `a media type range is not preferred as the JSON response`() {
+        val text = Model.Primitive.String(default = null, description = null, constraint = null, isNullable = false, title = null)
+        val bytes = Model.ByteArray(description = null, isNullable = false, title = null)
+        for (range in listOf(ContentType.Any, ContentType.Application.Any)) {
+            val returnType = Route.ReturnType(
+                types = linkedMapOf(range to bytes, ContentType.parse("application/json; charset=utf-8") to text),
+                extensions = emptyMap(),
+            )
+
+            assertEquals(ContentType.parse("application/json; charset=utf-8"), returnType.preferredContentType())
+            assertEquals(text, returnType.preferredModel())
+        }
+    }
 
     @Test
     fun `content type naming examples`() {

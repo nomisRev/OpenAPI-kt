@@ -2846,6 +2846,198 @@ val clientSpec by testSuite {
         "client/non-json-request-bodies"
     )
 
+    // A wildcard media type is a range the server accepts, not a `Content-Type`: a request body declared under
+    // `*/*`, `application/*` or `text/*` is sent with the concrete media type in that range the client produces for
+    // its model (JSON for structured values, `text/plain` for text, `application/octet-stream` for bytes), and a
+    // string response declared under a range that includes JSON is decoded by the `Content-Type` the server sends.
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/objects": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "*/*": { "schema": { "$ref": "#/components/schemas/Pet" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/texts": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "*/*": { "schema": { "type": "string" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/files": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "*/*": { "schema": { "type": "string", "format": "binary" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/app-objects": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "application/*": { "schema": { "$ref": "#/components/schemas/Pet" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/app-texts": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "application/*": { "schema": { "type": "string" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/app-files": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "application/*": { "schema": { "type": "string", "format": "binary" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/notes": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "text/*": { "schema": { "type": "string" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/labels": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "*/*": { "schema": { "type": "string" } },
+                    "application/*": { "schema": { "type": "string" } }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/greeting": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "*/*": { "schema": { "type": "string" } } }
+                  }
+                }
+              }
+            },
+            "/app-greeting": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "application/*": { "schema": { "type": "string" } } }
+                  }
+                }
+              }
+            },
+            "/text-greeting": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "text/*": { "schema": { "type": "string" } } }
+                  }
+                }
+              }
+            },
+            "/animal": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "*/*": { "schema": { "$ref": "#/components/schemas/Pet" } } }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Pet": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "tag": { "type": "string" }
+                },
+                "required": ["name"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/wildcard-media-types"
+    )
+
+    fun wildcardBodyApi(vararg content: Pair<String, String>): String = """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/images": {
+              "put": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    ${content.joinToString(",\n") { [type, schema] -> "\"$type\": { \"schema\": $schema }" }}
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          }
+        }
+    """.trimIndent()
+
+    val wildcardConfig = RenderConfig(
+        modelPackage = "io.github.nomisrev.render.test.client.wildcard.unsendable.model",
+        apiPackage = "io.github.nomisrev.render.test.client.wildcard.unsendable.api",
+        targets = setOf(KmpTarget.JVM),
+    )
+    val objectSchema = """{ "type": "object", "properties": { "name": { "type": "string" } } }"""
+
+    test("a body under a wildcard media type no producible media type matches fails generation") {
+        for (schema in listOf(objectSchema, """{ "type": "string", "format": "binary" }""")) {
+            val error = assertFailsWith<IllegalArgumentException> {
+                OpenAPI.fromJson(wildcardBodyApi("image/*" to schema)).toApiTree().generateClient(wildcardConfig)
+            }
+            assertTrue(error.message.orEmpty().contains("PUT /images (image/*)"), error.message)
+        }
+    }
+
+    test("a body under an unsendable wildcard media type is skipped with a warning when another body exists") {
+        val result = OpenAPI.fromJson(
+            wildcardBodyApi("image/*" to objectSchema, "application/json" to objectSchema)
+        ).toApiTree().generateClientWithDiagnostics(wildcardConfig)
+
+        val diagnostic = result.diagnostics.single()
+        assertEquals(GenerationDiagnosticSeverity.Warning, diagnostic.severity)
+        assertTrue(diagnostic.message.contains("PUT /images (image/*)"), diagnostic.message)
+        val code = result.files.joinToString("\n") { it.toString() }
+        assertTrue("contentType(ContentType.Application.Json)" in code, code)
+        assertTrue("\"image\"" !in code, code)
+    }
+
     test("ambiguous form overload emits warning and is omitted when json body is available") {
         val json = """
         {

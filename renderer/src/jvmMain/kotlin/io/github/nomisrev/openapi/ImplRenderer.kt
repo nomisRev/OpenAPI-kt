@@ -13,7 +13,9 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
+import io.github.nomisrev.openapi.routes.admitsJson
 import io.github.nomisrev.openapi.routes.isJsonLike
+import io.github.nomisrev.openapi.routes.isWildcard
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -704,7 +706,7 @@ private fun buildMultiCTRangeErrorDispatch(
     status: ResponseStatus.Range,
     variants: List<Map.Entry<ContentType, Model>>,
 ): CodeBlock {
-    val preferredVariant = variants.firstOrNull { ContentType.Application.Json.match(it.key) } ?: variants.first()
+    val preferredVariant = variants.firstOrNull { it.key.match(ContentType.Application.Json) } ?: variants.first()
     val code = CodeBlock.builder()
     code.add("in %L -> run {\n", requireNotNull(status.matchingRange))
     code.indent()
@@ -742,7 +744,7 @@ private fun buildMultiCTErrorDispatch(
     statusCode: HttpStatusCode,
     variants: List<Pair<ContentType, Model>>,
 ): CodeBlock {
-    val preferredVariant = variants.firstOrNull { ContentType.Application.Json.match(it.first) } ?: variants.first()
+    val preferredVariant = variants.firstOrNull { it.first.match(ContentType.Application.Json) } ?: variants.first()
     val code = CodeBlock.builder()
     code.add("%L -> run {\n", statusCode.value)
     code.indent()
@@ -995,7 +997,7 @@ private fun addBodyCode(
 private fun CodeBlock.Builder.addRequestTypeSetBody(requestType: RequestTypeArgument, value: String) {
     val arguments = requestType.variants.map { variant ->
         val model = (variant.body as? Route.Body.SetBody)?.type
-        setBodyArgument(model, variant.contentType, value)
+        setBodyArgument(model, variant.sentContentType, value)
     }
     if (arguments.distinct().size == 1) {
         addStatement("%M(%L)", SetBodyMember, arguments.first())
@@ -1147,8 +1149,26 @@ private fun bodyCall(model: Model?, contentType: ContentType?): CodeBlock {
     )
 }
 
-private fun responseBody(model: Model?, contentType: ContentType?): CodeBlock =
-    CodeBlock.of("response.%L", bodyCall(model, contentType))
+/**
+ * Decodes a response of [model] declared as [contentType]. A string declared under a media type range that admits
+ * JSON (any media type, any `application` subtype) is a JSON string when the server sends a JSON `Content-Type` and
+ * raw text otherwise, so the generated code decides on the `Content-Type` of the response, with the same JSON check as
+ * [isJsonLike]. Other models go through `ContentNegotiation`, which already decides on that `Content-Type`.
+ */
+private fun responseBody(model: Model?, contentType: ContentType?): CodeBlock {
+    val isRangeAdmittingJson = contentType != null && contentType.isWildcard() && contentType.admitsJson()
+    if (model !is Model.Primitive.String || !isRangeAdmittingJson) {
+        return CodeBlock.of("response.%L", bodyCall(model, contentType))
+    }
+    return CodeBlock.of(
+        "if (response.%M()?.let { it.match(%T.Application.Json) || it.contentSubtype.endsWith(%S, ignoreCase = true) } == true) response.%L else response.%L",
+        ContentTypeFunMember,
+        ContentTypeType,
+        "+json",
+        bodyCall(model, ContentType.Application.Json),
+        bodyCall(model, ContentType.Text.Plain),
+    )
+}
 
 private fun Model.isJsonLikeMultipartModel(): Boolean = when (this) {
     is Model.ByteArray,

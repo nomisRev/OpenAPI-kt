@@ -120,21 +120,21 @@ data class Route(
                 val mediaType = key.withoutParameters()
                 val isDefault =
                     mediaType.isJsonLike() ||
-                            ContentType.Application.Xml.match(mediaType) ||
-                            ContentType.Application.OctetStream.match(mediaType) ||
-                            ContentType.Text.Plain.match(mediaType)
+                            mediaType.match(ContentType.Application.Xml) ||
+                            mediaType.match(ContentType.Application.OctetStream) ||
+                            mediaType.match(ContentType.Text.Plain)
                 if (isDefault) value else null
             }
 
         fun formUrlEncodedOrNull(): Body.FormUrlEncoded? =
             types.entries.firstNotNullOfOrNull { (key, value) ->
-                if (ContentType.Application.FormUrlEncoded.match(key)) value as? Body.FormUrlEncoded
+                if (key.match(ContentType.Application.FormUrlEncoded)) value as? Body.FormUrlEncoded
                 else null
             }
 
         fun multipartOrNull(): Body.Multipart? =
             types.entries.firstNotNullOfOrNull { (key, value) ->
-                if (ContentType.MultiPart.FormData.match(key)) value as? Body.Multipart else null
+                if (key.match(ContentType.MultiPart.Any)) value as? Body.Multipart else null
             }
     }
 

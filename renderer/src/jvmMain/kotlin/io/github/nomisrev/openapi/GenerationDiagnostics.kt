@@ -2,6 +2,8 @@ package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.FileSpec
 import io.github.nomisrev.openapi.routes.Route
+import io.github.nomisrev.openapi.routes.isWildcard
+import io.ktor.http.ContentType
 
 data class GenerationResult(
     val files: List<FileSpec>,
@@ -72,6 +74,25 @@ private fun Route.requestBodyDiagnostics(): List<GenerationDiagnostic> {
         }
     }
 
+    diagnostics += unsupportedVariants.mapNotNull { variant ->
+        val contentType = variant.body.unsendableWildcardOrNull() ?: return@mapNotNull null
+        val prefix = "${method.value} $path ($contentType)"
+        val reason =
+            "declares its request body under a media type range that admits no media type the client produces for " +
+                "this body (JSON, text/plain, application/octet-stream), and a wildcard is not a valid Content-Type"
+        if (supportedVariants.isEmpty()) {
+            GenerationDiagnostic(
+                severity = GenerationDiagnosticSeverity.Error,
+                message = "$prefix $reason, and no alternative supported request body variant exists.",
+            )
+        } else {
+            GenerationDiagnostic(
+                severity = GenerationDiagnosticSeverity.Warning,
+                message = "Skipping unsupported request body overload for $prefix, which $reason.",
+            )
+        }
+    }
+
     if (bodies.exceedsFlattenedBodyOverloadLimit()) {
         val contentType = bodies.variants().single().contentType
         diagnostics += GenerationDiagnostic(
@@ -108,7 +129,22 @@ private fun Route.Body.isSupportedForGeneration(): Boolean =
     when (this) {
         is Route.Body.FormUrlEncoded -> isSupported
         is Route.Body.Multipart.Ref,
-        is Route.Body.Multipart.Value,
+        is Route.Body.Multipart.Value -> true
         is Route.Body.OverloadedBody,
-        is Route.Body.SetBody -> true
+        is Route.Body.SetBody -> unsendableWildcardOrNull() == null
     }
+
+/**
+ * The media type range a body is still declared under after `typed` picked the concrete media type to send it as
+ * (`Route.Body.SetBody.contentType`): a range none of whose media types the client produces for the body, such as an
+ * object under the range of every `image` subtype.
+ */
+private fun Route.Body.unsendableWildcardOrNull(): ContentType? {
+    val contentType = when (this) {
+        is Route.Body.SetBody -> contentType
+        is Route.Body.OverloadedBody -> contentType
+        is Route.Body.FormUrlEncoded,
+        is Route.Body.Multipart -> null
+    }
+    return contentType?.takeIf { it.isWildcard() }
+}
