@@ -11,6 +11,7 @@ import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.RequestBody
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.resolveComponent
 import io.github.nomisrev.openapi.registry.toModel
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
@@ -183,19 +184,9 @@ private fun Schema.normalizedInlineRequestBodySchema(): Schema =
         this
     }
 
-// TODO Move to Registry and support top-level schemas.
 context(ctx: Registry)
-private fun ReferenceOr<RequestBody>.resolve(): RequestBody = when (this) {
-    is ReferenceOr.Value -> value
-    is ReferenceOr.Reference -> {
-        val referenceName = ref.drop("#/components/requestBodies/".length)
-        when (val requestBodies = ctx.openAPI.components.requestBodies[referenceName]) {
-            is ReferenceOr.Reference -> TODO("Remote parameters not supported yet.")
-            is ReferenceOr.Value<RequestBody> -> requestBodies.value
-            null -> error("RequestBody $referenceName could not be found in ${ctx.openAPI.components.requestBodies}.")
-        }
-    }
-}
+private fun ReferenceOr<RequestBody>.resolve(): RequestBody =
+    resolveComponent("requestBodies", ctx.openAPI.components.requestBodies)
 
 /**
  * The schema of a request body, following local aliases (`Alias: {$ref: X}`) and failing on cyclic ones,

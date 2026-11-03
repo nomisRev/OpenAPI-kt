@@ -9,6 +9,7 @@ import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.resolveComponent
 import io.github.nomisrev.openapi.registry.toModel
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
@@ -83,20 +84,9 @@ private fun withMissingPathParameters(
     return (missing + resolvedParameters).sortedBy { priorityOrder[it.name] ?: Int.MAX_VALUE }
 }
 
-// TODO Move to Registry and support top-level schemas.
 context(ctx: Registry)
-private fun ReferenceOr<Parameter>.resolve(): Parameter = when (this) {
-    is ReferenceOr.Value -> value
-    is ReferenceOr.Reference -> {
-        val referenceName = ref.drop("#/components/parameters/".length)
-        when (val parameter = ctx.openAPI.components.parameters[referenceName]) {
-            is ReferenceOr.Reference -> TODO("Remote parameters not supported yet.")
-            is ReferenceOr.Value<Parameter> -> parameter.value
-            null ->
-                error("Parameter $referenceName not found: ${ctx.openAPI.components.parameters}.")
-        }
-    }
-}
+private fun ReferenceOr<Parameter>.resolve(): Parameter =
+    resolveComponent("parameters", ctx.openAPI.components.parameters)
 
 private val pathParamRegex = Regex("\\{.*?\\}")
 

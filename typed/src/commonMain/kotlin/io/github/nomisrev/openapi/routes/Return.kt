@@ -7,6 +7,7 @@ import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Response
 import io.github.nomisrev.openapi.parser.StatusCodeOrRange
 import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.resolveComponent
 import io.github.nomisrev.openapi.registry.toModel
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
@@ -63,16 +64,6 @@ private suspend fun Response.toReturnType(
     )
 }
 
-// TODO Move to Registry and support top-level schemas.
 context(ctx: Registry)
-private fun ReferenceOr<Response>.resolve(): Response = when (this) {
-    is ReferenceOr.Value -> value
-    is ReferenceOr.Reference -> {
-        val referenceName = ref.drop("#/components/responses/".length)
-        when (val responses = ctx.openAPI.components.responses[referenceName]) {
-            is ReferenceOr.Reference -> TODO("Remote parameters not supported yet.")
-            is ReferenceOr.Value<Response> -> responses.value
-            null -> error("Response $referenceName could not be found in ${ctx.openAPI.components.responses}.")
-        }
-    }
-}
+private fun ReferenceOr<Response>.resolve(): Response =
+    resolveComponent("responses", ctx.openAPI.components.responses)
