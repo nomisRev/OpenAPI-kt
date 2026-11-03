@@ -2711,6 +2711,141 @@ val clientSpec by testSuite {
         "client/json-string-bodies"
     )
 
+    // A request body declared only under a structured-syntax `+json` media type (RFC 6839) is JSON: it is sent
+    // through the client's JSON converter, with the declared media type as `Content-Type`.
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/claims": {
+              "patch": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/merge-patch+json": { "schema": { "$ref": "#/components/schemas/ClaimPatch" } }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/documents": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/vnd.api+json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "title": { "type": "string" },
+                          "draft": { "type": "boolean" }
+                        },
+                        "required": ["title"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/operations": {
+              "patch": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json-patch+json": {
+                      "schema": { "type": "array", "items": { "$ref": "#/components/schemas/PatchOperation" } }
+                    }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/notes": {
+              "put": {
+                "requestBody": {
+                  "content": {
+                    "application/merge-patch+json": { "schema": { "type": "string" } }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "ClaimPatch": {
+                "type": "object",
+                "properties": {
+                  "status": { "type": "string" },
+                  "note": { "type": "string" }
+                }
+              },
+              "PatchOperation": {
+                "type": "object",
+                "properties": {
+                  "op": { "type": "string" },
+                  "path": { "type": "string" },
+                  "value": { "type": "string" }
+                },
+                "required": ["op", "path"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/json-suffix-request-bodies"
+    )
+
+    // A request body declared only under a media type without a dedicated rendering is still sent with its
+    // declared media type, instead of being dropped from the operation.
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/reports": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "text/csv": { "schema": { "type": "string" } }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/avatars": {
+              "put": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "image/png": { "schema": { "type": "string", "format": "binary" } }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/feeds": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/atom+xml": { "schema": { "type": "string" } }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/non-json-request-bodies"
+    )
+
     test("ambiguous form overload emits warning and is omitted when json body is available") {
         val json = """
         {

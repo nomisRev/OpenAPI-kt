@@ -13,6 +13,7 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
+import io.github.nomisrev.openapi.routes.isJsonLike
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -1148,9 +1149,6 @@ private fun bodyCall(model: Model?, contentType: ContentType?): CodeBlock {
 
 private fun responseBody(model: Model?, contentType: ContentType?): CodeBlock =
     CodeBlock.of("response.%L", bodyCall(model, contentType))
-
-private fun ContentType.isJsonLike(): Boolean =
-    ContentType.Application.Json.match(this) || contentSubtype.endsWith("+json")
 
 private fun Model.isJsonLikeMultipartModel(): Boolean = when (this) {
     is Model.ByteArray,

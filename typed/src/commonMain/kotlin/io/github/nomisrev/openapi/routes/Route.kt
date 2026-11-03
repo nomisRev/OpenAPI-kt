@@ -107,16 +107,22 @@ data class Route(
             Variant(contentType, body)
         }
 
+        /**
+         * The body an operation renders when its request bodies do not each get their own overload: the first JSON
+         * (including `+json`), XML, octet-stream or plain-text body, else the form or multipart body, else the first
+         * declared body, which is sent with its own media type. A request body is never dropped for its media type.
+         */
         fun defaultOrNull(): Body? =
-            defaultBodyOrNull() ?: formUrlEncodedOrNull() ?: multipartOrNull()
+            defaultBodyOrNull() ?: formUrlEncodedOrNull() ?: multipartOrNull() ?: types.values.firstOrNull()
 
         private fun defaultBodyOrNull(): Body? =
             types.entries.firstNotNullOfOrNull { (key, value) ->
+                val mediaType = key.withoutParameters()
                 val isDefault =
-                    ContentType.Application.Json.match(key) ||
-                            ContentType.Application.Xml.match(key) ||
-                            ContentType.Application.OctetStream.match(key) ||
-                            ContentType.Text.Plain.match(key)
+                    mediaType.isJsonLike() ||
+                            ContentType.Application.Xml.match(mediaType) ||
+                            ContentType.Application.OctetStream.match(mediaType) ||
+                            ContentType.Text.Plain.match(mediaType)
                 if (isDefault) value else null
             }
 
