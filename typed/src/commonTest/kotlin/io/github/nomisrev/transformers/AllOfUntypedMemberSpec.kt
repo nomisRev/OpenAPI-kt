@@ -47,9 +47,15 @@ val allOfUntypedMemberSpec by testSuite {
             }
         }
 
-    /** The `allOf` of [first] and [second] itself, and as property `p` both members declare. */
+    /**
+     * The `allOf` of [first] and [second] itself, and as property `p` both members declare. The component `Merged`
+     * merged to a collection, primitive or map is its value wrapper, like any named non-object schema: check what it
+     * wraps.
+     */
     suspend fun models(first: String, second: String): List<Model> = listOf(
-        model("Merged", first, second),
+        model("Merged", first, second).let { merged ->
+            if (merged is Model.Object && merged.isTransparentWrapper) merged.properties.values.single().model else merged
+        },
         assertIs<Model.Object>(model("MergedProperty", first, second)).properties.getValue("p").model,
     )
 

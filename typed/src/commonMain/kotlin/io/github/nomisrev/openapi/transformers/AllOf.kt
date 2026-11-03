@@ -32,9 +32,12 @@ suspend fun ResolvedSchema.allOf(context: SchemaContext, allOf: List<ReferenceOr
 
 /**
  * A named component `allOf: [{$ref: X}]` is an alias of X with its own name, like `anyOf`/`oneOf: [{$ref: X}]`:
- * X's schema modelled under the component's name, see [singleBranch]. Merging X's schema as an inline value instead
- * models a primitive or collection X as its bare value, so the component, which `$ref`s to it still name, is never
- * generated while array items, map values and bodies silently use the bare value.
+ * X's schema modelled under the component's name, see [singleBranch]. A named component with several members is the
+ * merged schema modelled under the component's name, as if the component declared the merged keywords itself:
+ * `{allOf: [{type: array, items: X}, {minItems: 1}]}` is `{type: array, items: X, minItems: 1}`.
+ * Merging as an inline value instead models a primitive, collection or map as its bare value, so the component,
+ * which `$ref`s to it still name, is never generated while array items, map values and bodies silently use the
+ * bare value.
  */
 context(scope: Registry.Scope)
 private suspend fun ResolvedSchema.resolveAllOf(
@@ -48,7 +51,12 @@ private suspend fun ResolvedSchema.resolveAllOf(
         } catch (e: IllegalArgumentException) {
             throw IllegalArgumentException("allOf members of '${name.describe()}' are incompatible: ${e.message}", e)
         }
-        ReferenceOr.value(merged).toModel(name, context)
+        when (val resolved = this@resolveAllOf) {
+            is ResolvedSchema.Reference ->
+                engine.transform(scope, this, ResolvedSchema.Reference(resolved.reference, merged), context, true)
+
+            else -> ReferenceOr.value(merged).toModel(name, context)
+        }
     }
 }
 
