@@ -50,11 +50,12 @@ private fun Route.requestBodyDiagnostics(): List<GenerationDiagnostic> {
     val bodies = body ?: return emptyList()
     val diagnostics = mutableListOf<GenerationDiagnostic>()
     val variants = bodies.variants()
-    val supportedVariants = variants.filter { it.body.isSupportedForGeneration() }
-    val unsupportedVariants = variants.filter { !it.body.isSupportedForGeneration() }
+    val supportedVariants = variants.filter { it.isSupportedForGeneration() }
+    val unsupportedVariants = variants.filter { !it.isSupportedForGeneration() }
 
     diagnostics += unsupportedVariants.mapNotNull { variant ->
         val formBody = variant.body as? Route.Body.FormUrlEncoded ?: return@mapNotNull null
+        if (formBody.isSupported) return@mapNotNull null
         val fieldDescription = formBody.unsupportedFields.sorted().joinToString(", ")
         val prefix = "${method.value} $path (${variant.contentType})"
         if (supportedVariants.isEmpty()) {
@@ -70,6 +71,25 @@ private fun Route.requestBodyDiagnostics(): List<GenerationDiagnostic> {
                 message =
                     "Skipping unsupported form overload for $prefix because fields " +
                         "[$fieldDescription] are non-scalar and have no explicit encoding rules.",
+            )
+        }
+    }
+
+    diagnostics += unsupportedVariants.mapNotNull { variant ->
+        val charset = variant.unsupportedFormCharsetOrNull() ?: return@mapNotNull null
+        val prefix = "${method.value} $path (${variant.contentType})"
+        val reason =
+            "declares a form body in charset $charset, but a form body is percent-encoded as UTF-8, and sending " +
+                "it labelled $charset would make the server decode every non-ASCII character wrongly"
+        if (supportedVariants.isEmpty()) {
+            GenerationDiagnostic(
+                severity = GenerationDiagnosticSeverity.Error,
+                message = "$prefix $reason, and no alternative supported request body variant exists.",
+            )
+        } else {
+            GenerationDiagnostic(
+                severity = GenerationDiagnosticSeverity.Warning,
+                message = "Skipping unsupported form overload for $prefix, which $reason.",
             )
         }
     }
@@ -122,9 +142,24 @@ private fun Route.withSupportedRequestBodiesOnly(): Route =
     copy(body = body?.withSupportedRequestBodiesOnly())
 
 private fun Route.Bodies.withSupportedRequestBodiesOnly(): Route.Bodies? {
-    val supportedTypes = types.filterValues(Route.Body::isSupportedForGeneration)
+    val supportedTypes = types.filter { entry ->
+        Route.Bodies.Variant(entry.key, entry.value).isSupportedForGeneration()
+    }
     return if (supportedTypes.isEmpty()) null else copy(types = supportedTypes)
 }
+
+private fun Route.Bodies.Variant.isSupportedForGeneration(): Boolean =
+    body.isSupportedForGeneration() && unsupportedFormCharsetOrNull() == null
+
+/**
+ * The `charset` a form body is declared in when it is not UTF-8. Ktor's `formUrlEncode` percent-encodes the UTF-8
+ * bytes of every name and value on every target, which is how `application/x-www-form-urlencoded` is serialized
+ * without a `charset` (the media type defines no parameters, and a form is UTF-8) or with `charset=utf-8`. A form
+ * declared in another charset would go out labelled with it but in UTF-8, so it is not generated.
+ */
+private fun Route.Bodies.Variant.unsupportedFormCharsetOrNull(): String? =
+    if (body !is Route.Body.FormUrlEncoded) null
+    else contentType.parameter("charset")?.takeUnless { it.equals("UTF-8", ignoreCase = true) }
 
 private fun Route.Body.isSupportedForGeneration(): Boolean =
     when (this) {

@@ -6,7 +6,9 @@ import io.ktor.client.request.`get`
 import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.Parameters
+import io.ktor.http.contentType
 import io.ktor.http.formUrlEncode
 import kotlinx.serialization.Serializable
 
@@ -39,6 +41,7 @@ public class Jobs internal constructor(
   ) {
     public suspend operator fun invoke(mode: Body.Mode) {
       val response = client.post("/jobs") {
+        contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("mode", mode.toString())
         }.formUrlEncode())

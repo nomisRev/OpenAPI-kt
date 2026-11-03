@@ -1089,6 +1089,86 @@ val clientSpec by testSuite {
         "client/operations-body-form"
     )
 
+    // A form body is sent as `application/x-www-form-urlencoded`, with the parameters the spec declares on it, not as
+    // the `text/plain` Ktor labels a bare `String` body with: for a single form body, the form overload next to a
+    // JSON body, and a form declared with `charset=utf-8`.
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/tokens": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "grant_type": { "type": "string", "enum": ["authorization_code", "refresh_token"] },
+                          "code": { "type": "string" },
+                          "redirect_uri": { "type": "string" }
+                        },
+                        "required": ["grant_type", "code", "redirect_uri"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/notes": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/x-www-form-urlencoded; charset=utf-8": {
+                      "schema": {
+                        "type": "object",
+                        "properties": { "text": { "type": "string" } },
+                        "required": ["text"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/search": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": { "schema": { "$ref": "#/components/schemas/SearchQuery" } },
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": { "query": { "type": "string" } },
+                        "required": ["query"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "SearchQuery": {
+                "type": "object",
+                "properties": { "query": { "type": "string" }, "limit": { "type": "integer" } },
+                "required": ["query", "limit"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/form-urlencoded-body"
+    )
+
     clientTest(
         """
         {
@@ -3302,6 +3382,50 @@ val clientSpec by testSuite {
         val code = result.files.joinToString("\n") { it.toString() }
         assertTrue("contentType(ContentType.Application.Json)" in code, code)
         assertTrue("\"image\"" !in code, code)
+    }
+
+    // Ktor's form encoder percent-encodes the UTF-8 bytes of a value, so a form declared in another charset would go
+    // out labelled with that charset but encoded in UTF-8, and the server would decode every non-ASCII character
+    // wrongly.
+    val formSchema = """{ "type": "object", "properties": { "name": { "type": "string" } }, "required": ["name"] }"""
+    test("a form body declared in a charset other than UTF-8 fails generation when it is the only body") {
+        val error = assertFailsWith<IllegalArgumentException> {
+            OpenAPI.fromJson(
+                wildcardBodyApi("application/x-www-form-urlencoded; charset=iso-8859-1" to formSchema)
+            ).toApiTree().generateClient(wildcardConfig)
+        }
+        val message = error.message.orEmpty()
+        assertTrue(message.contains("PUT /images (application/x-www-form-urlencoded; charset=iso-8859-1)"), message)
+        assertTrue(message.contains("UTF-8"), message)
+    }
+
+    test("a form body declared in a charset other than UTF-8 is skipped with a warning when another body exists") {
+        val result = OpenAPI.fromJson(
+            wildcardBodyApi(
+                "application/x-www-form-urlencoded; charset=iso-8859-1" to formSchema,
+                "application/json" to formSchema,
+            )
+        ).toApiTree().generateClientWithDiagnostics(wildcardConfig)
+
+        val diagnostic = result.diagnostics.single()
+        assertEquals(GenerationDiagnosticSeverity.Warning, diagnostic.severity)
+        assertTrue(diagnostic.message.contains("charset=iso-8859-1"), diagnostic.message)
+        val code = result.files.joinToString("\n") { it.toString() }
+        assertTrue("contentType(ContentType.Application.Json)" in code, code)
+        assertTrue("formUrlEncode" !in code, code)
+    }
+
+    test("a form body declared in UTF-8 under any spelling of the charset is generated") {
+        val result = OpenAPI.fromJson(
+            wildcardBodyApi("application/x-www-form-urlencoded; charset=UTF-8" to formSchema)
+        ).toApiTree().generateClientWithDiagnostics(wildcardConfig)
+
+        assertTrue(result.diagnostics.isEmpty(), result.diagnostics.toString())
+        val code = result.files.joinToString("\n") { it.toString() }
+        assertTrue(
+            """contentType(ContentType.Application.FormUrlEncoded.withParameter("charset", "UTF-8"))""" in code,
+            code,
+        )
     }
 
     test("ambiguous form overload emits warning and is omitted when json body is available") {

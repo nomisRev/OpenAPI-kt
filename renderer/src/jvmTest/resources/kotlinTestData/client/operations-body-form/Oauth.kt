@@ -4,7 +4,9 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.ContentType
 import io.ktor.http.Parameters
+import io.ktor.http.contentType
 import io.ktor.http.formUrlEncode
 import kotlin.String
 
@@ -27,6 +29,7 @@ public class Oauth internal constructor(
         redirectUri: String,
       ) {
         val response = client.post("/oauth/token") {
+          contentType(ContentType.Application.FormUrlEncoded)
           setBody(Parameters.build {
             append("grant_type", grantType)
             append("code", code)

@@ -920,6 +920,7 @@ private fun Route.addRequestConfigCode(
             bodyGuard = bodyGuard,
             requestType = requestType,
             callerContentType = callerContentTypeArgumentOrNull(config, selectedBody),
+            sentContentType = body?.variants()?.firstOrNull { it.body === selectedBody }?.sentContentType,
         )
     }
 }
@@ -984,6 +985,7 @@ private fun addBodyCode(
     bodyGuard: String? = null,
     requestType: RequestTypeArgument? = null,
     callerContentType: CallerContentTypeArgument? = null,
+    sentContentType: ContentType? = null,
 ) {
     when (body) {
         is Route.Body.SetBody -> {
@@ -1007,7 +1009,10 @@ private fun addBodyCode(
             }
         }
 
-        is Route.Body.FormUrlEncoded -> code.addFormUrlEncodedBodyCode(body)
+        is Route.Body.FormUrlEncoded -> code.addFormUrlEncodedBodyCode(
+            body,
+            requireNotNull(sentContentType) { "A form body is sent as the media type it is declared under." },
+        )
         is Route.Body.Multipart.Value -> code.addMultipartValueBodyCode(config, body)
         is Route.Body.Multipart.Ref -> code.addMultipartRefBodyCode(bodyMayBeNull)
     }
@@ -1067,7 +1072,19 @@ private fun CodeBlock.Builder.addSetLikeBodyCode(
     }
 }
 
-private fun CodeBlock.Builder.addFormUrlEncodedBodyCode(body: Route.Body.FormUrlEncoded) {
+/**
+ * A form body is the `String` of `formUrlEncode`, which Ktor sends as `TextContent` labelled with the request's
+ * `Content-Type`, and `text/plain` when none is set; so the media type the form is declared under is set, parameters
+ * included, as for any other body. It is the form's own media type, never `requestType.contentType`: a form shares
+ * its signature with a `multipart/form-data` body of the same fields, which Ktor labels itself.
+ *
+ * `formUrlEncode` serializes UTF-8 `application/x-www-form-urlencoded`: a space is `+` and every byte outside
+ * `A-Z a-z 0-9 - . _ ~` is percent-encoded, so values with `&`, `=`, `+` or non-ASCII characters decode back to
+ * themselves. (The URL Standard leaves `*` and encodes `~`; every decoder reads both forms alike.) A form declared in
+ * another charset is not generated (`unsupportedFormCharsetOrNull`).
+ */
+private fun CodeBlock.Builder.addFormUrlEncodedBodyCode(body: Route.Body.FormUrlEncoded, contentType: ContentType) {
+    addStatement("%M(%L)", ContentTypeFunMember, contentType.toContentTypeCodeBlock())
     add("%M(%T.build {\n", SetBodyMember, ParametersType)
     indent()
     for (formData in body.parameters) {
