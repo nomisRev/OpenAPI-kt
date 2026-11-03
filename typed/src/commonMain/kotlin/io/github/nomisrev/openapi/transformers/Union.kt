@@ -17,7 +17,7 @@ import io.github.nomisrev.openapi.parser.Schema.Type
 import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.schemaName
-import io.github.nomisrev.openapi.registry.hasNullableDiscriminatedMember
+import io.github.nomisrev.openapi.registry.hasNullableMember
 import io.github.nomisrev.openapi.registry.isNull
 import io.github.nomisrev.openapi.toPascalCase
 
@@ -44,7 +44,7 @@ suspend fun ResolvedSchema.buildOneOf(
         description(),
         schema.title,
         dispatch,
-        isNullable || hasNullableDiscriminatedMember()
+        isNullable || subtypes.hasNullableMember()
     )
 }
 
@@ -63,7 +63,7 @@ suspend fun ResolvedSchema.buildAnyOf(
         description(),
         schema.title,
         dispatch,
-        isNullable || hasNullableDiscriminatedMember()
+        isNullable || subtypes.hasNullableMember()
     )
 }
 
@@ -105,7 +105,8 @@ private suspend fun List<ReferenceOr<Schema>>.inferTagOnlyDiscriminatorOrNull():
     if (size < 2) return null
 
     val caseLiterals = map { subtype ->
-        val subtypeSchema = subtype.peek().flattenAllOfForUnionDiscriminator()
+        // `null` carries no tag: infer the discriminator from a nullable member's non-null schema.
+        val subtypeSchema = subtype.peek().withoutNull().flattenAllOfForUnionDiscriminator()
         val properties = subtypeSchema.properties ?: return null
         val required = subtypeSchema.required.toSet()
         properties.mapNotNull { [propertyName, propertySchema] ->
@@ -196,8 +197,11 @@ private suspend fun ResolvedSchema.buildUnionCases(
                     )
                 }
 
+                // `null` is the union's own (`hasNullableMember`), decoded before any case is tried: a case is
+                // the member's non-null form.
                 UnionDispatch.Structural ->
                     scope.registry().engine.transform(scope, scope.registry(), resolved, context, false)
+                        .let { if (it.isNullable) it.with(isNullable = false) else it }
             }
             Model.Union.Case(model, discriminatorValues)
         }
@@ -257,7 +261,7 @@ private suspend fun Schema.normalizedTaggedCustomUnionCase(): Schema =
 /**
  * The non-null part of a discriminated union member: `null` carries no discriminator, so a member that permits it
  * (`nullable: true`, `type: [T, null]`, or a `null` branch) is the case of its non-null schema, and the union is
- * nullable instead ([io.github.nomisrev.openapi.registry.hasNullableDiscriminatedMember]). A member that only
+ * nullable instead ([io.github.nomisrev.openapi.registry.hasNullableMember]). A member that only
  * wraps a single schema next to its `null`, `oneOf: [{$ref: Cat}, {type: null}]`, is that schema.
  */
 context(ctx: Registry.Scope)

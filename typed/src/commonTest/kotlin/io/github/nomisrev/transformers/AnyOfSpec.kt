@@ -162,14 +162,15 @@ val anyOfSpec by testSuite {
                 description = description.actual,
                 nullable = isNullable
             )
+            // A member that permits `null` makes the union nullable, and is its non-null case.
             val expected = Model.AnyOf(
                 NamingContext.path("test"),
-                anyOf.expected,
+                anyOf.expected.map { it.copy(model = it.model.with(isNullable = false)) },
                 null,
                 description.expected,
                 null,
                 UnionDispatch.Structural,
-                isNullable ?: false
+                isNullable == true || anyOf.expected.any { it.model.isNullable }
             )
 
             actual expect expected

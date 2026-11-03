@@ -61,9 +61,8 @@ suspend fun ResolvedSchema.isAllOfNullableType(): Boolean = with(ctx) {
 /**
  * Whether this schema's model is nullable: `nullable: true`, a `type` array listing `"null"`, an `anyOf`/`oneOf`/`allOf` with a `null` branch, which the composite nullable-flatten plugins model
  * as a nullable `X?`, or a single-`$ref` alias `anyOf`/`oneOf`/`allOf: [{$ref: X}]` of a nullable X, which models
- * X's (nullable) schema, or a discriminated `anyOf`/`oneOf` with a member that permits `null`
- * ([hasNullableDiscriminatedMember]), or an `allOf` of members that all permit `null` ([allOfNullability]), which the
- * merged model is. A `$ref` that is not resolved (a property, a recursive reference) must use this so
+ * X's (nullable) schema, or an `anyOf`/`oneOf` with a member that permits `null` ([hasNullableMember]), or an
+ * `allOf` of members that all permit `null` ([allOfNullability]), which the merged model is. A `$ref` that is not resolved (a property, a recursive reference) must use this so
  * the use site is nullable exactly when the referenced model is.
  */
 context(ctx: Registry.Scope)
@@ -76,7 +75,7 @@ private suspend fun Schema.isNullableModel(visited: Set<String>): Boolean {
     if (!compositeTakesPrecedence()) return false
     val composites = listOfNotNull(allOf, anyOf, oneOf)
     if (composites.flatten().any { it.peek().isNull() }) return true
-    if (hasNullableDiscriminatedMember(visited)) return true
+    if (listOfNotNull(anyOf, oneOf).flatten().hasNullableMember(visited)) return true
     val target = composites.singleOrNull()?.singleOrNull()
     if (target is ReferenceOr.Reference) return target.ref !in visited && target.peek().isNullableModel(visited + target.ref)
     val allOf = allOf
@@ -138,17 +137,21 @@ internal fun Schema.isNonStructural(): Boolean =
             enumLikeValues() == null
 
 /**
- * Whether this is a discriminated `anyOf`/`oneOf` (it has a `discriminator`) with a member that permits `null`, such
- * as a `$ref` to `oneOf: [{$ref: Cat}, {type: null}]`. `null` carries no discriminator, so it cannot be one of the
- * union's cases: the union itself is nullable, and the member is modelled as its non-null case.
+ * Whether one of these `anyOf`/`oneOf` members permits `null`, such as a `$ref` to `anyOf: [string, null]`, an inline
+ * `nullable: true` or `type: [string, null]` member, or a `$ref` to `oneOf: [{$ref: Cat}, {type: null}]`. `null`
+ * validates against that member, so it validates against the union: the union itself is nullable, and the member is
+ * modelled as its non-null case. JSON `null` is decoded as the union's own `null` before any case is tried, so a case
+ * could never hold it, and with a discriminator (explicit or inferred) `null` carries no tag to select a case anyway.
+ * A `oneOf` with several members that permit `null` is strictly ambiguous for `null` (it matches more than one), but
+ * it is nullable too: `null` is still the only reading of it, and cases are not checked for exclusivity for any other
+ * value either.
  */
 context(ctx: Registry.Scope)
-suspend fun ResolvedSchema.hasNullableDiscriminatedMember(): Boolean =
-    schema.hasNullableDiscriminatedMember(emptySet())
+suspend fun List<ReferenceOr<Schema>>.hasNullableMember(): Boolean = hasNullableMember(emptySet())
 
 context(ctx: Registry.Scope)
-private suspend fun Schema.hasNullableDiscriminatedMember(visited: Set<String>): Boolean =
-    discriminator != null && listOfNotNull(anyOf, oneOf).flatten().any { member ->
+private suspend fun List<ReferenceOr<Schema>>.hasNullableMember(visited: Set<String>): Boolean =
+    any { member ->
         when (member) {
             is ReferenceOr.Reference ->
                 member.ref !in visited && member.peek().isNullableModel(visited + member.ref)

@@ -118,14 +118,15 @@ val unionSpec by testSuite {
                 description = description.actual,
                 nullable = isNullable
             )
+            // A member that permits `null` makes the union nullable, and is its non-null case.
             val expected = Model.OneOf(
                 NamingContext.path("test"),
-                oneOf.expected,
+                oneOf.expected.map { it.copy(model = it.model.with(isNullable = false)) },
                 null,
                 description.expected,
                 null,
                 UnionDispatch.Structural,
-                isNullable ?: false
+                isNullable == true || oneOf.expected.any { it.model.isNullable }
             )
 
             actual expect expected
@@ -1015,7 +1016,7 @@ val unionSpec by testSuite {
         }
     }
 
-    test("Union preserves nullable case models") {
+    test("Union with members that permit null is nullable with non-null case models") {
         val unionSchema = Schema(
             oneOf = listOf(
                 ReferenceOr.value(Schema.string.copy(nullable = true)),
@@ -1035,13 +1036,13 @@ val unionSpec by testSuite {
             val result = ReferenceOr.schema("Union")
                 .toModel(NamingContext.reference("Union", SchemaContext.Null), SchemaContext.Write) as Union
 
-            assertEquals(false, result.isNullable)
-            assertEquals(true, (result.cases[0].model as Model.Primitive.String).isNullable)
+            assertEquals(true, result.isNullable)
+            assertEquals(false, (result.cases[0].model as Model.Primitive.String).isNullable)
             assertEquals(false, (result.cases[1].model as Model.Primitive.Int).isNullable)
 
-            val nullableCollection = result.cases[2].model as Model.Collection
-            assertEquals(true, nullableCollection.isNullable)
-            assertEquals(false, nullableCollection.inner.isNullable)
+            val collection = result.cases[2].model as Model.Collection
+            assertEquals(false, collection.isNullable)
+            assertEquals(false, collection.inner.isNullable)
         }
     }
 
