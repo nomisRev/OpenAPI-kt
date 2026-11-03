@@ -296,9 +296,7 @@ private suspend fun Schema.flattenAllOfForUnionDiscriminator(): Schema =
         ?.takeIf { it.isNotEmpty() }
         ?.let { allOfSchemas ->
             (allOfSchemas.map { it.peek().flattenAllOfForUnionDiscriminator() } + copy(allOf = null))
-                .reduce { acc, schema ->
-                    acc.merge(schema).copy(required = (acc.required + schema.required).distinct())
-                }
+                .reduce { acc, schema -> acc.merge(schema) }
         }
         ?: this
 

@@ -207,8 +207,21 @@ private suspend fun ReferenceOr.Reference.combine(value: Schema): ReferenceOr<Sc
     val target = peek()
     val keepsNullability = listOf(this).allOfNullability().permitsNull() ==
             listOf(this, ReferenceOr.value(value)).allOfNullability().permitsNull()
-    return if (keepsNullability && value.restates(target)) withAccess(value.readOnly, value.writeOnly)
-    else ReferenceOr.value(mergeTarget(target, value))
+    return if (keepsNullability && value.restates(target) && !value.requiresOptionalPropertyOf(target)) {
+        withAccess(value.readOnly, value.writeOnly)
+    } else ReferenceOr.value(mergeTarget(target, value))
+}
+
+/**
+ * Whether this schema requires a property that [target] declares but leaves optional, so the generated type of a
+ * `$ref` to [target] cannot represent it. A `required` naming a property [target] does not declare adds no property,
+ * as for a standalone object.
+ */
+context(ctx: Registry.Scope)
+private suspend fun Schema.requiresOptionalPropertyOf(target: Schema): Boolean {
+    if (required.isEmpty()) return false
+    val expanded = target.expandAllOf()
+    return required.any { it in expanded.properties.orEmpty() && it !in expanded.required }
 }
 
 context(ctx: Registry.Scope)
@@ -323,12 +336,18 @@ private fun ResolvedSchema.Reference.simpleCase(
  * member, so the merge permits `null` only when neither schema excludes it and one permits it ([allOfNullability]):
  * a `nullable` member next to a non-null one is non-null. Both are merged without their `null` (`nullable`, a `"null"`
  * type, a `null` branch), and the result is `nullable` exactly when the merge permits `null`.
+ * Likewise a property is required when either schema requires it, also when the other one declares it: the merged
+ * `required` is the union of both, whichever schema lists it first.
  */
 context(ctx: Registry.Scope)
 suspend fun Schema.merge(other: Schema): Schema {
     if (this == other) return this
     val permitsNull = listOf(allOfNullability(), other.allOfNullability()).combine() == AllOfNullability.Permits
-    return withoutNull().mergeNonNull(other.withoutNull()).copy(nullable = if (permitsNull) true else null)
+    val left = withoutNull()
+    val right = other.withoutNull()
+    // `withoutNull` can unwrap `{allOf: [X], nullable: true}` to X, so the required of both forms apply.
+    val required = (required + left.required + other.required + right.required).distinct()
+    return left.mergeNonNull(right).copy(nullable = if (permitsNull) true else null, required = required)
 }
 
 @Suppress("UnsafeCallOnNullableType")
