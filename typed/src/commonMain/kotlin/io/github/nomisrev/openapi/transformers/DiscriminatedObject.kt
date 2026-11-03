@@ -16,9 +16,13 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
+import io.github.nomisrev.openapi.registry.AllOfNullability
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
+import io.github.nomisrev.openapi.registry.allOfNullability
+import io.github.nomisrev.openapi.registry.combine
 import io.github.nomisrev.openapi.registry.description
+import io.github.nomisrev.openapi.registry.isNonStructural
 import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.schemaName
 import kotlin.collections.component1
@@ -214,9 +218,22 @@ private fun ResolvedSchema.Reference.simpleCase(
     )
 }
 
+/**
+ * Merges two schemas an `allOf` combines. An instance validates against `allOf` only when it validates against every
+ * member, so the merge permits `null` only when neither schema excludes it and one permits it ([allOfNullability]):
+ * a `nullable` member next to a non-null one is non-null. Both are merged without their `null` (`nullable`, a `"null"`
+ * type, a `null` branch), and the result is `nullable` exactly when the merge permits `null`.
+ */
+context(ctx: Registry.Scope)
+suspend fun Schema.merge(other: Schema): Schema {
+    if (this == other) return this
+    val permitsNull = listOf(allOfNullability(), other.allOfNullability()).combine() == AllOfNullability.Permits
+    return withoutNull().mergeNonNull(other.withoutNull()).copy(nullable = if (permitsNull) true else null)
+}
+
 @Suppress("UnsafeCallOnNullableType")
 context(ctx: Registry.Scope)
-suspend fun Schema.merge(other: Schema): Schema = when {
+private suspend fun Schema.mergeNonNull(other: Schema): Schema = when {
     this == other -> this
     !allOf.isNullOrEmpty() || !other.allOf.isNullOrEmpty() -> mergeNestedAllOf(other)
     compositeUnionOrNull() != null || other.compositeUnionOrNull() != null -> mergeCompositeUnion(other)
@@ -267,16 +284,6 @@ private fun Schema.compositeUnionOrNull(): CompositeUnion? =
 private fun Schema.isObjectLike(): Boolean =
     type == Type.Basic.Object || properties != null || additionalProperties != null
 
-private fun Schema.isNonStructural(): Boolean =
-    type == null &&
-            properties == null &&
-            additionalProperties == null &&
-            items == null &&
-            allOf.isNullOrEmpty() &&
-            oneOf.isNullOrEmpty() &&
-            anyOf.isNullOrEmpty() &&
-            enumLikeValues() == null
-
 context(ctx: Registry.Scope)
 private suspend fun Schema.mergeCompositeUnion(other: Schema): Schema {
     val left = compositeUnionOrNull()
@@ -302,7 +309,7 @@ private suspend fun Schema.mergeCompositeUnion(other: Schema): Schema {
         else -> emptyList()
     }.distinct()
 
-    if (mergedBranches.isEmpty()) return Schema(description = description ?: other.description, nullable = let(nullable, other.nullable) { a, b -> a || b })
+    if (mergedBranches.isEmpty()) return Schema(description = description ?: other.description)
     if (mergedBranches.size == 1) return mergedBranches.single().peek()
 
     val kind = when {
@@ -313,7 +320,6 @@ private suspend fun Schema.mergeCompositeUnion(other: Schema): Schema {
     return Schema(
         title = title ?: other.title,
         description = description ?: other.description,
-        nullable = let(nullable, other.nullable) { a, b -> a || b },
         default = default ?: other.default,
         oneOf = mergedBranches.takeIf { kind == CompositeKind.OneOf },
         anyOf = mergedBranches.takeIf { kind == CompositeKind.AnyOf }
@@ -361,7 +367,6 @@ private fun mergedEnumDefault(
 fun Schema.mergeCommon(other: Schema): Schema = copy(
     type = type ?: other.type,
     description = description ?: other.description,
-    nullable = let(nullable, other.nullable) { a, b -> a || b },
     default = default ?: other.default
 )
 

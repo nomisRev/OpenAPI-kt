@@ -261,7 +261,7 @@ private suspend fun Schema.normalizedTaggedCustomUnionCase(): Schema =
  * wraps a single schema next to its `null`, `oneOf: [{$ref: Cat}, {type: null}]`, is that schema.
  */
 context(ctx: Registry.Scope)
-private suspend fun Schema.withoutNull(visited: Set<String> = emptySet()): Schema {
+internal suspend fun Schema.withoutNull(visited: Set<String> = emptySet()): Schema {
     val type = type
     val nonNullType = if (type is Type.Array) type.types.filter { it != Type.Basic.Null } else null
     val nonNullBranches = listOf(allOf, anyOf, oneOf).map { branches -> branches?.filterNot { it.peek().isNull() } }

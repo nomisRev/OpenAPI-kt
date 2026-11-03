@@ -62,7 +62,8 @@ suspend fun ResolvedSchema.isAllOfNullableType(): Boolean = with(ctx) {
  * Whether this schema's model is nullable: `nullable: true`, a `type` array listing `"null"`, an `anyOf`/`oneOf`/`allOf` with a `null` branch, which the composite nullable-flatten plugins model
  * as a nullable `X?`, or a single-`$ref` alias `anyOf`/`oneOf`/`allOf: [{$ref: X}]` of a nullable X, which models
  * X's (nullable) schema, or a discriminated `anyOf`/`oneOf` with a member that permits `null`
- * ([hasNullableDiscriminatedMember]). A `$ref` that is not resolved (a property, a recursive reference) must use this so
+ * ([hasNullableDiscriminatedMember]), or an `allOf` of members that all permit `null` ([allOfNullability]), which the
+ * merged model is. A `$ref` that is not resolved (a property, a recursive reference) must use this so
  * the use site is nullable exactly when the referenced model is.
  */
 context(ctx: Registry.Scope)
@@ -76,9 +77,65 @@ private suspend fun Schema.isNullableModel(visited: Set<String>): Boolean {
     val composites = listOfNotNull(allOf, anyOf, oneOf)
     if (composites.flatten().any { it.peek().isNull() }) return true
     if (hasNullableDiscriminatedMember(visited)) return true
-    val target = composites.singleOrNull()?.singleOrNull() as? ReferenceOr.Reference ?: return false
-    return target.ref !in visited && target.peek().isNullableModel(visited + target.ref)
+    val target = composites.singleOrNull()?.singleOrNull()
+    if (target is ReferenceOr.Reference) return target.ref !in visited && target.peek().isNullableModel(visited + target.ref)
+    val allOf = allOf
+    return composites.size == 1 && !allOf.isNullOrEmpty() && allOf.allOfNullability(visited) == AllOfNullability.Permits
 }
+
+/** How a schema, as one of the schemas an `allOf` merges, constrains `null`. */
+internal enum class AllOfNullability {
+    /** It permits `null` itself: its model is nullable ([isNullableModel]). */
+    Permits,
+
+    /** It only annotates or constrains other types (`description`, `maxLength`, ...), which `null` satisfies. */
+    Neutral,
+
+    /** It excludes `null`. */
+    Excludes
+}
+
+/**
+ * Whether merging these schemas as `allOf` members permits `null`. An instance validates against `allOf` only when it
+ * validates against every member, so the merge permits `null` only when no member excludes it. Members that only
+ * annotate do not decide it: at least one member must permit `null` itself, so a `description` member next to a
+ * nullable `$ref` stays nullable, and an `allOf` of only annotating members is not made nullable.
+ */
+context(ctx: Registry.Scope)
+internal suspend fun List<ReferenceOr<Schema>>.allOfNullability(visited: Set<String> = emptySet()): AllOfNullability =
+    map { member ->
+        when (member) {
+            is ReferenceOr.Reference ->
+                if (member.ref in visited) AllOfNullability.Excludes
+                else member.peek().allOfNullability(visited + member.ref)
+
+            is ReferenceOr.Value<Schema> -> member.value.allOfNullability(visited)
+        }
+    }.combine()
+
+internal fun List<AllOfNullability>.combine(): AllOfNullability = when {
+    AllOfNullability.Excludes in this -> AllOfNullability.Excludes
+    AllOfNullability.Permits in this -> AllOfNullability.Permits
+    else -> AllOfNullability.Neutral
+}
+
+context(ctx: Registry.Scope)
+internal suspend fun Schema.allOfNullability(visited: Set<String> = emptySet()): AllOfNullability = when {
+    isNullableModel(visited) -> AllOfNullability.Permits
+    isNonStructural() -> AllOfNullability.Neutral
+    else -> AllOfNullability.Excludes
+}
+
+/** A schema without any keyword that shapes a value: it only annotates, or constrains values of other types. */
+internal fun Schema.isNonStructural(): Boolean =
+    type == null &&
+            properties == null &&
+            additionalProperties == null &&
+            items == null &&
+            allOf.isNullOrEmpty() &&
+            oneOf.isNullOrEmpty() &&
+            anyOf.isNullOrEmpty() &&
+            enumLikeValues() == null
 
 /**
  * Whether this is a discriminated `anyOf`/`oneOf` (it has a `discriminator`) with a member that permits `null`, such
