@@ -34,18 +34,7 @@ internal suspend fun ResolvedSchema.flattenedSingleNullableBranch(
     branch: ReferenceOr<Schema>,
     context: SchemaContext,
 ): Model = when (branch) {
-    // A named component `anyOf`/`oneOf`/`allOf: [{$ref: X}, {type: null}]` is its own (nullable) type named after
-    // the component, like the non-null `allOf: [{$ref: X}]` alias: model X's schema under the component's name.
-    // Resolving the `$ref` instead yields X's own model, so X is generated twice and the component never is.
-    is ReferenceOr.Reference if this is ResolvedSchema.Reference -> ctx.registry().engine.transform(
-        ctx,
-        ctx.registry(),
-        ResolvedSchema.Reference(reference, branch.peek()),
-        context,
-        true
-    )
-
-    is ReferenceOr.Reference -> branch.toModel(name, context)
+    is ReferenceOr.Reference -> singleBranch(branch, context)
     is ReferenceOr.Value<Schema> -> when (this) {
         is ResolvedSchema.Reference -> ctx.registry().engine.transform(
             ctx,
@@ -65,4 +54,28 @@ internal suspend fun ResolvedSchema.flattenedSingleNullableBranch(
 
         is ResolvedSchema.Value -> branch.toModel(name, context)
     }
+}
+
+/**
+ * Models the only (non-null) branch of a composite schema.
+ * A named component whose only branch is a `$ref`, `anyOf`/`oneOf: [{$ref: X}]` or
+ * `anyOf`/`oneOf`/`allOf: [{$ref: X}, {type: null}]`, is its own type named after the component, like the
+ * `allOf: [{$ref: X}]` alias: model X's schema under the component's name. Resolving the `$ref` instead yields X's own
+ * model, so X is generated twice and the component, which `$ref`s to it still name, never is.
+ * An inline (unnamed) single branch is X itself.
+ */
+context(ctx: Registry.Scope)
+internal suspend fun ResolvedSchema.singleBranch(
+    branch: ReferenceOr<Schema>,
+    context: SchemaContext,
+): Model = when (this) {
+    is ResolvedSchema.Reference if branch is ReferenceOr.Reference -> ctx.registry().engine.transform(
+        ctx,
+        ctx.registry(),
+        ResolvedSchema.Reference(reference, branch.peek()),
+        context,
+        true
+    )
+
+    else -> branch.toModel(name, context)
 }

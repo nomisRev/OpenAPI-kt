@@ -8,7 +8,6 @@ import io.github.nomisrev.openapi.pipeline.SchemaTransformerEngine
 import io.github.nomisrev.openapi.pipeline.SchemaTransformerPlugin
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
-import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 object OneOfSinglePlugin : SchemaTransformerPlugin {
@@ -26,6 +25,6 @@ object OneOfSinglePlugin : SchemaTransformerPlugin {
         val oneOf = schema.schema.oneOf ?: return null
         if (oneOf.size != 1) return null
 
-        oneOf.single().toModel(schema.name, context)
+        schema.singleBranch(oneOf.single(), context)
     }
 }
