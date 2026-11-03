@@ -1,5 +1,6 @@
 package io.github.nomisrev.render
 
+import io.github.nomisrev.render.test.object_.type.array.nullable.AnyOfNullableAlias
 import io.github.nomisrev.render.test.object_.type.array.nullable.NullableAlias
 import io.github.nomisrev.render.test.object_.type.array.nullable.TypeArrayNullable
 import io.github.nomisrev.render.test.object_.type.array.nullable.optional.OptionalNullableMessage
@@ -64,7 +65,7 @@ class TypeArrayNullableRoundTripTest {
 
     private val nullKeys = listOf(
         "requiredString", "optionalString", "nullFirst", "int32", "int64", "number", "flag",
-        "createdAt", "status", "owner", "tags", "alias", "stringOrIntOrNull",
+        "createdAt", "status", "owner", "tags", "alias", "anyOfAlias", "stringOrIntOrNull",
     )
 
     @Test
@@ -81,6 +82,7 @@ class TypeArrayNullableRoundTripTest {
         assertEquals(TypeArrayNullable.Owner("simon"), decoded.owner)
         assertEquals(listOf("a", "b"), decoded.tags)
         assertEquals(NullableAlias("al"), decoded.alias)
+        assertEquals(AnyOfNullableAlias("any"), decoded.anyOfAlias)
         assertEquals("one", decoded.single)
         assertEquals(json.decodeFromString<TypeArrayNullable>(json.encodeToString(decoded)), decoded)
     }
@@ -92,11 +94,11 @@ class TypeArrayNullableRoundTripTest {
         )
         val decoded = json.decodeFromJsonElement(TypeArrayNullable.serializer(), withNulls)
         assertEquals(
-            listOf(null, null, null, null, null, null, null, null, null, null, null, null, null),
+            listOf(null, null, null, null, null, null, null, null, null, null, null, null, null, null),
             listOf(
                 decoded.requiredString, decoded.optionalString, decoded.nullFirst, decoded.int32, decoded.int64,
                 decoded.number, decoded.flag, decoded.createdAt, decoded.status, decoded.owner, decoded.tags,
-                decoded.alias, decoded.stringOrIntOrNull,
+                decoded.alias, decoded.anyOfAlias, decoded.stringOrIntOrNull,
             )
         )
         assertEquals(JsonPrimitive("one"), json.encodeToJsonElement(TypeArrayNullable.serializer(), decoded).jsonObject["single"])

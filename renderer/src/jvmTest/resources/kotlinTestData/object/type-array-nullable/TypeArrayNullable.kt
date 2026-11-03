@@ -39,7 +39,7 @@ public data class TypeArrayNullable(
   public val owner: Owner?,
   public val tags: List<String>?,
   public val alias: NullableAlias?,
-  public val anyOfAlias: AnyOfNullableAlias,
+  public val anyOfAlias: AnyOfNullableAlias?,
   public val single: String,
   public val stringOrInt: StringOrInt,
   public val stringOrIntOrNull: StringOrIntOrNull?,

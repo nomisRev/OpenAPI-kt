@@ -26,6 +26,7 @@ import io.github.nomisrev.openapi.pipeline.plugins.typed.flattenSingleTypeArray
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
+import io.github.nomisrev.openapi.registry.isNullableModel
 import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.openapi.transformers.discriminatedSubtypeOrNull
 
@@ -56,13 +57,13 @@ class SchemaTransformerEngine internal constructor(
             val name = with(ctx) {
                 schema.schema.discriminatedSubtypeOrNull(context, schema.reference.name)
             } ?: schema.name
-            return Model.Reference(name, with(ctx) { schema.description() }, schema.isNullable, schema.schema.title)
+            return Model.Reference(name, with(ctx) { schema.description() }, schema.isNullableModel(), schema.schema.title)
         }
         if (schema is ResolvedSchema.Recursive) {
             return Model.Reference(
                 schema.name,
                 with(ctx) { schema.description() },
-                schema.isNullable,
+                schema.isNullableModel(),
                 schema.schema.title
             )
         }

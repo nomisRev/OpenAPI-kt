@@ -5,6 +5,7 @@ import io.github.nomisrev.openapi.enumLikeValues
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.ReferenceOr.Companion.schema
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.pipeline.plugins.composite.compositeTakesPrecedence
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Reference
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
 import kotlin.contracts.ExperimentalContracts
@@ -56,6 +57,17 @@ suspend fun ResolvedSchema.isAllOfNullableType(): Boolean = with(ctx) {
     val allOf = schema.allOf ?: return false
     allOf.any { it.peek().isNull() }
 }
+
+/**
+ * Whether this schema's model is nullable: `nullable: true` (which `type: [X, "null"]` is normalised to),
+ * or an `anyOf`/`oneOf`/`allOf` with a `null` branch, which the composite nullable-flatten plugins model
+ * as a nullable `X?`. A `$ref` that is not resolved (a property, a recursive reference) must use this so
+ * the use site is nullable exactly when the referenced model is.
+ */
+context(ctx: Registry.Scope)
+suspend fun ResolvedSchema.isNullableModel(): Boolean =
+    isNullable || (schema.compositeTakesPrecedence() &&
+            (isAnyOfNullableType() || isOneOfNullableType() || isAllOfNullableType()))
 
 context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.Reference.isObjectWithDiscriminator(): Boolean =
