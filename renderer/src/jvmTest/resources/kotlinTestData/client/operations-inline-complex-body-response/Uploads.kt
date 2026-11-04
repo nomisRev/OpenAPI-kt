@@ -7,6 +7,7 @@ import io.ktor.client.request.forms.formData
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.HttpStatusCode
+import io.ktor.http.encodeURLParameter
 import io.ktor.serialization.JsonConvertException
 import kotlin.Boolean
 import kotlin.ByteArray
@@ -37,7 +38,7 @@ public class Uploads internal constructor(
         retries: Int? = null,
         tags: List<String>,
       ): Response {
-        val response = client.post("/uploads/$uploadId") {
+        val response = client.post("/uploads/${uploadId.encodeURLParameter()}") {
           setBody(MultiPartFormDataContent(formData {
             append("file", file)
             append("checksum", checksum)

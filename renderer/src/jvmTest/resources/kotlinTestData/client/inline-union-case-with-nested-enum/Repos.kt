@@ -6,6 +6,7 @@ import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.OptIn
 import kotlin.String
 import kotlinx.serialization.EncodeDefault
@@ -55,7 +56,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(source: Source? = null) {
-            val response = client.put("/repos/$owner/$repo/pages") {
+            val response = client.put("/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages") {
               contentType(ContentType.Application.Json)
               setBody(Body(source = source))
             }

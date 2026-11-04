@@ -3,6 +3,7 @@ package io.github.nomisrev.render.test.client.parameter.styles
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
+import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Codes internal constructor(
@@ -21,7 +22,7 @@ public class Codes internal constructor(
       private val code: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("/codes/;code=$code")
+        val response = client.get("/codes/;code=${code.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

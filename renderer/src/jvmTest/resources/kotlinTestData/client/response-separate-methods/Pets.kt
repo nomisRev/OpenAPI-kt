@@ -8,6 +8,7 @@ import io.ktor.client.request.`header`
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.ktor.serialization.JsonConvertException
 import kotlin.Int
 import kotlin.String
@@ -29,7 +30,7 @@ public class Pets internal constructor(
       private val petId: String,
     ) {
       public suspend fun json(): JsonResponse {
-        val response = client.get("/pets/$petId") {
+        val response = client.get("/pets/${petId.encodeURLParameter()}") {
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
         }
         return when (response.status.value) {
@@ -47,7 +48,7 @@ public class Pets internal constructor(
       }
 
       public suspend fun xml(): XmlResponse {
-        val response = client.get("/pets/$petId") {
+        val response = client.get("/pets/${petId.encodeURLParameter()}") {
           `header`(HttpHeaders.Accept, ContentType.Application.Xml)
         }
         return when (response.status.value) {

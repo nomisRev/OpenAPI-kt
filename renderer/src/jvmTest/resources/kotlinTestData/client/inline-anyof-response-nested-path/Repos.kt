@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
+import io.ktor.http.encodeURLParameter
 import kotlin.OptIn
 import kotlin.String
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -49,7 +50,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/repos/$owner/$repo/interaction-limits")
+            val response = client.get("/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/interaction-limits")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }

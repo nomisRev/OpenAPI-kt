@@ -5,6 +5,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
+import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Issues internal constructor(
@@ -23,7 +24,7 @@ public class Issues internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(): IssueKey {
-        val response = client.get("/issues/$id")
+        val response = client.get("/issues/${id.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }

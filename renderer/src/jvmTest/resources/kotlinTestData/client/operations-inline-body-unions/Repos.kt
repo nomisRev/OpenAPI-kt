@@ -6,6 +6,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
@@ -61,7 +62,7 @@ public class Repos internal constructor(
             body: String? = null,
             milestone: Milestone? = null,
           ) {
-            val response = client.post("/repos/$owner/$repo/issues") {
+            val response = client.post("/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseString(title), body = body, milestone = milestone))
             }
@@ -73,7 +74,7 @@ public class Repos internal constructor(
             body: String? = null,
             milestone: Milestone? = null,
           ) {
-            val response = client.post("/repos/$owner/$repo/issues") {
+            val response = client.post("/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseLong(title), body = body, milestone = milestone))
             }

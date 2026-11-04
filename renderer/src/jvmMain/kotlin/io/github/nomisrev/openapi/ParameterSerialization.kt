@@ -215,8 +215,11 @@ private fun Model.pairValueCode(config: RenderConfig, target: PairTarget, expr: 
 
 /** A scalar's `String` form [expr], and whether it can hold a character a query must percent-encode. */
 private data class ScalarValue(val expr: String, val needsEncoding: Boolean) {
-    fun encodedFor(target: PairTarget): CodeBlock =
-        if (target == PairTarget.Query && needsEncoding) CodeBlock.of("%L.%M()", expr, EncodeURLParameterMember)
+    fun encodedFor(target: PairTarget): CodeBlock = code(encode = target == PairTarget.Query)
+
+    /** This value, percent-encoded with `encodeURLParameter` if [encode] and it can hold a character to encode. */
+    fun code(encode: Boolean): CodeBlock =
+        if (encode && needsEncoding) CodeBlock.of("%L.%M()", expr, EncodeURLParameterMember)
         else CodeBlock.of("%L", expr)
 }
 
@@ -311,7 +314,7 @@ internal fun CodeBlock.Builder.addHeaderCode(
     explode: Boolean,
 ) {
     val value = { valueExpr: String, valueModel: Model ->
-        expansionCode(config, Style.simple, explode, name, valueExpr, valueModel).expression()
+        expansionCode(config, Style.simple, explode, name, valueExpr, valueModel, encode = false).expression()
     }
     when (val resolved = model.formModel(config)) {
         is Model.Union -> addUnionCode(config, name, expr, model, resolved, mayBeNull) { caseExpr, caseModel ->
@@ -350,6 +353,11 @@ internal fun CodeBlock.Builder.addHeaderCode(
  *   (exploded `;R=100;G=200`).
  *
  * An empty array, undefined in RFC 6570, expands to nothing, so a path segment of one is empty.
+ *
+ * With [encode] (a path segment), every scalar and array item is percent-encoded as RFC 6570 does, all but
+ * `A-Z a-z 0-9 - . _ ~`, so a `/`, `?`, `#` or `%` in a value stays inside its segment, while the `,`, `.`, `;` and
+ * `=` written by the style stay literal. The client does not generate path objects or maps, so those are not encoded.
+ * Its spaces are `·`: a path is one string template, which KotlinPoet must not wrap.
  */
 @Suppress("LongParameterList")
 private fun expansionCode(
@@ -359,27 +367,32 @@ private fun expansionCode(
     name: String,
     expr: String,
     model: Model,
+    encode: Boolean,
 ): StringCode {
     val [prefix, separator] = when (style) {
         Style.label -> "." to "."
         Style.matrix -> ";" to ";"
         else -> "" to ","
     }
-    val named = if (style == Style.matrix) "$name=" else ""
+    val named = if (style == Style.matrix) "${if (encode) name.encodeURLParameter() else name}=" else ""
+    val valueCode = { valueModel: Model, valueExpr: String ->
+        ScalarValue(valueModel.formValueExpr(config, valueExpr), valueModel.needsEncoding(config)).code(encode)
+    }
     return when (val resolved = model.formModel(config)) {
         is Model.Collection -> {
-            val itemExpr = resolved.inner.formValueExpr(config, "it")
+            val itemValue = valueCode(resolved.inner, "it")
             if (explode && style != Style.simple) {
-                val item = CodeBlock.of("%L%L", templateText(prefix + named), CodeBlock.of("%L", itemExpr).interpolated())
-                StringCode.Expression(CodeBlock.of("%L.joinToString(%S)·{ \"%L\" }", expr, "", item))
+                val item = CodeBlock.of("%L%L", templateText(prefix + named), itemValue.interpolated())
+                StringCode.Expression(CodeBlock.of("%L.joinToString(%S)·{·\"%L\"·}", expr, "", item))
             } else {
+                val itemCode = itemValue.toString()
                 val joined =
-                    if (itemExpr == "it" || itemExpr == "it.toString()") CodeBlock.of("%L.joinToString(%S)", expr, ",")
-                    else CodeBlock.of("%L.joinToString(%S)·{ %L }", expr, ",", itemExpr)
+                    if (itemCode == "it" || itemCode == "it.toString()") CodeBlock.of("%L.joinToString(%S)", expr, ",")
+                    else CodeBlock.of("%L.joinToString(%S)·{·%L·}", expr, ",", itemValue)
                 if (prefix.isEmpty()) StringCode.Expression(joined)
                 else StringCode.Expression(
                     CodeBlock.of(
-                        "if (%L.isEmpty()) \"\" else \"%L%L%L\"",
+                        "if·(%L.isEmpty())·\"\"·else·\"%L%L%L\"",
                         expr,
                         templateText(prefix),
                         templateText(named),
@@ -405,7 +418,7 @@ private fun expansionCode(
             else objectCode(config, resolved, expr, keySeparator = ",", separator = ",", prefix = prefix + named)
 
         else -> {
-            val value = CodeBlock.of("%L", model.formValueExpr(config, expr))
+            val value = valueCode(model, expr)
             if (prefix.isEmpty()) StringCode.Expression(value)
             else StringCode.Template(CodeBlock.of("%L%L", templateText(prefix + named), value.interpolated()))
         }
@@ -414,18 +427,22 @@ private fun expansionCode(
 
 /**
  * The path of this route as a `String` template: every parameter segment is the expansion of its `style` and
- * `explode` ([expansionCode]); a `simple` scalar is `$name` as before. An overloaded parameter is already its string.
+ * `explode` ([expansionCode]), percent-encoded as a path segment (`${id.encodeURLParameter()}`, a number `$id`). A
+ * fixed enum segment is its encoded wire value and an overloaded parameter, already its string, is encoded alike. The
+ * literal segments of the path template are written as they are.
  */
-internal fun Route.pathLiteral(config: RenderConfig): String {
-    val inner = segments.joinToString("/") { segment ->
+internal fun Route.pathLiteral(config: RenderConfig): CodeBlock {
+    val inner = segments.map { segment ->
         when (segment) {
-            is PathSegment.FixedValue -> segment.wireValue
-            is PathSegment.Literal -> segment.name
-            is PathSegment.OverloadedParameter -> "\$${segment.name.toCamelCase()}"
+            is PathSegment.FixedValue -> CodeBlock.of("%L", templateText(segment.wireValue.encodeURLParameter()))
+            // `·` keeps KotlinPoet from wrapping a line inside the template.
+            is PathSegment.Literal -> CodeBlock.of("%L", segment.name.replace(' ', '·'))
+            is PathSegment.OverloadedParameter ->
+                CodeBlock.of("%L.%M()", segment.name.toCamelCase(), EncodeURLParameterMember).interpolated()
             is PathSegment.Parameter -> {
                 val variable = segment.name.toCamelCase()
                 val input = parameters.firstOrNull { it.input == Parameter.Input.Path && it.name == segment.name }
-                if (input == null || !input.isSupported) "\$$variable"
+                if (input == null || !input.isSupported) CodeBlock.of("$%L", variable)
                 else expansionCode(
                     config = config,
                     style = if (input.contentType != null) Style.simple else input.style,
@@ -433,12 +450,12 @@ internal fun Route.pathLiteral(config: RenderConfig): String {
                     name = segment.name,
                     expr = variable,
                     model = segment.model.publicInputModelOrSelf(),
-                ).templateText().toString()
+                    encode = true,
+                ).templateText()
             }
         }
     }
-    val path = if (inner.isEmpty()) "/" else "/$inner"
-    return "\"$path\""
+    return if (inner.isEmpty()) CodeBlock.of("\"/\"") else CodeBlock.of("\"/%L\"", inner.joinToCode("/"))
 }
 
 /**

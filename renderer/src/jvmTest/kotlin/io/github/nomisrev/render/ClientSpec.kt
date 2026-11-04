@@ -1439,6 +1439,103 @@ val clientSpec by testSuite {
         "client/parameter-styles"
     )
 
+    // Path values are percent-encoded as a path segment (OpenAPI 3.1.1, 4.8.12.4; RFC 6570 3.2.1): all but
+    // `A-Z a-z 0-9 - . _ ~`, so a `/`, `?`, `#` or `%` in a value stays inside its segment, while the `,`, `.`, `;`
+    // and `=` the style writes stay literal.
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/simple/{id}": {
+              "get": {
+                "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/label/{id}": {
+              "get": {
+                "parameters": [{ "name": "id", "in": "path", "required": true, "style": "label", "schema": { "type": "string" } }],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/matrix/{id}": {
+              "get": {
+                "parameters": [{ "name": "id", "in": "path", "required": true, "style": "matrix", "schema": { "type": "string" } }],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/simple-array/{ids}": {
+              "get": {
+                "parameters": [{ "name": "ids", "in": "path", "required": true, "schema": { "type": "array", "items": { "type": "string" } } }],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/label-array/{ids}": {
+              "get": {
+                "parameters": [{ "name": "ids", "in": "path", "required": true, "style": "label", "schema": { "type": "array", "items": { "type": "string" } } }],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/label-exploded/{ids}": {
+              "get": {
+                "parameters": [{ "name": "ids", "in": "path", "required": true, "style": "label", "explode": true, "schema": { "type": "array", "items": { "type": "string" } } }],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/matrix-array/{ids}": {
+              "get": {
+                "parameters": [{ "name": "ids", "in": "path", "required": true, "style": "matrix", "schema": { "type": "array", "items": { "type": "string" } } }],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/matrix-exploded/{ids}": {
+              "get": {
+                "parameters": [{ "name": "ids", "in": "path", "required": true, "style": "matrix", "explode": true, "schema": { "type": "array", "items": { "type": "string" } } }],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/numbers/{n}": {
+              "get": {
+                "parameters": [{ "name": "n", "in": "path", "required": true, "schema": { "type": "integer", "format": "int64" } }],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/kinds/{kind}": {
+              "get": {
+                "parameters": [{ "name": "kind", "in": "path", "required": true, "schema": { "type": "string", "enum": ["plain", "with space"] } }],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/refs/{ref}": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "ref", "in": "path", "required": true,
+                    "schema": { "oneOf": [{ "type": "integer", "format": "int32" }, { "type": "string", "enum": ["a/b", "c"] }] }
+                  }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/versions/{version}": {
+              "get": {
+                "parameters": [
+                  {
+                    "name": "version", "in": "path", "required": true,
+                    "schema": { "oneOf": [{ "type": "integer", "format": "int32" }, { "type": "string" }] }
+                  }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/path-parameter-encoding"
+    )
+
     clientTest(
         """
         {

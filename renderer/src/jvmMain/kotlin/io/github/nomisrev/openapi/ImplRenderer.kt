@@ -294,7 +294,7 @@ internal fun Route.buildOperationBody(
 
 private data class OperationRequestInvocationContext(
     val httpMethodName: String,
-    val pathLiteral: String,
+    val pathLiteral: CodeBlock,
     val needsRequestConfig: Boolean,
     val bodyMayBeNull: Boolean,
 )
@@ -313,8 +313,7 @@ private fun Route.operationRequestInvocationContext(
 ): OperationRequestInvocationContext =
     OperationRequestInvocationContext(
         httpMethodName = method.value.lowercase(),
-        // `·` keeps KotlinPoet from wrapping a line inside the template's expressions.
-        pathLiteral = pathLiteral(config).replace(' ', '·'),
+        pathLiteral = pathLiteral(config),
         needsRequestConfig = hasRequestConfig(includeBody) || contentType != null,
         bodyMayBeNull = includeBody && when (selectedBody) {
             is Route.Body.OverloadedBody -> false

@@ -9,6 +9,7 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Folders internal constructor(
@@ -27,7 +28,7 @@ public class Folders internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(body: IssueFolderWrite): IssueFolderRead {
-        val response = client.post("/folders/$id") {
+        val response = client.post("/folders/${id.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }

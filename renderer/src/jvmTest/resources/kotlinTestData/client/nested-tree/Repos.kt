@@ -3,6 +3,7 @@ package io.github.nomisrev.render.test.client.nested.tree
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
+import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Repos internal constructor(
@@ -29,7 +30,7 @@ public class Repos internal constructor(
         private val repo: String,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("/repos/$owner/$repo")
+          val response = client.get("/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
         }
       }
