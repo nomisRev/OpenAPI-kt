@@ -224,6 +224,20 @@ private fun TypeSpec.Builder.addOperationInvokeFunctionsForContentType(
     functionName: String,
     operator: Boolean,
 ) {
+    if (context.needsNoBodyOverload(bodyVariants)) {
+        addFunction(
+            context.route.toInvokeFunSpecWithoutBody(
+                config = context.config,
+                pathClassName = context.pathClassName,
+                methodClassName = context.methodClassName,
+                sharedInlineParameterKeys = context.sharedInlineParameterKeys,
+                inlineModelScope = context.inlineModelScope,
+                functionName = functionName,
+                operator = operator,
+                contentType = contentType,
+            )
+        )
+    }
     when {
         requestBodyStrategy is RequestBodyStrategy.ClashingWithEnum -> {
             addFunction(
@@ -313,20 +327,6 @@ private fun TypeSpec.Builder.addOperationInvokeFunctionsForContentType(
         }
 
         overloadedBody != null -> {
-            if (context.route.body?.required != true) {
-                addFunction(
-                    context.route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
-                        config = context.config,
-                        pathClassName = context.pathClassName,
-                        methodClassName = context.methodClassName,
-                        sharedInlineParameterKeys = context.sharedInlineParameterKeys,
-                        inlineModelScope = context.inlineModelScope,
-                        functionName = functionName,
-                        operator = operator,
-                        contentType = contentType,
-                    )
-                )
-            }
             overloadedBody
                 .distinctCaseSignatures(context.config, context.inlineModelScope)
                 .forEach { caseSignature ->
@@ -361,6 +361,36 @@ private fun TypeSpec.Builder.addOperationInvokeFunctionsForContentType(
             )
         )
     }
+}
+
+/**
+ * Whether an optional request body (`requestBody.required` is `false` by default) needs an overload of its own that
+ * sends no body: an overload that takes the body's fields (a flattened inline JSON object, a form, a multipart form)
+ * or one of an overloaded body's cases always sends it, and keeps the schema's `required` fields required for when it
+ * is sent. A `body: T? = null` argument already leaves the body out when `null`. A body without fields takes no
+ * arguments, so its overload is the one without a body (a flattened object) or would clash with it (a form).
+ */
+private fun OperationTypeSpecContext.needsNoBodyOverload(bodyVariants: List<Route.Bodies.Variant>): Boolean {
+    val body = route.body ?: return false
+    if (body.required) return false
+    return when {
+        bodyVariants.size > 1 ->
+            bodyVariants.any { (it.body.fieldCountOrNull() ?: 0) > 0 } &&
+                bodyVariants.none { it.body.fieldCountOrNull() == 0 }
+
+        flattenedBody != null -> flattenedBody.overloads.none(FlattenedBodyOverload::omitsBody)
+        overloadedBody != null -> true
+        else -> (body.defaultOrNull()?.fieldCountOrNull() ?: 0) > 0
+    }
+}
+
+/** The number of fields of a form or multipart body, which its overload takes as arguments; `null` for other bodies. */
+private fun Route.Body.fieldCountOrNull(): Int? = when (this) {
+    is Route.Body.FormUrlEncoded -> parameters.size
+    is Route.Body.Multipart.Value -> parameters.size
+    is Route.Body.Multipart.Ref,
+    is Route.Body.OverloadedBody,
+    is Route.Body.SetBody -> null
 }
 
 /** Build the operation invoke(...) signature with parameters and response wrapper. */
@@ -646,7 +676,8 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     return builder.build()
 }
 
-private fun Route.toInvokeFunSpecForOptionalOverloadedBodyNoBody(
+/** The overload of an operation with an optional request body that sends none, see [needsNoBodyOverload]. */
+private fun Route.toInvokeFunSpecWithoutBody(
     config: RenderConfig,
     pathClassName: ClassName,
     methodClassName: ClassName,

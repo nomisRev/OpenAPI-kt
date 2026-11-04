@@ -19,6 +19,11 @@ public class Optional internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
+    public suspend operator fun invoke() {
+      val response = client.post("/optional")
+      if (response.status.value != 204) throw ResponseException(response, "")
+    }
+
     public suspend operator fun invoke(body: Body? = null) {
       val response = client.post("/optional") {
         body?.let {

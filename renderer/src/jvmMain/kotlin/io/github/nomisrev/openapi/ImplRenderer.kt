@@ -254,7 +254,6 @@ internal fun Route.buildOperationBody(
     includeBody: Boolean = true,
     selectedBody: Route.Body? = body?.defaultOrNull(),
     bodyExpr: CodeBlock? = null,
-    bodyGuard: String? = null,
     contentType: ContentType? = null,
     requestType: RequestTypeArgument? = null,
 ): CodeBlock {
@@ -268,7 +267,6 @@ internal fun Route.buildOperationBody(
                 includeBody = includeBody,
                 selectedBody = selectedBody,
                 bodyExpr = bodyExpr,
-                bodyGuard = bodyGuard,
                 requestType = requestType,
             )
         } else {
@@ -279,7 +277,6 @@ internal fun Route.buildOperationBody(
                 includeBody,
                 selectedBody,
                 bodyExpr,
-                bodyGuard,
                 contentType,
                 requestType,
             )
@@ -291,7 +288,6 @@ internal fun Route.buildOperationBody(
             includeBody,
             selectedBody,
             bodyExpr,
-            bodyGuard,
             contentType,
             requestType,
         )
@@ -339,7 +335,6 @@ private fun CodeBlock.Builder.addRequestInvocation(
     includeBody: Boolean,
     selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
-    bodyGuard: String?,
     acceptContentType: ContentType?,
     requestType: RequestTypeArgument?,
 ) {
@@ -369,7 +364,6 @@ private fun CodeBlock.Builder.addRequestInvocation(
         selectedBody = selectedBody,
         bodyMayBeNull = request.bodyMayBeNull,
         bodyExpr = bodyExpr,
-        bodyGuard = bodyGuard,
         acceptContentType = acceptContentType,
         requestType = requestType,
     )
@@ -384,7 +378,6 @@ private fun Route.buildSealedOperationBody(
     includeBody: Boolean,
     selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
-    bodyGuard: String?,
     contentType: ContentType?,
     requestType: RequestTypeArgument?,
 ): CodeBlock {
@@ -399,7 +392,6 @@ private fun Route.buildSealedOperationBody(
         includeBody = includeBody,
         selectedBody = selectedBody,
         bodyExpr = bodyExpr,
-        bodyGuard = bodyGuard,
         acceptContentType = contentType,
         requestType = requestType,
     )
@@ -421,7 +413,6 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
     includeBody: Boolean,
     selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
-    bodyGuard: String?,
     requestType: RequestTypeArgument?,
 ): CodeBlock {
     val code = CodeBlock.builder()
@@ -435,7 +426,6 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
         includeBody = includeBody,
         selectedBody = selectedBody,
         bodyExpr = bodyExpr,
-        bodyGuard = bodyGuard,
         acceptContentType = contentType,
         requestType = requestType,
     )
@@ -460,7 +450,6 @@ private fun Route.buildDirectOperationBody(
     includeBody: Boolean,
     selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
-    bodyGuard: String?,
     contentType: ContentType?,
     requestType: RequestTypeArgument?,
 ): CodeBlock {
@@ -482,7 +471,6 @@ private fun Route.buildDirectOperationBody(
         includeBody = includeBody,
         selectedBody = selectedBody,
         bodyExpr = bodyExpr,
-        bodyGuard = bodyGuard,
         acceptContentType = contentType,
         requestType = requestType,
     )
@@ -859,7 +847,6 @@ private fun Route.addRequestConfigCode(
     selectedBody: Route.Body? = body?.defaultOrNull(),
     bodyMayBeNull: Boolean = includeBody && body?.required != true,
     bodyExpr: CodeBlock? = null,
-    bodyGuard: String? = null,
     acceptContentType: ContentType? = null,
     requestType: RequestTypeArgument? = null,
 ) {
@@ -917,7 +904,6 @@ private fun Route.addRequestConfigCode(
             body = selectedBody,
             bodyMayBeNull = bodyMayBeNull,
             bodyExpr = bodyExpr,
-            bodyGuard = bodyGuard,
             requestType = requestType,
             callerContentType = callerContentTypeArgumentOrNull(config, selectedBody),
             sentContentType = body?.variants()?.firstOrNull { it.body === selectedBody }?.sentContentType,
@@ -982,7 +968,6 @@ private fun addBodyCode(
     body: Route.Body,
     bodyMayBeNull: Boolean,
     bodyExpr: CodeBlock? = null,
-    bodyGuard: String? = null,
     requestType: RequestTypeArgument? = null,
     callerContentType: CallerContentTypeArgument? = null,
     sentContentType: ContentType? = null,
@@ -993,7 +978,7 @@ private fun addBodyCode(
                 ?: callerContentType?.let { CodeBlock.of("%N", it.name) }
                 ?: body.contentType.toContentTypeCodeBlock()
             val check = callerContentType?.requireCode()
-            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard, check) { value ->
+            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, check) { value ->
                 if (requestType == null) {
                     addStatement("%M(%L)", SetBodyMember, setBodyArgument(body.type, body.contentType, value))
                 } else {
@@ -1004,7 +989,7 @@ private fun addBodyCode(
 
         is Route.Body.OverloadedBody -> {
             val contentType = requestType?.contentTypeCode ?: body.contentType.toContentTypeCodeBlock()
-            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, bodyGuard, contentTypeCheck = null) { value ->
+            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, contentTypeCheck = null) { value ->
                 addStatement("%M(%L)", SetBodyMember, value)
             }
         }
@@ -1044,7 +1029,6 @@ private fun CodeBlock.Builder.addSetLikeBodyCode(
     contentType: CodeBlock,
     bodyExpr: CodeBlock?,
     bodyMayBeNull: Boolean,
-    bodyGuard: String?,
     contentTypeCheck: CodeBlock?,
     setBody: CodeBlock.Builder.(value: String) -> Unit,
 ) {
@@ -1053,15 +1037,8 @@ private fun CodeBlock.Builder.addSetLikeBodyCode(
         addStatement("%M(%L)", ContentTypeFunMember, contentType)
     }
     if (bodyExpr != null) {
-        if (bodyMayBeNull && bodyGuard != null) {
-            beginControlFlow("if (%L)", bodyGuard)
-            setContentType()
-            addStatement("%M(%L)", SetBodyMember, bodyExpr)
-            endControlFlow()
-        } else {
-            setContentType()
-            addStatement("%M(%L)", SetBodyMember, bodyExpr)
-        }
+        setContentType()
+        addStatement("%M(%L)", SetBodyMember, bodyExpr)
     } else if (!bodyMayBeNull) {
         setContentType()
         setBody("body")

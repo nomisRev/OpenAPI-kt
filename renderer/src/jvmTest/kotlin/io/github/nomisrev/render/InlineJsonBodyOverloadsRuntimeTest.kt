@@ -120,4 +120,12 @@ class InlineJsonBodyOverloadsRuntimeTest {
         assertEquals("application/json", request().contentType)
         assertEquals("""{"name":"Ada"}""", request().body)
     }
+
+    @Test
+    fun optionalBodyNextToAFormIsLeftOutWithoutArguments() = bothClients { api, request ->
+        api.optional.post()
+
+        assertEquals(null, request().contentType)
+        assertEquals(null, request().body)
+    }
 }

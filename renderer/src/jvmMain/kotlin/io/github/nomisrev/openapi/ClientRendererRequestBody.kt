@@ -36,7 +36,11 @@ internal data class FlattenedBodyOverload(
     val bodyConstructorArgs: CodeBlock,
     val bodyHasConstructorArgs: Boolean,
     val bodyParamsBeforeOptionalParams: Boolean,
-    val bodyMayBeNull: Boolean,
+    /**
+     * An optional body without properties, whose overload takes no arguments for it and so is the one that sends no
+     * body; any other optional body has an overload of its own that sends none (see `needsNoBodyOverload`).
+     */
+    val omitsBody: Boolean,
 )
 
 private data class FlattenedBodyOverloadContext(
@@ -47,7 +51,7 @@ private data class FlattenedBodyOverloadContext(
     val additionalProperty: Model.Object.AdditionalProperties.Schema?,
     val selectedModels: Map<String, Model>,
     val bodyParamsBeforeOptionalParams: Boolean,
-    val bodyMayBeNull: Boolean,
+    val omitsBody: Boolean,
 )
 
 /** The `requestType` argument choosing among request bodies whose Kotlin signatures clash. */
@@ -303,7 +307,7 @@ private fun buildFlattenedBodyOverloads(
     }
 
     val bodyParamsBeforeOptionalParams = bodyModel.properties.values.any { it.isRequired }
-    val bodyMayBeNull = !bodyRequired && bodyModel.properties.values.none { it.isRequired }
+    val omitsBody = !bodyRequired && bodyModel.properties.isEmpty() && additionalProperty == null
     val parameterGroups = propertyOptions.fold(listOf(emptyMap<String, Model>())) { acc, [name, options] ->
         acc.flatMap { current ->
             options.map { option -> current + (name to option) }
@@ -320,7 +324,7 @@ private fun buildFlattenedBodyOverloads(
                 additionalProperty = additionalProperty,
                 selectedModels = selectedModels,
                 bodyParamsBeforeOptionalParams = bodyParamsBeforeOptionalParams,
-                bodyMayBeNull = bodyMayBeNull,
+                omitsBody = omitsBody,
             )
         )
     }
@@ -379,7 +383,7 @@ private fun buildFlattenedBodyOverload(
         bodyConstructorArgs = constructorArgPieces.joinToCode(separator = ", "),
         bodyHasConstructorArgs = constructorArgPieces.isNotEmpty(),
         bodyParamsBeforeOptionalParams = context.bodyParamsBeforeOptionalParams,
-        bodyMayBeNull = context.bodyMayBeNull,
+        omitsBody = context.omitsBody,
     )
 }
 
@@ -446,27 +450,14 @@ internal fun Route.buildFlattenedBodyOperationBody(
     } else {
         CodeBlock.of("%T(%L)", bodyClassName, overload.bodyConstructorArgs)
     }
-    val bodyGuard = if (overload.bodyMayBeNull) {
-        overload.parameters.joinToString(" || ") { parameter -> "${parameter.name} != null" }
-            .takeIf(String::isNotBlank)
-    } else {
-        null
-    }
-    if (overload.bodyMayBeNull && bodyGuard == null) {
-        return buildOperationBody(
-            config = config,
-            method = method,
-            methodClassName = methodClassName,
-            includeBody = false,
-            contentType = contentType,
-        )
-    }
+    // Sent whenever this overload is called, even with every optional property absent (`{}`): an optional body is
+    // left out by the overload without its properties.
     return buildOperationBody(
         config = config,
         method = method,
         methodClassName = methodClassName,
+        includeBody = !overload.omitsBody,
         bodyExpr = bodyExpr,
-        bodyGuard = bodyGuard,
         contentType = contentType,
     )
 }
