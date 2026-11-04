@@ -181,10 +181,17 @@ internal fun buildRequestTypeEnum(clashingVariants: List<Route.Bodies.Variant>):
     return builder.build()
 }
 
+/**
+ * The overloads taking the properties of an inline JSON object body as arguments, with the inline types they expose
+ * hoisted out of `Body`, which only the implementation then constructs and so is `internal`. Only an operation with a
+ * single request body is flattened: with several, each body gets an overload of its own, and the JSON one takes the
+ * public `Body` (see [exceedsFlattenedBodyOverloadLimit]).
+ */
 internal fun Route.Bodies.flattenedBodyRendering(
     config: RenderConfig,
     methodClassName: ClassName,
 ): FlattenedBodyRendering? {
+    if (types.size != 1) return null
     val body = defaultOrNull() as? Route.Body.SetBody
     val model = body?.type?.nestedOrNull() as? Model.Object
     val isInlineAdditionalProps = body == null || model == null || !model.isRouteInlineModel() ||
