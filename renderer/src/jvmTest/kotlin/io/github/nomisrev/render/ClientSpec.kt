@@ -1271,6 +1271,46 @@ val clientSpec by testSuite {
         "client/form-urlencoded-fields"
     )
 
+    // An Encoding Object that declares neither `style` nor `explode` is `style: form` (its default) with
+    // `explode: true` (the default of `form`): an array field is repeated keys, whatever else the encoding declares.
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/tags": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "tags": { "type": "array", "items": { "type": "string" } },
+                          "labels": { "type": "array", "items": { "type": "string" } },
+                          "ids": { "type": "array", "items": { "type": "integer", "format": "int64" } }
+                        },
+                        "required": ["tags"]
+                      },
+                      "encoding": {
+                        "tags": { "contentType": "text/plain" },
+                        "labels": { "allowReserved": true },
+                        "ids": { "explode": false }
+                      }
+                    }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/form-urlencoded-encoding-defaults"
+    )
+
     clientTest(
         """
         {
@@ -3548,9 +3588,6 @@ val clientSpec by testSuite {
     val unsupportedFormFields = listOf(
         // `deepObject` defines no array serialization.
         "an array with deepObject" to formFieldApi(stringArray, """{ "style": "deepObject", "explode": true }"""),
-        // Indistinguishable from `explode: false` once parsed, and `name=a&name=b` and `name=a,b` differ.
-        "an array with an encoding but no style or explode" to
-            formFieldApi(stringArray, """{ "contentType": "text/plain" }"""),
         "an array with a style forms do not define" to formFieldApi(stringArray, """{ "style": "matrix" }"""),
         "an array of objects" to formFieldApi("""{ "type": "array", "items": $scalarObject }""", null),
         "an array of nullable items" to
@@ -3579,6 +3616,17 @@ val clientSpec by testSuite {
                 message,
             )
         }
+    }
+
+    // An Encoding Object without `style` or `explode` is `style: form` with `explode: true`, its defaults, so an array
+    // field is repeated keys (`client/form-urlencoded-encoding-defaults`), not rejected as if it were `explode: false`.
+    test("a form array field whose encoding declares neither style nor explode is generated as repeated keys") {
+        val result = OpenAPI.fromJson(formFieldApi(stringArray, """{ "contentType": "text/plain" }"""))
+            .toApiTree().generateClientWithDiagnostics(wildcardConfig)
+
+        assertTrue(result.diagnostics.isEmpty(), result.diagnostics.toString())
+        val code = result.files.joinToString("\n") { it.toString() }
+        assertTrue("""appendAll("field", field)""" in code, code)
     }
 
     test("a form body declared in UTF-8 under any spelling of the charset is generated") {

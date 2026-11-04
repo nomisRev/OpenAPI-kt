@@ -829,6 +829,84 @@ val routeSpec by testSuite {
         assertTrue(form.unsupportedFields.isEmpty())
     }
 
+    // An Encoding Object's `style` defaults to `form`, and `explode` defaults to `true` for `form` and to `false` for
+    // every other style (OpenAPI 3.1.1, 4.8.15.2), so an array field whose encoding declares neither is repeated keys.
+    val effectiveFormStyles = listOf(
+        "neither style nor explode" to (Encoding(contentType = "text/plain") to Route.Body.FormStyle.FormExploded),
+        "only allowReserved" to (Encoding(allowReserved = true) to Route.Body.FormStyle.FormExploded),
+        "style form without explode" to (Encoding(style = "form") to Route.Body.FormStyle.FormExploded),
+        "explode true without style" to (Encoding(explode = true) to Route.Body.FormStyle.FormExploded),
+        "explode false without style" to (Encoding(explode = false) to Route.Body.FormStyle.Form),
+        "style form and explode false" to (Encoding(style = "form", explode = false) to Route.Body.FormStyle.Form),
+        "style spaceDelimited" to (Encoding(style = "spaceDelimited") to Route.Body.FormStyle.SpaceDelimited),
+        "style pipeDelimited" to (Encoding(style = "pipeDelimited") to Route.Body.FormStyle.PipeDelimited),
+    )
+    for ([description, case] in effectiveFormStyles) {
+        val [encoding, expected] = case
+        test("form-urlencoded array field with an encoding of $description is $expected") {
+            val route = routes(
+                openAPI(
+                    path = "/search",
+                    method = HttpMethod.Post,
+                    requestBody = formRequestBody(
+                        schema = ReferenceOr.value(
+                            Schema(
+                                type = Schema.Type.Basic.Object,
+                                properties = mapOf(
+                                    "tags" to ReferenceOr.value(
+                                        Schema(type = Schema.Type.Basic.Array, items = ReferenceOr.value(Schema.string))
+                                    ),
+                                ),
+                            )
+                        ),
+                        encoding = mapOf("tags" to encoding),
+                    ),
+                )
+            ).single()
+
+            val form = assertIs<Route.Body.FormUrlEncoded>(
+                requireNotNull(route.body).types.getValue(ContentType.Application.FormUrlEncoded)
+            )
+            assertEquals(emptyList(), form.unsupportedFields)
+            assertEquals(expected, form.styleOf(form.single()))
+        }
+    }
+
+    // An object field's encoding still needs an explicit `style` or `explode`: without one it is its `contentType`,
+    // `application/json`, which the client does not send. `explode: true` alone is `form`, exploded.
+    test("form-urlencoded object field needs an explicit style or explode in its encoding") {
+        val objectField = ReferenceOr.value(
+            Schema(
+                type = Schema.Type.Basic.Object,
+                properties = mapOf("status" to ReferenceOr.value(Schema.string)),
+            )
+        )
+        val route = routes(
+            openAPI(
+                path = "/search",
+                method = HttpMethod.Post,
+                requestBody = formRequestBody(
+                    schema = ReferenceOr.value(
+                        Schema(
+                            type = Schema.Type.Basic.Object,
+                            properties = mapOf("implicit" to objectField, "exploded" to objectField),
+                        )
+                    ),
+                    encoding = mapOf(
+                        "implicit" to Encoding(contentType = "application/json"),
+                        "exploded" to Encoding(explode = true),
+                    ),
+                ),
+            )
+        ).single()
+
+        val form = assertIs<Route.Body.FormUrlEncoded>(
+            requireNotNull(route.body).types.getValue(ContentType.Application.FormUrlEncoded)
+        )
+        assertEquals(listOf("implicit"), form.unsupportedFields)
+        assertEquals(Route.Body.FormStyle.FormExploded, form.styleOf(form.single { it.name == "exploded" }))
+    }
+
     test("parameter with content is resolved") {
         val route = routes(
             openAPI(

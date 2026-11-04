@@ -1,6 +1,8 @@
 package io.github.nomisrev.openapi.parser
 
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -22,7 +24,7 @@ class EncodingTest {
         assertEquals("application/json", encoding.contentType)
         assertTrue(encoding.headers.isEmpty())
         assertEquals(null, encoding.style)
-        assertEquals(false, encoding.explode)
+        assertEquals<Boolean?>(null, encoding.explode)
         assertEquals(false, encoding.allowReserved)
     }
 
@@ -76,25 +78,76 @@ class EncodingTest {
 
     // ── Style, explode, allowReserved ────────────────────────────────────────
 
+    // `explode` is kept as written, `null` when absent: its default (`true` for `style: form`, the default style,
+    // `false` otherwise) is applied where the encoding is used, so an absent `explode` stays distinguishable from an
+    // explicit `false` and is not written back on re-encode.
+
     @Test
-    fun `style form defaults explode to true`() {
+    fun `absent style and explode stay absent`() {
+        val encoding = decode("""{"contentType":"text/plain"}""")
+        assertEquals(null, encoding.style)
+        assertEquals<Boolean?>(null, encoding.explode)
+    }
+
+    @Test
+    fun `style form without explode keeps explode absent`() {
         val encoding = decode("""{"contentType":"text/plain","style":"form"}""")
         assertEquals("form", encoding.style)
-        assertEquals(true, encoding.explode)
+        assertEquals<Boolean?>(null, encoding.explode)
     }
 
     @Test
-    fun `non-form style defaults explode to false`() {
-        val encoding = decode("""{"contentType":"text/plain","style":"simple"}""")
-        assertEquals("simple", encoding.style)
-        assertEquals(false, encoding.explode)
+    fun `non-form style without explode keeps explode absent`() {
+        val encoding = decode("""{"contentType":"text/plain","style":"spaceDelimited"}""")
+        assertEquals("spaceDelimited", encoding.style)
+        assertEquals<Boolean?>(null, encoding.explode)
     }
 
     @Test
-    fun `explicit explode overrides style default`() {
+    fun `explicit explode true without style deserializes`() {
+        val encoding = decode("""{"explode":true}""")
+        assertEquals(null, encoding.style)
+        assertEquals<Boolean?>(true, encoding.explode)
+    }
+
+    @Test
+    fun `explicit explode false without style deserializes`() {
+        val encoding = decode("""{"explode":false}""")
+        assertEquals(null, encoding.style)
+        assertEquals<Boolean?>(false, encoding.explode)
+    }
+
+    @Test
+    fun `explicit explode false with style form deserializes`() {
         val encoding = decode("""{"contentType":"text/plain","style":"form","explode":false}""")
         assertEquals("form", encoding.style)
-        assertEquals(false, encoding.explode)
+        assertEquals<Boolean?>(false, encoding.explode)
+    }
+
+    @Test
+    fun `explicit explode true with a non-form style deserializes`() {
+        val encoding = decode("""{"style":"pipeDelimited","explode":true}""")
+        assertEquals("pipeDelimited", encoding.style)
+        assertEquals<Boolean?>(true, encoding.explode)
+    }
+
+    private fun roundTrip(json: String): JsonObject =
+        OpenAPI.Json.parseToJsonElement(OpenAPI.Json.encodeToString(Encoding.serializer(), decode(json))).jsonObject
+
+    @Test
+    fun `absent explode stays absent on re-encode`() {
+        assertEquals(null, roundTrip("""{"contentType":"text/plain"}""")["explode"])
+        assertEquals(null, roundTrip("""{"style":"form"}""")["explode"])
+        assertEquals(null, roundTrip("""{"style":"spaceDelimited"}""")["explode"])
+    }
+
+    @Test
+    fun `explicit explode is kept on re-encode`() {
+        assertEquals(JsonPrimitive(false), roundTrip("""{"explode":false}""")["explode"])
+        assertEquals(JsonPrimitive(true), roundTrip("""{"explode":true}""")["explode"])
+        assertEquals(JsonPrimitive(true), roundTrip("""{"style":"form","explode":true}""")["explode"])
+        assertEquals(JsonPrimitive(false), roundTrip("""{"style":"form","explode":false}""")["explode"])
+        assertEquals(JsonPrimitive(false), roundTrip("""{"style":"spaceDelimited","explode":false}""")["explode"])
     }
 
     @Test
@@ -151,7 +204,7 @@ class EncodingTest {
         val encoding = OpenAPI.Yaml.decodeFromString(Encoding.serializer(), yaml)
         assertEquals("text/plain", encoding.contentType)
         assertEquals("form", encoding.style)
-        assertEquals(true, encoding.explode)
+        assertEquals<Boolean?>(null, encoding.explode)
         assertEquals(false, encoding.allowReserved)
     }
 

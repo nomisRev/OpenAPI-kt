@@ -214,11 +214,13 @@ private suspend fun ReferenceOr<Schema>.resolveSchema(): Schema = with(ctx.scope
 
 /**
  * The [Route.Body.FormStyle] an Encoding Object declares for a form field, or `null` when it declares none that is
- * known. `style` defaults to `form`, whose `explode` defaults to `true`.
+ * known. `style` defaults to `form`, whose `explode` defaults to `true` (OpenAPI 3.1.1, 4.8.15.2); the parser keeps
+ * an absent `explode` as `null`, so the default is applied here.
  */
 private fun Encoding.formStyleOrNull(): Route.Body.FormStyle? =
     when (style) {
-        null, Style.form.name -> if (explode) Route.Body.FormStyle.FormExploded else Route.Body.FormStyle.Form
+        null, Style.form.name ->
+            if (explode ?: true) Route.Body.FormStyle.FormExploded else Route.Body.FormStyle.Form
         Style.spaceDelimited.name -> Route.Body.FormStyle.SpaceDelimited
         Style.pipeDelimited.name -> Route.Body.FormStyle.PipeDelimited
         Style.deepObject.name -> Route.Body.FormStyle.DeepObject
@@ -236,23 +238,18 @@ private fun Encoding.formStyleOrNull(): Route.Body.FormStyle? =
  * - An object of scalar properties, and nothing else, is one key per property (`form`, `explode: true`) or one
  *   `name[key]` per property (`deepObject`). It needs an explicit `style` or `explode`: without one, its default is
  *   its `contentType`, `application/json`, a JSON string the client does not send.
- *
- * The parser reads an Encoding Object without `style` or `explode` as `explode: false` (its default for a
- * missing `style`), so it cannot tell `explode: false` apart from no `explode` at all. For an array the two are
- * different serializations (`name=a,b` and `name=a&name=b`), so such an array is not supported.
  */
 context(scope: Registry)
 private suspend fun Model.isFormUrlEncodable(encoding: Encoding?, style: Route.Body.FormStyle?): Boolean {
     val model = formModel() ?: return false
     if (model.isFormScalar()) return true
-    val isAmbiguous = encoding != null && encoding.style == null && !encoding.explode
     return when (model) {
         is Model.Collection ->
-            !isAmbiguous && style != null && style != Route.Body.FormStyle.DeepObject &&
+            style != null && style != Route.Body.FormStyle.DeepObject &&
                 !model.inner.isNullable && model.inner.formModel()?.isFormScalar() == true
 
         is Model.Object ->
-            encoding != null && !isAmbiguous &&
+            encoding != null && (encoding.style != null || encoding.explode != null) &&
                 (style == Route.Body.FormStyle.FormExploded || style == Route.Body.FormStyle.DeepObject) &&
                 model.additionalProperties == Model.Object.AdditionalProperties.False &&
                 model.properties.values.all { it.model.formModel()?.isFormScalar() == true }

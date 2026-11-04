@@ -43,9 +43,11 @@ public data class Encoding(
    * each value of the array, or key-value-pair of the map. For other types of properties this
    * property has no effect. When style is form, the default value is true. For all other styles,
    * the default value is false. This property SHALL be ignored if the request body media type is
-   * not application/x-www-form-urlencoded.
+   * not application/x-www-form-urlencoded. `null` when the Encoding Object does not declare it, so
+   * that an absent value stays distinguishable from an explicit `false`; the default depends on the
+   * effective [style] and is applied by the consumer.
    */
-  public val explode: Boolean = style?.let { it == Style.form.name } ?: false,
+  public val explode: Boolean? = null,
     /**
    * Determines whether the parameter value SHOULD allow reserved characters, as defined by RFC3986
    * :/?#[]@!$&'()*+,;= to be included without percent-encoding. The default value is false. This
