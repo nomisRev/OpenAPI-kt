@@ -108,23 +108,25 @@ internal fun TypeSpec.Builder.addClientConstructorAndState(
     }
 }
 
+/** Adds the navigation to [childClassName] as [memberName], unique among the node's children ([uniqueNames]). */
+@Suppress("LongParameterList")
 internal fun PathSegment.addConcreteNavigationMember(
     builder: TypeSpec.Builder,
+    memberName: String,
     childClassName: ClassName,
     currentAccumulatedParams: List<AccumulatedParam>,
     parentClassName: ClassName,
     config: RenderConfig,
 ) {
     when (this) {
-        is PathSegment.FixedValue ->
-            builder.addConcreteNavigationProperty(name.toParamName(), childClassName, currentAccumulatedParams)
-
+        is PathSegment.FixedValue,
         is PathSegment.Literal ->
-            builder.addConcreteNavigationProperty(navigationName.toParamName(), childClassName, currentAccumulatedParams)
+            builder.addConcreteNavigationProperty(memberName, childClassName, currentAccumulatedParams)
 
         is PathSegment.OverloadedParameter ->
             builder.addOverloadedNavigationMembers(
                 segment = this,
+                functionName = memberName,
                 childClassName = childClassName,
                 currentAccumulatedParams = currentAccumulatedParams,
                 parentClassName = parentClassName,
@@ -133,6 +135,7 @@ internal fun PathSegment.addConcreteNavigationMember(
 
         is PathSegment.Parameter ->
             builder.addConcreteParameterNavigationMember(
+                functionName = memberName,
                 paramName = name.toCamelCase(),
                 typeName = model.publicInputTypeName(config),
                 childClassName = childClassName,
@@ -154,13 +157,14 @@ private fun TypeSpec.Builder.addConcreteNavigationProperty(
 }
 
 private fun TypeSpec.Builder.addConcreteParameterNavigationMember(
+    functionName: String,
     paramName: String,
     typeName: TypeName,
     childClassName: ClassName,
     currentAccumulatedParams: List<AccumulatedParam>,
 ) {
     addFunction(
-        FunSpec.builder(paramName)
+        FunSpec.builder(functionName)
             .addParameter(paramName, typeName)
             .addExperimentalUuidOptInIfNeeded(typeName)
             .returns(childClassName)
@@ -175,6 +179,7 @@ private fun TypeSpec.Builder.addConcreteParameterNavigationMember(
 
 private fun TypeSpec.Builder.addOverloadedNavigationMembers(
     segment: PathSegment.OverloadedParameter,
+    functionName: String,
     childClassName: ClassName,
     currentAccumulatedParams: List<AccumulatedParam>,
     parentClassName: ClassName,
@@ -207,7 +212,7 @@ private fun TypeSpec.Builder.addOverloadedNavigationMembers(
         }
         if (!emittedTypes.add(caseTypeName)) continue
 
-        val functionBuilder = FunSpec.builder(paramName)
+        val functionBuilder = FunSpec.builder(functionName)
             .addParameter(paramName, caseTypeName)
             .addExperimentalUuidOptInIfNeeded(caseTypeName)
             .returns(childClassName)

@@ -40,7 +40,29 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
 }
 
 internal fun ApiTree.generationDiagnostics(): List<GenerationDiagnostic> =
-    requestBodyDiagnostics() + ignoredParameterDiagnostics() + parameterDiagnostics()
+    requestBodyDiagnostics() + ignoredParameterDiagnostics() + parameterDiagnostics() +
+        children.renamedPathDiagnostics(parentPath = "")
+
+/** A warning for each node whose Kotlin name is taken by an earlier sibling, and is suffixed ([uniqueNames]). */
+private fun List<PathNode>.renamedPathDiagnostics(parentPath: String): List<GenerationDiagnostic> =
+    zip(uniqueNames()).flatMap { [node, name] ->
+        val path = "$parentPath/${node.segment.templateText()}"
+        val renamed = if (name.suffix == null) emptyList() else listOf(
+            GenerationDiagnostic(
+                severity = GenerationDiagnosticSeverity.Warning,
+                message = "Path '$path' is generated as '${name.memberName.unescapeBackticks()}' " +
+                    "(class ${name.simpleName}): an earlier path segment has the same Kotlin name.",
+            )
+        )
+        renamed + node.children.renamedPathDiagnostics(path)
+    }
+
+private fun PathSegment.templateText(): String = when (this) {
+    is PathSegment.FixedValue -> wireValue
+    is PathSegment.Literal -> name
+    is PathSegment.Parameter -> "{$name}"
+    is PathSegment.OverloadedParameter -> "{$name}"
+}
 
 private fun ApiTree.requestBodyDiagnostics(): List<GenerationDiagnostic> =
     operations.values.flatMapTo(mutableListOf(), Route::requestBodyDiagnostics) +

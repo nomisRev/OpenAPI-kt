@@ -29,8 +29,8 @@ private fun ApiTree.generateClientFiles(config: RenderConfig): List<FileSpec> {
     val rootClassName = ClassName(config.apiPackage, rootName)
 
     val childFiles = mutableListOf<FileSpec>()
-    for (child in children) {
-        val childSimpleName = child.childInterfaceSimpleName()
+    for ([child, name] in children.zip(children.uniqueNames())) {
+        val childSimpleName = name.simpleName
         val childClassName = ClassName(config.apiPackage, childSimpleName)
         val childTypeSpec = child.toTypeSpec(config, childClassName, emptyList())
 
@@ -99,11 +99,11 @@ private fun ApiTree.toRootTypeSpec(config: RenderConfig, className: ClassName): 
         )
     }
 
-    for (child in children) {
-        val childSimpleName = child.childInterfaceSimpleName()
-        val childClassName = ClassName(config.apiPackage, childSimpleName)
+    for ([child, name] in children.zip(children.uniqueNames())) {
+        val childClassName = ClassName(config.apiPackage, name.simpleName)
         child.segment.addConcreteNavigationMember(
             builder = builder,
+            memberName = name.memberName,
             childClassName = childClassName,
             currentAccumulatedParams = emptyList(),
             parentClassName = className,
@@ -149,12 +149,12 @@ private fun PathNode.toTypeSpec(
         )
     }
 
-    for (child in children) {
-        val childSimpleName = child.childInterfaceSimpleName()
-        val childClassName = className.nestedClass(childSimpleName)
+    for ([child, name] in children.zip(children.uniqueNames())) {
+        val childClassName = className.nestedClass(name.simpleName)
 
         child.segment.addConcreteNavigationMember(
             builder = builder,
+            memberName = name.memberName,
             childClassName = childClassName,
             currentAccumulatedParams = currentAccumulatedParams,
             parentClassName = className,

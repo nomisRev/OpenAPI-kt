@@ -1661,6 +1661,144 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/secret-scanning": {
+              "get": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/secret_scanning": {
+              "get": { "responses": { "204": { "description": "No Content" } } },
+              "post": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/x-y/a": {
+              "get": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/x_y/a": {
+              "get": { "responses": { "204": { "description": "No Content" } } },
+              "delete": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/p-q": {
+              "get": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/p_q": {
+              "put": { "responses": { "204": { "description": "No Content" } } }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/path-separator-collision"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/Users": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "object", "properties": { "name": { "type": "string" } } }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/users": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "object", "properties": { "id": { "type": "string" } } }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/a.b": {
+              "get": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/a-b": {
+              "post": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/owners": {
+              "get": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/owners/": {
+              "get": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/owners/slash": {
+              "get": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/accounts/{accountId}": {
+              "get": {
+                "parameters": [
+                  { "name": "accountId", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/accounts/{account_id}/members": {
+              "get": {
+                "parameters": [
+                  { "name": "account_id", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/path-identifier-collision"
+    )
+
+    test("a path whose Kotlin name an earlier path has is generated suffixed, with a warning") {
+        val operation = """{ "get": { "responses": { "204": { "description": "No Content" } } } }"""
+        val result = OpenAPI.fromJson(
+            """
+            {
+              "openapi": "3.1.0",
+              "info": { "title": "Api", "version": "0.0.1" },
+              "paths": {
+                "/secret-scanning": $operation,
+                "/secret_scanning": $operation,
+                "/owners": $operation,
+                "/owners/": $operation,
+                "/owners/slash": $operation,
+                "/accounts/{accountId}": $operation,
+                "/accounts/{account_id}/members": $operation
+              }
+            }
+            """.trimIndent()
+        ).toApiTree().generateClientWithDiagnostics(
+            RenderConfig(modelPackage = "test", apiPackage = "test", targets = setOf(KmpTarget.JVM))
+        )
+        assertEquals(
+            listOf(
+                "Path '/secret_scanning' is generated as 'secretScanning2' (class SecretScanning2): " +
+                    "an earlier path segment has the same Kotlin name.",
+                "Path '/owners/slash' is generated as 'slash2' (class Slash2): " +
+                    "an earlier path segment has the same Kotlin name.",
+                "Path '/accounts/{account_id}' is generated as 'accountId2' (class AccountIdPath2): " +
+                    "an earlier path segment has the same Kotlin name.",
+            ),
+            result.diagnostics.map { it.message },
+        )
+        assertTrue(result.diagnostics.all { it.severity == GenerationDiagnosticSeverity.Warning })
+    }
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/search": {
               "post": {
                 "requestBody": {

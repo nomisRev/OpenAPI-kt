@@ -32,19 +32,16 @@ fun Iterable<Route>.buildTree(
     servers: List<Server> = emptyList(),
 ): ApiTree {
     val routes = validatedConcreteRoutes()
-    val rootBuilder = PathNodeBuilder(segment = null)
     val pathsByResource = routes.groupBy(Route::resourceSegments) { it.path }.mapValues { it.value.toSet() }
-
-    for (route in routes) {
+    val placements = routes.map { route ->
         val resource = route.resourceSegments()
-        val nodeSegments = if (pathsByResource.getValue(resource).size > 1) route.segments else resource
-        rootBuilder.insert(nodeSegments, route)
+        Placement(if (pathsByResource.getValue(resource).size > 1) route.segments else resource, route)
     }
 
     return ApiTree(
         name = name,
-        operations = rootBuilder.operations,
-        children = rootBuilder.children.map { it.build() },
+        operations = placements.operations(),
+        children = placements.childNodes(parentSegments = emptyList()),
         models = models,
         servers = servers,
     )
@@ -123,47 +120,66 @@ private fun List<Server>.normalizeForClientGeneration(): List<Server> {
     return if (isImplicitDefault) emptyList() else this
 }
 
-private class PathNodeBuilder(
-    var segment: PathSegment?,
-    val sourceRoute: Route? = null,
-    val operations: MutableMap<HttpMethod, Route> = mutableMapOf(),
-    val children: MutableList<PathNodeBuilder> = mutableListOf(),
-) {
-    fun insert(
-        segments: List<PathSegment>,
-        route: Route,
-        parentSegments: List<PathSegment> = emptyList(),
-    ) {
-        if (segments.isEmpty()) {
-            operations[route.method] = route
-            return
-        }
+/** A route and the segments of its node that are still to be placed below the current one. */
+private class Placement(val remaining: List<PathSegment>, val route: Route) {
+    fun next(): Placement = Placement(remaining.drop(1), route)
+}
 
-        val head = segments.first()
-        val tail = segments.drop(1)
-        val existing = children.firstOrNull { it.segment.sameIdentityAs(head) }
-        if (existing != null) {
-            val existingSegment = requireNotNull(existing.segment)
-            existingSegment.requireCompatibleWith(
-                other = head,
-                nodePath = parentSegments + existingSegment,
-                existingRoute = requireNotNull(existing.sourceRoute),
-                incomingRoute = route,
-            )
-            existing.segment = existingSegment.preferredRepresentation(head)
-            existing.insert(tail, route, parentSegments + existingSegment)
-        } else {
-            val child = PathNodeBuilder(head, sourceRoute = route)
-            children.add(child)
-            child.insert(tail, route, parentSegments + head)
-        }
+/** The operations of the node the placements end on. Two would be one path, which [validatedConcreteRoutes] keeps once. */
+private fun List<Placement>.operations(): Map<HttpMethod, Route> =
+    filter { it.remaining.isEmpty() }.fold(mutableMapOf()) { operations, placement ->
+        val route = placement.route
+        val previous = operations.put(route.method, route)
+        check(previous == null) { "Two operations on one node: ${previous?.descriptor()} and ${route.descriptor()}" }
+        operations
     }
 
-    fun build(): PathNode = PathNode(
-        segment = requireNotNull(segment) { "Empty segment for root" },
-        operations = operations.toMap(),
-        children = children.map { it.build() },
+/**
+ * The child nodes of the placements that continue below this node, in the order their first route is declared.
+ *
+ * Segments with one [identityKey] share a node, so a fixed enum value `secret_scanning` and the literal
+ * `secret-scanning` are one resource. Their spellings are distinct paths, though, and each route requests its own: a
+ * spelling joins a node of its identity only when none of their routes has the same method and the same identity below
+ * it, and is a node of its own otherwise. One spelling stays on one node, so no operation replaces another.
+ */
+private fun List<Placement>.childNodes(parentSegments: List<PathSegment>): List<PathNode> {
+    val spellings = filter { it.remaining.isNotEmpty() }.groupBy { it.remaining.first().spellingKey() }.values
+    val clusters = mutableListOf<MutableList<Placement>>()
+    for (spelling in spellings) {
+        val identity = spelling.first().remaining.first().identityKey()
+        val cluster = clusters.firstOrNull { cluster ->
+            cluster.first().remaining.first().identityKey() == identity && !cluster.sharesAnOperationWith(spelling)
+        }
+        if (cluster != null) cluster += spelling else clusters += spelling.toMutableList()
+    }
+    return clusters.map { cluster -> cluster.toNode(parentSegments) }
+}
+
+private fun List<Placement>.toNode(parentSegments: List<PathSegment>): PathNode {
+    val first = first()
+    val firstSegment = first.remaining.first()
+    val segment = drop(1).fold(firstSegment) { segment, placement ->
+        val head = placement.remaining.first()
+        segment.requireCompatibleWith(
+            other = head,
+            nodePath = parentSegments + firstSegment,
+            existingRoute = first.route,
+            incomingRoute = placement.route,
+        )
+        segment.preferredRepresentation(head)
+    }
+    val below = map(Placement::next)
+    return PathNode(
+        segment = segment,
+        operations = below.operations(),
+        children = below.childNodes(parentSegments + firstSegment),
     )
+}
+
+/** Whether a route of these placements and one of [other] would end on one node with one method. */
+private fun List<Placement>.sharesAnOperationWith(other: List<Placement>): Boolean {
+    val operations = mapTo(mutableSetOf()) { it.route.method to it.remaining.drop(1).map(PathSegment::identityKey) }
+    return other.any { (it.route.method to it.remaining.drop(1).map(PathSegment::identityKey)) in operations }
 }
 
 /**
@@ -173,20 +189,20 @@ private class PathNodeBuilder(
  */
 private fun String.normalizeSegmentSeparators(): String = replace('-', '_')
 
-private fun PathSegment?.sameIdentityAs(other: PathSegment): Boolean = when {
-    this is PathSegment.Literal && other is PathSegment.Literal ->
-        name.normalizeSegmentSeparators() == other.name.normalizeSegmentSeparators()
-    this is PathSegment.Literal && other is PathSegment.FixedValue ->
-        name.normalizeSegmentSeparators() == other.wireValue.normalizeSegmentSeparators()
-    this is PathSegment.Parameter && other is PathSegment.Parameter -> name == other.name
-    this is PathSegment.Parameter && other is PathSegment.OverloadedParameter -> name == other.name
-    this is PathSegment.OverloadedParameter && other is PathSegment.Parameter -> name == other.name
-    this is PathSegment.OverloadedParameter && other is PathSegment.OverloadedParameter -> name == other.name
-    this is PathSegment.FixedValue && other is PathSegment.Literal ->
-        wireValue.normalizeSegmentSeparators() == other.name.normalizeSegmentSeparators()
-    this is PathSegment.FixedValue && other is PathSegment.FixedValue ->
-        wireValue.normalizeSegmentSeparators() == other.wireValue.normalizeSegmentSeparators()
-    else -> false
+/** The segment as it is sent: a literal and a fixed enum value with one wire value are one spelling. */
+private fun PathSegment.spellingKey(): String = when (this) {
+    is PathSegment.Literal -> "literal:$name"
+    is PathSegment.FixedValue -> "literal:$wireValue"
+    is PathSegment.Parameter -> "parameter:$name"
+    is PathSegment.OverloadedParameter -> "parameter:$name"
+}
+
+/** The resource a segment names: spellings that differ only by `-` and `_` name one. */
+private fun PathSegment.identityKey(): String = when (this) {
+    is PathSegment.Literal -> "literal:${name.normalizeSegmentSeparators()}"
+    is PathSegment.FixedValue -> "literal:${wireValue.normalizeSegmentSeparators()}"
+    is PathSegment.Parameter -> "parameter:$name"
+    is PathSegment.OverloadedParameter -> "parameter:$name"
 }
 
 private fun PathSegment.preferredRepresentation(other: PathSegment): PathSegment = when {

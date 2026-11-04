@@ -676,6 +676,75 @@ val apiTreeSpec by testSuite {
         }
     }
 
+    test("buildTree keeps separator-equivalent literal segments with the same method as two nodes") {
+        // `/secret-scanning` and `/secret_scanning` are two paths: merged on one node, one GET replaced the other.
+        val getHyphen = route(HttpMethod.Get, literal("secret-scanning"))
+        val getUnderscore = route(HttpMethod.Get, literal("secret_scanning"))
+        val postUnderscore = route(HttpMethod.Post, literal("secret_scanning"))
+        val expected = listOf(
+            node(literal("secret-scanning"), operations = mapOf(HttpMethod.Get to getHyphen)),
+            node(
+                literal("secret_scanning"),
+                operations = mapOf(HttpMethod.Get to getUnderscore, HttpMethod.Post to postUnderscore),
+            ),
+        )
+        assertEquals(expected, listOf(getHyphen, getUnderscore, postUnderscore).buildTree("Api").children)
+        // The routes of one spelling stay on one node in any order, and the first declared spelling comes first.
+        assertEquals(expected, listOf(getHyphen, postUnderscore, getUnderscore).buildTree("Api").children)
+        assertEquals(expected.reversed(), listOf(postUnderscore, getHyphen, getUnderscore).buildTree("Api").children)
+    }
+
+    test("buildTree keeps separator-equivalent segments apart when a descendant shares a method") {
+        // The routes meet on `a`, or on `x-y` for `/x-y` and `/x_y/`, which is named as `/x_y` as the only path of its
+        // resource; and a fixed enum value meets an explicit literal.
+        val getXyA = route(HttpMethod.Get, literal("x-y"), literal("a"))
+        val getXyUnderscoreA = route(HttpMethod.Get, literal("x_y"), literal("a"))
+        val getXy = route(HttpMethod.Get, literal("x-y"))
+        val getXyUnderscoreSlash = route(HttpMethod.Get, literal("x_y"), literal(""))
+        val getAlerts = route(HttpMethod.Get, literal("secret-scanning"), literal("alerts"))
+        val getFixedAlerts = route(
+            HttpMethod.Get,
+            fixed("secret_scanning", "security_product"),
+            literal("alerts"),
+        )
+        val cases = listOf(
+            listOf(getXyA, getXyUnderscoreA),
+            listOf(getXy, getXyUnderscoreSlash),
+            listOf(getAlerts, getFixedAlerts),
+        )
+        for (routes in cases) {
+            val tree = routes.buildTree("Api")
+            assertEquals(routes.map { it.segments.first() }, tree.children.map { it.segment })
+            val operations = mutableListOf<Route>()
+            fun collect(node: PathNode) {
+                operations += node.operations.values
+                node.children.forEach(::collect)
+            }
+            tree.children.forEach(::collect)
+            assertEquals(routes, operations)
+        }
+    }
+
+    test("buildTree still merges separator-equivalent segments whose methods differ") {
+        // Each route keeps its own segments on the shared node, so it requests its own path.
+        val getHyphen = route(HttpMethod.Get, literal("secret-scanning"), literal("alerts"))
+        val postUnderscore = route(HttpMethod.Post, literal("secret_scanning"), literal("alerts"))
+        assertEquals(
+            listOf(
+                node(
+                    literal("secret-scanning"),
+                    children = listOf(
+                        node(
+                            literal("alerts"),
+                            operations = mapOf(HttpMethod.Get to getHyphen, HttpMethod.Post to postUnderscore),
+                        ),
+                    ),
+                ),
+            ),
+            listOf(getHyphen, postUnderscore).buildTree("Api").children,
+        )
+    }
+
     test("Route.path computed property reconstructs template") {
         data class Case(val route: Route, val expected: String)
 
