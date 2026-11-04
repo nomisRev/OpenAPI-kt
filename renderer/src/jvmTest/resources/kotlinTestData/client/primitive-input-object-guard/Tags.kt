@@ -3,7 +3,7 @@ package io.github.nomisrev.render.test.client.primitive.input.`object`.guard
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.String
 import kotlinx.serialization.Serializable
 
@@ -17,7 +17,9 @@ public class Tags internal constructor(
   ) {
     public suspend operator fun invoke(filter: Filter? = null) {
       val response = client.get("/tags") {
-        filter?.let { parameter("filter", it) }
+        if (filter != null) {
+          url.encodedParameters.append("value", filter.value.encodeURLParameter())
+        }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
     }

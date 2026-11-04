@@ -5,7 +5,7 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.client.request.cookie
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Search internal constructor(
@@ -22,7 +22,7 @@ public class Search internal constructor(
       session: String,
     ) {
       val response = client.get("/search") {
-        parameter("query", query)
+        url.encodedParameters.append("query", query.encodeURLParameter())
         `header`("X-Api-Key", xApiKey)
         cookie("session", session)
       }

@@ -4,7 +4,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -27,7 +26,9 @@ public class Items internal constructor(
   ) {
     public suspend operator fun invoke(limit: Int? = null): List<String> {
       val response = client.get("/items") {
-        limit?.let { parameter("limit", it) }
+        if (limit != null) {
+          url.encodedParameters.append("limit", limit.toString())
+        }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()

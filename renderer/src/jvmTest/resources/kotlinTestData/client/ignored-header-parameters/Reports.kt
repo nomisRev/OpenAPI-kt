@@ -6,9 +6,9 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.client.request.cookie
-import io.ktor.client.request.parameter
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
+import io.ktor.http.encodeURLParameter
 import io.ktor.serialization.JsonConvertException
 import kotlin.String
 import kotlinx.serialization.json.JsonPrimitive
@@ -24,8 +24,12 @@ public class Reports internal constructor(
     public suspend fun json(contentType: String? = null, authorization: String? = null): String {
       val response = client.get("/reports") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
-        contentType?.let { parameter("Content-Type", it) }
-        authorization?.let { cookie("Authorization", it) }
+        if (contentType != null) {
+          url.encodedParameters.append("Content-Type", contentType.encodeURLParameter())
+        }
+        if (authorization != null) {
+          cookie("Authorization", authorization)
+        }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
@@ -34,8 +38,12 @@ public class Reports internal constructor(
     public suspend fun textCsv(contentType: String? = null, authorization: String? = null): String {
       val response = client.get("/reports") {
         `header`(HttpHeaders.Accept, ContentType("text", "csv"))
-        contentType?.let { parameter("Content-Type", it) }
-        authorization?.let { cookie("Authorization", it) }
+        if (contentType != null) {
+          url.encodedParameters.append("Content-Type", contentType.encodeURLParameter())
+        }
+        if (authorization != null) {
+          cookie("Authorization", authorization)
+        }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()

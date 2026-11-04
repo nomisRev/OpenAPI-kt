@@ -5,7 +5,7 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.client.request.cookie
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.Int
 import kotlin.String
 
@@ -25,11 +25,17 @@ public class Items internal constructor(
       preference: String? = null,
     ) {
       val response = client.get("/items") {
-        parameter("query", query)
-        limit?.let { parameter("limit", it) }
+        url.encodedParameters.append("query", query.encodeURLParameter())
+        if (limit != null) {
+          url.encodedParameters.append("limit", limit.toString())
+        }
         `header`("X-Request-Id", xRequestId)
-        xTraceId?.let { `header`("X-Trace-Id", it) }
-        preference?.let { cookie("preference", it) }
+        if (xTraceId != null) {
+          `header`("X-Trace-Id", xTraceId)
+        }
+        if (preference != null) {
+          cookie("preference", preference)
+        }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
     }

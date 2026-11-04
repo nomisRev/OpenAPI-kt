@@ -24,7 +24,9 @@ public class Avatars internal constructor(
       xRequestId: String? = null,
     ) {
       val response = client.put("/avatars") {
-        xRequestId?.let { `header`("X-Request-Id", it) }
+        if (xRequestId != null) {
+          `header`("X-Request-Id", xRequestId)
+        }
         require(contentType.match(ContentType("image", "*")) && contentType.contentSubtype != "*") {
           "contentType must be a media type in image/*, but was $contentType"
         }

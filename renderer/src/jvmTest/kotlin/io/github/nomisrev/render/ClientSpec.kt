@@ -1311,6 +1311,134 @@ val clientSpec by testSuite {
         "client/form-urlencoded-encoding-defaults"
     )
 
+    // Every parameter is serialized by its `style` and `explode` (OpenAPI 3.1.1, 4.8.12.4, RFC 6570), the defaults of
+    // its location without them: query and cookie `form`, path and header `simple`, `explode` true for `form` only.
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/items": {
+              "get": {
+                "parameters": [
+                  { "name": "ids", "in": "query", "required": true, "schema": { "type": "array", "items": { "type": "integer", "format": "int64" } } },
+                  { "name": "tags", "in": "query", "explode": false, "schema": { "type": "array", "items": { "type": "string" } } },
+                  { "name": "words", "in": "query", "style": "spaceDelimited", "schema": { "type": "array", "items": { "type": "string" } } },
+                  { "name": "pipes", "in": "query", "style": "pipeDelimited", "schema": { "type": "array", "items": { "type": "string" } } },
+                  { "name": "q", "in": "query", "schema": { "type": "string" } },
+                  { "name": "when", "in": "query", "schema": { "type": "string", "format": "date-time" } },
+                  { "name": "status", "in": "query", "schema": { "$ref": "#/components/schemas/Status" } },
+                  { "name": "statuses", "in": "query", "explode": false, "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Status" } } },
+                  { "name": "code", "in": "query", "schema": { "$ref": "#/components/schemas/Code" } },
+                  { "name": "codes", "in": "query", "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Code" } } },
+                  {
+                    "name": "filter", "in": "query", "style": "deepObject", "explode": true,
+                    "schema": {
+                      "type": "object",
+                      "properties": { "status": { "$ref": "#/components/schemas/Status" }, "limit": { "type": "integer", "format": "int32" } },
+                      "required": ["status"]
+                    }
+                  },
+                  {
+                    "name": "range", "in": "query",
+                    "schema": {
+                      "type": "object",
+                      "properties": { "min": { "type": "integer", "format": "int32" }, "max": { "type": "integer", "format": "int32" } },
+                      "required": ["min"]
+                    }
+                  },
+                  {
+                    "name": "color", "in": "query", "explode": false,
+                    "schema": {
+                      "type": "object",
+                      "properties": { "R": { "type": "integer", "format": "int32" }, "G": { "type": "integer", "format": "int32" } },
+                      "required": ["R", "G"]
+                    }
+                  },
+                  { "name": "cwe", "in": "query", "schema": { "oneOf": [{ "type": "string" }, { "type": "array", "items": { "type": "string" } }] } },
+                  { "name": "metadata", "in": "query", "schema": { "$ref": "#/components/schemas/Metadata" } },
+                  { "name": "labels", "in": "query", "style": "deepObject", "explode": true, "schema": { "type": "object", "additionalProperties": { "type": "string" } } },
+                  { "name": "attrs", "in": "query", "explode": false, "schema": { "type": "object", "additionalProperties": { "type": "integer", "format": "int32" } } },
+                  { "name": "X-Ids", "in": "header", "schema": { "type": "array", "items": { "type": "integer", "format": "int32" } } },
+                  { "name": "X-Status", "in": "header", "schema": { "$ref": "#/components/schemas/Status" } },
+                  { "name": "X-Meta", "in": "header", "schema": { "type": "object", "additionalProperties": { "type": "string" } } },
+                  {
+                    "name": "X-Point", "in": "header", "explode": true,
+                    "schema": {
+                      "type": "object",
+                      "properties": { "x": { "type": "integer", "format": "int32" }, "y": { "type": "integer", "format": "int32" } },
+                      "required": ["x", "y"]
+                    }
+                  },
+                  { "name": "session", "in": "cookie", "schema": { "type": "string" } },
+                  { "name": "prefs", "in": "cookie", "explode": false, "schema": { "type": "array", "items": { "type": "string" } } },
+                  { "name": "flags", "in": "cookie", "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Status" } } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/simple/{ids}": {
+              "get": {
+                "parameters": [
+                  { "name": "ids", "in": "path", "required": true, "schema": { "type": "array", "items": { "$ref": "#/components/schemas/Status" } } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/label/{ids}": {
+              "get": {
+                "parameters": [
+                  { "name": "ids", "in": "path", "required": true, "style": "label", "schema": { "type": "array", "items": { "type": "integer", "format": "int32" } } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/label-exploded/{ids}": {
+              "get": {
+                "parameters": [
+                  { "name": "ids", "in": "path", "required": true, "style": "label", "explode": true, "schema": { "type": "array", "items": { "type": "integer", "format": "int32" } } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/matrix/{ids}": {
+              "get": {
+                "parameters": [
+                  { "name": "ids", "in": "path", "required": true, "style": "matrix", "schema": { "type": "array", "items": { "type": "integer", "format": "int32" } } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/matrix-exploded/{ids}": {
+              "get": {
+                "parameters": [
+                  { "name": "ids", "in": "path", "required": true, "style": "matrix", "explode": true, "schema": { "type": "array", "items": { "type": "integer", "format": "int32" } } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/codes/{code}": {
+              "get": {
+                "parameters": [
+                  { "name": "code", "in": "path", "required": true, "style": "matrix", "schema": { "$ref": "#/components/schemas/Code" } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Status": { "type": "string", "enum": ["open", "in-progress"] },
+              "Code": { "type": "string" },
+              "Metadata": { "anyOf": [{ "type": "object", "additionalProperties": { "type": "string" } }, { "type": "null" }] }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/parameter-styles"
+    )
+
     clientTest(
         """
         {
@@ -3616,6 +3744,66 @@ val clientSpec by testSuite {
                 message,
             )
         }
+    }
+
+    // A parameter is generated only when the client writes the serialization its type, location, `style` and
+    // `explode` define (`client/parameter-styles`); any other parameter fails generation, rather than sending the
+    // `toString()` of its Kotlin value or a layout the server reads differently.
+    fun parameterApi(location: String, schema: String, extra: String = ""): String {
+        val path = if (location == "path") "/items/{p}" else "/items"
+        return """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "$path": {
+              "get": {
+                "parameters": [{ "name": "p", "in": "$location", "required": true, "schema": $schema$extra }],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          }
+        }
+        """.trimIndent()
+    }
+
+    val intArray = """{ "type": "array", "items": { "type": "integer" } }"""
+    val unsupportedParameters = listOf(
+        "a query array with deepObject" to
+            parameterApi("query", intArray, """, "style": "deepObject", "explode": true"""),
+        "a query array with spaceDelimited and explode true" to
+            parameterApi("query", intArray, """, "style": "spaceDelimited", "explode": true"""),
+        "a query array with simple, a style queries do not define" to
+            parameterApi("query", intArray, """, "style": "simple""""),
+        "a header array with form, a style headers do not define" to
+            parameterApi("header", intArray, """, "style": "form""""),
+        "a query array of objects" to parameterApi("query", """{ "type": "array", "items": $scalarObject }"""),
+        "a query map of objects" to
+            parameterApi("query", """{ "type": "object", "additionalProperties": $scalarObject }"""),
+        "a path object" to parameterApi("path", scalarObject),
+    )
+    for ([description, json] in unsupportedParameters) {
+        test("a parameter of $description has no supported serialization") {
+            val result = OpenAPI.fromJson(json).toApiTree().generateClientWithDiagnostics(wildcardConfig)
+
+            val diagnostic = result.diagnostics.single()
+            assertEquals(GenerationDiagnosticSeverity.Error, diagnostic.severity)
+            assertTrue(diagnostic.message.startsWith("GET /items"), diagnostic.message)
+            assertTrue(diagnostic.message.contains("parameter p"), diagnostic.message)
+            assertTrue(diagnostic.message.contains("no supported serialization"), diagnostic.message)
+        }
+    }
+
+    // A required parameter whose schema admits `null` takes a nullable argument, which is left out when `null` like an
+    // optional one, instead of being percent-encoded or joined without a null check.
+    test("a required query parameter whose schema admits null is left out when null") {
+        val result = OpenAPI.fromJson(parameterApi("query", """{ "type": ["string", "null"] }"""))
+            .toApiTree().generateClientWithDiagnostics(wildcardConfig)
+
+        assertTrue(result.diagnostics.isEmpty(), result.diagnostics.toString())
+        val code = result.files.joinToString("\n") { it.toString() }
+        assertTrue("p: String?" in code, code)
+        assertTrue("if (p != null) {" in code, code)
     }
 
     // An Encoding Object without `style` or `explode` is `style: form` with `explode: true`, its defaults, so an array

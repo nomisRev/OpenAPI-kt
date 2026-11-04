@@ -3,7 +3,7 @@ package io.github.nomisrev.render.test.client.operations.`inline`.oneof.paramete
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
@@ -38,9 +38,22 @@ public class Advisories internal constructor(
       cwes: Cwes? = null,
     ) {
       val response = client.get("/advisories") {
-        ghsaId?.let { parameter("ghsa_id", it) }
-        cveId?.let { parameter("cve_id", it) }
-        cwes?.let { parameter("cwes", it) }
+        if (ghsaId != null) {
+          url.encodedParameters.append("ghsa_id", ghsaId.encodeURLParameter())
+        }
+        if (cveId != null) {
+          url.encodedParameters.append("cve_id", cveId.encodeURLParameter())
+        }
+        if (cwes != null) {
+          when (cwes) {
+            is Cwes.CaseString -> {
+              url.encodedParameters.append("cwes", cwes.value.encodeURLParameter())
+            }
+            is Cwes.CaseStrings -> {
+              cwes.value.forEach { url.encodedParameters.append("cwes", it.encodeURLParameter()) }
+            }
+          }
+        }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
     }

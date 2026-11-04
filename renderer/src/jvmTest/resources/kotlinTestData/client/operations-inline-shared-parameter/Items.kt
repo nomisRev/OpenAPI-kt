@@ -3,8 +3,8 @@ package io.github.nomisrev.render.test.client.operations.`inline`.shared.paramet
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
+import io.ktor.http.encodeURLParameter
 import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -34,7 +34,9 @@ public class Items internal constructor(
   ) {
     public suspend operator fun invoke(status: Status? = Status.All) {
       val response = client.get("/items") {
-        status?.let { parameter("status", it.value) }
+        if (status != null) {
+          url.encodedParameters.append("status", status.value.encodeURLParameter())
+        }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
     }
@@ -45,7 +47,9 @@ public class Items internal constructor(
   ) {
     public suspend operator fun invoke(status: Status? = Status.All) {
       val response = client.post("/items") {
-        status?.let { parameter("status", it.value) }
+        if (status != null) {
+          url.encodedParameters.append("status", status.value.encodeURLParameter())
+        }
       }
       if (response.status.value != 204) throw ResponseException(response, "")
     }

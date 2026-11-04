@@ -217,15 +217,10 @@ private suspend fun ReferenceOr<Schema>.resolveSchema(): Schema = with(ctx.scope
  * known. `style` defaults to `form`, whose `explode` defaults to `true` (OpenAPI 3.1.1, 4.8.15.2); the parser keeps
  * an absent `explode` as `null`, so the default is applied here.
  */
-private fun Encoding.formStyleOrNull(): Route.Body.FormStyle? =
-    when (style) {
-        null, Style.form.name ->
-            if (explode ?: true) Route.Body.FormStyle.FormExploded else Route.Body.FormStyle.Form
-        Style.spaceDelimited.name -> Route.Body.FormStyle.SpaceDelimited
-        Style.pipeDelimited.name -> Route.Body.FormStyle.PipeDelimited
-        Style.deepObject.name -> Route.Body.FormStyle.DeepObject
-        else -> null
-    }
+private fun Encoding.formStyleOrNull(): Route.Body.FormStyle? {
+    val style = if (style == null) Style.form else Style.entries.firstOrNull { it.name == style } ?: return null
+    return formStyleOf(style, explode ?: (style == Style.form))
+}
 
 /**
  * Whether a form field of this model has a serialization the client generates, as the Encoding Object of the field
@@ -258,9 +253,11 @@ private suspend fun Model.isFormUrlEncodable(encoding: Encoding?, style: Route.B
     }
 }
 
-/** The model a form field of this model is serialized as: a [Model.Reference] is the model it names. */
+/**
+ * The model a form field or parameter of this model is serialized as: a [Model.Reference] is the model it names.
+ */
 context(scope: Registry)
-private suspend fun Model.formModel(visited: Set<NamingContext.Reference> = emptySet()): Model? = when (this) {
+internal suspend fun Model.formModel(visited: Set<NamingContext.Reference> = emptySet()): Model? = when (this) {
     is Model.Reference -> {
         val reference = context.head as? NamingContext.Reference
         if (reference == null || reference in visited) null
@@ -270,9 +267,11 @@ private suspend fun Model.formModel(visited: Set<NamingContext.Reference> = empt
     else -> this
 }
 
-/** A model whose form value is a single string: a primitive, date, UUID or enum, or a wrapper around one. */
+/**
+ * A model whose form or parameter value is a single string: a primitive, date, UUID or enum, or a wrapper around one.
+ */
 context(scope: Registry)
-private suspend fun Model.isFormScalar(visited: Set<NamingContext.Reference> = emptySet()): Boolean = when (this) {
+internal suspend fun Model.isFormScalar(visited: Set<NamingContext.Reference> = emptySet()): Boolean = when (this) {
     is Model.Date,
     is Model.DateTime,
     is Model.Enum,

@@ -3,7 +3,7 @@ package io.github.nomisrev.render.test.client.`inline`.oneof.components.paramete
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
@@ -35,7 +35,16 @@ public class Alerts internal constructor(
   ) {
     public suspend operator fun invoke(has: Has? = null) {
       val response = client.get("/alerts") {
-        has?.let { parameter("has", it) }
+        if (has != null) {
+          when (has) {
+            is Has.CaseString -> {
+              url.encodedParameters.append("has", has.value.encodeURLParameter())
+            }
+            is Has.CasePatchList -> {
+              has.value.forEach { url.encodedParameters.append("has", it.value.encodeURLParameter()) }
+            }
+          }
+        }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
     }

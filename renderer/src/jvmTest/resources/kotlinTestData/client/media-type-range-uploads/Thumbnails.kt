@@ -2,7 +2,6 @@ package io.github.nomisrev.render.test.client.media.type.range.uploads
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -24,7 +23,9 @@ public class Thumbnails internal constructor(
       contentType: ContentType? = null,
     ) {
       val response = client.post("/thumbnails") {
-        size?.let { parameter("size", it) }
+        if (size != null) {
+          url.encodedParameters.append("size", size.toString())
+        }
         body?.let {
           require(contentType != null && contentType.match(ContentType("image", "*")) && contentType.contentSubtype != "*") {
             "contentType must be a media type in image/*, but was $contentType"

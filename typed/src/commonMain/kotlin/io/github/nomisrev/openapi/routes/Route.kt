@@ -14,6 +14,7 @@ import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.PathItem
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.StatusCodeOrRange
+import io.github.nomisrev.openapi.parser.Style
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.resolveComponent
 import io.github.nomisrev.openapi.routes.Route.Bodies
@@ -287,6 +288,16 @@ data class Route(
         }
     }
 
+    /**
+     * A parameter of the operation.
+     *
+     * @property style the `style` it is serialized with: the declared one, or the default of its [input] location
+     * ([defaultStyle]: `form` for query and cookie parameters, `simple` for path and header parameters).
+     * @property explode whether it is exploded: the declared `explode`, or `true` for [Style.form] and `false` for
+     * every other style (OpenAPI 3.1.1, 4.8.12.2).
+     * @property isSupported whether the client generates the serialization its type, location, [style] and [explode]
+     * define (see [isSerializableParameter]).
+     */
     data class Input(
         val name: String,
         val type: Model,
@@ -294,7 +305,17 @@ data class Route(
         val isRequired: Boolean,
         val input: Parameter.Input,
         val description: String?,
-    )
+        val style: Style = input.defaultStyle,
+        val explode: Boolean = style == Style.form,
+        val isSupported: Boolean = true,
+    ) {
+        /** How a query parameter or cookie lays out its pairs, or `null` for a path or header parameter. */
+        val formStyle: Body.FormStyle?
+            get() = when (input) {
+                Parameter.Input.Query, Parameter.Input.Cookie -> formStyleOf(style, explode)
+                Parameter.Input.Path, Parameter.Input.Header -> null
+            }
+    }
 
     data class Returns(
         val default: ReturnType?,
@@ -375,6 +396,8 @@ private suspend fun Route.expandFiniteEnumPathSegmentAt(index: Int): List<Route>
     if (segment is PathSegment.Literal || segment is PathSegment.FixedValue) return null
 
     val pathInput = parameters.firstOrNull { it.input == Parameter.Input.Path && it.name == segment.name }
+    // A fixed segment or an overload is the value as is: `simple`. A `label` or `matrix` enum or union is reported.
+    if (pathInput != null && pathInput.style != Style.simple) return null
     val model = pathInput?.type ?: when (segment) {
         is PathSegment.Parameter -> segment.model
         is PathSegment.OverloadedParameter -> segment.type

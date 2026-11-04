@@ -4,7 +4,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`header`
-import io.ktor.client.request.parameter
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -26,7 +25,7 @@ public class Alias internal constructor(
       body: Owner,
     ): Owner {
       val response = client.put("/alias") {
-        parameter("limit", limit)
+        url.encodedParameters.append("limit", limit.toString())
         `header`("X-Trace-Id", xTraceId)
         contentType(ContentType.Application.Json)
         setBody(body)

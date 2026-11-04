@@ -40,7 +40,7 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
 }
 
 internal fun ApiTree.generationDiagnostics(): List<GenerationDiagnostic> =
-    requestBodyDiagnostics() + ignoredParameterDiagnostics()
+    requestBodyDiagnostics() + ignoredParameterDiagnostics() + parameterDiagnostics()
 
 private fun ApiTree.requestBodyDiagnostics(): List<GenerationDiagnostic> =
     operations.values.flatMapTo(mutableListOf(), Route::requestBodyDiagnostics) +
@@ -225,3 +225,29 @@ private fun Parameter.ignoredBecause(): String = when {
     name.equals("Accept", ignoreCase = true) -> "the client chooses the Accept header from the declared responses"
     else -> "authorization is described by security schemes and configured on the HttpClient"
 }
+
+private fun ApiTree.parameterDiagnostics(): List<GenerationDiagnostic> =
+    operations.values.flatMapTo(mutableListOf(), Route::parameterDiagnostics) +
+        children.flatMapTo(mutableListOf(), PathNode::parameterDiagnostics)
+
+private fun PathNode.parameterDiagnostics(): List<GenerationDiagnostic> =
+    operations.values.flatMapTo(mutableListOf(), Route::parameterDiagnostics) +
+        children.flatMapTo(mutableListOf(), PathNode::parameterDiagnostics)
+
+/**
+ * A parameter is sent only when the client writes the serialization its type, location, `style` and `explode`
+ * define (`isSerializableParameter` in `typed`). Any other parameter fails generation, rather than sending the
+ * `toString()` of its Kotlin value or a layout the server reads as something else.
+ */
+private fun Route.parameterDiagnostics(): List<GenerationDiagnostic> =
+    parameters.filterNot(Route.Input::isSupported).map { parameter ->
+        val serialization =
+            if (parameter.contentType != null) "content ${parameter.contentType}"
+            else "style ${parameter.style}, explode ${parameter.explode}"
+        GenerationDiagnostic(
+            severity = GenerationDiagnosticSeverity.Error,
+            message =
+                "${method.value} $path parameter ${parameter.name} (in ${parameter.input.value}, $serialization) has " +
+                    "no supported serialization for its type, location, `style` and `explode`.",
+        )
+    }

@@ -2,11 +2,11 @@ package io.github.nomisrev.render.test.client.optional.request.bodies
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.OptIn
 import kotlin.String
 import kotlinx.serialization.EncodeDefault
@@ -23,7 +23,9 @@ public class JsonOptionalFields internal constructor(
   ) {
     public suspend operator fun invoke(q: String? = null) {
       val response = client.post("/json-optional-fields") {
-        q?.let { parameter("q", it) }
+        if (q != null) {
+          url.encodedParameters.append("q", q.encodeURLParameter())
+        }
       }
       if (response.status.value != 204) throw ResponseException(response, "")
     }
@@ -34,7 +36,9 @@ public class JsonOptionalFields internal constructor(
       note: String? = null,
     ) {
       val response = client.post("/json-optional-fields") {
-        q?.let { parameter("q", it) }
+        if (q != null) {
+          url.encodedParameters.append("q", q.encodeURLParameter())
+        }
         contentType(ContentType.Application.Json)
         setBody(Body(name = name, note = note))
       }

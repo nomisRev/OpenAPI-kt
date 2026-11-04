@@ -5,7 +5,7 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.client.request.cookie
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
@@ -35,9 +35,13 @@ public class Repos internal constructor(
         session: Instant? = null,
       ) {
         val response = client.get("/repos/$alertNumber") {
-          toolName?.let { parameter("tool_name", it) }
+          if (toolName != null) {
+            url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
+          }
           `header`("X-Request-Id", xRequestId.toString())
-          session?.let { cookie("session", it.toString()) }
+          if (session != null) {
+            cookie("session", session.toString())
+          }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
       }

@@ -8,6 +8,7 @@ import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.parser.Style
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.resolveComponent
 import io.github.nomisrev.openapi.registry.toModel
@@ -80,7 +81,19 @@ private suspend fun Parameter.toRouteInput(
     } else {
         error("Parameter $name without schema or content for ${method.value} $path")
     }
-    return Route.Input(name, type, contentType, required, input, description)
+    val style = style ?: input.defaultStyle
+    val explode = explode ?: (style == Style.form)
+    return Route.Input(
+        name = name,
+        type = type,
+        contentType = contentType,
+        isRequired = required,
+        input = input,
+        description = description,
+        style = style,
+        explode = explode,
+        isSupported = type.isSerializableParameter(input, style, explode, hasContent = contentType != null),
+    )
 }
 
 /**

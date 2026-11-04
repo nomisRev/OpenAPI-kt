@@ -2,11 +2,11 @@ package io.github.nomisrev.render.test.client.media.type.range.uploads
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.ByteArray
 import kotlin.String
 
@@ -24,7 +24,7 @@ public class Fonts internal constructor(
       bodyContentType: ContentType,
     ) {
       val response = client.post("/fonts") {
-        parameter("contentType", contentType)
+        url.encodedParameters.append("contentType", contentType.encodeURLParameter())
         require(bodyContentType.match(ContentType("font", "*")) && bodyContentType.contentSubtype != "*") {
           "bodyContentType must be a media type in font/*, but was $bodyContentType"
         }

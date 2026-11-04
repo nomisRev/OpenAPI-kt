@@ -5,7 +5,6 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
-import io.ktor.client.request.parameter
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -25,7 +24,7 @@ public class Inline internal constructor(
   ) {
     public suspend operator fun invoke(limit: Int, xTraceId: String): Owner {
       val response = client.get("/inline") {
-        parameter("limit", limit)
+        url.encodedParameters.append("limit", limit.toString())
         `header`("X-Trace-Id", xTraceId)
       }
       if (response.status.value != 200) throw ResponseException(response, "")

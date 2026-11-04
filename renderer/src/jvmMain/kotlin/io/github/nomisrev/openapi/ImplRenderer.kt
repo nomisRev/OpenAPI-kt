@@ -32,9 +32,7 @@ private val JsonNullType = ClassName("kotlinx.serialization.json", "JsonNull")
 private val JsonConvertExceptionType = ClassName("io.ktor.serialization", "JsonConvertException")
 
 private val BodyMember = MemberName("io.ktor.client.call", "body")
-private val ParameterMember = MemberName("io.ktor.client.request", "parameter")
 private val HeaderMember = MemberName("io.ktor.client.request", "header")
-private val CookieMember = MemberName("io.ktor.client.request", "cookie")
 private val SetBodyMember = MemberName("io.ktor.client.request", "setBody")
 private val ContentTypeFunMember = MemberName("io.ktor.http", "contentType")
 private val HeadersOfMember = MemberName("io.ktor.http", "headersOf")
@@ -307,6 +305,7 @@ private enum class OperationRequestInvocationStyle {
 }
 
 private fun Route.operationRequestInvocationContext(
+    config: RenderConfig,
     method: HttpMethod,
     includeBody: Boolean,
     selectedBody: Route.Body?,
@@ -314,7 +313,8 @@ private fun Route.operationRequestInvocationContext(
 ): OperationRequestInvocationContext =
     OperationRequestInvocationContext(
         httpMethodName = method.value.lowercase(),
-        pathLiteral = segments.toPathLiteral(),
+        // `·` keeps KotlinPoet from wrapping a line inside the template's expressions.
+        pathLiteral = pathLiteral(config).replace(' ', '·'),
         needsRequestConfig = hasRequestConfig(includeBody) || contentType != null,
         bodyMayBeNull = includeBody && when (selectedBody) {
             is Route.Body.OverloadedBody -> false
@@ -382,7 +382,7 @@ private fun Route.buildSealedOperationBody(
     requestType: RequestTypeArgument?,
 ): CodeBlock {
     val code = CodeBlock.builder()
-    val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType)
+    val request = operationRequestInvocationContext(config, method, includeBody, selectedBody, contentType)
 
     code.addRequestInvocation(
         route = this,
@@ -416,7 +416,7 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
     requestType: RequestTypeArgument?,
 ): CodeBlock {
     val code = CodeBlock.builder()
-    val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType)
+    val request = operationRequestInvocationContext(config, method, includeBody, selectedBody, contentType)
 
     code.addRequestInvocation(
         route = this,
@@ -457,7 +457,7 @@ private fun Route.buildDirectOperationBody(
     val model = returns.singlePreferredModelOrNull()
     val returnsBody = model != null && model !is Model.Primitive.Unit
     val declaredStatus = returns.responses.keys.singleOrNull()
-    val request = operationRequestInvocationContext(method, includeBody, selectedBody, contentType)
+    val request = operationRequestInvocationContext(config, method, includeBody, selectedBody, contentType)
 
     code.addRequestInvocation(
         route = this,
@@ -862,39 +862,23 @@ private fun Route.addRequestConfigCode(
     }
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Query }) {
-        val paramName = param.name.toParamName()
-        val publicModel = param.type.publicInputModelOrSelf()
-        val valueExpr = publicModel.wireValueExpr(paramName)
-        if (param.isRequired) {
-            code.addStatement("%M(%S, %L)", ParameterMember, param.name, valueExpr)
-        } else {
-            val itExpr = publicModel.wireItExpr()
-            code.addStatement("%L?.let·{ %M(%S, %L) }", paramName, ParameterMember, param.name, itExpr)
-        }
+        code.addParameterPairsCode(config, PairTarget.Query, param)
     }
 
-    for (param in nonPathParams.filter { it.input == Parameter.Input.Header }) {
-        val paramName = param.name.toParamName()
-        val publicModel = param.type.publicInputModelOrSelf()
-        val valueExpr = publicModel.wireValueExpr(paramName)
-        if (param.isRequired) {
-            code.addStatement("%M(%S, %L)", HeaderMember, param.name, valueExpr)
-        } else {
-            val itExpr = publicModel.wireItExpr()
-            code.addStatement("%L?.let·{ %M(%S, %L) }", paramName, HeaderMember, param.name, itExpr)
-        }
+    for (param in nonPathParams.filter { it.input == Parameter.Input.Header && it.isSupported }) {
+        code.addHeaderCode(
+            config = config,
+            headerMember = HeaderMember,
+            name = param.name,
+            expr = param.name.toParamName(),
+            model = param.type.publicInputModelOrSelf(),
+            mayBeNull = param.mayBeNull,
+            explode = param.explode,
+        )
     }
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Cookie }) {
-        val paramName = param.name.toParamName()
-        val publicModel = param.type.publicInputModelOrSelf()
-        val valueExpr = publicModel.wireValueExpr(paramName)
-        if (param.isRequired) {
-            code.addStatement("%M(%S, %L)", CookieMember, param.name, valueExpr)
-        } else {
-            val itExpr = publicModel.wireItExpr()
-            code.addStatement("%L?.let·{ %M(%S, %L) }", paramName, CookieMember, param.name, itExpr)
-        }
+        code.addParameterPairsCode(config, PairTarget.Cookie, param)
     }
 
     if (includeBody && selectedBody != null) {
@@ -910,6 +894,28 @@ private fun Route.addRequestConfigCode(
         )
     }
 }
+
+/**
+ * Appends the query parameter or cookie [param] by its `style` and `explode` ([addPairsCode]). A parameter with
+ * `content` is a scalar sent as is, and a parameter without a supported serialization is reported by
+ * `GenerationDiagnostics` instead of sent.
+ */
+private fun CodeBlock.Builder.addParameterPairsCode(config: RenderConfig, target: PairTarget, param: Route.Input) {
+    if (!param.isSupported) return
+    addPairsCode(
+        config = config,
+        target = target,
+        name = param.name,
+        expr = param.name.toParamName(),
+        model = param.type.publicInputModelOrSelf(),
+        mayBeNull = param.mayBeNull,
+        style = param.formStyle ?: Route.Body.FormStyle.FormExploded,
+    )
+}
+
+/** Whether the argument of this parameter can be `null`: it is optional, or its schema admits `null`. */
+private val Route.Input.mayBeNull: Boolean
+    get() = !isRequired || type.isNullable || type.publicInputModelOrSelf().isNullable
 
 /**
  * Emits a KotlinPoet [CodeBlock] for the given [ContentType], parameters included: a declared
@@ -1061,7 +1067,7 @@ private fun CodeBlock.Builder.addSetLikeBodyCode(
  * themselves. (The URL Standard leaves `*` and encodes `~`; every decoder reads both forms alike.) A form declared in
  * another charset is not generated (`unsupportedFormCharsetOrNull`).
  *
- * Every field is serialized like a query parameter of its Encoding Object `style` and `explode` ([addFormFieldCode]).
+ * Every field is serialized like a query parameter of its Encoding Object `style` and `explode` ([addPairsCode]).
  * Encoding every reserved character is also right for `allowReserved: true`, which only permits leaving them as is:
  * a form decoder reads `%2F` and `/` alike, and must not see a value's own `&` or `=` unencoded.
  */
@@ -1074,8 +1080,9 @@ private fun CodeBlock.Builder.addFormUrlEncodedBodyCode(
     add("%M(%T.build {\n", SetBodyMember, ParametersType)
     indent()
     for (formData in body.parameters) {
-        addFormFieldCode(
+        addPairsCode(
             config = config,
+            target = PairTarget.FormBody,
             name = formData.name,
             expr = formData.name.toParamName(),
             model = formData.type,
@@ -1086,95 +1093,6 @@ private fun CodeBlock.Builder.addFormUrlEncodedBodyCode(
     unindent()
     add("}.%M())\n", FormUrlEncodeMember)
 }
-
-/**
- * Appends the form field [name] of [model], held by [expr], to a `ParametersBuilder` (OpenAPI 3.1.1, 4.8.15 and
- * Appendix C), with the support rules of the typed layer: a field that is `null` is left out, as an undefined
- * RFC 6570 variable is, and so is an empty array.
- *
- * - A scalar is its string form ([formValueExpr]).
- * - An array is one `name=item` per item ([Route.Body.FormStyle.FormExploded]), or one `name` of its items joined by
- *   `,`, a space or `|`. `formUrlEncode` percent-encodes the delimiter with the value: `a%2Cb`, `a+b`, `a%7Cb` decode
- *   to the `a,b`, `a b` and `a|b` the style defines.
- * - An object is one `key=value` per property ([Route.Body.FormStyle.FormExploded]) or one `name[key]=value`
- *   ([Route.Body.FormStyle.DeepObject]), `[` and `]` percent-encoded as the specification requires.
- */
-private fun CodeBlock.Builder.addFormFieldCode(
-    config: RenderConfig,
-    name: String,
-    expr: String,
-    model: Model,
-    mayBeNull: Boolean,
-    style: Route.Body.FormStyle,
-) {
-    when (val resolved = model.formModel(config)) {
-        is Model.Collection -> {
-            val itemExpr = resolved.inner.formValueExpr(config, "it")
-            if (style == Route.Body.FormStyle.FormExploded) {
-                if (mayBeNull) beginControlFlow("if (%L != null)", expr)
-                if (itemExpr == "it") addStatement("appendAll(%S, %L)", name, expr)
-                else addStatement("appendAll(%S, %L.map·{ %L })", name, expr, itemExpr)
-                if (mayBeNull) endControlFlow()
-            } else {
-                val delimiter = when (style) {
-                    Route.Body.FormStyle.Form -> ","
-                    Route.Body.FormStyle.SpaceDelimited -> " "
-                    Route.Body.FormStyle.PipeDelimited -> "|"
-                    else -> error("A form array has no $style serialization.")
-                }
-                beginControlFlow(if (mayBeNull) "if (!%L.isNullOrEmpty())" else "if (%L.isNotEmpty())", expr)
-                // `joinToString` writes every item with `toString()` already.
-                if (itemExpr == "it" || itemExpr == "it.toString()") {
-                    addStatement("append(%S, %L.joinToString(%S))", name, expr, delimiter)
-                } else {
-                    addStatement("append(%S, %L.joinToString(%S)·{ %L })", name, expr, delimiter, itemExpr)
-                }
-                endControlFlow()
-            }
-        }
-
-        is Model.Object if !resolved.isScalarWrapper -> {
-            if (mayBeNull) beginControlFlow("if (%L != null)", expr)
-            for ([propertyName, property] in resolved.properties) {
-                addFormFieldCode(
-                    config = config,
-                    name = if (style == Route.Body.FormStyle.DeepObject) "$name[$propertyName]" else propertyName,
-                    expr = "$expr.${propertyName.toParamName()}",
-                    model = property.model,
-                    mayBeNull = property.model.isNullable || !property.isRequired,
-                    style = Route.Body.FormStyle.FormExploded,
-                )
-            }
-            if (mayBeNull) endControlFlow()
-        }
-
-        else -> {
-            if (mayBeNull) beginControlFlow("if (%L != null)", expr)
-            addStatement("append(%S, %L)", name, model.formValueExpr(config, expr))
-            if (mayBeNull) endControlFlow()
-        }
-    }
-}
-
-/** The model a form value of this model is: a [Model.Reference] is the model it names. */
-private fun Model.formModel(config: RenderConfig): Model =
-    if (this is Model.Reference) {
-        requireNotNull(config.resolve(this)) { "A form field references ${context}, which is not rendered." }
-            .formModel(config)
-    } else this
-
-/**
- * The `String` form value of the scalar [expr] of this model: a string as is, an enum as its wire value (as for a
- * query parameter, see `enum-wire-tostring`), a number, boolean, date, date-time or UUID as its `toString()`
- * (`1`, `1.5`, `true`, `2024-01-31`, `2024-01-31T10:00:00Z`), and a scalar wrapper as the value it wraps.
- */
-private fun Model.formValueExpr(config: RenderConfig, expr: String): String =
-    when (val model = formModel(config)) {
-        is Model.Primitive.String -> expr
-        is Model.Enum -> if (model.needsValueProperty()) "$expr.value" else "$expr.toString()"
-        is Model.Object -> model.properties.getValue("value").model.formValueExpr(config, "$expr.value")
-        else -> "$expr.toString()"
-    }
 
 private fun CodeBlock.Builder.addMultipartValueBodyCode(config: RenderConfig, body: Route.Body.Multipart.Value) {
     add("%M(%T(%M {\n", SetBodyMember, MultiPartFormDataContentType, FormDataMember)
@@ -1328,19 +1246,6 @@ private fun Model.Enum.toPathParamValueExpression(
     return code.build()
 }
 
-private fun List<PathSegment>.toPathLiteral(): String {
-    val inner = joinToString("/") { segment ->
-        when (segment) {
-            is PathSegment.FixedValue -> segment.wireValue
-            is PathSegment.Literal -> segment.name
-            is PathSegment.Parameter -> "\$${segment.name.toCamelCase()}"
-            is PathSegment.OverloadedParameter -> "\$${segment.name.toCamelCase()}"
-        }
-    }
-    val path = if (inner.isEmpty()) "/" else "/$inner"
-    return "\"$path\""
-}
-
 /**
  * Returns the expression that produces the wire string for a named parameter.
  * For enums with a `value` property, appends `.value`. Otherwise falls back to `toString()`.
@@ -1351,16 +1256,4 @@ private fun Model.wireValueExpr(paramName: String): String =
         this is Model.Enum -> "$paramName.toString()"
         this is Model.Date || this is Model.DateTime || this is Model.Uuid -> "$paramName.toString()"
         else -> paramName
-    }
-
-/**
- * Returns the expression to use inside `?.let { ... }` lambdas when accessing the wire value.
- * For enums with a `value` property, returns `"it.value"`. Otherwise falls back to `"it.toString()"`.
- */
-private fun Model.wireItExpr(): String =
-    when {
-        this is Model.Enum && needsValueProperty() -> "it.value"
-        this is Model.Enum -> "it.toString()"
-        this is Model.Date || this is Model.DateTime || this is Model.Uuid -> "it.toString()"
-        else -> "it"
     }
