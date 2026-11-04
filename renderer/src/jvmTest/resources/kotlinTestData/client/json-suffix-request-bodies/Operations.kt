@@ -17,7 +17,7 @@ public class Operations internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: List<PatchOperation>) {
-      val response = client.patch("/operations") {
+      val response = client.patch("operations") {
         contentType(ContentType("application", "json-patch+json"))
         setBody(body)
       }

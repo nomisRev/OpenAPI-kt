@@ -24,7 +24,7 @@ public class Direct internal constructor(
       xTraceId: String,
       body: Owner,
     ): Owner {
-      val response = client.put("/direct") {
+      val response = client.put("direct") {
         url.encodedParameters.append("limit", limit.toString())
         `header`("X-Trace-Id", xTraceId)
         contentType(ContentType.Application.Json)

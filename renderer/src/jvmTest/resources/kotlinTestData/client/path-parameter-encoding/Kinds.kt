@@ -20,7 +20,7 @@ public class Kinds internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("/kinds/plain")
+        val response = client.get("kinds/plain")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
@@ -35,7 +35,7 @@ public class Kinds internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("/kinds/with%20space")
+        val response = client.get("kinds/with%20space")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

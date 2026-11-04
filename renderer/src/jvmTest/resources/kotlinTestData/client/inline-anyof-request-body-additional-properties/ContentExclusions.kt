@@ -38,7 +38,7 @@ public class ContentExclusions internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Body) {
-      val response = client.put("/content-exclusions") {
+      val response = client.put("content-exclusions") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

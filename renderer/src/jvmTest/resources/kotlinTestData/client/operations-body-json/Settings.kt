@@ -16,7 +16,7 @@ public class Settings internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: UpdateSettingsRequest? = null) {
-      val response = client.patch("/settings") {
+      val response = client.patch("settings") {
         body?.let {
           contentType(ContentType.Application.Json)
           setBody(it)

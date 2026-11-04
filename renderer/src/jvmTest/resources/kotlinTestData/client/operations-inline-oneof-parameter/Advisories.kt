@@ -37,7 +37,7 @@ public class Advisories internal constructor(
       cveId: String? = null,
       cwes: Cwes? = null,
     ) {
-      val response = client.get("/advisories") {
+      val response = client.get("advisories") {
         if (ghsaId != null) {
           url.encodedParameters.append("ghsa_id", ghsaId.encodeURLParameter())
         }

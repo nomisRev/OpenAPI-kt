@@ -19,7 +19,7 @@ public class Greeting internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): String {
-      val response = client.get("/greeting")
+      val response = client.get("greeting")
       if (response.status.value != 200) throw ResponseException(response, "")
       return if (response.contentType()?.let { it.match(ContentType.Application.Json) || it.contentSubtype.endsWith("+json", ignoreCase = true) } == true) response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") } else response.body()
     }

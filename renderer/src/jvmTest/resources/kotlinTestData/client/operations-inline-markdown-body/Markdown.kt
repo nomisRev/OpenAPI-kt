@@ -27,7 +27,7 @@ public class Markdown internal constructor(
       mode: Mode? = null,
       context: String? = null,
     ): String {
-      val response = client.post("/markdown") {
+      val response = client.post("markdown") {
         contentType(ContentType.Application.Json)
         setBody(Body(text = text, mode = mode, context = context))
       }

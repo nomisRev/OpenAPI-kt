@@ -20,7 +20,7 @@ public class Reports internal constructor(
     private val client: HttpClient,
   ) {
     public suspend fun json(): JsonResponse {
-      val response = client.get("/reports") {
+      val response = client.get("reports") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json.withParameter("charset", "utf-8"))
       }
       return when (response.status.value) {
@@ -46,7 +46,7 @@ public class Reports internal constructor(
     }
 
     public suspend fun textCsv(): TextCsvResponse {
-      val response = client.get("/reports") {
+      val response = client.get("reports") {
         `header`(HttpHeaders.Accept, ContentType("text", "csv").withParameter("charset", "utf-8"))
       }
       return when (response.status.value) {

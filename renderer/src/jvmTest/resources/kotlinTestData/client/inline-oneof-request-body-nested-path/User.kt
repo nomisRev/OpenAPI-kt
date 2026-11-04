@@ -31,7 +31,7 @@ public class User internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke(body: RepositoryIdAndRef): String {
-        val response = client.post("/user/codespaces") {
+        val response = client.post("user/codespaces") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -40,7 +40,7 @@ public class User internal constructor(
       }
 
       public suspend operator fun invoke(body: PullRequest): String {
-        val response = client.post("/user/codespaces") {
+        val response = client.post("user/codespaces") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }

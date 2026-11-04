@@ -25,7 +25,7 @@ public class Items internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(limit: Int? = null): List<String> {
-      val response = client.get("/items") {
+      val response = client.get("items") {
         if (limit != null) {
           url.encodedParameters.append("limit", limit.toString())
         }
@@ -39,7 +39,7 @@ public class Items internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String): Response {
-      val response = client.post("/items") {
+      val response = client.post("items") {
         contentType(ContentType.Application.Json)
         setBody(JsonPrimitive(body))
       }

@@ -17,7 +17,7 @@ public class Pets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: NullBranchPet?): NullableMemberPet? {
-      val response = client.put("/pets") {
+      val response = client.put("pets") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

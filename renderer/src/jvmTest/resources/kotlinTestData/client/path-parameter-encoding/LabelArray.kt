@@ -23,7 +23,7 @@ public class LabelArray internal constructor(
       private val ids: List<String>,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("/label-array/${if (ids.isEmpty()) "" else ".${ids.joinToString(",") { it.encodeURLParameter() }}"}")
+        val response = client.get("label-array/${if (ids.isEmpty()) "" else ".${ids.joinToString(",") { it.encodeURLParameter() }}"}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

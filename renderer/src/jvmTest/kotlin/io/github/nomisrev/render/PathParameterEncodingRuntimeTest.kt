@@ -129,9 +129,9 @@ class PathParameterEncodingRuntimeTest {
 
     @Test
     fun anEncodedSegmentSurvivesTheBaseUrl() = runBlocking {
-        // Ktor's `defaultRequest` resolves the absolute request path against the base URL, so its path prefix (`/v1/`)
-        // is replaced rather than prepended, as before; the encoded value is kept as is by the merge.
+        // The relative request path is appended to the base path (`/v1/`), and Ktor's `defaultRequest` keeps the
+        // encoded value as is, without encoding it again.
         api("https://api.example.com/v1/").simple.id("a/b c").get()
-        assertEquals("https://api.example.com/simple/a%2Fb%20c", requests.last().url.toString())
+        assertEquals("https://api.example.com/v1/simple/a%2Fb%20c", requests.last().url.toString())
     }
 }

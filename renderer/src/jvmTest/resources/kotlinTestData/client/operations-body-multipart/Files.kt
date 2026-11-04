@@ -18,7 +18,7 @@ public class Files internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(`file`: ByteArray, purpose: String) {
-      val response = client.post("/files") {
+      val response = client.post("files") {
         setBody(MultiPartFormDataContent(formData {
           append("file", file)
           append("purpose", purpose)

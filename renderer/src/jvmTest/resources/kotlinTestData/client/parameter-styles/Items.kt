@@ -66,7 +66,7 @@ public class Items internal constructor(
       prefs: List<String>? = null,
       flags: List<Status>? = null,
     ) {
-      val response = client.get("/items") {
+      val response = client.get("items") {
         ids.forEach { url.encodedParameters.append("ids", it.toString()) }
         if (!tags.isNullOrEmpty()) {
           url.encodedParameters.append("tags", tags.joinToString(",") { it.encodeURLParameter() })

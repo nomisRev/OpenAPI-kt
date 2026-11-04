@@ -23,7 +23,7 @@ public class Names internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String): String {
-      val response = client.post("/names") {
+      val response = client.post("names") {
         contentType(ContentType.Application.Json)
         setBody(JsonPrimitive(body))
       }
@@ -36,7 +36,7 @@ public class Names internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String): String {
-      val response = client.put("/names") {
+      val response = client.put("names") {
         contentType(ContentType.Text.Plain)
         setBody(body)
       }

@@ -23,7 +23,7 @@ public class Inline internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(limit: Int, xTraceId: String): Owner {
-      val response = client.get("/inline") {
+      val response = client.get("inline") {
         url.encodedParameters.append("limit", limit.toString())
         `header`("X-Trace-Id", xTraceId)
       }
@@ -36,7 +36,7 @@ public class Inline internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(xTraceId: String, body: Owner) {
-      val response = client.put("/inline") {
+      val response = client.put("inline") {
         `header`("X-Trace-Id", xTraceId)
         contentType(ContentType.Application.Json)
         setBody(body)

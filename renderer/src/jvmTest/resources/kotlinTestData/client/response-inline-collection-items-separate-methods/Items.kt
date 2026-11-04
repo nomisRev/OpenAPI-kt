@@ -20,7 +20,7 @@ public class Items internal constructor(
     private val client: HttpClient,
   ) {
     public suspend fun json(): List<Id> {
-      val response = client.get("/items") {
+      val response = client.get("items") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -28,7 +28,7 @@ public class Items internal constructor(
     }
 
     public suspend fun xml(): List<Name> {
-      val response = client.get("/items") {
+      val response = client.get("items") {
         `header`(HttpHeaders.Accept, ContentType.Application.Xml)
       }
       if (response.status.value != 200) throw ResponseException(response, "")

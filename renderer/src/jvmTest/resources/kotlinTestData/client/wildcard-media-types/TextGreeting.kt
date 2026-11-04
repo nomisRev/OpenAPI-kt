@@ -15,7 +15,7 @@ public class TextGreeting internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): String {
-      val response = client.get("/text-greeting")
+      val response = client.get("text-greeting")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }

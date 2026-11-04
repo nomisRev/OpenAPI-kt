@@ -23,7 +23,7 @@ public class Jobs internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(status: Status? = null) {
-      val response = client.get("/jobs") {
+      val response = client.get("jobs") {
         if (status != null) {
           url.encodedParameters.append("status", status.toString().encodeURLParameter())
         }
@@ -42,7 +42,7 @@ public class Jobs internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(mode: Body.Mode) {
-      val response = client.post("/jobs") {
+      val response = client.post("jobs") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("mode", mode.toString())

@@ -26,7 +26,7 @@ public class Widgets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("/widgets")
+      val response = client.get("widgets")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }
@@ -44,7 +44,7 @@ public class Widgets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(name: String): Response {
-      val response = client.post("/widgets") {
+      val response = client.post("widgets") {
         contentType(ContentType.Application.Json)
         setBody(Body(name = name))
       }

@@ -22,7 +22,7 @@ public class Documents internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(title: String, draft: Boolean? = null) {
-      val response = client.post("/documents") {
+      val response = client.post("documents") {
         contentType(ContentType("application", "vnd.api+json"))
         setBody(Body(title = title, draft = draft))
       }

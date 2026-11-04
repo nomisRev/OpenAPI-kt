@@ -17,7 +17,7 @@ public class Files internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: ByteArray) {
-      val response = client.post("/files") {
+      val response = client.post("files") {
         contentType(ContentType.Application.OctetStream)
         setBody(body)
       }

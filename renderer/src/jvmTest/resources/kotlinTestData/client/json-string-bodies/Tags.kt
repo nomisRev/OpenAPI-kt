@@ -19,7 +19,7 @@ public class Tags internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      val response = client.put("/tags") {
+      val response = client.put("tags") {
         contentType(ContentType.Application.Json)
         setBody(JsonPrimitive(body))
       }
@@ -27,7 +27,7 @@ public class Tags internal constructor(
     }
 
     public suspend operator fun invoke(body: Name) {
-      val response = client.put("/tags") {
+      val response = client.put("tags") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

@@ -18,7 +18,7 @@ public class Notes internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String? = null) {
-      val response = client.put("/notes") {
+      val response = client.put("notes") {
         body?.let {
           contentType(ContentType("application", "merge-patch+json"))
           setBody(JsonPrimitive(it))

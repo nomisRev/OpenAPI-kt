@@ -28,7 +28,7 @@ public class Folders internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(body: IssueFolderWrite): IssueFolderRead {
-        val response = client.post("/folders/${id.encodeURLParameter()}") {
+        val response = client.post("folders/${id.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }

@@ -23,7 +23,7 @@ public class Referenced internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(limit: Int, xTraceId: String): Owner {
-      val response = client.get("/referenced") {
+      val response = client.get("referenced") {
         url.encodedParameters.append("limit", limit.toString())
         `header`("X-Trace-Id", xTraceId)
       }
@@ -36,7 +36,7 @@ public class Referenced internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(xTraceId: String, body: Owner) {
-      val response = client.put("/referenced") {
+      val response = client.put("referenced") {
         `header`("X-Trace-Id", xTraceId)
         contentType(ContentType.Application.Json)
         setBody(body)

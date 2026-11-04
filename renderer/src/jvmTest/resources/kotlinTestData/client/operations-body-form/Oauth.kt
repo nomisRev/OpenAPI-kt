@@ -28,7 +28,7 @@ public class Oauth internal constructor(
         code: String,
         redirectUri: String,
       ) {
-        val response = client.post("/oauth/token") {
+        val response = client.post("oauth/token") {
           contentType(ContentType.Application.FormUrlEncoded)
           setBody(Parameters.build {
             append("grant_type", grantType)

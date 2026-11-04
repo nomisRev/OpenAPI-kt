@@ -22,7 +22,7 @@ public class Thumbnails internal constructor(
       body: ByteArray? = null,
       contentType: ContentType? = null,
     ) {
-      val response = client.post("/thumbnails") {
+      val response = client.post("thumbnails") {
         if (size != null) {
           url.encodedParameters.append("size", size.toString())
         }

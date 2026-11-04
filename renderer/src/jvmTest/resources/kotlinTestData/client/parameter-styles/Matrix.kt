@@ -22,7 +22,7 @@ public class Matrix internal constructor(
       private val ids: List<Int>,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("/matrix/${if (ids.isEmpty()) "" else ";ids=${ids.joinToString(",")}"}")
+        val response = client.get("matrix/${if (ids.isEmpty()) "" else ";ids=${ids.joinToString(",")}"}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

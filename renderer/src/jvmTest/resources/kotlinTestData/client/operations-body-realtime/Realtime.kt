@@ -29,7 +29,7 @@ public class Realtime internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke(sdp: String, session: RealtimeCallCreateRequest.Session? = null): String {
-        val response = client.post("/realtime/calls") {
+        val response = client.post("realtime/calls") {
           setBody(MultiPartFormDataContent(formData {
             append("sdp", sdp, headersOf(HttpHeaders.ContentType, "application/sdp"))
             if (session != null) {
@@ -42,7 +42,7 @@ public class Realtime internal constructor(
       }
 
       public suspend operator fun invoke(body: String): String {
-        val response = client.post("/realtime/calls") {
+        val response = client.post("realtime/calls") {
           contentType(ContentType("application", "sdp"))
           setBody(body)
         }

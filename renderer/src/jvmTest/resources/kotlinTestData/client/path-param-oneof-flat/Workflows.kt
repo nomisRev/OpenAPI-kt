@@ -28,7 +28,7 @@ public class Workflows internal constructor(
         private val client: HttpClient,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("/workflows/queued/runs")
+          val response = client.get("workflows/queued/runs")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
@@ -49,7 +49,7 @@ public class Workflows internal constructor(
         private val client: HttpClient,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("/workflows/in-progress/runs")
+          val response = client.get("workflows/in-progress/runs")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
@@ -73,7 +73,7 @@ public class Workflows internal constructor(
         private val workflowId: Int,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("/workflows/$workflowId/runs")
+          val response = client.get("workflows/$workflowId/runs")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }

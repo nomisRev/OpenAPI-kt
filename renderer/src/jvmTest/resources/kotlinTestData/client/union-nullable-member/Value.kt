@@ -17,7 +17,7 @@ public class Value internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: RefMember?): AnyOfRefMember? {
-      val response = client.put("/value") {
+      val response = client.put("value") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

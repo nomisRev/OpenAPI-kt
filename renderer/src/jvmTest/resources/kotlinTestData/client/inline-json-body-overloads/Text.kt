@@ -18,7 +18,7 @@ public class Text internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Body) {
-      val response = client.post("/text") {
+      val response = client.post("text") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
@@ -26,7 +26,7 @@ public class Text internal constructor(
     }
 
     public suspend operator fun invoke(body: String) {
-      val response = client.post("/text") {
+      val response = client.post("text") {
         contentType(ContentType.Text.Plain)
         setBody(body)
       }

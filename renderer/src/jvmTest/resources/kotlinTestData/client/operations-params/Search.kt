@@ -21,7 +21,7 @@ public class Search internal constructor(
       xApiKey: String,
       session: String,
     ) {
-      val response = client.get("/search") {
+      val response = client.get("search") {
         url.encodedParameters.append("query", query.encodeURLParameter())
         `header`("X-Api-Key", xApiKey)
         cookie("session", session)

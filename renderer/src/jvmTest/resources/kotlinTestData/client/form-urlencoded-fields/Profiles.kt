@@ -51,7 +51,7 @@ public class Profiles internal constructor(
       path: List<String>? = null,
       flags: List<Boolean>? = null,
     ) {
-      val response = client.post("/profiles") {
+      val response = client.post("profiles") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("name", name)

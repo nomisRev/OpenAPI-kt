@@ -21,7 +21,7 @@ public class Pets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.get("/pets")
+      val response = client.get("pets")
       if (response.status.value != 200) throw ResponseException(response, "")
     }
   }
@@ -30,7 +30,7 @@ public class Pets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      val response = client.post("/pets") {
+      val response = client.post("pets") {
         contentType(ContentType.Application.Json)
         setBody(JsonPrimitive(body))
       }

@@ -21,7 +21,7 @@ public class Multipart internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Body) {
-      val response = client.post("/multipart") {
+      val response = client.post("multipart") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
@@ -29,7 +29,7 @@ public class Multipart internal constructor(
     }
 
     public suspend operator fun invoke(`file`: ByteArray) {
-      val response = client.post("/multipart") {
+      val response = client.post("multipart") {
         setBody(MultiPartFormDataContent(formData {
           append("file", file)
         }))

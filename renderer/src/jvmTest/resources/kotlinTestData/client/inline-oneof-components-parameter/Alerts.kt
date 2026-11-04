@@ -34,7 +34,7 @@ public class Alerts internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(has: Has? = null) {
-      val response = client.get("/alerts") {
+      val response = client.get("alerts") {
         if (has != null) {
           when (has) {
             is Has.CaseString -> {

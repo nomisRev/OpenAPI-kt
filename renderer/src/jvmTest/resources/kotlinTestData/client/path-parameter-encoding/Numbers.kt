@@ -21,7 +21,7 @@ public class Numbers internal constructor(
       private val n: Long,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("/numbers/$n")
+        val response = client.get("numbers/$n")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

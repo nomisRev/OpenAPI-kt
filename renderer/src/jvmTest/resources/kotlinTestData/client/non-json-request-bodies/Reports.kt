@@ -17,7 +17,7 @@ public class Reports internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      val response = client.post("/reports") {
+      val response = client.post("reports") {
         contentType(ContentType("text", "csv"))
         setBody(body)
       }

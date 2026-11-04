@@ -20,7 +20,7 @@ public class Notes internal constructor(
     private val client: HttpClient,
   ) {
     public suspend fun json(): String {
-      val response = client.get("/notes") {
+      val response = client.get("notes") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -28,7 +28,7 @@ public class Notes internal constructor(
     }
 
     public suspend fun textPlain(): String {
-      val response = client.get("/notes") {
+      val response = client.get("notes") {
         `header`(HttpHeaders.Accept, ContentType.Text.Plain)
       }
       if (response.status.value != 200) throw ResponseException(response, "")

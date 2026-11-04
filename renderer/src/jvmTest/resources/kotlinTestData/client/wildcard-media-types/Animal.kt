@@ -14,7 +14,7 @@ public class Animal internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): Pet {
-      val response = client.get("/animal")
+      val response = client.get("animal")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }

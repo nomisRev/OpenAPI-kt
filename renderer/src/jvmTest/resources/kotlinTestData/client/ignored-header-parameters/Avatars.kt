@@ -23,7 +23,7 @@ public class Avatars internal constructor(
       contentType: ContentType,
       xRequestId: String? = null,
     ) {
-      val response = client.put("/avatars") {
+      val response = client.put("avatars") {
         if (xRequestId != null) {
           `header`("X-Request-Id", xRequestId)
         }

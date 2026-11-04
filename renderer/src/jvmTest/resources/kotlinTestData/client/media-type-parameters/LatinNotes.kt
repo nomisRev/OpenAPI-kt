@@ -17,7 +17,7 @@ public class LatinNotes internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      val response = client.post("/latin-notes") {
+      val response = client.post("latin-notes") {
         contentType(ContentType.Text.Plain.withParameter("charset", "iso-8859-1"))
         setBody(body)
       }

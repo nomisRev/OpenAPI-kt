@@ -17,7 +17,7 @@ public class Legacy internal constructor(
   ) {
     @Deprecated("Deprecated by the API provider")
     public suspend operator fun invoke() {
-      val response = client.get("/legacy")
+      val response = client.get("legacy")
       if (response.status.value != 200) throw ResponseException(response, "")
     }
   }

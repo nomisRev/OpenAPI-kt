@@ -19,7 +19,7 @@ public class Search internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: SearchQuery) {
-      val response = client.post("/search") {
+      val response = client.post("search") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
@@ -27,7 +27,7 @@ public class Search internal constructor(
     }
 
     public suspend operator fun invoke(query: String) {
-      val response = client.post("/search") {
+      val response = client.post("search") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("query", query)

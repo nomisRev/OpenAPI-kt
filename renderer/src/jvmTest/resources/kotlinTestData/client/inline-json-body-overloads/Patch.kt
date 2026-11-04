@@ -18,7 +18,7 @@ public class Patch internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Body, requestType: RequestType) {
-      val response = client.post("/patch") {
+      val response = client.post("patch") {
         contentType(requestType.contentType)
         setBody(body)
       }

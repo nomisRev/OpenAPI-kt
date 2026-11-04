@@ -17,7 +17,7 @@ public class Avatars internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: ByteArray, contentType: ContentType) {
-      val response = client.put("/avatars") {
+      val response = client.put("avatars") {
         require(contentType.match(ContentType("image", "*")) && contentType.contentSubtype != "*") {
           "contentType must be a media type in image/*, but was $contentType"
         }

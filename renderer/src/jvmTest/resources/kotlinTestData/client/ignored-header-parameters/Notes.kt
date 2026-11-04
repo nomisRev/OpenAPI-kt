@@ -16,7 +16,7 @@ public class Notes internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Note) {
-      val response = client.post("/notes") {
+      val response = client.post("notes") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

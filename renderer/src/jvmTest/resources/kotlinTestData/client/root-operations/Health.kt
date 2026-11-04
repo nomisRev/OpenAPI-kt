@@ -13,7 +13,7 @@ public class Health internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.get("/health")
+      val response = client.get("health")
       if (response.status.value != 200) throw ResponseException(response, "")
     }
   }

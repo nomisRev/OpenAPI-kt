@@ -21,12 +21,12 @@ public class Multipart internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.post("/multipart")
+      val response = client.post("multipart")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
 
     public suspend operator fun invoke(`file`: ByteArray, note: String? = null) {
-      val response = client.post("/multipart") {
+      val response = client.post("multipart") {
         setBody(MultiPartFormDataContent(formData {
           append("file", file)
           if (note != null) {
@@ -42,7 +42,7 @@ public class Multipart internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(`file`: ByteArray, note: String? = null) {
-      val response = client.put("/multipart") {
+      val response = client.put("multipart") {
         setBody(MultiPartFormDataContent(formData {
           append("file", file)
           if (note != null) {

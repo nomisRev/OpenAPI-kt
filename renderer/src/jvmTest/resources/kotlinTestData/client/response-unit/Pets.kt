@@ -22,7 +22,7 @@ public class Pets internal constructor(
       private val petId: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("/pets/${petId.encodeURLParameter()}")
+        val response = client.delete("pets/${petId.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

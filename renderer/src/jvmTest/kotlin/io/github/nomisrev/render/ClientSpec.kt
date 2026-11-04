@@ -1542,6 +1542,32 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/": {
+              "get": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/owners": {
+              "get": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/owners/{id}": {
+              "get": {
+                "parameters": [
+                  { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/server-base-path"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/search": {
               "post": {
                 "requestBody": {

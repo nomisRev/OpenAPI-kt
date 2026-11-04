@@ -24,7 +24,7 @@ public class Items internal constructor(
       xTraceId: String? = null,
       preference: String? = null,
     ) {
-      val response = client.get("/items") {
+      val response = client.get("items") {
         url.encodedParameters.append("query", query.encodeURLParameter())
         if (limit != null) {
           url.encodedParameters.append("limit", limit.toString())

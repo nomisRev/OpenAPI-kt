@@ -17,7 +17,7 @@ public class Owners internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: AnyOfRefAlias?): OneOfRefAlias? {
-      val response = client.put("/owners") {
+      val response = client.put("owners") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

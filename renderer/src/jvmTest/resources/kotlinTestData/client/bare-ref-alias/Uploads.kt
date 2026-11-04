@@ -17,7 +17,7 @@ public class Uploads internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(name: String) {
-      val response = client.post("/uploads") {
+      val response = client.post("uploads") {
         setBody(MultiPartFormDataContent(formData {
           append("name", name)
         }))

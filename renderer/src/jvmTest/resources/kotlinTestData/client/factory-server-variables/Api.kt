@@ -4,6 +4,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.HttpClientConfig
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.defaultRequest
+import io.ktor.http.encodedPath
 import io.ktor.serialization.kotlinx.json.json
 import kotlin.AutoCloseable
 import kotlin.String
@@ -17,12 +18,16 @@ public class Api internal constructor(
   public constructor(server: ApiServer, block: HttpClientConfig<*>.() -> Unit) : this(HttpClient {
     defaultRequest { url(server.url) }
     block()
+    // Ktor appends a relative path to the base URL only when its path ends with `/`.
+    defaultRequest { url { if (!encodedPath.endsWith("/")) encodedPath += "/" } }
   }
   )
 
   public constructor(server: ApiServer) : this(HttpClient {
     defaultRequest { url(server.url) }
     install(ContentNegotiation) { json() }
+    // Ktor appends a relative path to the base URL only when its path ends with `/`.
+    defaultRequest { url { if (!encodedPath.endsWith("/")) encodedPath += "/" } }
   }
   )
 

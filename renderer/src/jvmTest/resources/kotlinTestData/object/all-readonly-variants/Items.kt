@@ -19,7 +19,7 @@ public class Items internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: AllReadOnlyWrite): AllReadOnlyRead {
-      val response = client.post("/items") {
+      val response = client.post("items") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

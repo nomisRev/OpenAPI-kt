@@ -21,7 +21,7 @@ public class Pets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend fun json(): JsonResponse {
-      val response = client.get("/pets") {
+      val response = client.get("pets") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
       }
       return when (response.status.value) {
@@ -32,7 +32,7 @@ public class Pets internal constructor(
     }
 
     public suspend fun textPlain(): TextPlainResponse {
-      val response = client.get("/pets") {
+      val response = client.get("pets") {
         `header`(HttpHeaders.Accept, ContentType.Text.Plain)
       }
       return when (response.status.value) {

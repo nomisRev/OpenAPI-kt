@@ -16,7 +16,7 @@ public class Tags internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): List<String> {
-      val response = client.get("/tags")
+      val response = client.get("tags")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }

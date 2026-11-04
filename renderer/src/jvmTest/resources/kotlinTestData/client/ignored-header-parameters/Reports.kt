@@ -22,7 +22,7 @@ public class Reports internal constructor(
     private val client: HttpClient,
   ) {
     public suspend fun json(contentType: String? = null, authorization: String? = null): String {
-      val response = client.get("/reports") {
+      val response = client.get("reports") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
         if (contentType != null) {
           url.encodedParameters.append("Content-Type", contentType.encodeURLParameter())
@@ -36,7 +36,7 @@ public class Reports internal constructor(
     }
 
     public suspend fun textCsv(contentType: String? = null, authorization: String? = null): String {
-      val response = client.get("/reports") {
+      val response = client.get("reports") {
         `header`(HttpHeaders.Accept, ContentType("text", "csv"))
         if (contentType != null) {
           url.encodedParameters.append("Content-Type", contentType.encodeURLParameter())

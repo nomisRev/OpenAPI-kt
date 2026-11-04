@@ -37,7 +37,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.get("/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/collaborators")
+            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/collaborators")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }

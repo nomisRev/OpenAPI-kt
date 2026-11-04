@@ -21,6 +21,7 @@ internal val ContentNegotiationType =
     ClassName("io.ktor.client.plugins.contentnegotiation", "ContentNegotiation")
 internal val JsonMember = MemberName("io.ktor.serialization.kotlinx.json", "json")
 internal val DefaultRequestMember = MemberName("io.ktor.client.plugins", "defaultRequest")
+private val EncodedPathMember = MemberName("io.ktor.http", "encodedPath")
 
 /**
  * Generate the secondary constructors to be added to the root API class.
@@ -30,6 +31,8 @@ internal val DefaultRequestMember = MemberName("io.ktor.client.plugins", "defaul
  *    so the caller has full control; no plugins are installed implicitly.
  * 2. A *batteries-included* constructor — installs [ContentNegotiation] with JSON by default; no
  *    `block` parameter.
+ *
+ * Both make the base URL path end with `/` ([addBaseUrlPathEnd]), so each relative operation path is appended to it.
  */
 internal fun ApiTree.generateSecondaryConstructors(config: RenderConfig): List<FunSpec> {
     if (children.isEmpty() && operations.isEmpty()) return emptyList()
@@ -86,6 +89,7 @@ private fun baseUrlConstructorWithBlock(): FunSpec {
         .beginControlFlow("%T", HttpClientType)
         .addStatement("%M { url(baseUrl) }", DefaultRequestMember)
         .addStatement("block()")
+        .addBaseUrlPathEnd()
         .endControlFlow()
         .build()
     return FunSpec.constructorBuilder()
@@ -100,6 +104,7 @@ private fun baseUrlConstructorNoBlock(): FunSpec {
         .beginControlFlow("%T", HttpClientType)
         .addStatement("%M { url(baseUrl) }", DefaultRequestMember)
         .addStatement("install(%T) { %M() }", ContentNegotiationType, JsonMember)
+        .addBaseUrlPathEnd()
         .endControlFlow()
         .build()
     return FunSpec.constructorBuilder()
@@ -123,6 +128,7 @@ private fun serverConstructorWithBlock(
         .beginControlFlow("%T", HttpClientType)
         .addStatement("%M { url(server.url) }", DefaultRequestMember)
         .addStatement("block()")
+        .addBaseUrlPathEnd()
         .endControlFlow()
         .build()
     return FunSpec.constructorBuilder()
@@ -143,6 +149,7 @@ private fun serverConstructorNoBlock(
         .beginControlFlow("%T", HttpClientType)
         .addStatement("%M { url(server.url) }", DefaultRequestMember)
         .addStatement("install(%T) { %M() }", ContentNegotiationType, JsonMember)
+        .addBaseUrlPathEnd()
         .endControlFlow()
         .build()
     return FunSpec.constructorBuilder()
@@ -150,6 +157,23 @@ private fun serverConstructorNoBlock(
         .callThisConstructor(httpClientArg)
         .build()
 }
+
+/**
+ * An operation path is relative (`owners/1`) and is appended to the server URL (OpenAPI 3.1.1, 4.8.1). Ktor's
+ * `defaultRequest` resolves it as RFC 3986 does, replacing the last segment of the base path, so `/v1` would become
+ * `/owners/1`: this ends the base path with `/` (`/v1/owners/1`), keeping its query. It is installed after the
+ * client's configuration, so a `defaultRequest` URL the `block` sets is a base URL alike.
+ */
+private fun CodeBlock.Builder.addBaseUrlPathEnd(): CodeBlock.Builder =
+    add("// Ktor appends a relative path to the base URL only when its path ends with `/`.\n")
+        .addStatement(
+            "%M { url { if (!%M.endsWith(%S)) %M += %S } }",
+            DefaultRequestMember,
+            EncodedPathMember,
+            "/",
+            EncodedPathMember,
+            "/",
+        )
 
 // ---------------------------------------------------------------------------
 // Server type generation

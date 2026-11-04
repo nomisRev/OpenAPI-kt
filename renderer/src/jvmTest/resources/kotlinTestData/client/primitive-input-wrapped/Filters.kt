@@ -14,7 +14,7 @@ public class Filters internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(state: State? = null, selector: Selector? = null) {
-      val response = client.get("/filters") {
+      val response = client.get("filters") {
         if (state != null) {
           url.encodedParameters.append("state", state.value.encodeURLParameter())
         }

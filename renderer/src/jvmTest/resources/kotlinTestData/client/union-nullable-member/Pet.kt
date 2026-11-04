@@ -17,7 +17,7 @@ public class Pet internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: InferredPet?): InferredPet? {
-      val response = client.put("/pet") {
+      val response = client.put("pet") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

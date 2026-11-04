@@ -25,7 +25,7 @@ public class Tags internal constructor(
       labels: List<String>? = null,
       ids: List<Long>? = null,
     ) {
-      val response = client.post("/tags") {
+      val response = client.post("tags") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           appendAll("tags", tags)

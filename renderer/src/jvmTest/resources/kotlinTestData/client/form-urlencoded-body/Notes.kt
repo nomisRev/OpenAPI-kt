@@ -19,7 +19,7 @@ public class Notes internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(text: String) {
-      val response = client.post("/notes") {
+      val response = client.post("notes") {
         contentType(ContentType.Application.FormUrlEncoded.withParameter("charset", "utf-8"))
         setBody(Parameters.build {
           append("text", text)

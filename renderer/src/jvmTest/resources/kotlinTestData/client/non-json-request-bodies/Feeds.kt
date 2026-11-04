@@ -17,7 +17,7 @@ public class Feeds internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      val response = client.post("/feeds") {
+      val response = client.post("feeds") {
         contentType(ContentType("application", "atom+xml"))
         setBody(body)
       }

@@ -22,12 +22,12 @@ public class Form internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.post("/form")
+      val response = client.post("form")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
 
     public suspend operator fun invoke(name: String, note: String? = null) {
-      val response = client.post("/form") {
+      val response = client.post("form") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("name", name)
@@ -44,7 +44,7 @@ public class Form internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(name: String, note: String? = null) {
-      val response = client.put("/form") {
+      val response = client.put("form") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("name", name)

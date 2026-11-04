@@ -18,7 +18,7 @@ public class Drafts internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String, requestType: RequestType) {
-      val response = client.post("/drafts") {
+      val response = client.post("drafts") {
         contentType(requestType.contentType)
         when (requestType) {
           RequestType.Json -> setBody(JsonPrimitive(body))

@@ -25,7 +25,7 @@ public class Tokens internal constructor(
       code: String,
       redirectUri: String,
     ) {
-      val response = client.post("/tokens") {
+      val response = client.post("tokens") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("grant_type", grantType.value)

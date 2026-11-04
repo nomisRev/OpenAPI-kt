@@ -17,7 +17,7 @@ public class Pets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Pet): Pet {
-      val response = client.post("/pets") {
+      val response = client.post("pets") {
         contentType(ContentType.Application.Json.withParameter("charset", "utf-8"))
         setBody(body)
       }

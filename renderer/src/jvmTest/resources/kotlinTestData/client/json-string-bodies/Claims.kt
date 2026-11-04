@@ -21,7 +21,7 @@ public class Claims internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String? = null): Response {
-      val response = client.post("/claims") {
+      val response = client.post("claims") {
         body?.let {
           contentType(ContentType.Application.Json)
           setBody(JsonPrimitive(it))

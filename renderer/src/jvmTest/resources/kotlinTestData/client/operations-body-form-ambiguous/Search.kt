@@ -21,7 +21,7 @@ public class Search internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(query: String, filters: Filters? = null) {
-      val response = client.post("/search") {
+      val response = client.post("search") {
         contentType(ContentType.Application.Json)
         setBody(Body(query = query, filters = filters))
       }

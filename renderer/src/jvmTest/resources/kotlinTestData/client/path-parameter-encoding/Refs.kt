@@ -23,7 +23,7 @@ public class Refs internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("/refs/a%2Fb")
+        val response = client.get("refs/a%2Fb")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
@@ -38,7 +38,7 @@ public class Refs internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("/refs/c")
+        val response = client.get("refs/c")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
@@ -55,7 +55,7 @@ public class Refs internal constructor(
       private val ref: Int,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("/refs/$ref")
+        val response = client.get("refs/$ref")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

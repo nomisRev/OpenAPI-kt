@@ -17,7 +17,7 @@ public class Items internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(status: Status? = Status.All) {
-      val response = client.get("/items") {
+      val response = client.get("items") {
         if (status != null) {
           url.encodedParameters.append("status", status.value.encodeURLParameter())
         }

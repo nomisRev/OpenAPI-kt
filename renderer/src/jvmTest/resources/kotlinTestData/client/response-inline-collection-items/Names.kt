@@ -17,7 +17,7 @@ public class Names internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): List<Name> {
-      val response = client.get("/names")
+      val response = client.get("names")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }

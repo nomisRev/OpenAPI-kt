@@ -26,7 +26,7 @@ public class Pets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend fun json(name: String, tag: String? = null): JsonResponse {
-      val response = client.post("/pets") {
+      val response = client.post("pets") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
         contentType(ContentType.Application.Json)
         setBody(Body(name = name, tag = tag))
@@ -39,7 +39,7 @@ public class Pets internal constructor(
     }
 
     public suspend fun textPlain(name: String, tag: String? = null): TextPlainResponse {
-      val response = client.post("/pets") {
+      val response = client.post("pets") {
         `header`(HttpHeaders.Accept, ContentType.Text.Plain)
         contentType(ContentType.Application.Json)
         setBody(Body(name = name, tag = tag))

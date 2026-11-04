@@ -16,7 +16,7 @@ public class Tags internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(filter: Filter? = null) {
-      val response = client.get("/tags") {
+      val response = client.get("tags") {
         if (filter != null) {
           url.encodedParameters.append("value", filter.value.encodeURLParameter())
         }

@@ -19,7 +19,7 @@ public class Locales internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: LocaleDescriptorWrite): LocaleDescriptorRead {
-      val response = client.post("/locales") {
+      val response = client.post("locales") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

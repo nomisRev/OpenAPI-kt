@@ -22,7 +22,7 @@ public class Label internal constructor(
       private val ids: List<Int>,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("/label/${if (ids.isEmpty()) "" else ".${ids.joinToString(",")}"}")
+        val response = client.get("label/${if (ids.isEmpty()) "" else ".${ids.joinToString(",")}"}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

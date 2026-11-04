@@ -17,7 +17,7 @@ public class Tagged internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: TaggedNullableMemberPet?): TaggedNullableMemberPet? {
-      val response = client.put("/tagged") {
+      val response = client.put("tagged") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

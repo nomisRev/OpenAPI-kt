@@ -17,7 +17,7 @@ public class Avatars internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: ByteArray) {
-      val response = client.put("/avatars") {
+      val response = client.put("avatars") {
         contentType(ContentType.Image.PNG)
         setBody(body)
       }

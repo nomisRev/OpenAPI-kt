@@ -14,7 +14,7 @@ public class Holder internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): BareRefAliasHolder {
-      val response = client.get("/holder")
+      val response = client.get("holder")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }

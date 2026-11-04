@@ -13,7 +13,7 @@ public class Users internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.get("/users")
+      val response = client.get("users")
       if (response.status.value != 200) throw ResponseException(response, "")
     }
   }

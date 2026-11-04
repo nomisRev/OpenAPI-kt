@@ -16,7 +16,7 @@ public class Claims internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: ClaimPatch) {
-      val response = client.patch("/claims") {
+      val response = client.patch("claims") {
         contentType(ContentType("application", "merge-patch+json"))
         setBody(body)
       }

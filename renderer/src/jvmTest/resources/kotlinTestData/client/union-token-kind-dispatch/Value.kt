@@ -14,7 +14,7 @@ public class Value internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): StringOrInteger {
-      val response = client.get("/value")
+      val response = client.get("value")
       if (response.status.value != 200) throw ResponseException(response, "")
       return response.body()
     }

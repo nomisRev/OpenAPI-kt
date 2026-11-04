@@ -19,7 +19,7 @@ public class Users internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: UserWrite): UserRead {
-      val response = client.post("/users") {
+      val response = client.post("users") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

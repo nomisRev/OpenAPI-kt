@@ -18,7 +18,7 @@ public class AppTexts internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: String) {
-      val response = client.post("/app-texts") {
+      val response = client.post("app-texts") {
         contentType(ContentType.Application.Json)
         setBody(JsonPrimitive(body))
       }

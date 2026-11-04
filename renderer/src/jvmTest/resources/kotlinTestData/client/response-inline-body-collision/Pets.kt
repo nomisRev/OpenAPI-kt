@@ -17,7 +17,7 @@ public class Pets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("/pets")
+      val response = client.get("pets")
       return when (response.status.value) {
         200 -> response.body<Response.Ok>()
         503 -> response.body<Response.ServiceUnavailable>()

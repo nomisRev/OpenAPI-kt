@@ -17,7 +17,7 @@ public class Aliases internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: PrimAllOf): ListAllOf {
-      val response = client.put("/aliases") {
+      val response = client.put("aliases") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

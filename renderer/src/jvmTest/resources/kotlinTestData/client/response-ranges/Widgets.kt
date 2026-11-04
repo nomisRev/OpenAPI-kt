@@ -26,7 +26,7 @@ public class Widgets internal constructor(
     private val client: HttpClient,
   ) {
     public suspend fun json(): JsonResponse {
-      val response = client.get("/widgets") {
+      val response = client.get("widgets") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
       }
       return when (response.status.value) {
@@ -39,7 +39,7 @@ public class Widgets internal constructor(
     }
 
     public suspend fun xml(): XmlResponse {
-      val response = client.get("/widgets") {
+      val response = client.get("widgets") {
         `header`(HttpHeaders.Accept, ContentType.Application.Xml)
       }
       return when (response.status.value) {

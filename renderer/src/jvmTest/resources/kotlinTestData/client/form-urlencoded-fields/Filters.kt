@@ -23,7 +23,7 @@ public class Filters internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(filter: Body.Filter, range: Body.Range? = null) {
-      val response = client.post("/filters") {
+      val response = client.post("filters") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("status", filter.status.toString())

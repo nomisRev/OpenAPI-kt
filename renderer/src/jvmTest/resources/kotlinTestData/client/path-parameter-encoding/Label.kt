@@ -22,7 +22,7 @@ public class Label internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("/label/.${id.encodeURLParameter()}")
+        val response = client.get("label/.${id.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

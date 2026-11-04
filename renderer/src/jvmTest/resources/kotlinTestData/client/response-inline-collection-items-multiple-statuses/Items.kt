@@ -17,7 +17,7 @@ public class Items internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("/items")
+      val response = client.get("items")
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
         201 -> Response.Created(response.body())

@@ -24,7 +24,7 @@ public class Form internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Body) {
-      val response = client.post("/form") {
+      val response = client.post("form") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }
@@ -32,7 +32,7 @@ public class Form internal constructor(
     }
 
     public suspend operator fun invoke(name: String) {
-      val response = client.post("/form") {
+      val response = client.post("form") {
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("name", name)

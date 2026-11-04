@@ -17,7 +17,7 @@ public class Labelled internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: Labels): NonEmptyNames {
-      val response = client.post("/labelled") {
+      val response = client.post("labelled") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

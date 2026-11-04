@@ -14,7 +14,7 @@ public class Items internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(limit: Int = 20, offset: Int? = 0) {
-      val response = client.get("/items") {
+      val response = client.get("items") {
         url.encodedParameters.append("limit", limit.toString())
         if (offset != null) {
           url.encodedParameters.append("offset", offset.toString())

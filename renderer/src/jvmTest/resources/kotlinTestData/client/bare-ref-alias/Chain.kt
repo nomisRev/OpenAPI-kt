@@ -17,7 +17,7 @@ public class Chain internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: ChainOwner): NullableChainOwner? {
-      val response = client.put("/chain") {
+      val response = client.put("chain") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

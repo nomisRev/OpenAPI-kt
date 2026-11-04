@@ -17,7 +17,7 @@ public class Names internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(body: NullableAllOfNames?): NullableAnyOfColor? {
-      val response = client.put("/names") {
+      val response = client.put("names") {
         contentType(ContentType.Application.Json)
         setBody(body)
       }

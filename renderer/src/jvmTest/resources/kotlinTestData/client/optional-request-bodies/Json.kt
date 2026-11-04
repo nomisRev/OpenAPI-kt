@@ -24,12 +24,12 @@ public class Json internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke() {
-      val response = client.post("/json")
+      val response = client.post("json")
       if (response.status.value != 204) throw ResponseException(response, "")
     }
 
     public suspend operator fun invoke(name: String, note: String? = null) {
-      val response = client.post("/json") {
+      val response = client.post("json") {
         contentType(ContentType.Application.Json)
         setBody(Body(name = name, note = note))
       }
@@ -49,7 +49,7 @@ public class Json internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(name: String, note: String? = null) {
-      val response = client.put("/json") {
+      val response = client.put("json") {
         contentType(ContentType.Application.Json)
         setBody(Body(name = name, note = note))
       }

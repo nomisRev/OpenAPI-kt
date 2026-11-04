@@ -430,6 +430,9 @@ private fun expansionCode(
  * `explode` ([expansionCode]), percent-encoded as a path segment (`${id.encodeURLParameter()}`, a number `$id`). A
  * fixed enum segment is its encoded wire value and an overloaded parameter, already its string, is encoded alike. The
  * literal segments of the path template are written as they are.
+ *
+ * The path is relative, `owners/$id` and `""` for `/`, so Ktor's `defaultRequest` appends it to the base URL path
+ * (OpenAPI 3.1.1, 4.8.1) rather than replacing that path, as an absolute `/owners/$id` would.
  */
 internal fun Route.pathLiteral(config: RenderConfig): CodeBlock {
     val inner = segments.map { segment ->
@@ -455,7 +458,7 @@ internal fun Route.pathLiteral(config: RenderConfig): CodeBlock {
             }
         }
     }
-    return if (inner.isEmpty()) CodeBlock.of("\"/\"") else CodeBlock.of("\"/%L\"", inner.joinToCode("/"))
+    return CodeBlock.of("\"%L\"", inner.joinToCode("/"))
 }
 
 /**
