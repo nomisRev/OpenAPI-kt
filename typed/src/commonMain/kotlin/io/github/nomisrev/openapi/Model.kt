@@ -434,8 +434,30 @@ sealed interface Model {
         override val description: String?,
         override val title: String?,
         val discriminator: String,
-        override val isNullable: Boolean
-    ) : Model, ContextHolder
+        override val isNullable: Boolean,
+        /**
+         * The properties a subtype redeclares so that no value satisfies both its declaration and the one it inherits.
+         * The subtype's declaration is its property, as a subclass overrides one, see [PropertyOverride].
+         */
+        val overriddenProperties: List<PropertyOverride> = emptyList(),
+    ) : Model, ContextHolder {
+        /**
+         * Subtype [schema] redeclares [property], which it inherits from [parent] as [inherited], as [declared], and no
+         * value satisfies both ([reason]). The subtype is generated with [declared]: an `allOf` requires a value to
+         * satisfy both, so taken literally no value of the subtype has the property, but a hierarchy that redeclares
+         * a property means the subtype's declaration, as YouTrack's `{type: object}` placeholders do.
+         * [inherited] and [declared] are the declarations as JSON.
+         */
+        @Serializable
+        data class PropertyOverride(
+            val schema: String,
+            val parent: String,
+            val property: String,
+            val inherited: String,
+            val declared: String,
+            val reason: String,
+        )
+    }
 
     @SerialName("Enum")
     @Serializable

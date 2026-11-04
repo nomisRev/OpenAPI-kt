@@ -48,6 +48,8 @@ kotlin {
 
 tasks.withType<Test>().configureEach {
     systemProperty("updateGolden", project.findProperty("updateGolden")?.toString() ?: "false")
+    // CorpusRenderSmokeSpec renders specs of the parser's test corpus.
+    inputs.dir("../parser/src/commonTest/resources/specs").withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 

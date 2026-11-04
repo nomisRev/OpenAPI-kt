@@ -41,7 +41,26 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
 
 internal fun ApiTree.generationDiagnostics(): List<GenerationDiagnostic> =
     requestBodyDiagnostics() + ignoredParameterDiagnostics() + parameterDiagnostics() +
-        children.renamedPathDiagnostics(parentPath = "")
+        children.renamedPathDiagnostics(parentPath = "") + propertyOverrideDiagnostics()
+
+/**
+ * A warning for each property a discriminated subtype redeclares so that no value satisfies its declaration and the
+ * inherited one: `typed` generates the subtype with its own declaration ([Model.DiscriminatedObject.PropertyOverride]),
+ * as a subclass overrides a property, where `allOf` taken literally admits no value with the property. A schema that
+ * is generated for both the read and the write context is reported once.
+ */
+private fun ApiTree.propertyOverrideDiagnostics(): List<GenerationDiagnostic> =
+    models.filterIsInstance<Model.DiscriminatedObject>()
+        .flatMap { it.overriddenProperties }
+        .distinct()
+        .map { override ->
+            GenerationDiagnostic(
+                severity = GenerationDiagnosticSeverity.Warning,
+                message = "Discriminated subtype ${override.schema} overrides property '${override.property}' it " +
+                    "inherits from ${override.parent}: it declares ${override.declared}, which contradicts the " +
+                    "inherited ${override.inherited} (${override.reason}). ${override.schema}'s declaration is used.",
+            )
+        }
 
 /** A warning for each node whose Kotlin name is taken by an earlier sibling, and is suffixed ([uniqueNames]). */
 private fun List<PathNode>.renamedPathDiagnostics(parentPath: String): List<GenerationDiagnostic> =
