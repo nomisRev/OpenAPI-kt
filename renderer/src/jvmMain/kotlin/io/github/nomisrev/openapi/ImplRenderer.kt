@@ -116,8 +116,11 @@ internal fun PathSegment.addConcreteNavigationMember(
     config: RenderConfig,
 ) {
     when (this) {
-        is PathSegment.FixedValue, is PathSegment.Literal ->
+        is PathSegment.FixedValue ->
             builder.addConcreteNavigationProperty(name.toParamName(), childClassName, currentAccumulatedParams)
+
+        is PathSegment.Literal ->
+            builder.addConcreteNavigationProperty(navigationName.toParamName(), childClassName, currentAccumulatedParams)
 
         is PathSegment.OverloadedParameter ->
             builder.addOverloadedNavigationMembers(

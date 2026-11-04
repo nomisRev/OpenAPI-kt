@@ -33,9 +33,12 @@ fun Iterable<Route>.buildTree(
 ): ApiTree {
     val routes = validatedConcreteRoutes()
     val rootBuilder = PathNodeBuilder(segment = null)
+    val pathsByResource = routes.groupBy(Route::resourceSegments) { it.path }.mapValues { it.value.toSet() }
 
     for (route in routes) {
-        rootBuilder.insert(route.segments, route)
+        val resource = route.resourceSegments()
+        val nodeSegments = if (pathsByResource.getValue(resource).size > 1) route.segments else resource
+        rootBuilder.insert(nodeSegments, route)
     }
 
     return ApiTree(
@@ -46,6 +49,15 @@ fun Iterable<Route>.buildTree(
         servers = servers,
     )
 }
+
+/**
+ * The node a route is placed on: its segments without the empty ones of a trailing slash (`/owners/`) or a double
+ * slash (`/a//b`), so a path that is the only one of its resource is named as it is without them. When two paths share
+ * these segments (`/owners` and `/owners/`), each keeps its own, and an empty segment is a node of its own. The route
+ * keeps its [Route.segments] either way, so it requests its path as written.
+ */
+private fun Route.resourceSegments(): List<PathSegment> =
+    segments.filterNot { it is PathSegment.Literal && it.name.isEmpty() }
 
 private tailrec suspend fun Set<NamingContext.Reference>.topLevelModels(registry: Registry): List<Model> {
     val models = with(registry) { map { it.toModel() } }

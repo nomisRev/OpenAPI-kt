@@ -46,13 +46,19 @@ private val DefaultPathParameterType = Model.Primitive.String(
 
 /**
  * Parses an OpenAPI path template into ordered literal and parameter segments.
+ *
+ * The path is appended to the server URL as written (OpenAPI 3.1.1, 4.8.1), so `/owners/` and `/owners` are two
+ * paths: a trailing slash (`/owners/`) or an empty segment (`/a//b`) is an empty [PathSegment.Literal], and the
+ * request path is the segments joined by `/` (`owners/`, `a//b`). `/` has no segments. A leading empty segment
+ * (`//owners`) is dropped: the request path is relative to the server URL, and a relative path cannot start with `/`.
  */
 fun parsePathSegments(
     path: String,
     pathParamTypes: Map<String, Model>,
-): List<PathSegment> = path.split("/")
-    .filter(String::isNotEmpty)
-    .map { segment ->
+): List<PathSegment> {
+    val relative = path.trimStart('/')
+    if (relative.isEmpty()) return emptyList()
+    return relative.split("/").map { segment ->
         if (segment.startsWith("{") && segment.endsWith("}")) {
             val paramName = segment.removeSurrounding("{", "}")
             (pathParamTypes[paramName] ?: DefaultPathParameterType).toPathSegment(paramName)
@@ -60,6 +66,7 @@ fun parsePathSegments(
             PathSegment.Literal(segment)
         }
     }
+}
 
 internal fun Model.toPathSegment(paramName: String): PathSegment = when (this) {
     is Model.Union -> toPathSegmentOrOverload(paramName)

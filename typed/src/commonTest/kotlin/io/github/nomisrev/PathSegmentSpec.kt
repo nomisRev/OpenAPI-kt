@@ -103,6 +103,16 @@ val PathSegmentSpec by testSuite {
     listOf(
         Input("/", emptyMap(), emptyList()),
         Input("/pets", emptyMap(), listOf(PathSegment.Literal("pets"))),
+        // The template is kept as written: a trailing slash and an empty segment are an empty literal segment.
+        Input("/pets/", emptyMap(), listOf(PathSegment.Literal("pets"), PathSegment.Literal(""))),
+        Input(
+            "/pets/{petId}/",
+            emptyMap(),
+            listOf(PathSegment.Literal("pets"), PathSegment.Parameter("petId", stringType), PathSegment.Literal(""))
+        ),
+        Input("/a//b", emptyMap(), listOf(PathSegment.Literal("a"), PathSegment.Literal(""), PathSegment.Literal("b"))),
+        // A request path is relative to the server URL and cannot start with `/`, so a leading empty segment is dropped.
+        Input("//pets", emptyMap(), listOf(PathSegment.Literal("pets"))),
         Input(
             "/pets/{petId}",
             emptyMap(),

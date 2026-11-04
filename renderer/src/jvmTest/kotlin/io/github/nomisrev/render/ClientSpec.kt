@@ -1568,6 +1568,99 @@ val clientSpec by testSuite {
           "openapi": "3.1.0",
           "info": { "title": "Api", "version": "0.0.1" },
           "paths": {
+            "/owners/": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "object", "properties": { "name": { "type": "string" } } }
+                      }
+                    }
+                  }
+                }
+              },
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": { "application/json": { "schema": { "type": "string" } } }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/owners/{id}/": {
+              "get": {
+                "parameters": [
+                  { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/a//b": {
+              "get": { "responses": { "204": { "description": "No Content" } } }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/path-trailing-slash"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/owners": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "object", "properties": { "name": { "type": "string" } } }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "/owners/": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": { "type": "object", "properties": { "id": { "type": "string" } } }
+                      }
+                    }
+                  }
+                }
+              },
+              "post": { "responses": { "204": { "description": "No Content" } } }
+            },
+            "/owners/{id}": {
+              "get": {
+                "parameters": [
+                  { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/path-trailing-slash-collision"
+    )
+
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
             "/search": {
               "post": {
                 "requestBody": {

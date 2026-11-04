@@ -607,6 +607,75 @@ val apiTreeSpec by testSuite {
         )
     }
 
+    test("buildTree places a trailing slash or empty segment route on the node of the path without it") {
+        // `/owners/`, `/owners/{id}/` and `/a//b` are the only templates of their resource: they are named as
+        // `/owners`, `/owners/{id}` and `/a/b`, and each route keeps its own segments, so it sends its template.
+        val getOwners = route(HttpMethod.Get, literal("owners"), literal(""))
+        val getOwner = route(HttpMethod.Get, literal("owners"), param("id"), literal(""))
+        val getAB = route(HttpMethod.Get, literal("a"), literal(""), literal("b"))
+        assertEquals(
+            ApiTree(
+                name = "Api",
+                operations = emptyMap(),
+                children = listOf(
+                    node(
+                        literal("owners"),
+                        operations = mapOf(HttpMethod.Get to getOwners),
+                        children = listOf(node(param("id"), operations = mapOf(HttpMethod.Get to getOwner))),
+                    ),
+                    node(literal("a"), children = listOf(node(literal("b"), operations = mapOf(HttpMethod.Get to getAB)))),
+                ),
+                servers = emptyList(),
+            ),
+            listOf(getOwners, getOwner, getAB).buildTree("Api"),
+        )
+    }
+
+    test("buildTree keeps a path with and without a trailing slash as two nodes in any order") {
+        // `/owners` and `/owners/` are two resources: `/owners/` is the empty segment node under `/owners`.
+        val getOwners = route(HttpMethod.Get, literal("owners"))
+        val getOwnersSlash = route(HttpMethod.Get, literal("owners"), literal(""))
+        val postOwnersSlash = route(HttpMethod.Post, literal("owners"), literal(""))
+        val getOwner = route(HttpMethod.Get, literal("owners"), param("id"))
+        val expected = node(
+            literal("owners"),
+            operations = mapOf(HttpMethod.Get to getOwners),
+            children = listOf(
+                node(literal(""), operations = mapOf(HttpMethod.Get to getOwnersSlash, HttpMethod.Post to postOwnersSlash)),
+                node(param("id"), operations = mapOf(HttpMethod.Get to getOwner)),
+            ),
+        )
+        assertEquals(
+            listOf(expected),
+            listOf(getOwners, getOwnersSlash, postOwnersSlash, getOwner).buildTree("Api").children,
+        )
+        val reversed = listOf(postOwnersSlash, getOwnersSlash, getOwners, getOwner).buildTree("Api").children.single()
+        assertEquals(mapOf(HttpMethod.Get to getOwners), reversed.operations)
+        assertEquals(
+            listOf(literal("") to setOf(HttpMethod.Get, HttpMethod.Post), param("id") to setOf(HttpMethod.Get)),
+            reversed.children.map { it.segment to it.operations.keys },
+        )
+    }
+
+    test("toApiTree keeps a path declared with and without a trailing slash as two operations") {
+        fun api(slashStatus: Int) = OpenAPI(
+            info = Info("Owners", "1.0"),
+            paths = [
+                "/owners" to PathItem(get = Operation(responses = Responses(204, Response()))),
+                "/owners/" to PathItem(get = Operation(responses = Responses(slashStatus, Response()))),
+            ],
+        )
+        // The same operation (204 and 204) and two different ones (204 and 200) are both kept.
+        for (slashStatus in listOf(204, 200)) {
+            val owners = api(slashStatus).toApiTree("Owners").children.single()
+            assertEquals("/owners", owners.operations.getValue(HttpMethod.Get).path)
+            val slash = owners.children.single()
+            assertEquals(literal(""), slash.segment)
+            assertEquals("/owners/", slash.operations.getValue(HttpMethod.Get).path)
+            assertEquals(setOf(slashStatus), slash.operations.getValue(HttpMethod.Get).returns.responses.keys.map { it.value }.toSet())
+        }
+    }
+
     test("Route.path computed property reconstructs template") {
         data class Case(val route: Route, val expected: String)
 
@@ -615,6 +684,9 @@ val apiTreeSpec by testSuite {
             Case(route(HttpMethod.Get, literal("pets")), "/pets"),
             Case(route(HttpMethod.Get, literal("pets"), param("petId")), "/pets/{petId}"),
             Case(route(HttpMethod.Get, param("a"), param("b")), "/{a}/{b}"),
+            Case(route(HttpMethod.Get, literal("pets"), literal("")), "/pets/"),
+            Case(route(HttpMethod.Get, literal("pets"), param("petId"), literal("")), "/pets/{petId}/"),
+            Case(route(HttpMethod.Get, literal("a"), literal(""), literal("b")), "/a//b"),
             Case(
                 route(
                     HttpMethod.Get,
