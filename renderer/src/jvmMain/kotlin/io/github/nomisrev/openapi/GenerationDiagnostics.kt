@@ -66,15 +66,16 @@ private fun Route.requestBodyDiagnostics(): List<GenerationDiagnostic> {
             GenerationDiagnostic(
                 severity = GenerationDiagnosticSeverity.Error,
                 message =
-                    "$prefix contains non-scalar form fields without explicit encoding rules " +
-                        "[$fieldDescription], and no alternative supported request body variant exists.",
+                    "$prefix contains form fields [$fieldDescription] that have no supported form serialization " +
+                        "for their type and encoding (`style`, `explode`), and no alternative supported request body " +
+                        "variant exists.",
             )
         } else {
             GenerationDiagnostic(
                 severity = GenerationDiagnosticSeverity.Warning,
                 message =
-                    "Skipping unsupported form overload for $prefix because fields " +
-                        "[$fieldDescription] are non-scalar and have no explicit encoding rules.",
+                    "Skipping unsupported form overload for $prefix because fields [$fieldDescription] have no " +
+                        "supported form serialization for their type and encoding (`style`, `explode`).",
             )
         }
     }

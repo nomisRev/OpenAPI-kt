@@ -1169,6 +1169,108 @@ val clientSpec by testSuite {
         "client/form-urlencoded-body"
     )
 
+    // Form fields are serialized like query parameters (Encoding Object, default `style: form`, `explode: true`):
+    // an optional field is left out when `null`, a scalar is its string form, an enum its wire value, an array is
+    // repeated keys, or one value joined by `,` (`explode: false`), a space (`spaceDelimited`) or `|`
+    // (`pipeDelimited`), and an object is its properties as keys (`style: form`) or as `name[key]` (`deepObject`).
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/profiles": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "name": { "type": "string" },
+                          "nickname": { "type": "string" },
+                          "count": { "type": "integer", "format": "int32" },
+                          "age": { "type": "integer", "format": "int64" },
+                          "ratio": { "type": "number", "format": "double" },
+                          "active": { "type": "boolean" },
+                          "role": { "type": "string", "enum": ["admin", "read-only"] },
+                          "status": { "$ref": "#/components/schemas/Status" },
+                          "born": { "type": "string", "format": "date" },
+                          "seen": { "type": "string", "format": "date-time" },
+                          "id": { "type": "string", "format": "uuid" },
+                          "code": { "$ref": "#/components/schemas/Code" },
+                          "tags": { "type": "array", "items": { "type": "string" } },
+                          "roles": { "type": "array", "items": { "type": "string", "enum": ["admin", "read-only"] } },
+                          "ids": { "type": "array", "items": { "type": "integer", "format": "int64" } },
+                          "words": { "type": "array", "items": { "type": "string" } },
+                          "path": { "type": "array", "items": { "type": "string" } },
+                          "flags": { "type": "array", "items": { "type": "boolean" } }
+                        },
+                        "required": ["name", "count", "ratio", "role", "roles"]
+                      },
+                      "encoding": {
+                        "ids": { "style": "form", "explode": false },
+                        "words": { "style": "spaceDelimited" },
+                        "path": { "style": "pipeDelimited" },
+                        "flags": { "explode": true }
+                      }
+                    }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/filters": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": {
+                          "filter": {
+                            "type": "object",
+                            "properties": {
+                              "status": { "$ref": "#/components/schemas/Status" },
+                              "limit": { "type": "integer", "format": "int32" }
+                            },
+                            "required": ["status"]
+                          },
+                          "range": {
+                            "type": "object",
+                            "properties": {
+                              "min": { "type": "integer", "format": "int32" },
+                              "max": { "type": "integer", "format": "int32" }
+                            },
+                            "required": ["min"]
+                          }
+                        },
+                        "required": ["filter"]
+                      },
+                      "encoding": {
+                        "filter": { "style": "form", "explode": true },
+                        "range": { "style": "deepObject", "explode": true }
+                      }
+                    }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Status": { "type": "string", "enum": ["OPEN", "CLOSED"] },
+              "Code": { "type": "string" }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/form-urlencoded-fields"
+    )
+
     clientTest(
         """
         {
@@ -3415,6 +3517,70 @@ val clientSpec by testSuite {
         assertTrue("formUrlEncode" !in code, code)
     }
 
+    // A form field is generated only when its type and Encoding Object `style` / `explode` have a serialization the
+    // client writes (`client/form-urlencoded-fields`); any other field fails generation as the only body, rather
+    // than generating code that does not compile or sends a body the server reads differently.
+    fun formFieldApi(property: String, encoding: String?): String = """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/forms": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": { "type": "object", "properties": { "field": $property } }
+                      ${encoding?.let { ""","encoding": { "field": $it }""" }.orEmpty()}
+                    }
+                  }
+                },
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          }
+        }
+    """.trimIndent()
+
+    val scalarObject = """{ "type": "object", "properties": { "a": { "type": "string" } } }"""
+    val stringArray = """{ "type": "array", "items": { "type": "string" } }"""
+    val unsupportedFormFields = listOf(
+        // `deepObject` defines no array serialization.
+        "an array with deepObject" to formFieldApi(stringArray, """{ "style": "deepObject", "explode": true }"""),
+        // Indistinguishable from `explode: false` once parsed, and `name=a&name=b` and `name=a,b` differ.
+        "an array with an encoding but no style or explode" to
+            formFieldApi(stringArray, """{ "contentType": "text/plain" }"""),
+        "an array with a style forms do not define" to formFieldApi(stringArray, """{ "style": "matrix" }"""),
+        "an array of objects" to formFieldApi("""{ "type": "array", "items": $scalarObject }""", null),
+        "an array of nullable items" to
+            formFieldApi("""{ "type": "array", "items": { "type": ["string", "null"] } }""", null),
+        // Without `style` or `explode`, an object field is its `contentType`, `application/json`.
+        "an object without encoding" to formFieldApi(scalarObject, null),
+        "an object with form and explode false" to formFieldApi(scalarObject, """{ "style": "form", "explode": false }"""),
+        "an object with spaceDelimited" to formFieldApi(scalarObject, """{ "style": "spaceDelimited" }"""),
+        "an object with a non-scalar property" to formFieldApi(
+            """{ "type": "object", "properties": { "a": $stringArray } }""",
+            """{ "style": "deepObject", "explode": true }""",
+        ),
+        "a map" to formFieldApi(
+            """{ "type": "object", "additionalProperties": { "type": "string" } }""",
+            """{ "style": "deepObject", "explode": true }""",
+        ),
+    )
+    for ([description, json] in unsupportedFormFields) {
+        test("a form field of $description has no supported form serialization") {
+            val error = assertFailsWith<IllegalArgumentException> {
+                OpenAPI.fromJson(json).toApiTree().generateClient(wildcardConfig)
+            }
+            val message = error.message.orEmpty()
+            assertTrue(
+                message.contains("POST /forms (application/x-www-form-urlencoded) contains form fields [field]"),
+                message,
+            )
+        }
+    }
+
     test("a form body declared in UTF-8 under any spelling of the charset is generated") {
         val result = OpenAPI.fromJson(
             wildcardBodyApi("application/x-www-form-urlencoded; charset=UTF-8" to formSchema)
@@ -3540,7 +3706,7 @@ val clientSpec by testSuite {
                 )
         }
 
-        assertTrue(error.message.orEmpty().contains("non-scalar form fields without explicit encoding rules"))
+        assertTrue(error.message.orEmpty().contains("form fields [filters] that have no supported form serialization"))
     }
 
     test("flattened request body overload limit is reported as an error") {

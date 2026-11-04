@@ -224,15 +224,42 @@ data class Route(
                 get() = type.cases
         }
 
-        /** application/x-www-form-urlencoded body. Represented as key/value pairs. */
+        /**
+         * application/x-www-form-urlencoded body. Represented as key/value pairs.
+         *
+         * @property unsupportedFields the fields that have no form serialization the client generates.
+         * @property styles how each array or object field is laid out, by field name; [FormStyle.FormExploded],
+         * the Encoding Object default, when absent. A scalar field is its value whatever its style.
+         */
         data class FormUrlEncoded(
             val parameters: List<Multipart.FormData>,
             val unsupportedFields: List<String> = emptyList(),
             override val description: String?,
             override val extensions: Map<String, JsonElement>,
+            val styles: Map<String, FormStyle> = emptyMap(),
         ) : Body, List<Multipart.FormData> by parameters {
             val isSupported: Boolean
                 get() = unsupportedFields.isEmpty()
+
+            fun styleOf(field: Multipart.FormData): FormStyle = styles[field.name] ?: FormStyle.FormExploded
+        }
+
+        /** The Encoding Object `style` and `explode` of an array or object form field, as query parameters use them. */
+        enum class FormStyle {
+            /** `form`, `explode: true`: an array is `name=a&name=b`, an object one `key=value` per property. */
+            FormExploded,
+
+            /** `form`, `explode: false`: an array is `name=a,b`. */
+            Form,
+
+            /** `spaceDelimited`: an array is `name=a b`. */
+            SpaceDelimited,
+
+            /** `pipeDelimited`: an array is `name=a|b`. */
+            PipeDelimited,
+
+            /** `deepObject`: an object is one `name[key]=value` per property. */
+            DeepObject,
         }
 
         sealed interface Multipart : Body {

@@ -754,7 +754,9 @@ val routeSpec by testSuite {
         assertTrue(form.unsupportedFields.isEmpty())
     }
 
-    test("form-urlencoded body with non-scalar fields and no encoding becomes unsupported") {
+    // Without an Encoding Object an array field is `form` with `explode: true`, repeated keys, but an object field is
+    // its `contentType`, `application/json`, which the client does not send.
+    test("form-urlencoded body with an object field and no encoding becomes unsupported, an array field does not") {
         val route = routes(
             openAPI(
                 path = "/search",
@@ -788,7 +790,7 @@ val routeSpec by testSuite {
         val form = assertIs<Route.Body.FormUrlEncoded>(
             requireNotNull(route.body).types.getValue(ContentType.Application.FormUrlEncoded)
         )
-        assertEquals(listOf("filters", "tags"), form.unsupportedFields.sorted())
+        assertEquals(listOf("filters"), form.unsupportedFields.sorted())
         assertTrue(!form.isSupported)
     }
 

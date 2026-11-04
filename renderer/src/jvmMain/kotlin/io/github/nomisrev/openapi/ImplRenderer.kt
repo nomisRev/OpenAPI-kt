@@ -1010,6 +1010,7 @@ private fun addBodyCode(
         }
 
         is Route.Body.FormUrlEncoded -> code.addFormUrlEncodedBodyCode(
+            config,
             body,
             requireNotNull(sentContentType) { "A form body is sent as the media type it is declared under." },
         )
@@ -1082,19 +1083,121 @@ private fun CodeBlock.Builder.addSetLikeBodyCode(
  * `A-Z a-z 0-9 - . _ ~` is percent-encoded, so values with `&`, `=`, `+` or non-ASCII characters decode back to
  * themselves. (The URL Standard leaves `*` and encodes `~`; every decoder reads both forms alike.) A form declared in
  * another charset is not generated (`unsupportedFormCharsetOrNull`).
+ *
+ * Every field is serialized like a query parameter of its Encoding Object `style` and `explode` ([addFormFieldCode]).
+ * Encoding every reserved character is also right for `allowReserved: true`, which only permits leaving them as is:
+ * a form decoder reads `%2F` and `/` alike, and must not see a value's own `&` or `=` unencoded.
  */
-private fun CodeBlock.Builder.addFormUrlEncodedBodyCode(body: Route.Body.FormUrlEncoded, contentType: ContentType) {
+private fun CodeBlock.Builder.addFormUrlEncodedBodyCode(
+    config: RenderConfig,
+    body: Route.Body.FormUrlEncoded,
+    contentType: ContentType,
+) {
     addStatement("%M(%L)", ContentTypeFunMember, contentType.toContentTypeCodeBlock())
     add("%M(%T.build {\n", SetBodyMember, ParametersType)
     indent()
     for (formData in body.parameters) {
-        val paramName = formData.name.toParamName()
-        val valueExpr = formData.type.wireValueExpr(paramName)
-        addStatement("append(%S, %L)", formData.name, valueExpr)
+        addFormFieldCode(
+            config = config,
+            name = formData.name,
+            expr = formData.name.toParamName(),
+            model = formData.type,
+            mayBeNull = formData.type.isNullable || !formData.isRequired,
+            style = body.styleOf(formData),
+        )
     }
     unindent()
     add("}.%M())\n", FormUrlEncodeMember)
 }
+
+/**
+ * Appends the form field [name] of [model], held by [expr], to a `ParametersBuilder` (OpenAPI 3.1.1, 4.8.15 and
+ * Appendix C), with the support rules of the typed layer: a field that is `null` is left out, as an undefined
+ * RFC 6570 variable is, and so is an empty array.
+ *
+ * - A scalar is its string form ([formValueExpr]).
+ * - An array is one `name=item` per item ([Route.Body.FormStyle.FormExploded]), or one `name` of its items joined by
+ *   `,`, a space or `|`. `formUrlEncode` percent-encodes the delimiter with the value: `a%2Cb`, `a+b`, `a%7Cb` decode
+ *   to the `a,b`, `a b` and `a|b` the style defines.
+ * - An object is one `key=value` per property ([Route.Body.FormStyle.FormExploded]) or one `name[key]=value`
+ *   ([Route.Body.FormStyle.DeepObject]), `[` and `]` percent-encoded as the specification requires.
+ */
+private fun CodeBlock.Builder.addFormFieldCode(
+    config: RenderConfig,
+    name: String,
+    expr: String,
+    model: Model,
+    mayBeNull: Boolean,
+    style: Route.Body.FormStyle,
+) {
+    when (val resolved = model.formModel(config)) {
+        is Model.Collection -> {
+            val itemExpr = resolved.inner.formValueExpr(config, "it")
+            if (style == Route.Body.FormStyle.FormExploded) {
+                if (mayBeNull) beginControlFlow("if (%L != null)", expr)
+                if (itemExpr == "it") addStatement("appendAll(%S, %L)", name, expr)
+                else addStatement("appendAll(%S, %L.map·{ %L })", name, expr, itemExpr)
+                if (mayBeNull) endControlFlow()
+            } else {
+                val delimiter = when (style) {
+                    Route.Body.FormStyle.Form -> ","
+                    Route.Body.FormStyle.SpaceDelimited -> " "
+                    Route.Body.FormStyle.PipeDelimited -> "|"
+                    else -> error("A form array has no $style serialization.")
+                }
+                beginControlFlow(if (mayBeNull) "if (!%L.isNullOrEmpty())" else "if (%L.isNotEmpty())", expr)
+                // `joinToString` writes every item with `toString()` already.
+                if (itemExpr == "it" || itemExpr == "it.toString()") {
+                    addStatement("append(%S, %L.joinToString(%S))", name, expr, delimiter)
+                } else {
+                    addStatement("append(%S, %L.joinToString(%S)·{ %L })", name, expr, delimiter, itemExpr)
+                }
+                endControlFlow()
+            }
+        }
+
+        is Model.Object if !resolved.isScalarWrapper -> {
+            if (mayBeNull) beginControlFlow("if (%L != null)", expr)
+            for ([propertyName, property] in resolved.properties) {
+                addFormFieldCode(
+                    config = config,
+                    name = if (style == Route.Body.FormStyle.DeepObject) "$name[$propertyName]" else propertyName,
+                    expr = "$expr.${propertyName.toParamName()}",
+                    model = property.model,
+                    mayBeNull = property.model.isNullable || !property.isRequired,
+                    style = Route.Body.FormStyle.FormExploded,
+                )
+            }
+            if (mayBeNull) endControlFlow()
+        }
+
+        else -> {
+            if (mayBeNull) beginControlFlow("if (%L != null)", expr)
+            addStatement("append(%S, %L)", name, model.formValueExpr(config, expr))
+            if (mayBeNull) endControlFlow()
+        }
+    }
+}
+
+/** The model a form value of this model is: a [Model.Reference] is the model it names. */
+private fun Model.formModel(config: RenderConfig): Model =
+    if (this is Model.Reference) {
+        requireNotNull(config.resolve(this)) { "A form field references ${context}, which is not rendered." }
+            .formModel(config)
+    } else this
+
+/**
+ * The `String` form value of the scalar [expr] of this model: a string as is, an enum as its wire value (as for a
+ * query parameter, see `enum-wire-tostring`), a number, boolean, date, date-time or UUID as its `toString()`
+ * (`1`, `1.5`, `true`, `2024-01-31`, `2024-01-31T10:00:00Z`), and a scalar wrapper as the value it wraps.
+ */
+private fun Model.formValueExpr(config: RenderConfig, expr: String): String =
+    when (val model = formModel(config)) {
+        is Model.Primitive.String -> expr
+        is Model.Enum -> if (model.needsValueProperty()) "$expr.value" else "$expr.toString()"
+        is Model.Object -> model.properties.getValue("value").model.formValueExpr(config, "$expr.value")
+        else -> "$expr.toString()"
+    }
 
 private fun CodeBlock.Builder.addMultipartValueBodyCode(config: RenderConfig, body: Route.Body.Multipart.Value) {
     add("%M(%T(%M {\n", SetBodyMember, MultiPartFormDataContentType, FormDataMember)

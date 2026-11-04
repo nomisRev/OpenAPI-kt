@@ -5,11 +5,13 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.parser.AdditionalProperties
+import io.github.nomisrev.openapi.parser.Encoding
 import io.github.nomisrev.openapi.parser.MediaType
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.RequestBody
 import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.parser.Style
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.resolveComponent
 import io.github.nomisrev.openapi.registry.toModel
@@ -110,14 +112,18 @@ private suspend fun RequestBody.formUrlEncoded(
             "Form URL encoded body must be an object. $this"
         }
     }
+    val styles = obj.properties.keys.mapNotNull { baseName ->
+        mediaType.encoding[baseName]?.formStyleOrNull()?.let { baseName to it }
+    }.toMap()
     val unsupportedFields = with(scope) {
         obj.properties.mapNotNull { [baseName, prop] ->
-            if (baseName in mediaType.encoding || prop.model.isSafeFormUrlEncodedField()) null
-            else baseName
+            val encoding = mediaType.encoding[baseName]
+            val style = if (encoding == null) Route.Body.FormStyle.FormExploded else styles[baseName]
+            if (prop.model.isFormUrlEncodable(encoding, style)) null else baseName
         }
     }
     val params = obj.properties.map { [baseName, prop] -> Route.Body.Multipart.FormData(baseName, prop.model, null, prop.isRequired) }
-    return Route.Body.FormUrlEncoded(params, unsupportedFields, description, mediaType.extensions)
+    return Route.Body.FormUrlEncoded(params, unsupportedFields, description, mediaType.extensions, styles)
 }
 
 context(scope: Registry)
@@ -206,10 +212,70 @@ private fun ReferenceOr<RequestBody>.resolve(): RequestBody =
 context(ctx: Registry)
 private suspend fun ReferenceOr<Schema>.resolveSchema(): Schema = with(ctx.scope()) { peek() }
 
+/**
+ * The [Route.Body.FormStyle] an Encoding Object declares for a form field, or `null` when it declares none that is
+ * known. `style` defaults to `form`, whose `explode` defaults to `true`.
+ */
+private fun Encoding.formStyleOrNull(): Route.Body.FormStyle? =
+    when (style) {
+        null, Style.form.name -> if (explode) Route.Body.FormStyle.FormExploded else Route.Body.FormStyle.Form
+        Style.spaceDelimited.name -> Route.Body.FormStyle.SpaceDelimited
+        Style.pipeDelimited.name -> Route.Body.FormStyle.PipeDelimited
+        Style.deepObject.name -> Route.Body.FormStyle.DeepObject
+        else -> null
+    }
+
+/**
+ * Whether a form field of this model has a serialization the client generates, as the Encoding Object of the field
+ * describes it (OpenAPI 3.1.1, 4.8.15): a field is serialized like a query parameter of its `style` and `explode`,
+ * `form` and `explode: true` by default.
+ *
+ * - A scalar is its value, so it is supported whatever its style.
+ * - An array of scalars is repeated keys (`form`, `explode: true`), or one value joined by `,` (`form`,
+ *   `explode: false`), a space (`spaceDelimited`) or `|` (`pipeDelimited`). `deepObject` defines no array.
+ * - An object of scalar properties, and nothing else, is one key per property (`form`, `explode: true`) or one
+ *   `name[key]` per property (`deepObject`). It needs an explicit `style` or `explode`: without one, its default is
+ *   its `contentType`, `application/json`, a JSON string the client does not send.
+ *
+ * The parser reads an Encoding Object without `style` or `explode` as `explode: false` (its default for a
+ * missing `style`), so it cannot tell `explode: false` apart from no `explode` at all. For an array the two are
+ * different serializations (`name=a,b` and `name=a&name=b`), so such an array is not supported.
+ */
 context(scope: Registry)
-private suspend fun Model.isSafeFormUrlEncodedField(
-    visited: Set<NamingContext.Reference> = emptySet(),
-): Boolean = when (this) {
+private suspend fun Model.isFormUrlEncodable(encoding: Encoding?, style: Route.Body.FormStyle?): Boolean {
+    val model = formModel() ?: return false
+    if (model.isFormScalar()) return true
+    val isAmbiguous = encoding != null && encoding.style == null && !encoding.explode
+    return when (model) {
+        is Model.Collection ->
+            !isAmbiguous && style != null && style != Route.Body.FormStyle.DeepObject &&
+                !model.inner.isNullable && model.inner.formModel()?.isFormScalar() == true
+
+        is Model.Object ->
+            encoding != null && !isAmbiguous &&
+                (style == Route.Body.FormStyle.FormExploded || style == Route.Body.FormStyle.DeepObject) &&
+                model.additionalProperties == Model.Object.AdditionalProperties.False &&
+                model.properties.values.all { it.model.formModel()?.isFormScalar() == true }
+
+        else -> false
+    }
+}
+
+/** The model a form field of this model is serialized as: a [Model.Reference] is the model it names. */
+context(scope: Registry)
+private suspend fun Model.formModel(visited: Set<NamingContext.Reference> = emptySet()): Model? = when (this) {
+    is Model.Reference -> {
+        val reference = context.head as? NamingContext.Reference
+        if (reference == null || reference in visited) null
+        else with(scope) { reference.toModel() }.formModel(visited + reference)
+    }
+
+    else -> this
+}
+
+/** A model whose form value is a single string: a primitive, date, UUID or enum, or a wrapper around one. */
+context(scope: Registry)
+private suspend fun Model.isFormScalar(visited: Set<NamingContext.Reference> = emptySet()): Boolean = when (this) {
     is Model.Date,
     is Model.DateTime,
     is Model.Enum,
@@ -235,12 +301,12 @@ private suspend fun Model.isSafeFormUrlEncodedField(
             additionalProperties == Model.Object.AdditionalProperties.False &&
             properties.size == 1 &&
             properties["value"]?.let { property ->
-                property.isRequired && property.model.isSafeFormUrlEncodedField(visited)
+                property.isRequired && property.model.isFormScalar(visited)
             } == true
 
     is Model.Reference -> {
-        val reference = context.head as? NamingContext.Reference ?: return false
-        if (reference in visited) false
-        else with(scope) { reference.toModel() }.isSafeFormUrlEncodedField(visited + reference)
+        val reference = context.head as? NamingContext.Reference
+        if (reference == null || reference in visited) false
+        else with(scope) { reference.toModel() }.isFormScalar(visited + reference)
     }
 }
