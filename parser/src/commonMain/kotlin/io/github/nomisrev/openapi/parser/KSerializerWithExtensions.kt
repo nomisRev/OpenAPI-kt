@@ -55,10 +55,10 @@ internal open class KSerializerWithExtensions<T>(
     }
 
   override fun serialize(encoder: Encoder, value: T) {
-    encoder as JsonEncoder
-    val jsObject = encoder.json.encodeToJsonElement(serializer, value).jsonObject - "extensions"
+    val json = (encoder as? JsonEncoder)?.json ?: OpenAPI.Json
+    val jsObject = json.encodeToJsonElement(serializer, value).jsonObject - "extensions"
     encoder.encodeSerializableValue(
-      JsonElement.serializer(),
+      JsonElementWithYamlSerializer,
       JsonObject(jsObject + extensions(value)),
     )
   }

@@ -54,6 +54,7 @@ class PathsExtensionsTest {
       assertEquals(expectedPaths, encoded["paths"])
       assertFalse("pathsExtensions" in encoded)
       assertEquals(spec, OpenAPI.fromJson(spec.toJson()))
+      assertEquals(spec, OpenAPI.fromYaml(spec.toYaml()))
     }
   }
 
@@ -74,6 +75,7 @@ class PathsExtensionsTest {
       assertTrue(spec.paths.extensions.isEmpty())
       assertFalse("pathsExtensions" in spec.toJsObject())
       assertEquals(spec, OpenAPI.fromJson(spec.toJson()))
+      assertEquals(spec, OpenAPI.fromYaml(spec.toYaml()))
     }
   }
 }

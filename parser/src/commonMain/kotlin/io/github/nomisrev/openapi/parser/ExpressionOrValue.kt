@@ -13,7 +13,6 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable(with = ExpressionOrValue.Serializer::class)
@@ -51,8 +50,8 @@ public sealed interface ExpressionOrValue {
 
     override fun serialize(encoder: Encoder, value: ExpressionOrValue) {
       when (value) {
-        is Expression -> (encoder as JsonEncoder).encodeJsonElement(JsonPrimitive(value.value))
-        is Value -> (encoder as JsonEncoder).encodeJsonElement(value.value)
+        is Expression -> encoder.encodeString(value.value)
+        is Value -> encoder.encodeSerializableValue(JsonElementWithYamlSerializer, value.value)
       }
     }
   }

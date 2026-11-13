@@ -142,21 +142,20 @@ public data class Responses(
         }
 
       override fun serialize(encoder: Encoder, value: Responses) {
-        encoder as JsonEncoder
+        val json = (encoder as? JsonEncoder)?.json ?: OpenAPI.Json
         val responses = buildMap {
           value.responses.forEach { [statusCodeOrRange, response] ->
             put(
               statusCodeOrRange.toPropertyName(),
-              encoder.json.encodeToJsonElement(responseSerializer, response),
+              json.encodeToJsonElement(responseSerializer, response),
             )
           }
           value.default?.let {
-            put("default", encoder.json.encodeToJsonElement(responseSerializer, it))
+            put("default", json.encodeToJsonElement(responseSerializer, it))
           }
           putAll(value.extensions)
         }
-        val json = JsonObject(responses)
-        encoder.encodeSerializableValue(JsonElement.serializer(), json)
+        encoder.encodeSerializableValue(JsonElementWithYamlSerializer, JsonObject(responses))
       }
     }
   }
