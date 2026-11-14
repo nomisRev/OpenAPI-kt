@@ -84,6 +84,19 @@ Wire behaviour unchanged: `defaultRequest { url(server.url) }`.
 - Use the same name list in `buildSecondaryConstructors` (`FactoryRenderer.kt:63-70`) so the default argument refers to the renamed case.
 - Same pass should make the name a valid identifier; see `issues/server-case-name-not-identifier.md`.
 
+## Re-checked on 2026-11-14 (census `census-2026-11-14e`, 550 documents compiling)
+
+- 270 documents still fail to compile with this error. For 54 it is the only family of errors; for another 144 the
+  only other family is `unregistered-status-codes-share-one-response-case`. Fixing both leaves 198 documents without a
+  known compile error (an upper bound: the census sees nothing past the compiler).
+- What tells the clashing servers apart, over all 617 clashing groups in the corpus (341 documents, counted from the
+  spec files with the naming rule above): the scheme only in 611 (`http://x` next to `https://x`, usually with one
+  description); different URLs with the same first two host words or the same description in 5 (nowpayments
+  `…io` / `…ioo`, shotstack `/{version}` / `/serve/{version}`); scheme and another URL difference together in 1
+  (Amazon S3: four servers, one description). No group repeats an identical URL.
+- 575 server names are not identifiers today because of parentheses (`…China(Beijing)AndChina(Ningxia)`), and 213
+  names are longer than 60 characters (longest 224): both come from using the whole description.
+
 ## Proof
 
 - Golden `ClientSpec` case next to `renderer/src/jvmTest/resources/kotlinTestData/client/factory-servers/`: servers `http://x` + `https://x`; two servers with one description; a server described "Custom". Today the golden output would contain two identical declarations — add a compile check (the reproducer) since a golden file alone does not prove it compiles.
