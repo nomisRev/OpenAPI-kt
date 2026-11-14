@@ -42,6 +42,11 @@ Read these numbers with three caveats:
 | [untyped-schema-parameters-and-form-fields-refused](untyped-schema-parameters-and-form-fields-refused.md) | `02be578d`, `3fb0ba0b` | a free-form object as a form field, arrays and maps of free-form objects, a free-form object path parameter |
 | [composite-path-segments](composite-path-segments.md) | `f9555f8b`, `fd203506`, `eb97be6c` | Google resource names are sent with `%2F`; a name repeated in one segment (`{a}-{a}`); `?` in a path key is sent as written; `{insight_id:}` |
 | [optional-nullable-property-cannot-send-explicit-null](optional-nullable-property-cannot-send-explicit-null.md) | `cae01e33`, `909e08bc` | a required nullable property is dropped under `explicitNulls = false` |
+| [path-literal-segment-not-a-kotlin-identifier](path-literal-segment-not-a-kotlin-identifier.md) | `eae909af` | signed literals `+1` / `-1` share the name `_1` and are numbered |
+| [parameter-kotlin-name-collisions](parameter-kotlin-name-collisions.md), [flattened-body-field-vs-parameter-name](flattened-body-field-vs-parameter-name.md), [parameter-named-client-shadows-http-client](parameter-named-client-shadows-http-client.md) | `8858c973` | query names that differ only by case are sent under one name (Ktor's parameters ignore case); a path parameter named `{client}` |
+| [enum-values-with-one-kotlin-name-silently-dropped](enum-values-with-one-kotlin-name-silently-dropped.md), [enum-entry-name-illegal-characters](enum-entry-name-illegal-characters.md), [enum-empty-identifier](enum-empty-identifier.md) | `bf24fce5` | defaults on optional model properties are not covered by a golden |
+| [dollar-in-path-literal-interpolated](dollar-in-path-literal-interpolated.md), [keyword-path-parameter-unescaped-at-use-sites](keyword-path-parameter-unescaped-at-use-sites.md) | `bb15dd58` | parameter names `_` / empty |
+| [union-case-name-collisions](union-case-name-collisions.md) | `11ac049c` | a `required`-only branch next to `$ref` branches still becomes a free-form JSON case |
 | [response-media-type-without-schema](response-media-type-without-schema.md) | `3e55150c`, and the two commits after `e0a84a6c` | malformed media type keys on responses still abort the document (`malformed-media-type-key-crash`) |
 | [unregistered-status-codes-share-one-response-case](unregistered-status-codes-share-one-response-case.md) | `0862fee5` | the multi-content-type and error-dispatch shapes are covered by a golden only |
 | [server-case-names-collide](server-case-names-collide.md), [server-case-name-not-identifier](server-case-name-not-identifier.md), [server-empty-description-empty-case-name](server-empty-description-empty-case-name.md) | `796be767` | names over 200 characters are not shortened |
@@ -74,6 +79,13 @@ from typed to a compile failure. One document regressed (plaid.com, a request co
 type); it is fixed and compiles again when re-checked alone. The largest remaining failures before compile:
 `Duplicate generated files` (95, emit), `Conflicting shared path parameter node` (65, typed), refused parameters
 (36, render).
+
+An eighth census after the five commits above (`exploration/build/census-2026-11-15a/`): 1,128 generate and compile,
+108 fail to compile, 159 fail in typed, 95 fail at emit, 46 fail at render. 196 documents newly compile, none stops
+earlier than before. Largest remaining groups: `Duplicate generated files` (95, emit), `Conflicting shared path
+parameter node` (65, typed), an unresolved inline type under a per-media-type response class such as
+`PdfResponse.BadRequest.ErrorDescription` (43 apisetu.gov.in documents, compile; reached since `3e55150c`), refused
+parameters (36, render), unresolved `$ref` pointers (22, typed), recursive `allOf` (20, typed).
 
 The tables below still carry the counts of the first census.
 
