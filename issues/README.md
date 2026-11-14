@@ -38,12 +38,19 @@ Read these numbers with three caveats:
 | [enum-and-default-values-stored-as-strings](enum-and-default-values-stored-as-strings.md) | `5854454c`, `5d203102`, `1b89168f`, `f39eb298`, `87aac23f`, `01f1fe46`, `fde99b78` | enums with a `null` member next to typed members; YAML quoting is not visible to the parser |
 | [enum-structured-members-fail-parse](enum-structured-members-fail-parse.md) | `1b89168f` | nothing |
 | [default-or-enum-value-not-of-declared-type](default-or-enum-value-not-of-declared-type.md) | `f39eb298` (partly) | values that cannot be read as the declared type still abort the document (12) |
+| [operation-parameter-shadows-path-parameter](operation-parameter-shadows-path-parameter.md) | `68db4e01` | nothing; the GitHub integration client compiles again |
+| [untyped-schema-parameters-and-form-fields-refused](untyped-schema-parameters-and-form-fields-refused.md) | `02be578d`, `3fb0ba0b` | a free-form object as a form field, arrays and maps of free-form objects, a free-form object path parameter |
 
 A second census after these commits (`exploration/build/census-2026-11-14b/`, taken before `01f1fe46` and
 `fde99b78`): 457 generate and compile (was 445), 541 fail to compile (was 555), 387 fail in typed (was 380), none
 fails to parse (was 5). The typed count rose because the five documents that used to fail parsing now stop at
 other reported issues, and because of two regressions that `01f1fe46` and `fde99b78` then fixed; the four
 documents involved were re-checked individually and are back at their earlier stage or better.
+
+A third census after `68db4e01` and `02be578d` (`exploration/build/census-2026-11-14c/`): 468 generate and compile,
+538 fail to compile, 385 fail in typed, 99 fail at emit, 46 fail at render. Two of the 468 and one render failure
+were re-checked individually: the run recorded them one stage too early because the generator was rebuilt while it
+ran. No document stops earlier than in the second census.
 
 The tables below still carry the counts of the first census.
 
@@ -160,8 +167,7 @@ Counts are documents affected; see each report for how they were counted.
 
 `integration-tests/` (GitHub, OpenAI, YouTrack) generates and compiles each client and, since `8d373468`,
 round-trips the specs' own examples through the generated models against a committed baseline (see
-`integration-tests/README.md`). It still sends no requests, so it cannot catch a wrong URL or parameter. On this branch OpenAI and YouTrack compile and GitHub does not
-(`operation-parameter-shadows-path-parameter`, plus one stale line in the hand-written `Smoke.kt`).
+`integration-tests/README.md`). It still sends no requests, so it cannot catch a wrong URL or parameter. On this branch all three compile and pass their round-trip tests.
 The three specs contain few of the constructs above: GitHub has the shadowed path parameter, the
 context-variant duplicates and a schema-less request media type; YouTrack has `$ref` + `readOnly`;
 OpenAI has integer enums, 3.1 `$ref` siblings and webhooks.
