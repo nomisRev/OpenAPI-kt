@@ -134,12 +134,10 @@ private fun Model.prependContextIfInline(prefix: NamingContext.Nested): Model = 
     is Model.Uuid -> this
 }
 
+context(ctx: Registry.Scope)
 private fun ResolvedSchema.collectionDefault() = when (val default = schema.default) {
     null -> null
-    JsonNull -> {
-        require(schema.nullable == true) { "Null default for non-nullable collection at ${name.describe()}." }
-        Default.Null
-    }
+    JsonNull -> nullDefault(schema.nullable == true)
 
     is JsonArray -> Default.Value(default.map { if (it is JsonPrimitive) it.content else it.toString() })
     is JsonPrimitive -> Default.Value(listOf(default.content))

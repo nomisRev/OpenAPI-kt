@@ -207,12 +207,6 @@ val collectionSpec by testSuite {
         Model.Collection(Model.FreeFormJson(null, null, false, null), Model.Default.Null, null, null, true, null)
     )
 
-    verifyFails<IllegalArgumentException>(
-        "Default - null on non-null array",
-        Schema(type = Type.Basic.Array, default = JsonNull, nullable = false),
-        "Null default for non-nullable collection at GET /test."
-    )
-
     verify(
         "Default - value",
         Schema(

@@ -40,7 +40,7 @@ suspend fun ResolvedSchema.buildOneOf(
     return Model.OneOf(
         name,
         cases,
-        default(),
+        default(isNullable || subtypes.hasNullableMember()),
         description(),
         schema.title,
         dispatch,
@@ -59,7 +59,7 @@ suspend fun ResolvedSchema.buildAnyOf(
     return Model.AnyOf(
         name,
         cases,
-        default(),
+        default(isNullable || subtypes.hasNullableMember()),
         description(),
         schema.title,
         dispatch,

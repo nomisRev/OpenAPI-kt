@@ -108,7 +108,7 @@ private fun <A : Any> ResolvedSchema.default(
     onMultiple: (List<String>) -> A,
 ): Model.Default<A>? = when (val default = schema.default) {
     null -> null
-    JsonNull -> Model.Default.Null
+    JsonNull -> nullDefault(isNullable)
     is JsonPrimitive -> Model.Default.Value(parseDefault(default, label, acceptsString, onLiteral))
     is JsonArray if default.all { it is JsonPrimitive } ->
         Model.Default.Value(onMultiple(default.map { (it as JsonPrimitive).content }))

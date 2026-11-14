@@ -193,17 +193,6 @@ val closedEnumSpec by testSuite {
 //        "Multiple default values not supported for enums."
 //    )
 
-    verifyFails<IllegalArgumentException>(
-        "Null default in non-null enum",
-        Schema(
-            default = JsonNull,
-            enum = listOf(JsonPrimitive(1), JsonPrimitive(2)),
-            type = Schema.Type.Basic.Integer,
-            nullable = false
-        ),
-        "The default value Null is not present in the enum values: [1, 2] & schema is not nullable."
-    )
-
     fun List<Expect<Schema, Model.Primitive.String>>.openEnum(
         name: NamingContext,
         values: List<JsonPrimitive>

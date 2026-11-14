@@ -59,11 +59,7 @@ suspend fun ResolvedSchema.toClosedEnum(context: SchemaContext, enum: List<JsonE
         if (declared == null) innerSchema.copy(type = members.inferredType()) else innerSchema
     ).let { ctx.registry().engine.transform(ctx, ctx.registry(), it, context, false) }
     val enumValues = enum.map { inner.toEnumValue(it, this) }
-    val enumDefault = enumDefault(inner)
-    @Suppress("NullableToStringCall")
-    require(!(enumDefault == Model.Default.Null && !nestedNull)) {
-        "The default value $enumDefault is not present in the enum values: ${schema.enumLikeValues()} & schema is not nullable."
-    }
+    val enumDefault = enumDefault(inner, nestedNull)
     @Suppress("UnsafeCallOnNullableType")
     return Model.Enum(name, inner, enumValues, enumDefault, description(), schema.title, isNullable)
 }
@@ -126,10 +122,10 @@ private fun Model.toEnumValue(member: JsonElement, schema: ResolvedSchema): Mode
 }
 
 context(ctx: Registry.Scope)
-private fun ResolvedSchema.enumDefault(inner: Model): Model.Default<Model.EnumValue>? =
+private fun ResolvedSchema.enumDefault(inner: Model, permitsNull: Boolean): Model.Default<Model.EnumValue>? =
     when (val defaultValue = schema.default) {
         null -> null
-        JsonNull -> Model.Default.Null
+        JsonNull -> nullDefault(permitsNull)
         is JsonPrimitive -> Model.Default.Value(inner.toEnumValue(defaultValue, this))
         // OpenAI sometimes has empty list for default where inapplicable sometimes
         is JsonArray if defaultValue.isEmpty() -> null
@@ -139,12 +135,26 @@ private fun ResolvedSchema.enumDefault(inner: Model): Model.Default<Model.EnumVa
     }
 
 /** The default of a schema generated as text, such as a union, where the JSON `null` is no default text. */
-fun ResolvedSchema.default(): Model.Default<String>? = when (val defaultValue = schema.default) {
+context(ctx: Registry.Scope)
+fun ResolvedSchema.default(permitsNull: Boolean): Model.Default<String>? = when (val defaultValue = schema.default) {
     null -> null
-    JsonNull -> Model.Default.Null
+    JsonNull -> nullDefault(permitsNull)
     is JsonPrimitive -> Model.Default.Value(defaultValue.content)
     is JsonArray if defaultValue.isEmpty() -> null
     is JsonArray if defaultValue.all { it is JsonPrimitive } ->
         throw IllegalArgumentException("Multiple default values not supported for ${name.describe()}.")
     else -> Model.Default.Value(defaultValue.toString())
+}
+
+/**
+ * An explicit `default: null` is [Model.Default.Null] where the schema permits `null`. Where it does not, it is no
+ * default (what the schema generates without the keyword), and the registry records a warning naming the location.
+ */
+context(ctx: Registry.Scope)
+fun ResolvedSchema.nullDefault(permitsNull: Boolean): Model.Default.Null? {
+    if (permitsNull) return Model.Default.Null
+    ctx.registry().warn(
+        "Default `null` at ${name.describe()} is ignored: the schema is not nullable, so it has no default."
+    )
+    return null
 }
