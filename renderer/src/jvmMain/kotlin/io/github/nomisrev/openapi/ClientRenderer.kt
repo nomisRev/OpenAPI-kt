@@ -65,7 +65,10 @@ private fun ApiTree.generateClientFiles(config: RenderConfig): List<FileSpec> {
         listOf(generateOptionalSupport(config, config.modelPackage.toPackageName()))
     } else emptyList()
 
-    return files + serializationUtils + optional
+    val ianaCodes = buildSet { collectIanaStatusCodes(this) }
+    val statusCodes = if (ianaCodes.isNotEmpty()) listOf(generateStatusCodeSupport(config, ianaCodes)) else emptyList()
+
+    return files + serializationUtils + optional + statusCodes
 }
 
 private fun ApiTree.toRootTypeSpec(config: RenderConfig, className: ClassName): TypeSpec {

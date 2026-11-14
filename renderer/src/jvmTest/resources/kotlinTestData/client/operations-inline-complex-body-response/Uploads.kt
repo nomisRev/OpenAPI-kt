@@ -50,7 +50,7 @@ public class Uploads internal constructor(
         }
         return when (response.status.value) {
           201 -> Response.Created(response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") })
-          207 -> Response.`Multi-status`(response.body())
+          207 -> Response.MultiStatus(response.body())
           422 -> Response.UnprocessableEntity(response.body())
           else -> Response.Default(response.status, response.body())
         }
@@ -61,7 +61,7 @@ public class Uploads internal constructor(
           public val `value`: String,
         ) : Response
 
-        public data class `Multi-status`(
+        public data class MultiStatus(
           public val `value`: List<String>,
         ) : Response
 

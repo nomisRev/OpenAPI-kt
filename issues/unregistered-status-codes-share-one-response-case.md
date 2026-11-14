@@ -1,6 +1,6 @@
 # Status codes Ktor has no name for all become `UnknownStatusCode`
 
-**Status:** open
+**Status:** fixed on openapi-3.2-streaming: a code Ktor has no name for is `Status<code>`, the nine registered codes Ktor lacks get their IANA name (with a generated `HttpStatusCode.Companion` extension per used code, in the api package), and the hyphenated 203, 207 and 414 are `NonAuthoritativeInformation`, `MultiStatus`, `RequestUriTooLong`. Proof: `StatusCodeCaseNameTest`, golden `client/status-code-case-names`, `StatusCodeCaseNamesRuntimeTest`.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
 **Impact:** 209 of 1,547 documents fail to compile (all amazonaws.com). 263 documents have an operation with two or more such codes; the other 54 fail before compilation. 98 documents have an operation with exactly one such code: those compile, with a case named `UnknownStatusCode`.

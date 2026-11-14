@@ -265,11 +265,6 @@ private fun contentTypeIdentifierBase(ct: ContentType): String {
 private fun contentTypeMethodNameBase(ct: ContentType): String =
     contentTypeIdentifierBase(ct).replaceFirstChar { it.lowercase() }
 
-internal fun HttpStatusCode.toCaseName(): String =
-    description.split(" ").joinToString("") { word ->
-        word.lowercase().replaceFirstChar { it.uppercase() }
-    }
-
 private fun ContentType.normalizedForComparison(): ContentType =
     ContentType.parse(toString().substringBefore(';').trim())
 
