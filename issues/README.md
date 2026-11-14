@@ -42,6 +42,7 @@ Read these numbers with three caveats:
 | [untyped-schema-parameters-and-form-fields-refused](untyped-schema-parameters-and-form-fields-refused.md) | `02be578d`, `3fb0ba0b` | a free-form object as a form field, arrays and maps of free-form objects, a free-form object path parameter |
 | [composite-path-segments](composite-path-segments.md) | `f9555f8b`, `fd203506`, `eb97be6c` | Google resource names are sent with `%2F`; a name repeated in one segment (`{a}-{a}`); `?` in a path key is sent as written; `{insight_id:}` |
 | [optional-nullable-property-cannot-send-explicit-null](optional-nullable-property-cannot-send-explicit-null.md) | `cae01e33`, `909e08bc` | a required nullable property is dropped under `explicitNulls = false` |
+| [response-media-type-without-schema](response-media-type-without-schema.md) | `3e55150c`, and the two commits after `e0a84a6c` | malformed media type keys on responses still abort the document (`malformed-media-type-key-crash`) |
 | [unregistered-status-codes-share-one-response-case](unregistered-status-codes-share-one-response-case.md) | `0862fee5` | the multi-content-type and error-dispatch shapes are covered by a golden only |
 | [server-case-names-collide](server-case-names-collide.md), [server-case-name-not-identifier](server-case-name-not-identifier.md), [server-empty-description-empty-case-name](server-empty-description-empty-case-name.md) | `796be767` | names over 200 characters are not shortened |
 
@@ -66,6 +67,13 @@ chained path navigation, matched the fourth): 759 generate and compile, 250 fail
 fail at emit, 45 fail at render. 209 documents newly compile, none stops earlier than before. The largest remaining
 compile families: `name contains illegal characters: :` (119 documents, literal path segments such as
 `entities:search`) and `conflicting declarations` (92).
+
+A seventh census after `3e55150c` (`exploration/build/census-2026-11-14g/`): 932 generate and compile, 301 fail to
+compile, 160 fail in typed, 97 fail at emit, 46 fail at render. 174 documents went from typed to compiling and 51
+from typed to a compile failure. One document regressed (plaid.com, a request content key `examples` that is no media
+type); it is fixed and compiles again when re-checked alone. The largest remaining failures before compile:
+`Duplicate generated files` (95, emit), `Conflicting shared path parameter node` (65, typed), refused parameters
+(36, render).
 
 The tables below still carry the counts of the first census.
 
