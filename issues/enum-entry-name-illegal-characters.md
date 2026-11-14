@@ -1,6 +1,6 @@
 # Enum values with `:`, `<`, `>`, `;` or `\` produce entry names Kotlin rejects (`aws:kms`, `<=`)
 
-**Status:** open
+**Status:** fixed on branch openapi-3.2-streaming. The entries of one enum are named together, `enumEntryNames` (`renderer/.../EnumEntryNames.kt`): a character that cannot be in a name is a word break (`aws:kms` is `AwsKms`), a value without letter or digit is spelled out (`<=` `LessThanOrEqual`, `""` `Empty`, `" "` `Blank`), values that still share a name spell their symbols (`last_activity`/`-last_activity` are `LastActivity`/`MinusLastActivity`, `aws:kms`/`aws-kms` are `AwsColonKms`/`AwsMinusKms`), the rest take the first free number from 2; a rename warns. Names that compiled and did not collide are unchanged. The declaration, `@SerialName`, the typed and open enum serializers, the path `when` and every default literal read the one table. Golden `enum/entry-names` and `client/enum-entry-names`, `EnumEntryNamesTest`, `EnumEntryNamesRoundTripTest`, `EnumEntryNamesRuntimeTest`, `EnumEntryNamesWarningsSpec`.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
 **Impact:** 26 of 1,547 documents (amazonaws.com:s3, :glacier, :macie2, :config, :accessanalyzer, apptigent.com, api2cart.com, nexmo.com:voice, salesforce.local:einstein, alertersystem.com, …); 53 documents declare such a value

@@ -91,12 +91,13 @@ private fun buildOpenEnumSerializer(
     val enumClassName = className.nestedClass(enumSimpleName)
     val stringClassName = className.nestedClass(stringSimpleName)
 
+    val entryNames = parts.enumModel.entryNames()
     val serializeCode = CodeBlock.builder()
         .beginControlFlow("when(value)")
         .apply {
             parts.enumModel.values.forEach { enumValue ->
                 val v = enumValue.wireValue()
-                val entryName = toEnumValueName(v)
+                val entryName = entryNames.nameOf(v)
                 addStatement("%T.%L -> encoder.encodeString(%S)", enumClassName, entryName, v)
             }
             addStatement("is %T -> encoder.encodeString(value.value)", stringClassName)
@@ -110,7 +111,7 @@ private fun buildOpenEnumSerializer(
         .apply {
             parts.enumModel.values.forEach { enumValue ->
                 val v = enumValue.wireValue()
-                val entryName = toEnumValueName(v)
+                val entryName = entryNames.nameOf(v)
                 addStatement("%S -> %T.%L", v, enumClassName, entryName)
             }
             addStatement("else -> %T(value)", stringClassName)

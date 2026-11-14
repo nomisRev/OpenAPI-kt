@@ -42,7 +42,7 @@ private fun Model.collectionEntryLiteral(raw: String, config: RenderConfig): Cod
         is Model.Primitive.Float -> raw.toFloatOrNull()?.let { CodeBlock.of("%Lf", it) }
         is Model.Primitive.Double -> raw.toDoubleOrNull()?.let { CodeBlock.of("%L", it) }
         is Model.Primitive.Boolean -> raw.toBooleanStrictOrNull()?.let { CodeBlock.of("%L", it) }
-        is Model.Enum -> CodeBlock.of("%T.%L", context.toClassName(config), toEnumValueName(raw))
+        is Model.Enum -> CodeBlock.of("%T.%L", context.toClassName(config), entryNames().nameOf(raw))
 
         is Model.ByteArray,
         is Model.RawResponse,

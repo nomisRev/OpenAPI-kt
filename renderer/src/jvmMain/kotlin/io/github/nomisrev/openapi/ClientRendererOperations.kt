@@ -823,7 +823,7 @@ private fun Route.Input.toParameterSpec(
         when (val d = publicModel.default) {
             null -> null
             Model.Default.Null -> CodeBlock.of("null")
-            is Model.Default.Value -> CodeBlock.of("%T.%L", enumClassName, toEnumValueName(d.value.wireValue()))
+            is Model.Default.Value -> CodeBlock.of("%T.%L", enumClassName, publicModel.entryNames().nameOf(d.value.wireValue()))
         }
     } else {
         publicModel.defaultLiteral(config)

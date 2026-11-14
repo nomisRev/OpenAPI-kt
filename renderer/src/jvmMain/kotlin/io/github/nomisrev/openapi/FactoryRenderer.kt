@@ -292,7 +292,7 @@ private fun Server.buildServerCaseWithVariables(
             builder.addType(buildVariableEnum(enumName, variable))
             ctorBuilder.addParameter(
                 ParameterSpec.builder(paramName, enumClassName)
-                    .defaultValue("%T.%L", enumClassName, toEnumValueName(variable.default))
+                    .defaultValue("%T.%L", enumClassName, enumEntryNames(variable.enum!!).nameOf(variable.default))
                     .build()
             )
             builder.addProperty(
@@ -329,9 +329,11 @@ private fun buildVariableEnum(name: String, variable: Server.Variable): TypeSpec
     builder.addProperty(
         PropertySpec.builder("value", String::class).initializer("value").build()
     )
-    for (enumValue in variable.enum!!) {
+    val values = variable.enum!!
+    val entryNames = enumEntryNames(values)
+    for (enumValue in values.distinct()) {
         builder.addEnumConstant(
-            toEnumValueName(enumValue),
+            entryNames.nameOf(enumValue),
             TypeSpec.anonymousClassBuilder()
                 .addSuperclassConstructorParameter("%S", enumValue)
                 .build()

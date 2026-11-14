@@ -28,9 +28,11 @@ import kotlinx.serialization.Serializable
  * kotlinx.serialization, not by Ktor's `parameter()` / form-data `append()`).
  */
 fun Model.Enum.needsValueProperty(): Boolean =
-    values.any { enumValue ->
-        val v = enumValue.wireValue()
-        v != toEnumValueName(v).unescapeBackticks()
+    entryNames().let { names ->
+        values.any { enumValue ->
+            val v = enumValue.wireValue()
+            v != names.nameOf(v).unescapeBackticks()
+        }
     }
 
 /**
@@ -190,9 +192,10 @@ fun Model.Enum.toTypeSpec(
             }
             parentInterface?.let(::addSuperinterface)
 
-            values.forEach { enumValue ->
+            val entryNames = entryNames()
+            values.distinctBy { it.wireValue() }.forEach { enumValue ->
                 val rawValue = enumValue.wireValue()
-                val entryName = toEnumValueName(rawValue)
+                val entryName = entryNames.nameOf(rawValue)
                 val entry = TypeSpec.anonymousClassBuilder()
 
                 // A typed enum's `Serializer` writes the entry's `value`, so it needs no `@SerialName`.

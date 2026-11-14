@@ -44,7 +44,89 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
 internal fun ApiTree.generationDiagnostics(config: RenderConfig): List<GenerationDiagnostic> =
     requestBodyDiagnostics() + ignoredParameterDiagnostics() + parameterDiagnostics() +
         renamedArgumentDiagnostics(config.withOptionalTypeName(this).withNamedModels(models)) +
-        children.renamedPathDiagnostics(parentPath = "") + renamedServerDiagnostics() + propertyOverrideDiagnostics() + typedWarningDiagnostics()
+        children.renamedPathDiagnostics(parentPath = "") + renamedServerDiagnostics() + propertyOverrideDiagnostics() + typedWarningDiagnostics() +
+        renamedEnumEntryDiagnostics(config.withOptionalTypeName(this).withNamedModels(models))
+
+/**
+ * A warning for each value of an enum whose entry is not named after the value alone, because another value of the
+ * enum has that name ([enumEntryNames]): the enum, the wire value and the entry name. The enums of the models, of the
+ * operations and the variables of the servers are looked at; an enum used in more places is reported once.
+ */
+private fun ApiTree.renamedEnumEntryDiagnostics(config: RenderConfig): List<GenerationDiagnostic> {
+    val enums = buildList {
+        models.forEach { it.collectEnums(this) }
+        collectEnums(this)
+    }.distinct()
+    val schemaEnums = enums.flatMap { enum ->
+        val name = enum.context.toClassName(config).simpleNames.joinToString(".")
+        enum.entryNames().renames.map { "Enum $name: ${it.message()}" }
+    }
+    val serverEnums = servers.flatMap { server ->
+        server.variables.orEmpty().flatMap { [variable, definition] ->
+            definition.enum.orEmpty().let(::enumEntryNames).renames
+                .map { "Enum of server variable '$variable' in '${server.url}': ${it.message()}" }
+        }
+    }
+    return (schemaEnums + serverEnums).distinct()
+        .map { GenerationDiagnostic(GenerationDiagnosticSeverity.Warning, it) }
+}
+
+private fun EnumEntryRename.message(): String =
+    "value '$wireValue' is generated as entry '${entryName.unescapeBackticks()}': $explanation"
+
+private fun Model.collectEnums(into: MutableList<Model.Enum>) {
+    when (this) {
+        is Model.Enum -> into += this
+        is Model.Object -> {
+            properties.values.forEach { it.model.collectEnums(into) }
+            (additionalProperties as? Model.Object.AdditionalProperties.Schema)?.value?.collectEnums(into)
+        }
+
+        is Model.Collection -> inner.collectEnums(into)
+        is Model.Dictionary -> inner.collectEnums(into)
+        is Model.Union -> cases.forEach { it.model.collectEnums(into) }
+        is Model.DiscriminatedObject -> {
+            abstractProperties.values.forEach { it.model.collectEnums(into) }
+            subtypes.forEach { it.collectEnums(into) }
+        }
+
+        is Model.Reference,
+        is Model.ByteArray,
+        is Model.RawResponse,
+        is Model.Date,
+        is Model.DateTime,
+        is Model.FreeFormJson,
+        is Model.Uuid,
+        is Model.Primitive -> Unit
+    }
+}
+
+private fun ApiTree.collectEnums(into: MutableList<Model.Enum>) {
+    operations.values.forEach { it.collectEnums(into) }
+    children.forEach { it.collectEnums(into) }
+}
+
+private fun PathNode.collectEnums(into: MutableList<Model.Enum>) {
+    operations.values.forEach { it.collectEnums(into) }
+    children.forEach { it.collectEnums(into) }
+}
+
+private fun Route.collectEnums(into: MutableList<Model.Enum>) {
+    parameters.forEach { it.type.collectEnums(into) }
+    body?.types.orEmpty().values.forEach { body ->
+        when (body) {
+            is Route.Body.SetBody -> body.type.collectEnums(into)
+            is Route.Body.OverloadedBody -> body.cases.forEach { it.model.collectEnums(into) }
+            is Route.Body.FormUrlEncoded -> body.parameters.forEach { it.type.collectEnums(into) }
+            is Route.Body.Multipart.Value -> body.parameters.forEach { it.type.collectEnums(into) }
+            is Route.Body.Multipart.Ref -> body.value.collectEnums(into)
+            is Route.Body.CallerSet -> Unit
+        }
+    }
+    (returns.responses.values + returns.responseRanges.values + listOfNotNull(returns.default)).forEach { returnType ->
+        returnType.models.forEach { it.collectEnums(into) }
+    }
+}
 
 /** A warning for each server whose name is a last resort: the same name as an earlier server, or `Custom` ([serverNames]). */
 private fun ApiTree.renamedServerDiagnostics(): List<GenerationDiagnostic> =

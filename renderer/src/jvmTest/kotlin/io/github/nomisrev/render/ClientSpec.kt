@@ -210,6 +210,41 @@ val clientSpec by testSuite {
         "client/enum-int-default"
     )
 
+    // Enum values that share a Kotlin name are each an entry, also as the default of a parameter and of a server variable.
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "servers": [
+            {
+              "url": "https://{kind}.example.com",
+              "variables": { "kind": { "enum": ["aws:kms", "aws-kms"], "default": "aws-kms" } }
+            }
+          ],
+          "paths": {
+            "/items": {
+              "get": {
+                "operationId": "listItems",
+                "parameters": [
+                  { "name": "ordering", "in": "query", "schema": { "type": "string", "enum": ["last_activity", "-last_activity"], "default": "-last_activity" } },
+                  { "name": "operator", "in": "query", "schema": { "${'$'}ref": "#/components/schemas/Operator" } },
+                  { "name": "kind", "in": "query", "schema": { "type": "string", "enum": ["", "spiders"], "default": "" } }
+                ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Operator": { "type": "string", "enum": ["eq", "<", "<=", ">", ">="], "default": "<=" }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/enum-entry-names"
+    )
+
     clientTest(
         """
         {

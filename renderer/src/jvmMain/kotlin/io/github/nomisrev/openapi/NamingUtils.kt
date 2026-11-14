@@ -80,7 +80,8 @@ fun String.toCamelCase(): String {
     return head + tail
 }
 
-fun toEnumValueName(rawValue: String): String =
+/** The name [toEnumValueName] has always given a value that has a letter or digit, which may not compile. */
+internal fun legacyEnumValueName(rawValue: String): String =
     when (rawValue) {
         "*" -> "Star"
         "/" -> "Slash"

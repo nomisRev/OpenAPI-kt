@@ -581,7 +581,7 @@ internal fun Model.defaultLiteral(
                     }
                 }
                 .remapTypeNames(externalTypeNames)
-            CodeBlock.of("%T.%L", typeName, toEnumValueName(value.wireValue()))
+            CodeBlock.of("%T.%L", typeName, entryNames().nameOf(value.wireValue()))
         }
 
         is Model.Collection -> default.toLiteral { values ->

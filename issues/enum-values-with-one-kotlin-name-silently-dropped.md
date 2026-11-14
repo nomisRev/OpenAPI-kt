@@ -1,6 +1,6 @@
 # Enum values that map to the same Kotlin entry name are silently dropped (`last_activity` / `-last_activity`)
 
-**Status:** open
+**Status:** fixed on branch openapi-3.2-streaming. The entries of one enum are named together, `enumEntryNames` (`renderer/.../EnumEntryNames.kt`): a character that cannot be in a name is a word break (`aws:kms` is `AwsKms`), a value without letter or digit is spelled out (`<=` `LessThanOrEqual`, `""` `Empty`, `" "` `Blank`), values that still share a name spell their symbols (`last_activity`/`-last_activity` are `LastActivity`/`MinusLastActivity`, `aws:kms`/`aws-kms` are `AwsColonKms`/`AwsMinusKms`), the rest take the first free number from 2; a rename warns. Names that compiled and did not collide are unchanged. The declaration, `@SerialName`, the typed and open enum serializers, the path `when` and every default literal read the one table. Golden `enum/entry-names` and `client/enum-entry-names`, `EnumEntryNamesTest`, `EnumEntryNamesRoundTripTest`, `EnumEntryNamesRuntimeTest`, `EnumEntryNamesWarningsSpec`.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** wrong output (compiles; values missing from the generated enum)
 **Impact:** 31 of 1,547 documents declare such an enum; 2 of them pass the whole census with values missing (docker.com:hub, walletobjects.googleapis.com:pay-passes), 7 reach compile and fail for other reasons, the rest stop earlier

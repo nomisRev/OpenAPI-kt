@@ -211,4 +211,52 @@ val enumSpec by testSuite {
         """.trimIndent(),
         "enum/typed-wire",
     ) { apiTree, config -> apiTree.generateModels(config) }
+
+    // Two values of one enum with one Kotlin name, values that are only symbols, and an empty value: one entry each.
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/test": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": { "schema": { "${'$'}ref": "#/components/schemas/Listing" } }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Ordering": { "type": "string", "enum": ["last_activity", "-last_activity"] },
+              "Operator": { "type": "string", "enum": ["eq", "<", "<=", ">", ">="] },
+              "Encryption": { "type": "string", "enum": ["aws:kms", "aws-kms"] },
+              "Kind": { "type": "string", "enum": ["", "spiders"] },
+              "Level": { "type": "number", "format": "double", "enum": [0.5, -0.5] },
+              "Sort": { "anyOf": [{ "type": "string", "enum": ["last_activity", "-last_activity"] }, { "type": "string" }] },
+              "Listing": {
+                "type": "object",
+                "properties": {
+                  "ordering": { "${'$'}ref": "#/components/schemas/Ordering" },
+                  "operator": { "${'$'}ref": "#/components/schemas/Operator" },
+                  "encryption": { "${'$'}ref": "#/components/schemas/Encryption" },
+                  "kind": { "${'$'}ref": "#/components/schemas/Kind" },
+                  "level": { "${'$'}ref": "#/components/schemas/Level" },
+                  "sort": { "${'$'}ref": "#/components/schemas/Sort" },
+                  "direction": { "type": "string", "enum": ["last_activity", "-last_activity"], "default": "-last_activity" },
+                  "operators": { "type": "array", "items": { "type": "string", "enum": ["eq", "<", "<=", ">", ">="] }, "default": ["<=", ">"] }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "enum/entry-names",
+    ) { apiTree, config -> apiTree.generateModels(config) }
 }

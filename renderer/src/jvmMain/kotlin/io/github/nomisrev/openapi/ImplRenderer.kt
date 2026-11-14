@@ -1344,9 +1344,10 @@ private fun Model.Enum.toPathParamValueExpression(
     val code = CodeBlock.builder()
     code.add("when (%L) {\n", paramName)
     code.indent()
-    for (value in values) {
+    val entryNames = entryNames()
+    for (value in values.distinctBy { it.wireValue() }) {
         val rawValue = value.wireValue()
-        code.add("%T.%L -> %S\n", enumClassName, toEnumValueName(rawValue), rawValue)
+        code.add("%T.%L -> %S\n", enumClassName, entryNames.nameOf(rawValue), rawValue)
     }
     code.unindent()
     code.add("}")
