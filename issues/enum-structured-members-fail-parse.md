@@ -1,6 +1,6 @@
 # An `enum` member that is an array or an object makes the whole document fail to parse
 
-**Status:** open
+**Status:** fixed in `1b89168f`: structured members parse and round-trip in JSON and YAML, and the typed layer generates the underlying type with a warning. Census re-run 2026-11-14: no document fails to parse; the five affected documents now stop at other reported issues.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming); pinned by `CensusRegressionTest`
 **Stage:** parse
 **Impact:** 5 of 1,547 documents, 6 schema locations (docker.com:engine, pandascore.co, enode.io, apacta.com, gov.bc.ca:jobposting). These are all 5 parse failures of the census.

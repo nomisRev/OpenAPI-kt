@@ -30,6 +30,23 @@ Read these numbers with three caveats:
 - **"Duplicate generated files" is a harness check.** The Gradle plugin has no such check: it writes
   every file and the last one wins.
 
+## Fixed since the census
+
+| Report | Commits | Left open |
+| --- | --- | --- |
+| [query-parameter-named-url-shadows-request-builder](query-parameter-named-url-shadows-request-builder.md) | `273df770` | nothing |
+| [enum-and-default-values-stored-as-strings](enum-and-default-values-stored-as-strings.md) | `5854454c`, `5d203102`, `1b89168f`, `f39eb298`, `87aac23f`, `01f1fe46`, `fde99b78` | enums with a `null` member next to typed members; YAML quoting is not visible to the parser |
+| [enum-structured-members-fail-parse](enum-structured-members-fail-parse.md) | `1b89168f` | nothing |
+| [default-or-enum-value-not-of-declared-type](default-or-enum-value-not-of-declared-type.md) | `f39eb298` (partly) | values that cannot be read as the declared type still abort the document (12) |
+
+A second census after these commits (`exploration/build/census-2026-11-14b/`, taken before `01f1fe46` and
+`fde99b78`): 457 generate and compile (was 445), 541 fail to compile (was 555), 387 fail in typed (was 380), none
+fails to parse (was 5). The typed count rose because the five documents that used to fail parsing now stop at
+other reported issues, and because of two regressions that `01f1fe46` and `fde99b78` then fixed; the four
+documents involved were re-checked individually and are back at their earlier stage or better.
+
+The tables below still carry the counts of the first census.
+
 ## Suggested order
 
 Ordered by: silent wrong output first, then regressions from this branch, then documents unblocked.
@@ -141,8 +158,9 @@ Counts are documents affected; see each report for how they were counted.
 
 ## Integration tests
 
-`integration-tests/` (GitHub, OpenAI, YouTrack) only generates and compiles; it runs no tests, so it
-cannot catch a wire-level bug. On this branch OpenAI and YouTrack compile and GitHub does not
+`integration-tests/` (GitHub, OpenAI, YouTrack) generates and compiles each client and, since `8d373468`,
+round-trips the specs' own examples through the generated models against a committed baseline (see
+`integration-tests/README.md`). It still sends no requests, so it cannot catch a wrong URL or parameter. On this branch OpenAI and YouTrack compile and GitHub does not
 (`operation-parameter-shadows-path-parameter`, plus one stale line in the hand-written `Smoke.kt`).
 The three specs contain few of the constructs above: GitHub has the shadowed path parameter, the
 context-variant duplicates and a schema-less request media type; YouTrack has `$ref` + `readOnly`;

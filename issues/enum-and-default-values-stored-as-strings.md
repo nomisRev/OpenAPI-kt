@@ -1,6 +1,6 @@
 # Integer, number and boolean enums are generated as string-serialized Kotlin enums (enum and default values are parsed as strings)
 
-**Status:** open
+**Status:** fixed in `5854454c`, `5d203102` (typed enum serializer), `1b89168f`, `f39eb298` (parser keeps JSON types; a string that reads as the declared type is accepted with a warning) and `87aac23f` (YAML scalars by the core schema). Still open: an enum with a `null` member next to typed members (`[1, 2, null]`) stays string-serialized; untyped enums mixing JSON types fall back to free-form JSON with a warning; YAML cannot tell `'1'` from `1` because the YAML library drops quoting, so an untyped YAML enum of quoted numbers becomes an integer enum; JSON `{type: string, default: 5}` is still accepted silently as text.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming); parser half pinned by `CorpusRoundTripAuditTest`
 **Stage:** wrong output (parse loses the JSON type; the generated enum sends and expects JSON strings)
 **Impact:** 103 of 1,547 documents declare an enum on a `type: integer`, `number` or `boolean` schema (1,208 locations). 28 of them currently pass every phase including compilation and ship the wrong wire format silently; the rest fail earlier for other reasons and will hit this once those are fixed.

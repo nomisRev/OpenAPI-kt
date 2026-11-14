@@ -1,6 +1,6 @@
 # A `default` or `enum` value that does not match the declared `type` aborts generation
 
-**Status:** open
+**Status:** partly addressed in `f39eb298`: a string that reads as the declared type (`"7"`, `"true"`) is accepted with a warning (510 such values in the census), and rejections now name the schema location. Still open: values that cannot be read as the declared type (`inf`, `BASIC`, `current`) abort the whole document — 12 documents in the 2026-11-14 re-run.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** typed
 **Impact:** 11 of 1,547 documents — 8 by `default` (openai 1.2.0, graphhopper, motaword, gov.bc.ca news, botify, paypi, vtex x2), 3 by `enum` (googleapis cloudidentity, visualstudio, probely)

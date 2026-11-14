@@ -1,6 +1,6 @@
 # A parameter named `url` breaks every query parameter of its operation
 
-**Status:** open, regression from f43c8ec9 ("Serialize parameters by their style and explode", 2026-11-04)
+**Status:** fixed in `273df770` (generated code reaches the URL through `this.url`). Census re-run 2026-11-14: no document fails on `encodedParameters` any more; appwrite.io, axesso.de and netatmo.net compile again.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
 **Impact:** 24 of 1,547 documents (webscraping.ai, googleapis.com pagespeedonline/blogger/indexing/factchecktools, nytimes.com timeswire/community, appwrite.io client/server, netatmo.net, axesso.de, flat.io, stackexchange.com, ...)
