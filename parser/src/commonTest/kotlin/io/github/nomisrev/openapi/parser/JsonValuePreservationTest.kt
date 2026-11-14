@@ -158,4 +158,22 @@ class JsonValuePreservationTest {
         val yaml = api.toYaml()
         assertEquals(true, "- 300" in yaml && "- 600" in yaml && "\"default\": 300" in yaml, yaml)
     }
+
+    @Test
+    fun `yaml plain scalars that only look like numbers to the JVM stay strings`() {
+        // `String.toDouble` accepts a `d`/`f` suffix, `NaN`, `Infinity` and hex floats; YAML's core schema does not.
+        val words = listOf("1m", "1h", "1d", "1f", "2D", "NaN", "Infinity", "-Infinity", "0x1p3", "1e", "1_000")
+        val schema = fromYaml("type: string\nenum: [" + words.joinToString(", ") + "]\ndefault: 1d")
+        assertEquals(words.map { JsonPrimitive(it) }, schema.enum)
+        assertEquals(JsonPrimitive("1d"), schema.default)
+    }
+
+    @Test
+    fun `yaml plain scalars of the core schema keep their type`() {
+        val schema = fromYaml("enum: [1, -2, +3, 0.5, .5, 1., 1e3, -1.5E-2, true, False, 0x1F, 0o17]")
+        assertEquals(
+            json("[1, -2, 3, 0.5, 0.5, 1.0, 1000.0, -0.015, true, false, 31, 15]"),
+            JsonArray(schema.enum.orEmpty()),
+        )
+    }
 }
