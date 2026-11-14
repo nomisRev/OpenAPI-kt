@@ -51,11 +51,14 @@ public data class PullRequestReviewComment(
   @SerialName("_links")
   public val links: Links,
   @SerialName("start_line")
-  public val startLine: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val startLine: Optional<Long> = Optional.Absent,
   @SerialName("original_start_line")
-  public val originalStartLine: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val originalStartLine: Optional<Long> = Optional.Absent,
   @SerialName("start_side")
-  public val startSide: StartSide? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val startSide: Optional<StartSide> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val line: Long? = null,
   @SerialName("original_line")

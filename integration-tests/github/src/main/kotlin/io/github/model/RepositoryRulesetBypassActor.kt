@@ -15,7 +15,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class RepositoryRulesetBypassActor(
   @SerialName("actor_id")
-  public val actorId: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val actorId: Optional<Long> = Optional.Absent,
   @SerialName("actor_type")
   public val actorType: ActorType,
   @SerialName("bypass_mode")

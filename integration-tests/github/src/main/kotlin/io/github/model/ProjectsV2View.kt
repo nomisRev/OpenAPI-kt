@@ -27,6 +27,7 @@ import kotlinx.serialization.json.doubleOrNull
 /**
  * A view inside a projects v2 project
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class ProjectsV2View(
   public val id: Long,
@@ -44,7 +45,8 @@ public data class ProjectsV2View(
   public val createdAt: Instant,
   @SerialName("updated_at")
   public val updatedAt: Instant,
-  public val filter: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val filter: Optional<String> = Optional.Absent,
   @SerialName("visible_fields")
   public val visibleFields: List<Long>,
   @SerialName("sort_by")
@@ -60,8 +62,10 @@ public data class ProjectsV2View(
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Creator(
-    public val name: String? = null,
-    public val email: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val name: Optional<String> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val email: Optional<String> = Optional.Absent,
     public val login: String,
     public val id: Long,
     @SerialName("node_id")

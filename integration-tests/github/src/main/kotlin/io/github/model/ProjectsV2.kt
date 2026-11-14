@@ -41,7 +41,8 @@ public data class ProjectsV2(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val state: State? = null,
   @SerialName("latest_status_update")
-  public val latestStatusUpdate: NullableProjectsV2StatusUpdate? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val latestStatusUpdate: Optional<NullableProjectsV2StatusUpdate> = Optional.Absent,
   @SerialName("is_template")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val isTemplate: Boolean? = null,

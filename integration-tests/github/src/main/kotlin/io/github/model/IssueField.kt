@@ -20,12 +20,14 @@ public data class IssueField(
   @SerialName("node_id")
   public val nodeId: String,
   public val name: String,
-  public val description: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val description: Optional<String> = Optional.Absent,
   @SerialName("data_type")
   public val dataType: DataType,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val visibility: Visibility? = null,
-  public val options: List<Options>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val options: Optional<List<Options>> = Optional.Absent,
   @SerialName("created_at")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val createdAt: Instant? = null,
@@ -53,9 +55,12 @@ public data class IssueField(
   public data class Options(
     public val id: Long,
     public val name: String,
-    public val description: String? = null,
-    public val color: Color? = null,
-    public val priority: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val description: Optional<String> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val color: Optional<Color> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val priority: Optional<Long> = Optional.Absent,
     @SerialName("created_at")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val createdAt: Instant? = null,

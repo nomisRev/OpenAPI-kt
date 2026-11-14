@@ -9,11 +9,13 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class SubmitToolOutputsRunRequest(
   @SerialName("tool_outputs")
   public val toolOutputs: List<ToolOutputs>,
-  public val stream: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stream: Optional<Boolean> = Optional.Absent,
 ) {
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable

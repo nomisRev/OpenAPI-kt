@@ -32,7 +32,8 @@ public data class TimelineReviewedEvent(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val submittedAt: Instant? = null,
   @SerialName("updated_at")
-  public val updatedAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val updatedAt: Optional<Instant> = Optional.Absent,
   @SerialName("commit_id")
   public val commitId: String,
   @SerialName("body_html")

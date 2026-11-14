@@ -21,8 +21,10 @@ public data class CreateThreadRequest(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val messages: List<CreateMessageRequest>? = null,
   @SerialName("tool_resources")
-  public val toolResources: ToolResources? = null,
-  public val metadata: Metadata? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val toolResources: Optional<ToolResources> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
 ) {
   /**
    * A set of resources that are made available to the assistant's tools in this thread. The resources are specific to the type of tool. For example, the `code_interpreter` tool requires a list of file IDs, while the `file_search` tool requires a list of vector store IDs.
@@ -65,7 +67,8 @@ public data class CreateThreadRequest(
         @SerialName("chunking_strategy")
         @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val chunkingStrategy: ChunkingStrategy? = null,
-        public val metadata: Metadata? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val metadata: Optional<Metadata> = Optional.Absent,
       ) {
         /**
          * The chunking strategy used to chunk the file(s). If not set, will use the `auto` strategy.

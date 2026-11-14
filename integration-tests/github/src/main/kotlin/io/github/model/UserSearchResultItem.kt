@@ -64,20 +64,28 @@ public data class UserSearchResultItem(
   @SerialName("updated_at")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val updatedAt: Instant? = null,
-  public val name: String? = null,
-  public val bio: String? = null,
-  public val email: String? = null,
-  public val location: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val name: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val bio: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val email: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val location: Optional<String> = Optional.Absent,
   @SerialName("site_admin")
   public val siteAdmin: Boolean,
-  public val hireable: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val hireable: Optional<Boolean> = Optional.Absent,
   @SerialName("text_matches")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val textMatches: SearchResultTextMatches? = null,
-  public val blog: String? = null,
-  public val company: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val blog: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val company: Optional<String> = Optional.Absent,
   @SerialName("suspended_at")
-  public val suspendedAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val suspendedAt: Optional<Instant> = Optional.Absent,
   @SerialName("user_view_type")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val userViewType: String? = null,

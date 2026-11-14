@@ -30,17 +30,23 @@ public data class Import(
   public val tfvcProject: String? = null,
   public val status: Status,
   @SerialName("status_text")
-  public val statusText: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val statusText: Optional<String> = Optional.Absent,
   @SerialName("failed_step")
-  public val failedStep: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val failedStep: Optional<String> = Optional.Absent,
   @SerialName("error_message")
-  public val errorMessage: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val errorMessage: Optional<String> = Optional.Absent,
   @SerialName("import_percent")
-  public val importPercent: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val importPercent: Optional<Long> = Optional.Absent,
   @SerialName("commit_count")
-  public val commitCount: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val commitCount: Optional<Long> = Optional.Absent,
   @SerialName("push_percent")
-  public val pushPercent: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val pushPercent: Optional<Long> = Optional.Absent,
   @SerialName("has_large_files")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasLargeFiles: Boolean? = null,
@@ -56,7 +62,8 @@ public data class Import(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val message: String? = null,
   @SerialName("authors_count")
-  public val authorsCount: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val authorsCount: Optional<Long> = Optional.Absent,
   public val url: String,
   @SerialName("html_url")
   public val htmlUrl: String,

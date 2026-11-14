@@ -68,7 +68,8 @@ public data class RealtimeSessionCreateRequest(
   public val maxResponseOutputTokens: MaxResponseOutputTokens? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val truncation: RealtimeTruncation? = null,
-  public val prompt: Prompt? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val prompt: Optional<Prompt> = Optional.Absent,
 ) {
   /**
    * Ephemeral key returned by the API.

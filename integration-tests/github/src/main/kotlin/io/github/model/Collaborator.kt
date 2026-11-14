@@ -17,8 +17,10 @@ import kotlinx.serialization.Serializable
 public data class Collaborator(
   public val login: String,
   public val id: Long,
-  public val email: String? = null,
-  public val name: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val email: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val name: Optional<String> = Optional.Absent,
   @SerialName("node_id")
   public val nodeId: String,
   @SerialName("avatar_url")

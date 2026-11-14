@@ -130,16 +130,22 @@ public data class ValidateGraderResponse(
       /**
        * The sampling parameters for the model.
        */
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class SamplingParams(
-        public val seed: Long? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val seed: Optional<Long> = Optional.Absent,
         @SerialName("top_p")
-        public val topP: Double? = null,
-        public val temperature: Double? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val topP: Optional<Double> = Optional.Absent,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val temperature: Optional<Double> = Optional.Absent,
         @SerialName("max_completions_tokens")
-        public val maxCompletionsTokens: Long? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val maxCompletionsTokens: Optional<Long> = Optional.Absent,
         @SerialName("reasoning_effort")
-        public val reasoningEffort: ReasoningEffort? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val reasoningEffort: Optional<ReasoningEffort> = Optional.Absent,
       )
     }
 
@@ -264,16 +270,22 @@ public data class ValidateGraderResponse(
           /**
            * The sampling parameters for the model.
            */
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class SamplingParams(
-            public val seed: Long? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val seed: Optional<Long> = Optional.Absent,
             @SerialName("top_p")
-            public val topP: Double? = null,
-            public val temperature: Double? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val topP: Optional<Double> = Optional.Absent,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val temperature: Optional<Double> = Optional.Absent,
             @SerialName("max_completions_tokens")
-            public val maxCompletionsTokens: Long? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val maxCompletionsTokens: Optional<Long> = Optional.Absent,
             @SerialName("reasoning_effort")
-            public val reasoningEffort: ReasoningEffort? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val reasoningEffort: Optional<ReasoningEffort> = Optional.Absent,
           )
         }
 

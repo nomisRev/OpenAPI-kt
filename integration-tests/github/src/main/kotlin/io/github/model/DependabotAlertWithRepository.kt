@@ -39,9 +39,11 @@ public data class DependabotAlertWithRepository(
   @SerialName("fixed_at")
   public val fixedAt: AlertFixedAt?,
   @SerialName("auto_dismissed_at")
-  public val autoDismissedAt: AlertAutoDismissedAt? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val autoDismissedAt: Optional<AlertAutoDismissedAt> = Optional.Absent,
   @SerialName("dismissal_request")
-  public val dismissalRequest: DependabotAlertDismissalRequestSimple? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val dismissalRequest: Optional<DependabotAlertDismissalRequestSimple> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val assignees: List<SimpleUser>? = null,
   public val repository: SimpleRepository,
@@ -57,8 +59,10 @@ public data class DependabotAlertWithRepository(
     @SerialName("manifest_path")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val manifestPath: String? = null,
-    public val scope: Scope? = null,
-    public val relationship: Relationship? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val scope: Optional<Scope> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val relationship: Optional<Relationship> = Optional.Absent,
   ) {
     @Serializable
     public enum class Relationship(

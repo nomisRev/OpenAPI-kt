@@ -42,7 +42,8 @@ public data class RealtimeSessionCreateRequestGA(
   public val audio: Audio? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val include: List<Include>? = null,
-  public val tracing: Tracing? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val tracing: Optional<Tracing> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tools: List<Tools>? = null,
   @SerialName("tool_choice")
@@ -53,7 +54,8 @@ public data class RealtimeSessionCreateRequestGA(
   public val maxOutputTokens: MaxOutputTokens? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val truncation: RealtimeTruncation? = null,
-  public val prompt: Prompt? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val prompt: Optional<Prompt> = Optional.Absent,
 ) {
   /**
    * Configuration for input and output audio.
@@ -78,7 +80,8 @@ public data class RealtimeSessionCreateRequestGA(
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val noiseReduction: NoiseReduction? = null,
       @SerialName("turn_detection")
-      public val turnDetection: RealtimeTurnDetection? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val turnDetection: Optional<RealtimeTurnDetection> = Optional.Absent,
     ) {
       /**
        * Configuration for input audio noise reduction. This can be set to `null` to turn off.

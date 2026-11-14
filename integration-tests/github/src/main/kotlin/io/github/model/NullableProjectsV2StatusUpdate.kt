@@ -28,14 +28,16 @@ public data class NullableProjectsV2StatusUpdate(
   public val createdAt: Instant,
   @SerialName("updated_at")
   public val updatedAt: Instant,
-  public val status: Status? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val status: Optional<Status> = Optional.Absent,
   @SerialName("start_date")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val startDate: LocalDate? = null,
   @SerialName("target_date")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val targetDate: LocalDate? = null,
-  public val body: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val body: Optional<String> = Optional.Absent,
 ) {
   @Serializable
   public enum class Status(

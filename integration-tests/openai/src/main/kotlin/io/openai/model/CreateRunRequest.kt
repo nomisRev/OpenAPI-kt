@@ -29,28 +29,42 @@ import kotlinx.serialization.json.JsonPrimitive
 public data class CreateRunRequest(
   @SerialName("assistant_id")
   public val assistantId: String,
-  public val model: Model? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val model: Optional<Model> = Optional.Absent,
   @SerialName("reasoning_effort")
-  public val reasoningEffort: ReasoningEffort? = null,
-  public val instructions: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val reasoningEffort: Optional<ReasoningEffort> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val instructions: Optional<String> = Optional.Absent,
   @SerialName("additional_instructions")
-  public val additionalInstructions: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val additionalInstructions: Optional<String> = Optional.Absent,
   @SerialName("additional_messages")
-  public val additionalMessages: List<CreateMessageRequest>? = null,
-  public val tools: List<Tools>? = null,
-  public val metadata: Metadata? = null,
-  public val temperature: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val additionalMessages: Optional<List<CreateMessageRequest>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val tools: Optional<List<Tools>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val temperature: Optional<Double> = Optional.Absent,
   @SerialName("top_p")
-  public val topP: Double? = null,
-  public val stream: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val topP: Optional<Double> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stream: Optional<Boolean> = Optional.Absent,
   @SerialName("max_prompt_tokens")
-  public val maxPromptTokens: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val maxPromptTokens: Optional<Long> = Optional.Absent,
   @SerialName("max_completion_tokens")
-  public val maxCompletionTokens: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val maxCompletionTokens: Optional<Long> = Optional.Absent,
   @SerialName("truncation_strategy")
-  public val truncationStrategy: TruncationObject? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val truncationStrategy: Optional<TruncationObject> = Optional.Absent,
   @SerialName("tool_choice")
-  public val toolChoice: AssistantsApiToolChoiceOption? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val toolChoice: Optional<AssistantsApiToolChoiceOption> = Optional.Absent,
   @SerialName("parallel_tool_calls")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val parallelToolCalls: ParallelToolCalls? = null,
@@ -148,7 +162,8 @@ public data class CreateRunRequest(
       public val name: String,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val parameters: FunctionParameters? = null,
-      public val strict: Boolean? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val strict: Optional<Boolean> = Optional.Absent,
     ) : Tools
   }
 }

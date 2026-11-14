@@ -14,7 +14,8 @@ public data class SecretScanningPushProtectionBypass(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val reason: SecretScanningPushProtectionBypassReason? = null,
   @SerialName("expire_at")
-  public val expireAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val expireAt: Optional<Instant> = Optional.Absent,
   @SerialName("token_type")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tokenType: String? = null,

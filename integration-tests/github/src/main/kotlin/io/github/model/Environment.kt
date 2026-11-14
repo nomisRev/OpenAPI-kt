@@ -43,7 +43,8 @@ public data class Environment(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val protectionRules: List<ProtectionRules>? = null,
   @SerialName("deployment_branch_policy")
-  public val deploymentBranchPolicy: DeploymentBranchPolicySettings? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val deploymentBranchPolicy: Optional<DeploymentBranchPolicySettings> = Optional.Absent,
 ) {
   @Serializable(with = ProtectionRules.Serializer::class)
   public sealed interface ProtectionRules {

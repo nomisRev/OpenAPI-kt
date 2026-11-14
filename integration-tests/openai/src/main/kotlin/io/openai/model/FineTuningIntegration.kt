@@ -32,8 +32,10 @@ public data class FineTuningIntegration(
   @Serializable
   public data class Wandb(
     public val project: String,
-    public val name: String? = null,
-    public val entity: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val name: Optional<String> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val entity: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val tags: List<String>? = null,
   )

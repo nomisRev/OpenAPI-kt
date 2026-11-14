@@ -66,6 +66,7 @@ import io.github.model.NetworkConfiguration
 import io.github.model.OidcCustomPropertyInclusion
 import io.github.model.OidcCustomPropertyInclusionInput
 import io.github.model.OidcCustomSub
+import io.github.model.Optional
 import io.github.model.OrgHook
 import io.github.model.OrgMembership
 import io.github.model.OrgPrivateRegistryConfiguration
@@ -721,7 +722,8 @@ public class Orgs internal constructor(
             public val id: String? = null,
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val source: Source? = null,
-            public val version: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val version: Optional<String> = Optional.Absent,
           ) {
             @Serializable
             public enum class Source(
@@ -1062,7 +1064,7 @@ public class Orgs internal constructor(
               enableStaticIp: Boolean? = null,
               size: String? = null,
               imageId: String? = null,
-              imageVersion: String? = null,
+              imageVersion: Optional<String> = Optional.Absent,
             ): ActionsHostedRunner {
               val response = client.patch("orgs/${this.org.encodeURLParameter()}/actions/hosted-runners/${this.hostedRunnerId}") {
                 contentType(ContentType.Application.Json)
@@ -1092,7 +1094,8 @@ public class Orgs internal constructor(
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val imageId: String? = null,
               @SerialName("image_version")
-              public val imageVersion: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val imageVersion: Optional<String> = Optional.Absent,
             )
           }
         }
@@ -2155,7 +2158,7 @@ public class Orgs internal constructor(
               allowsPublicRepositories: Boolean? = null,
               restrictedToWorkflows: Boolean? = null,
               selectedWorkflows: List<String>? = null,
-              networkConfigurationId: String? = null,
+              networkConfigurationId: Optional<String> = Optional.Absent,
             ): RunnerGroupsOrg {
               val response = client.patch("orgs/${this.org.encodeURLParameter()}/actions/runner-groups/${this.runnerGroupId}") {
                 contentType(ContentType.Application.Json)
@@ -2194,7 +2197,8 @@ public class Orgs internal constructor(
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val selectedWorkflows: List<String>? = null,
               @SerialName("network_configuration_id")
-              public val networkConfigurationId: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val networkConfigurationId: Optional<String> = Optional.Absent,
             )
           }
 
@@ -3687,11 +3691,13 @@ public class Orgs internal constructor(
                 @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val digest: String? = null,
                 @SerialName("artifact_url")
-                public val artifactUrl: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
+                public val artifactUrl: Optional<String> = Optional.Absent,
                 @SerialName("registry_url")
                 @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val registryUrl: String? = null,
-                public val repository: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
+                public val repository: Optional<String> = Optional.Absent,
                 @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val status: String? = null,
                 @SerialName("created_at")
@@ -4136,7 +4142,8 @@ public class Orgs internal constructor(
             @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class Attestations(
-              public val bundle: Bundle? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val bundle: Optional<Bundle> = Optional.Absent,
               @SerialName("repository_id")
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val repositoryId: Long? = null,
@@ -4367,8 +4374,8 @@ public class Orgs internal constructor(
           managers: List<String>? = null,
           teamManagers: List<String>? = null,
           endsAt: Instant,
-          contactLink: String? = null,
-          codeScanningAlerts: List<CodeScanningAlerts>? = null,
+          contactLink: Optional<String> = Optional.Absent,
+          codeScanningAlerts: Optional<List<CodeScanningAlerts>> = Optional.Absent,
           generateIssues: Boolean? = null,
         ): Response {
           val response = client.post("orgs/${this.org.encodeURLParameter()}/campaigns") {
@@ -4407,9 +4414,11 @@ public class Orgs internal constructor(
           @SerialName("ends_at")
           public val endsAt: Instant,
           @SerialName("contact_link")
-          public val contactLink: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val contactLink: Optional<String> = Optional.Absent,
           @SerialName("code_scanning_alerts")
-          public val codeScanningAlerts: List<CodeScanningAlerts>? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val codeScanningAlerts: Optional<List<CodeScanningAlerts>> = Optional.Absent,
           @SerialName("generate_issues")
           @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val generateIssues: Boolean? = null,
@@ -4549,7 +4558,7 @@ public class Orgs internal constructor(
             managers: List<String>? = null,
             teamManagers: List<String>? = null,
             endsAt: Instant? = null,
-            contactLink: String? = null,
+            contactLink: Optional<String> = Optional.Absent,
             state: CampaignState? = null,
           ): Response {
             val response = client.patch("orgs/${this.org.encodeURLParameter()}/campaigns/${this.campaignNumber}") {
@@ -4582,7 +4591,8 @@ public class Orgs internal constructor(
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val endsAt: Instant? = null,
             @SerialName("contact_link")
-            public val contactLink: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val contactLink: Optional<String> = Optional.Absent,
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val state: CampaignState? = null,
           )
@@ -4832,9 +4842,9 @@ public class Orgs internal constructor(
             dependabotAlerts: DependabotAlerts? = null,
             dependabotSecurityUpdates: DependabotSecurityUpdates? = null,
             dependabotDelegatedAlertDismissal: DependabotDelegatedAlertDismissal? = null,
-            codeScanningOptions: CodeScanningOptions? = null,
+            codeScanningOptions: Optional<CodeScanningOptions> = Optional.Absent,
             codeScanningDefaultSetup: CodeScanningDefaultSetup? = null,
-            codeScanningDefaultSetupOptions: CodeScanningDefaultSetupOptions? = null,
+            codeScanningDefaultSetupOptions: Optional<CodeScanningDefaultSetupOptions> = Optional.Absent,
             codeScanningDelegatedAlertDismissal: CodeScanningDelegatedAlertDismissal? = null,
             secretProtection: SecretProtection? = null,
             secretScanning: SecretScanning? = null,
@@ -5183,12 +5193,15 @@ public class Orgs internal constructor(
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val dependabotDelegatedAlertDismissal: DependabotDelegatedAlertDismissal? = null,
             @SerialName("code_scanning_options")
-            public val codeScanningOptions: CodeScanningOptions? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val codeScanningOptions: Optional<CodeScanningOptions> = Optional.Absent,
             @SerialName("code_scanning_default_setup")
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val codeScanningDefaultSetup: CodeScanningDefaultSetup? = null,
             @SerialName("code_scanning_default_setup_options")
-            public val codeScanningDefaultSetupOptions: CodeScanningDefaultSetupOptions? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val codeScanningDefaultSetupOptions:
+                Optional<CodeScanningDefaultSetupOptions> = Optional.Absent,
             @SerialName("code_scanning_delegated_alert_dismissal")
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val codeScanningDelegatedAlertDismissal:
@@ -5432,8 +5445,8 @@ public class Orgs internal constructor(
               dependabotSecurityUpdates: DependabotSecurityUpdates? = null,
               dependabotDelegatedAlertDismissal: DependabotDelegatedAlertDismissal? = null,
               codeScanningDefaultSetup: CodeScanningDefaultSetup? = null,
-              codeScanningDefaultSetupOptions: CodeScanningDefaultSetupOptions? = null,
-              codeScanningOptions: CodeScanningOptions? = null,
+              codeScanningDefaultSetupOptions: Optional<CodeScanningDefaultSetupOptions> = Optional.Absent,
+              codeScanningOptions: Optional<CodeScanningOptions> = Optional.Absent,
               codeScanningDelegatedAlertDismissal: CodeScanningDelegatedAlertDismissal? = null,
               secretProtection: SecretProtection? = null,
               secretScanning: SecretScanning? = null,
@@ -5791,9 +5804,12 @@ public class Orgs internal constructor(
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val codeScanningDefaultSetup: CodeScanningDefaultSetup? = null,
               @SerialName("code_scanning_default_setup_options")
-              public val codeScanningDefaultSetupOptions: CodeScanningDefaultSetupOptions? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val codeScanningDefaultSetupOptions:
+                  Optional<CodeScanningDefaultSetupOptions> = Optional.Absent,
               @SerialName("code_scanning_options")
-              public val codeScanningOptions: CodeScanningOptions? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val codeScanningOptions: Optional<CodeScanningOptions> = Optional.Absent,
               @SerialName("code_scanning_delegated_alert_dismissal")
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val codeScanningDelegatedAlertDismissal:
@@ -13450,7 +13466,7 @@ public class Orgs internal constructor(
         public suspend operator fun invoke(
           patRequestIds: List<Long>? = null,
           action: Action,
-          reason: String? = null,
+          reason: Optional<String> = Optional.Absent,
         ): Response {
           val response = client.post("orgs/${this.org.encodeURLParameter()}/personal-access-token-requests") {
             contentType(ContentType.Application.Json)
@@ -13484,7 +13500,8 @@ public class Orgs internal constructor(
           @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val patRequestIds: List<Long>? = null,
           public val action: Action,
-          public val reason: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val reason: Optional<String> = Optional.Absent,
         )
 
         public sealed interface Response {
@@ -13524,7 +13541,7 @@ public class Orgs internal constructor(
           private val org: String,
           private val patRequestId: Long,
         ) {
-          public suspend operator fun invoke(action: Action, reason: String? = null): Response {
+          public suspend operator fun invoke(action: Action, reason: Optional<String> = Optional.Absent): Response {
             val response = client.post("orgs/${this.org.encodeURLParameter()}/personal-access-token-requests/${this.patRequestId}") {
               contentType(ContentType.Application.Json)
               setBody(Body(action = action, reason = reason))
@@ -13550,10 +13567,12 @@ public class Orgs internal constructor(
             ;
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             public val action: Action,
-            public val reason: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val reason: Optional<String> = Optional.Absent,
           )
 
           public sealed interface Response {
@@ -13968,7 +13987,7 @@ public class Orgs internal constructor(
         public suspend operator fun invoke(
           registryType: RegistryType,
           url: String,
-          username: String? = null,
+          username: Optional<String> = Optional.Absent,
           replacesBase: Boolean? = null,
           encryptedValue: String,
           keyId: String,
@@ -14043,7 +14062,8 @@ public class Orgs internal constructor(
           @SerialName("registry_type")
           public val registryType: RegistryType,
           public val url: String,
-          public val username: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val username: Optional<String> = Optional.Absent,
           @SerialName("replaces_base")
           @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val replacesBase: Boolean? = null,
@@ -14178,7 +14198,7 @@ public class Orgs internal constructor(
           public suspend operator fun invoke(
             registryType: RegistryType? = null,
             url: String? = null,
-            username: String? = null,
+            username: Optional<String> = Optional.Absent,
             replacesBase: Boolean? = null,
             encryptedValue: String? = null,
             keyId: String? = null,
@@ -14255,7 +14275,8 @@ public class Orgs internal constructor(
             public val registryType: RegistryType? = null,
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val url: String? = null,
-            public val username: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val username: Optional<String> = Optional.Absent,
             @SerialName("replaces_base")
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val replacesBase: Boolean? = null,
@@ -16711,7 +16732,7 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(
-            patternConfigVersion: SecretScanningRowVersion? = null,
+            patternConfigVersion: Optional<SecretScanningRowVersion> = Optional.Absent,
             providerPatternSettings: List<ProviderPatternSettings>? = null,
             customPatternSettings: List<CustomPatternSettings>? = null,
           ): Response {
@@ -16761,7 +16782,8 @@ public class Orgs internal constructor(
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val tokenType: String? = null,
             @SerialName("custom_pattern_version")
-            public val customPatternVersion: SecretScanningRowVersion? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val customPatternVersion: Optional<SecretScanningRowVersion> = Optional.Absent,
             @SerialName("push_protection_setting")
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val pushProtectionSetting: PushProtectionSetting? = null,
@@ -16782,7 +16804,8 @@ public class Orgs internal constructor(
           @Serializable
           internal data class Body(
             @SerialName("pattern_config_version")
-            public val patternConfigVersion: SecretScanningRowVersion? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val patternConfigVersion: Optional<SecretScanningRowVersion> = Optional.Absent,
             @SerialName("provider_pattern_settings")
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val providerPatternSettings: List<ProviderPatternSettings>? = null,
@@ -17792,7 +17815,7 @@ public class Orgs internal constructor(
             privacy: Privacy? = null,
             notificationSetting: NotificationSetting? = null,
             permission: Permission? = null,
-            parentTeamId: Long? = null,
+            parentTeamId: Optional<Long> = Optional.Absent,
           ): Response {
             val response = client.patch("orgs/${this.org.encodeURLParameter()}/teams/${this.teamSlug.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
@@ -17858,7 +17881,8 @@ public class Orgs internal constructor(
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val permission: Permission? = null,
             @SerialName("parent_team_id")
-            public val parentTeamId: Long? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val parentTeamId: Optional<Long> = Optional.Absent,
           )
 
           public sealed interface Response {

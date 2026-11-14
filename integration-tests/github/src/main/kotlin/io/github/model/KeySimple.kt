@@ -21,5 +21,6 @@ public data class KeySimple(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val createdAt: Instant? = null,
   @SerialName("last_used")
-  public val lastUsed: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val lastUsed: Optional<Instant> = Optional.Absent,
 )

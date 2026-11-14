@@ -30,7 +30,8 @@ public data class CodeSearchResultItem(
   @SerialName("file_size")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val fileSize: Long? = null,
-  public val language: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val language: Optional<String> = Optional.Absent,
   @SerialName("last_modified_at")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val lastModifiedAt: Instant? = null,

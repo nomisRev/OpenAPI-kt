@@ -34,7 +34,8 @@ public data class TeamFull(
   public val membersUrl: String,
   @SerialName("repositories_url")
   public val repositoriesUrl: String,
-  public val parent: NullableTeamSimple? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val parent: Optional<NullableTeamSimple> = Optional.Absent,
   @SerialName("members_count")
   public val membersCount: Long,
   @SerialName("repos_count")

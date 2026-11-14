@@ -61,7 +61,8 @@ public data class Batch(
   public val requestCounts: RequestCounts? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val usage: Usage? = null,
-  public val metadata: Metadata? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
 ) {
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable
@@ -78,8 +79,10 @@ public data class Batch(
       public val code: String? = null,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val message: String? = null,
-      public val `param`: String? = null,
-      public val line: Long? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val `param`: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val line: Optional<Long> = Optional.Absent,
     )
   }
 

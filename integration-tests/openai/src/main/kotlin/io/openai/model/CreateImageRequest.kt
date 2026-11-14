@@ -19,22 +19,34 @@ import kotlinx.serialization.encoding.Encoder
 @Serializable
 public data class CreateImageRequest(
   public val prompt: String,
-  public val model: Model? = null,
-  public val n: Long? = null,
-  public val quality: Quality? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val model: Optional<Model> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val n: Optional<Long> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val quality: Optional<Quality> = Optional.Absent,
   @SerialName("response_format")
-  public val responseFormat: ResponseFormat? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val responseFormat: Optional<ResponseFormat> = Optional.Absent,
   @SerialName("output_format")
-  public val outputFormat: OutputFormat? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val outputFormat: Optional<OutputFormat> = Optional.Absent,
   @SerialName("output_compression")
-  public val outputCompression: Long? = null,
-  public val stream: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val outputCompression: Optional<Long> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stream: Optional<Boolean> = Optional.Absent,
   @SerialName("partial_images")
-  public val partialImages: PartialImages? = null,
-  public val size: Size? = null,
-  public val moderation: Moderation? = null,
-  public val background: Background? = null,
-  public val style: Style? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val partialImages: Optional<PartialImages> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val size: Optional<Size> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val moderation: Optional<Moderation> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val background: Optional<Background> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val style: Optional<Style> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
 ) {

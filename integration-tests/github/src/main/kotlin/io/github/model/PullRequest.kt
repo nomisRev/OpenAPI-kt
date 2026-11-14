@@ -48,7 +48,8 @@ public data class PullRequest(
   public val labels: List<Labels>,
   public val milestone: NullableMilestone?,
   @SerialName("active_lock_reason")
-  public val activeLockReason: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val activeLockReason: Optional<String> = Optional.Absent,
   @SerialName("created_at")
   public val createdAt: Instant,
   @SerialName("updated_at")
@@ -80,7 +81,8 @@ public data class PullRequest(
   public val draft: Boolean? = null,
   public val merged: Boolean,
   public val mergeable: Boolean?,
-  public val rebaseable: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val rebaseable: Optional<Boolean> = Optional.Absent,
   @SerialName("mergeable_state")
   public val mergeableState: String,
   @SerialName("merged_by")

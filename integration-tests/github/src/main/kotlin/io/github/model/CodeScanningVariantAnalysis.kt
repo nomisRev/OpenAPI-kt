@@ -31,7 +31,8 @@ public data class CodeScanningVariantAnalysis(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val updatedAt: Instant? = null,
   @SerialName("completed_at")
-  public val completedAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val completedAt: Optional<Instant> = Optional.Absent,
   public val status: Status,
   @SerialName("actions_workflow_run_id")
   @EncodeDefault(EncodeDefault.Mode.NEVER)

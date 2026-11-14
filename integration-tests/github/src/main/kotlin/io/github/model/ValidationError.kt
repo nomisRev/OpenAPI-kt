@@ -48,7 +48,8 @@ public data class ValidationError(
     public val code: String,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val index: Long? = null,
-    public val `value`: Value? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val `value`: Optional<Value> = Optional.Absent,
   ) {
     @Serializable(with = Value.Serializer::class)
     public sealed interface Value {

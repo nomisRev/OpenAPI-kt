@@ -21,9 +21,11 @@ public data class OrganizationInvitation(
   @SerialName("created_at")
   public val createdAt: String,
   @SerialName("failed_at")
-  public val failedAt: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val failedAt: Optional<String> = Optional.Absent,
   @SerialName("failed_reason")
-  public val failedReason: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val failedReason: Optional<String> = Optional.Absent,
   public val inviter: SimpleUser,
   @SerialName("team_count")
   public val teamCount: Long,

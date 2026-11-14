@@ -29,7 +29,8 @@ public data class VectorStoreFileObject(
   @SerialName("chunking_strategy")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val chunkingStrategy: ChunkingStrategy? = null,
-  public val attributes: VectorStoreFileAttributes? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val attributes: Optional<VectorStoreFileAttributes> = Optional.Absent,
 ) {
   /**
    * The strategy used to chunk the file.

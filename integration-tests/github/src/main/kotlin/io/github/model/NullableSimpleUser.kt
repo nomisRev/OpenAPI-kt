@@ -15,8 +15,10 @@ import kotlinx.serialization.Serializable
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class NullableSimpleUser(
-  public val name: String? = null,
-  public val email: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val name: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val email: Optional<String> = Optional.Absent,
   public val login: String,
   public val id: Long,
   @SerialName("node_id")

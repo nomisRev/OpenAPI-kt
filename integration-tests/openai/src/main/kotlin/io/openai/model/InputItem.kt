@@ -44,7 +44,8 @@ public sealed interface InputItem {
   public data class Message(
     public val role: Role,
     public val content: Content,
-    public val phase: MessagePhase? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val phase: Optional<MessagePhase> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: Type? = null,
   ) : InputItem {
@@ -190,13 +191,15 @@ public sealed interface InputItem {
      * An output message from the model.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class OutputMessage(
       public val id: String,
       public val type: Type,
       public val role: Role,
       public val content: List<OutputMessageContent>,
-      public val phase: MessagePhase? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val phase: Optional<MessagePhase> = Optional.Absent,
       public val status: Status,
     ) : Item {
       @Serializable
@@ -236,13 +239,15 @@ public sealed interface InputItem {
      * [file search guide](/docs/guides/tools-file-search) for more information.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class FileSearchCall(
       public val id: String,
       public val type: Type,
       public val status: Status,
       public val queries: List<String>,
-      public val results: List<Results>? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val results: Optional<List<Results>> = Optional.Absent,
     ) : Item {
       @OptIn(ExperimentalSerializationApi::class)
       @Serializable
@@ -254,7 +259,8 @@ public sealed interface InputItem {
         public val text: String? = null,
         @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val filename: String? = null,
-        public val attributes: VectorStoreFileAttributes? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val attributes: Optional<VectorStoreFileAttributes> = Optional.Absent,
         @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val score: Float? = null,
       )
@@ -333,17 +339,22 @@ public sealed interface InputItem {
     /**
      * The output of a computer tool call.
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ComputerCallOutput(
-      public val id: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val id: Optional<String> = Optional.Absent,
       @SerialName("call_id")
       public val callId: String,
       @Required
       public val type: Type = Type.ComputerCallOutput,
       public val output: ComputerScreenshotImage,
       @SerialName("acknowledged_safety_checks")
-      public val acknowledgedSafetyChecks: List<ComputerCallSafetyCheckParam>? = null,
-      public val status: FunctionCallItemStatus? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val acknowledgedSafetyChecks:
+          Optional<List<ComputerCallSafetyCheckParam>> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val status: Optional<FunctionCallItemStatus> = Optional.Absent,
     ) : Item {
       @Serializable
       public enum class Type(
@@ -415,9 +426,11 @@ public sealed interface InputItem {
          *
          */
         @SerialName("open_page")
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class OpenPage(
-          public val url: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val url: Optional<String> = Optional.Absent,
         ) : Action
 
         /**
@@ -503,15 +516,18 @@ public sealed interface InputItem {
     /**
      * The output of a function tool call.
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class FunctionCallOutput(
-      public val id: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val id: Optional<String> = Optional.Absent,
       @SerialName("call_id")
       public val callId: String,
       @Required
       public val type: Type = Type.FunctionCallOutput,
       public val output: Output,
-      public val status: FunctionCallItemStatus? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val status: Optional<FunctionCallItemStatus> = Optional.Absent,
     ) : Item {
       /**
        * Text, image, or file output of the function tool call.
@@ -551,28 +567,37 @@ public sealed interface InputItem {
            * An image input to the model. Learn about [image inputs](/docs/guides/vision)
            */
           @SerialName("input_image")
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class InputImage(
             @SerialName("image_url")
-            public val imageUrl: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val imageUrl: Optional<String> = Optional.Absent,
             @SerialName("file_id")
-            public val fileId: String? = null,
-            public val detail: DetailEnum? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val fileId: Optional<String> = Optional.Absent,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val detail: Optional<DetailEnum> = Optional.Absent,
           ) : InputTextContentParamOrInputImageContentParamAutoParamOrInputFileContentParam
 
           /**
            * A file input to the model.
            */
           @SerialName("input_file")
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class InputFile(
             @SerialName("file_id")
-            public val fileId: String? = null,
-            public val filename: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val fileId: Optional<String> = Optional.Absent,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val filename: Optional<String> = Optional.Absent,
             @SerialName("file_data")
-            public val fileData: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val fileData: Optional<String> = Optional.Absent,
             @SerialName("file_url")
-            public val fileUrl: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val fileUrl: Optional<String> = Optional.Absent,
           ) : InputTextContentParamOrInputImageContentParamAutoParamOrInputFileContentParam
         }
 
@@ -625,15 +650,18 @@ public sealed interface InputItem {
     @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ToolSearchCall(
-      public val id: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val id: Optional<String> = Optional.Absent,
       @SerialName("call_id")
-      public val callId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val callId: Optional<String> = Optional.Absent,
       @Required
       public val type: Type = Type.ToolSearchCall,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val execution: ToolSearchExecutionType? = null,
       public val arguments: EmptyModelParam,
-      public val status: FunctionCallItemStatus? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val status: Optional<FunctionCallItemStatus> = Optional.Absent,
     ) : Item {
       @Serializable
       public enum class Type(
@@ -648,15 +676,18 @@ public sealed interface InputItem {
     @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ToolSearchOutput(
-      public val id: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val id: Optional<String> = Optional.Absent,
       @SerialName("call_id")
-      public val callId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val callId: Optional<String> = Optional.Absent,
       @Required
       public val type: Type = Type.ToolSearchOutput,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val execution: ToolSearchExecutionType? = null,
       public val tools: List<Tool>,
-      public val status: FunctionCallItemStatus? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val status: Optional<FunctionCallItemStatus> = Optional.Absent,
     ) : Item {
       @Serializable
       public enum class Type(
@@ -681,7 +712,8 @@ public sealed interface InputItem {
       public val type: Type,
       public val id: String,
       @SerialName("encrypted_content")
-      public val encryptedContent: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val encryptedContent: Optional<String> = Optional.Absent,
       public val summary: List<SummaryTextContent>,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val content: List<ReasoningTextContent>? = null,
@@ -714,9 +746,11 @@ public sealed interface InputItem {
     /**
      * A compaction item generated by the [`v1/responses/compact` API](/docs/api-reference/responses/compact).
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Compaction(
-      public val id: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val id: Optional<String> = Optional.Absent,
       @Required
       public val type: Type = Type.Compaction,
       @SerialName("encrypted_content")
@@ -873,12 +907,14 @@ public sealed interface InputItem {
      * The output of a local shell tool call.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class LocalShellCallOutput(
       public val type: Type,
       public val id: String,
       public val output: String,
-      public val status: Status? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val status: Optional<Status> = Optional.Absent,
     ) : Item {
       @Serializable
       public enum class Status(
@@ -906,16 +942,20 @@ public sealed interface InputItem {
     /**
      * A tool representing a request to execute one or more shell commands.
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ShellCall(
-      public val id: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val id: Optional<String> = Optional.Absent,
       @SerialName("call_id")
       public val callId: String,
       @Required
       public val type: Type = Type.ShellCall,
       public val action: FunctionShellActionParam,
-      public val status: FunctionShellCallItemStatus? = null,
-      public val environment: Environment? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val status: Optional<FunctionShellCallItemStatus> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val environment: Optional<Environment> = Optional.Absent,
     ) : Item {
       /**
        * The environment to execute the shell commands in.
@@ -953,17 +993,21 @@ public sealed interface InputItem {
     /**
      * The streamed output items emitted by a shell tool call.
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ShellCallOutput(
-      public val id: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val id: Optional<String> = Optional.Absent,
       @SerialName("call_id")
       public val callId: String,
       @Required
       public val type: Type = Type.ShellCallOutput,
       public val output: List<FunctionShellCallOutputContentParam>,
-      public val status: FunctionShellCallItemStatus? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val status: Optional<FunctionShellCallItemStatus> = Optional.Absent,
       @SerialName("max_output_length")
-      public val maxOutputLength: Long? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val maxOutputLength: Optional<Long> = Optional.Absent,
     ) : Item {
       @Serializable
       public enum class Type(
@@ -978,11 +1022,13 @@ public sealed interface InputItem {
     /**
      * A tool call representing a request to create, delete, or update files using diff patches.
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ApplyPatchCall(
       @Required
       public val type: Type = Type.ApplyPatchCall,
-      public val id: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val id: Optional<String> = Optional.Absent,
       @SerialName("call_id")
       public val callId: String,
       public val status: ApplyPatchCallStatusParam,
@@ -1001,15 +1047,18 @@ public sealed interface InputItem {
     /**
      * The streamed output emitted by an apply patch tool call.
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ApplyPatchCallOutput(
       @Required
       public val type: Type = Type.ApplyPatchCallOutput,
-      public val id: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val id: Optional<String> = Optional.Absent,
       @SerialName("call_id")
       public val callId: String,
       public val status: ApplyPatchCallOutputStatusParam,
-      public val output: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val output: Optional<String> = Optional.Absent,
     ) : Item {
       @Serializable
       public enum class Type(
@@ -1025,6 +1074,7 @@ public sealed interface InputItem {
      * A list of tools available on an MCP server.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class McpListTools(
       public val type: Type,
@@ -1032,7 +1082,8 @@ public sealed interface InputItem {
       @SerialName("server_label")
       public val serverLabel: String,
       public val tools: List<MCPListToolsTool>,
-      public val error: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val error: Optional<String> = Optional.Absent,
     ) : Item {
       @Serializable
       public enum class Type(
@@ -1071,14 +1122,17 @@ public sealed interface InputItem {
      * A response to an MCP approval request.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class McpApprovalResponse(
       public val type: Type,
-      public val id: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val id: Optional<String> = Optional.Absent,
       @SerialName("approval_request_id")
       public val approvalRequestId: String,
       public val approve: Boolean,
-      public val reason: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val reason: Optional<String> = Optional.Absent,
     ) : Item {
       @Serializable
       public enum class Type(
@@ -1103,12 +1157,15 @@ public sealed interface InputItem {
       public val serverLabel: String,
       public val name: String,
       public val arguments: String,
-      public val output: String? = null,
-      public val error: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val output: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val error: Optional<String> = Optional.Absent,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val status: MCPToolCallStatus? = null,
       @SerialName("approval_request_id")
-      public val approvalRequestId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val approvalRequestId: Optional<String> = Optional.Absent,
     ) : Item {
       @Serializable
       public enum class Type(
@@ -1342,9 +1399,11 @@ public sealed interface InputItem {
   /**
    * An internal identifier for an item to reference.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class ItemReference(
-    public val type: Type? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val type: Optional<Type> = Optional.Absent,
     public val id: String,
   ) : InputItem {
     @Serializable

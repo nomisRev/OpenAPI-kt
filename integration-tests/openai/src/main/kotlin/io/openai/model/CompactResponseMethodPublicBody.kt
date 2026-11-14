@@ -4,6 +4,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -21,15 +22,20 @@ import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CompactResponseMethodPublicBody(
   public val model: ModelIdsCompaction?,
-  public val input: Input? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val input: Optional<Input> = Optional.Absent,
   @SerialName("previous_response_id")
-  public val previousResponseId: String? = null,
-  public val instructions: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val previousResponseId: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val instructions: Optional<String> = Optional.Absent,
   @SerialName("prompt_cache_key")
-  public val promptCacheKey: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val promptCacheKey: Optional<String> = Optional.Absent,
 ) {
   /**
    * Text, image, or file inputs to the model, used to generate a response

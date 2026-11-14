@@ -26,7 +26,8 @@ public data class ProjectsV2ItemWithContent(
   public val projectUrl: String? = null,
   @SerialName("content_type")
   public val contentType: ProjectsV2ItemContentType,
-  public val content: JsonElement? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val content: Optional<JsonElement> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val creator: SimpleUser? = null,
   @SerialName("created_at")
@@ -36,7 +37,8 @@ public data class ProjectsV2ItemWithContent(
   @SerialName("archived_at")
   public val archivedAt: Instant?,
   @SerialName("item_url")
-  public val itemUrl: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val itemUrl: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val fields: JsonArray? = null,
 )

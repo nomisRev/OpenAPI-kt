@@ -35,14 +35,18 @@ public data class TopicSearchResultItem(
   public val curated: Boolean,
   public val score: Double,
   @SerialName("repository_count")
-  public val repositoryCount: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val repositoryCount: Optional<Long> = Optional.Absent,
   @SerialName("logo_url")
-  public val logoUrl: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val logoUrl: Optional<String> = Optional.Absent,
   @SerialName("text_matches")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val textMatches: SearchResultTextMatches? = null,
-  public val related: List<Related>? = null,
-  public val aliases: List<Aliases>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val related: Optional<List<Related>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val aliases: Optional<List<Aliases>> = Optional.Absent,
 ) {
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable

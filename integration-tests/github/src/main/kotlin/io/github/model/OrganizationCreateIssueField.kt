@@ -13,12 +13,14 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class OrganizationCreateIssueField(
   public val name: String,
-  public val description: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val description: Optional<String> = Optional.Absent,
   @SerialName("data_type")
   public val dataType: DataType,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val visibility: Visibility? = null,
-  public val options: List<Options>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val options: Optional<List<Options>> = Optional.Absent,
 ) {
   @Serializable
   public enum class DataType(
@@ -35,10 +37,12 @@ public data class OrganizationCreateIssueField(
     ;
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Options(
     public val name: String,
-    public val description: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val description: Optional<String> = Optional.Absent,
     public val color: Color,
     public val priority: Long,
   ) {

@@ -23,7 +23,8 @@ public data class CreateChatCompletionStreamResponse(
   public val created: Long,
   public val model: String,
   @SerialName("service_tier")
-  public val serviceTier: ServiceTier? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val serviceTier: Optional<ServiceTier> = Optional.Absent,
   @SerialName("system_fingerprint")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val systemFingerprint: String? = null,
@@ -31,10 +32,12 @@ public data class CreateChatCompletionStreamResponse(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val usage: CompletionUsage? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Choices(
     public val delta: ChatCompletionStreamResponseDelta,
-    public val logprobs: Logprobs? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val logprobs: Optional<Logprobs> = Optional.Absent,
     @SerialName("finish_reason")
     public val finishReason: FinishReason?,
     public val index: Long,

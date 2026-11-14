@@ -5,6 +5,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -24,6 +25,7 @@ import kotlinx.serialization.json.doubleOrNull
 /**
  * A value assigned to an issue field
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class IssueFieldValue(
   @SerialName("issue_field_id")
@@ -34,7 +36,8 @@ public data class IssueFieldValue(
   public val dataType: DataType,
   public val `value`: Value?,
   @SerialName("single_select_option")
-  public val singleSelectOption: SingleSelectOption? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val singleSelectOption: Optional<SingleSelectOption> = Optional.Absent,
 ) {
   @Serializable
   public enum class DataType(

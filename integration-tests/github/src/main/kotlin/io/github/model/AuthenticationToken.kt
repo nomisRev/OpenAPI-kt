@@ -24,7 +24,8 @@ public data class AuthenticationToken(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val repositories: List<Repository>? = null,
   @SerialName("single_file")
-  public val singleFile: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val singleFile: Optional<String> = Optional.Absent,
   @SerialName("repository_selection")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val repositorySelection: RepositorySelection? = null,

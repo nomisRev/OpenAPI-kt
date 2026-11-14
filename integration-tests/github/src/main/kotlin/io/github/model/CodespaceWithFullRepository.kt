@@ -20,7 +20,8 @@ public data class CodespaceWithFullRepository(
   public val id: Long,
   public val name: String,
   @SerialName("display_name")
-  public val displayName: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val displayName: Optional<String> = Optional.Absent,
   @SerialName("environment_id")
   public val environmentId: String?,
   public val owner: SimpleUser,
@@ -29,7 +30,8 @@ public data class CodespaceWithFullRepository(
   public val repository: FullRepository,
   public val machine: NullableCodespaceMachine?,
   @SerialName("devcontainer_path")
-  public val devcontainerPath: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val devcontainerPath: Optional<String> = Optional.Absent,
   public val prebuild: Boolean?,
   @SerialName("created_at")
   public val createdAt: Instant,
@@ -53,7 +55,8 @@ public data class CodespaceWithFullRepository(
   @SerialName("stop_url")
   public val stopUrl: String,
   @SerialName("publish_url")
-  public val publishUrl: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val publishUrl: Optional<String> = Optional.Absent,
   @SerialName("pulls_url")
   public val pullsUrl: String?,
   @SerialName("recent_folders")
@@ -62,15 +65,20 @@ public data class CodespaceWithFullRepository(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val runtimeConstraints: RuntimeConstraints? = null,
   @SerialName("pending_operation")
-  public val pendingOperation: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val pendingOperation: Optional<Boolean> = Optional.Absent,
   @SerialName("pending_operation_disabled_reason")
-  public val pendingOperationDisabledReason: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val pendingOperationDisabledReason: Optional<String> = Optional.Absent,
   @SerialName("idle_timeout_notice")
-  public val idleTimeoutNotice: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val idleTimeoutNotice: Optional<String> = Optional.Absent,
   @SerialName("retention_period_minutes")
-  public val retentionPeriodMinutes: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val retentionPeriodMinutes: Optional<Long> = Optional.Absent,
   @SerialName("retention_expires_at")
-  public val retentionExpiresAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val retentionExpiresAt: Optional<Instant> = Optional.Absent,
 ) {
   /**
    * Details about the codespace's git repository.
@@ -100,10 +108,12 @@ public data class CodespaceWithFullRepository(
     WestUs2,
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class RuntimeConstraints(
     @SerialName("allowed_port_privacy_settings")
-    public val allowedPortPrivacySettings: List<String>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val allowedPortPrivacySettings: Optional<List<String>> = Optional.Absent,
   )
 
   @Serializable

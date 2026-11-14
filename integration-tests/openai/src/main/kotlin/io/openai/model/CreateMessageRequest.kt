@@ -23,12 +23,15 @@ import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateMessageRequest(
   public val role: Role,
   public val content: Content,
-  public val attachments: List<Attachments>? = null,
-  public val metadata: Metadata? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val attachments: Optional<List<Attachments>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
 ) {
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable

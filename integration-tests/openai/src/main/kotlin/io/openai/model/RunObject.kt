@@ -16,6 +16,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 /**
  * Represents an execution run on a [thread](/docs/api-reference/threads).
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class RunObject(
   public val id: String,
@@ -49,9 +50,11 @@ public data class RunObject(
   public val tools: List<Tools> = emptyList(),
   public val metadata: Metadata?,
   public val usage: RunCompletionUsage?,
-  public val temperature: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val temperature: Optional<Double> = Optional.Absent,
   @SerialName("top_p")
-  public val topP: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val topP: Optional<Double> = Optional.Absent,
   @SerialName("max_prompt_tokens")
   public val maxPromptTokens: Long?,
   @SerialName("max_completion_tokens")
@@ -210,7 +213,8 @@ public data class RunObject(
       public val name: String,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val parameters: FunctionParameters? = null,
-      public val strict: Boolean? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val strict: Optional<Boolean> = Optional.Absent,
     ) : Tools
   }
 }

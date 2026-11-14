@@ -45,7 +45,8 @@ public sealed interface RealtimeTurnDetection {
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val interruptResponse: Boolean? = null,
     @SerialName("idle_timeout_ms")
-    public val idleTimeoutMs: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val idleTimeoutMs: Optional<Long> = Optional.Absent,
   ) : RealtimeTurnDetection
 
   /**

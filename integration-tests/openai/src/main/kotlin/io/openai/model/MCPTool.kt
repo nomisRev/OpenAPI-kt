@@ -46,11 +46,14 @@ public data class MCPTool(
   @SerialName("server_description")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val serverDescription: String? = null,
-  public val headers: Map<String, String>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val headers: Optional<Map<String, String>> = Optional.Absent,
   @SerialName("allowed_tools")
-  public val allowedTools: AllowedTools? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val allowedTools: Optional<AllowedTools> = Optional.Absent,
   @SerialName("require_approval")
-  public val requireApproval: RequireApproval? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val requireApproval: Optional<RequireApproval> = Optional.Absent,
   @SerialName("defer_loading")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val deferLoading: Boolean? = null,

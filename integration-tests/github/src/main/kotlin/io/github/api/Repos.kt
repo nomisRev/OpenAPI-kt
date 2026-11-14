@@ -125,6 +125,7 @@ import io.github.model.MergedUpstream
 import io.github.model.Milestone
 import io.github.model.MinimalRepository
 import io.github.model.OidcCustomSubRepo
+import io.github.model.Optional
 import io.github.model.Page
 import io.github.model.PageBuild
 import io.github.model.PageBuildStatus
@@ -519,7 +520,7 @@ public class Repos internal constructor(
           homepage: String? = null,
           `private`: Boolean? = null,
           visibility: Visibility? = null,
-          securityAndAnalysis: SecurityAndAnalysis? = null,
+          securityAndAnalysis: Optional<SecurityAndAnalysis> = Optional.Absent,
           hasIssues: Boolean? = null,
           hasProjects: Boolean? = null,
           hasWiki: Boolean? = null,
@@ -779,7 +780,8 @@ public class Repos internal constructor(
           @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val visibility: Visibility? = null,
           @SerialName("security_and_analysis")
-          public val securityAndAnalysis: SecurityAndAnalysis? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val securityAndAnalysis: Optional<SecurityAndAnalysis> = Optional.Absent,
           @SerialName("has_issues")
           @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val hasIssues: Boolean? = null,
@@ -4431,7 +4433,7 @@ public class Repos internal constructor(
                 requiredPullRequestReviews: RequiredPullRequestReviews?,
                 restrictions: Restrictions?,
                 requiredLinearHistory: Boolean? = null,
-                allowForcePushes: Boolean? = null,
+                allowForcePushes: Optional<Boolean> = Optional.Absent,
                 allowDeletions: Boolean? = null,
                 blockCreations: Boolean? = null,
                 requiredConversationResolution: Boolean? = null,
@@ -4552,7 +4554,8 @@ public class Repos internal constructor(
                 @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val requiredLinearHistory: Boolean? = null,
                 @SerialName("allow_force_pushes")
-                public val allowForcePushes: Boolean? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
+                public val allowForcePushes: Optional<Boolean> = Optional.Absent,
                 @SerialName("allow_deletions")
                 @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val allowDeletions: Boolean? = null,
@@ -6714,8 +6717,8 @@ public class Repos internal constructor(
             ) {
               public suspend operator fun invoke(
                 state: CodeScanningAlertSetState? = null,
-                dismissedReason: CodeScanningAlertDismissedReason? = null,
-                dismissedComment: CodeScanningAlertDismissedComment? = null,
+                dismissedReason: Optional<CodeScanningAlertDismissedReason> = Optional.Absent,
+                dismissedComment: Optional<CodeScanningAlertDismissedComment> = Optional.Absent,
                 createRequest: CodeScanningAlertCreateRequest? = null,
                 assignees: CodeScanningAlertAssignees? = null,
               ): Response {
@@ -6739,9 +6742,13 @@ public class Repos internal constructor(
                 @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val state: CodeScanningAlertSetState? = null,
                 @SerialName("dismissed_reason")
-                public val dismissedReason: CodeScanningAlertDismissedReason? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
+                public val dismissedReason:
+                    Optional<CodeScanningAlertDismissedReason> = Optional.Absent,
                 @SerialName("dismissed_comment")
-                public val dismissedComment: CodeScanningAlertDismissedComment? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
+                public val dismissedComment:
+                    Optional<CodeScanningAlertDismissedComment> = Optional.Absent,
                 @SerialName("create_request")
                 @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val createRequest: CodeScanningAlertCreateRequest? = null,
@@ -10920,7 +10927,7 @@ public class Repos internal constructor(
             requiredContexts: List<String>? = null,
             payload: Payload? = null,
             environment: String? = null,
-            description: String? = null,
+            description: Optional<String> = Optional.Absent,
             transientEnvironment: Boolean? = null,
             productionEnvironment: Boolean? = null,
           ): Response {
@@ -11003,7 +11010,8 @@ public class Repos internal constructor(
             public val payload: Payload? = null,
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val environment: String? = null,
-            public val description: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val description: Optional<String> = Optional.Absent,
             @SerialName("transient_environment")
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val transientEnvironment: Boolean? = null,
@@ -11416,8 +11424,8 @@ public class Repos internal constructor(
             public suspend operator fun invoke(
               waitTimer: WaitTimer? = null,
               preventSelfReview: PreventSelfReview? = null,
-              reviewers: List<Reviewers>? = null,
-              deploymentBranchPolicy: DeploymentBranchPolicySettings? = null,
+              reviewers: Optional<List<Reviewers>> = Optional.Absent,
+              deploymentBranchPolicy: Optional<DeploymentBranchPolicySettings> = Optional.Absent,
             ): Response {
               val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
@@ -11448,9 +11456,12 @@ public class Repos internal constructor(
               @SerialName("prevent_self_review")
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val preventSelfReview: PreventSelfReview? = null,
-              public val reviewers: List<Reviewers>? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val reviewers: Optional<List<Reviewers>> = Optional.Absent,
               @SerialName("deployment_branch_policy")
-              public val deploymentBranchPolicy: DeploymentBranchPolicySettings? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val deploymentBranchPolicy:
+                  Optional<DeploymentBranchPolicySettings> = Optional.Absent,
             )
 
             public sealed interface Response {
@@ -12858,7 +12869,8 @@ public class Repos internal constructor(
               public val mode: Mode? = null,
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val type: Type? = null,
-              public val sha: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val sha: Optional<String> = Optional.Absent,
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val content: String? = null,
             ) {
@@ -14418,11 +14430,11 @@ public class Repos internal constructor(
           public suspend operator fun invoke(
             title: String,
             body: String? = null,
-            assignee: String? = null,
-            milestone: Milestone? = null,
+            assignee: Optional<String> = Optional.Absent,
+            milestone: Optional<Milestone> = Optional.Absent,
             labels: List<Labels>? = null,
             assignees: List<String>? = null,
-            type: String? = null,
+            type: Optional<String> = Optional.Absent,
           ): Response {
             val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
@@ -14443,11 +14455,11 @@ public class Repos internal constructor(
           public suspend operator fun invoke(
             title: Long,
             body: String? = null,
-            assignee: String? = null,
-            milestone: Milestone? = null,
+            assignee: Optional<String> = Optional.Absent,
+            milestone: Optional<Milestone> = Optional.Absent,
             labels: List<Labels>? = null,
             assignees: List<String>? = null,
-            type: String? = null,
+            type: Optional<String> = Optional.Absent,
           ): Response {
             val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
@@ -14530,8 +14542,10 @@ public class Repos internal constructor(
               public val id: Long? = null,
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val name: String? = null,
-              public val description: String? = null,
-              public val color: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val description: Optional<String> = Optional.Absent,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val color: Optional<String> = Optional.Absent,
             ) : Labels
 
             public object Serializer : KSerializer<Labels> {
@@ -14576,13 +14590,16 @@ public class Repos internal constructor(
             public val title: Title,
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val body: String? = null,
-            public val assignee: String? = null,
-            public val milestone: Milestone? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val assignee: Optional<String> = Optional.Absent,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val milestone: Optional<Milestone> = Optional.Absent,
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val labels: List<Labels>? = null,
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val assignees: List<String>? = null,
-            public val type: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val type: Optional<String> = Optional.Absent,
           ) {
             /**
              * The title of the issue.
@@ -15298,16 +15315,16 @@ public class Repos internal constructor(
             }
 
             public suspend operator fun invoke(
-              title: Title? = null,
-              body: String? = null,
-              assignee: String? = null,
+              title: Optional<Title> = Optional.Absent,
+              body: Optional<String> = Optional.Absent,
+              assignee: Optional<String> = Optional.Absent,
               state: State? = null,
-              stateReason: StateReason? = null,
-              milestone: Milestone? = null,
+              stateReason: Optional<StateReason> = Optional.Absent,
+              milestone: Optional<Milestone> = Optional.Absent,
               labels: List<Labels>? = null,
               assignees: List<String>? = null,
               issueFieldValues: List<IssueFieldValues>? = null,
-              type: String? = null,
+              type: Optional<String> = Optional.Absent,
             ): Response {
               val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}") {
                 contentType(ContentType.Application.Json)
@@ -15469,8 +15486,10 @@ public class Repos internal constructor(
                 public val id: Long? = null,
                 @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val name: String? = null,
-                public val description: String? = null,
-                public val color: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
+                public val description: Optional<String> = Optional.Absent,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
+                public val color: Optional<String> = Optional.Absent,
               ) : Labels
 
               public object Serializer : KSerializer<Labels> {
@@ -15572,14 +15591,19 @@ public class Repos internal constructor(
             @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
-              public val title: Title? = null,
-              public val body: String? = null,
-              public val assignee: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val title: Optional<Title> = Optional.Absent,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val body: Optional<String> = Optional.Absent,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val assignee: Optional<String> = Optional.Absent,
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val state: State? = null,
               @SerialName("state_reason")
-              public val stateReason: StateReason? = null,
-              public val milestone: Milestone? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val stateReason: Optional<StateReason> = Optional.Absent,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val milestone: Optional<Milestone> = Optional.Absent,
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val labels: List<Labels>? = null,
               @EncodeDefault(EncodeDefault.Mode.NEVER)
@@ -15587,7 +15611,8 @@ public class Repos internal constructor(
               @SerialName("issue_field_values")
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val issueFieldValues: List<IssueFieldValues>? = null,
-              public val type: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val type: Optional<String> = Optional.Absent,
             )
 
             public sealed interface Response {
@@ -18179,7 +18204,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(
-            cname: String? = null,
+            cname: Optional<String> = Optional.Absent,
             httpsEnforced: Boolean? = null,
             buildType: BuildType? = null,
             source: Source? = null,
@@ -18282,7 +18307,8 @@ public class Repos internal constructor(
           @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
-            public val cname: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val cname: Optional<String> = Optional.Absent,
             @SerialName("https_enforced")
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val httpsEnforced: Boolean? = null,
@@ -22159,9 +22185,9 @@ public class Repos internal constructor(
             ) {
               public suspend operator fun invoke(
                 state: SecretScanningAlertState? = null,
-                resolution: SecretScanningAlertResolution? = null,
-                resolutionComment: SecretScanningAlertResolutionComment? = null,
-                assignee: SecretScanningAlertAssignee? = null,
+                resolution: Optional<SecretScanningAlertResolution> = Optional.Absent,
+                resolutionComment: Optional<SecretScanningAlertResolutionComment> = Optional.Absent,
+                assignee: Optional<SecretScanningAlertAssignee> = Optional.Absent,
               ): Response {
                 val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/alerts/${this.alertNumber}") {
                   contentType(ContentType.Application.Json)
@@ -22182,10 +22208,14 @@ public class Repos internal constructor(
               internal data class Body(
                 @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val state: SecretScanningAlertState? = null,
-                public val resolution: SecretScanningAlertResolution? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
+                public val resolution: Optional<SecretScanningAlertResolution> = Optional.Absent,
                 @SerialName("resolution_comment")
-                public val resolutionComment: SecretScanningAlertResolutionComment? = null,
-                public val assignee: SecretScanningAlertAssignee? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
+                public val resolutionComment:
+                    Optional<SecretScanningAlertResolutionComment> = Optional.Absent,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
+                public val assignee: Optional<SecretScanningAlertAssignee> = Optional.Absent,
               )
 
               public sealed interface Response {
@@ -23045,8 +23075,8 @@ public class Repos internal constructor(
           ) {
             public suspend operator fun invoke(
               state: State,
-              targetUrl: String? = null,
-              description: String? = null,
+              targetUrl: Optional<String> = Optional.Absent,
+              description: Optional<String> = Optional.Absent,
               context: String? = null,
             ): Status {
               val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/statuses/${this.sha.encodeURLParameter()}") {
@@ -23077,8 +23107,10 @@ public class Repos internal constructor(
             internal data class Body(
               public val state: State,
               @SerialName("target_url")
-              public val targetUrl: String? = null,
-              public val description: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val targetUrl: Optional<String> = Optional.Absent,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val description: Optional<String> = Optional.Absent,
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val context: String? = null,
             )

@@ -44,7 +44,8 @@ public data class DeploymentStatus(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val logUrl: String? = null,
   @SerialName("performed_via_github_app")
-  public val performedViaGithubApp: NullableIntegration? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val performedViaGithubApp: Optional<NullableIntegration> = Optional.Absent,
 ) {
   @Serializable
   public enum class State(

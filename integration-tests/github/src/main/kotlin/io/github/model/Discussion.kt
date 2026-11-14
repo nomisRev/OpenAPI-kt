@@ -65,7 +65,8 @@ public data class Discussion(
     public val avatarUrl: String? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val deleted: Boolean? = null,
-    public val email: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val email: Optional<String> = Optional.Absent,
     @SerialName("events_url")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val eventsUrl: String? = null,
@@ -218,7 +219,8 @@ public data class Discussion(
     public val avatarUrl: String? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val deleted: Boolean? = null,
-    public val email: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val email: Optional<String> = Optional.Absent,
     @SerialName("events_url")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val eventsUrl: String? = null,

@@ -45,14 +45,19 @@ public data class CodeSecurityConfiguration(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val dependabotSecurityUpdates: DependabotSecurityUpdates? = null,
   @SerialName("dependabot_delegated_alert_dismissal")
-  public val dependabotDelegatedAlertDismissal: DependabotDelegatedAlertDismissal? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val dependabotDelegatedAlertDismissal:
+      Optional<DependabotDelegatedAlertDismissal> = Optional.Absent,
   @SerialName("code_scanning_options")
-  public val codeScanningOptions: CodeScanningOptions? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val codeScanningOptions: Optional<CodeScanningOptions> = Optional.Absent,
   @SerialName("code_scanning_default_setup")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val codeScanningDefaultSetup: CodeScanningDefaultSetup? = null,
   @SerialName("code_scanning_default_setup_options")
-  public val codeScanningDefaultSetupOptions: CodeScanningDefaultSetupOptions? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val codeScanningDefaultSetupOptions:
+      Optional<CodeScanningDefaultSetupOptions> = Optional.Absent,
   @SerialName("code_scanning_delegated_alert_dismissal")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val codeScanningDelegatedAlertDismissal: CodeScanningDelegatedAlertDismissal? = null,
@@ -131,12 +136,15 @@ public data class CodeSecurityConfiguration(
   /**
    * Feature options for code scanning default setup
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class CodeScanningDefaultSetupOptions(
     @SerialName("runner_type")
-    public val runnerType: RunnerType? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val runnerType: Optional<RunnerType> = Optional.Absent,
     @SerialName("runner_label")
-    public val runnerLabel: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val runnerLabel: Optional<String> = Optional.Absent,
   ) {
     @Serializable
     public enum class RunnerType(
@@ -168,10 +176,12 @@ public data class CodeSecurityConfiguration(
   /**
    * Feature options for code scanning
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class CodeScanningOptions(
     @SerialName("allow_advanced")
-    public val allowAdvanced: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val allowAdvanced: Optional<Boolean> = Optional.Absent,
   )
 
   @Serializable

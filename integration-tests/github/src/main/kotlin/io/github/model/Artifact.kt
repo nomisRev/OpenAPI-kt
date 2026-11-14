@@ -13,6 +13,7 @@ import kotlinx.serialization.Serializable
 /**
  * An artifact
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Artifact(
   public val id: Long,
@@ -31,9 +32,11 @@ public data class Artifact(
   public val expiresAt: Instant?,
   @SerialName("updated_at")
   public val updatedAt: Instant?,
-  public val digest: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val digest: Optional<String> = Optional.Absent,
   @SerialName("workflow_run")
-  public val workflowRun: WorkflowRun? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val workflowRun: Optional<WorkflowRun> = Optional.Absent,
 ) {
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable

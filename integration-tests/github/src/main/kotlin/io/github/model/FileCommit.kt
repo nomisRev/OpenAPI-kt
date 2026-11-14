@@ -94,10 +94,13 @@ public data class FileCommit(
       public val verified: Boolean? = null,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val reason: String? = null,
-      public val signature: String? = null,
-      public val payload: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val signature: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val payload: Optional<String> = Optional.Absent,
       @SerialName("verified_at")
-      public val verifiedAt: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val verifiedAt: Optional<String> = Optional.Absent,
     )
   }
 

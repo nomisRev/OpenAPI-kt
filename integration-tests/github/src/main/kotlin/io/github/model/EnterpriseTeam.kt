@@ -30,7 +30,8 @@ public data class EnterpriseTeam(
   @SerialName("group_id")
   public val groupId: String?,
   @SerialName("group_name")
-  public val groupName: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val groupName: Optional<String> = Optional.Absent,
   @SerialName("html_url")
   public val htmlUrl: String,
   @SerialName("members_url")

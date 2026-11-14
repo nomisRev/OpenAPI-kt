@@ -34,7 +34,8 @@ public value class ApiInsightsRouteStats(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val rateLimitedRequestCount: Long? = null,
     @SerialName("last_rate_limited_timestamp")
-    public val lastRateLimitedTimestamp: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val lastRateLimitedTimestamp: Optional<String> = Optional.Absent,
     @SerialName("last_request_timestamp")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val lastRequestTimestamp: String? = null,

@@ -34,7 +34,8 @@ public data class HookDelivery(
   @SerialName("repository_id")
   public val repositoryId: Long?,
   @SerialName("throttled_at")
-  public val throttledAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val throttledAt: Optional<Instant> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val url: String? = null,
   public val request: Request,

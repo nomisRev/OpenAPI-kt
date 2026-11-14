@@ -1,13 +1,17 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * State Change Issue Event
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class StateChangeIssueEvent(
   public val id: Long,
@@ -25,5 +29,6 @@ public data class StateChangeIssueEvent(
   @SerialName("performed_via_github_app")
   public val performedViaGithubApp: NullableIntegration?,
   @SerialName("state_reason")
-  public val stateReason: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stateReason: Optional<String> = Optional.Absent,
 )

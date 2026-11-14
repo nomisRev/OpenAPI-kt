@@ -19,10 +19,13 @@ import kotlinx.serialization.json.JsonArray
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class GistSimple(
-  public val forks: List<Forks>? = null,
-  public val history: List<GistHistory>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val forks: Optional<List<Forks>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val history: Optional<List<GistHistory>> = Optional.Absent,
   @SerialName("fork_of")
-  public val forkOf: ForkOf? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val forkOf: Optional<ForkOf> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val url: String? = null,
   @SerialName("forks_url")
@@ -55,13 +58,15 @@ public data class GistSimple(
   @SerialName("updated_at")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val updatedAt: String? = null,
-  public val description: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val description: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val comments: Long? = null,
   @SerialName("comments_enabled")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val commentsEnabled: Boolean? = null,
-  public val user: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val user: Optional<String> = Optional.Absent,
   @SerialName("comments_url")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val commentsUrl: String? = null,
@@ -126,7 +131,8 @@ public data class GistSimple(
     public val user: NullableSimpleUser?,
     @SerialName("comments_url")
     public val commentsUrl: String,
-    public val owner: NullableSimpleUser? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val owner: Optional<NullableSimpleUser> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val truncated: Boolean? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)

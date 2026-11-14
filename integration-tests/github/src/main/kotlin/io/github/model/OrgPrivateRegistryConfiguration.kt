@@ -20,7 +20,8 @@ public data class OrgPrivateRegistryConfiguration(
   public val registryType: RegistryType,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val url: String? = null,
-  public val username: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val username: Optional<String> = Optional.Absent,
   @SerialName("replaces_base")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val replacesBase: Boolean? = null,

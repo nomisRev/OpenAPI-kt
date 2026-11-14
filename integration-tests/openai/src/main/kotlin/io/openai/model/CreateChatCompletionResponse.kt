@@ -20,7 +20,8 @@ public data class CreateChatCompletionResponse(
   public val created: Long,
   public val model: String,
   @SerialName("service_tier")
-  public val serviceTier: ServiceTier? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val serviceTier: Optional<ServiceTier> = Optional.Absent,
   @SerialName("system_fingerprint")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val systemFingerprint: String? = null,

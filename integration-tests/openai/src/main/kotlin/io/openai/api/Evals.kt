@@ -20,6 +20,7 @@ import io.openai.model.EvalRunList
 import io.openai.model.EvalRunOutputItem
 import io.openai.model.EvalRunOutputItemList
 import io.openai.model.Metadata
+import io.openai.model.Optional
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.OptIn
@@ -156,7 +157,7 @@ public class Evals internal constructor(
       private val client: HttpClient,
       private val evalId: String,
     ) {
-      public suspend operator fun invoke(name: String? = null, metadata: Metadata? = null): Eval {
+      public suspend operator fun invoke(name: String? = null, metadata: Optional<Metadata> = Optional.Absent): Eval {
         val response = client.post("evals/${this.evalId.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(Body(name = name, metadata = metadata))
@@ -170,7 +171,8 @@ public class Evals internal constructor(
       internal data class Body(
         @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val name: String? = null,
-        public val metadata: Metadata? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val metadata: Optional<Metadata> = Optional.Absent,
       )
     }
 

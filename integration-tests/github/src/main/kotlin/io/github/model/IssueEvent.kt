@@ -27,15 +27,20 @@ public data class IssueEvent(
   public val commitUrl: String?,
   @SerialName("created_at")
   public val createdAt: Instant,
-  public val issue: NullableIssue? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val issue: Optional<NullableIssue> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val label: IssueEventLabel? = null,
-  public val assignee: NullableSimpleUser? = null,
-  public val assigner: NullableSimpleUser? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val assignee: Optional<NullableSimpleUser> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val assigner: Optional<NullableSimpleUser> = Optional.Absent,
   @SerialName("review_requester")
-  public val reviewRequester: NullableSimpleUser? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val reviewRequester: Optional<NullableSimpleUser> = Optional.Absent,
   @SerialName("requested_reviewer")
-  public val requestedReviewer: NullableSimpleUser? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val requestedReviewer: Optional<NullableSimpleUser> = Optional.Absent,
   @SerialName("requested_team")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val requestedTeam: Team? = null,
@@ -53,7 +58,9 @@ public data class IssueEvent(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val authorAssociation: AuthorAssociation? = null,
   @SerialName("lock_reason")
-  public val lockReason: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val lockReason: Optional<String> = Optional.Absent,
   @SerialName("performed_via_github_app")
-  public val performedViaGithubApp: NullableIntegration? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val performedViaGithubApp: Optional<NullableIntegration> = Optional.Absent,
 )

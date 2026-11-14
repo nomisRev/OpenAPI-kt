@@ -67,7 +67,8 @@ public data class Installation(
   @SerialName("suspended_at")
   public val suspendedAt: Instant?,
   @SerialName("contact_email")
-  public val contactEmail: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val contactEmail: Optional<String> = Optional.Absent,
 ) {
   @Serializable(with = Account.Serializer::class)
   public sealed interface Account {

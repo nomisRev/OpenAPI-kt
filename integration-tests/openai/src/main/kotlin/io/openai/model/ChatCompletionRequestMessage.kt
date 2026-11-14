@@ -239,16 +239,20 @@ public sealed interface ChatCompletionRequestMessage {
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Assistant(
-    public val content: Content? = null,
-    public val refusal: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val content: Optional<Content> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val refusal: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
-    public val audio: Audio? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val audio: Optional<Audio> = Optional.Absent,
     @SerialName("tool_calls")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val toolCalls: ChatCompletionMessageToolCalls? = null,
     @SerialName("function_call")
-    public val functionCall: FunctionCall? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val functionCall: Optional<FunctionCall> = Optional.Absent,
   ) : ChatCompletionRequestMessage {
     /**
      * Data about a previous audio response from the model.

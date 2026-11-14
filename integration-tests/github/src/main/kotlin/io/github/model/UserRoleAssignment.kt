@@ -21,8 +21,10 @@ public data class UserRoleAssignment(
   @SerialName("inherited_from")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val inheritedFrom: List<TeamSimple>? = null,
-  public val name: String? = null,
-  public val email: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val name: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val email: Optional<String> = Optional.Absent,
   public val login: String,
   public val id: Long,
   @SerialName("node_id")

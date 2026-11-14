@@ -53,7 +53,8 @@ public data class CopilotDotcomPullRequests(
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val isCustomModel: Boolean? = null,
       @SerialName("custom_model_training_date")
-      public val customModelTrainingDate: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val customModelTrainingDate: Optional<String> = Optional.Absent,
       @SerialName("total_pr_summaries_created")
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val totalPrSummariesCreated: Long? = null,

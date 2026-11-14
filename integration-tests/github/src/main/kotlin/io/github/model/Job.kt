@@ -98,6 +98,7 @@ public data class Job(
     ;
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Steps(
     public val status: Status,
@@ -105,9 +106,11 @@ public data class Job(
     public val name: String,
     public val number: Long,
     @SerialName("started_at")
-    public val startedAt: Instant? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val startedAt: Optional<Instant> = Optional.Absent,
     @SerialName("completed_at")
-    public val completedAt: Instant? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val completedAt: Optional<Instant> = Optional.Absent,
   ) {
     @Serializable
     public enum class Status(

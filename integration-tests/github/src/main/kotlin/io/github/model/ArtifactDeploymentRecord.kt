@@ -43,7 +43,8 @@ public data class ArtifactDeploymentRecord(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val updatedAt: String? = null,
   @SerialName("attestation_id")
-  public val attestationId: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val attestationId: Optional<Long> = Optional.Absent,
 ) {
   @Serializable
   public enum class RuntimeRisks(

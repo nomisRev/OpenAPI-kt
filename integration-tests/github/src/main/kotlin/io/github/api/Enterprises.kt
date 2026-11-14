@@ -12,6 +12,7 @@ import io.github.model.DependabotAlertWithRepository
 import io.github.model.EnterpriseTeam
 import io.github.model.OidcCustomPropertyInclusion
 import io.github.model.OidcCustomPropertyInclusionInput
+import io.github.model.Optional
 import io.github.model.OrganizationSimple
 import io.github.model.SimpleUser
 import io.github.model.ValidationErrorSimple
@@ -438,9 +439,9 @@ public class Enterprises internal constructor(
             dependencyGraphAutosubmitActionOptions: DependencyGraphAutosubmitActionOptions? = null,
             dependabotAlerts: DependabotAlerts? = null,
             dependabotSecurityUpdates: DependabotSecurityUpdates? = null,
-            codeScanningOptions: CodeScanningOptions? = null,
+            codeScanningOptions: Optional<CodeScanningOptions> = Optional.Absent,
             codeScanningDefaultSetup: CodeScanningDefaultSetup? = null,
-            codeScanningDefaultSetupOptions: CodeScanningDefaultSetupOptions? = null,
+            codeScanningDefaultSetupOptions: Optional<CodeScanningDefaultSetupOptions> = Optional.Absent,
             codeScanningDelegatedAlertDismissal: CodeScanningDelegatedAlertDismissal? = null,
             secretProtection: SecretProtection? = null,
             secretScanning: SecretScanning? = null,
@@ -739,12 +740,15 @@ public class Enterprises internal constructor(
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val dependabotSecurityUpdates: DependabotSecurityUpdates? = null,
             @SerialName("code_scanning_options")
-            public val codeScanningOptions: CodeScanningOptions? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val codeScanningOptions: Optional<CodeScanningOptions> = Optional.Absent,
             @SerialName("code_scanning_default_setup")
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val codeScanningDefaultSetup: CodeScanningDefaultSetup? = null,
             @SerialName("code_scanning_default_setup_options")
-            public val codeScanningDefaultSetupOptions: CodeScanningDefaultSetupOptions? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val codeScanningDefaultSetupOptions:
+                Optional<CodeScanningDefaultSetupOptions> = Optional.Absent,
             @SerialName("code_scanning_delegated_alert_dismissal")
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val codeScanningDelegatedAlertDismissal:
@@ -922,8 +926,8 @@ public class Enterprises internal constructor(
               dependabotAlerts: DependabotAlerts? = null,
               dependabotSecurityUpdates: DependabotSecurityUpdates? = null,
               codeScanningDefaultSetup: CodeScanningDefaultSetup? = null,
-              codeScanningDefaultSetupOptions: CodeScanningDefaultSetupOptions? = null,
-              codeScanningOptions: CodeScanningOptions? = null,
+              codeScanningDefaultSetupOptions: Optional<CodeScanningDefaultSetupOptions> = Optional.Absent,
+              codeScanningOptions: Optional<CodeScanningOptions> = Optional.Absent,
               codeScanningDelegatedAlertDismissal: CodeScanningDelegatedAlertDismissal? = null,
               secretProtection: SecretProtection? = null,
               secretScanning: SecretScanning? = null,
@@ -1228,9 +1232,12 @@ public class Enterprises internal constructor(
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val codeScanningDefaultSetup: CodeScanningDefaultSetup? = null,
               @SerialName("code_scanning_default_setup_options")
-              public val codeScanningDefaultSetupOptions: CodeScanningDefaultSetupOptions? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val codeScanningDefaultSetupOptions:
+                  Optional<CodeScanningDefaultSetupOptions> = Optional.Absent,
               @SerialName("code_scanning_options")
-              public val codeScanningOptions: CodeScanningOptions? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val codeScanningOptions: Optional<CodeScanningOptions> = Optional.Absent,
               @SerialName("code_scanning_delegated_alert_dismissal")
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val codeScanningDelegatedAlertDismissal:
@@ -1750,10 +1757,10 @@ public class Enterprises internal constructor(
       ) {
         public suspend operator fun invoke(
           name: String,
-          description: String? = null,
+          description: Optional<String> = Optional.Absent,
           syncToOrganizations: SyncToOrganizations? = null,
           organizationSelectionType: OrganizationSelectionType? = null,
-          groupId: String? = null,
+          groupId: Optional<String> = Optional.Absent,
         ): EnterpriseTeam {
           val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/teams") {
             contentType(ContentType.Application.Json)
@@ -1791,7 +1798,8 @@ public class Enterprises internal constructor(
         @Serializable
         internal data class Body(
           public val name: String,
-          public val description: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val description: Optional<String> = Optional.Absent,
           @SerialName("sync_to_organizations")
           @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val syncToOrganizations: SyncToOrganizations? = null,
@@ -1799,7 +1807,8 @@ public class Enterprises internal constructor(
           @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val organizationSelectionType: OrganizationSelectionType? = null,
           @SerialName("group_id")
-          public val groupId: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val groupId: Optional<String> = Optional.Absent,
         )
       }
 
@@ -2182,11 +2191,11 @@ public class Enterprises internal constructor(
           private val teamSlug: String,
         ) {
           public suspend operator fun invoke(
-            name: String? = null,
-            description: String? = null,
+            name: Optional<String> = Optional.Absent,
+            description: Optional<String> = Optional.Absent,
             syncToOrganizations: SyncToOrganizations? = null,
             organizationSelectionType: OrganizationSelectionType? = null,
-            groupId: String? = null,
+            groupId: Optional<String> = Optional.Absent,
           ): Response {
             val response = client.patch("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.teamSlug.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
@@ -2226,8 +2235,10 @@ public class Enterprises internal constructor(
           @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
-            public val name: String? = null,
-            public val description: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val name: Optional<String> = Optional.Absent,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val description: Optional<String> = Optional.Absent,
             @SerialName("sync_to_organizations")
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val syncToOrganizations: SyncToOrganizations? = null,
@@ -2235,7 +2246,8 @@ public class Enterprises internal constructor(
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val organizationSelectionType: OrganizationSelectionType? = null,
             @SerialName("group_id")
-            public val groupId: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val groupId: Optional<String> = Optional.Absent,
           )
 
           public sealed interface Response {

@@ -36,8 +36,10 @@ public data class IssueSearchResultItem(
   public val title: String,
   public val locked: Boolean,
   @SerialName("active_lock_reason")
-  public val activeLockReason: String? = null,
-  public val assignees: List<SimpleUser>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val activeLockReason: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val assignees: Optional<List<SimpleUser>> = Optional.Absent,
   public val user: NullableSimpleUser?,
   public val labels: List<Labels>,
   @SerialName("sub_issues_summary")
@@ -51,7 +53,8 @@ public data class IssueSearchResultItem(
   public val issueFieldValues: List<IssueFieldValue>? = null,
   public val state: String,
   @SerialName("state_reason")
-  public val stateReason: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stateReason: Optional<String> = Optional.Absent,
   public val assignee: NullableSimpleUser?,
   public val milestone: NullableMilestone?,
   public val comments: Long,
@@ -85,11 +88,14 @@ public data class IssueSearchResultItem(
   @SerialName("timeline_url")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val timelineUrl: String? = null,
-  public val type: IssueType? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val type: Optional<IssueType> = Optional.Absent,
   @SerialName("performed_via_github_app")
-  public val performedViaGithubApp: NullableIntegration? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val performedViaGithubApp: Optional<NullableIntegration> = Optional.Absent,
   @SerialName("pinned_comment")
-  public val pinnedComment: NullableIssueComment? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val pinnedComment: Optional<NullableIssueComment> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val reactions: ReactionRollup? = null,
 ) {
@@ -109,13 +115,16 @@ public data class IssueSearchResultItem(
     public val color: String? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val default: Boolean? = null,
-    public val description: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val description: Optional<String> = Optional.Absent,
   )
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class PullRequest(
     @SerialName("merged_at")
-    public val mergedAt: Instant? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val mergedAt: Optional<Instant> = Optional.Absent,
     @SerialName("diff_url")
     public val diffUrl: String?,
     @SerialName("html_url")

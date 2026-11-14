@@ -1,17 +1,23 @@
 package io.github.model
 
 import kotlin.Boolean
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class OrganizationUpdateIssueType(
   public val name: String,
   @SerialName("is_enabled")
   public val isEnabled: Boolean,
-  public val description: String? = null,
-  public val color: Color? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val description: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val color: Optional<Color> = Optional.Absent,
 ) {
   @Serializable
   public enum class Color(

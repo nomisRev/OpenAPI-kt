@@ -46,7 +46,8 @@ public sealed interface TextResponseFormatConfiguration {
     public val description: String? = null,
     public val name: String,
     public val schema: ResponseFormatJsonSchemaSchema,
-    public val strict: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val strict: Optional<Boolean> = Optional.Absent,
   ) : TextResponseFormatConfiguration
 
   @Serializable

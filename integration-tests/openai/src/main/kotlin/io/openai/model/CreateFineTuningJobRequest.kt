@@ -31,14 +31,19 @@ public data class CreateFineTuningJobRequest(
   public val trainingFile: String,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hyperparameters: Hyperparameters? = null,
-  public val suffix: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val suffix: Optional<String> = Optional.Absent,
   @SerialName("validation_file")
-  public val validationFile: String? = null,
-  public val integrations: List<Integrations>? = null,
-  public val seed: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val validationFile: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val integrations: Optional<List<Integrations>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val seed: Optional<Long> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val method: FineTuneMethod? = null,
-  public val metadata: Metadata? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
 ) {
   /**
    * The hyperparameters used for the fine-tuning job.
@@ -257,8 +262,10 @@ public data class CreateFineTuningJobRequest(
     @Serializable
     public data class Wandb(
       public val project: String,
-      public val name: String? = null,
-      public val entity: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val name: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val entity: Optional<String> = Optional.Absent,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val tags: List<String>? = null,
     )

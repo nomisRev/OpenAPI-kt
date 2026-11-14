@@ -48,7 +48,8 @@ public data class PullRequestSimple(
   public val labels: List<Labels>,
   public val milestone: NullableMilestone?,
   @SerialName("active_lock_reason")
-  public val activeLockReason: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val activeLockReason: Optional<String> = Optional.Absent,
   @SerialName("created_at")
   public val createdAt: Instant,
   @SerialName("updated_at")

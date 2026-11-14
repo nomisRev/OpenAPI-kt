@@ -57,21 +57,28 @@ public data class UsageTimeBucket(
       @SerialName("num_model_requests")
       public val numModelRequests: Long,
       @SerialName("project_id")
-      public val projectId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val projectId: Optional<String> = Optional.Absent,
       @SerialName("user_id")
-      public val userId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val userId: Optional<String> = Optional.Absent,
       @SerialName("api_key_id")
-      public val apiKeyId: String? = null,
-      public val model: String? = null,
-      public val batch: Boolean? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val apiKeyId: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val model: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val batch: Optional<Boolean> = Optional.Absent,
       @SerialName("service_tier")
-      public val serviceTier: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val serviceTier: Optional<String> = Optional.Absent,
     ) : Result
 
     /**
      * The aggregated embeddings usage details of the specific time bucket.
      */
     @SerialName("organization.usage.embeddings.result")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class OrganizationUsageEmbeddingsResult(
       @SerialName("input_tokens")
@@ -79,18 +86,23 @@ public data class UsageTimeBucket(
       @SerialName("num_model_requests")
       public val numModelRequests: Long,
       @SerialName("project_id")
-      public val projectId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val projectId: Optional<String> = Optional.Absent,
       @SerialName("user_id")
-      public val userId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val userId: Optional<String> = Optional.Absent,
       @SerialName("api_key_id")
-      public val apiKeyId: String? = null,
-      public val model: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val apiKeyId: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val model: Optional<String> = Optional.Absent,
     ) : Result
 
     /**
      * The aggregated moderations usage details of the specific time bucket.
      */
     @SerialName("organization.usage.moderations.result")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class OrganizationUsageModerationsResult(
       @SerialName("input_tokens")
@@ -98,80 +110,103 @@ public data class UsageTimeBucket(
       @SerialName("num_model_requests")
       public val numModelRequests: Long,
       @SerialName("project_id")
-      public val projectId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val projectId: Optional<String> = Optional.Absent,
       @SerialName("user_id")
-      public val userId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val userId: Optional<String> = Optional.Absent,
       @SerialName("api_key_id")
-      public val apiKeyId: String? = null,
-      public val model: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val apiKeyId: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val model: Optional<String> = Optional.Absent,
     ) : Result
 
     /**
      * The aggregated images usage details of the specific time bucket.
      */
     @SerialName("organization.usage.images.result")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class OrganizationUsageImagesResult(
       public val images: Long,
       @SerialName("num_model_requests")
       public val numModelRequests: Long,
-      public val source: String? = null,
-      public val size: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val source: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val size: Optional<String> = Optional.Absent,
       @SerialName("project_id")
-      public val projectId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val projectId: Optional<String> = Optional.Absent,
       @SerialName("user_id")
-      public val userId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val userId: Optional<String> = Optional.Absent,
       @SerialName("api_key_id")
-      public val apiKeyId: String? = null,
-      public val model: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val apiKeyId: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val model: Optional<String> = Optional.Absent,
     ) : Result
 
     /**
      * The aggregated audio speeches usage details of the specific time bucket.
      */
     @SerialName("organization.usage.audio_speeches.result")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class OrganizationUsageAudioSpeechesResult(
       public val characters: Long,
       @SerialName("num_model_requests")
       public val numModelRequests: Long,
       @SerialName("project_id")
-      public val projectId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val projectId: Optional<String> = Optional.Absent,
       @SerialName("user_id")
-      public val userId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val userId: Optional<String> = Optional.Absent,
       @SerialName("api_key_id")
-      public val apiKeyId: String? = null,
-      public val model: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val apiKeyId: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val model: Optional<String> = Optional.Absent,
     ) : Result
 
     /**
      * The aggregated audio transcriptions usage details of the specific time bucket.
      */
     @SerialName("organization.usage.audio_transcriptions.result")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class OrganizationUsageAudioTranscriptionsResult(
       public val seconds: Long,
       @SerialName("num_model_requests")
       public val numModelRequests: Long,
       @SerialName("project_id")
-      public val projectId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val projectId: Optional<String> = Optional.Absent,
       @SerialName("user_id")
-      public val userId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val userId: Optional<String> = Optional.Absent,
       @SerialName("api_key_id")
-      public val apiKeyId: String? = null,
-      public val model: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val apiKeyId: Optional<String> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val model: Optional<String> = Optional.Absent,
     ) : Result
 
     /**
      * The aggregated vector stores usage details of the specific time bucket.
      */
     @SerialName("organization.usage.vector_stores.result")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class OrganizationUsageVectorStoresResult(
       @SerialName("usage_bytes")
       public val usageBytes: Long,
       @SerialName("project_id")
-      public val projectId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val projectId: Optional<String> = Optional.Absent,
     ) : Result
 
     /**
@@ -185,7 +220,8 @@ public data class UsageTimeBucket(
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val numSessions: Long? = null,
       @SerialName("project_id")
-      public val projectId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val projectId: Optional<String> = Optional.Absent,
     ) : Result
 
     /**
@@ -198,9 +234,11 @@ public data class UsageTimeBucket(
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val amount: Amount? = null,
       @SerialName("line_item")
-      public val lineItem: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val lineItem: Optional<String> = Optional.Absent,
       @SerialName("project_id")
-      public val projectId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val projectId: Optional<String> = Optional.Absent,
     ) : Result {
       /**
        * The monetary value in its associated currency.

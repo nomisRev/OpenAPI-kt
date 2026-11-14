@@ -25,18 +25,25 @@ import kotlinx.serialization.json.JsonElement
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CopilotSeatDetails(
-  public val assignee: NullableSimpleUser? = null,
-  public val organization: NullableOrganizationSimple? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val assignee: Optional<NullableSimpleUser> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val organization: Optional<NullableOrganizationSimple> = Optional.Absent,
   @SerialName("assigning_team")
-  public val assigningTeam: AssigningTeam? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val assigningTeam: Optional<AssigningTeam> = Optional.Absent,
   @SerialName("pending_cancellation_date")
-  public val pendingCancellationDate: LocalDate? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val pendingCancellationDate: Optional<LocalDate> = Optional.Absent,
   @SerialName("last_activity_at")
-  public val lastActivityAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val lastActivityAt: Optional<Instant> = Optional.Absent,
   @SerialName("last_activity_editor")
-  public val lastActivityEditor: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val lastActivityEditor: Optional<String> = Optional.Absent,
   @SerialName("last_authenticated_at")
-  public val lastAuthenticatedAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val lastAuthenticatedAt: Optional<Instant> = Optional.Absent,
   @SerialName("created_at")
   public val createdAt: Instant,
   @SerialName("updated_at")

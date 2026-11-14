@@ -14,16 +14,19 @@ import kotlinx.serialization.Serializable
 public data class OrganizationUpdateIssueField(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val name: String? = null,
-  public val description: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val description: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val visibility: Visibility? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val options: List<Options>? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Options(
     public val name: String,
-    public val description: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val description: Optional<String> = Optional.Absent,
     public val color: Color,
     public val priority: Long,
   ) {

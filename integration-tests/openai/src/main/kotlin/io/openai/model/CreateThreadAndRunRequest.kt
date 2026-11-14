@@ -25,24 +25,36 @@ public data class CreateThreadAndRunRequest(
   public val assistantId: String,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val thread: CreateThreadRequest? = null,
-  public val model: Model? = null,
-  public val instructions: String? = null,
-  public val tools: List<Tools>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val model: Optional<Model> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val instructions: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val tools: Optional<List<Tools>> = Optional.Absent,
   @SerialName("tool_resources")
-  public val toolResources: ToolResources? = null,
-  public val metadata: Metadata? = null,
-  public val temperature: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val toolResources: Optional<ToolResources> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val temperature: Optional<Double> = Optional.Absent,
   @SerialName("top_p")
-  public val topP: Double? = null,
-  public val stream: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val topP: Optional<Double> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stream: Optional<Boolean> = Optional.Absent,
   @SerialName("max_prompt_tokens")
-  public val maxPromptTokens: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val maxPromptTokens: Optional<Long> = Optional.Absent,
   @SerialName("max_completion_tokens")
-  public val maxCompletionTokens: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val maxCompletionTokens: Optional<Long> = Optional.Absent,
   @SerialName("truncation_strategy")
-  public val truncationStrategy: TruncationObject? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val truncationStrategy: Optional<TruncationObject> = Optional.Absent,
   @SerialName("tool_choice")
-  public val toolChoice: AssistantsApiToolChoiceOption? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val toolChoice: Optional<AssistantsApiToolChoiceOption> = Optional.Absent,
   @SerialName("parallel_tool_calls")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val parallelToolCalls: ParallelToolCalls? = null,
@@ -305,7 +317,8 @@ public data class CreateThreadAndRunRequest(
       public val name: String,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val parameters: FunctionParameters? = null,
-      public val strict: Boolean? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val strict: Optional<Boolean> = Optional.Absent,
     ) : Tools
   }
 }

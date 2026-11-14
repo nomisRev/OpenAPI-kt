@@ -52,13 +52,16 @@ public data class FineTuningJob(
   public val trainingFile: String,
   @SerialName("validation_file")
   public val validationFile: String?,
-  public val integrations: List<FineTuningIntegration>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val integrations: Optional<List<FineTuningIntegration>> = Optional.Absent,
   public val seed: Long,
   @SerialName("estimated_finish")
-  public val estimatedFinish: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val estimatedFinish: Optional<Long> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val method: FineTuneMethod? = null,
-  public val metadata: Metadata? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
 ) {
   /**
    * For fine-tuning jobs that have `failed`, this will contain more information on the cause of the failure.
@@ -77,7 +80,8 @@ public data class FineTuningJob(
   @Serializable
   public data class Hyperparameters(
     @SerialName("batch_size")
-    public val batchSize: BatchSize? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val batchSize: Optional<BatchSize> = Optional.Absent,
     @SerialName("learning_rate_multiplier")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val learningRateMultiplier: LearningRateMultiplier? = null,

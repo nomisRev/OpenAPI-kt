@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
 /**
  * A repository security advisory.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class RepositoryAdvisory(
   @SerialName("ghsa_id")
@@ -45,7 +46,8 @@ public data class RepositoryAdvisory(
   public val vulnerabilities: List<RepositoryAdvisoryVulnerability>?,
   public val cvss: Cvss?,
   @SerialName("cvss_severities")
-  public val cvssSeverities: CvssSeverities? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val cvssSeverities: Optional<CvssSeverities> = Optional.Absent,
   public val cwes: List<Cwes>?,
   @SerialName("cwe_ids")
   public val cweIds: List<String>?,
@@ -65,8 +67,10 @@ public data class RepositoryAdvisory(
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Author(
-    public val name: String? = null,
-    public val email: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val name: Optional<String> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val email: Optional<String> = Optional.Absent,
     public val login: String,
     public val id: Long,
     @SerialName("node_id")
@@ -240,8 +244,10 @@ public data class RepositoryAdvisory(
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Publisher(
-    public val name: String? = null,
-    public val email: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val name: Optional<String> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val email: Optional<String> = Optional.Absent,
     public val login: String,
     public val id: Long,
     @SerialName("node_id")

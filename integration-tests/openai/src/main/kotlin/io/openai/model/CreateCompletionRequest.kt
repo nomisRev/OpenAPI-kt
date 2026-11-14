@@ -32,27 +32,42 @@ public data class CreateCompletionRequest(
   public val model: Model,
   public val prompt: Prompt?,
   @SerialName("best_of")
-  public val bestOf: Long? = null,
-  public val echo: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val bestOf: Optional<Long> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val echo: Optional<Boolean> = Optional.Absent,
   @SerialName("frequency_penalty")
-  public val frequencyPenalty: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val frequencyPenalty: Optional<Double> = Optional.Absent,
   @SerialName("logit_bias")
-  public val logitBias: Map<String, Long>? = null,
-  public val logprobs: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val logitBias: Optional<Map<String, Long>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val logprobs: Optional<Long> = Optional.Absent,
   @SerialName("max_tokens")
-  public val maxTokens: Long? = null,
-  public val n: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val maxTokens: Optional<Long> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val n: Optional<Long> = Optional.Absent,
   @SerialName("presence_penalty")
-  public val presencePenalty: Double? = null,
-  public val seed: Long? = null,
-  public val stop: StopConfiguration? = null,
-  public val stream: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val presencePenalty: Optional<Double> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val seed: Optional<Long> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stop: Optional<StopConfiguration> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stream: Optional<Boolean> = Optional.Absent,
   @SerialName("stream_options")
-  public val streamOptions: ChatCompletionStreamOptions? = null,
-  public val suffix: String? = null,
-  public val temperature: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val streamOptions: Optional<ChatCompletionStreamOptions> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val suffix: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val temperature: Optional<Double> = Optional.Absent,
   @SerialName("top_p")
-  public val topP: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val topP: Optional<Double> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
 ) {

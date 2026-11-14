@@ -34,12 +34,16 @@ public data class CustomPropertySetPayload(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val required: Boolean? = null,
   @SerialName("default_value")
-  public val defaultValue: DefaultValue? = null,
-  public val description: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val defaultValue: Optional<DefaultValue> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val description: Optional<String> = Optional.Absent,
   @SerialName("allowed_values")
-  public val allowedValues: List<String>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val allowedValues: Optional<List<String>> = Optional.Absent,
   @SerialName("values_editable_by")
-  public val valuesEditableBy: ValuesEditableBy? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val valuesEditableBy: Optional<ValuesEditableBy> = Optional.Absent,
   @SerialName("require_explicit_values")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val requireExplicitValues: Boolean? = null,

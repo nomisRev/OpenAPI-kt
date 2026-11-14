@@ -27,27 +27,38 @@ import kotlinx.serialization.encoding.Encoder
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class EditImageBodyJsonParam(
-  public val model: Model? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val model: Optional<Model> = Optional.Absent,
   public val images: List<ImageRefParam>,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val mask: ImageRefParam? = null,
   public val prompt: String,
-  public val n: Long? = null,
-  public val quality: Quality? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val n: Optional<Long> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val quality: Optional<Quality> = Optional.Absent,
   @SerialName("input_fidelity")
-  public val inputFidelity: InputFidelity? = null,
-  public val size: Size? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val inputFidelity: Optional<InputFidelity> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val size: Optional<Size> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
   @SerialName("output_format")
-  public val outputFormat: OutputFormat? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val outputFormat: Optional<OutputFormat> = Optional.Absent,
   @SerialName("output_compression")
-  public val outputCompression: Long? = null,
-  public val moderation: Moderation? = null,
-  public val background: Background? = null,
-  public val stream: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val outputCompression: Optional<Long> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val moderation: Optional<Moderation> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val background: Optional<Background> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stream: Optional<Boolean> = Optional.Absent,
   @SerialName("partial_images")
-  public val partialImages: PartialImages? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val partialImages: Optional<PartialImages> = Optional.Absent,
 ) {
   @Serializable
   public enum class Background(

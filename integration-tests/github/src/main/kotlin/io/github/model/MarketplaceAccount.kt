@@ -18,7 +18,9 @@ public data class MarketplaceAccount(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val nodeId: String? = null,
   public val login: String,
-  public val email: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val email: Optional<String> = Optional.Absent,
   @SerialName("organization_billing_email")
-  public val organizationBillingEmail: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val organizationBillingEmail: Optional<String> = Optional.Absent,
 )

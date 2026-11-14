@@ -16,21 +16,28 @@ public data class RepositoryAdvisoryUpdate(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val description: String? = null,
   @SerialName("cve_id")
-  public val cveId: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val cveId: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val vulnerabilities: List<Vulnerabilities>? = null,
   @SerialName("cwe_ids")
-  public val cweIds: List<String>? = null,
-  public val credits: List<Credits>? = null,
-  public val severity: Severity? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val cweIds: Optional<List<String>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val credits: Optional<List<Credits>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val severity: Optional<Severity> = Optional.Absent,
   @SerialName("cvss_vector_string")
-  public val cvssVectorString: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val cvssVectorString: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val state: State? = null,
   @SerialName("collaborating_users")
-  public val collaboratingUsers: List<String>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val collaboratingUsers: Optional<List<String>> = Optional.Absent,
   @SerialName("collaborating_teams")
-  public val collaboratingTeams: List<String>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val collaboratingTeams: Optional<List<String>> = Optional.Absent,
 ) {
   @Serializable
   public data class Credits(
@@ -66,23 +73,29 @@ public data class RepositoryAdvisoryUpdate(
     ;
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Vulnerabilities(
     public val `package`: Package,
     @SerialName("vulnerable_version_range")
-    public val vulnerableVersionRange: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val vulnerableVersionRange: Optional<String> = Optional.Absent,
     @SerialName("patched_versions")
-    public val patchedVersions: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val patchedVersions: Optional<String> = Optional.Absent,
     @SerialName("vulnerable_functions")
-    public val vulnerableFunctions: List<String>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val vulnerableFunctions: Optional<List<String>> = Optional.Absent,
   ) {
     /**
      * The name of the package affected by the vulnerability.
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Package(
       public val ecosystem: SecurityAdvisoryEcosystems,
-      public val name: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val name: Optional<String> = Optional.Absent,
     )
   }
 }

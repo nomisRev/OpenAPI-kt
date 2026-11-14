@@ -37,7 +37,8 @@ public data class ActionsHostedRunner(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val publicIps: List<PublicIp>? = null,
   @SerialName("last_active_on")
-  public val lastActiveOn: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val lastActiveOn: Optional<Instant> = Optional.Absent,
   @SerialName("image_gen")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val imageGen: Boolean? = null,

@@ -1,15 +1,19 @@
 package io.github.model
 
 import kotlin.Double
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Details for the GitHub Security Advisory.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class DependabotAlertSecurityAdvisory(
   @SerialName("ghsa_id")
@@ -22,8 +26,10 @@ public data class DependabotAlertSecurityAdvisory(
   public val severity: Severity,
   public val cvss: Cvss,
   @SerialName("cvss_severities")
-  public val cvssSeverities: CvssSeverities? = null,
-  public val epss: SecurityAdvisoryEpss? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val cvssSeverities: Optional<CvssSeverities> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val epss: Optional<SecurityAdvisoryEpss> = Optional.Absent,
   public val cwes: List<Cwes>,
   public val identifiers: List<Identifiers>,
   public val references: List<References>,

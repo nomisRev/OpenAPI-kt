@@ -31,7 +31,8 @@ public data class ResponseFormatJsonSchema(
     public val name: String,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val schema: ResponseFormatJsonSchemaSchema? = null,
-    public val strict: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val strict: Optional<Boolean> = Optional.Absent,
   )
 
   @Serializable

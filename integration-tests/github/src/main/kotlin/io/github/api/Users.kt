@@ -10,6 +10,7 @@ import io.github.model.Event
 import io.github.model.GpgKey
 import io.github.model.KeySimple
 import io.github.model.MinimalRepository
+import io.github.model.Optional
 import io.github.model.OrganizationSimple
 import io.github.model.Package
 import io.github.model.PackageVersion
@@ -324,11 +325,13 @@ public class Users internal constructor(
             public val location: String?,
             public val email: String?,
             @SerialName("notification_email")
-            public val notificationEmail: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val notificationEmail: Optional<String> = Optional.Absent,
             public val hireable: Boolean?,
             public val bio: String?,
             @SerialName("twitter_username")
-            public val twitterUsername: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val twitterUsername: Optional<String> = Optional.Absent,
             @SerialName("public_repos")
             public val publicRepos: Long,
             @SerialName("public_gists")
@@ -414,11 +417,13 @@ public class Users internal constructor(
             public val location: String?,
             public val email: String?,
             @SerialName("notification_email")
-            public val notificationEmail: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val notificationEmail: Optional<String> = Optional.Absent,
             public val hireable: Boolean?,
             public val bio: String?,
             @SerialName("twitter_username")
-            public val twitterUsername: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val twitterUsername: Optional<String> = Optional.Absent,
             @SerialName("public_repos")
             public val publicRepos: Long,
             @SerialName("public_gists")

@@ -28,13 +28,16 @@ import kotlinx.serialization.json.JsonPrimitive
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateChatCompletionRequest(
-  public val metadata: Metadata? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
   @SerialName("top_logprobs")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val topLogprobs: Long? = null,
-  public val temperature: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val temperature: Optional<Double> = Optional.Absent,
   @SerialName("top_p")
-  public val topP: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val topP: Optional<Double> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
   @SerialName("safety_identifier")
@@ -44,41 +47,60 @@ public data class CreateChatCompletionRequest(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val promptCacheKey: String? = null,
   @SerialName("service_tier")
-  public val serviceTier: ServiceTier? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val serviceTier: Optional<ServiceTier> = Optional.Absent,
   @SerialName("prompt_cache_retention")
-  public val promptCacheRetention: PromptCacheRetention? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val promptCacheRetention: Optional<PromptCacheRetention> = Optional.Absent,
   public val messages: List<ChatCompletionRequestMessage>,
   public val model: ModelIdsShared,
-  public val modalities: ResponseModalities? = null,
-  public val verbosity: Verbosity? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val modalities: Optional<ResponseModalities> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val verbosity: Optional<Verbosity> = Optional.Absent,
   @SerialName("reasoning_effort")
-  public val reasoningEffort: ReasoningEffort? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val reasoningEffort: Optional<ReasoningEffort> = Optional.Absent,
   @SerialName("max_completion_tokens")
-  public val maxCompletionTokens: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val maxCompletionTokens: Optional<Long> = Optional.Absent,
   @SerialName("frequency_penalty")
-  public val frequencyPenalty: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val frequencyPenalty: Optional<Double> = Optional.Absent,
   @SerialName("presence_penalty")
-  public val presencePenalty: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val presencePenalty: Optional<Double> = Optional.Absent,
   @SerialName("web_search_options")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val webSearchOptions: WebSearchOptions? = null,
   @SerialName("response_format")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val responseFormat: ResponseFormat? = null,
-  public val audio: Audio? = null,
-  public val store: Boolean? = null,
-  public val stream: Boolean? = null,
-  public val stop: StopConfiguration? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val audio: Optional<Audio> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val store: Optional<Boolean> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stream: Optional<Boolean> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stop: Optional<StopConfiguration> = Optional.Absent,
   @SerialName("logit_bias")
-  public val logitBias: Map<String, Long>? = null,
-  public val logprobs: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val logitBias: Optional<Map<String, Long>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val logprobs: Optional<Boolean> = Optional.Absent,
   @SerialName("max_tokens")
-  public val maxTokens: Long? = null,
-  public val n: Long? = null,
-  public val prediction: PredictionContent? = null,
-  public val seed: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val maxTokens: Optional<Long> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val n: Optional<Long> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val prediction: Optional<PredictionContent> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val seed: Optional<Long> = Optional.Absent,
   @SerialName("stream_options")
-  public val streamOptions: ChatCompletionStreamOptions? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val streamOptions: Optional<ChatCompletionStreamOptions> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tools: List<Tools>? = null,
   @SerialName("tool_choice")
@@ -241,7 +263,8 @@ public data class CreateChatCompletionRequest(
       public val name: String,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val schema: ResponseFormatJsonSchemaSchema? = null,
-      public val strict: Boolean? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val strict: Optional<Boolean> = Optional.Absent,
     ) : ResponseFormat
 
     @Serializable
@@ -266,7 +289,8 @@ public data class CreateChatCompletionRequest(
       public val name: String,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val parameters: FunctionParameters? = null,
-      public val strict: Boolean? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val strict: Optional<Boolean> = Optional.Absent,
     ) : Tools
 
     /**
@@ -328,7 +352,8 @@ public data class CreateChatCompletionRequest(
   @Serializable
   public data class WebSearchOptions(
     @SerialName("user_location")
-    public val userLocation: UserLocation? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val userLocation: Optional<UserLocation> = Optional.Absent,
     @SerialName("search_context_size")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val searchContextSize: WebSearchContextSize? = null,

@@ -26,7 +26,8 @@ public data class Contributor(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val avatarUrl: String? = null,
   @SerialName("gravatar_id")
-  public val gravatarId: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val gravatarId: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val url: String? = null,
   @SerialName("html_url")

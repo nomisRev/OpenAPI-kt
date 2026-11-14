@@ -20,7 +20,8 @@ public data class CodeScanningAlertInstanceList(
   public val environment: CodeScanningAlertEnvironment? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val category: CodeScanningAnalysisCategory? = null,
-  public val state: CodeScanningAlertInstanceState? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val state: Optional<CodeScanningAlertInstanceState> = Optional.Absent,
   @SerialName("commit_sha")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val commitSha: String? = null,

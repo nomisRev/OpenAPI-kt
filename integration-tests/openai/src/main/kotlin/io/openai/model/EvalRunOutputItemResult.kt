@@ -30,7 +30,8 @@ public data class EvalRunOutputItemResult(
   public val type: String? = null,
   public val score: Double,
   public val passed: Boolean,
-  public val sample: JsonElement? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val sample: Optional<JsonElement> = Optional.Absent,
   public val additional: JsonObject? = null,
 ) {
   public object Serializer : KSerializer<EvalRunOutputItemResult> {

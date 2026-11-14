@@ -13,6 +13,7 @@ import io.openai.model.Batch
 import io.openai.model.BatchFileExpirationAfter
 import io.openai.model.ListBatchesResponse
 import io.openai.model.Metadata
+import io.openai.model.Optional
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
@@ -54,7 +55,7 @@ public class Batches internal constructor(
       inputFileId: String,
       endpoint: Endpoint,
       completionWindow: CompletionWindow,
-      metadata: Metadata? = null,
+      metadata: Optional<Metadata> = Optional.Absent,
       outputExpiresAfter: BatchFileExpirationAfter? = null,
     ): Batch {
       val response = client.post("batches") {
@@ -99,7 +100,8 @@ public class Batches internal constructor(
       public val endpoint: Endpoint,
       @SerialName("completion_window")
       public val completionWindow: CompletionWindow,
-      public val metadata: Metadata? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val metadata: Optional<Metadata> = Optional.Absent,
       @SerialName("output_expires_after")
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val outputExpiresAfter: BatchFileExpirationAfter? = null,

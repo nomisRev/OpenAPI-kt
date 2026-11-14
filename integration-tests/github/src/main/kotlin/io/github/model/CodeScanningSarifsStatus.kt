@@ -15,8 +15,10 @@ public data class CodeScanningSarifsStatus(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val processingStatus: ProcessingStatus? = null,
   @SerialName("analyses_url")
-  public val analysesUrl: String? = null,
-  public val errors: List<String>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val analysesUrl: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val errors: Optional<List<String>> = Optional.Absent,
 ) {
   @Serializable
   public enum class ProcessingStatus(

@@ -41,5 +41,6 @@ public data class DeploymentSimple(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val productionEnvironment: Boolean? = null,
   @SerialName("performed_via_github_app")
-  public val performedViaGithubApp: NullableIntegration? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val performedViaGithubApp: Optional<NullableIntegration> = Optional.Absent,
 )

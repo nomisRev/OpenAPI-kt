@@ -19,5 +19,6 @@ public data class CreateVectorStoreFileBatchRequest(
   @SerialName("chunking_strategy")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val chunkingStrategy: ChunkingStrategyRequestParam? = null,
-  public val attributes: VectorStoreFileAttributes? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val attributes: Optional<VectorStoreFileAttributes> = Optional.Absent,
 )

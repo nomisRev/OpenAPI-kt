@@ -111,12 +111,15 @@ public sealed interface ConversationItem {
        * An image input to the model. Learn about [image inputs](/docs/guides/vision).
        */
       @SerialName("input_image")
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class InputImage(
         @SerialName("image_url")
-        public val imageUrl: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val imageUrl: Optional<String> = Optional.Absent,
         @SerialName("file_id")
-        public val fileId: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val fileId: Optional<String> = Optional.Absent,
         public val detail: ImageDetail,
       ) : Content
 
@@ -141,7 +144,8 @@ public sealed interface ConversationItem {
       @Serializable
       public data class InputFile(
         @SerialName("file_id")
-        public val fileId: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val fileId: Optional<String> = Optional.Absent,
         @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val filename: String? = null,
         @SerialName("file_data")
@@ -277,12 +281,14 @@ public sealed interface ConversationItem {
    *
    */
   @SerialName("file_search_call")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class FileSearchCall(
     public val id: String,
     public val status: Status,
     public val queries: List<String>,
-    public val results: List<Results>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val results: Optional<List<Results>> = Optional.Absent,
   ) : ConversationItem {
     @OptIn(ExperimentalSerializationApi::class)
     @Serializable
@@ -294,7 +300,8 @@ public sealed interface ConversationItem {
       public val text: String? = null,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val filename: String? = null,
-      public val attributes: VectorStoreFileAttributes? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val attributes: Optional<VectorStoreFileAttributes> = Optional.Absent,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val score: Float? = null,
     )
@@ -377,9 +384,11 @@ public sealed interface ConversationItem {
        *
        */
       @SerialName("open_page")
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class OpenPage(
-        public val url: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val url: Optional<String> = Optional.Absent,
       ) : Action
 
       /**
@@ -546,7 +555,8 @@ public sealed interface ConversationItem {
   public data class Reasoning(
     public val id: String,
     @SerialName("encrypted_content")
-    public val encryptedContent: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val encryptedContent: Optional<String> = Optional.Absent,
     public val summary: List<SummaryTextContent>,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val content: List<ReasoningTextContent>? = null,
@@ -654,11 +664,13 @@ public sealed interface ConversationItem {
    *
    */
   @SerialName("local_shell_call_output")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class LocalShellCallOutput(
     public val id: String,
     public val output: String,
-    public val status: Status? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val status: Optional<Status> = Optional.Absent,
   ) : ConversationItem {
     @Serializable
     public enum class Status(
@@ -795,7 +807,8 @@ public sealed interface ConversationItem {
     @SerialName("call_id")
     public val callId: String,
     public val status: ApplyPatchCallOutputStatus,
-    public val output: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val output: Optional<String> = Optional.Absent,
     @SerialName("created_by")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val createdBy: String? = null,
@@ -806,13 +819,15 @@ public sealed interface ConversationItem {
    *
    */
   @SerialName("mcp_list_tools")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class McpListTools(
     public val id: String,
     @SerialName("server_label")
     public val serverLabel: String,
     public val tools: List<MCPListToolsTool>,
-    public val error: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val error: Optional<String> = Optional.Absent,
   ) : ConversationItem
 
   /**
@@ -834,13 +849,15 @@ public sealed interface ConversationItem {
    *
    */
   @SerialName("mcp_approval_response")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class McpApprovalResponse(
     public val id: String,
     @SerialName("approval_request_id")
     public val approvalRequestId: String,
     public val approve: Boolean,
-    public val reason: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val reason: Optional<String> = Optional.Absent,
   ) : ConversationItem
 
   /**
@@ -856,12 +873,15 @@ public sealed interface ConversationItem {
     public val serverLabel: String,
     public val name: String,
     public val arguments: String,
-    public val output: String? = null,
-    public val error: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val output: Optional<String> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val error: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val status: MCPToolCallStatus? = null,
     @SerialName("approval_request_id")
-    public val approvalRequestId: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val approvalRequestId: Optional<String> = Optional.Absent,
   ) : ConversationItem
 
   /**

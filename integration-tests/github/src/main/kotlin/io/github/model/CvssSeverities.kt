@@ -1,16 +1,22 @@
 package io.github.model
 
 import kotlin.Double
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CvssSeverities(
   @SerialName("cvss_v3")
-  public val cvssV3: CvssV3? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val cvssV3: Optional<CvssV3> = Optional.Absent,
   @SerialName("cvss_v4")
-  public val cvssV4: CvssV4? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val cvssV4: Optional<CvssV4> = Optional.Absent,
 ) {
   @Serializable
   public data class CvssV3(

@@ -21,7 +21,8 @@ public data class IssueType(
   public val nodeId: String,
   public val name: String,
   public val description: String?,
-  public val color: Color? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val color: Optional<Color> = Optional.Absent,
   @SerialName("created_at")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val createdAt: Instant? = null,

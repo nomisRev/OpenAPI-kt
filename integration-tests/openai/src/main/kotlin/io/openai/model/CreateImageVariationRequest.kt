@@ -19,11 +19,15 @@ import kotlinx.serialization.encoding.Encoder
 @Serializable
 public data class CreateImageVariationRequest(
   public val image: ByteArray,
-  public val model: Model? = null,
-  public val n: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val model: Optional<Model> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val n: Optional<Long> = Optional.Absent,
   @SerialName("response_format")
-  public val responseFormat: ResponseFormat? = null,
-  public val size: Size? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val responseFormat: Optional<ResponseFormat> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val size: Optional<Size> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
 ) {

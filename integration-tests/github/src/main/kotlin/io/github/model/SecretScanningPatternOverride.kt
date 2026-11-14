@@ -15,7 +15,8 @@ public data class SecretScanningPatternOverride(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tokenType: String? = null,
   @SerialName("custom_pattern_version")
-  public val customPatternVersion: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val customPatternVersion: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val slug: String? = null,
   @SerialName("display_name")
@@ -40,7 +41,8 @@ public data class SecretScanningPatternOverride(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val defaultSetting: DefaultSetting? = null,
   @SerialName("enterprise_setting")
-  public val enterpriseSetting: EnterpriseSetting? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val enterpriseSetting: Optional<EnterpriseSetting> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val setting: Setting? = null,
 ) {

@@ -29,13 +29,17 @@ public data class CommitCommentEvent(
     public val nodeId: String? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val body: String? = null,
-    public val path: String? = null,
-    public val position: Long? = null,
-    public val line: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val path: Optional<String> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val position: Optional<Long> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val line: Optional<Long> = Optional.Absent,
     @SerialName("commit_id")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val commitId: String? = null,
-    public val user: NullableSimpleUser? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val user: Optional<NullableSimpleUser> = Optional.Absent,
     @SerialName("created_at")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val createdAt: Instant? = null,

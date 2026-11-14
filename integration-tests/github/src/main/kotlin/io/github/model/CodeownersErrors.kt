@@ -23,7 +23,8 @@ public data class CodeownersErrors(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val source: String? = null,
     public val kind: String,
-    public val suggestion: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val suggestion: Optional<String> = Optional.Absent,
     public val message: String,
     public val path: String,
   )

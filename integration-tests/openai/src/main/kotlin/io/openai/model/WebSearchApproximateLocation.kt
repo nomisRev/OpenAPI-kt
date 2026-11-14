@@ -16,10 +16,14 @@ import kotlinx.serialization.Serializable
 public data class WebSearchApproximateLocation(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val type: Type? = null,
-  public val country: String? = null,
-  public val region: String? = null,
-  public val city: String? = null,
-  public val timezone: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val country: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val region: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val city: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val timezone: Optional<String> = Optional.Absent,
 ) {
   @Serializable
   public enum class Type(

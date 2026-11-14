@@ -22,9 +22,11 @@ public data class MarketplacePurchase(
   @SerialName("organization_billing_email")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val organizationBillingEmail: String? = null,
-  public val email: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val email: Optional<String> = Optional.Absent,
   @SerialName("marketplace_pending_change")
-  public val marketplacePendingChange: MarketplacePendingChange? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val marketplacePendingChange: Optional<MarketplacePendingChange> = Optional.Absent,
   @SerialName("marketplace_purchase")
   public val marketplacePurchase: MarketplacePurchase,
 ) {
@@ -38,7 +40,8 @@ public data class MarketplacePurchase(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val effectiveDate: String? = null,
     @SerialName("unit_count")
-    public val unitCount: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val unitCount: Optional<Long> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val id: Long? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
@@ -52,17 +55,20 @@ public data class MarketplacePurchase(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val billingCycle: String? = null,
     @SerialName("next_billing_date")
-    public val nextBillingDate: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val nextBillingDate: Optional<String> = Optional.Absent,
     @SerialName("is_installed")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val isInstalled: Boolean? = null,
     @SerialName("unit_count")
-    public val unitCount: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val unitCount: Optional<Long> = Optional.Absent,
     @SerialName("on_free_trial")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val onFreeTrial: Boolean? = null,
     @SerialName("free_trial_ends_on")
-    public val freeTrialEndsOn: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val freeTrialEndsOn: Optional<String> = Optional.Absent,
     @SerialName("updated_at")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val updatedAt: String? = null,

@@ -47,7 +47,8 @@ public data class TeamOrganization(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val email: String? = null,
   @SerialName("twitter_username")
-  public val twitterUsername: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val twitterUsername: Optional<String> = Optional.Absent,
   @SerialName("is_verified")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val isVerified: Boolean? = null,
@@ -73,20 +74,27 @@ public data class TeamOrganization(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val ownedPrivateRepos: Long? = null,
   @SerialName("private_gists")
-  public val privateGists: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val privateGists: Optional<Long> = Optional.Absent,
   @SerialName("disk_usage")
-  public val diskUsage: Long? = null,
-  public val collaborators: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val diskUsage: Optional<Long> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val collaborators: Optional<Long> = Optional.Absent,
   @SerialName("billing_email")
-  public val billingEmail: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val billingEmail: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val plan: Plan? = null,
   @SerialName("default_repository_permission")
-  public val defaultRepositoryPermission: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val defaultRepositoryPermission: Optional<String> = Optional.Absent,
   @SerialName("members_can_create_repositories")
-  public val membersCanCreateRepositories: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val membersCanCreateRepositories: Optional<Boolean> = Optional.Absent,
   @SerialName("two_factor_requirement_enabled")
-  public val twoFactorRequirementEnabled: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val twoFactorRequirementEnabled: Optional<Boolean> = Optional.Absent,
   @SerialName("members_allowed_repository_creation_type")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val membersAllowedRepositoryCreationType: String? = null,
@@ -109,7 +117,8 @@ public data class TeamOrganization(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val membersCanCreatePrivatePages: Boolean? = null,
   @SerialName("members_can_fork_private_repositories")
-  public val membersCanForkPrivateRepositories: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val membersCanForkPrivateRepositories: Optional<Boolean> = Optional.Absent,
   @SerialName("web_commit_signoff_required")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val webCommitSignoffRequired: Boolean? = null,

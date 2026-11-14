@@ -59,16 +59,19 @@ public data class ReviewComment(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val side: Side? = null,
   @SerialName("start_side")
-  public val startSide: StartSide? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val startSide: Optional<StartSide> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val line: Long? = null,
   @SerialName("original_line")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val originalLine: Long? = null,
   @SerialName("start_line")
-  public val startLine: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val startLine: Optional<Long> = Optional.Absent,
   @SerialName("original_start_line")
-  public val originalStartLine: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val originalStartLine: Optional<Long> = Optional.Absent,
   @SerialName("subject_type")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val subjectType: SubjectType? = null,

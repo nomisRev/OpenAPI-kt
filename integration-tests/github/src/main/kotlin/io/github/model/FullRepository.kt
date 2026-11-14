@@ -169,9 +169,11 @@ public data class FullRepository(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowRebaseMerge: Boolean? = null,
   @SerialName("template_repository")
-  public val templateRepository: NullableRepository? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val templateRepository: Optional<NullableRepository> = Optional.Absent,
   @SerialName("temp_clone_token")
-  public val tempCloneToken: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val tempCloneToken: Optional<String> = Optional.Absent,
   @SerialName("allow_squash_merge")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowSquashMerge: Boolean? = null,
@@ -213,7 +215,8 @@ public data class FullRepository(
   @SerialName("network_count")
   public val networkCount: Long,
   public val license: NullableLicenseSimple?,
-  public val organization: NullableSimpleUser? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val organization: Optional<NullableSimpleUser> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val parent: Repository? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
@@ -232,7 +235,8 @@ public data class FullRepository(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val codeOfConduct: CodeOfConductSimple? = null,
   @SerialName("security_and_analysis")
-  public val securityAndAnalysis: SecurityAndAnalysis? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val securityAndAnalysis: Optional<SecurityAndAnalysis> = Optional.Absent,
   @SerialName("custom_properties")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val customProperties: JsonElement? = null,

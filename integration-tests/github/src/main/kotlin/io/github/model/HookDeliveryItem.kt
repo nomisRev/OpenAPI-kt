@@ -3,14 +3,18 @@ package io.github.model
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Delivery made by a webhook, without request and response information.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class HookDeliveryItem(
   public val id: Long,
@@ -29,5 +33,6 @@ public data class HookDeliveryItem(
   @SerialName("repository_id")
   public val repositoryId: Long?,
   @SerialName("throttled_at")
-  public val throttledAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val throttledAt: Optional<Instant> = Optional.Absent,
 )

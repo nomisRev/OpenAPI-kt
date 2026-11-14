@@ -17,5 +17,6 @@ import kotlinx.serialization.Serializable
 public data class ResponseTextParam(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val format: TextResponseFormatConfiguration? = null,
-  public val verbosity: Verbosity? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val verbosity: Optional<Verbosity> = Optional.Absent,
 )

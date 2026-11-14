@@ -11,21 +11,27 @@ import kotlinx.serialization.Serializable
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CodeScanningAlertRule(
-  public val id: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val id: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val name: String? = null,
-  public val severity: Severity? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val severity: Optional<Severity> = Optional.Absent,
   @SerialName("security_severity_level")
-  public val securitySeverityLevel: SecuritySeverityLevel? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val securitySeverityLevel: Optional<SecuritySeverityLevel> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val description: String? = null,
   @SerialName("full_description")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val fullDescription: String? = null,
-  public val tags: List<String>? = null,
-  public val help: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val tags: Optional<List<String>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val help: Optional<String> = Optional.Absent,
   @SerialName("help_uri")
-  public val helpUri: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val helpUri: Optional<String> = Optional.Absent,
 ) {
   @Serializable
   public enum class SecuritySeverityLevel(

@@ -26,21 +26,31 @@ import kotlinx.serialization.json.JsonPrimitive
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class TokenCountsBody(
-  public val model: String? = null,
-  public val input: Input? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val model: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val input: Optional<Input> = Optional.Absent,
   @SerialName("previous_response_id")
-  public val previousResponseId: String? = null,
-  public val tools: List<Tool>? = null,
-  public val text: ResponseTextParam? = null,
-  public val reasoning: Reasoning? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val previousResponseId: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val tools: Optional<List<Tool>> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val text: Optional<ResponseTextParam> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val reasoning: Optional<Reasoning> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val truncation: TruncationEnum? = null,
-  public val instructions: String? = null,
-  public val conversation: ConversationParam? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val instructions: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val conversation: Optional<ConversationParam> = Optional.Absent,
   @SerialName("tool_choice")
-  public val toolChoice: ToolChoiceParam? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val toolChoice: Optional<ToolChoiceParam> = Optional.Absent,
   @SerialName("parallel_tool_calls")
-  public val parallelToolCalls: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val parallelToolCalls: Optional<Boolean> = Optional.Absent,
 ) {
   /**
    * Text, image, or file inputs to the model, used to generate a response

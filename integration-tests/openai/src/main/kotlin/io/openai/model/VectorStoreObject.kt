@@ -28,7 +28,8 @@ public data class VectorStoreObject(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val expiresAfter: VectorStoreExpirationAfter? = null,
   @SerialName("expires_at")
-  public val expiresAt: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val expiresAt: Optional<Long> = Optional.Absent,
   @SerialName("last_active_at")
   public val lastActiveAt: Long?,
   public val metadata: Metadata?,

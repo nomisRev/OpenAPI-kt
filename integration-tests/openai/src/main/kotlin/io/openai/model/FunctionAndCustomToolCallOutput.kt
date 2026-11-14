@@ -25,12 +25,15 @@ public sealed interface FunctionAndCustomToolCallOutput {
    * An image input to the model. Learn about [image inputs](/docs/guides/vision).
    */
   @SerialName("input_image")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class InputImage(
     @SerialName("image_url")
-    public val imageUrl: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val imageUrl: Optional<String> = Optional.Absent,
     @SerialName("file_id")
-    public val fileId: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val fileId: Optional<String> = Optional.Absent,
     public val detail: ImageDetail,
   ) : FunctionAndCustomToolCallOutput
 
@@ -42,7 +45,8 @@ public sealed interface FunctionAndCustomToolCallOutput {
   @Serializable
   public data class InputFile(
     @SerialName("file_id")
-    public val fileId: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val fileId: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val filename: String? = null,
     @SerialName("file_data")

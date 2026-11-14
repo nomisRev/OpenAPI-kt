@@ -15,7 +15,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class DependabotRepositoryAccessDetails(
   @SerialName("default_level")
-  public val defaultLevel: DefaultLevel? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val defaultLevel: Optional<DefaultLevel> = Optional.Absent,
   @SerialName("accessible_repositories")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val accessibleRepositories: List<NullableSimpleRepository?>? = null,

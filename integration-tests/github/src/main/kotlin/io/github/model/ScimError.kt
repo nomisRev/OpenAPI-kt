@@ -15,13 +15,17 @@ import kotlinx.serialization.Serializable
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class ScimError(
-  public val message: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val message: Optional<String> = Optional.Absent,
   @SerialName("documentation_url")
-  public val documentationUrl: String? = null,
-  public val detail: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val documentationUrl: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val detail: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val status: Long? = null,
-  public val scimType: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val scimType: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val schemas: List<String>? = null,
 )

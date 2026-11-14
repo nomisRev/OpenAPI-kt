@@ -17,7 +17,8 @@ public data class InputFileContent(
   @Required
   public val type: Type = Type.InputFile,
   @SerialName("file_id")
-  public val fileId: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val fileId: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val filename: String? = null,
   @SerialName("file_data")

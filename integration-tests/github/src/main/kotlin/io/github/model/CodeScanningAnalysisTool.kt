@@ -10,6 +10,8 @@ import kotlinx.serialization.Serializable
 public data class CodeScanningAnalysisTool(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val name: CodeScanningAnalysisToolName? = null,
-  public val version: CodeScanningAnalysisToolVersion? = null,
-  public val guid: CodeScanningAnalysisToolGuid? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val version: Optional<CodeScanningAnalysisToolVersion> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val guid: Optional<CodeScanningAnalysisToolGuid> = Optional.Absent,
 )

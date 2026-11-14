@@ -26,7 +26,8 @@ public data class CreateVectorStoreRequest(
   @SerialName("chunking_strategy")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val chunkingStrategy: ChunkingStrategy? = null,
-  public val metadata: Metadata? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
 ) {
   /**
    * The chunking strategy used to chunk the file(s). If not set, will use the `auto` strategy. Only applicable if `file_ids` is non-empty.

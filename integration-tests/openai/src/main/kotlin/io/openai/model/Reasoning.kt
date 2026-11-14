@@ -1,6 +1,9 @@
 package io.openai.model
 
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -11,12 +14,16 @@ import kotlinx.serialization.Serializable
  * [reasoning models](https://platform.openai.com/docs/guides/reasoning).
  *
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Reasoning(
-  public val effort: ReasoningEffort? = null,
-  public val summary: Summary? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val effort: Optional<ReasoningEffort> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val summary: Optional<Summary> = Optional.Absent,
   @SerialName("generate_summary")
-  public val generateSummary: GenerateSummary? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val generateSummary: Optional<GenerateSummary> = Optional.Absent,
 ) {
   @Serializable
   public enum class GenerateSummary(

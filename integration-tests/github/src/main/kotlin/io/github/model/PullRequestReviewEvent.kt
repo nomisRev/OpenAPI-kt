@@ -23,14 +23,16 @@ public data class PullRequestReviewEvent(
     @SerialName("node_id")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val nodeId: String? = null,
-    public val user: NullableSimpleUser? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val user: Optional<NullableSimpleUser> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val body: String? = null,
     @SerialName("commit_id")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val commitId: String? = null,
     @SerialName("submitted_at")
-    public val submittedAt: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val submittedAt: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val state: String? = null,
     @SerialName("html_url")

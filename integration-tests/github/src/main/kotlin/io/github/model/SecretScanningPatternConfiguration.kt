@@ -14,7 +14,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class SecretScanningPatternConfiguration(
   @SerialName("pattern_config_version")
-  public val patternConfigVersion: SecretScanningRowVersion? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val patternConfigVersion: Optional<SecretScanningRowVersion> = Optional.Absent,
   @SerialName("provider_pattern_overrides")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val providerPatternOverrides: List<SecretScanningPatternOverride>? = null,

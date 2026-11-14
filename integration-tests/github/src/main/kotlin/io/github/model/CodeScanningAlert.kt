@@ -23,7 +23,8 @@ public data class CodeScanningAlert(
   public val instancesUrl: AlertInstancesUrl,
   public val state: CodeScanningAlertState?,
   @SerialName("fixed_at")
-  public val fixedAt: AlertFixedAt? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val fixedAt: Optional<AlertFixedAt> = Optional.Absent,
   @SerialName("dismissed_by")
   public val dismissedBy: NullableSimpleUser?,
   @SerialName("dismissed_at")
@@ -31,13 +32,15 @@ public data class CodeScanningAlert(
   @SerialName("dismissed_reason")
   public val dismissedReason: CodeScanningAlertDismissedReason?,
   @SerialName("dismissed_comment")
-  public val dismissedComment: CodeScanningAlertDismissedComment? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val dismissedComment: Optional<CodeScanningAlertDismissedComment> = Optional.Absent,
   public val rule: CodeScanningAlertRule,
   public val tool: CodeScanningAnalysisTool,
   @SerialName("most_recent_instance")
   public val mostRecentInstance: CodeScanningAlertInstance,
   @SerialName("dismissal_approved_by")
-  public val dismissalApprovedBy: NullableSimpleUser? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val dismissalApprovedBy: Optional<NullableSimpleUser> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val assignees: List<SimpleUser>? = null,
 )

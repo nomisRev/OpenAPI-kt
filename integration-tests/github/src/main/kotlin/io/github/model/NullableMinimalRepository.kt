@@ -111,14 +111,17 @@ public data class NullableMinimalRepository(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val cloneUrl: String? = null,
   @SerialName("mirror_url")
-  public val mirrorUrl: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val mirrorUrl: Optional<String> = Optional.Absent,
   @SerialName("hooks_url")
   public val hooksUrl: String,
   @SerialName("svn_url")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val svnUrl: String? = null,
-  public val homepage: String? = null,
-  public val language: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val homepage: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val language: Optional<String> = Optional.Absent,
   @SerialName("forks_count")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val forksCount: Long? = null,
@@ -175,11 +178,14 @@ public data class NullableMinimalRepository(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val visibility: String? = null,
   @SerialName("pushed_at")
-  public val pushedAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val pushedAt: Optional<Instant> = Optional.Absent,
   @SerialName("created_at")
-  public val createdAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val createdAt: Optional<Instant> = Optional.Absent,
   @SerialName("updated_at")
-  public val updatedAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val updatedAt: Optional<Instant> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val permissions: Permissions? = null,
   @SerialName("role_name")
@@ -200,7 +206,8 @@ public data class NullableMinimalRepository(
   @SerialName("code_of_conduct")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val codeOfConduct: CodeOfConduct? = null,
-  public val license: License? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val license: Optional<License> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val forks: Long? = null,
   @SerialName("open_issues")
@@ -215,7 +222,8 @@ public data class NullableMinimalRepository(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val webCommitSignoffRequired: Boolean? = null,
   @SerialName("security_and_analysis")
-  public val securityAndAnalysis: SecurityAndAnalysis? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val securityAndAnalysis: Optional<SecurityAndAnalysis> = Optional.Absent,
   @SerialName("custom_properties")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val customProperties: JsonElement? = null,
@@ -230,7 +238,8 @@ public data class NullableMinimalRepository(
     @SerialName("spdx_id")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val spdxId: String? = null,
-    public val url: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val url: Optional<String> = Optional.Absent,
     @SerialName("node_id")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val nodeId: String? = null,

@@ -36,7 +36,8 @@ public data class Release(
   @SerialName("target_commitish")
   public val targetCommitish: String,
   public val name: String?,
-  public val body: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val body: Optional<String> = Optional.Absent,
   public val draft: Boolean,
   public val prerelease: Boolean,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
@@ -46,7 +47,8 @@ public data class Release(
   @SerialName("published_at")
   public val publishedAt: Instant?,
   @SerialName("updated_at")
-  public val updatedAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val updatedAt: Optional<Instant> = Optional.Absent,
   public val author: SimpleUser,
   public val assets: List<ReleaseAsset>,
   @SerialName("body_html")

@@ -43,7 +43,8 @@ public sealed interface Tool {
     @Required
     public val type: Type = Type.Function,
     public val name: String,
-    public val description: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val description: Optional<String> = Optional.Absent,
     public val parameters: Map<String, JsonElement>?,
     public val strict: Boolean?,
     @SerialName("defer_loading")
@@ -76,7 +77,8 @@ public sealed interface Tool {
     @SerialName("ranking_options")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val rankingOptions: RankingOptions? = null,
-    public val filters: Filters? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val filters: Optional<Filters> = Optional.Absent,
   ) : Tool {
     @Serializable
     public enum class Type(
@@ -139,9 +141,11 @@ public sealed interface Tool {
   public data class WebSearchTool(
     @Required
     public val type: Type = Type.WebSearch,
-    public val filters: Filters? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val filters: Optional<Filters> = Optional.Absent,
     @SerialName("user_location")
-    public val userLocation: WebSearchApproximateLocation? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val userLocation: Optional<WebSearchApproximateLocation> = Optional.Absent,
     @SerialName("search_context_size")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val searchContextSize: SearchContextSize? = null,
@@ -150,10 +154,12 @@ public sealed interface Tool {
      * Filters for the search.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Filters(
       @SerialName("allowed_domains")
-      public val allowedDomains: List<String>? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val allowedDomains: Optional<List<String>> = Optional.Absent,
     )
 
     @Serializable
@@ -203,11 +209,14 @@ public sealed interface Tool {
     @SerialName("server_description")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val serverDescription: String? = null,
-    public val headers: Map<String, String>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val headers: Optional<Map<String, String>> = Optional.Absent,
     @SerialName("allowed_tools")
-    public val allowedTools: AllowedTools? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val allowedTools: Optional<AllowedTools> = Optional.Absent,
     @SerialName("require_approval")
-    public val requireApproval: RequireApproval? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val requireApproval: Optional<RequireApproval> = Optional.Absent,
     @SerialName("defer_loading")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val deferLoading: Boolean? = null,
@@ -460,7 +469,8 @@ public sealed interface Tool {
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val background: Background? = null,
     @SerialName("input_fidelity")
-    public val inputFidelity: InputFidelity? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val inputFidelity: Optional<InputFidelity> = Optional.Absent,
     @SerialName("input_image_mask")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val inputImageMask: InputImageMask? = null,
@@ -625,11 +635,13 @@ public sealed interface Tool {
   /**
    * A tool that allows the model to execute shell commands.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Shell(
     @Required
     public val type: Type = Type.Shell,
-    public val environment: Environment? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val environment: Optional<Environment> = Optional.Absent,
   ) : Tool {
     @OptIn(ExperimentalSerializationApi::class)
     @JsonClassDiscriminator("type")
@@ -643,7 +655,8 @@ public sealed interface Tool {
         @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val fileIds: List<String>? = null,
         @SerialName("memory_limit")
-        public val memoryLimit: ContainerMemoryLimit? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val memoryLimit: Optional<ContainerMemoryLimit> = Optional.Absent,
         @SerialName("network_policy")
         @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val networkPolicy: NetworkPolicy? = null,
@@ -791,12 +804,16 @@ public sealed interface Tool {
     @Serializable
     public sealed interface Tools {
       @SerialName("function")
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class Function(
         public val name: String,
-        public val description: String? = null,
-        public val parameters: EmptyModelParam? = null,
-        public val strict: Boolean? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val description: Optional<String> = Optional.Absent,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val parameters: Optional<EmptyModelParam> = Optional.Absent,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val strict: Optional<Boolean> = Optional.Absent,
       ) : Tools
 
       /**
@@ -859,8 +876,10 @@ public sealed interface Tool {
     public val type: Type = Type.ToolSearch,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val execution: ToolSearchExecutionType? = null,
-    public val description: String? = null,
-    public val parameters: EmptyModelParam? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val description: Optional<String> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val parameters: Optional<EmptyModelParam> = Optional.Absent,
   ) : Tool {
     @Serializable
     public enum class Type(
@@ -881,7 +900,8 @@ public sealed interface Tool {
     @Required
     public val type: Type = Type.WebSearchPreview,
     @SerialName("user_location")
-    public val userLocation: ApproximateLocation? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val userLocation: Optional<ApproximateLocation> = Optional.Absent,
     @SerialName("search_context_size")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val searchContextSize: SearchContextSize? = null,

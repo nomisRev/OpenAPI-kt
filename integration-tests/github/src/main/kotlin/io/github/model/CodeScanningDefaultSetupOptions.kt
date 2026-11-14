@@ -17,7 +17,8 @@ public data class CodeScanningDefaultSetupOptions(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val runnerType: RunnerType? = null,
   @SerialName("runner_label")
-  public val runnerLabel: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val runnerLabel: Optional<String> = Optional.Absent,
 ) {
   @Serializable
   public enum class RunnerType(

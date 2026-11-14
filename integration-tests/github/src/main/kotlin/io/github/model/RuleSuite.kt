@@ -19,9 +19,11 @@ public data class RuleSuite(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val id: Long? = null,
   @SerialName("actor_id")
-  public val actorId: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val actorId: Optional<Long> = Optional.Absent,
   @SerialName("actor_name")
-  public val actorName: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val actorName: Optional<String> = Optional.Absent,
   @SerialName("before_sha")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val beforeSha: String? = null,
@@ -42,7 +44,8 @@ public data class RuleSuite(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val result: Result? = null,
   @SerialName("evaluation_result")
-  public val evaluationResult: EvaluationResult? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val evaluationResult: Optional<EvaluationResult> = Optional.Absent,
   @SerialName("rule_evaluations")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val ruleEvaluations: List<RuleEvaluations>? = null,
@@ -86,7 +89,8 @@ public data class RuleSuite(
     @SerialName("rule_type")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val ruleType: String? = null,
-    public val details: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val details: Optional<String> = Optional.Absent,
   ) {
     @Serializable
     public enum class Enforcement(
@@ -117,8 +121,10 @@ public data class RuleSuite(
     public data class RuleSource(
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val type: String? = null,
-      public val id: Long? = null,
-      public val name: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val id: Optional<Long> = Optional.Absent,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val name: Optional<String> = Optional.Absent,
     )
   }
 }

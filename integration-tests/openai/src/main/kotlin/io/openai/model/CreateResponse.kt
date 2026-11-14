@@ -14,13 +14,16 @@ import kotlinx.serialization.Serializable
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateResponse(
-  public val metadata: Metadata? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
   @SerialName("top_logprobs")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val topLogprobs: Long? = null,
-  public val temperature: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val temperature: Optional<Double> = Optional.Absent,
   @SerialName("top_p")
-  public val topP: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val topP: Optional<Double> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
   @SerialName("safety_identifier")
@@ -30,19 +33,26 @@ public data class CreateResponse(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val promptCacheKey: String? = null,
   @SerialName("service_tier")
-  public val serviceTier: ServiceTier? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val serviceTier: Optional<ServiceTier> = Optional.Absent,
   @SerialName("prompt_cache_retention")
-  public val promptCacheRetention: PromptCacheRetention? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val promptCacheRetention: Optional<PromptCacheRetention> = Optional.Absent,
   @SerialName("previous_response_id")
-  public val previousResponseId: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val previousResponseId: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val model: ModelIdsResponses? = null,
-  public val reasoning: Reasoning? = null,
-  public val background: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val reasoning: Optional<Reasoning> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val background: Optional<Boolean> = Optional.Absent,
   @SerialName("max_output_tokens")
-  public val maxOutputTokens: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val maxOutputTokens: Optional<Long> = Optional.Absent,
   @SerialName("max_tool_calls")
-  public val maxToolCalls: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val maxToolCalls: Optional<Long> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val text: ResponseTextParam? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
@@ -50,21 +60,31 @@ public data class CreateResponse(
   @SerialName("tool_choice")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val toolChoice: ToolChoiceParam? = null,
-  public val prompt: Prompt? = null,
-  public val truncation: Truncation? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val prompt: Optional<Prompt> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val truncation: Optional<Truncation> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val input: InputParam? = null,
-  public val include: List<IncludeEnum>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val include: Optional<List<IncludeEnum>> = Optional.Absent,
   @SerialName("parallel_tool_calls")
-  public val parallelToolCalls: Boolean? = null,
-  public val store: Boolean? = null,
-  public val instructions: String? = null,
-  public val stream: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val parallelToolCalls: Optional<Boolean> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val store: Optional<Boolean> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val instructions: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stream: Optional<Boolean> = Optional.Absent,
   @SerialName("stream_options")
-  public val streamOptions: ResponseStreamOptions? = null,
-  public val conversation: ConversationParam? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val streamOptions: Optional<ResponseStreamOptions> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val conversation: Optional<ConversationParam> = Optional.Absent,
   @SerialName("context_management")
-  public val contextManagement: List<ContextManagementParam>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val contextManagement: Optional<List<ContextManagementParam>> = Optional.Absent,
 ) {
   @Serializable
   public enum class PromptCacheRetention(

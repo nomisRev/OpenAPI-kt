@@ -47,7 +47,8 @@ public data class RepositoryRuleset(
   @SerialName("_links")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val links: Links? = null,
-  public val conditions: Conditions? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val conditions: Optional<Conditions> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val rules: List<RepositoryRule>? = null,
   @SerialName("created_at")
@@ -121,7 +122,8 @@ public data class RepositoryRuleset(
   public data class Links(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val self: Self? = null,
-    public val html: Html? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val html: Optional<Html> = Optional.Absent,
   ) {
     @OptIn(ExperimentalSerializationApi::class)
     @Serializable

@@ -36,7 +36,8 @@ public data class ForkEvent(
     @SerialName("html_url")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val htmlUrl: String? = null,
-    public val description: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val description: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val fork: Boolean? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
@@ -150,11 +151,14 @@ public data class ForkEvent(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val deploymentsUrl: String? = null,
     @SerialName("created_at")
-    public val createdAt: Instant? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val createdAt: Optional<Instant> = Optional.Absent,
     @SerialName("updated_at")
-    public val updatedAt: Instant? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val updatedAt: Optional<Instant> = Optional.Absent,
     @SerialName("pushed_at")
-    public val pushedAt: Instant? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val pushedAt: Optional<Instant> = Optional.Absent,
     @SerialName("git_url")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val gitUrl: String? = null,
@@ -167,7 +171,8 @@ public data class ForkEvent(
     @SerialName("svn_url")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val svnUrl: String? = null,
-    public val homepage: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val homepage: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val size: Long? = null,
     @SerialName("stargazers_count")
@@ -176,7 +181,8 @@ public data class ForkEvent(
     @SerialName("watchers_count")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val watchersCount: Long? = null,
-    public val language: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val language: Optional<String> = Optional.Absent,
     @SerialName("has_issues")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val hasIssues: Boolean? = null,
@@ -208,7 +214,8 @@ public data class ForkEvent(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val forksCount: Long? = null,
     @SerialName("mirror_url")
-    public val mirrorUrl: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val mirrorUrl: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val archived: Boolean? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
@@ -216,7 +223,8 @@ public data class ForkEvent(
     @SerialName("open_issues_count")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val openIssuesCount: Long? = null,
-    public val license: NullableLicenseSimple? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val license: Optional<NullableLicenseSimple> = Optional.Absent,
     @SerialName("allow_forking")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val allowForking: Boolean? = null,

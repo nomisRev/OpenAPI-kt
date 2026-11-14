@@ -18,7 +18,8 @@ import kotlinx.serialization.json.JsonElement
 public data class CreateEvalRequest(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val name: String? = null,
-  public val metadata: Metadata? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
   @SerialName("data_source_config")
   public val dataSourceConfig: DataSourceConfig,
   @SerialName("testing_criteria")
@@ -209,16 +210,22 @@ public data class CreateEvalRequest(
       /**
        * The sampling parameters for the model.
        */
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class SamplingParams(
-        public val seed: Long? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val seed: Optional<Long> = Optional.Absent,
         @SerialName("top_p")
-        public val topP: Double? = null,
-        public val temperature: Double? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val topP: Optional<Double> = Optional.Absent,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val temperature: Optional<Double> = Optional.Absent,
         @SerialName("max_completions_tokens")
-        public val maxCompletionsTokens: Long? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val maxCompletionsTokens: Optional<Long> = Optional.Absent,
         @SerialName("reasoning_effort")
-        public val reasoningEffort: ReasoningEffort? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val reasoningEffort: Optional<ReasoningEffort> = Optional.Absent,
       )
     }
   }

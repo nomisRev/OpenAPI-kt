@@ -2,6 +2,7 @@ package io.github.api
 
 import io.github.model.BasicError
 import io.github.model.MinimalRepository
+import io.github.model.Optional
 import io.github.model.OrganizationInvitation
 import io.github.model.SimpleUser
 import io.github.model.Team
@@ -125,7 +126,7 @@ public class Teams internal constructor(
         privacy: Privacy? = null,
         notificationSetting: NotificationSetting? = null,
         permission: Permission? = null,
-        parentTeamId: Long? = null,
+        parentTeamId: Optional<Long> = Optional.Absent,
       ): Response {
         val response = client.patch("teams/${this.teamId}") {
           contentType(ContentType.Application.Json)
@@ -190,7 +191,8 @@ public class Teams internal constructor(
         @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val permission: Permission? = null,
         @SerialName("parent_team_id")
-        public val parentTeamId: Long? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val parentTeamId: Optional<Long> = Optional.Absent,
       )
 
       public sealed interface Response {

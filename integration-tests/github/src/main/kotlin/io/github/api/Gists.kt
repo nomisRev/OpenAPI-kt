@@ -5,6 +5,7 @@ import io.github.model.BasicError
 import io.github.model.GistComment
 import io.github.model.GistCommit
 import io.github.model.GistSimple
+import io.github.model.Optional
 import io.github.model.ValidationError
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -403,7 +404,8 @@ public class Gists internal constructor(
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val createdAt: String? = null,
             @SerialName("html_url")
-            public val htmlUrl: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val htmlUrl: Optional<String> = Optional.Absent,
           )
         }
 
@@ -435,7 +437,8 @@ public class Gists internal constructor(
       public data class Files(
         @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val content: String? = null,
-        public val filename: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val filename: Optional<String> = Optional.Absent,
       )
 
       @OptIn(ExperimentalSerializationApi::class)
@@ -636,7 +639,8 @@ public class Gists internal constructor(
                 @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val createdAt: String? = null,
                 @SerialName("html_url")
-                public val htmlUrl: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
+                public val htmlUrl: Optional<String> = Optional.Absent,
               )
             }
 

@@ -147,7 +147,8 @@ public data class EvalRun(
             public data class EasyInputMessage(
               public val role: Role,
               public val content: Content,
-              public val phase: MessagePhase? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val phase: Optional<MessagePhase> = Optional.Absent,
               @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val type: Type? = null,
             ) : Template {
@@ -359,7 +360,8 @@ public data class EvalRun(
       @Serializable
       public data class SamplingParams(
         @SerialName("reasoning_effort")
-        public val reasoningEffort: ReasoningEffort? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val reasoningEffort: Optional<ReasoningEffort> = Optional.Absent,
         @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val temperature: Double? = null,
         @SerialName("max_completion_tokens")
@@ -411,7 +413,8 @@ public data class EvalRun(
             public val name: String,
             @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val schema: ResponseFormatJsonSchemaSchema? = null,
-            public val strict: Boolean? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val strict: Optional<Boolean> = Optional.Absent,
           ) : ResponseFormat
 
           @Serializable
@@ -452,15 +455,21 @@ public data class EvalRun(
          *
          */
         @SerialName("stored_completions")
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class StoredCompletions(
-          public val metadata: Metadata? = null,
-          public val model: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val metadata: Optional<Metadata> = Optional.Absent,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val model: Optional<String> = Optional.Absent,
           @SerialName("created_after")
-          public val createdAfter: Long? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val createdAfter: Optional<Long> = Optional.Absent,
           @SerialName("created_before")
-          public val createdBefore: Long? = null,
-          public val limit: Long? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val createdBefore: Optional<Long> = Optional.Absent,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val limit: Optional<Long> = Optional.Absent,
         ) : Source
       }
     }
@@ -552,7 +561,8 @@ public data class EvalRun(
       @Serializable
       public data class SamplingParams(
         @SerialName("reasoning_effort")
-        public val reasoningEffort: ReasoningEffort? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val reasoningEffort: Optional<ReasoningEffort> = Optional.Absent,
         @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val temperature: Double? = null,
         @SerialName("max_completion_tokens")
@@ -615,23 +625,34 @@ public data class EvalRun(
          *
          */
         @SerialName("responses")
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Responses(
-          public val metadata: JsonElement? = null,
-          public val model: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val metadata: Optional<JsonElement> = Optional.Absent,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val model: Optional<String> = Optional.Absent,
           @SerialName("instructions_search")
-          public val instructionsSearch: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val instructionsSearch: Optional<String> = Optional.Absent,
           @SerialName("created_after")
-          public val createdAfter: Long? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val createdAfter: Optional<Long> = Optional.Absent,
           @SerialName("created_before")
-          public val createdBefore: Long? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val createdBefore: Optional<Long> = Optional.Absent,
           @SerialName("reasoning_effort")
-          public val reasoningEffort: ReasoningEffort? = null,
-          public val temperature: Double? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val reasoningEffort: Optional<ReasoningEffort> = Optional.Absent,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val temperature: Optional<Double> = Optional.Absent,
           @SerialName("top_p")
-          public val topP: Double? = null,
-          public val users: List<String>? = null,
-          public val tools: List<String>? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val topP: Optional<Double> = Optional.Absent,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val users: Optional<List<String>> = Optional.Absent,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
+          public val tools: Optional<List<String>> = Optional.Absent,
         ) : Source
       }
     }

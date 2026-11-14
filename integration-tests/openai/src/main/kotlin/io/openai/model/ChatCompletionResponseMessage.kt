@@ -26,7 +26,8 @@ public data class ChatCompletionResponseMessage(
   @SerialName("function_call")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val functionCall: FunctionCall? = null,
-  public val audio: Audio? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val audio: Optional<Audio> = Optional.Absent,
 ) {
   /**
    * A URL citation when using web search.

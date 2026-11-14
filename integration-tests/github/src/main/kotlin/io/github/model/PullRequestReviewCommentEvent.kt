@@ -33,7 +33,8 @@ public data class PullRequestReviewCommentEvent(
     @SerialName("original_position")
     public val originalPosition: Long,
     @SerialName("subject_type")
-    public val subjectType: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val subjectType: Optional<String> = Optional.Absent,
     @SerialName("commit_id")
     public val commitId: String,
     public val user: User?,
@@ -112,7 +113,8 @@ public data class PullRequestReviewCommentEvent(
       public val avatarUrl: String? = null,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val deleted: Boolean? = null,
-      public val email: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val email: Optional<String> = Optional.Absent,
       @SerialName("events_url")
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val eventsUrl: String? = null,

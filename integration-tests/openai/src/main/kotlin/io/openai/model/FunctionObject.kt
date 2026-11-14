@@ -15,5 +15,6 @@ public data class FunctionObject(
   public val name: String,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val parameters: FunctionParameters? = null,
-  public val strict: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val strict: Optional<Boolean> = Optional.Absent,
 )

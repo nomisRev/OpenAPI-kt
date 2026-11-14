@@ -36,9 +36,11 @@ public data class SecretScanningScanHistory(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val status: String? = null,
     @SerialName("completed_at")
-    public val completedAt: Instant? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val completedAt: Optional<Instant> = Optional.Absent,
     @SerialName("started_at")
-    public val startedAt: Instant? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val startedAt: Optional<Instant> = Optional.Absent,
     @SerialName("pattern_name")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val patternName: String? = null,

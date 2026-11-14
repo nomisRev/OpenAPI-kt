@@ -34,7 +34,8 @@ public data class CampaignSummary(
   @SerialName("ends_at")
   public val endsAt: Instant,
   @SerialName("closed_at")
-  public val closedAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val closedAt: Optional<Instant> = Optional.Absent,
   public val state: CampaignState,
   @SerialName("contact_link")
   public val contactLink: String?,

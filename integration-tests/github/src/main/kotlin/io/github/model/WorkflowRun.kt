@@ -17,7 +17,8 @@ import kotlinx.serialization.Serializable
 @Serializable
 public data class WorkflowRun(
   public val id: Long,
-  public val name: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val name: Optional<String> = Optional.Absent,
   @SerialName("node_id")
   public val nodeId: String,
   @SerialName("check_suite_id")
@@ -37,7 +38,8 @@ public data class WorkflowRun(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val runAttempt: Long? = null,
   @SerialName("referenced_workflows")
-  public val referencedWorkflows: List<ReferencedWorkflow>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val referencedWorkflows: Optional<List<ReferencedWorkflow>> = Optional.Absent,
   public val event: String,
   public val status: String?,
   public val conclusion: String?,
@@ -73,7 +75,8 @@ public data class WorkflowRun(
   @SerialName("rerun_url")
   public val rerunUrl: String,
   @SerialName("previous_attempt_url")
-  public val previousAttemptUrl: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val previousAttemptUrl: Optional<String> = Optional.Absent,
   @SerialName("workflow_url")
   public val workflowUrl: String,
   @SerialName("head_commit")

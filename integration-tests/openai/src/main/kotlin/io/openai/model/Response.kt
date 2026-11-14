@@ -31,7 +31,8 @@ import kotlinx.serialization.json.JsonPrimitive
 public data class Response(
   public val metadata: Metadata?,
   @SerialName("top_logprobs")
-  public val topLogprobs: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val topLogprobs: Optional<Long> = Optional.Absent,
   @Required
   public val temperature: Double? = null,
   @SerialName("top_p")
@@ -46,25 +47,34 @@ public data class Response(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val promptCacheKey: String? = null,
   @SerialName("service_tier")
-  public val serviceTier: ServiceTier? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val serviceTier: Optional<ServiceTier> = Optional.Absent,
   @SerialName("prompt_cache_retention")
-  public val promptCacheRetention: PromptCacheRetention? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val promptCacheRetention: Optional<PromptCacheRetention> = Optional.Absent,
   @SerialName("previous_response_id")
-  public val previousResponseId: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val previousResponseId: Optional<String> = Optional.Absent,
   public val model: ModelIdsResponses,
-  public val reasoning: Reasoning? = null,
-  public val background: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val reasoning: Optional<Reasoning> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val background: Optional<Boolean> = Optional.Absent,
   @SerialName("max_output_tokens")
-  public val maxOutputTokens: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val maxOutputTokens: Optional<Long> = Optional.Absent,
   @SerialName("max_tool_calls")
-  public val maxToolCalls: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val maxToolCalls: Optional<Long> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val text: ResponseTextParam? = null,
   public val tools: ToolsArray,
   @SerialName("tool_choice")
   public val toolChoice: ToolChoiceParam,
-  public val prompt: Prompt? = null,
-  public val truncation: Truncation? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val prompt: Optional<Prompt> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val truncation: Optional<Truncation> = Optional.Absent,
   public val id: String,
   public val `object`: Object,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
@@ -72,20 +82,23 @@ public data class Response(
   @SerialName("created_at")
   public val createdAt: Double,
   @SerialName("completed_at")
-  public val completedAt: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val completedAt: Optional<Double> = Optional.Absent,
   public val error: ResponseError?,
   @SerialName("incomplete_details")
   public val incompleteDetails: IncompleteDetails?,
   public val output: List<OutputItem>,
   public val instructions: Instructions?,
   @SerialName("output_text")
-  public val outputText: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val outputText: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val usage: ResponseUsage? = null,
   @SerialName("parallel_tool_calls")
   @Required
   public val parallelToolCalls: Boolean = true,
-  public val conversation: Conversation2? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val conversation: Optional<Conversation2> = Optional.Absent,
 ) {
   /**
    * Details about why the response is incomplete.

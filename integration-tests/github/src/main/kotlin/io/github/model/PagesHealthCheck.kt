@@ -17,7 +17,8 @@ public data class PagesHealthCheck(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val domain: Domain? = null,
   @SerialName("alt_domain")
-  public val altDomain: AltDomain? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val altDomain: Optional<AltDomain> = Optional.Absent,
 ) {
   @OptIn(ExperimentalSerializationApi::class)
   @Serializable
@@ -32,19 +33,26 @@ public data class PagesHealthCheck(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val dnsResolves: Boolean? = null,
     @SerialName("is_proxied")
-    public val isProxied: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isProxied: Optional<Boolean> = Optional.Absent,
     @SerialName("is_cloudflare_ip")
-    public val isCloudflareIp: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isCloudflareIp: Optional<Boolean> = Optional.Absent,
     @SerialName("is_fastly_ip")
-    public val isFastlyIp: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isFastlyIp: Optional<Boolean> = Optional.Absent,
     @SerialName("is_old_ip_address")
-    public val isOldIpAddress: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isOldIpAddress: Optional<Boolean> = Optional.Absent,
     @SerialName("is_a_record")
-    public val isARecord: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isARecord: Optional<Boolean> = Optional.Absent,
     @SerialName("has_cname_record")
-    public val hasCnameRecord: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val hasCnameRecord: Optional<Boolean> = Optional.Absent,
     @SerialName("has_mx_records_present")
-    public val hasMxRecordsPresent: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val hasMxRecordsPresent: Optional<Boolean> = Optional.Absent,
     @SerialName("is_valid_domain")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val isValidDomain: Boolean? = null,
@@ -52,26 +60,34 @@ public data class PagesHealthCheck(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val isApexDomain: Boolean? = null,
     @SerialName("should_be_a_record")
-    public val shouldBeARecord: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val shouldBeARecord: Optional<Boolean> = Optional.Absent,
     @SerialName("is_cname_to_github_user_domain")
-    public val isCnameToGithubUserDomain: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isCnameToGithubUserDomain: Optional<Boolean> = Optional.Absent,
     @SerialName("is_cname_to_pages_dot_github_dot_com")
-    public val isCnameToPagesDotGithubDotCom: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isCnameToPagesDotGithubDotCom: Optional<Boolean> = Optional.Absent,
     @SerialName("is_cname_to_fastly")
-    public val isCnameToFastly: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isCnameToFastly: Optional<Boolean> = Optional.Absent,
     @SerialName("is_pointed_to_github_pages_ip")
-    public val isPointedToGithubPagesIp: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isPointedToGithubPagesIp: Optional<Boolean> = Optional.Absent,
     @SerialName("is_non_github_pages_ip_present")
-    public val isNonGithubPagesIpPresent: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isNonGithubPagesIpPresent: Optional<Boolean> = Optional.Absent,
     @SerialName("is_pages_domain")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val isPagesDomain: Boolean? = null,
     @SerialName("is_served_by_pages")
-    public val isServedByPages: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isServedByPages: Optional<Boolean> = Optional.Absent,
     @SerialName("is_valid")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val isValid: Boolean? = null,
-    public val reason: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val reason: Optional<String> = Optional.Absent,
     @SerialName("responds_to_https")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val respondsToHttps: Boolean? = null,
@@ -79,11 +95,14 @@ public data class PagesHealthCheck(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val enforcesHttps: Boolean? = null,
     @SerialName("https_error")
-    public val httpsError: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val httpsError: Optional<String> = Optional.Absent,
     @SerialName("is_https_eligible")
-    public val isHttpsEligible: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isHttpsEligible: Optional<Boolean> = Optional.Absent,
     @SerialName("caa_error")
-    public val caaError: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val caaError: Optional<String> = Optional.Absent,
   )
 
   @OptIn(ExperimentalSerializationApi::class)
@@ -99,19 +118,26 @@ public data class PagesHealthCheck(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val dnsResolves: Boolean? = null,
     @SerialName("is_proxied")
-    public val isProxied: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isProxied: Optional<Boolean> = Optional.Absent,
     @SerialName("is_cloudflare_ip")
-    public val isCloudflareIp: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isCloudflareIp: Optional<Boolean> = Optional.Absent,
     @SerialName("is_fastly_ip")
-    public val isFastlyIp: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isFastlyIp: Optional<Boolean> = Optional.Absent,
     @SerialName("is_old_ip_address")
-    public val isOldIpAddress: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isOldIpAddress: Optional<Boolean> = Optional.Absent,
     @SerialName("is_a_record")
-    public val isARecord: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isARecord: Optional<Boolean> = Optional.Absent,
     @SerialName("has_cname_record")
-    public val hasCnameRecord: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val hasCnameRecord: Optional<Boolean> = Optional.Absent,
     @SerialName("has_mx_records_present")
-    public val hasMxRecordsPresent: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val hasMxRecordsPresent: Optional<Boolean> = Optional.Absent,
     @SerialName("is_valid_domain")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val isValidDomain: Boolean? = null,
@@ -119,26 +145,34 @@ public data class PagesHealthCheck(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val isApexDomain: Boolean? = null,
     @SerialName("should_be_a_record")
-    public val shouldBeARecord: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val shouldBeARecord: Optional<Boolean> = Optional.Absent,
     @SerialName("is_cname_to_github_user_domain")
-    public val isCnameToGithubUserDomain: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isCnameToGithubUserDomain: Optional<Boolean> = Optional.Absent,
     @SerialName("is_cname_to_pages_dot_github_dot_com")
-    public val isCnameToPagesDotGithubDotCom: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isCnameToPagesDotGithubDotCom: Optional<Boolean> = Optional.Absent,
     @SerialName("is_cname_to_fastly")
-    public val isCnameToFastly: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isCnameToFastly: Optional<Boolean> = Optional.Absent,
     @SerialName("is_pointed_to_github_pages_ip")
-    public val isPointedToGithubPagesIp: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isPointedToGithubPagesIp: Optional<Boolean> = Optional.Absent,
     @SerialName("is_non_github_pages_ip_present")
-    public val isNonGithubPagesIpPresent: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isNonGithubPagesIpPresent: Optional<Boolean> = Optional.Absent,
     @SerialName("is_pages_domain")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val isPagesDomain: Boolean? = null,
     @SerialName("is_served_by_pages")
-    public val isServedByPages: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isServedByPages: Optional<Boolean> = Optional.Absent,
     @SerialName("is_valid")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val isValid: Boolean? = null,
-    public val reason: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val reason: Optional<String> = Optional.Absent,
     @SerialName("responds_to_https")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val respondsToHttps: Boolean? = null,
@@ -146,10 +180,13 @@ public data class PagesHealthCheck(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val enforcesHttps: Boolean? = null,
     @SerialName("https_error")
-    public val httpsError: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val httpsError: Optional<String> = Optional.Absent,
     @SerialName("is_https_eligible")
-    public val isHttpsEligible: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val isHttpsEligible: Optional<Boolean> = Optional.Absent,
     @SerialName("caa_error")
-    public val caaError: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val caaError: Optional<String> = Optional.Absent,
   )
 }

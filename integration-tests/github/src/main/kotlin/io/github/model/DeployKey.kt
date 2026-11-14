@@ -26,9 +26,11 @@ public data class DeployKey(
   @SerialName("read_only")
   public val readOnly: Boolean,
   @SerialName("added_by")
-  public val addedBy: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val addedBy: Optional<String> = Optional.Absent,
   @SerialName("last_used")
-  public val lastUsed: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val lastUsed: Optional<Instant> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val enabled: Boolean? = null,
 )

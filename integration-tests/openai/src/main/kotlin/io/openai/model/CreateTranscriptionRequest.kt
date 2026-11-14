@@ -43,9 +43,11 @@ public data class CreateTranscriptionRequest(
   @SerialName("timestamp_granularities")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val timestampGranularities: List<TimestampGranularities>? = null,
-  public val stream: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stream: Optional<Boolean> = Optional.Absent,
   @SerialName("chunking_strategy")
-  public val chunkingStrategy: ChunkingStrategy? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val chunkingStrategy: Optional<ChunkingStrategy> = Optional.Absent,
   @SerialName("known_speaker_names")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val knownSpeakerNames: List<String>? = null,

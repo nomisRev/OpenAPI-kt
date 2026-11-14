@@ -15,7 +15,8 @@ import kotlinx.serialization.Serializable
 @OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class GistHistory(
-  public val user: NullableSimpleUser? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val user: Optional<NullableSimpleUser> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val version: String? = null,
   @SerialName("committed_at")

@@ -22,7 +22,8 @@ public data class AutoCodeInterpreterToolParam(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val fileIds: List<String>? = null,
   @SerialName("memory_limit")
-  public val memoryLimit: ContainerMemoryLimit? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val memoryLimit: Optional<ContainerMemoryLimit> = Optional.Absent,
   @SerialName("network_policy")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val networkPolicy: NetworkPolicy? = null,

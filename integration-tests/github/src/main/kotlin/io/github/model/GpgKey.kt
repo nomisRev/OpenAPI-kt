@@ -15,10 +15,12 @@ import kotlinx.serialization.json.JsonArray
 /**
  * A unique encryption key
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class GpgKey(
   public val id: Long,
-  public val name: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val name: Optional<String> = Optional.Absent,
   @SerialName("primary_key_id")
   public val primaryKeyId: Long?,
   @SerialName("key_id")
@@ -86,9 +88,11 @@ public data class GpgKey(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val createdAt: String? = null,
     @SerialName("expires_at")
-    public val expiresAt: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val expiresAt: Optional<String> = Optional.Absent,
     @SerialName("raw_key")
-    public val rawKey: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val rawKey: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val revoked: Boolean? = null,
   ) {

@@ -1,13 +1,20 @@
 package io.openai.model
 
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class UpdateVectorStoreRequest(
-  public val name: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val name: Optional<String> = Optional.Absent,
   @SerialName("expires_after")
-  public val expiresAfter: VectorStoreExpirationAfter? = null,
-  public val metadata: Metadata? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val expiresAfter: Optional<VectorStoreExpirationAfter> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
 )

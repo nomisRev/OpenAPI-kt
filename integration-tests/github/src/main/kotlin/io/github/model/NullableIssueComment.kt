@@ -40,8 +40,10 @@ public data class NullableIssueComment(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val authorAssociation: AuthorAssociation? = null,
   @SerialName("performed_via_github_app")
-  public val performedViaGithubApp: NullableIntegration? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val performedViaGithubApp: Optional<NullableIntegration> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val reactions: ReactionRollup? = null,
-  public val pin: NullablePinnedIssueComment? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val pin: Optional<NullablePinnedIssueComment> = Optional.Absent,
 )

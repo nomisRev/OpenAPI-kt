@@ -92,13 +92,15 @@ public sealed interface ItemResource {
    * An output message from the model.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class OutputMessage(
     public val id: String,
     public val type: Type,
     public val role: Role,
     public val content: List<OutputMessageContent>,
-    public val phase: MessagePhase? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val phase: Optional<MessagePhase> = Optional.Absent,
     public val status: Status,
   ) : ItemResource {
     @Serializable
@@ -138,13 +140,15 @@ public sealed interface ItemResource {
    * [file search guide](/docs/guides/tools-file-search) for more information.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class FileSearchCall(
     public val id: String,
     public val type: Type,
     public val status: Status,
     public val queries: List<String>,
-    public val results: List<Results>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val results: Optional<List<Results>> = Optional.Absent,
   ) : ItemResource {
     @OptIn(ExperimentalSerializationApi::class)
     @Serializable
@@ -156,7 +160,8 @@ public sealed interface ItemResource {
       public val text: String? = null,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val filename: String? = null,
-      public val attributes: VectorStoreFileAttributes? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val attributes: Optional<VectorStoreFileAttributes> = Optional.Absent,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val score: Float? = null,
     )
@@ -334,9 +339,11 @@ public sealed interface ItemResource {
        *
        */
       @SerialName("open_page")
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class OpenPage(
-        public val url: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val url: Optional<String> = Optional.Absent,
       ) : Action
 
       /**
@@ -702,12 +709,14 @@ public sealed interface ItemResource {
    * The output of a local shell tool call.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class LocalShellCallOutput(
     public val type: Type,
     public val id: String,
     public val output: String,
-    public val status: Status? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val status: Optional<Status> = Optional.Absent,
   ) : ItemResource {
     @Serializable
     public enum class Status(
@@ -884,7 +893,8 @@ public sealed interface ItemResource {
     @SerialName("call_id")
     public val callId: String,
     public val status: ApplyPatchCallOutputStatus,
-    public val output: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val output: Optional<String> = Optional.Absent,
     @SerialName("created_by")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val createdBy: String? = null,
@@ -903,6 +913,7 @@ public sealed interface ItemResource {
    * A list of tools available on an MCP server.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class McpListTools(
     public val type: Type,
@@ -910,7 +921,8 @@ public sealed interface ItemResource {
     @SerialName("server_label")
     public val serverLabel: String,
     public val tools: List<MCPListToolsTool>,
-    public val error: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val error: Optional<String> = Optional.Absent,
   ) : ItemResource {
     @Serializable
     public enum class Type(
@@ -949,6 +961,7 @@ public sealed interface ItemResource {
    * A response to an MCP approval request.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class McpApprovalResponse(
     public val type: Type,
@@ -956,7 +969,8 @@ public sealed interface ItemResource {
     @SerialName("approval_request_id")
     public val approvalRequestId: String,
     public val approve: Boolean,
-    public val reason: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val reason: Optional<String> = Optional.Absent,
   ) : ItemResource {
     @Serializable
     public enum class Type(
@@ -981,12 +995,15 @@ public sealed interface ItemResource {
     public val serverLabel: String,
     public val name: String,
     public val arguments: String,
-    public val output: String? = null,
-    public val error: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val output: Optional<String> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val error: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val status: MCPToolCallStatus? = null,
     @SerialName("approval_request_id")
-    public val approvalRequestId: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val approvalRequestId: Optional<String> = Optional.Absent,
   ) : ItemResource {
     @Serializable
     public enum class Type(

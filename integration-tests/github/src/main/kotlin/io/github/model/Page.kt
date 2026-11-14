@@ -20,9 +20,11 @@ public data class Page(
   public val status: Status?,
   public val cname: String?,
   @SerialName("protected_domain_state")
-  public val protectedDomainState: ProtectedDomainState? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val protectedDomainState: Optional<ProtectedDomainState> = Optional.Absent,
   @SerialName("pending_domain_unverified_at")
-  public val pendingDomainUnverifiedAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val pendingDomainUnverifiedAt: Optional<Instant> = Optional.Absent,
   @SerialName("custom_404")
   @Required
   public val custom404: Boolean = false,
@@ -30,7 +32,8 @@ public data class Page(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val htmlUrl: String? = null,
   @SerialName("build_type")
-  public val buildType: BuildType? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val buildType: Optional<BuildType> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val source: PagesSourceHash? = null,
   public val `public`: Boolean,

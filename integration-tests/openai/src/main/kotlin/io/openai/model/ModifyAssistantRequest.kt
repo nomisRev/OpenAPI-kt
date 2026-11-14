@@ -30,20 +30,29 @@ public data class ModifyAssistantRequest(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val model: Model? = null,
   @SerialName("reasoning_effort")
-  public val reasoningEffort: ReasoningEffort? = null,
-  public val name: String? = null,
-  public val description: String? = null,
-  public val instructions: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val reasoningEffort: Optional<ReasoningEffort> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val name: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val description: Optional<String> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val instructions: Optional<String> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tools: List<Tools>? = null,
   @SerialName("tool_resources")
-  public val toolResources: ToolResources? = null,
-  public val metadata: Metadata? = null,
-  public val temperature: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val toolResources: Optional<ToolResources> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val metadata: Optional<Metadata> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val temperature: Optional<Double> = Optional.Absent,
   @SerialName("top_p")
-  public val topP: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val topP: Optional<Double> = Optional.Absent,
   @SerialName("response_format")
-  public val responseFormat: AssistantsApiResponseFormatOption? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val responseFormat: Optional<AssistantsApiResponseFormatOption> = Optional.Absent,
 ) {
   /**
    * ID of the model to use. You can use the [List models](/docs/api-reference/models/list) API to see all of your available models, or see our [Model overview](/docs/models) for descriptions of them.
@@ -167,7 +176,8 @@ public data class ModifyAssistantRequest(
       public val name: String,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val parameters: FunctionParameters? = null,
-      public val strict: Boolean? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val strict: Optional<Boolean> = Optional.Absent,
     ) : Tools
   }
 }

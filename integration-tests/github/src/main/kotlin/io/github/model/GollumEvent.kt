@@ -16,9 +16,12 @@ public data class GollumEvent(
   @Serializable
   public data class Pages(
     @SerialName("page_name")
-    public val pageName: String? = null,
-    public val title: String? = null,
-    public val summary: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val pageName: Optional<String> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val title: Optional<String> = Optional.Absent,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val summary: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val action: String? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)

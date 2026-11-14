@@ -33,13 +33,17 @@ public data class CopilotUsageMetricsDay(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val totalEngagedUsers: Long? = null,
   @SerialName("copilot_ide_code_completions")
-  public val copilotIdeCodeCompletions: CopilotIdeCodeCompletions? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val copilotIdeCodeCompletions: Optional<CopilotIdeCodeCompletions> = Optional.Absent,
   @SerialName("copilot_ide_chat")
-  public val copilotIdeChat: CopilotIdeChat? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val copilotIdeChat: Optional<CopilotIdeChat> = Optional.Absent,
   @SerialName("copilot_dotcom_chat")
-  public val copilotDotcomChat: CopilotDotcomChat? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val copilotDotcomChat: Optional<CopilotDotcomChat> = Optional.Absent,
   @SerialName("copilot_dotcom_pull_requests")
-  public val copilotDotcomPullRequests: CopilotDotcomPullRequests? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val copilotDotcomPullRequests: Optional<CopilotDotcomPullRequests> = Optional.Absent,
   public val additional: JsonObject? = null,
 ) {
   public object Serializer : KSerializer<CopilotUsageMetricsDay> {

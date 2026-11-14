@@ -20,9 +20,11 @@ public data class CodeScanningDefaultSetup(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val languages: List<Languages>? = null,
   @SerialName("runner_type")
-  public val runnerType: RunnerType? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val runnerType: Optional<RunnerType> = Optional.Absent,
   @SerialName("runner_label")
-  public val runnerLabel: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val runnerLabel: Optional<String> = Optional.Absent,
   @SerialName("query_suite")
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val querySuite: QuerySuite? = null,
@@ -30,8 +32,10 @@ public data class CodeScanningDefaultSetup(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val threatModel: ThreatModel? = null,
   @SerialName("updated_at")
-  public val updatedAt: Instant? = null,
-  public val schedule: Schedule? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val updatedAt: Optional<Instant> = Optional.Absent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val schedule: Optional<Schedule> = Optional.Absent,
 ) {
   @Serializable
   public enum class Languages(

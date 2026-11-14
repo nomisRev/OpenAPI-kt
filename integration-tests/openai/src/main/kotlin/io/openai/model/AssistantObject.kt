@@ -16,6 +16,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 /**
  * Represents an `assistant` that can call the model and use tools.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class AssistantObject(
   public val id: String,
@@ -29,13 +30,17 @@ public data class AssistantObject(
   @Required
   public val tools: List<Tools> = emptyList(),
   @SerialName("tool_resources")
-  public val toolResources: ToolResources? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val toolResources: Optional<ToolResources> = Optional.Absent,
   public val metadata: Metadata?,
-  public val temperature: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val temperature: Optional<Double> = Optional.Absent,
   @SerialName("top_p")
-  public val topP: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val topP: Optional<Double> = Optional.Absent,
   @SerialName("response_format")
-  public val responseFormat: AssistantsApiResponseFormatOption? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val responseFormat: Optional<AssistantsApiResponseFormatOption> = Optional.Absent,
 ) {
   @Serializable
   public enum class Object(
@@ -117,7 +122,8 @@ public data class AssistantObject(
       public val name: String,
       @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val parameters: FunctionParameters? = null,
-      public val strict: Boolean? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
+      public val strict: Optional<Boolean> = Optional.Absent,
     ) : Tools
   }
 }

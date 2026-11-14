@@ -45,10 +45,12 @@ public data class ChatCompletionMessageList(
     @SerialName("function_call")
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val functionCall: FunctionCall? = null,
-    public val audio: Audio? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val audio: Optional<Audio> = Optional.Absent,
     public val id: String,
     @SerialName("content_parts")
-    public val contentParts: List<ContentParts>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val contentParts: Optional<List<ContentParts>> = Optional.Absent,
   ) {
     /**
      * A URL citation when using web search.
