@@ -15,6 +15,7 @@ import io.github.nomisrev.openapi.parser.Style
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.resolveComponent
 import io.github.nomisrev.openapi.registry.toModel
+import io.ktor.http.BadContentTypeFormatException
 import io.ktor.http.ContentType
 import io.ktor.http.HttpMethod
 import kotlin.collections.component1
@@ -35,11 +36,23 @@ private suspend fun RequestBody.toBodies(
     method: HttpMethod,
 ): Route.Bodies? {
     val typedBodies = content.entries.mapNotNull { [contentType, mediaType] ->
-        val declared = ContentType.parse(contentType)
         val schema = mediaType.schema
+        if (schema == null) {
             // Only `itemSchema` (OpenAPI 3.2): a stream of items, which request bodies do not model.
-            ?: if (mediaType.itemSchema != null) return@mapNotNull null
-            else return@mapNotNull Pair(declared, schemalessBody(segments, method, declared, mediaType))
+            if (mediaType.itemSchema != null) return@mapNotNull null
+            // A key that is no media type (plaid.com has `examples` next to `application/json`) describes no body.
+            val declared = try {
+                ContentType.parse(contentType)
+            } catch (_: BadContentTypeFormatException) {
+                ctx.warn(
+                    "Request body of ${method.value} $path has the content key '$contentType', which is not a " +
+                        "media type and has no schema. It is ignored."
+                )
+                return@mapNotNull null
+            }
+            return@mapNotNull Pair(declared, schemalessBody(segments, method, declared, mediaType))
+        }
+        val declared = ContentType.parse(contentType)
         val body = when {
             declared.isMultipartFormData() -> formDataToBody(segments, method, mediaType, schema)
             declared.match(ContentType.Application.FormUrlEncoded) ->

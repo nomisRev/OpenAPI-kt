@@ -180,4 +180,18 @@ val SchemalessMediaTypeSpec by testSuite {
         )
         assertEquals(setOf(HttpStatusCode.OK, HttpStatusCode.NotFound), route.returns.responses.keys)
     }
+
+    test("a request content key that is no media type and has no schema is ignored, as before") {
+        // plaid.com: `"content": { "application/json": { schema }, "examples": {} }`
+        val route = routeOf(
+            requestBody = RequestBody(
+                content = mapOf(
+                    "application/json" to MediaType(schema = ReferenceOr.Value(Schema.string)),
+                    "examples" to MediaType(),
+                ),
+                required = true,
+            ),
+        )
+        assertEquals(setOf(ContentType.Application.Json), assertNotNull(route.body).types.keys)
+    }
 }
