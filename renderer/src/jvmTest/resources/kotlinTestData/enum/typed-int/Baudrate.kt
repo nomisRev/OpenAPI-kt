@@ -9,9 +9,6 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.intOrNull
 
 @Serializable(with = Baudrate.Serializer::class)
 public enum class Baudrate(
@@ -31,13 +28,7 @@ public enum class Baudrate(
     }
 
     override fun deserialize(decoder: Decoder): Baudrate {
-      val value = if (decoder is JsonDecoder) {
-        val element = decoder.decodeJsonElement()
-        val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-        primitive?.intOrNull ?: throw SerializationException("""Baudrate expects a JSON integer, got $element""")
-      } else {
-        decoder.decodeInt()
-      }
+      val value = decoder.decodeInt()
       val member = Baudrate.entries.firstOrNull { it.value == value }
       return member ?: throw SerializationException("""Baudrate has no member with value $value""")
     }

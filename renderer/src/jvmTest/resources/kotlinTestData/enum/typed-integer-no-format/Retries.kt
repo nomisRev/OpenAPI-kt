@@ -9,9 +9,6 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.longOrNull
 
 @Serializable(with = Retries.Serializer::class)
 public enum class Retries(
@@ -31,13 +28,7 @@ public enum class Retries(
     }
 
     override fun deserialize(decoder: Decoder): Retries {
-      val value = if (decoder is JsonDecoder) {
-        val element = decoder.decodeJsonElement()
-        val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-        primitive?.longOrNull ?: throw SerializationException("""Retries expects a JSON integer, got $element""")
-      } else {
-        decoder.decodeLong()
-      }
+      val value = decoder.decodeLong()
       val member = Retries.entries.firstOrNull { it.value == value }
       return member ?: throw SerializationException("""Retries has no member with value $value""")
     }

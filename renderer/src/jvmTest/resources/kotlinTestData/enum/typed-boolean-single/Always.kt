@@ -9,9 +9,6 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
 
 @Serializable(with = Always.Serializer::class)
 public enum class Always(
@@ -29,13 +26,7 @@ public enum class Always(
     }
 
     override fun deserialize(decoder: Decoder): Always {
-      val value = if (decoder is JsonDecoder) {
-        val element = decoder.decodeJsonElement()
-        val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-        primitive?.booleanOrNull ?: throw SerializationException("""Always expects a JSON boolean, got $element""")
-      } else {
-        decoder.decodeBoolean()
-      }
+      val value = decoder.decodeBoolean()
       val member = Always.entries.firstOrNull { it.value == value }
       return member ?: throw SerializationException("""Always has no member with value $value""")
     }

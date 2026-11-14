@@ -43,14 +43,12 @@ internal enum class TypedEnumKind(
     val primitiveKind: String,
     val encode: String,
     val decode: String,
-    val jsonType: String,
-    val orNull: String,
 ) {
-    Int(INT, "INT", "encodeInt", "decodeInt", "integer", "intOrNull"),
-    Long(LONG, "LONG", "encodeLong", "decodeLong", "integer", "longOrNull"),
-    Float(FLOAT, "FLOAT", "encodeFloat", "decodeFloat", "number", "floatOrNull"),
-    Double(DOUBLE, "DOUBLE", "encodeDouble", "decodeDouble", "number", "doubleOrNull"),
-    Boolean(BOOLEAN, "BOOLEAN", "encodeBoolean", "decodeBoolean", "boolean", "booleanOrNull"),
+    Int(INT, "INT", "encodeInt", "decodeInt"),
+    Long(LONG, "LONG", "encodeLong", "decodeLong"),
+    Float(FLOAT, "FLOAT", "encodeFloat", "decodeFloat"),
+    Double(DOUBLE, "DOUBLE", "encodeDouble", "decodeDouble"),
+    Boolean(BOOLEAN, "BOOLEAN", "encodeBoolean", "decodeBoolean"),
 }
 
 /**
@@ -100,8 +98,6 @@ internal fun Model.Enum.wireTextExpr(expr: String): String = when {
 
 private val PrimitiveSerialDescriptorMember = MemberName("kotlinx.serialization.descriptors", "PrimitiveSerialDescriptor")
 private val PrimitiveKindType = ClassName("kotlinx.serialization.descriptors", "PrimitiveKind")
-private val JsonDecoderType = ClassName("kotlinx.serialization.json", "JsonDecoder")
-private val JsonPrimitiveType = ClassName("kotlinx.serialization.json", "JsonPrimitive")
 private val SerializationExceptionType =ClassName("kotlinx.serialization", "SerializationException")
 
 /**
@@ -112,20 +108,8 @@ private fun typedEnumSerializer(enumName: String, kind: TypedEnumKind): TypeSpec
     val enumClassName = ClassName("", enumName)
     val dollar = "$"
     val deserialize = CodeBlock.builder()
-        // kotlinx.serialization's JSON decoder accepts a quoted number for `decodeInt()` and a quoted `"true"` for
-        // `decodeBoolean()`, so read the element to refuse a string where the schema says number or boolean.
-        .beginControlFlow("val value = if (decoder is %T)", JsonDecoderType)
-        .addStatement("val element = decoder.decodeJsonElement()")
-        .addStatement("val primitive = (element as? %T)?.takeIf·{ !it.isString }", JsonPrimitiveType)
-        .addStatement(
-            "primitive?.%M·?: throw %T(%P)",
-            MemberName("kotlinx.serialization.json", kind.orNull),
-            SerializationExceptionType,
-            "$enumName expects a JSON ${kind.jsonType}, got ${dollar}element",
-        )
-        .nextControlFlow("else")
-        .addStatement("decoder.%L()", kind.decode)
-        .endControlFlow()
+        // Decodes exactly like the primitive it wraps: how lenient that is, is up to the `Json` instance.
+        .addStatement("val value = decoder.%L()", kind.decode)
         .addStatement("val member = %L.entries.firstOrNull·{ it.value·==·value }", enumName)
         .addStatement("return member ?: throw %T(%P)", SerializationExceptionType, "$enumName has no member with value ${dollar}value")
         .build()

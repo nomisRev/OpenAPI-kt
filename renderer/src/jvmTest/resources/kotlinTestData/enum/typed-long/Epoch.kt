@@ -9,9 +9,6 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.longOrNull
 
 @Serializable(with = Epoch.Serializer::class)
 public enum class Epoch(
@@ -30,13 +27,7 @@ public enum class Epoch(
     }
 
     override fun deserialize(decoder: Decoder): Epoch {
-      val value = if (decoder is JsonDecoder) {
-        val element = decoder.decodeJsonElement()
-        val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-        primitive?.longOrNull ?: throw SerializationException("""Epoch expects a JSON integer, got $element""")
-      } else {
-        decoder.decodeLong()
-      }
+      val value = decoder.decodeLong()
       val member = Epoch.entries.firstOrNull { it.value == value }
       return member ?: throw SerializationException("""Epoch has no member with value $value""")
     }

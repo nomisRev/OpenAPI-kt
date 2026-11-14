@@ -22,11 +22,6 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.booleanOrNull
-import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.longOrNull
 
 public class Meters internal constructor(
   private val client: HttpClient,
@@ -101,13 +96,7 @@ public class Meters internal constructor(
           }
 
           override fun deserialize(decoder: Decoder): Scale {
-            val value = if (decoder is JsonDecoder) {
-              val element = decoder.decodeJsonElement()
-              val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-              primitive?.doubleOrNull ?: throw SerializationException("""Scale expects a JSON number, got $element""")
-            } else {
-              decoder.decodeDouble()
-            }
+            val value = decoder.decodeDouble()
             val member = Scale.entries.firstOrNull { it.value == value }
             return member ?: throw SerializationException("""Scale has no member with value $value""")
           }
@@ -131,13 +120,7 @@ public class Meters internal constructor(
           }
 
           override fun deserialize(decoder: Decoder): On {
-            val value = if (decoder is JsonDecoder) {
-              val element = decoder.decodeJsonElement()
-              val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-              primitive?.booleanOrNull ?: throw SerializationException("""On expects a JSON boolean, got $element""")
-            } else {
-              decoder.decodeBoolean()
-            }
+            val value = decoder.decodeBoolean()
             val member = On.entries.firstOrNull { it.value == value }
             return member ?: throw SerializationException("""On has no member with value $value""")
           }
@@ -161,13 +144,7 @@ public class Meters internal constructor(
           }
 
           override fun deserialize(decoder: Decoder): XLevel {
-            val value = if (decoder is JsonDecoder) {
-              val element = decoder.decodeJsonElement()
-              val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-              primitive?.longOrNull ?: throw SerializationException("""XLevel expects a JSON integer, got $element""")
-            } else {
-              decoder.decodeLong()
-            }
+            val value = decoder.decodeLong()
             val member = XLevel.entries.firstOrNull { it.value == value }
             return member ?: throw SerializationException("""XLevel has no member with value $value""")
           }
@@ -224,13 +201,7 @@ public class Meters internal constructor(
           }
 
           override fun deserialize(decoder: Decoder): Scale {
-            val value = if (decoder is JsonDecoder) {
-              val element = decoder.decodeJsonElement()
-              val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-              primitive?.doubleOrNull ?: throw SerializationException("""Scale expects a JSON number, got $element""")
-            } else {
-              decoder.decodeDouble()
-            }
+            val value = decoder.decodeDouble()
             val member = Scale.entries.firstOrNull { it.value == value }
             return member ?: throw SerializationException("""Scale has no member with value $value""")
           }
@@ -254,13 +225,7 @@ public class Meters internal constructor(
           }
 
           override fun deserialize(decoder: Decoder): On {
-            val value = if (decoder is JsonDecoder) {
-              val element = decoder.decodeJsonElement()
-              val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-              primitive?.booleanOrNull ?: throw SerializationException("""On expects a JSON boolean, got $element""")
-            } else {
-              decoder.decodeBoolean()
-            }
+            val value = decoder.decodeBoolean()
             val member = On.entries.firstOrNull { it.value == value }
             return member ?: throw SerializationException("""On has no member with value $value""")
           }
@@ -284,13 +249,7 @@ public class Meters internal constructor(
           }
 
           override fun deserialize(decoder: Decoder): XLevel {
-            val value = if (decoder is JsonDecoder) {
-              val element = decoder.decodeJsonElement()
-              val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-              primitive?.longOrNull ?: throw SerializationException("""XLevel expects a JSON integer, got $element""")
-            } else {
-              decoder.decodeLong()
-            }
+            val value = decoder.decodeLong()
             val member = XLevel.entries.firstOrNull { it.value == value }
             return member ?: throw SerializationException("""XLevel has no member with value $value""")
           }
@@ -347,13 +306,7 @@ public class Meters internal constructor(
           }
 
           override fun deserialize(decoder: Decoder): Scale {
-            val value = if (decoder is JsonDecoder) {
-              val element = decoder.decodeJsonElement()
-              val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-              primitive?.doubleOrNull ?: throw SerializationException("""Scale expects a JSON number, got $element""")
-            } else {
-              decoder.decodeDouble()
-            }
+            val value = decoder.decodeDouble()
             val member = Scale.entries.firstOrNull { it.value == value }
             return member ?: throw SerializationException("""Scale has no member with value $value""")
           }
@@ -377,13 +330,7 @@ public class Meters internal constructor(
           }
 
           override fun deserialize(decoder: Decoder): On {
-            val value = if (decoder is JsonDecoder) {
-              val element = decoder.decodeJsonElement()
-              val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-              primitive?.booleanOrNull ?: throw SerializationException("""On expects a JSON boolean, got $element""")
-            } else {
-              decoder.decodeBoolean()
-            }
+            val value = decoder.decodeBoolean()
             val member = On.entries.firstOrNull { it.value == value }
             return member ?: throw SerializationException("""On has no member with value $value""")
           }
@@ -407,13 +354,7 @@ public class Meters internal constructor(
           }
 
           override fun deserialize(decoder: Decoder): XLevel {
-            val value = if (decoder is JsonDecoder) {
-              val element = decoder.decodeJsonElement()
-              val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-              primitive?.longOrNull ?: throw SerializationException("""XLevel expects a JSON integer, got $element""")
-            } else {
-              decoder.decodeLong()
-            }
+            val value = decoder.decodeLong()
             val member = XLevel.entries.firstOrNull { it.value == value }
             return member ?: throw SerializationException("""XLevel has no member with value $value""")
           }

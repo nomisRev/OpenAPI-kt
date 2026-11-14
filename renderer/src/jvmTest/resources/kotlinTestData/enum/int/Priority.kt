@@ -9,9 +9,6 @@ import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonDecoder
-import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.longOrNull
 
 @Serializable(with = Priority.Serializer::class)
 public enum class Priority(
@@ -31,13 +28,7 @@ public enum class Priority(
     }
 
     override fun deserialize(decoder: Decoder): Priority {
-      val value = if (decoder is JsonDecoder) {
-        val element = decoder.decodeJsonElement()
-        val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-        primitive?.longOrNull ?: throw SerializationException("""Priority expects a JSON integer, got $element""")
-      } else {
-        decoder.decodeLong()
-      }
+      val value = decoder.decodeLong()
       val member = Priority.entries.firstOrNull { it.value == value }
       return member ?: throw SerializationException("""Priority has no member with value $value""")
     }

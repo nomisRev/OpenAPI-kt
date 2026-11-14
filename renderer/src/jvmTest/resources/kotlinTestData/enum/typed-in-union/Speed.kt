@@ -21,7 +21,6 @@ import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
-import kotlinx.serialization.json.longOrNull
 
 @Serializable(with = Speed.Serializer::class)
 public sealed interface Speed {
@@ -42,13 +41,7 @@ public sealed interface Speed {
       }
 
       override fun deserialize(decoder: Decoder): CaseLong {
-        val value = if (decoder is JsonDecoder) {
-          val element = decoder.decodeJsonElement()
-          val primitive = (element as? JsonPrimitive)?.takeIf { !it.isString }
-          primitive?.longOrNull ?: throw SerializationException("""CaseLong expects a JSON integer, got $element""")
-        } else {
-          decoder.decodeLong()
-        }
+        val value = decoder.decodeLong()
         val member = CaseLong.entries.firstOrNull { it.value == value }
         return member ?: throw SerializationException("""CaseLong has no member with value $value""")
       }
