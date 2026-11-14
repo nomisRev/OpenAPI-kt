@@ -7,7 +7,14 @@ import io.ktor.http.encodeURLParameter
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 public class Meter internal constructor(
   private val client: HttpClient,
@@ -25,26 +32,44 @@ public class Meter internal constructor(
     ) {
       val response = client.get("meter") {
         if (rate != null) {
-          url.encodedParameters.append("rate", rate.toString().encodeURLParameter())
+          this.url.encodedParameters.append("rate", rate.value.toString().encodeURLParameter())
         }
         if (limit != null) {
-          url.encodedParameters.append("limit", limit.toString())
+          this.url.encodedParameters.append("limit", limit.toString())
         }
         if (ratio != null) {
-          url.encodedParameters.append("ratio", ratio.toString())
+          this.url.encodedParameters.append("ratio", ratio.toString())
         }
         if (on != null) {
-          url.encodedParameters.append("on", on.toString())
+          this.url.encodedParameters.append("on", on.toString())
         }
       }
       if (response.status.value != 204) throw ResponseException(response, "")
     }
 
-    @Serializable
-    public enum class Rate {
-      `300`,
-      `600`,
-      `1200`,
+    @Serializable(with = Rate.Serializer::class)
+    public enum class Rate(
+      public val `value`: Long,
+    ) {
+      `300`(300L),
+      `600`(600L),
+      `1200`(1_200L),
+      ;
+
+      internal object Serializer : KSerializer<Rate> {
+        override val descriptor: SerialDescriptor =
+            PrimitiveSerialDescriptor("Rate", PrimitiveKind.LONG)
+
+        override fun serialize(encoder: Encoder, `value`: Rate) {
+          encoder.encodeLong(value.value)
+        }
+
+        override fun deserialize(decoder: Decoder): Rate {
+          val value = decoder.decodeLong()
+          val member = Rate.entries.firstOrNull { it.value == value }
+          return member ?: throw SerializationException("""Rate has no member with value $value""")
+        }
+      }
     }
   }
 }

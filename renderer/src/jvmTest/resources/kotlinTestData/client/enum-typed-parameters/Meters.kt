@@ -64,13 +64,13 @@ public class Meters internal constructor(
       ) {
         val response = client.get("meters/300") {
           if (speed != null) {
-            url.encodedParameters.append("speed", speed.value.toString().encodeURLParameter())
+            this.url.encodedParameters.append("speed", speed.value.toString().encodeURLParameter())
           }
           if (scale != null) {
-            url.encodedParameters.append("scale", scale.value.toString().encodeURLParameter())
+            this.url.encodedParameters.append("scale", scale.value.toString().encodeURLParameter())
           }
           if (on != null) {
-            url.encodedParameters.append("on", on.value.toString().encodeURLParameter())
+            this.url.encodedParameters.append("on", on.value.toString().encodeURLParameter())
           }
           if (xLevel != null) {
             `header`("X-Level", xLevel.value.toString())
@@ -169,13 +169,13 @@ public class Meters internal constructor(
       ) {
         val response = client.get("meters/600") {
           if (speed != null) {
-            url.encodedParameters.append("speed", speed.value.toString().encodeURLParameter())
+            this.url.encodedParameters.append("speed", speed.value.toString().encodeURLParameter())
           }
           if (scale != null) {
-            url.encodedParameters.append("scale", scale.value.toString().encodeURLParameter())
+            this.url.encodedParameters.append("scale", scale.value.toString().encodeURLParameter())
           }
           if (on != null) {
-            url.encodedParameters.append("on", on.value.toString().encodeURLParameter())
+            this.url.encodedParameters.append("on", on.value.toString().encodeURLParameter())
           }
           if (xLevel != null) {
             `header`("X-Level", xLevel.value.toString())
@@ -274,13 +274,13 @@ public class Meters internal constructor(
       ) {
         val response = client.get("meters/1200") {
           if (speed != null) {
-            url.encodedParameters.append("speed", speed.value.toString().encodeURLParameter())
+            this.url.encodedParameters.append("speed", speed.value.toString().encodeURLParameter())
           }
           if (scale != null) {
-            url.encodedParameters.append("scale", scale.value.toString().encodeURLParameter())
+            this.url.encodedParameters.append("scale", scale.value.toString().encodeURLParameter())
           }
           if (on != null) {
-            url.encodedParameters.append("on", on.value.toString().encodeURLParameter())
+            this.url.encodedParameters.append("on", on.value.toString().encodeURLParameter())
           }
           if (xLevel != null) {
             `header`("X-Level", xLevel.value.toString())
