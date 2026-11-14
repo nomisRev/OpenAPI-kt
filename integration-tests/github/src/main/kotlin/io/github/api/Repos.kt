@@ -9883,11 +9883,15 @@ public class Repos internal constructor(
             private val repo: String,
             private val path: String,
           ) {
-            public suspend fun vndGithubObject(ref: String? = null): VndGithubObjectResponse {
+            public suspend fun vndGithubObject(ref: String? = null, body: JsonElement? = null): VndGithubObjectResponse {
               val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contents/${this.path.encodeURLParameter()}") {
                 `header`(HttpHeaders.Accept, ContentType("application", "vnd.github.object"))
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
+                }
+                body?.let {
+                  contentType(ContentType.Application.Json)
+                  setBody(it)
                 }
               }
               return when (response.status.value) {
@@ -9900,11 +9904,15 @@ public class Repos internal constructor(
               }
             }
 
-            public suspend fun json(ref: String? = null): JsonResponse {
+            public suspend fun json(ref: String? = null, body: JsonElement? = null): JsonResponse {
               val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contents/${this.path.encodeURLParameter()}") {
                 `header`(HttpHeaders.Accept, ContentType.Application.Json)
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
+                }
+                body?.let {
+                  contentType(ContentType.Application.Json)
+                  setBody(it)
                 }
               }
               return when (response.status.value) {
