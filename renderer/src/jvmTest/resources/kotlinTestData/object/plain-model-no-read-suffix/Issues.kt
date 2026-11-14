@@ -24,7 +24,7 @@ public class Issues internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(): IssueKey {
-        val response = client.get("issues/${id.encodeURLParameter()}")
+        val response = client.get("issues/${this.id.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }

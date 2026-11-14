@@ -23,7 +23,7 @@ public class LabelExploded internal constructor(
       private val ids: List<String>,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("label-exploded/${ids.joinToString("") { ".${it.encodeURLParameter()}" }}")
+        val response = client.get("label-exploded/${this.ids.joinToString("") { ".${it.encodeURLParameter()}" }}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

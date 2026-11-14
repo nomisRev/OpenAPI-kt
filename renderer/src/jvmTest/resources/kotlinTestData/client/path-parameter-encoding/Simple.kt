@@ -22,7 +22,7 @@ public class Simple internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("simple/${id.encodeURLParameter()}")
+        val response = client.get("simple/${this.id.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

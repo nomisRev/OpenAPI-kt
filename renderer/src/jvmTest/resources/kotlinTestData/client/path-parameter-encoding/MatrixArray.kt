@@ -23,7 +23,7 @@ public class MatrixArray internal constructor(
       private val ids: List<String>,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("matrix-array/${if (ids.isEmpty()) "" else ";ids=${ids.joinToString(",") { it.encodeURLParameter() }}"}")
+        val response = client.get("matrix-array/${if (this.ids.isEmpty()) "" else ";ids=${this.ids.joinToString(",") { it.encodeURLParameter() }}"}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

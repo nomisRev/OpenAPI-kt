@@ -38,7 +38,7 @@ public class Uploads internal constructor(
         retries: Int? = null,
         tags: List<String>,
       ): Response {
-        val response = client.post("uploads/${uploadId.encodeURLParameter()}") {
+        val response = client.post("uploads/${this.uploadId.encodeURLParameter()}") {
           setBody(MultiPartFormDataContent(formData {
             append("file", file)
             append("checksum", checksum)

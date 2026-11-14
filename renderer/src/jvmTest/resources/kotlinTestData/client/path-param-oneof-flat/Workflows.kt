@@ -73,7 +73,7 @@ public class Workflows internal constructor(
         private val workflowId: Int,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("workflows/$workflowId/runs")
+          val response = client.get("workflows/${this.workflowId}/runs")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }

@@ -30,7 +30,7 @@ public class Pets internal constructor(
       private val petId: String,
     ) {
       public suspend fun json(): JsonResponse {
-        val response = client.get("pets/${petId.encodeURLParameter()}") {
+        val response = client.get("pets/${this.petId.encodeURLParameter()}") {
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
         }
         return when (response.status.value) {
@@ -48,7 +48,7 @@ public class Pets internal constructor(
       }
 
       public suspend fun xml(): XmlResponse {
-        val response = client.get("pets/${petId.encodeURLParameter()}") {
+        val response = client.get("pets/${this.petId.encodeURLParameter()}") {
           `header`(HttpHeaders.Accept, ContentType.Application.Xml)
         }
         return when (response.status.value) {

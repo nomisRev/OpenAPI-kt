@@ -22,7 +22,7 @@ public class Codes internal constructor(
       private val code: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("codes/;code=${code.encodeURLParameter()}")
+        val response = client.get("codes/;code=${this.code.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

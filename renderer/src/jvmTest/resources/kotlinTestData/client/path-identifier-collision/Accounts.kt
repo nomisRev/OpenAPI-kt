@@ -24,7 +24,7 @@ public class Accounts internal constructor(
       private val accountId: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("accounts/${accountId.encodeURLParameter()}")
+        val response = client.get("accounts/${this.accountId.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
@@ -47,7 +47,7 @@ public class Accounts internal constructor(
         private val accountId: String,
       ) {
         public suspend operator fun invoke() {
-          val response = client.get("accounts/${accountId.encodeURLParameter()}/members")
+          val response = client.get("accounts/${this.accountId.encodeURLParameter()}/members")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }

@@ -427,8 +427,18 @@ private fun expansionCode(
 }
 
 /**
+ * The path parameter [this] as the operation reads it, `this.id` (a keyword as ``this.`object` ``). A path parameter is
+ * a property of the operation class, and the `invoke` parameters (a query parameter, the property of a flattened body
+ * or form) are nearer declarations of the same name, so a bare `id` could be one of those.
+ */
+private fun String.pathProperty(): String {
+    val name = toCamelCase()
+    return "this.${if (name.isValidParamName()) name else "`$name`"}"
+}
+
+/**
  * The path of this route as a `String` template: every parameter segment is the expansion of its `style` and
- * `explode` ([expansionCode]), percent-encoded as a path segment (`${id.encodeURLParameter()}`, a number `$id`). A
+ * `explode` ([expansionCode]), percent-encoded as a path segment (`${this.id.encodeURLParameter()}`, a number `${this.id}`). A
  * fixed enum segment is its encoded wire value and an overloaded parameter, already its string, is encoded alike. The
  * literal segments of the path template are written as they are, so the empty one of a trailing slash or a double
  * slash keeps its `/` (`owners/`, `a//b`).
@@ -443,11 +453,11 @@ internal fun Route.pathLiteral(config: RenderConfig): CodeBlock {
             // `·` keeps KotlinPoet from wrapping a line inside the template.
             is PathSegment.Literal -> CodeBlock.of("%L", segment.name.replace(' ', '·'))
             is PathSegment.OverloadedParameter ->
-                CodeBlock.of("%L.%M()", segment.name.toCamelCase(), EncodeURLParameterMember).interpolated()
+                CodeBlock.of("%L.%M()", segment.name.pathProperty(), EncodeURLParameterMember).interpolated()
             is PathSegment.Parameter -> {
-                val variable = segment.name.toCamelCase()
+                val variable = segment.name.pathProperty()
                 val input = parameters.firstOrNull { it.input == Parameter.Input.Path && it.name == segment.name }
-                if (input == null || !input.isSupported) CodeBlock.of("$%L", variable)
+                if (input == null || !input.isSupported) CodeBlock.of("\${%L}", variable)
                 else expansionCode(
                     config = config,
                     style = if (input.contentType != null) Style.simple else input.style,

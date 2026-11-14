@@ -49,7 +49,7 @@ public class A internal constructor(
               private val e: Long,
             ) {
               public suspend operator fun invoke() {
-                val response = client.get("a/b/${c.encodeURLParameter()}/d/$e/f")
+                val response = client.get("a/b/${this.c.encodeURLParameter()}/d/${this.e}/f")
                 if (response.status.value != 200) throw ResponseException(response, "")
               }
             }

@@ -66,13 +66,13 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(): List<Name> {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels")
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
 
               public suspend operator fun invoke(body: LabelsStrings): List<Name> {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -82,7 +82,7 @@ public class Repos internal constructor(
 
               @JvmName("StringList")
               public suspend operator fun invoke(body: List<String>): List<Name> {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -91,7 +91,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: LabelsNames): List<Name> {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -101,7 +101,7 @@ public class Repos internal constructor(
 
               @JvmName("NameList")
               public suspend operator fun invoke(body: List<Name>): List<Name> {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -110,7 +110,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: String): List<Name> {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(JsonPrimitive(body))
                 }

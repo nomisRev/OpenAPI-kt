@@ -1,6 +1,6 @@
 # An operation parameter with the Kotlin name of a path parameter replaces it in the request path
 
-**Status:** open
+**Status:** fixed (path parameters are written `this.name` in the path template); open: the checked-in `integration-tests` clients are not regenerated yet
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** wrong output (silent) when the types are compatible; compile otherwise
 **Impact:** 14 of 1,547 documents: 3 compile and send the wrong path (tfl.gov.uk, opentargets.io, vtex.local:Catalog-API-Seller-Portal), 11 fail to compile (combell.com, xero.com:xero_bankfeeds, interactivebrokers.com, docusign.net, authentiq.io, warwick.ac.uk:enterobase, clickmeter.com, trello.com, gsmtasks.com, ix-api.net, amazonaws.com:apigateway). Also `integration-tests/github` (3 operations).

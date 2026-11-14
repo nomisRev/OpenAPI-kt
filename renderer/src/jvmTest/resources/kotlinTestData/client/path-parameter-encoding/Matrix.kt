@@ -22,7 +22,7 @@ public class Matrix internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("matrix/;id=${id.encodeURLParameter()}")
+        val response = client.get("matrix/;id=${this.id.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

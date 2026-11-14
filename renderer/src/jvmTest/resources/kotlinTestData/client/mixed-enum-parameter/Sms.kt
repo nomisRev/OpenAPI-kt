@@ -33,7 +33,7 @@ public class Sms internal constructor(
         xDelivered: JsonElement? = null,
         deliveredCookie: JsonElement? = null,
       ) {
-        val response = client.post("sms/${mode.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }.encodeURLParameter()}") {
+        val response = client.post("sms/${this.mode.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }.encodeURLParameter()}") {
           this.url.encodedParameters.append("delivered", delivered.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }.encodeURLParameter())
           if (xDelivered != null) {
             `header`("X-Delivered", xDelivered.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() })
@@ -52,7 +52,7 @@ public class Sms internal constructor(
         flag: JsonElement,
         label: JsonElement? = null,
       ) {
-        val response = client.post("sms/${mode.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }.encodeURLParameter()}") {
+        val response = client.post("sms/${this.mode.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }.encodeURLParameter()}") {
           this.url.encodedParameters.append("delivered", delivered.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }.encodeURLParameter())
           if (xDelivered != null) {
             `header`("X-Delivered", xDelivered.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() })

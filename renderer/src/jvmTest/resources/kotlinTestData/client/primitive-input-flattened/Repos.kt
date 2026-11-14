@@ -34,7 +34,7 @@ public class Repos internal constructor(
         toolName: String? = null,
         session: Instant? = null,
       ) {
-        val response = client.get("repos/$alertNumber") {
+        val response = client.get("repos/${this.alertNumber}") {
           if (toolName != null) {
             this.url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
           }

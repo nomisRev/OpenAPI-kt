@@ -55,7 +55,7 @@ public class Refs internal constructor(
       private val ref: Int,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("refs/$ref")
+        val response = client.get("refs/${this.ref}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

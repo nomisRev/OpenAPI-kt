@@ -62,7 +62,7 @@ public class Repos internal constructor(
             body: String? = null,
             milestone: Milestone? = null,
           ) {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseString(title), body = body, milestone = milestone))
             }
@@ -74,7 +74,7 @@ public class Repos internal constructor(
             body: String? = null,
             milestone: Milestone? = null,
           ) {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseLong(title), body = body, milestone = milestone))
             }

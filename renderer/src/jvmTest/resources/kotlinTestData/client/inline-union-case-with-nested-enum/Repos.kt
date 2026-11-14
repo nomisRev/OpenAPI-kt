@@ -56,7 +56,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(source: Source? = null) {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages") {
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages") {
               contentType(ContentType.Application.Json)
               setBody(Body(source = source))
             }

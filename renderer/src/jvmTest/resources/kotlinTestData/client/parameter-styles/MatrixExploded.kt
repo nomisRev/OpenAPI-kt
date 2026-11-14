@@ -22,7 +22,7 @@ public class MatrixExploded internal constructor(
       private val ids: List<Int>,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("matrix-exploded/${ids.joinToString("") { ";ids=$it" }}")
+        val response = client.get("matrix-exploded/${this.ids.joinToString("") { ";ids=$it" }}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

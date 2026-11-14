@@ -65,7 +65,7 @@ public class Owners internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("owners/${id.encodeURLParameter()}/")
+        val response = client.get("owners/${this.id.encodeURLParameter()}/")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }

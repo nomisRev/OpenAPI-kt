@@ -25,7 +25,7 @@ public class Versions internal constructor(
       private val version: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.get("versions/${version.encodeURLParameter()}")
+        val response = client.get("versions/${this.version.encodeURLParameter()}")
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
