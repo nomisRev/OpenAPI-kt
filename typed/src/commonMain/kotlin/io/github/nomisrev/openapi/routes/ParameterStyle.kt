@@ -2,6 +2,8 @@ package io.github.nomisrev.openapi.routes
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.parser.Parameter
+import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Style
 import io.github.nomisrev.openapi.registry.Registry
 
@@ -115,3 +117,48 @@ private fun Model.isUnionParameterCase(): Boolean = when (this) {
 
     else -> false
 }
+
+/**
+ * The model of a parameter or form field of [schema], whose [this] model is the one the schema has anywhere else.
+ *
+ * A query, header, cookie or path parameter and a form field is a string on the wire, so the value of a schema without
+ * a `type` (`{}`, `items: {}`, an enum of members of different JSON types) is a `JsonPrimitive` sent as its
+ * `content`, not any `JsonElement`: `form` and `simple` define no serialization of a nested value. A free-form object
+ * (`type: object` without properties) is a map of them, which `form` defines as one pair per entry. The schema of an
+ * array item that is a free-form object stays as it is: nested, so undefined.
+ *
+ * Free-form JSON in a JSON body or a model property is not affected.
+ */
+context(scope: Registry)
+internal suspend fun Model.asParameterValue(schema: ReferenceOr<Schema>?): Model {
+    if (schema == null) return this
+    if (schema is ReferenceOr.Reference) {
+        // A reference to an untyped schema is a value class around a `JsonElement`: the parameter is the primitive.
+        val wrapper = formModel() as? Model.Object ?: return this
+        val inner = wrapper.properties["value"]?.model as? Model.FreeFormJson
+        if (!wrapper.isScalarWrapper || inner == null) return this
+        return inner.with(isNullable = wrapper.isNullable || inner.isNullable)
+            .asParameterValue(ReferenceOr.value(schema.resolveSchema()))
+    }
+    val value = (schema as? ReferenceOr.Value)?.value ?: return this
+    return when (this) {
+        is Model.FreeFormJson ->
+            if (value.isObjectSchema) Model.Dictionary(copy(description = null, isPrimitive = true), description, constraint, isNullable, title)
+            else copy(isPrimitive = true)
+
+        is Model.Collection -> {
+            val item = (value.items as? ReferenceOr.Value)?.value
+            if (inner is Model.FreeFormJson && item?.isObjectSchema != true) copy(inner = inner.copy(isPrimitive = true))
+            else this
+        }
+
+        else -> this
+    }
+}
+
+private val Schema.isObjectSchema: Boolean
+    get() = when (val type = type) {
+        Schema.Type.Basic.Object -> true
+        is Schema.Type.Array -> Schema.Type.Basic.Object in type.types
+        else -> false
+    }

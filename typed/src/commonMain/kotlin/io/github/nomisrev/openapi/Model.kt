@@ -241,6 +241,11 @@ sealed interface Model {
         val constraint: Constraints.Object?,
         override val isNullable: Boolean,
         override val title: String?,
+        /**
+         * Whether this is the value of a parameter or form field, which is a string on the wire: a
+         * `kotlinx.serialization.json.JsonPrimitive` sent as its `content`, rather than any `JsonElement`.
+         */
+        val isPrimitive: Boolean = false,
         //  val default: Default<String>?
     ) : Model {
         // TODO support default values

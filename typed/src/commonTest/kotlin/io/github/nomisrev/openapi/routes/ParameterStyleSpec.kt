@@ -1,11 +1,13 @@
 package io.github.nomisrev.openapi.routes
 
 import de.infix.testBalloon.framework.core.testSuite
+import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.parser.Style
 import io.github.nomisrev.openapi.registry.Registry
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 
 /**
  * A parameter is serialized by its `style` and `explode` (OpenAPI 3.1.1, 4.8.12.4): `style` defaults to `form` for
@@ -96,6 +98,64 @@ val ParameterStyleSpec by testSuite {
         }
     }
 
+    // A schema without a `type` is any JSON value, which a parameter sends as the content of a `JsonPrimitive`; a
+    // free-form object is a map of them. Neither is a `JsonElement`, which could hold a nested value `form` and
+    // `simple` define no serialization for.
+    fun primitive() = Model.FreeFormJson(null, null, false, null, isPrimitive = true)
+    val untyped = """{}"""
+    val untypedArray = """{ "type": "array", "items": {} }"""
+    val freeFormObject = """{ "type": "object" }"""
+    val untypedShapes = listOf(
+        "a query untyped" to (parameter("query", untyped) to primitive()),
+        "a header untyped" to (parameter("header", untyped) to primitive()),
+        "a cookie untyped" to (parameter("cookie", untyped) to primitive()),
+        "a path untyped" to (parameter("path", untyped) to primitive()),
+        "a query untyped enum of mixed types" to (parameter("query", """{ "enum": [true, 0, "a"] }""") to primitive()),
+    )
+    for ([description, case] in untypedShapes) {
+        val [json, expected] = case
+        test("$description parameter is a JsonPrimitive") {
+            val input = input(json)
+            assertEquals(true, input.isSupported)
+            assertEquals(expected, (input.type as Model.FreeFormJson).copy(description = null, constraint = null))
+        }
+    }
+    val untypedCollections = listOf(
+        "a query untyped array" to parameter("query", untypedArray),
+        "a query untyped array, explode false" to parameter("query", untypedArray, """, "explode": false"""),
+        "a header untyped array" to parameter("header", untypedArray),
+        "a path untyped array" to parameter("path", untypedArray),
+    )
+    for ([description, json] in untypedCollections) {
+        test("$description parameter is a list of JsonPrimitive") {
+            val input = input(json)
+            assertEquals(true, input.isSupported)
+            val inner = assertIs<Model.Collection>(input.type).inner
+            assertEquals(primitive(), (inner as Model.FreeFormJson).copy(description = null, constraint = null))
+        }
+    }
+    val freeFormObjects = listOf(
+        "a query free-form object" to parameter("query", freeFormObject),
+        "a query free-form object, explode false" to parameter("query", freeFormObject, """, "explode": false"""),
+        "a header free-form object" to parameter("header", freeFormObject),
+        "a cookie free-form object, explode false" to parameter("cookie", freeFormObject, """, "explode": false"""),
+    )
+    for ([description, json] in freeFormObjects) {
+        test("$description parameter is a map of JsonPrimitive") {
+            val input = input(json)
+            assertEquals(true, input.isSupported)
+            val inner = assertIs<Model.Dictionary>(input.type).inner
+            assertEquals(primitive(), (inner as Model.FreeFormJson).copy(description = null, constraint = null))
+        }
+    }
+
+    // A reference to an untyped schema is the same value: the client sends the content of a `JsonPrimitive`.
+    test("a query referenced untyped schema parameter is a JsonPrimitive") {
+        val input = input(parameter("query", $$"""{ "$ref": "#/components/schemas/Any" }"""), """"Any": {}""")
+        assertEquals(true, input.isSupported)
+        assertEquals(primitive(), (input.type as Model.FreeFormJson).copy(description = null, constraint = null))
+    }
+
     val unsupported = listOf(
         // Styles a location does not define.
         "a query array with simple" to parameter("query", array, """, "style": "simple""""),
@@ -122,6 +182,11 @@ val ParameterStyleSpec by testSuite {
         "a path object" to parameter("path", obj, """, "style": "matrix""""),
         "a path label enum (its path segments are fixed values)" to
             parameter("path", """{ "type": "string", "enum": ["a", "b"] }""", """, "style": "label""""),
+        // An array of free-form objects is nested, and undefined.
+        "a query array of free-form objects" to parameter("query", """{ "type": "array", "items": $freeFormObject }"""),
+        "a query map of free-form objects" to
+            parameter("query", """{ "type": "object", "additionalProperties": $freeFormObject }"""),
+        "a path free-form object" to parameter("path", freeFormObject),
         // A parameter with `content` is its media type, which is only generated for a scalar.
         "a query object with content" to
             """{ "name": "p", "in": "query", "content": { "application/json": { "schema": $obj } } }""",

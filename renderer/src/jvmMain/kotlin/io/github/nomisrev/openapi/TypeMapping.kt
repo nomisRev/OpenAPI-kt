@@ -17,6 +17,7 @@ private val UuidType = ClassName("kotlin.uuid", "Uuid")
 private val LocalDateType = ClassName("kotlinx.datetime", "LocalDate")
 private val InstantType = ClassName("kotlin.time", "Instant")
 private val JsonElementType = ClassName("kotlinx.serialization.json", "JsonElement")
+private val JsonPrimitiveType = ClassName("kotlinx.serialization.json", "JsonPrimitive")
 private val JsonArrayType = ClassName("kotlinx.serialization.json", "JsonArray")
 private val ListType = ClassName("kotlin.collections", "List")
 private val MapType = ClassName("kotlin.collections", "Map")
@@ -25,7 +26,7 @@ private val MapType = ClassName("kotlin.collections", "Map")
 fun Model.toTypeName(config: RenderConfig): TypeName = when (this) {
         is Model.ByteArray -> BYTE_ARRAY
         is Model.Collection -> {
-            if (inner is Model.FreeFormJson) JsonArrayType
+            if ((inner as? Model.FreeFormJson)?.isPrimitive == false) JsonArrayType
             else ListType.parameterizedBy(inner.toTypeName(config))
         }
 
@@ -35,7 +36,7 @@ fun Model.toTypeName(config: RenderConfig): TypeName = when (this) {
         is Model.DateTime -> InstantType
         is Model.DiscriminatedObject -> context.toClassName(config)
         is Model.Enum -> context.toClassName(config)
-        is Model.FreeFormJson -> JsonElementType
+        is Model.FreeFormJson -> if (isPrimitive) JsonPrimitiveType else JsonElementType
         is Model.Object -> context.toClassName(config)
         is Model.Primitive.Boolean -> BOOLEAN
         is Model.Primitive.Double -> DOUBLE

@@ -18,7 +18,7 @@ import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Runtime check for the `mixed-enum-parameter` golden: an enum without a `type` and with members of different JSON
- * types is sent as the text of its JSON primitive wherever a parameter or form field is serialized, as the
+ * types is a `JsonPrimitive` sent as its `content` wherever a parameter or form field is serialized, as the
  * `delivered` query parameter of the nexmo.com conversion API (`[true, false, 0, 1]`) is.
  */
 class MixedEnumParameterRuntimeTest {

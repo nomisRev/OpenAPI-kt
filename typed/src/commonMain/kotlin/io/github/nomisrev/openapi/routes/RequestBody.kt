@@ -112,17 +112,21 @@ private suspend fun RequestBody.formUrlEncoded(
             "Form URL encoded body must be an object. $this"
         }
     }
+    // A form field is a string on the wire, so an untyped one is a `JsonPrimitive` (see [asParameterValue]).
+    val properties = obj.properties.mapValues { [baseName, prop] ->
+        prop.copy(model = prop.model.asParameterValue(resolvedSchema.properties?.get(baseName)))
+    }
     val styles = obj.properties.keys.mapNotNull { baseName ->
         mediaType.encoding[baseName]?.formStyleOrNull()?.let { baseName to it }
     }.toMap()
     val unsupportedFields = with(scope) {
-        obj.properties.mapNotNull { [baseName, prop] ->
+        properties.mapNotNull { [baseName, prop] ->
             val encoding = mediaType.encoding[baseName]
             val style = if (encoding == null) Route.Body.FormStyle.FormExploded else styles[baseName]
             if (prop.model.isFormUrlEncodable(encoding, style)) null else baseName
         }
     }
-    val params = obj.properties.map { [baseName, prop] -> Route.Body.Multipart.FormData(baseName, prop.model, null, prop.isRequired) }
+    val params = properties.map { [baseName, prop] -> Route.Body.Multipart.FormData(baseName, prop.model, null, prop.isRequired) }
     return Route.Body.FormUrlEncoded(params, unsupportedFields, description, mediaType.extensions, styles)
 }
 
@@ -210,7 +214,7 @@ private fun ReferenceOr<RequestBody>.resolve(): RequestBody =
  * like every other `$ref` the [Registry] resolves.
  */
 context(ctx: Registry)
-private suspend fun ReferenceOr<Schema>.resolveSchema(): Schema = with(ctx.scope()) { peek() }
+internal suspend fun ReferenceOr<Schema>.resolveSchema(): Schema = with(ctx.scope()) { peek() }
 
 /**
  * The [Route.Body.FormStyle] an Encoding Object declares for a form field, or `null` when it declares none that is
@@ -268,7 +272,7 @@ internal suspend fun Model.formModel(visited: Set<NamingContext.Reference> = emp
 }
 
 /**
- * A model whose form or parameter value is a single string: a primitive, date, UUID, enum or `JsonElement`, or a wrapper around one.
+ * A model whose form or parameter value is a single string: a primitive, date, UUID, enum or `JsonPrimitive`, or a wrapper around one.
  */
 context(scope: Registry)
 internal suspend fun Model.isFormScalar(visited: Set<NamingContext.Reference> = emptySet()): Boolean = when (this) {
@@ -281,9 +285,10 @@ internal suspend fun Model.isFormScalar(visited: Set<NamingContext.Reference> = 
     is Model.Primitive.Int,
     is Model.Primitive.Long,
     is Model.Primitive.String,
-    // A `JsonElement`, such as an enum of members of different JSON types: its text is the content of a JSON primitive.
-    is Model.FreeFormJson,
     is Model.Uuid -> true
+
+    // A `JsonPrimitive` ([asParameterValue]): its string is its `content`. Any other JSON has no string form.
+    is Model.FreeFormJson -> isPrimitive
 
     is Model.ByteArray,
     is Model.Collection,

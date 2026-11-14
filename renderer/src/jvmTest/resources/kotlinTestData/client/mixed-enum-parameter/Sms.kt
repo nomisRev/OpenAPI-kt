@@ -11,60 +11,61 @@ import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import io.ktor.http.encodeURLParameter
 import io.ktor.http.formUrlEncode
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Sms internal constructor(
   private val client: HttpClient,
 ) {
-  public fun mode(mode: JsonElement): ModePath = ModePath(client, mode)
+  public fun mode(mode: JsonPrimitive): ModePath = ModePath(client, mode)
 
   public class ModePath internal constructor(
     private val client: HttpClient,
-    private val mode: JsonElement,
+    private val mode: JsonPrimitive,
   ) {
     public val post: Post = Post(client, mode)
 
     public class Post internal constructor(
       private val client: HttpClient,
-      private val mode: JsonElement,
+      private val mode: JsonPrimitive,
     ) {
       public suspend operator fun invoke(
-        delivered: JsonElement,
-        xDelivered: JsonElement? = null,
-        deliveredCookie: JsonElement? = null,
+        delivered: JsonPrimitive,
+        xDelivered: JsonPrimitive? = null,
+        deliveredCookie: JsonPrimitive? = null,
       ) {
-        val response = client.post("sms/${this.mode.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }.encodeURLParameter()}") {
-          this.url.encodedParameters.append("delivered", delivered.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }.encodeURLParameter())
-          if (xDelivered != null) {
-            `header`("X-Delivered", xDelivered.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() })
+        val response = client.post("sms/${this.mode.content.encodeURLParameter()}") {
+          this.url.encodedParameters.append("delivered", delivered.content.encodeURLParameter())
+          if (xDelivered != null && xDelivered !is JsonNull) {
+            `header`("X-Delivered", xDelivered.content)
           }
-          if (deliveredCookie != null) {
-            cookie("delivered-cookie", deliveredCookie.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() })
+          if (deliveredCookie != null && deliveredCookie !is JsonNull) {
+            cookie("delivered-cookie", deliveredCookie.content)
           }
         }
         if (response.status.value != 204) throw ResponseException(response, "")
       }
 
       public suspend operator fun invoke(
-        delivered: JsonElement,
-        xDelivered: JsonElement? = null,
-        deliveredCookie: JsonElement? = null,
-        flag: JsonElement,
-        label: JsonElement? = null,
+        delivered: JsonPrimitive,
+        xDelivered: JsonPrimitive? = null,
+        deliveredCookie: JsonPrimitive? = null,
+        flag: JsonPrimitive,
+        label: JsonPrimitive? = null,
       ) {
-        val response = client.post("sms/${this.mode.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }.encodeURLParameter()}") {
-          this.url.encodedParameters.append("delivered", delivered.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }.encodeURLParameter())
-          if (xDelivered != null) {
-            `header`("X-Delivered", xDelivered.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() })
+        val response = client.post("sms/${this.mode.content.encodeURLParameter()}") {
+          this.url.encodedParameters.append("delivered", delivered.content.encodeURLParameter())
+          if (xDelivered != null && xDelivered !is JsonNull) {
+            `header`("X-Delivered", xDelivered.content)
           }
-          if (deliveredCookie != null) {
-            cookie("delivered-cookie", deliveredCookie.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() })
+          if (deliveredCookie != null && deliveredCookie !is JsonNull) {
+            cookie("delivered-cookie", deliveredCookie.content)
           }
           contentType(ContentType.Application.FormUrlEncoded)
           setBody(Parameters.build {
-            append("flag", flag.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() })
-            if (label != null) {
-              append("label", label.let { (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() })
+            append("flag", flag.content)
+            if (label != null && label !is JsonNull) {
+              append("label", label.content)
             }
           }.formUrlEncode())
         }

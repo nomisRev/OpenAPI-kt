@@ -71,12 +71,13 @@ private suspend fun Parameter.toRouteInput(
 ): Route.Input {
     val context = NamingContext.path(segments, method).nest(RouteParam(name))
     val [type, contentType] = if (schema != null) {
-        schema!!.toModel(context, SchemaContext.Write) to null
+        schema!!.toModel(context, SchemaContext.Write).asParameterValue(schema) to null
     } else if (content.isNotEmpty()) {
         val [contentType, mediaType] = content.entries.first()
         val mediaTypeSchema = requireNotNull(mediaType.schema) {
             "Parameter $name with content $contentType without schema for ${method.value} $path"
         }
+        // Not narrowed by [asParameterValue]: the value of a `content` parameter is serialized by its media type.
         mediaTypeSchema.toModel(context, SchemaContext.Write) to ContentType.parse(contentType)
     } else {
         error("Parameter $name without schema or content for ${method.value} $path")

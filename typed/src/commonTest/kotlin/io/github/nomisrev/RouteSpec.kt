@@ -794,6 +794,64 @@ val routeSpec by testSuite {
         assertTrue(!form.isSupported)
     }
 
+    // A field without a `type` is any JSON value, which a form sends as the content of a `JsonPrimitive`.
+    test("form-urlencoded body with untyped fields is supported, as JsonPrimitive") {
+        val route = routes(
+            openAPI(
+                path = "/engagements",
+                method = HttpMethod.Post,
+                requestBody = formRequestBody(
+                    ReferenceOr.value(
+                        Schema(
+                            type = Schema.Type.Basic.Object,
+                            properties = mapOf(
+                                "To" to ReferenceOr.value(Schema.string),
+                                "Parameters" to ReferenceOr.value(Schema()),
+                                "Tags" to ReferenceOr.value(
+                                    Schema(type = Schema.Type.Basic.Array, items = ReferenceOr.value(Schema()))
+                                ),
+                            ),
+                        )
+                    )
+                ),
+            )
+        ).single()
+
+        val form = assertIs<Route.Body.FormUrlEncoded>(
+            requireNotNull(route.body).types.getValue(ContentType.Application.FormUrlEncoded)
+        )
+        assertTrue(form.isSupported)
+        assertTrue(form.unsupportedFields.isEmpty())
+        val fields = form.parameters.associateBy { it.name }
+        assertEquals(true, assertIs<Model.FreeFormJson>(fields.getValue("Parameters").type).isPrimitive)
+        val tags = assertIs<Model.Collection>(fields.getValue("Tags").type)
+        assertEquals(true, assertIs<Model.FreeFormJson>(tags.inner).isPrimitive)
+    }
+
+    test("form-urlencoded body with a free-form object field and no encoding is unsupported") {
+        val route = routes(
+            openAPI(
+                path = "/engagements",
+                method = HttpMethod.Post,
+                requestBody = formRequestBody(
+                    ReferenceOr.value(
+                        Schema(
+                            type = Schema.Type.Basic.Object,
+                            properties = mapOf(
+                                "AddOns" to ReferenceOr.value(Schema(type = Schema.Type.Basic.Object)),
+                            ),
+                        )
+                    )
+                ),
+            )
+        ).single()
+
+        val form = assertIs<Route.Body.FormUrlEncoded>(
+            requireNotNull(route.body).types.getValue(ContentType.Application.FormUrlEncoded)
+        )
+        assertEquals(listOf("AddOns"), form.unsupportedFields)
+    }
+
     test("explicit form field encoding keeps non-scalar field supported") {
         val route = routes(
             openAPI(

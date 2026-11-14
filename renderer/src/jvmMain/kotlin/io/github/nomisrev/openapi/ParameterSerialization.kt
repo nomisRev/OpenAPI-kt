@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi
 
+import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.joinToCode
@@ -9,6 +10,7 @@ import io.github.nomisrev.openapi.routes.Route
 import io.ktor.http.encodeURLParameter
 
 private val CookieMember = MemberName("io.ktor.client.request", "cookie")
+private val JsonNullType = ClassName("kotlinx.serialization.json", "JsonNull")
 private val EncodeURLParameterMember = MemberName("io.ktor.http", "encodeURLParameter")
 
 /**
@@ -159,10 +161,24 @@ internal fun CodeBlock.Builder.addPairsCode(
         }
 
         else -> {
-            if (mayBeNull) beginControlFlow("if (%L != null)", expr)
+            if (mayBeNull) beginPresentControlFlow(config, model, expr)
             addStatement("%L", target.pairCode(name, model.pairValueCode(config, target, expr)))
             if (mayBeNull) endControlFlow()
         }
+    }
+}
+
+/**
+ * Opens the block that runs when the optional scalar [expr] is present: not `null`, and, for a `JsonPrimitive`, not
+ * `JsonNull` either, which leaves a nullable parameter out like `null` does. A required parameter is always sent, so a
+ * `JsonNull` there is the text `null`.
+ */
+private fun CodeBlock.Builder.beginPresentControlFlow(config: RenderConfig, model: Model, expr: String) {
+    val resolved = model.formModel(config)
+    if (resolved is Model.FreeFormJson && resolved.isPrimitive) {
+        beginControlFlow("if (%L != null && %L !is %T)", expr, expr, JsonNullType)
+    } else {
+        beginControlFlow("if (%L != null)", expr)
     }
 }
 
@@ -337,7 +353,7 @@ internal fun CodeBlock.Builder.addHeaderCode(
         }
 
         else -> {
-            if (mayBeNull) beginControlFlow("if (%L != null)", expr)
+            if (mayBeNull) beginPresentControlFlow(config, model, expr)
             addStatement("%M(%S, %L)", headerMember, name, value(expr, model))
             if (mayBeNull) endControlFlow()
         }
@@ -514,7 +530,7 @@ internal fun Model.formModel(config: RenderConfig): Model =
     } else this
 
 /**
- * The `String` form value of the scalar [expr] of this model: a string as is, a `JsonElement` as the content of its primitive, an enum as its wire value (see
+ * The `String` form value of the scalar [expr] of this model: a string as is, a `JsonPrimitive` as its `content`, an enum as its wire value (see
  * `enum-wire-tostring`), a number, boolean, date, date-time or UUID as its `toString()` (`1`, `1.5`, `true`,
  * `2024-01-31`, `2024-01-31T10:00:00Z`), and a scalar wrapper as the value it wraps.
  */
@@ -522,9 +538,8 @@ internal fun Model.formValueExpr(config: RenderConfig, expr: String): String =
     when (val model = formModel(config)) {
         is Model.Primitive.String -> expr
         is Model.Enum -> model.wireTextExpr(expr)
-        // `true`, `0` and `a` for the JSON primitives `true`, `0` and `"a"`; any other JSON is its text.
-        is Model.FreeFormJson ->
-            "$expr.let·{ (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }"
+        // `true`, `0` and `a` for the JSON primitives `true`, `0` and `"a"`.
+        is Model.FreeFormJson -> "$expr.content"
         is Model.Object -> model.properties.getValue("value").model.formValueExpr(config, "$expr.value")
         else -> "$expr.toString()"
     }
