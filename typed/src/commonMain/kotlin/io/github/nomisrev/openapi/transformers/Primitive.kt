@@ -54,7 +54,7 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
         }
 
         Schema.Type.Basic.Boolean -> Model.Primitive.Boolean(
-            default = default("Boolean") { it.toBooleanStrictOrNull() },
+            default = default("Boolean") { it.lowercase().toBooleanStrictOrNull() },
             description = description(),
             isNullable = isNullable,
             title = schema.title
@@ -95,11 +95,12 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
 
 /**
  * The `default` of this schema as the Kotlin value of its declared type, decided from the JSON type of the default:
- * a number or a boolean is parsed by [onLiteral], a string is only a string (`"7"` is not the integer `7`), and the
- * JSON `null` is [Model.Default.Null], where the string `"null"` is the text `null`.
+ * a number or a boolean is parsed by [onLiteral], a string that parses as the declared type is read as it with a
+ * warning (`"7"` for an integer), any other string is rejected, and the JSON `null` is [Model.Default.Null], where the string `"null"` is the text `null`.
  *
  * A string schema takes the text of a number or a boolean default as it is, as YAML cannot tell `'1'` from `1`.
  */
+context(ctx: Registry.Scope)
 private fun <A : Any> ResolvedSchema.default(
     label: String,
     acceptsString: Boolean = false,
@@ -115,15 +116,26 @@ private fun <A : Any> ResolvedSchema.default(
     else -> Model.Default.Value(parseDefault(JsonPrimitive(default.toString()), label, acceptsString, onLiteral))
 }
 
+context(ctx: Registry.Scope)
 private fun <A : Any> ResolvedSchema.parseDefault(
     default: JsonPrimitive,
     label: String,
     acceptsString: Boolean,
     onLiteral: (String) -> A?,
-): A = requireNotNull(if (default.isString && !acceptsString) null else onLiteral(default.content)) {
-    "Default value $default at ${name.describe()} is not a $label."
+): A {
+    val parsed = requireNotNull(onLiteral(default.content)) {
+        "Default value $default at ${name.describe()} is not a $label."
+    }
+    if (default.isString && !acceptsString) {
+        ctx.registry().warn(
+            "Default value $default at ${name.describe()} is a string; read as the ${label.lowercase()} $parsed " +
+                "because the schema declares type ${label.lowercase()}."
+        )
+    }
+    return parsed
 }
 
+context(ctx: Registry.Scope)
 private fun <A : Any> ResolvedSchema.default(
     label: String,
     acceptsString: Boolean = false,

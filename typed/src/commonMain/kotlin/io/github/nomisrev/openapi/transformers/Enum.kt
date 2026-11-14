@@ -91,6 +91,7 @@ private fun List<JsonElement>.inferredType(): Schema.Type? = when {
     else -> null
 }
 
+context(ctx: Registry.Scope)
 private fun Model.toEnumValue(member: JsonElement, schema: ResolvedSchema): Model.EnumValue {
     if (member is JsonNull) return Model.EnumValue.Null(null)
     val primitive = member as JsonPrimitive
@@ -98,22 +99,33 @@ private fun Model.toEnumValue(member: JsonElement, schema: ResolvedSchema): Mode
     fun mismatch(label: String): Nothing =
         throw IllegalArgumentException("Enum value $member at ${schema.name.describe()} is not a $label.")
 
-    // A non-string member is its JSON number or boolean; a string is never a number or a boolean (`"7"` is not `7`).
-    val literal = if (primitive.isString) null else raw
+    // A string member that parses as the declared number or boolean is read as it, with a warning (`"7"` for 7).
+    val literal = raw
+    fun <A> coerced(label: String, parsed: A?): A {
+        val value = parsed ?: mismatch(label)
+        if (primitive.isString) {
+            ctx.registry().warn(
+                "Enum value $member at ${schema.name.describe()} is a string; read as the ${label.lowercase()} " +
+                    "$value because the schema declares type ${label.lowercase()}."
+            )
+        }
+        return value
+    }
     return when (this) {
         is Model.Primitive.Boolean ->
-            Model.EnumValue.Boolean(literal?.toBooleanStrictOrNull() ?: mismatch("Boolean"), raw)
+            Model.EnumValue.Boolean(coerced("Boolean", literal.lowercase().toBooleanStrictOrNull()), raw)
 
-        is Model.Primitive.Int -> Model.EnumValue.Int(literal?.toIntOrNull() ?: mismatch("Integer"), raw)
-        is Model.Primitive.Long -> Model.EnumValue.Long(literal?.toLongOrNull() ?: mismatch("Integer"), raw)
-        is Model.Primitive.Float -> Model.EnumValue.Float(literal?.toFloatOrNull() ?: mismatch("Number"), raw)
-        is Model.Primitive.Double -> Model.EnumValue.Double(literal?.toDoubleOrNull() ?: mismatch("Number"), raw)
+        is Model.Primitive.Int -> Model.EnumValue.Int(coerced("Integer", literal.toIntOrNull()), raw)
+        is Model.Primitive.Long -> Model.EnumValue.Long(coerced("Integer", literal.toLongOrNull()), raw)
+        is Model.Primitive.Float -> Model.EnumValue.Float(coerced("Number", literal.toFloatOrNull()), raw)
+        is Model.Primitive.Double -> Model.EnumValue.Double(coerced("Number", literal.toDoubleOrNull()), raw)
         // A schema that declares `type: string` takes the text of a number or a boolean member as it is: a YAML
         // document cannot tell `'1'` from `1`, and the member can only be sent as a string.
         else -> Model.EnumValue.String(raw)
     }
 }
 
+context(ctx: Registry.Scope)
 private fun ResolvedSchema.enumDefault(inner: Model): Model.Default<Model.EnumValue>? =
     when (val defaultValue = schema.default) {
         null -> null

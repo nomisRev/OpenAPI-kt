@@ -20,21 +20,24 @@ import kotlin.test.assertTrue
 val corpusRenderSmokeSpec by testSuite {
     listOf("youtrack.json", "supabase.json", "fly-io.json", "openai.yaml", "github.json").forEach { spec ->
         test("$spec renders without errors") {
-            val text = File("../parser/src/commonTest/resources/specs/$spec").readText().withValidDefaults()
+            val text = File("../parser/src/commonTest/resources/specs/$spec").readText()
             val api = if (spec.endsWith(".json")) OpenAPI.fromJson(text) else OpenAPI.fromYaml(text)
             val result = api.toApiTree().renderWithDiagnostics(RenderConfig())
             val errors = result.diagnostics.filter { it.severity == GenerationDiagnosticSeverity.Error }
             assertEquals(emptyList(), errors.map { it.message }, "Errors generating $spec")
             assertTrue(result.files.isNotEmpty(), "Expected files for $spec")
+            if (spec == "supabase.json") {
+                // `force` declares `"default": "true"` on a boolean: read as true, and reported.
+                assertTrue(
+                    result.diagnostics.any {
+                        it.severity == GenerationDiagnosticSeverity.Warning &&
+                            it.message.startsWith("Default value \"true\" at ") &&
+                            it.message.endsWith("is a string; read as the boolean true because the schema declares type boolean.")
+                    },
+                    result.diagnostics.map { it.message }.toString(),
+                )
+            }
             result.files.forEach { file -> assertTrue(file.toString().isNotEmpty()) }
         }
     }
 }
-
-/**
- * supabase.json declares the boolean query parameter `force` with `"default": "true"`, a string where OAS 3.0 requires
- * the boolean the schema's type declares (see `issues/default-or-enum-value-not-of-declared-type.md`). `default`
- * values are decided from their JSON type, so the document is corrected here to what its author meant.
- */
-private fun String.withValidDefaults(): String =
-    replace("\"default\": \"true\",\n              \"type\": \"boolean\"", "\"default\": true,\n              \"type\": \"boolean\"")

@@ -82,11 +82,25 @@ val enumJsonTypesSpec by testSuite {
         assertEquals(listOf(Model.EnumValue.String("1")), strings.values)
     }
 
-    test("an integer enum with a string member is invalid and names the schema and the value") {
+    test("an integer enum with a numeric string member reads it as the number, with a warning") {
+        val [model, warnings] = modelWithWarnings(
+            Schema(type = Schema.Type.Basic.Integer, enum = listOf(JsonPrimitive(1), JsonPrimitive("2")))
+        )
+        assertEquals(
+            listOf(Model.EnumValue.Long(1, "1"), Model.EnumValue.Long(2, "2")),
+            assertIs<Model.Enum>(model).values,
+        )
+        assertEquals(
+            listOf("Enum value \"2\" at GET /test is a string; read as the integer 2 because the schema declares type integer."),
+            warnings,
+        )
+    }
+
+    test("an integer enum with a member that is no integer is invalid and names the schema and the value") {
         val e = assertFailsWith<IllegalArgumentException> {
-            modelOf(Schema(type = Schema.Type.Basic.Integer, enum = listOf(JsonPrimitive(1), JsonPrimitive("2"))))
+            modelOf(Schema(type = Schema.Type.Basic.Integer, enum = listOf(JsonPrimitive(1), JsonPrimitive("BASIC"))))
         }
-        assertEquals("Enum value \"2\" at GET /test is not a Integer.", e.message)
+        assertEquals("Enum value \"BASIC\" at GET /test is not a Integer.", e.message)
     }
 
     test("an enum without a type and with members of one JSON type takes that type") {
@@ -174,36 +188,85 @@ val enumJsonTypesSpec by testSuite {
         assertEquals(1, warnings.size, warnings.toString())
     }
 
-    test("an integer default is a number, and a string default for an integer is rejected") {
-        assertEquals(
-            Model.Primitive.Long(Model.Default.Value(7L), null, null, false, null),
-            modelOf(Schema(type = Schema.Type.Basic.Integer, default = JsonPrimitive(7))),
+    test("a string default that parses as the declared type is read as it, with a warning") {
+        val [integer, integerWarnings] = modelWithWarnings(
+            Schema(type = Schema.Type.Basic.Integer, default = JsonPrimitive("7"))
         )
-        val e = assertFailsWith<IllegalArgumentException> {
-            modelOf(Schema(type = Schema.Type.Basic.Integer, default = JsonPrimitive("7")))
-        }
-        assertEquals("Default value \"7\" at GET /test is not a Integer.", e.message)
+        assertEquals(Model.Primitive.Long(Model.Default.Value(7L), null, null, false, null), integer)
+        assertEquals(
+            listOf("Default value \"7\" at GET /test is a string; read as the integer 7 because the schema declares type integer."),
+            integerWarnings,
+        )
+        val [boolean, booleanWarnings] = modelWithWarnings(
+            Schema(type = Schema.Type.Basic.Boolean, default = JsonPrimitive("true"))
+        )
+        assertEquals(Model.Primitive.Boolean(Model.Default.Value(true), null, false, null), boolean)
+        assertEquals(
+            listOf("Default value \"true\" at GET /test is a string; read as the boolean true because the schema declares type boolean."),
+            booleanWarnings,
+        )
+        val [number, numberWarnings] = modelWithWarnings(
+            Schema(type = Schema.Type.Basic.Number, default = JsonPrimitive("1.5"))
+        )
+        assertEquals(Model.Primitive.Double(Model.Default.Value(1.5), null, null, false, null), number)
+        assertEquals(
+            listOf("Default value \"1.5\" at GET /test is a string; read as the number 1.5 because the schema declares type number."),
+            numberWarnings,
+        )
     }
 
-    test("a default of another JSON type than the declared one is rejected with the value") {
+    test("an integer default is a number and needs no warning") {
+        val [model, warnings] = modelWithWarnings(Schema(type = Schema.Type.Basic.Integer, default = JsonPrimitive(7)))
+        assertEquals(Model.Primitive.Long(Model.Default.Value(7L), null, null, false, null), model)
+        assertEquals(emptyList(), warnings)
+    }
+
+    test("a default that does not parse as the declared type is rejected with the value") {
+        val string = assertFailsWith<IllegalArgumentException> {
+            modelOf(Schema(type = Schema.Type.Basic.Integer, default = JsonPrimitive("current")))
+        }
+        assertEquals("Default value \"current\" at GET /test is not a Integer.", string.message)
         val boolean = assertFailsWith<IllegalArgumentException> {
             modelOf(Schema(type = Schema.Type.Basic.Boolean, default = JsonPrimitive(1)))
         }
         assertEquals("Default value 1 at GET /test is not a Boolean.", boolean.message)
-        val number = assertFailsWith<IllegalArgumentException> {
-            modelOf(Schema(type = Schema.Type.Basic.Number, default = JsonPrimitive("1.5")))
-        }
-        assertEquals("Default value \"1.5\" at GET /test is not a Number.", number.message)
         val integer = assertFailsWith<IllegalArgumentException> {
             modelOf(Schema(type = Schema.Type.Basic.Integer, default = JsonPrimitive(true)))
         }
         assertEquals("Default value true at GET /test is not a Integer.", integer.message)
     }
 
-    test("an enum default of another JSON type than the members is rejected") {
+    test("an enum default that is no member type is rejected") {
         val e = assertFailsWith<IllegalArgumentException> {
-            modelOf(Schema(type = Schema.Type.Basic.Integer, enum = ints(1, 2), default = JsonPrimitive("2")))
+            modelOf(Schema(type = Schema.Type.Basic.Integer, enum = ints(1, 2), default = JsonPrimitive("two")))
         }
-        assertEquals("Enum value \"2\" at GET /test is not a Integer.", e.message)
+        assertEquals("Enum value \"two\" at GET /test is not a Integer.", e.message)
+    }
+
+    test("YAML integer enum of quoted numbers reads as numbers, without a warning") {
+        val [model, warnings] = modelWithWarnings(Schema.fromYaml("type: integer\nenum: ['1', '2']"))
+        assertEquals(
+            listOf(Model.EnumValue.Long(1, "1"), Model.EnumValue.Long(2, "2")),
+            assertIs<Model.Enum>(model).values,
+        )
+        assertEquals(emptyList(), warnings)
+    }
+
+    test("YAML string enum of quoted numbers keeps them as strings, without a warning") {
+        val [model, warnings] = modelWithWarnings(Schema.fromYaml("type: string\nenum: ['1', '2']"))
+        assertEquals(
+            listOf(Model.EnumValue.String("1"), Model.EnumValue.String("2")),
+            assertIs<Model.Enum>(model).values,
+        )
+        assertEquals(emptyList(), warnings)
+    }
+
+    test("YAML untyped enum of quoted numbers is an integer enum, without a warning") {
+        val [model, warnings] = modelWithWarnings(Schema.fromYaml("enum: ['1', '2']"))
+        assertEquals(
+            listOf(Model.EnumValue.Long(1, "1"), Model.EnumValue.Long(2, "2")),
+            assertIs<Model.Enum>(model).values,
+        )
+        assertEquals(emptyList(), warnings)
     }
 }
