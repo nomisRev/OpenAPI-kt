@@ -16,6 +16,7 @@ import io.github.nomisrev.openapi.registry.readOnly
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.toModel
 import io.github.nomisrev.openapi.registry.writeOnly
+import io.github.nomisrev.openapi.pipeline.plugins.composite.hasOnlyConstraintBranches
 import io.github.nomisrev.openapi.routes.SchemaContext
 
 context(ctx: Registry.Scope)
@@ -23,6 +24,7 @@ suspend fun ResolvedSchema.toObject(
     context: SchemaContext,
     properties: Map<String, ReferenceOr<Schema>>
 ): Model.Object {
+    warnConstraintOnlyBranches()
     val filteredProperties = properties(properties, context)
 
     val additionalProperties = additionalProperties(context)
@@ -167,5 +169,22 @@ internal suspend fun ResolvedSchema.fallback(): Model = when (this) {
         reference,
         Model.FreeFormJson(description(), Constraints.Object(schema), isNullable, schema.title),
         title = schema.title
+    )
+}
+
+/**
+ * Branches that only list `required` properties are a constraint on this object, see [hasOnlyConstraintBranches]; the
+ * generated type has every declared property, so it cannot enforce which of them must be present.
+ */
+context(ctx: Registry.Scope)
+private fun ResolvedSchema.warnConstraintOnlyBranches() {
+    if (!schema.hasOnlyConstraintBranches()) return
+    val keyword = if (schema.oneOf.isNullOrEmpty()) "anyOf" else "oneOf"
+    val branches = listOfNotNull(schema.oneOf, schema.anyOf).flatten().mapNotNull { (it as? ReferenceOr.Value)?.value }
+    ctx.registry().warn(
+        "Schema ${name.describe()}: its `$keyword` only lists required properties " +
+            "(${branches.joinToString(" | ") { "[${it.required.joinToString()}]" }}), which is a constraint on the " +
+            "object, not alternative types. The type has all declared properties; \"at least one of\" / " +
+            "\"one of these property sets\" is not enforced by the generated type."
     )
 }

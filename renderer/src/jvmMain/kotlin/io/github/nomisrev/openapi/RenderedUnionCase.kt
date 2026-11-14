@@ -74,8 +74,8 @@ internal fun Model.Union.Case.renderNonDiscriminatedCase(
     parentInterface: ClassName,
     collidingSingleDiscriminatorTags: Set<String> = emptySet(),
     externalTypeNames: Map<ClassName, TypeName>,
+    simpleName: String = caseSimpleName(config, collidingSingleDiscriminatorTags),
 ): RenderedUnionCase {
-    val simpleName = caseSimpleName(config, collidingSingleDiscriminatorTags)
     return when (val caseModel = model) {
         is Model.Object ->
             if (!caseModel.context.isTopLevel()) {

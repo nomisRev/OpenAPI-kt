@@ -136,13 +136,15 @@ private fun Model.Union.toCustomSerializedTypeSpec(
     if (openEnum != null) return buildOpenEnumTypeSpec(config, className, openEnum, parentInterface)
 
     val collidingSingleDiscriminatorTags = cases.collidingSingleDiscriminatorTags()
-    val renderedCases = cases.map {
-        it.renderNonDiscriminatedCase(
+    val caseNames = cases.caseSimpleNames(config, collidingSingleDiscriminatorTags)
+    val renderedCases = cases.zip(caseNames).map { [case, caseName] ->
+        case.renderNonDiscriminatedCase(
             config = config,
             originalClassName = originalClassName,
             parentInterface = className,
             collidingSingleDiscriminatorTags = collidingSingleDiscriminatorTags,
             externalTypeNames = externalTypeNames,
+            simpleName = caseName,
         )
     }
 

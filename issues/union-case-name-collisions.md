@@ -1,6 +1,6 @@
 # Union cases of one `oneOf`/`anyOf` get the same class name
 
-**Status:** open
+**Status:** fixed on openapi-3.2-streaming: branches Kotlin cannot tell apart are one case, identical objects one case, different shapes with one name are named by enum value or position with a warning (`separateCases` in `Union.kt`); `required`-only `oneOf`/`anyOf` branches are a constraint on the parent object with a warning (`hasOnlyConstraintBranches`, `Object.kt`); the renderer numbers any remaining collision from 2 with a warning (`caseSimpleNames`). Covered by `UnionCaseNameCollisionsSpec` (typed), `UnionSpec` golden `union/name-collisions`, `UnionCaseNameCollisionsRoundTripTest` and `UnionCaseNameCollisionsWarningsSpec`. Not yet re-run against the census corpus.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
 **Impact:** 17 of 1,547 documents fail to compile (github.com GHES 2.18–3.7 and github.ae: 14, webflow.com, journy.io, nexmo.com:messages-olympus).
@@ -89,7 +89,7 @@ Traced: case names are computed per branch and never compared with the sibling b
 - Renderer, `Model.Union.Case.caseSimpleName` in `renderer/src/jvmMain/kotlin/io/github/nomisrev/openapi/UnionRendererNaming.kt:8-46`: for a primitive, date, UUID, byte array or free-form case the name is a constant per Kotlin type (`CaseString`, `CaseJsonElement`, …). The typed-layer name is only read for models that hold a context (`unionCaseValueOrNull`, line 59), so the name `CaseDatetime` that the typed layer computes for journy.io's second branch is discarded.
 - `collidingSingleDiscriminatorTags` (`UnionRendererNaming.kt:48-53`) handles the one collision the renderer knows about, duplicate discriminator tags. There is no general pass.
 
-Not traced: where the typed layer decides that the gists `anyOf` of `required`-only branches is a union of three free-form JSON values, dropping the object's own `content` and `filename` properties. `github.json` in the test fixtures has `oneOf: [{required: [...]}, {required: [...]}]` on several request bodies and compiles, so that shape is handled somewhere when it sits directly on a body schema; the gists shape (three branches, one of them `{type: object, maxProperties: 0}`, under `additionalProperties`) is not.
+Traced (fixed): where the typed layer decides that the gists `anyOf` of `required`-only branches is a union of three free-form JSON values, dropping the object's own `content` and `filename` properties. `github.json` in the test fixtures has `oneOf: [{required: [...]}, {required: [...]}]` on several request bodies and compiles, so that shape is handled somewhere when it sits directly on a body schema; the gists shape (three branches, one of them `{type: object, maxProperties: 0}`, under `additionalProperties`) is not. Answer: `compositeTakesPrecedence` (`CompositePrecedenceGuard.kt`) lets a composite win only when the schema has no `type` or a branch adds structure (a `$ref`, a `type`, properties, ...). With `type: object` and branches of only `required` nothing adds structure, so `ObjectPlugin` builds the object. The gists schema has a trailing `{type: object, maxProperties: 0}` branch, whose `type` counts as structure, and `files` values are `nullable` objects; so the composite won. Without a `type` on the parent the composite always won.
 
 ## Correct final API
 

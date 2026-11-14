@@ -918,4 +918,86 @@ val unionSpec by testSuite {
         """.trimMargin(),
         "union/additional-properties-last"
     )
+
+    modelTest(
+        $$"""
+        |"Collisions": {
+        |  "type": "object",
+        |  "properties": {
+        |    "transitionId": {
+        |      "anyOf": [
+        |        { "type": "string", "pattern": "^las:transition:[a-f0-9]{32}$" },
+        |        { "type": "string", "pattern": "^las:transition:commons-[0-9A-Za-z-]+$" }
+        |      ]
+        |    },
+        |    "metadata": {
+        |      "oneOf": [
+        |        { "type": "string" },
+        |        { "type": "string", "format": "datetime" }
+        |      ]
+        |    },
+        |    "mixed": {
+        |      "oneOf": [
+        |        { "type": "string", "pattern": "^a+$" },
+        |        { "type": "string", "pattern": "^b+$" },
+        |        { "type": "integer", "format": "int32" }
+        |      ]
+        |    },
+        |    "result": {
+        |      "oneOf": [
+        |        { "type": "object", "properties": { "status": { "type": "string", "enum": ["succeeded"] } } },
+        |        { "type": "object", "properties": { "status": { "type": "string", "enum": ["failed", "rejected"] } } }
+        |      ]
+        |    },
+        |    "titled": {
+        |      "oneOf": [
+        |        { "title": "First", "type": "object", "properties": { "value": { "type": "string" } } },
+        |        { "title": "Second", "type": "object", "properties": { "value": { "type": "integer", "format": "int32" } } }
+        |      ]
+        |    },
+        |    "positional": {
+        |      "oneOf": [
+        |        { "type": "object", "properties": { "value": { "type": "string" } } },
+        |        { "type": "object", "properties": { "value": { "type": "integer", "format": "int32" } } }
+        |      ]
+        |    },
+        |    "accepted": {
+        |      "oneOf": [
+        |        { "type": "object", "description": "one", "properties": { "message_uuid": { "type": "string", "format": "uuid" } } },
+        |        { "type": "object", "description": "two", "properties": { "message_uuid": { "type": "string", "format": "uuid", "description": "other" } } }
+        |      ]
+        |    },
+        |    "files": {
+        |      "type": "object",
+        |      "additionalProperties": {
+        |        "type": "object",
+        |        "nullable": true,
+        |        "properties": {
+        |          "content": { "type": "string" },
+        |          "filename": { "type": "string" }
+        |        },
+        |        "anyOf": [
+        |          { "required": ["content"] },
+        |          { "required": ["filename"] },
+        |          { "type": "object", "maxProperties": 0 }
+        |        ]
+        |      }
+        |    },
+        |    "contact": { "$ref": "#/components/schemas/Contact" }
+        |  }
+        |},
+        |"Contact": {
+        |  "type": "object",
+        |  "properties": {
+        |    "email": { "type": "string" },
+        |    "phone": { "type": "string" }
+        |  },
+        |  "oneOf": [
+        |    { "required": ["email"] },
+        |    { "required": ["phone"] }
+        |  ]
+        |}
+        """.trimMargin(),
+        "union/name-collisions"
+    )
 }

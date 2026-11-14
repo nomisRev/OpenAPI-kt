@@ -44,6 +44,35 @@ internal fun Model.Union.Case.caseSimpleName(
             is Model.DiscriminatedObject -> "Case${caseModel.context.toClassName(config).simpleName}"
         }
 
+/**
+ * The class names of the cases of one union, in order, all different: a name a case shares with an earlier one gets the
+ * first free number from 2. [caseSimpleName] is a constant per Kotlin type for a case without a context of its own, so
+ * a collision the typed layer let through would otherwise be two declarations of one class. The typed layer separates
+ * cases, so this is a safety net; [uniqueCaseNameRenames] reports where it was needed.
+ */
+internal fun List<Model.Union.Case>.caseSimpleNames(
+    config: RenderConfig,
+    collidingSingleDiscriminatorTags: Set<String> = collidingSingleDiscriminatorTags(),
+): List<String> {
+    val names = map { it.caseSimpleName(config, collidingSingleDiscriminatorTags) }
+    val taken = names.toMutableSet()
+    val seen = mutableSetOf<String>()
+    return names.map { name ->
+        if (seen.add(name)) name
+        else generateSequence(2) { it + 1 }.map { "$name$it" }.first { it !in taken }.also {
+            taken += it
+            seen += it
+        }
+    }
+}
+
+/** The case names of [this] union that [caseSimpleNames] had to number, as `first -> numbered`. */
+internal fun Model.Union.uniqueCaseNameRenames(config: RenderConfig): List<Pair<String, String>> {
+    val colliding = cases.collidingSingleDiscriminatorTags()
+    return cases.map { it.caseSimpleName(config, colliding) }.zip(cases.caseSimpleNames(config, colliding))
+        .filter { [base, unique] -> base != unique }
+}
+
 internal fun List<Model.Union.Case>.collidingSingleDiscriminatorTags(): Set<String> =
     mapNotNull { it.discriminatorValues.singleOrNull() }
         .groupingBy { it }

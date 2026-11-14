@@ -526,8 +526,9 @@ private fun CodeBlock.Builder.addUnionCode(
     val colliding = resolved.cases.collidingSingleDiscriminatorTags()
     if (mayBeNull) beginControlFlow("if (%L != null)", expr)
     beginControlFlow("when (%L)", expr)
-    for (case in resolved.cases) {
-        beginControlFlow("is %L.%L ->", unionType, case.caseSimpleName(config, colliding))
+    val caseNames = resolved.cases.caseSimpleNames(config, colliding)
+    for ([case, caseName] in resolved.cases.zip(caseNames)) {
+        beginControlFlow("is %L.%L ->", unionType, caseName)
         caseCode("$expr.value", case.model)
         endControlFlow()
     }

@@ -14,6 +14,7 @@ import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
+import io.github.nomisrev.openapi.pipeline.plugins.composite.singleBranch
 import io.github.nomisrev.openapi.registry.peek
 import io.github.nomisrev.openapi.registry.resolve
 import io.github.nomisrev.openapi.registry.schemaName
@@ -33,10 +34,12 @@ context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.buildOneOf(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
-): Model.OneOf {
+): Model {
     val discriminator = resolveUnionDiscriminator(subtypes)
     val dispatch = classifyDispatch(discriminator)
-    val cases = buildUnionCases(context, subtypes, discriminator, dispatch)
+    val built = buildUnionCases(context, subtypes, discriminator, dispatch)
+    built.single?.let { return collapsedUnion(it, subtypes) }
+    val cases = built.cases
     return Model.OneOf(
         name,
         cases,
@@ -52,10 +55,12 @@ context(ctx: Registry.Scope)
 suspend fun ResolvedSchema.buildAnyOf(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
-): Model.AnyOf {
+): Model {
     val discriminator = resolveUnionDiscriminator(subtypes)
     val dispatch = classifyDispatch(discriminator)
-    val cases = buildUnionCases(context, subtypes, discriminator, dispatch)
+    val built = buildUnionCases(context, subtypes, discriminator, dispatch)
+    built.single?.let { return collapsedUnion(it, subtypes) }
+    val cases = built.cases
     return Model.AnyOf(
         name,
         cases,
@@ -66,6 +71,18 @@ suspend fun ResolvedSchema.buildAnyOf(
         isNullable || subtypes.hasNullableMember()
     )
 }
+
+/**
+ * The model of a union whose branches are all one case, see [mergeEqualCases]: that case is the type, with the
+ * union's own description, title and nullability.
+ */
+context(ctx: Registry.Scope)
+private suspend fun ResolvedSchema.collapsedUnion(model: Model, subtypes: List<ReferenceOr<Schema>>): Model =
+    model.with(
+        description = description() ?: model.description,
+        isNullable = model.isNullable || isNullable || subtypes.hasNullableMember(),
+        title = schema.title ?: model.title,
+    )
 
 private data class UnionDiscriminator(
     val propertyName: String,
@@ -132,13 +149,24 @@ private suspend fun List<ReferenceOr<Schema>>.inferTagOnlyDiscriminatorOrNull():
         ?: discriminators.singleOrNull()
 }
 
+/** The cases of a union; [single] is set instead when all its branches are one case, the type is then that model. */
+private class BuiltUnionCases(val cases: List<Model.Union.Case>, val single: Model? = null)
+
+/** One branch of a union as modelled: [context] is the name it was modelled under. */
+private class BuiltCase(
+    val index: Int,
+    val subtype: ReferenceOr<Schema>,
+    val context: NamingContext,
+    val case: Model.Union.Case,
+)
+
 context(ctx: Registry.Scope)
 private suspend fun ResolvedSchema.buildUnionCases(
     context: SchemaContext,
     subtypes: List<ReferenceOr<Schema>>,
     discriminator: UnionDiscriminator?,
     dispatch: UnionDispatch,
-): List<Model.Union.Case> {
+): BuiltUnionCases {
     val uniqueSubtypes = subtypes.distinct()
     val caseDiscriminators = discriminator?.caseValues ?: List(uniqueSubtypes.size) { emptySet() }
     val singleTagCounts = caseDiscriminators
@@ -177,14 +205,14 @@ private suspend fun ResolvedSchema.buildUnionCases(
      *  So in this case whenever there are n casses, and n-1 cases are references,
      *  then the non-referenced case should inherit the outer name.
      */
-    val cases = uniqueSubtypes.mapIndexed { index, subtype ->
-        subtype.resolve(unionContexts[index], context) { scope, resolved ->
+    suspend fun buildCase(index: Int, caseContext: NamingContext): Model.Union.Case =
+        uniqueSubtypes[index].resolve(caseContext, context) { scope, resolved ->
             val discriminatorValues = caseDiscriminators[index]
             val model = when (dispatch) {
                 is UnionDispatch.NativeDiscriminator -> with(scope) {
                     resolved.toDiscriminatedUnionCaseModel(
                         context = context,
-                        caseContext = unionContexts[index],
+                        caseContext = caseContext,
                         discriminatorField = dispatch.propertyName,
                         caseDiscriminator = discriminatorValues.singleOrNull(),
                     )
@@ -193,7 +221,7 @@ private suspend fun ResolvedSchema.buildUnionCases(
                 is UnionDispatch.TaggedCustom -> with(scope) {
                     resolved.toTaggedCustomUnionCaseModel(
                         context = context,
-                        caseContext = unionContexts[index],
+                        caseContext = caseContext,
                     )
                 }
 
@@ -205,8 +233,175 @@ private suspend fun ResolvedSchema.buildUnionCases(
             }
             Model.Union.Case(model, discriminatorValues)
         }
+
+    val built = uniqueSubtypes.mapIndexed { index, subtype ->
+        BuiltCase(index, subtype, unionContexts[index], buildCase(index, unionContexts[index]))
     }
-    return cases
+    return separateCases(built, ::buildCase, context)
+}
+
+/**
+ * Two cases of one union must not get one class name, and a decoder must not try one type twice:
+ *  - Branches Kotlin cannot tell apart are one case: primitives of one Kotlin type (two `string` branches that differ
+ *    by `pattern`, `format`, length or description), and objects with the same properties.
+ *  - Different object shapes that would get one name stay separate cases, named by an enum value that tells them
+ *    apart (`Succeeded`, `FailedOrRejected`), else by position (`Status1`, `Status2`) with a warning.
+ * A union whose cases all have distinct names is returned as it is. Cases of a discriminated union are named by their
+ * tag, and are left alone.
+ */
+context(ctx: Registry.Scope)
+private suspend fun ResolvedSchema.separateCases(
+    built: List<BuiltCase>,
+    buildCase: suspend (Int, NamingContext) -> Model.Union.Case,
+    context: SchemaContext,
+): BuiltUnionCases {
+    val groups = built.filter { it.case.discriminatorValues.isEmpty() }
+        .groupBy { it.collisionKey() }
+        .filterKeys { it != null }
+        .filterValues { it.size > 1 }
+    if (groups.isEmpty()) return BuiltUnionCases(built.map { it.case })
+
+    val dropped = mutableSetOf<BuiltCase>()
+    val replaced = mutableMapOf<BuiltCase, Model.Union.Case>()
+    val renamedGroups = mutableListOf<List<BuiltCase>>()
+    for (group in groups.values) {
+        val byShape = group.groupBy { it.case.model.wireShape() }.values
+        for (sameShape in byShape) {
+            dropped += sameShape.drop(1)
+            if (sameShape.size > 1) replaced[sameShape.first()] = sameShape.mergedCase()
+        }
+        if (byShape.size > 1) renamedGroups += byShape.map { it.first() }
+    }
+
+    val kept = built.filterNot { it in dropped }
+    val renames = mutableMapOf<BuiltCase, Model.Union.Case>()
+    for (group in renamedGroups) {
+        val taken = (kept - group.toSet()).mapNotNull { it.caseName() }.toMutableSet()
+        val base = group.first().caseName().orEmpty()
+        val byEnum = group.enumCaseNames()?.takeIf { names -> names.distinct().size == names.size && names.none { it in taken } }
+        val names = byEnum ?: group.indices.map { "$base${it + 1}" }.also { numbered ->
+            ctx.registry().warn(
+                "Union ${name.describe()}: the cases at positions ${group.joinToString(" and ") { "${it.index + 1}" }} " +
+                    "are different object shapes that would all be named '$base', and nothing in the schema tells " +
+                    "them apart (no `title`, no property with an enum of its own values). " +
+                    "They are named ${numbered.joinToString(", ")} by their position."
+            )
+        }
+        group.zip(names).forEach { [case, newName] ->
+            if (newName != case.caseName()) {
+                renames[case] = buildCase(case.index, name.nest(NamingContext.UnionCase(newName)))
+            }
+        }
+    }
+
+    val cases = kept.map { renames[it] ?: replaced[it] ?: it.case }
+    if (cases.size == 1 && built.size > 1 && renamedGroups.isEmpty()) {
+        val only = kept.single()
+        val model = replaced[only]?.model ?: only.case.model
+        // An inline object is modelled again under the name of the union itself, as `oneOf` with one branch does.
+        return BuiltUnionCases(cases, if (model is Model.ContextHolder) singleBranch(only.subtype, context) else model)
+    }
+    return BuiltUnionCases(cases)
+}
+
+/** The merged case of [this], cases of one Kotlin type: the first, without the constraints the others do not share. */
+private fun List<BuiltCase>.mergedCase(): Model.Union.Case {
+    val first = first().case
+    val models = map { it.case.model }
+    val model = if (models.map { it.constraintShape() }.distinct().size > 1) first.model.withoutConstraints() else first.model
+    return first.copy(model = model)
+}
+
+private fun BuiltCase.caseName(): String? =
+    ((case.model as? Model.ContextHolder)?.context?.takeIf { it == context }?.nested?.lastOrNull() as? NamingContext.UnionCase)
+        ?.value?.toPascalCase()?.takeIf { it.isNotBlank() }
+
+/**
+ * The name the renderer gives the case: the last `UnionCase` of an inline model's context, else by the Kotlin type of
+ * a model without a context. `null` when the case is a reference or named some other way.
+ */
+private fun BuiltCase.collisionKey(): String? = when (val model = case.model) {
+    is Model.Reference -> null
+    is Model.ContextHolder -> caseName()?.let { "n:$it" }
+    else -> "k:${model.wireShape()}"
+}
+
+/**
+ * Names for [this], object cases of one name, after the values of a string enum property that tells them apart; the
+ * same naming the code gives a string enum case. `null` when no property does.
+ */
+context(ctx: Registry.Scope)
+private suspend fun List<BuiltCase>.enumCaseNames(): List<String>? {
+    val schemas = map { it.subtype.peek() }
+    val candidates = schemas.first().properties?.keys.orEmpty()
+    for (property in candidates) {
+        val values = schemas.map { schema ->
+            schema.properties?.get(property)?.peek()?.enumLikeValues()?.filterNotNull()?.takeIf { it.isNotEmpty() }
+        }
+        if (values.any { it == null }) continue
+        if (values.map { it!!.toSet() }.distinct().size != values.size) continue
+        val names = values.map { it!!.joinToString(separator = "Or") { value -> value.toPascalCase() } }
+        if (names.all { it.isNotBlank() && it.length < MAX_CODE_LENGTH }) return names
+    }
+    return null
+}
+
+/**
+ * What a decoder can tell apart: the shape of the model without its name (context), descriptions, titles and
+ * constraints. Referenced types are told apart by name.
+ */
+private fun Model.wireShape(): String = when (this) {
+    is Model.Reference -> "ref(${context})"
+    is Model.Primitive.String -> "String"
+    is Model.Primitive.Int -> "Int"
+    is Model.Primitive.Long -> "Long"
+    is Model.Primitive.Float -> "Float"
+    is Model.Primitive.Double -> "Double"
+    is Model.Primitive.Boolean -> "Boolean"
+    is Model.Primitive.Unit -> "Unit"
+    is Model.ByteArray, is Model.RawResponse -> "Binary"
+    is Model.Date -> "Date"
+    is Model.DateTime -> "DateTime"
+    is Model.Uuid -> "Uuid"
+    is Model.FreeFormJson -> "Json"
+    is Model.Collection -> "List<${inner.nestedShape()}>"
+    is Model.Dictionary -> "Map<${inner.nestedShape()}>"
+    is Model.Object -> "Object(${properties.entries.joinToString(",") { [name, property] ->
+        "$name${if (property.isRequired) "!" else "?"}${if (property.model.isNullable) "~" else ""}:${property.model.wireShape()}"
+    }};${additionalProperties.shape()};${isTransparentWrapper})"
+    is Model.Enum -> "Enum(${inner.wireShape()};${values.joinToString(",") { it.rawValue.toString() }})"
+    is Model.Union -> "Union(${dispatch};${cases.joinToString("|") { "${it.discriminatorValues}${it.model.wireShape()}" }})"
+    is Model.DiscriminatedObject -> "Discriminated(${context})"
+}
+
+/** A collection of inline objects are told apart by name too: they are rendered under the name of their context. */
+private fun Model.nestedShape(): String = when (this) {
+    is Model.ContextHolder -> "${this::class.simpleName}(${context})"
+    else -> wireShape()
+}
+
+private fun Model.Object.AdditionalProperties.shape(): String = when (this) {
+    is Model.Object.AdditionalProperties.Allowed -> value.toString()
+    is Model.Object.AdditionalProperties.Schema -> value.wireShape()
+}
+
+/** The constraints and defaults of a primitive, which the cases of one Kotlin type may differ in. */
+private fun Model.constraintShape(): Any? = when (this) {
+    is Model.Primitive.String -> constraint to default
+    is Model.Primitive.Int -> constraint to default
+    is Model.Primitive.Long -> constraint to default
+    is Model.Primitive.Float -> constraint to default
+    is Model.Primitive.Double -> constraint to default
+    else -> null
+}
+
+private fun Model.withoutConstraints(): Model = when (this) {
+    is Model.Primitive.String -> copy(constraint = null, default = null)
+    is Model.Primitive.Int -> copy(constraint = null, default = null)
+    is Model.Primitive.Long -> copy(constraint = null, default = null)
+    is Model.Primitive.Float -> copy(constraint = null, default = null)
+    is Model.Primitive.Double -> copy(constraint = null, default = null)
+    else -> this
 }
 
 context(ctx: Registry.Scope)
