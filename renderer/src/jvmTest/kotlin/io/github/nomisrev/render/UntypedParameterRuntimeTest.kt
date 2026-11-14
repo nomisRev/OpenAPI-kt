@@ -63,21 +63,20 @@ class UntypedParameterRuntimeTest {
     }
 
     @Test
-    fun aNullParameterIsLeftOutAndAJsonNullIsToo() = runBlocking {
+    fun aNullParameterIsLeftOut() = runBlocking {
         lookup(any = null, xAny = null, anyCookie = null)
-        assertEquals("required=1", request.url.encodedQuery)
-        assertNull(request.headers["X-Any"])
-
-        lookup(any = JsonNull, xAny = JsonNull, anyCookie = JsonNull)
         assertEquals("required=1", request.url.encodedQuery)
         assertNull(request.headers["X-Any"])
         assertNull(request.headers[HttpHeaders.Cookie])
     }
 
+    /** `null` is "not sent" and `JsonNull` is the value null: an optional parameter can say either. */
     @Test
-    fun aRequiredJsonNullIsSentAsItsText() = runBlocking {
-        lookup(required = JsonNull)
-        assertEquals("required=null", request.url.encodedQuery)
+    fun aJsonNullIsSentAsItsText() = runBlocking {
+        lookup(any = JsonNull, xAny = JsonNull, anyCookie = JsonNull, required = JsonNull)
+        assertEquals("any=null&required=null", request.url.encodedQuery)
+        assertEquals("null", request.headers["X-Any"])
+        assertEquals("any-cookie=null", request.headers[HttpHeaders.Cookie])
     }
 
     @Test

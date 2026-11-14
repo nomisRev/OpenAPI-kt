@@ -1,6 +1,5 @@
 package io.github.nomisrev.openapi
 
-import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.joinToCode
@@ -10,7 +9,6 @@ import io.github.nomisrev.openapi.routes.Route
 import io.ktor.http.encodeURLParameter
 
 private val CookieMember = MemberName("io.ktor.client.request", "cookie")
-private val JsonNullType = ClassName("kotlinx.serialization.json", "JsonNull")
 private val EncodeURLParameterMember = MemberName("io.ktor.http", "encodeURLParameter")
 
 /**
@@ -161,24 +159,10 @@ internal fun CodeBlock.Builder.addPairsCode(
         }
 
         else -> {
-            if (mayBeNull) beginPresentControlFlow(config, model, expr)
+            if (mayBeNull) beginControlFlow("if (%L != null)", expr)
             addStatement("%L", target.pairCode(name, model.pairValueCode(config, target, expr)))
             if (mayBeNull) endControlFlow()
         }
-    }
-}
-
-/**
- * Opens the block that runs when the optional scalar [expr] is present: not `null`, and, for a `JsonPrimitive`, not
- * `JsonNull` either, which leaves a nullable parameter out like `null` does. A required parameter is always sent, so a
- * `JsonNull` there is the text `null`.
- */
-private fun CodeBlock.Builder.beginPresentControlFlow(config: RenderConfig, model: Model, expr: String) {
-    val resolved = model.formModel(config)
-    if (resolved is Model.FreeFormJson && resolved.isPrimitive) {
-        beginControlFlow("if (%L != null && %L !is %T)", expr, expr, JsonNullType)
-    } else {
-        beginControlFlow("if (%L != null)", expr)
     }
 }
 
@@ -353,7 +337,7 @@ internal fun CodeBlock.Builder.addHeaderCode(
         }
 
         else -> {
-            if (mayBeNull) beginPresentControlFlow(config, model, expr)
+            if (mayBeNull) beginControlFlow("if (%L != null)", expr)
             addStatement("%M(%S, %L)", headerMember, name, value(expr, model))
             if (mayBeNull) endControlFlow()
         }

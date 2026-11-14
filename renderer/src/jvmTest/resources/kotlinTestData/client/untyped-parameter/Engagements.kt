@@ -10,7 +10,6 @@ import io.ktor.http.contentType
 import io.ktor.http.formUrlEncode
 import kotlin.String
 import kotlin.collections.List
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Engagements internal constructor(
@@ -35,7 +34,7 @@ public class Engagements internal constructor(
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {
           append("To", to)
-          if (parameters != null && parameters !is JsonNull) {
+          if (parameters != null) {
             append("Parameters", parameters.content)
           }
           if (tags != null) {

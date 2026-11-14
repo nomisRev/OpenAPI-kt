@@ -9,7 +9,6 @@ import io.ktor.http.encodeURLParameter
 import kotlin.String
 import kotlin.collections.List
 import kotlin.collections.Map
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Lookup internal constructor(
@@ -39,7 +38,7 @@ public class Lookup internal constructor(
         anyCookie: JsonPrimitive? = null,
       ) {
         val response = client.get("lookup/${this.key.content.encodeURLParameter()}") {
-          if (any != null && any !is JsonNull) {
+          if (any != null) {
             this.url.encodedParameters.append("any", any.content.encodeURLParameter())
           }
           this.url.encodedParameters.append("required", required.content.encodeURLParameter())
@@ -51,13 +50,13 @@ public class Lookup internal constructor(
           if (!flat.isNullOrEmpty()) {
             this.url.encodedParameters.append("Flat", flat.entries.joinToString(",") { "${it.key.encodeURLParameter()},${it.value.content.encodeURLParameter()}" })
           }
-          if (xAny != null && xAny !is JsonNull) {
+          if (xAny != null) {
             `header`("X-Any", xAny.content)
           }
           if (!xIds.isNullOrEmpty()) {
             `header`("X-Ids", xIds.joinToString(",") { it.content })
           }
-          if (anyCookie != null && anyCookie !is JsonNull) {
+          if (anyCookie != null) {
             cookie("any-cookie", anyCookie.content)
           }
         }

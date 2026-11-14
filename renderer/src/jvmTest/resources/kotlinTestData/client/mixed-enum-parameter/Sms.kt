@@ -11,7 +11,6 @@ import io.ktor.http.Parameters
 import io.ktor.http.contentType
 import io.ktor.http.encodeURLParameter
 import io.ktor.http.formUrlEncode
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 
 public class Sms internal constructor(
@@ -36,10 +35,10 @@ public class Sms internal constructor(
       ) {
         val response = client.post("sms/${this.mode.content.encodeURLParameter()}") {
           this.url.encodedParameters.append("delivered", delivered.content.encodeURLParameter())
-          if (xDelivered != null && xDelivered !is JsonNull) {
+          if (xDelivered != null) {
             `header`("X-Delivered", xDelivered.content)
           }
-          if (deliveredCookie != null && deliveredCookie !is JsonNull) {
+          if (deliveredCookie != null) {
             cookie("delivered-cookie", deliveredCookie.content)
           }
         }
@@ -55,16 +54,16 @@ public class Sms internal constructor(
       ) {
         val response = client.post("sms/${this.mode.content.encodeURLParameter()}") {
           this.url.encodedParameters.append("delivered", delivered.content.encodeURLParameter())
-          if (xDelivered != null && xDelivered !is JsonNull) {
+          if (xDelivered != null) {
             `header`("X-Delivered", xDelivered.content)
           }
-          if (deliveredCookie != null && deliveredCookie !is JsonNull) {
+          if (deliveredCookie != null) {
             cookie("delivered-cookie", deliveredCookie.content)
           }
           contentType(ContentType.Application.FormUrlEncoded)
           setBody(Parameters.build {
             append("flag", flag.content)
-            if (label != null && label !is JsonNull) {
+            if (label != null) {
               append("label", label.content)
             }
           }.formUrlEncode())
