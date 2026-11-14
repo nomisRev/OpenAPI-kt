@@ -1,0 +1,82 @@
+{
+  "project": "openai",
+  "findings": [
+    {
+      "id": "/components/schemas/ChatSessionResource/example",
+      "classification": "example-not-in-schema",
+      "class": "io.openai.model.ChatSessionResource",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'state_variables', 'tracing' at $.workflow"
+    },
+    {
+      "id": "/components/schemas/CompactResource/example",
+      "classification": "example-not-in-schema",
+      "class": "io.openai.model.CompactResource",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'status' at $.output[0]"
+    },
+    {
+      "id": "/components/schemas/ContainerReferenceParam/properties/container_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "ContainerReferenceParam: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/CreateEvalCustomDataSourceConfig/properties/item_schema/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "CreateEvalCustomDataSourceConfig: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/CreateEvalLogsDataSourceConfig/properties/metadata/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "CreateEvalLogsDataSourceConfig: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/CreateEvalStoredCompletionsDataSourceConfig/properties/metadata/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "CreateEvalStoredCompletionsDataSourceConfig: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/EvalCustomDataSourceConfig/properties/schema/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "EvalCustomDataSourceConfig: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/ModelResponseProperties/properties/prompt_cache_key/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "ModelResponseProperties: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/ModelResponseProperties/properties/safety_identifier/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "ModelResponseProperties: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/ModelResponseProperties/properties/user/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "ModelResponseProperties: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/Response/example",
+      "classification": "example-not-in-schema",
+      "class": "io.openai.model.Response",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'logprobs' at $.output[0].content[0]"
+    }
+  ]
+}

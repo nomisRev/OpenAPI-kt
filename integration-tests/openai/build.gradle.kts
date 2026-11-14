@@ -12,8 +12,8 @@ buildscript {
 }
 
 plugins {
-    kotlin("jvm") version "2.3.0"
-    kotlin("plugin.serialization") version "2.3.0"
+    kotlin("jvm") version "2.4.0"
+    kotlin("plugin.serialization") version "2.4.0"
 }
 
 apply(plugin = "io.github.nomisrev.openapi")
@@ -43,3 +43,9 @@ configure<OpenApiExtension> {
     targets.set(setOf("JVM"))
     outputDirectory.set(project.file("src/main/kotlin"))
 }
+
+// Example round-trip test: see ../README.md.
+extra["exampleRoundTrip.spec"] = rootProject.file("../parser/src/commonTest/resources/specs/openai.yaml")
+extra["exampleRoundTrip.modelPackage"] = "io.openai.model"
+extra["exampleRoundTrip.apiPackage"] = "io.openai.api"
+apply(from = rootProject.file("gradle/example-roundtrip.gradle.kts"))

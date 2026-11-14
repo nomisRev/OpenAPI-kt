@@ -43,3 +43,9 @@ configure<OpenApiExtension> {
     targets.set(setOf("JVM"))
     outputDirectory.set(project.file("src/main/kotlin"))
 }
+
+// Example round-trip test: see ../README.md.
+extra["exampleRoundTrip.spec"] = rootProject.file("../parser/src/commonTest/resources/specs/youtrack.json")
+extra["exampleRoundTrip.modelPackage"] = "io.youtrack.model"
+extra["exampleRoundTrip.apiPackage"] = "io.youtrack.api"
+apply(from = rootProject.file("gradle/example-roundtrip.gradle.kts"))

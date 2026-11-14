@@ -1,0 +1,2455 @@
+{
+  "project": "github",
+  "findings": [
+    {
+      "id": "/components/examples/actions-hosted-runner-custom-image-version/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ActionsHostedRunnerCustomImageVersion",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'state_details' at $"
+    },
+    {
+      "id": "/components/examples/actions-hosted-runner/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ActionsHostedRunner",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'image_details' at $ [after removing 1 undeclared example key(s): $.image]"
+    },
+    {
+      "id": "/components/examples/activity-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Activity",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'timestamp', 'activity_type', 'actor' at $[0] [after removing 3 undeclared example key(s): $[0].pushed_at, $[0].push_type, $[0].pusher]"
+    },
+    {
+      "id": "/components/examples/api-overview/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ApiOverview",
+      "signature": "example value of a type the schema does not allow",
+      "detail": "the model normalised a value the schema does not allow: $.ssh_key_fingerprints.SHA256_DSA: 1234567890 -> \"1234567890\" (number->string); $.ssh_key_fingerprints.SHA256_ECDSA: 1234567890 -> \"1234567890\" (number->string); $.ssh_key_fingerprints.SHA256_ED25519: 1234567890 -> \"1234567890\" (number->string); $.ssh_key_fingerprints.SHA256_RSA: 1234567890 -> \"1234567890\" (number->string)"
+    },
+    {
+      "id": "/components/examples/branch-protection/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.BranchProtection",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'checks' at $.required_status_checks"
+    },
+    {
+      "id": "/components/examples/branch-restriction-policy/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.BranchRestrictionPolicy",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $.teams[0]"
+    },
+    {
+      "id": "/components/examples/branch-with-protection/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.BranchWithProtection",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'checks' at $.protection.required_status_checks"
+    },
+    {
+      "id": "/components/examples/campaign-org-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.CampaignSummary",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'contact_link' at $[0]"
+    },
+    {
+      "id": "/components/examples/campaign-summary/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.CampaignSummary",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'contact_link' at $"
+    },
+    {
+      "id": "/components/examples/check-suite-preference/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.CheckSuitePreference",
+      "signature": "undeclared example key(s)",
+      "detail": "the example has keys the schema does not declare: '$.repository.template_repository'"
+    },
+    {
+      "id": "/components/examples/check-suite/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.CheckSuite",
+      "signature": "undeclared example key(s)",
+      "detail": "the example has keys the schema does not declare: '$.repository.template_repository'"
+    },
+    {
+      "id": "/components/examples/classroom-accepted-assignment/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ClassroomAcceptedAssignment",
+      "signature": "example is not an array",
+      "detail": "the schema is an array of classroom-accepted-assignment, the example is object"
+    },
+    {
+      "id": "/components/examples/classroom-assignment/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ClassroomAssignment",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has string at $.id, the schema declares integer"
+    },
+    {
+      "id": "/components/examples/classroom/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Classroom",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has string at $.archived, the schema declares boolean"
+    },
+    {
+      "id": "/components/examples/code-scanning-variant-analysis/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.CodeScanningVariantAnalysis",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'stargazers_count', 'updated_at' at $.scanned_repositories[0].repository"
+    },
+    {
+      "id": "/components/examples/codespace-with-full-repository/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.CodespaceWithFullRepository",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'has_discussions' at $.repository [after removing 6 undeclared example key(s): $.repository.template_repository.subscribers_count, $.repository.template_repository.network_count, $.repository.parent.subscribers_count, $.repository.parent.network_count, $.repository.source.subscribers_count, $.repository.source.network_count]"
+    },
+    {
+      "id": "/components/examples/codespace/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Codespace",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'prebuild_availability' at $.machine"
+    },
+    {
+      "id": "/components/examples/commit/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Commit",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'sha', 'contents_url' at $.files[0]"
+    },
+    {
+      "id": "/components/examples/copilot-seat-detail-active/value",
+      "classification": "decode-failed",
+      "class": "io.github.model.CopilotSeatDetails",
+      "signature": "UnionSerializationException: Failed to deserialize Json: <json>",
+      "detail": "UnionSerializationException: Failed to deserialize Json: <json>"
+    },
+    {
+      "id": "/components/examples/delete-budget/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.DeleteBudget",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id' at $ [after removing 1 undeclared example key(s): $.budget_id]"
+    },
+    {
+      "id": "/components/examples/dependabot-alert-open/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.DependabotAlert",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has array at $.security_advisory.epss, the schema declares null|object"
+    },
+    {
+      "id": "/components/examples/dependabot-alerts-for-organization/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.DependabotAlertWithRepository",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has array at $[0].security_advisory.epss, the schema declares null|object"
+    },
+    {
+      "id": "/components/examples/dependabot-alerts-for-repository/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.DependabotAlert",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has array at $[0].security_advisory.epss, the schema declares null|object"
+    },
+    {
+      "id": "/components/examples/dependabot-repository-access-details/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.DependabotRepositoryAccessDetails",
+      "signature": "example value of a type the schema does not allow",
+      "detail": "the model normalised a value the schema does not allow: $.accessible_repositories[0].owner.gravatar_id: 1 -> \"1\" (number->string)"
+    },
+    {
+      "id": "/components/examples/diff-range-response/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.DependencyGraphDiff",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'scope' at $[0]"
+    },
+    {
+      "id": "/components/examples/environment/value",
+      "classification": "decode-failed",
+      "class": "io.github.model.Environment",
+      "signature": "UnionSerializationException: Failed to deserialize Json: <json>",
+      "detail": "UnionSerializationException: Failed to deserialize Json: <json>"
+    },
+    {
+      "id": "/components/examples/full-repository-default-response/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.FullRepository",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'language' at $.source [after removing 7 undeclared example key(s): $.template_repository.subscribers_count, $.template_repository.network_count, $.parent.subscribers_count, $.parent.network_count, $.source.subscribers_count, $.source.network_count, $.source.security_and_analysis]"
+    },
+    {
+      "id": "/components/examples/full-repository/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.FullRepository",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'has_discussions' at $ [after removing 6 undeclared example key(s): $.template_repository.subscribers_count, $.template_repository.network_count, $.parent.subscribers_count, $.parent.network_count, $.source.subscribers_count, $.source.network_count]"
+    },
+    {
+      "id": "/components/examples/get-budget/value",
+      "classification": "decode-failed",
+      "class": "io.github.model.GetBudget",
+      "signature": "JsonDecodingException: Unexpected JSON token at offset N: Unexpected symbol '.' in numeric literal at path: $.budget_amount",
+      "detail": "JsonDecodingException: Unexpected JSON token at offset N: Unexpected symbol '.' in numeric literal at path: $.budget_amount"
+    },
+    {
+      "id": "/components/examples/get_all_budgets/value",
+      "classification": "decode-failed",
+      "class": "io.github.model.GetAllBudgets",
+      "signature": "JsonDecodingException: Unexpected JSON token at offset N: Unexpected symbol '.' in numeric literal at path: $.budgets[N].budget_amount",
+      "detail": "JsonDecodingException: Unexpected JSON token at offset N: Unexpected symbol '.' in numeric literal at path: $.budgets[0].budget_amount [after removing 1 undeclared example key(s): $.budgets[0].budget_product_skus]"
+    },
+    {
+      "id": "/components/examples/global-advisory-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.GlobalAdvisory",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has array at $[0].epss, the schema declares null|object [after removing 1 undeclared example key(s): $[0].id]"
+    },
+    {
+      "id": "/components/examples/installation-token/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.InstallationToken",
+      "signature": "undeclared example key(s)",
+      "detail": "the example has keys the schema does not declare: '$.repositories[0].template_repository', '$.repositories[0].subscribers_count', '$.repositories[0].network_count'"
+    },
+    {
+      "id": "/components/examples/integration-installation-request-paginated/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.IntegrationInstallationRequest",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'login' at $[0].requester"
+    },
+    {
+      "id": "/components/examples/issue-with-repo-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Issue",
+      "signature": "undeclared example key(s)",
+      "detail": "the example has keys the schema does not declare: '$[0].repository.subscribers_count', '$[0].repository.network_count'"
+    },
+    {
+      "id": "/components/examples/job/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Job",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'created_at' at $"
+    },
+    {
+      "id": "/components/examples/list-repository-advisories/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.RepositoryAdvisory",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $[0].collaborating_teams[0]"
+    },
+    {
+      "id": "/components/examples/migration-2/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Migration",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'exclude_metadata', 'exclude_git_data', 'org_metadata_only' at $ [after removing 3 undeclared example key(s): $.repositories[0].template_repository, $.repositories[0].subscribers_count, $.repositories[0].network_count]"
+    },
+    {
+      "id": "/components/examples/migration-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Migration",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'exclude_metadata', 'exclude_git_data', 'org_metadata_only' at $[0] [after removing 3 undeclared example key(s): $[0].repositories[0].template_repository, $[0].repositories[0].subscribers_count, $[0].repositories[0].network_count]"
+    },
+    {
+      "id": "/components/examples/migration-with-short-org-2/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Migration",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'exclude_metadata', 'exclude_git_data', 'org_metadata_only' at $ [after removing 3 undeclared example key(s): $.repositories[0].template_repository, $.repositories[0].subscribers_count, $.repositories[0].network_count]"
+    },
+    {
+      "id": "/components/examples/migration-with-short-org-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Migration",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'exclude_metadata', 'exclude_git_data', 'org_metadata_only' at $[0] [after removing 3 undeclared example key(s): $[0].repositories[0].template_repository, $[0].repositories[0].subscribers_count, $[0].repositories[0].network_count]"
+    },
+    {
+      "id": "/components/examples/migration-with-short-org/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Migration",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'exclude_metadata', 'exclude_git_data', 'org_metadata_only' at $ [after removing 3 undeclared example key(s): $.repositories[0].template_repository, $.repositories[0].subscribers_count, $.repositories[0].network_count]"
+    },
+    {
+      "id": "/components/examples/migration/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Migration",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'exclude_metadata', 'exclude_git_data' at $ [after removing 3 undeclared example key(s): $.repositories[0].template_repository, $.repositories[0].subscribers_count, $.repositories[0].network_count]"
+    },
+    {
+      "id": "/components/examples/minimal-repository/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.MinimalRepository",
+      "signature": "undeclared example key(s)",
+      "detail": "the example has keys the schema does not declare: '$.template_repository'"
+    },
+    {
+      "id": "/components/examples/oidc-custom-property-inclusion/value#oidc-custom-property-inclusion/Read",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.OidcCustomPropertyInclusion",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'inclusion_source' at $"
+    },
+    {
+      "id": "/components/examples/org-ruleset-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.RepositoryRuleset",
+      "signature": "example value is not in the schema's enum",
+      "detail": "'enabled' at $[0].enforcement is not one of the enum values the schema lists"
+    },
+    {
+      "id": "/components/examples/organization-full/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.OrganizationFull",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'archived_at' at $"
+    },
+    {
+      "id": "/components/examples/organization-role/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.OrganizationRole",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'gravatar_id', 'html_url', 'followers_url', 'following_url', 'gists_url', 'starred_url', 'subscriptions_url', 'organizations_url', 'received_events_url', 'type', 'site_admin' at $.organization [after removing 5 undeclared example key(s): $.organization.hooks_url, $.organization.issues_url, $.organization.members_url, $.organization.public_members_url, $.organization.description]"
+    },
+    {
+      "id": "/components/examples/organization-simple/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.OrganizationSimple",
+      "signature": "example is not an array",
+      "detail": "the schema is an array of organization-simple, the example is object"
+    },
+    {
+      "id": "/components/examples/pending-deployment-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.PendingDeployment",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has array at $, the schema declares object"
+    },
+    {
+      "id": "/components/examples/projects-v2-field-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2Field",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'completed' at $[5].configuration.iterations[0]"
+    },
+    {
+      "id": "/components/examples/projects-v2-field-iteration/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2Field",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'completed' at $.configuration.iterations[0]"
+    },
+    {
+      "id": "/components/examples/projects-v2-item-with-content/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2ItemWithContent",
+      "signature": "example is not an array",
+      "detail": "the schema is an array of projects-v2-item-with-content, the example is object"
+    },
+    {
+      "id": "/components/examples/projects-v2/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2",
+      "signature": "example is not an array",
+      "detail": "the schema is an array of projects-v2, the example is object"
+    },
+    {
+      "id": "/components/examples/protected-branch-pull-request-review/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProtectedBranchPullRequestReview",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $.dismissal_restrictions.teams[0]"
+    },
+    {
+      "id": "/components/examples/pull-request-review-request/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.PullRequestSimple",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $.requested_teams[0]"
+    },
+    {
+      "id": "/components/examples/pull-request-simple-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.PullRequestSimple",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $[0].requested_teams[0]"
+    },
+    {
+      "id": "/components/examples/pull-request-simple/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.PullRequestSimple",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $.requested_teams[0]"
+    },
+    {
+      "id": "/components/examples/pull-request/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.PullRequest",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $.requested_teams[0]"
+    },
+    {
+      "id": "/components/examples/repo-codespaces-secret/value#repo-codespaces-secret/Read",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.RepoCodespacesSecret",
+      "signature": "undeclared example key(s)",
+      "detail": "the example has keys the schema does not declare: '$.visibility'"
+    },
+    {
+      "id": "/components/examples/repository-advisory-pvr/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.RepositoryAdvisory",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $.identifiers[1].value, the schema declares string"
+    },
+    {
+      "id": "/components/examples/repository-advisory/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.RepositoryAdvisory",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $.collaborating_teams[0]"
+    },
+    {
+      "id": "/components/examples/repository-collaborator-permission-response-if-user-has-admin-permissions/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.RepositoryCollaboratorPermission",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'role_name' at $.user"
+    },
+    {
+      "id": "/components/examples/repository-items-default-response/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Repository",
+      "signature": "undeclared example key(s)",
+      "detail": "the example has keys the schema does not declare: '$[0].template_repository', '$[0].subscribers_count', '$[0].network_count'"
+    },
+    {
+      "id": "/components/examples/repository-ruleset-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.RepositoryRuleset",
+      "signature": "example value is not in the schema's enum",
+      "detail": "'enabled' at $[0].enforcement is not one of the enum values the schema lists"
+    },
+    {
+      "id": "/components/examples/secret-scanning-scan-history/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.SecretScanningScanHistory",
+      "signature": "undeclared example key(s)",
+      "detail": "the example has keys the schema does not declare: '$.custom_pattern_backfill_scans[0].pattern_slug', '$.custom_pattern_backfill_scans[1].pattern_slug'"
+    },
+    {
+      "id": "/components/examples/short-branch-with-protection-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ShortBranch",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'checks' at $[0].protection.required_status_checks"
+    },
+    {
+      "id": "/components/examples/simple-classroom-assignment/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.SimpleClassroomAssignment",
+      "signature": "example is not an array",
+      "detail": "the schema is an array of simple-classroom-assignment, the example is object"
+    },
+    {
+      "id": "/components/examples/simple-classroom/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.SimpleClassroom",
+      "signature": "example is not an array",
+      "detail": "the schema is an array of simple-classroom, the example is object"
+    },
+    {
+      "id": "/components/examples/simple-pull-request-review-request/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.PullRequestReviewRequest",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $.teams[0]"
+    },
+    {
+      "id": "/components/examples/starred-repository-items-alternative-response-with-star-creation-timestamps/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.StarredRepository",
+      "signature": "undeclared example key(s)",
+      "detail": "the example has keys the schema does not declare: '$[0].repo.template_repository', '$[0].repo.subscribers_count', '$[0].repo.network_count'"
+    },
+    {
+      "id": "/components/examples/status-check-policy/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.StatusCheckPolicy",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'checks' at $"
+    },
+    {
+      "id": "/components/examples/team-full-items/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.TeamFull",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'archived_at' at $[0].organization"
+    },
+    {
+      "id": "/components/examples/team-full/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.TeamFull",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'archived_at' at $.organization"
+    },
+    {
+      "id": "/components/examples/team-items-response-if-child-teams-exist/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Team",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $[0].parent"
+    },
+    {
+      "id": "/components/examples/team-items/value#team-role-assignment/Read",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.TeamRoleAssignment",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $[0]"
+    },
+    {
+      "id": "/components/examples/team-items/value#team/Read",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Team",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'type' at $[0]"
+    },
+    {
+      "id": "/components/schemas/actions-hosted-runner-curated-image/properties/display_name/example",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ActionsHostedRunnerCuratedImage",
+      "signature": "example value of a type the schema does not allow",
+      "detail": "the model normalised a value the schema does not allow: $.display_name: 20.04 -> \"20.04\" (number->string)"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/completed_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/conclusion/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/details_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/external_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/head_sha/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/html_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/name/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/node_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/started_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/status/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/check-run-with-simple-check-suite/properties/url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "check-run-with-simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/contributor-activity/properties/weeks/example",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ContributorActivity",
+      "signature": "example value of a type the schema does not allow",
+      "detail": "the model normalised a value the schema does not allow: $.weeks[0].w: \"1367712000\" -> 1367712000 (string->number)"
+    },
+    {
+      "id": "/components/schemas/dependency/properties/dependencies/example",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Dependency",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has string at $.dependencies, the schema declares array"
+    },
+    {
+      "id": "/components/schemas/enterprise-webhooks/properties/created_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "enterprise-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/enterprise-webhooks/properties/html_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "enterprise-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/enterprise-webhooks/properties/id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "enterprise-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/enterprise-webhooks/properties/name/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "enterprise-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/enterprise-webhooks/properties/node_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "enterprise-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/enterprise-webhooks/properties/slug/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "enterprise-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/enterprise-webhooks/properties/updated_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "enterprise-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/network-configuration/properties/failover_network_settings_ids/example",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.NetworkConfiguration",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has string at $.failover_network_settings_ids, the schema declares array"
+    },
+    {
+      "id": "/components/schemas/network-configuration/properties/network_settings_ids/example",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.NetworkConfiguration",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has string at $.network_settings_ids, the schema declares array"
+    },
+    {
+      "id": "/components/schemas/nullable-actions-hosted-runner-pool-image/properties/display_name/example",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.NullableActionsHostedRunnerPoolImage",
+      "signature": "example value of a type the schema does not allow",
+      "detail": "the model normalised a value the schema does not allow: $.display_name: 20.04 -> \"20.04\" (number->string)"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/created_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/description/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/environment/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/node_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/original_environment/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/production_environment/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/ref/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/repository_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/sha/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/statuses_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/task/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/transient_environment/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/updated_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-deployment/properties/url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-deployment: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-git-user/properties/date/example",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.NullableGitUser",
+      "signature": "example string is not a valid date-time",
+      "detail": "'\"2007-10-29T02:42:39.000-07:00\"' cannot be parsed as an RFC 3339 date-time"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/allow_auto_merge/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/allow_merge_commit/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/allow_rebase_merge/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/allow_squash_merge/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/allow_update_branch/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/archive_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/assignees_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/blobs_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/branches_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/clone_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/collaborators_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/comments_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/commits_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/compare_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/contents_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/contributors_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/created_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/default_branch/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/delete_branch_on_merge/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/deployments_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/description/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/downloads_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/events_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/forks_count/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/forks_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/full_name/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/git_commits_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/git_refs_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/git_tags_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/git_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/has_commit_comments/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/has_discussions/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/has_downloads/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/has_issues/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/has_projects/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/has_pull_requests/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/has_wiki/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/homepage/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/hooks_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/html_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/is_template/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/issue_comment_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/issue_events_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/issues_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/keys_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/labels_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/languages_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/merges_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/milestones_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/mirror_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/name/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/node_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/notifications_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/open_issues_count/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/pulls_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/pushed_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/releases_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/size/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/ssh_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/stargazers_count/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/stargazers_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/starred_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/statuses_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/subscribers_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/subscription_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/svn_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/tags_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/teams_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/trees_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/updated_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/nullable-repository-webhooks/properties/watchers_count/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "nullable-repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/avatar_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/description/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/events_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/hooks_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/issues_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/login/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/members_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/node_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/public_members_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/repos_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/organization-simple-webhooks/properties/url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "organization-simple-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/projects-v2-item/properties/archived_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "projects-v2-item: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/projects-v2-item/properties/created_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "projects-v2-item: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/projects-v2-item/properties/updated_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "projects-v2-item: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/projects-v2-status-update/properties/body/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "projects-v2-status-update: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/projects-v2-status-update/properties/created_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "projects-v2-status-update: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/projects-v2-status-update/properties/start_date/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "projects-v2-status-update: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/projects-v2-status-update/properties/target_date/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "projects-v2-status-update: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/projects-v2-status-update/properties/updated_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "projects-v2-status-update: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/allow_auto_merge/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/allow_merge_commit/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/allow_rebase_merge/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/allow_squash_merge/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/allow_update_branch/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/archive_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/assignees_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/blobs_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/branches_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/clone_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/collaborators_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/comments_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/commits_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/compare_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/contents_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/contributors_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/created_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/default_branch/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/delete_branch_on_merge/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/deployments_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/description/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/downloads_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/events_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/forks_count/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/forks_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/full_name/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/git_commits_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/git_refs_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/git_tags_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/git_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/has_commit_comments/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/has_discussions/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/has_downloads/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/has_issues/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/has_projects/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/has_pull_requests/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/has_wiki/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/homepage/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/hooks_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/html_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/is_template/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/issue_comment_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/issue_events_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/issues_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/keys_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/labels_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/languages_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/merges_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/milestones_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/mirror_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/name/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/node_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/notifications_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/open_issues_count/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/pulls_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/pushed_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/releases_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/size/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/ssh_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/stargazers_count/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/stargazers_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/starred_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/statuses_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/subscribers_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/subscription_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/svn_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/tags_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/teams_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/trees_url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/updated_at/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/repository-webhooks/properties/watchers_count/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "repository-webhooks: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/simple-check-suite/properties/after/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/simple-check-suite/properties/before/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/simple-check-suite/properties/conclusion/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/simple-check-suite/properties/head_branch/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/simple-check-suite/properties/head_sha/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/simple-check-suite/properties/id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/simple-check-suite/properties/node_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/simple-check-suite/properties/status/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/simple-check-suite/properties/url/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "simple-check-suite: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/simple-installation/properties/id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "simple-installation: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/simple-installation/properties/node_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "simple-installation: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/webhooks_membership/properties/direct_membership/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "webhooks_membership: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/webhooks_membership/properties/enterprise_teams_providing_indirect_membership/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "webhooks_membership: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/webhooks_team/properties/enterprise_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "webhooks_team: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/webhooks_team/properties/organization_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "webhooks_team: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/webhooks_team_1/properties/enterprise_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "webhooks_team_1: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/components/schemas/webhooks_team_1/properties/organization_id/example",
+      "classification": "no-class",
+      "class": null,
+      "signature": "no-class: schema is not reachable from any operation, so the generator emits no class for it",
+      "detail": "webhooks_team_1: schema is not reachable from any operation, so the generator emits no class for it"
+    },
+    {
+      "id": "/paths/~1enterprises~1{enterprise}~1code-security~1configurations~1{configuration_id}~1repositories/get/responses/200/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.CodeSecurityConfigurationRepositories",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'node_id', 'name', 'full_name', 'owner', 'private', 'html_url', 'description', 'fork', 'url', 'archive_url', 'assignees_url', 'blobs_url', 'branches_url', 'collaborators_url', 'comments_url', 'commits_url', 'compare_url', 'contents_url', 'contributors_url', 'deployments_url', 'downloads_url', 'events_url', 'forks_url', 'git_commits_url', 'git_refs_url', 'git_tags_url', 'issue_comment_url', 'issue_events_url', 'issues_url', 'keys_url', 'labels_url', 'languages_url', 'merges_url', 'milestones_url', 'notifications_url', 'pulls_url', 'releases_url', 'stargazers_url', 'statuses_url', 'subscribers_url', 'subscription_url', 'tags_url', 'teams_url', 'trees_url', 'hooks_url' at $[0].repository [after removing 1 undeclared example key(s): $[0].repository.$ref]"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1actions~1oidc~1customization~1properties~1repo/get/responses/200/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.OidcCustomPropertyInclusion",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'custom_property_name', 'inclusion_source' at $[0] [after removing 1 undeclared example key(s): $[0].property_name]"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1actions~1oidc~1customization~1sub/put/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1actions~1secrets~1{secret_name}/put/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1actions~1variables/post/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1code-security~1configurations~1{configuration_id}~1repositories/get/responses/200/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.CodeSecurityConfigurationRepositories",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'node_id', 'name', 'full_name', 'owner', 'private', 'html_url', 'description', 'fork', 'url', 'archive_url', 'assignees_url', 'blobs_url', 'branches_url', 'collaborators_url', 'comments_url', 'commits_url', 'compare_url', 'contents_url', 'contributors_url', 'deployments_url', 'downloads_url', 'events_url', 'forks_url', 'git_commits_url', 'git_refs_url', 'git_tags_url', 'issue_comment_url', 'issue_events_url', 'issues_url', 'keys_url', 'labels_url', 'languages_url', 'merges_url', 'milestones_url', 'notifications_url', 'pulls_url', 'releases_url', 'stargazers_url', 'statuses_url', 'subscribers_url', 'subscription_url', 'tags_url', 'teams_url', 'trees_url', 'hooks_url' at $[0].repository [after removing 1 undeclared example key(s): $[0].repository.$ref]"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1codespaces~1secrets~1{secret_name}/put/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1dependabot~1secrets~1{secret_name}/put/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1issue-fields/post/requestBody/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.OrganizationCreateIssueField",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'priority' at $.options[0]"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1projectsV2~1{project_number}~1items/post/responses/201/content/application~1json/examples/issue_with_id/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2ItemSimple",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'content_type', 'created_at', 'updated_at', 'archived_at' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1projectsV2~1{project_number}~1items/post/responses/201/content/application~1json/examples/issue_with_nwo/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2ItemSimple",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'content_type', 'created_at', 'updated_at', 'archived_at' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1projectsV2~1{project_number}~1items/post/responses/201/content/application~1json/examples/pull_request_with_id/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2ItemSimple",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'content_type', 'created_at', 'updated_at', 'archived_at' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1projectsV2~1{project_number}~1items/post/responses/201/content/application~1json/examples/pull_request_with_nwo/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2ItemSimple",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'content_type', 'created_at', 'updated_at', 'archived_at' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1projectsV2~1{project_number}~1views/post/responses/201/content/application~1json/examples/board_view/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2View",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'number', 'name', 'layout', 'node_id', 'project_url', 'html_url', 'creator', 'created_at', 'updated_at', 'visible_fields', 'sort_by', 'group_by', 'vertical_group_by' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1projectsV2~1{project_number}~1views/post/responses/201/content/application~1json/examples/roadmap_view/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2View",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'number', 'name', 'layout', 'node_id', 'project_url', 'html_url', 'creator', 'created_at', 'updated_at', 'visible_fields', 'sort_by', 'group_by', 'vertical_group_by' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1orgs~1{org}~1projectsV2~1{project_number}~1views/post/responses/201/content/application~1json/examples/table_view/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2View",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'number', 'name', 'layout', 'node_id', 'project_url', 'html_url', 'creator', 'created_at', 'updated_at', 'visible_fields', 'sort_by', 'group_by', 'vertical_group_by' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1actions~1jobs~1{job_id}~1rerun/post/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1actions~1oidc~1customization~1sub/put/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1actions~1runs~1{run_id}~1approve/post/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1actions~1runs~1{run_id}~1cancel/post/responses/202/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1actions~1runs~1{run_id}~1force-cancel/post/responses/202/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1actions~1runs~1{run_id}~1rerun-failed-jobs/post/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1actions~1runs~1{run_id}~1rerun/post/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1actions~1secrets~1{secret_name}/put/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1actions~1variables/post/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1check-runs~1{check_run_id}~1rerequest/post/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1check-suites~1{check_suite_id}~1rerequest/post/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1code-scanning~1codeql~1variant-analyses/post/responses/201/content/application~1json/examples/repositories_parameter/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.CodeScanningVariantAnalysis",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'controller_repo', 'actor', 'query_language', 'query_pack_url', 'status' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1code-scanning~1codeql~1variant-analyses/post/responses/201/content/application~1json/examples/repository_lists/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.CodeScanningVariantAnalysis",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'controller_repo', 'actor', 'query_language', 'query_pack_url', 'status' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1code-scanning~1codeql~1variant-analyses/post/responses/201/content/application~1json/examples/repository_owners/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.CodeScanningVariantAnalysis",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'controller_repo', 'actor', 'query_language', 'query_pack_url', 'status' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1code-scanning~1default-setup/patch/responses/200/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1codespaces~1secrets~1{secret_name}/put/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1dependabot~1secrets~1{secret_name}/put/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1environments~1{environment_name}~1secrets~1{secret_name}/put/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1environments~1{environment_name}~1variables/post/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1issues~1{issue_number}/get/responses/200/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Issue",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'node_id', 'url', 'repository_url', 'labels_url', 'comments_url', 'events_url', 'html_url', 'number', 'state', 'title', 'user', 'labels', 'assignee', 'milestone', 'locked', 'comments', 'closed_at', 'created_at', 'updated_at' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1issues~1{issue_number}/get/responses/200/content/application~1json/examples/pinned_comment/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.Issue",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'node_id', 'url', 'repository_url', 'labels_url', 'comments_url', 'events_url', 'html_url', 'number', 'state', 'title', 'user', 'labels', 'assignee', 'milestone', 'locked', 'comments', 'closed_at', 'created_at', 'updated_at' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1pages~1health/get/responses/202/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1security-advisories~1{ghsa_id}/patch/requestBody/content/application~1json/examples/update_vvrs/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.RepositoryAdvisoryUpdate",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has array at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1security-advisories~1{ghsa_id}/patch/responses/422/content/application~1json/examples/invalid_state_transition/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ValidationError",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'documentation_url' at $"
+    },
+    {
+      "id": "/paths/~1repos~1{owner}~1{repo}~1security-advisories~1{ghsa_id}/patch/responses/422/content/application~1json/examples/update_severity_with_cvss_set/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ValidationError",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'documentation_url' at $"
+    },
+    {
+      "id": "/paths/~1users~1{user_id}~1projectsV2~1{project_number}~1views/post/responses/201/content/application~1json/examples/board_view/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2View",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'number', 'name', 'layout', 'node_id', 'project_url', 'html_url', 'creator', 'created_at', 'updated_at', 'visible_fields', 'sort_by', 'group_by', 'vertical_group_by' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1users~1{user_id}~1projectsV2~1{project_number}~1views/post/responses/201/content/application~1json/examples/roadmap_view/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2View",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'number', 'name', 'layout', 'node_id', 'project_url', 'html_url', 'creator', 'created_at', 'updated_at', 'visible_fields', 'sort_by', 'group_by', 'vertical_group_by' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1users~1{user_id}~1projectsV2~1{project_number}~1views/post/responses/201/content/application~1json/examples/table_view/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2View",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'number', 'name', 'layout', 'node_id', 'project_url', 'html_url', 'creator', 'created_at', 'updated_at', 'visible_fields', 'sort_by', 'group_by', 'vertical_group_by' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1users~1{username}~1attestations~1{subject_digest}/get/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    },
+    {
+      "id": "/paths/~1users~1{username}~1projectsV2~1{project_number}~1items/post/responses/201/content/application~1json/examples/issue_with_id/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2ItemSimple",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'content_type', 'created_at', 'updated_at', 'archived_at' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1users~1{username}~1projectsV2~1{project_number}~1items/post/responses/201/content/application~1json/examples/issue_with_nwo/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2ItemSimple",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'content_type', 'created_at', 'updated_at', 'archived_at' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1users~1{username}~1projectsV2~1{project_number}~1items/post/responses/201/content/application~1json/examples/pull_request_with_id/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2ItemSimple",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'content_type', 'created_at', 'updated_at', 'archived_at' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1users~1{username}~1projectsV2~1{project_number}~1items/post/responses/201/content/application~1json/examples/pull_request_with_nwo/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.ProjectsV2ItemSimple",
+      "signature": "example lacks required key(s)",
+      "detail": "the example omits keys the schema requires: 'id', 'content_type', 'created_at', 'updated_at', 'archived_at' at $ [after removing 1 undeclared example key(s): $.$ref]"
+    },
+    {
+      "id": "/paths/~1user~1codespaces~1secrets~1{secret_name}/put/responses/201/content/application~1json/examples/default/value",
+      "classification": "example-not-in-schema",
+      "class": "io.github.model.EmptyObject",
+      "signature": "example has a JSON type the schema does not allow",
+      "detail": "the example has null at $, the schema declares object"
+    }
+  ]
+}

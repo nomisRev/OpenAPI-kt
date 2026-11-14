@@ -320,7 +320,7 @@ private suspend fun GitHubV3RESTAPI.runRepoBaselineProbes(
 
   results.probe("repo.languages.get") {
     val response = repo.languages.get()
-    "languageBuckets=${response.values?.size ?: 0}, sample=${preview(response.values?.take(5))}"
+    "languageBuckets=${response.values.size}, sample=${preview(response.values.entries.take(5))}"
   }
 
   results.probe("repo.license.get") {
