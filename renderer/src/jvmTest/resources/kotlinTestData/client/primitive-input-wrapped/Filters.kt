@@ -16,15 +16,15 @@ public class Filters internal constructor(
     public suspend operator fun invoke(state: State? = null, selector: Selector? = null) {
       val response = client.get("filters") {
         if (state != null) {
-          url.encodedParameters.append("state", state.value.encodeURLParameter())
+          this.url.encodedParameters.append("state", state.value.encodeURLParameter())
         }
         if (selector != null) {
           when (selector) {
             is Selector.CaseString -> {
-              url.encodedParameters.append("selector", selector.value.encodeURLParameter())
+              this.url.encodedParameters.append("selector", selector.value.encodeURLParameter())
             }
             is Selector.CaseInt -> {
-              url.encodedParameters.append("selector", selector.value.toString())
+              this.url.encodedParameters.append("selector", selector.value.toString())
             }
           }
         }

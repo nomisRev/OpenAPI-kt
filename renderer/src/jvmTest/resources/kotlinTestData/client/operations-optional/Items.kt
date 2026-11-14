@@ -25,9 +25,9 @@ public class Items internal constructor(
       preference: String? = null,
     ) {
       val response = client.get("items") {
-        url.encodedParameters.append("query", query.encodeURLParameter())
+        this.url.encodedParameters.append("query", query.encodeURLParameter())
         if (limit != null) {
-          url.encodedParameters.append("limit", limit.toString())
+          this.url.encodedParameters.append("limit", limit.toString())
         }
         `header`("X-Request-Id", xRequestId)
         if (xTraceId != null) {

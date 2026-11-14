@@ -27,7 +27,7 @@ public class Items internal constructor(
     public suspend operator fun invoke(limit: Int? = null): List<String> {
       val response = client.get("items") {
         if (limit != null) {
-          url.encodedParameters.append("limit", limit.toString())
+          this.url.encodedParameters.append("limit", limit.toString())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")

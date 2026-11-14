@@ -25,7 +25,7 @@ public class Reports internal constructor(
       val response = client.get("reports") {
         `header`(HttpHeaders.Accept, ContentType.Application.Json)
         if (contentType != null) {
-          url.encodedParameters.append("Content-Type", contentType.encodeURLParameter())
+          this.url.encodedParameters.append("Content-Type", contentType.encodeURLParameter())
         }
         if (authorization != null) {
           cookie("Authorization", authorization)
@@ -39,7 +39,7 @@ public class Reports internal constructor(
       val response = client.get("reports") {
         `header`(HttpHeaders.Accept, ContentType("text", "csv"))
         if (contentType != null) {
-          url.encodedParameters.append("Content-Type", contentType.encodeURLParameter())
+          this.url.encodedParameters.append("Content-Type", contentType.encodeURLParameter())
         }
         if (authorization != null) {
           cookie("Authorization", authorization)

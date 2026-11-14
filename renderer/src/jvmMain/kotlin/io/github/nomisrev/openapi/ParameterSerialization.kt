@@ -173,7 +173,8 @@ private fun PairTarget.pairCode(name: String, value: CodeBlock): CodeBlock =
 /** The statement that appends the pair of the `String` expression [name] (as [nameOf] writes it) and [value]. */
 private fun PairTarget.pairCode(name: CodeBlock, value: CodeBlock): CodeBlock = when (this) {
     PairTarget.FormBody -> CodeBlock.of("append(%L, %L)", name, value)
-    PairTarget.Query -> CodeBlock.of("url.encodedParameters.append(%L, %L)", name, value)
+    // `this.url`: a parameter named `url` is closer than the receiver of the request lambda and would shadow `url`.
+    PairTarget.Query -> CodeBlock.of("this.url.encodedParameters.append(%L, %L)", name, value)
     PairTarget.Cookie -> CodeBlock.of("%M(%L, %L)", CookieMember, name, value)
 }
 

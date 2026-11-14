@@ -25,7 +25,7 @@ public class Alias internal constructor(
       body: Owner,
     ): Owner {
       val response = client.put("alias") {
-        url.encodedParameters.append("limit", limit.toString())
+        this.url.encodedParameters.append("limit", limit.toString())
         `header`("X-Trace-Id", xTraceId)
         contentType(ContentType.Application.Json)
         setBody(body)

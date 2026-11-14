@@ -24,7 +24,7 @@ public class Inline internal constructor(
   ) {
     public suspend operator fun invoke(limit: Int, xTraceId: String): Owner {
       val response = client.get("inline") {
-        url.encodedParameters.append("limit", limit.toString())
+        this.url.encodedParameters.append("limit", limit.toString())
         `header`("X-Trace-Id", xTraceId)
       }
       if (response.status.value != 200) throw ResponseException(response, "")

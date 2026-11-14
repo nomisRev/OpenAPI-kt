@@ -24,7 +24,7 @@ public class Fonts internal constructor(
       bodyContentType: ContentType,
     ) {
       val response = client.post("fonts") {
-        url.encodedParameters.append("contentType", contentType.encodeURLParameter())
+        this.url.encodedParameters.append("contentType", contentType.encodeURLParameter())
         require(bodyContentType.match(ContentType("font", "*")) && bodyContentType.contentSubtype != "*") {
           "bodyContentType must be a media type in font/*, but was $bodyContentType"
         }

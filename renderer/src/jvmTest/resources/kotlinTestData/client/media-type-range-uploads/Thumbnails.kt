@@ -24,7 +24,7 @@ public class Thumbnails internal constructor(
     ) {
       val response = client.post("thumbnails") {
         if (size != null) {
-          url.encodedParameters.append("size", size.toString())
+          this.url.encodedParameters.append("size", size.toString())
         }
         body?.let {
           require(contentType != null && contentType.match(ContentType("image", "*")) && contentType.contentSubtype != "*") {

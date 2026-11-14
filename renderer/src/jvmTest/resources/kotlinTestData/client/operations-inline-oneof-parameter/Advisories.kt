@@ -39,18 +39,18 @@ public class Advisories internal constructor(
     ) {
       val response = client.get("advisories") {
         if (ghsaId != null) {
-          url.encodedParameters.append("ghsa_id", ghsaId.encodeURLParameter())
+          this.url.encodedParameters.append("ghsa_id", ghsaId.encodeURLParameter())
         }
         if (cveId != null) {
-          url.encodedParameters.append("cve_id", cveId.encodeURLParameter())
+          this.url.encodedParameters.append("cve_id", cveId.encodeURLParameter())
         }
         if (cwes != null) {
           when (cwes) {
             is Cwes.CaseString -> {
-              url.encodedParameters.append("cwes", cwes.value.encodeURLParameter())
+              this.url.encodedParameters.append("cwes", cwes.value.encodeURLParameter())
             }
             is Cwes.CaseStrings -> {
-              cwes.value.forEach { url.encodedParameters.append("cwes", it.encodeURLParameter()) }
+              cwes.value.forEach { this.url.encodedParameters.append("cwes", it.encodeURLParameter()) }
             }
           }
         }

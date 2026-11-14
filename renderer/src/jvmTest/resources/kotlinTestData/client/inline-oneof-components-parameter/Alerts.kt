@@ -38,10 +38,10 @@ public class Alerts internal constructor(
         if (has != null) {
           when (has) {
             is Has.CaseString -> {
-              url.encodedParameters.append("has", has.value.encodeURLParameter())
+              this.url.encodedParameters.append("has", has.value.encodeURLParameter())
             }
             is Has.CasePatchList -> {
-              has.value.forEach { url.encodedParameters.append("has", it.value.encodeURLParameter()) }
+              has.value.forEach { this.url.encodedParameters.append("has", it.value.encodeURLParameter()) }
             }
           }
         }

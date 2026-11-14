@@ -35,7 +35,7 @@ public class Items internal constructor(
     public suspend operator fun invoke(status: Status? = Status.All) {
       val response = client.get("items") {
         if (status != null) {
-          url.encodedParameters.append("status", status.value.encodeURLParameter())
+          this.url.encodedParameters.append("status", status.value.encodeURLParameter())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -48,7 +48,7 @@ public class Items internal constructor(
     public suspend operator fun invoke(status: Status? = Status.All) {
       val response = client.post("items") {
         if (status != null) {
-          url.encodedParameters.append("status", status.value.encodeURLParameter())
+          this.url.encodedParameters.append("status", status.value.encodeURLParameter())
         }
       }
       if (response.status.value != 204) throw ResponseException(response, "")

@@ -67,63 +67,63 @@ public class Items internal constructor(
       flags: List<Status>? = null,
     ) {
       val response = client.get("items") {
-        ids.forEach { url.encodedParameters.append("ids", it.toString()) }
+        ids.forEach { this.url.encodedParameters.append("ids", it.toString()) }
         if (!tags.isNullOrEmpty()) {
-          url.encodedParameters.append("tags", tags.joinToString(",") { it.encodeURLParameter() })
+          this.url.encodedParameters.append("tags", tags.joinToString(",") { it.encodeURLParameter() })
         }
         if (!words.isNullOrEmpty()) {
-          url.encodedParameters.append("words", words.joinToString("%20") { it.encodeURLParameter() })
+          this.url.encodedParameters.append("words", words.joinToString("%20") { it.encodeURLParameter() })
         }
         if (!pipes.isNullOrEmpty()) {
-          url.encodedParameters.append("pipes", pipes.joinToString("%7C") { it.encodeURLParameter() })
+          this.url.encodedParameters.append("pipes", pipes.joinToString("%7C") { it.encodeURLParameter() })
         }
         if (q != null) {
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
         }
         if (`when` != null) {
-          url.encodedParameters.append("when", `when`.toString().encodeURLParameter())
+          this.url.encodedParameters.append("when", `when`.toString().encodeURLParameter())
         }
         if (status != null) {
-          url.encodedParameters.append("status", status.value.encodeURLParameter())
+          this.url.encodedParameters.append("status", status.value.encodeURLParameter())
         }
         if (!statuses.isNullOrEmpty()) {
-          url.encodedParameters.append("statuses", statuses.joinToString(",") { it.value.encodeURLParameter() })
+          this.url.encodedParameters.append("statuses", statuses.joinToString(",") { it.value.encodeURLParameter() })
         }
         if (code != null) {
-          url.encodedParameters.append("code", code.encodeURLParameter())
+          this.url.encodedParameters.append("code", code.encodeURLParameter())
         }
-        codes?.forEach { url.encodedParameters.append("codes", it.value.encodeURLParameter()) }
+        codes?.forEach { this.url.encodedParameters.append("codes", it.value.encodeURLParameter()) }
         if (filter != null) {
-          url.encodedParameters.append("filter%5Bstatus%5D", filter.status.value.encodeURLParameter())
+          this.url.encodedParameters.append("filter%5Bstatus%5D", filter.status.value.encodeURLParameter())
           if (filter.limit != null) {
-            url.encodedParameters.append("filter%5Blimit%5D", filter.limit.toString())
+            this.url.encodedParameters.append("filter%5Blimit%5D", filter.limit.toString())
           }
         }
         if (range != null) {
-          url.encodedParameters.append("min", range.min.toString())
+          this.url.encodedParameters.append("min", range.min.toString())
           if (range.max != null) {
-            url.encodedParameters.append("max", range.max.toString())
+            this.url.encodedParameters.append("max", range.max.toString())
           }
         }
         if (color != null) {
-          url.encodedParameters.append("color", "R,${color.r},G,${color.g}")
+          this.url.encodedParameters.append("color", "R,${color.r},G,${color.g}")
         }
         if (cwe != null) {
           when (cwe) {
             is Cwe.CaseString -> {
-              url.encodedParameters.append("cwe", cwe.value.encodeURLParameter())
+              this.url.encodedParameters.append("cwe", cwe.value.encodeURLParameter())
             }
             is Cwe.CaseStrings -> {
-              cwe.value.forEach { url.encodedParameters.append("cwe", it.encodeURLParameter()) }
+              cwe.value.forEach { this.url.encodedParameters.append("cwe", it.encodeURLParameter()) }
             }
           }
         }
         if (metadata != null) {
-          metadata.values.forEach { url.encodedParameters.append(it.key.encodeURLParameter(), it.value.encodeURLParameter()) }
+          metadata.values.forEach { this.url.encodedParameters.append(it.key.encodeURLParameter(), it.value.encodeURLParameter()) }
         }
-        labels?.forEach { url.encodedParameters.append("labels%5B${it.key.encodeURLParameter()}%5D", it.value.encodeURLParameter()) }
+        labels?.forEach { this.url.encodedParameters.append("labels%5B${it.key.encodeURLParameter()}%5D", it.value.encodeURLParameter()) }
         if (!attrs.isNullOrEmpty()) {
-          url.encodedParameters.append("attrs", attrs.entries.joinToString(",") { "${it.key.encodeURLParameter()},${it.value}" })
+          this.url.encodedParameters.append("attrs", attrs.entries.joinToString(",") { "${it.key.encodeURLParameter()},${it.value}" })
         }
         if (!xIds.isNullOrEmpty()) {
           `header`("X-Ids", xIds.joinToString(","))

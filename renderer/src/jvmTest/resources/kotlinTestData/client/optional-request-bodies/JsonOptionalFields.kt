@@ -24,7 +24,7 @@ public class JsonOptionalFields internal constructor(
     public suspend operator fun invoke(q: String? = null) {
       val response = client.post("json-optional-fields") {
         if (q != null) {
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
         }
       }
       if (response.status.value != 204) throw ResponseException(response, "")
@@ -37,7 +37,7 @@ public class JsonOptionalFields internal constructor(
     ) {
       val response = client.post("json-optional-fields") {
         if (q != null) {
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
         }
         contentType(ContentType.Application.Json)
         setBody(Body(name = name, note = note))

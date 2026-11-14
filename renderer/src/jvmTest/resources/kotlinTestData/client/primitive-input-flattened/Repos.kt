@@ -36,7 +36,7 @@ public class Repos internal constructor(
       ) {
         val response = client.get("repos/$alertNumber") {
           if (toolName != null) {
-            url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
+            this.url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
           }
           `header`("X-Request-Id", xRequestId.toString())
           if (session != null) {

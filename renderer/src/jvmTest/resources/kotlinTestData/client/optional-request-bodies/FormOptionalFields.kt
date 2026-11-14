@@ -22,7 +22,7 @@ public class FormOptionalFields internal constructor(
     public suspend operator fun invoke(q: String? = null) {
       val response = client.post("form-optional-fields") {
         if (q != null) {
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
         }
       }
       if (response.status.value != 204) throw ResponseException(response, "")
@@ -35,7 +35,7 @@ public class FormOptionalFields internal constructor(
     ) {
       val response = client.post("form-optional-fields") {
         if (q != null) {
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
         }
         contentType(ContentType.Application.FormUrlEncoded)
         setBody(Parameters.build {

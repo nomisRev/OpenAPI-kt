@@ -25,7 +25,7 @@ public class Jobs internal constructor(
     public suspend operator fun invoke(status: Status? = null) {
       val response = client.get("jobs") {
         if (status != null) {
-          url.encodedParameters.append("status", status.toString().encodeURLParameter())
+          this.url.encodedParameters.append("status", status.toString().encodeURLParameter())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
