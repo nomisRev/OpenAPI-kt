@@ -406,7 +406,7 @@ val StreamingResponseSpec by testSuite {
         assertEquals("LogEntry", assertIs<Stream.Unsupported>(stream).item.referenceName())
     }
 
-    test("media type without schema and itemSchema still fails") {
+    test("media type without schema and itemSchema is the raw response") {
         val api = streamingSpec(
             """
             /logs:
@@ -418,7 +418,9 @@ val StreamingResponseSpec by testSuite {
                       application/jsonl: {}
             """
         )
-        assertFailsWith<IllegalArgumentException> { api.singleRoute() }
+        val returnType = api.singleRoute().returns.responses.getValue(HttpStatusCode.OK)
+        assertIs<Model.RawResponse>(returnType.types.getValue(ContentType.parse("application/jsonl")))
+        assertEquals(emptyMap(), returnType.streams)
     }
 }
 

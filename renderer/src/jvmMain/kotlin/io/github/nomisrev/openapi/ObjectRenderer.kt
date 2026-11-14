@@ -200,6 +200,7 @@ fun Model.Object.toTypeSpec(
                 is Model.Union -> model.toTypeSpec(config, classNameOverride = childClassNameOverride)
 
                 is Model.ByteArray,
+                is Model.RawResponse,
                 is Model.Collection,
                 is Model.Dictionary,
                 is Model.Date,
@@ -507,7 +508,7 @@ internal fun Model.nonNullableSerializerCode(
         is Model.Primitive.Double -> CodeBlock.of("%T.%M()", Double::class, SerializerMember)
         is Model.Primitive.Boolean -> CodeBlock.of("%T.%M()", Boolean::class, SerializerMember)
         is Model.Primitive.Unit -> CodeBlock.of("%T.%M()", Unit::class, SerializerMember)
-        is Model.ByteArray -> CodeBlock.of("%M()", ByteArraySerializerMember)
+        is Model.ByteArray, is Model.RawResponse -> CodeBlock.of("%M()", ByteArraySerializerMember)
         is Model.Uuid -> CodeBlock.of("%T.serializer()", UuidType)
         is Model.Date -> CodeBlock.of("%T.serializer()", LocalDateType)
         is Model.DateTime -> CodeBlock.of("%T.serializer()", InstantType)
@@ -593,6 +594,7 @@ internal fun Model.defaultLiteral(
         }
 
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Date,
         is Model.DateTime,
         is Model.Dictionary,

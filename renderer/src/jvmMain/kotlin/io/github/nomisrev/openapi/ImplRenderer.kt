@@ -203,6 +203,7 @@ private fun TypeSpec.Builder.addOverloadedNavigationMembers(
         val caseTypeName = when (case.model) {
             is Model.Enum -> requireNotNull(enumClassNames[case])
             is Model.ByteArray,
+            is Model.RawResponse,
             is Model.Collection,
             is Model.Dictionary,
             is Model.Date,
@@ -259,6 +260,11 @@ private fun PathSegment.OverloadedParameter.enumClassNames(
     }
 }
 
+/**
+ * The request and the handling of its response. An operation that returns the response itself ([Model.RawResponse])
+ * has no converter to ask for its media type, so it sends the `Accept` of the media type it declares, as the
+ * operations with a method per media type ([contentType]) do.
+ */
 internal fun Route.buildOperationBody(
     config: RenderConfig,
     method: HttpMethod,
@@ -269,6 +275,7 @@ internal fun Route.buildOperationBody(
     contentType: ContentType? = null,
     requestType: RequestTypeArgument? = null,
 ): CodeBlock {
+    val accept = contentType ?: returns.rawResponseContentTypeOrNull()
     return if (returns.needsSealedInterface()) {
         if (contentType != null && returns.contentTypeStrategy() is ContentTypeStrategy.SeparateMethods) {
             buildMultiContentTypeSealedOperationBody(
@@ -289,7 +296,7 @@ internal fun Route.buildOperationBody(
                 includeBody,
                 selectedBody,
                 bodyExpr,
-                contentType,
+                accept,
                 requestType,
             )
         }
@@ -300,7 +307,7 @@ internal fun Route.buildOperationBody(
             includeBody,
             selectedBody,
             bodyExpr,
-            contentType,
+            accept,
             requestType,
         )
     }
@@ -335,6 +342,7 @@ private fun Route.operationRequestInvocationContext(
             is Route.Body.Multipart.Ref,
             is Route.Body.Multipart.Value,
             is Route.Body.SetBody,
+            is Route.Body.CallerSet,
             null -> body?.required != true
         },
     )
@@ -904,6 +912,7 @@ private fun Route.addRequestConfigCode(
             requestType = requestType,
             callerContentType = callerContentTypeArgumentOrNull(config, selectedBody),
             sentContentType = body?.variants()?.firstOrNull { it.body === selectedBody }?.sentContentType,
+            callerBlock = if (selectedBody is Route.Body.CallerSet) callerBlockParameterName() else null,
         )
     }
 }
@@ -990,8 +999,15 @@ private fun addBodyCode(
     requestType: RequestTypeArgument? = null,
     callerContentType: CallerContentTypeArgument? = null,
     sentContentType: ContentType? = null,
+    callerBlock: String? = null,
 ) {
     when (body) {
+        is Route.Body.CallerSet -> code.addCallerSetBodyCode(
+            body,
+            callerContentType,
+            requireNotNull(callerBlock) { "A caller-set body is built in a block." },
+        )
+
         is Route.Body.SetBody -> {
             val contentType = requestType?.contentTypeCode
                 ?: callerContentType?.let { CodeBlock.of("%N", it.name) }
@@ -1021,6 +1037,35 @@ private fun addBodyCode(
         is Route.Body.Multipart.Value -> code.addMultipartValueBodyCode(config, body)
         is Route.Body.Multipart.Ref -> code.addMultipartRefBodyCode(bodyMayBeNull)
     }
+}
+
+/**
+ * A [Route.Body.CallerSet] body: the declared media type, or the one the caller passes in [callerContentType], then
+ * the caller's [block], which sets the body and may still change anything set before it, the media type included.
+ * An optional media type argument that is absent leaves it to the block.
+ */
+private fun CodeBlock.Builder.addCallerSetBodyCode(
+    body: Route.Body.CallerSet,
+    callerContentType: CallerContentTypeArgument?,
+    block: String,
+) {
+    when {
+        callerContentType == null ->
+            addStatement("%M(%L)", ContentTypeFunMember, body.contentType.toContentTypeCodeBlock())
+
+        callerContentType.nullable -> {
+            beginControlFlow("if (%N != null)", callerContentType.name)
+            add(callerContentType.copy(nullable = false).requireCode())
+            addStatement("%M(%N)", ContentTypeFunMember, callerContentType.name)
+            endControlFlow()
+        }
+
+        else -> {
+            add(callerContentType.requireCode())
+            addStatement("%M(%N)", ContentTypeFunMember, callerContentType.name)
+        }
+    }
+    addStatement("%N()", block)
 }
 
 /**
@@ -1212,6 +1257,8 @@ private fun bodyCall(model: Model?, contentType: ContentType?): CodeBlock {
  * [isJsonLike]. Other models go through `ContentNegotiation`, which already decides on that `Content-Type`.
  */
 private fun responseBody(model: Model?, contentType: ContentType?): CodeBlock {
+    // The response itself, as the call produced it: the body is not read, so the caller chooses how to.
+    if (model is Model.RawResponse) return CodeBlock.of("response")
     val isRangeAdmittingJson = contentType != null && contentType.isWildcard() && contentType.admitsJson()
     if (model !is Model.Primitive.String || !isRangeAdmittingJson) {
         return CodeBlock.of("response.%L", bodyCall(model, contentType))
@@ -1228,6 +1275,7 @@ private fun responseBody(model: Model?, contentType: ContentType?): CodeBlock {
 
 private fun Model.isJsonLikeMultipartModel(): Boolean = when (this) {
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Date,
     is Model.DateTime,
     is Model.Enum,

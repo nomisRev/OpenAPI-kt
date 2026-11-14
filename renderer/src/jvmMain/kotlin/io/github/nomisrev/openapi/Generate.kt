@@ -55,6 +55,7 @@ private fun Model.toFileSpecOrNull(config: RenderConfig): FileSpec? = when (this
     is Model.Union -> toFileSpec(config)
     is Model.Reference,
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Date,
     is Model.DateTime,
     is Model.FreeFormJson,
@@ -71,6 +72,7 @@ private fun Model.requiresSerializationUtils(): Boolean = when (this) {
     is Model.Enum,
     is Model.Reference,
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Date,
     is Model.DateTime,
     is Model.FreeFormJson,

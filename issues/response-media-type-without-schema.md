@@ -1,6 +1,6 @@
 # A response media type without `schema` aborts the whole document
 
-**Status:** open
+**Status:** fixed on branch openapi-3.2-streaming (typed + renderer, golden `client/media-type-without-schema`); census re-run pending
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** typed (responses); wrong output / silent drop (request bodies)
 **Impact:** 243 of 1,547 documents fail on it (179 apisetu.gov.in, 64 from 55 other providers). 7 more contain the construct but fail earlier on something else (250 total). 6 documents have the same construct in a request body, where it is dropped silently.
@@ -101,33 +101,49 @@ Related behaviour that the fix must not copy (verified by `repro/c3-empty-schema
 
 ## Correct final API
 
-The media type decides the Kotlin type when there is no schema, exactly as it would for the schema one would have written by hand:
+A media type declared without `schema` (and without `itemSchema`) gets its type from the media type alone. `example` and `examples` never influence it. One classification (`ContentType.mediaTypeKind()` in `typed`) serves responses and request bodies.
 
-| Declared media type, no schema | Generated value type | Same as today's output for |
-|---|---|---|
-| `application/json`, `*+json` | `JsonElement` | `schema: {}` |
-| `text/*` | `String` | `schema: {type: string}` under `text/plain` (read as text, not as a JSON string) |
-| anything else (`application/pdf`, `image/*`, `application/octet-stream`, `*/*`, XML until XML is modelled) | `ByteArray` | `schema: {type: string, format: binary}` |
+Responses:
 
-For the reproducer:
+| Declared media type, no schema | Generated value type |
+|---|---|
+| `application/json`, `*+json` | `JsonElement` (what `schema: {}` gives) |
+| `text/*` | `String` (read as text, like `{type: string}` under `text/plain`) |
+| anything else (`application/pdf`, `image/*`, `application/octet-stream`, `*/*`, XML) | Ktor's `io.ktor.client.statement.HttpResponse` |
+
+`ByteArray` is only for a spec that says bytes: a declared `{type: string, format: binary}` keeps generating `ByteArray`. Where the spec says nothing, the caller gets the `HttpResponse` and chooses `body<ByteArray>()`, `bodyAsChannel()`, the headers, the real content type.
+
+Typed status dispatch stays and the response object is passed through unread:
 
 ```kotlin
-public suspend operator fun invoke(): ByteArray {
+public suspend operator fun invoke(): HttpResponse {
   val response = client.get("certificate") {
     header(HttpHeaders.Accept, ContentType.Application.Pdf)
   }
-  return when (response.status.value) {
-    200 -> response.body()
-    else -> throw ResponseException(response, "")
-  }
+  if (response.status.value != 200) throw ResponseException(response, "")
+  return response
 }
 ```
 
-Wire behaviour: `Accept` carries the declared media type; the body is returned undecoded for binary, decoded with the response charset for text, parsed as JSON for JSON. `example`/`examples` never influence the type (inferring a schema from an example would be a guess).
+In a sealed response the success case holds it (`data class Ok(val response: HttpResponse) : Response`) and the declared error cases are unchanged. `Accept` carries the declared media type. A schema-less entry next to a typed one for the same status follows the existing multi-content-type rendering: one method per success media type (`json()`, `pdf()`), each returning its own type.
 
-Request side, symmetric: `"application/pdf": {}` is a body parameter of type `ByteArray` sent with `Content-Type: application/pdf`; a JSON entry without schema takes `JsonElement`. No media type is dropped; if one really cannot be generated, a diagnostic names the operation and media type.
+Request bodies:
 
-Whether binary should be `ByteArray` or a scoped stream is a separate decision; this issue should follow whatever `format: binary` produces.
+- Schema-less JSON is a `body: JsonElement`, schema-less `text/*` a `body: String`, both sent with the declared `Content-Type`.
+- Any other schema-less media type has no body type. The function takes a request builder block and the caller sets the body; the declared media type is set before the block, so the block can override it:
+
+```kotlin
+public suspend operator fun invoke(block: HttpRequestBuilder.() -> Unit) {
+  val response = client.post("upload") {
+    contentType(ContentType.Application.Pdf)
+    block()
+  }
+  ...
+}
+```
+
+  The block is required when the body is required and defaults to `{}` when it is optional (alone). Next to a typed alternative it is one more overload; when the body is optional it has no default there, so `invoke()` stays unambiguous. A body declared under a range (`image/*`) or under several such media types takes a `contentType: ContentType` argument before the block, validated like the existing declared-binary range upload.
+- No media type is dropped any more. An `itemSchema`-only request body is still not modelled (streaming request bodies are out of scope).
 
 ## Fix slice
 

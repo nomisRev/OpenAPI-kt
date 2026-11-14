@@ -102,6 +102,7 @@ private fun Route.Bodies?.topLevelNames(): Set<NamingContext.Reference> =
             is Route.Body.Multipart.Ref -> body.value.topLevelNames()
             is Route.Body.FormUrlEncoded -> body.parameters.flatMap { it.type.topLevelNames() }
             is Route.Body.SetBody -> body.type.topLevelNames()
+            is Route.Body.CallerSet -> emptySet()
             is Route.Body.OverloadedBody -> body.type.topLevelNames()
         }
     }
@@ -356,6 +357,8 @@ private fun Route.Body.normalizedForConcreteCollision(): Route.Body = when (this
         extensions = emptyMap(),
     )
 
+    is Route.Body.CallerSet -> copy(description = null, extensions = emptyMap())
+
     is Route.Body.OverloadedBody -> copy(
         type = type.normalizedForCompatibility() as Model.Union,
         description = null,
@@ -411,6 +414,7 @@ private fun Route.concreteCollisionDescription(): String = buildString {
 private fun Route.Body.concreteCollisionDescription(): String = when (this) {
     is Route.Body.SetBody -> "SetBody(${type.compatibilityDescription()})"
     is Route.Body.OverloadedBody -> "OverloadedBody(${type.compatibilityDescription()})"
+    is Route.Body.CallerSet -> "CallerSet($contentType)"
     is Route.Body.FormUrlEncoded ->
         "FormUrlEncoded(${parameters.joinToString { "${it.name}:${it.type.compatibilityDescription()}" }})"
 
@@ -454,6 +458,7 @@ private fun Model.normalizedForCompatibility(): Model = when (this) {
     is Model.AnyOf -> normalizedForCompatibility()
 
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Date,
     is Model.DateTime,
     is Model.FreeFormJson,
@@ -547,6 +552,7 @@ private fun Model.clearedCompatibilityMetadata(): Model =
         title = null,
     )
     else if (this is Model.Uuid) copy(description = null, title = null)
+    else if (this is Model.RawResponse) copy(description = null, title = null)
     else error("Unsupported model: $this")
 
 private fun Model.Object.AdditionalProperties.normalizedForCompatibility(): Model.Object.AdditionalProperties =
@@ -570,6 +576,7 @@ private fun Model.compatibilityDescription(): String {
     val suffix = if (isNullable) "?" else ""
     return when (this) {
         is Model.ByteArray -> "ByteArray$suffix"
+        is Model.RawResponse -> "RawResponse$suffix"
         is Model.Collection -> "List<${inner.compatibilityDescription()}>$suffix"
         is Model.Dictionary -> "Map<String, ${inner.compatibilityDescription()}>$suffix"
         is Model.Date -> "Date$suffix"

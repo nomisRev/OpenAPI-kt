@@ -57,6 +57,7 @@ private fun Model.normalizedForContextComparison(splitNames: Set<String>): Model
         is Model.OneOf -> normalizedForContextComparison(splitNames)
         is Model.AnyOf -> normalizedForContextComparison(splitNames)
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Date,
         is Model.DateTime,
         is Model.FreeFormJson,

@@ -16,6 +16,7 @@ internal fun Model.normalizedForSharingKey(): Model =
         is Model.OneOf -> normalizedForSharingKey()
         is Model.AnyOf -> normalizedForSharingKey()
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Date,
         is Model.DateTime,
         is Model.FreeFormJson,

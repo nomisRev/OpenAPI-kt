@@ -33,6 +33,7 @@ sealed interface Model {
         title: String? = this.title
     ) = when (this) {
         is ByteArray -> copy(description = description, isNullable = isNullable, title = title)
+        is RawResponse -> copy(description = description, isNullable = isNullable, title = title)
         is Collection -> copy(description = description, isNullable = isNullable, title = title)
         is Dictionary -> copy(description = description, isNullable = isNullable, title = title)
         is Date -> copy(description = description, isNullable = isNullable, title = title)
@@ -209,6 +210,20 @@ sealed interface Model {
 
     @Serializable
     data class ByteArray(
+        override val description: String?,
+        override val isNullable: Boolean,
+        override val title: String?
+    ) : Model
+
+    /**
+     * The response itself rather than a value decoded from its body: the content of a response whose media type is
+     * declared without a `schema` and is neither JSON nor text (`application/pdf`, a media type range, ...). The spec
+     * says nothing about what the bytes are, so the client hands the caller the Ktor `HttpResponse`, to read as bytes,
+     * as a channel, or with its headers. Only ever a response model, never part of a request.
+     */
+    @SerialName("RawResponse")
+    @Serializable
+    data class RawResponse(
         override val description: String?,
         override val isNullable: Boolean,
         override val title: String?

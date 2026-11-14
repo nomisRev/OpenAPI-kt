@@ -7,6 +7,7 @@ tailrec fun Model.nestedOrNull(): Model? = when (this) {
     is Model.Collection -> inner.nestedOrNull()
     is Model.Dictionary -> inner.nestedOrNull()
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Date,
     is Model.FreeFormJson,
     is Model.DateTime,
@@ -69,6 +70,7 @@ private fun Model.addNames() {
         is Model.Collection -> inner.addNames()
         is Model.Dictionary -> inner.addNames()
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Date,
         is Model.DateTime,
         is Model.FreeFormJson,

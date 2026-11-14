@@ -203,7 +203,7 @@ internal fun classifyErrorStatus(
  */
 internal fun Bodies.detectSignatureClashes(config: RenderConfig): RequestBodyStrategy {
     val variants = variants().distinctBy { variant ->
-        if ((variant.body as? Route.Body.SetBody)?.callerContentTypeRange != null) variant.body.toKotlinSignature(config)
+        if (variant.body.isSuppliedByCaller()) variant.body.toKotlinSignature(config)
         else variant
     }
     return when (variants.size) {
@@ -223,8 +223,18 @@ internal fun Bodies.detectSignatureClashes(config: RenderConfig): RequestBodyStr
     }
 }
 
+/**
+ * Whether the caller supplies the media type of this body, or builds the whole body: bytes under a media type range
+ * ([Route.Body.SetBody.callerContentTypeRange]), and a [Route.Body.CallerSet] body. Such bodies with the same Kotlin
+ * signature are one overload.
+ */
+internal fun Route.Body.isSuppliedByCaller(): Boolean =
+    (this as? Route.Body.SetBody)?.callerContentTypeRange != null || this is Route.Body.CallerSet
+
 internal fun Route.Body.toKotlinSignature(config: RenderConfig): String =
     when (this) {
+        is Route.Body.CallerSet -> "HttpRequestBuilder.() -> Unit"
+
         is Route.Body.SetBody ->
             if (callerContentTypeRange == null) type.toTypeName(config).toString()
             else "${type.toTypeName(config)}|${ContentType::class.qualifiedName}"

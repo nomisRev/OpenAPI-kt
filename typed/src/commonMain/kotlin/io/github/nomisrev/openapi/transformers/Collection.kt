@@ -34,6 +34,7 @@ suspend fun ResolvedSchema.collection(context: SchemaContext): Model =
                 }
 
                 is Model.ByteArray,
+                is Model.RawResponse,
                 is Model.Date,
                 is Model.DateTime,
                 is Model.FreeFormJson,
@@ -121,6 +122,7 @@ private fun Model.prependContextIfInline(prefix: NamingContext.Nested): Model = 
     is Model.Dictionary -> copy(inner = inner.prependContextIfInline(prefix))
 
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Date,
     is Model.DateTime,
     is Model.DiscriminatedObject,

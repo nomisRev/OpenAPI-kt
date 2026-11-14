@@ -278,6 +278,7 @@ fun pathTemplateProblems(path: String, declared: Set<String>): List<String> {
 internal fun Model.toPathSegment(paramName: String): PathSegment = when (this) {
     is Model.Union -> toPathSegmentOrOverload(paramName)
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Collection,
     is Model.Dictionary,
     is Model.Date,

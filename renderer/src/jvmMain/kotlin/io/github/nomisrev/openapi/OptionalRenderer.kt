@@ -96,6 +96,7 @@ internal fun Model.collectOptionalPackages(config: RenderConfig, into: MutableSe
         is Model.Enum,
         is Model.Reference,
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Date,
         is Model.DateTime,
         is Model.FreeFormJson,
@@ -124,6 +125,7 @@ private fun Route.collectOptionalPackages(config: RenderConfig, into: MutableSet
             is Route.Body.FormUrlEncoded -> body.parameters.forEach { it.type.collectOptionalPackages(config, into) }
             is Route.Body.Multipart.Value -> body.parameters.forEach { it.type.collectOptionalPackages(config, into) }
             is Route.Body.Multipart.Ref -> body.value.collectOptionalPackages(config, into)
+            is Route.Body.CallerSet -> Unit
         }
     }
     (returns.responses.values + returns.responseRanges.values + listOfNotNull(returns.default)).forEach { returnType ->

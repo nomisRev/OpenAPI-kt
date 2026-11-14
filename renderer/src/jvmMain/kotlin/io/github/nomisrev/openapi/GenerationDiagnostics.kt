@@ -225,7 +225,8 @@ private fun Route.Body.isSupportedForGeneration(): Boolean =
     when (this) {
         is Route.Body.FormUrlEncoded -> isSupported
         is Route.Body.Multipart.Ref,
-        is Route.Body.Multipart.Value -> true
+        is Route.Body.Multipart.Value,
+        is Route.Body.CallerSet -> true
         is Route.Body.OverloadedBody,
         is Route.Body.SetBody -> unsendableWildcardOrNull() == null
     }
@@ -241,6 +242,7 @@ private fun Route.Body.unsendableWildcardOrNull(): ContentType? {
         is Route.Body.SetBody -> contentType.takeIf { callerContentTypeRange == null }
         is Route.Body.OverloadedBody -> contentType
         is Route.Body.FormUrlEncoded,
+        is Route.Body.CallerSet,
         is Route.Body.Multipart -> null
     }
     return contentType?.takeIf { it.isWildcard() }

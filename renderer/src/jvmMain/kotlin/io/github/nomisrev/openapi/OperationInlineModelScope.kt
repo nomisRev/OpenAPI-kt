@@ -24,6 +24,7 @@ internal class OperationInlineModelScope(
                 ?: remap(model.toTypeName(config))
 
             is Model.ByteArray,
+            is Model.RawResponse,
             is Model.Date,
             is Model.DateTime,
             is Model.Dictionary,
@@ -371,6 +372,7 @@ private fun StandaloneInlineType.toTypeSpec(
         is Model.Enum -> model.toTypeSpec(config, nameOverride = targetClassName.simpleName)
 
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Collection,
         is Model.Dictionary,
         is Model.Date,

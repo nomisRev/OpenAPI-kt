@@ -19,6 +19,7 @@ internal fun Model.publicInputTypeName(config: RenderConfig): TypeName =
 
 private fun Model.flattenedScalarInputModel(): Model? = when (this) {
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Date,
     is Model.DateTime,
     is Model.Primitive,

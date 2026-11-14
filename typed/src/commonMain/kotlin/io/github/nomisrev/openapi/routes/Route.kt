@@ -213,6 +213,18 @@ data class Route(
         }
 
         /**
+         * A request body of a media type declared without `schema` that is neither JSON nor text
+         * ([MediaTypeKind.Other]): the spec says nothing about its content, so the generated function takes a request
+         * builder block, and the caller sets the body in it. [contentType] is set before the block runs, so the caller
+         * can override it; a media type range is not a `Content-Type`, so the caller supplies the media type within it.
+         */
+        data class CallerSet(
+            val contentType: ContentType,
+            override val description: String?,
+            override val extensions: Map<String, JsonElement>,
+        ) : Body
+
+        /**
          * A request body whose inline non-discriminated union has been marked for future overload
          * rendering while still carrying the underlying union model for phased renderer migration.
          */
@@ -328,7 +340,9 @@ data class Route(
     /**
      * The content of a response, per media type.
      *
-     * @property types the models of media types that declare a `schema`, describing the complete content.
+     * @property types the models of media types that declare a `schema`, describing the complete content, and of
+     * those that declare neither `schema` nor `itemSchema`, which the media type types ([MediaTypeKind]): any JSON, a
+     * string, or the [Model.RawResponse].
      * @property streams OpenAPI 3.2: the media types that declare an `itemSchema`, describing every item of a
      * sequential media type such as `application/jsonl` or `text/event-stream`. A media type that declares both
      * `schema` and `itemSchema` appears in both maps, since they describe the same content at different levels.
@@ -351,6 +365,7 @@ private fun Bodies?.nested(): Set<Model> =
             is Body.Multipart.Ref -> listOfNotNull(body.value.nestedOrNull())
             is Body.FormUrlEncoded -> body.parameters.mapNotNull { it.type.nestedOrNull() }
             is Body.SetBody -> listOfNotNull(body.type.nestedOrNull())
+            is Body.CallerSet -> emptyList()
             is Body.OverloadedBody -> body.cases.mapNotNull { it.model.nestedOrNull() }
         }
     }
@@ -489,6 +504,7 @@ private suspend fun Model.closedEnumOrNull(): Model.Enum? = when (this) {
     }
 
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Collection,
     is Model.Dictionary,
     is Model.Date,
@@ -532,6 +548,7 @@ private fun Model.Union.rebuildDynamicPathSegment(
         }
 
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Collection,
         is Model.Dictionary,
         is Model.Date,

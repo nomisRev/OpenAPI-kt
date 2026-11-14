@@ -13,6 +13,7 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.joinToCode
 import io.github.nomisrev.openapi.routes.Route
+import io.github.nomisrev.openapi.routes.isWildcard
 import io.github.nomisrev.openapi.transformers.nestedOrNull
 import io.ktor.http.ContentType
 
@@ -117,6 +118,14 @@ internal fun Route.callerContentTypeArgumentOrNull(
     config: RenderConfig,
     selectedBody: Route.Body?,
 ): CallerContentTypeArgument? {
+    if (selectedBody is Route.Body.CallerSet) {
+        // The caller builds the body, so the media type is the declared one, set before the caller's block: unless
+        // the body is declared under several media types, or one that is a range, which the caller then chooses.
+        val declared = body?.types?.values.orEmpty().filterIsInstance<Route.Body.CallerSet>()
+            .map { it.contentType.withoutParameters() }.distinct()
+        if (declared.size == 1 && !declared.single().isWildcard()) return null
+        return CallerContentTypeArgument(callerContentTypeParameterName(), declared, nullable = body?.required != true)
+    }
     if ((selectedBody as? Route.Body.SetBody)?.callerContentTypeRange == null) return null
     val signature = selectedBody.toKotlinSignature(config)
     val ranges = body?.types?.values.orEmpty()
@@ -130,6 +139,19 @@ internal fun Route.callerContentTypeArgumentOrNull(
  * `contentType`, unless a parameter of the operation already takes that name (a query parameter `content_type`), as
  * the body argument and `requestType` already do: then `bodyContentType`, else a numbered `contentType`.
  */
+/**
+ * The request builder block of a [Route.Body.CallerSet] body: `block`, unless a parameter of the operation already
+ * takes that name, as the body argument, `requestType` and `contentType` do: then `requestBlock`, else a numbered
+ * `block`.
+ */
+internal fun Route.callerBlockParameterName(): String {
+    val taken = parameters.mapTo(mutableSetOf("body", "requestType", callerContentTypeParameterName())) {
+        it.name.toParamName()
+    }
+    return (sequenceOf("block", "requestBlock") + generateSequence(2) { it + 1 }.map { "block$it" })
+        .first { it !in taken }
+}
+
 private fun Route.callerContentTypeParameterName(): String {
     val taken = parameters.mapTo(mutableSetOf("body", "requestType")) { it.name.toParamName() }
     return (sequenceOf("contentType", "bodyContentType") + generateSequence(2) { it + 1 }.map { "contentType$it" })
@@ -145,6 +167,7 @@ internal val Route.Bodies.Variant.sentContentType: ContentType
     get() = when (val body = body) {
         is Route.Body.SetBody -> body.contentType
         is Route.Body.OverloadedBody -> body.contentType
+        is Route.Body.CallerSet -> body.contentType
         is Route.Body.FormUrlEncoded -> contentType
         is Route.Body.Multipart -> ContentType(
             contentType.contentType,
@@ -499,7 +522,7 @@ private fun Model.flattenedPrimitiveUnionCaseName(): String = when (this) {
     is Model.Primitive.Double -> "CaseDouble"
     is Model.Primitive.Boolean -> "CaseBoolean"
     is Model.Primitive.Unit -> "Empty"
-    is Model.ByteArray -> "CaseBinary"
+    is Model.ByteArray, is Model.RawResponse -> "CaseBinary"
     is Model.Date -> "CaseDate"
     is Model.DateTime -> "CaseDateTime"
     is Model.Uuid -> "CaseUuid"
@@ -678,5 +701,6 @@ private fun Route.Body?.bodyModelOrNull(): Model? = when (this) {
     is Route.Body.OverloadedBody -> type
     is Route.Body.FormUrlEncoded,
     is Route.Body.Multipart,
+    is Route.Body.CallerSet,
     null -> null
 }

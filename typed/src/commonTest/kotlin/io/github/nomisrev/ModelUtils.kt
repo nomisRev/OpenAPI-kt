@@ -36,6 +36,7 @@ fun Model.default(default: Model.Default<*>?): Model = when (this) {
     is Model.Object,
     is Model.Dictionary,
     is Model.FreeFormJson,
+    is Model.RawResponse,
     is Model.ByteArray -> this
 }
 
@@ -50,6 +51,7 @@ fun Model.context(block: (NamingContext) -> NamingContext): Model = when (this) 
     }
 
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Collection,
     is Model.Dictionary,
     is Model.Date,

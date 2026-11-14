@@ -8,6 +8,7 @@ import com.squareup.kotlinpoet.CodeBlock
 import com.squareup.kotlinpoet.joinToCode
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.LambdaTypeName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -389,6 +390,7 @@ private fun Route.Body.fieldCountOrNull(): Int? = when (this) {
     is Route.Body.Multipart.Value -> parameters.size
     is Route.Body.Multipart.Ref,
     is Route.Body.OverloadedBody,
+    is Route.Body.CallerSet,
     is Route.Body.SetBody -> null
 }
 
@@ -456,6 +458,18 @@ private fun Route.toInvokeFunSpec(
         }
     }
 
+    if (selectedBody is Route.Body.CallerSet) {
+        // Last, so that it is the trailing lambda. Optional and alone it defaults to no body at all; next to another
+        // body, that one leaves the body out (`body = null`, or its own overload), and a default here would make a
+        // call without arguments ambiguous.
+        val onlyBlock = body?.required != true && body?.types?.values.orEmpty().all { it is Route.Body.CallerSet }
+        val block = ParameterSpec.builder(callerBlockParameterName(), RequestBuilderBlockType).apply {
+            if (onlyBlock) defaultValue(CodeBlock.of("{}"))
+        }.build()
+        builder.addParameter(block)
+        signatureTypes += block.type
+    }
+
     val returnType = invokeReturnType(config, methodClassName, inlineModelScope, contentType)
     @Suppress("SpreadOperator")
     return builder.returns(returnType)
@@ -463,6 +477,12 @@ private fun Route.toInvokeFunSpec(
         .addCode(buildOperationBody(config, method, methodClassName, selectedBody = selectedBody, contentType = contentType))
         .build()
 }
+
+/** `HttpRequestBuilder.() -> Unit`: the block in which the caller sets the body of a [Route.Body.CallerSet] body. */
+private val RequestBuilderBlockType = LambdaTypeName.get(
+    receiver = ClassName("io.ktor.client.request", "HttpRequestBuilder"),
+    returnType = UNIT,
+)
 
 @Suppress("LongParameterList")
 private fun Route.toInvokeFunSpecWithRequestType(
@@ -781,6 +801,9 @@ private fun Route.Body.toInvokeParameterSpecs(
     usesNestedBodyType: Boolean,
     required: Boolean,
 ): List<ParameterSpec>? = when (this) {
+    // The caller builds this body in the request builder block, which [toInvokeFunSpec] adds last.
+    is Route.Body.CallerSet -> emptyList()
+
     is Route.Body.SetBody -> {
         val bodyType = if (usesNestedBodyType) {
             methodClassName.nestedClass("Body")

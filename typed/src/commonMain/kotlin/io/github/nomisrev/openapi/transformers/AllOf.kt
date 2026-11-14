@@ -153,6 +153,7 @@ private fun Model.merge(other: Model, name: NamingContext): Model = when (this) 
     is Model.Reference,
     is Model.FreeFormJson,
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Date,
     is Model.Primitive,
     is Model.DateTime,

@@ -45,6 +45,7 @@ private fun Model.collectionEntryLiteral(raw: String, config: RenderConfig): Cod
         is Model.Enum -> CodeBlock.of("%T.%L", context.toClassName(config), toEnumValueName(raw))
 
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Collection,
         is Model.Dictionary,
         is Model.Date,

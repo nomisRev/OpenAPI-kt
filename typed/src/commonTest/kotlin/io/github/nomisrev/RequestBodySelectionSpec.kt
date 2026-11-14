@@ -31,6 +31,7 @@ val requestBodySelectionSpec by testSuite {
             when (body) {
                 is Route.Body.SetBody -> body.contentType
                 is Route.Body.OverloadedBody -> body.contentType
+                is Route.Body.CallerSet -> body.contentType
                 is Route.Body.FormUrlEncoded -> ContentType.Application.FormUrlEncoded
                 is Route.Body.Multipart -> ContentType.MultiPart.FormData
             }

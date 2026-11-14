@@ -630,7 +630,7 @@ internal fun Model.deserializationPriority(config: RenderConfig): Int = when (th
     is Model.Uuid -> UUID_PRIORITY
     is Model.Date -> DATE_PRIORITY
     is Model.DateTime -> DATE_TIME_PRIORITY
-    is Model.ByteArray -> BYTE_ARRAY_PRIORITY
+    is Model.ByteArray, is Model.RawResponse -> BYTE_ARRAY_PRIORITY
     is Model.Primitive.String -> STRING_PRIORITY
     is Model.FreeFormJson -> FREE_FORM_JSON_PRIORITY
 }

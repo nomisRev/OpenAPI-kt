@@ -135,6 +135,7 @@ internal fun Model.Union.Case.renderNonDiscriminatedCase(
 
         is Model.DiscriminatedObject,
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Collection,
         is Model.Dictionary,
         is Model.Date,

@@ -13,6 +13,7 @@ internal fun Model.needsJsonObjectImport(): Boolean = when (this) {
     is Model.Dictionary -> inner.nestedOrNull()?.needsJsonObjectImport() == true
 
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Date,
     is Model.DateTime,
     is Model.FreeFormJson,

@@ -68,6 +68,7 @@ internal fun Model.jsonTokenKinds(
         is Model.Primitive.Unit -> setOf(JsonTokenKind.Object)
         // `ByteArraySerializer()` reads an array of numbers.
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Collection -> setOf(JsonTokenKind.Array)
 
         is Model.Dictionary,

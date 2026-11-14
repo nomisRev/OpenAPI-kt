@@ -13,6 +13,7 @@ import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.UNIT
 import io.github.nomisrev.openapi.routes.SchemaContext
 
+private val HttpResponseType = ClassName("io.ktor.client.statement", "HttpResponse")
 private val UuidType = ClassName("kotlin.uuid", "Uuid")
 private val LocalDateType = ClassName("kotlinx.datetime", "LocalDate")
 private val InstantType = ClassName("kotlin.time", "Instant")
@@ -25,6 +26,7 @@ private val MapType = ClassName("kotlin.collections", "Map")
 @Suppress("CyclomaticComplexMethod")
 fun Model.toTypeName(config: RenderConfig): TypeName = when (this) {
         is Model.ByteArray -> BYTE_ARRAY
+        is Model.RawResponse -> HttpResponseType
         is Model.Collection -> {
             if ((inner as? Model.FreeFormJson)?.isPrimitive == false) JsonArrayType
             else ListType.parameterizedBy(inner.toTypeName(config))

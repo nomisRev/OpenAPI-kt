@@ -1,6 +1,11 @@
 package io.github.nomisrev.openapi.routes
 
 import io.github.nomisrev.openapi.Model
+import io.github.nomisrev.openapi.NamingContext
+import io.github.nomisrev.openapi.parser.ReferenceOr
+import io.github.nomisrev.openapi.parser.Schema
+import io.github.nomisrev.openapi.registry.Registry
+import io.github.nomisrev.openapi.registry.toModel
 import io.ktor.http.ContentType
 
 /**
@@ -48,3 +53,45 @@ fun ContentType.requestContentType(model: Model): ContentType {
     return if (charset == null || chosen == ContentType.Application.OctetStream) chosen
     else chosen.withParameter("charset", charset)
 }
+
+/** How the content of a media type declared without `schema` is typed, by the media type alone. */
+enum class MediaTypeKind {
+    /** `application/json` and every `+json` media type: any JSON value. */
+    Json,
+
+    /** Every `text` media type, and the range of all of them: a string. */
+    Text,
+
+    /**
+     * Everything else (`application/pdf`, `application/octet-stream`, XML, any media type range, ...): the spec says
+     * nothing about the content. A response is handed to the caller as it is, and the caller builds the request body.
+     */
+    Other,
+}
+
+/**
+ * The [MediaTypeKind] of this media type, which decides the type of its content when there is no `schema`
+ * (`example` and `examples` never do). A media type range is never [MediaTypeKind.Json], even when it admits JSON, and
+ * only the range of every `text` subtype is [MediaTypeKind.Text]. Shared by responses and request bodies.
+ */
+fun ContentType.mediaTypeKind(): MediaTypeKind = when {
+    isWildcard() && !contentType.equals("text", ignoreCase = true) -> MediaTypeKind.Other
+    isJsonLike() -> MediaTypeKind.Json
+    contentType.equals("text", ignoreCase = true) -> MediaTypeKind.Text
+    else -> MediaTypeKind.Other
+}
+
+/**
+ * The model of content declared under this media type without `schema`: what `schema: {}` is for JSON, and what
+ * `type: string` is for text. `null` for [MediaTypeKind.Other], which has no model: a response is
+ * [Model.RawResponse], and a request body is built by the caller ([Route.Body.CallerSet]).
+ */
+context(ctx: Registry)
+internal suspend fun ContentType.schemalessModelOrNull(name: NamingContext, context: SchemaContext): Model? =
+    when (mediaTypeKind()) {
+        MediaTypeKind.Json -> with(ctx) { ReferenceOr.value(Schema()).toModel(name, context) }
+        MediaTypeKind.Text ->
+            with(ctx) { ReferenceOr.value(Schema(type = Schema.Type.Basic.String)).toModel(name, context) }
+
+        MediaTypeKind.Other -> null
+    }

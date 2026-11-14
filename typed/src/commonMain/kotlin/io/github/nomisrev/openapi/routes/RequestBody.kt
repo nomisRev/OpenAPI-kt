@@ -35,8 +35,11 @@ private suspend fun RequestBody.toBodies(
     method: HttpMethod,
 ): Route.Bodies? {
     val typedBodies = content.entries.mapNotNull { [contentType, mediaType] ->
-        val schema = mediaType.schema ?: return@mapNotNull null
         val declared = ContentType.parse(contentType)
+        val schema = mediaType.schema
+            // Only `itemSchema` (OpenAPI 3.2): a stream of items, which request bodies do not model.
+            ?: if (mediaType.itemSchema != null) return@mapNotNull null
+            else return@mapNotNull Pair(declared, schemalessBody(segments, method, declared, mediaType))
         val body = when {
             declared.isMultipartFormData() -> formDataToBody(segments, method, mediaType, schema)
             declared.match(ContentType.Application.FormUrlEncoded) ->
@@ -61,6 +64,24 @@ private suspend fun RequestBody.toBodies(
         types = typedBodies,
         extensions = extensions
     )
+}
+
+/**
+ * The body of a media type declared without `schema`: any JSON and a string are sent like the body of a hand-written
+ * schema, and the caller builds the body of any other media type ([Route.Body.CallerSet]). `example` and `examples`
+ * never decide the type.
+ */
+context(scope: Registry)
+private suspend fun RequestBody.schemalessBody(
+    segments: List<PathSegment>,
+    method: HttpMethod,
+    declared: ContentType,
+    mediaType: MediaType,
+): Route.Body {
+    val name = NamingContext.path(segments, method).nest(NamingContext.RouteBody)
+    val model = declared.schemalessModelOrNull(name, SchemaContext.Write)
+        ?: return Route.Body.CallerSet(declared, description, mediaType.extensions)
+    return Route.Body.SetBody(declared.requestContentType(model), model, description, mediaType.extensions)
 }
 
 /**
@@ -291,6 +312,7 @@ internal suspend fun Model.isFormScalar(visited: Set<NamingContext.Reference> = 
     is Model.FreeFormJson -> isPrimitive
 
     is Model.ByteArray,
+    is Model.RawResponse,
     is Model.Collection,
     is Model.Dictionary,
     is Model.DiscriminatedObject,

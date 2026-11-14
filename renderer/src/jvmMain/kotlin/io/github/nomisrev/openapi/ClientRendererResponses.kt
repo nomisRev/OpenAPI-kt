@@ -230,12 +230,12 @@ private fun buildDataResponseTypeSpec(
         .addModifiers(KModifier.DATA)
         .primaryConstructor(
             FunSpec.constructorBuilder()
-                .addParameter("value", typeName)
+                .addParameter(model.responseValueName(), typeName)
                 .build()
         )
         .addProperty(
-            PropertySpec.builder("value", typeName)
-                .initializer("value")
+            PropertySpec.builder(model.responseValueName(), typeName)
+                .initializer(model.responseValueName())
                 .build()
         )
         .apply {
@@ -446,12 +446,12 @@ private fun buildSealedResponseCaseTypeSpec(
             .addModifiers(KModifier.DATA)
             .primaryConstructor(
                 FunSpec.constructorBuilder()
-                    .addParameter("value", typeName)
+                    .addParameter(model.responseValueName(), typeName)
                     .build()
             )
             .addProperty(
-                PropertySpec.builder("value", typeName)
-                    .initializer("value")
+                PropertySpec.builder(model.responseValueName(), typeName)
+                    .initializer(model.responseValueName())
                     .build()
             )
             .addSuperinterface(responseClassName)
@@ -500,10 +500,11 @@ private fun buildRangeResponseCaseTypeSpec(
             .build()
     )
     if (valueType != null) {
-        constructor.addParameter("value", valueType)
+        val valueName = model?.responseValueName() ?: "value"
+        constructor.addParameter(valueName, valueType)
         builder.addProperty(
-            PropertySpec.builder("value", valueType)
-                .initializer("value")
+            PropertySpec.builder(valueName, valueType)
+                .initializer(valueName)
                 .build()
         )
     }
@@ -564,6 +565,7 @@ private fun buildInlineResponseBodyTypeSpec(
         )
 
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Collection,
         is Model.Dictionary,
         is Model.Date,
@@ -617,10 +619,10 @@ private fun buildSealedResponseDefaultTypeSpec(
 
     if (model != null && model !is Model.Primitive.Unit) {
         val typeName = requireNotNull(valueType)
-        constructorBuilder.addParameter("value", typeName)
+        constructorBuilder.addParameter(model.responseValueName(), typeName)
         props.add(
-            PropertySpec.builder("value", typeName)
-                .initializer("value")
+            PropertySpec.builder(model.responseValueName(), typeName)
+                .initializer(model.responseValueName())
                 .build()
         )
     }
@@ -688,12 +690,12 @@ private fun buildMultiContentTypeResponseCaseTypeSpec(
         .addModifiers(KModifier.DATA)
         .primaryConstructor(
             FunSpec.constructorBuilder()
-                .addParameter("value", typeName)
+                .addParameter(model.responseValueName(), typeName)
                 .build()
         )
         .addProperty(
-            PropertySpec.builder("value", typeName)
-                .initializer("value")
+            PropertySpec.builder(model.responseValueName(), typeName)
+                .initializer(model.responseValueName())
                 .build()
         )
         .addSuperinterface(responseClassName)
@@ -762,12 +764,12 @@ private fun buildSharedResponseCaseTypeSpec(
         .addModifiers(KModifier.DATA)
         .primaryConstructor(
             FunSpec.constructorBuilder()
-                .addParameter("value", typeName)
+                .addParameter(model.responseValueName(), typeName)
                 .build()
         )
         .addProperty(
-            PropertySpec.builder("value", typeName)
-                .initializer("value")
+            PropertySpec.builder(model.responseValueName(), typeName)
+                .initializer(model.responseValueName())
                 .build()
         )
         .apply {
@@ -835,10 +837,10 @@ private fun buildMultiContentTypeDefaultTypeSpec(
 
     if (model != null && model !is Model.Primitive.Unit) {
         val typeName = requireNotNull(valueType)
-        constructorBuilder.addParameter("value", typeName)
+        constructorBuilder.addParameter(model.responseValueName(), typeName)
         props.add(
-            PropertySpec.builder("value", typeName)
-                .initializer("value")
+            PropertySpec.builder(model.responseValueName(), typeName)
+                .initializer(model.responseValueName())
                 .build()
         )
     }
@@ -849,6 +851,18 @@ private fun buildMultiContentTypeDefaultTypeSpec(
         defaultTypeSpec = defaultBuilder.build(),
         inlineTypeSpec = inlineTypeSpec,
     )
+}
+
+/**
+ * The media type of the response an operation with a single success media type returns as it is ([Model.RawResponse]),
+ * or `null` when it returns anything else.
+ */
+internal fun Route.Returns.rawResponseContentTypeOrNull(): ContentType? {
+    if (contentTypeStrategy() !is ContentTypeStrategy.SingleContentType) return null
+    val success = responseStatuses().filter { it.isSuccessStatusCode }.map { it.returnType } + listOfNotNull(default)
+    return success.firstNotNullOfOrNull { returnType ->
+        returnType.preferredContentType()?.takeIf { returnType.preferredModel() is Model.RawResponse }
+    }
 }
 
 internal fun Route.Returns.singlePreferredModelOrNull(): Model? =
@@ -869,3 +883,9 @@ internal fun Route.Returns.singlePreferredModelOrNull(contentType: ContentType?)
         .firstOrNull()
         ?: singlePreferredModelOrNull()
 }
+
+/**
+ * The name of the property holding the content of a response case: `value`, or `response` for the [Model.RawResponse],
+ * which is the response itself and not a value decoded from it.
+ */
+internal fun Model.responseValueName(): String = if (this is Model.RawResponse) "response" else "value"

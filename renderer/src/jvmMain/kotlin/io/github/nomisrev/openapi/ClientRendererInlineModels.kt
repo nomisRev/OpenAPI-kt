@@ -53,6 +53,7 @@ private fun Route.Body.containsInlineNonDiscriminatedUnion(): Boolean =
         is Route.Body.FormUrlEncoded -> parameters.any { it.type.containsInlineNonDiscriminatedUnion() }
         is Route.Body.Multipart.Value -> parameters.any { it.type.containsInlineNonDiscriminatedUnion() }
         is Route.Body.Multipart.Ref -> value.containsInlineNonDiscriminatedUnion()
+        is Route.Body.CallerSet -> false
     }
 
 private fun Model.containsInlineNonDiscriminatedUnion(): Boolean =
@@ -79,6 +80,7 @@ private fun Model.containsInlineNonDiscriminatedUnion(): Boolean =
                     }
 
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Date,
         is Model.DateTime,
         is Model.Enum,
@@ -113,6 +115,7 @@ internal fun Model.toInlineOperationTypeSpecOrNull(
 
         is Model.DiscriminatedObject,
         is Model.ByteArray,
+        is Model.RawResponse,
         is Model.Collection,
         is Model.Dictionary,
         is Model.Date,

@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi.routes
 
+import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.parser.Operation
@@ -43,15 +44,20 @@ private suspend fun Response.toReturnType(
     method: HttpMethod,
 ): Route.ReturnType {
     val name = NamingContext.path(segments, method).nest(NamingContext.Response)
-    content.forEach { [contentType, mediaType] ->
-        require(mediaType.schema != null || mediaType.itemSchema != null) {
-            "Response without $mediaType schema for ${method.value} $path ($contentType). $this"
-        }
-    }
     return Route.ReturnType(
         types = content.entries.mapNotNull { [contentType, mediaType] ->
-            mediaType.schema?.let { schema ->
-                Pair(ContentType.parse(contentType), schema.toModel(name, SchemaContext.Read))
+            val parsed = ContentType.parse(contentType)
+            val schema = mediaType.schema
+            when {
+                schema != null -> Pair(parsed, schema.toModel(name, SchemaContext.Read))
+                // Only `itemSchema`: the content is a stream of items, described by [Route.ReturnType.streams].
+                mediaType.itemSchema != null -> null
+                // Neither: the media type alone says how the content is read. `example` and `examples` never do.
+                else -> {
+                    val model: Model = parsed.schemalessModelOrNull(name, SchemaContext.Read)
+                        ?: Model.RawResponse(description = null, isNullable = false, title = null)
+                    Pair(parsed, model)
+                }
             }
         }.toMap(),
         extensions = extensions,
