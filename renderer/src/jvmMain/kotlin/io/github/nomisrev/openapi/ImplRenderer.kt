@@ -271,6 +271,7 @@ internal fun Route.buildOperationBody(
     config: RenderConfig,
     method: HttpMethod,
     methodClassName: ClassName,
+    arguments: OperationArguments,
     includeBody: Boolean = true,
     selectedBody: Route.Body? = body?.defaultOrNull(),
     bodyExpr: CodeBlock? = null,
@@ -289,6 +290,7 @@ internal fun Route.buildOperationBody(
                 selectedBody = selectedBody,
                 bodyExpr = bodyExpr,
                 requestType = requestType,
+                arguments = arguments,
             )
         } else {
             buildSealedOperationBody(
@@ -300,6 +302,7 @@ internal fun Route.buildOperationBody(
                 bodyExpr,
                 accept,
                 requestType,
+                arguments,
             )
         }
     } else {
@@ -311,6 +314,7 @@ internal fun Route.buildOperationBody(
             bodyExpr,
             accept,
             requestType,
+            arguments,
         )
     }
 }
@@ -320,6 +324,11 @@ private data class OperationRequestInvocationContext(
     val pathLiteral: CodeBlock,
     val needsRequestConfig: Boolean,
     val bodyMayBeNull: Boolean,
+    /**
+     * The `HttpClient` property of the operation class: `client`, or `this.client` when an argument of that name is
+     * nearer.
+     */
+    val client: String,
 )
 
 private enum class OperationRequestInvocationStyle {
@@ -333,8 +342,10 @@ private fun Route.operationRequestInvocationContext(
     includeBody: Boolean,
     selectedBody: Route.Body?,
     contentType: ContentType?,
+    arguments: OperationArguments,
 ): OperationRequestInvocationContext =
     OperationRequestInvocationContext(
+        client = if (arguments.shadowsClient) "this.client" else "client",
         httpMethodName = method.value.lowercase(),
         pathLiteral = pathLiteral(config),
         needsRequestConfig = hasRequestConfig(includeBody) || contentType != null,
@@ -360,24 +371,25 @@ private fun CodeBlock.Builder.addRequestInvocation(
     bodyExpr: CodeBlock?,
     acceptContentType: ContentType?,
     requestType: RequestTypeArgument?,
+    arguments: OperationArguments,
 ) {
     if (!request.needsRequestConfig) {
         when (style) {
             OperationRequestInvocationStyle.ResponseBinding ->
-                addStatement("val response = client.%L(%L)", request.httpMethodName, request.pathLiteral)
+                addStatement("val response = %L.%L(%L)", request.client, request.httpMethodName, request.pathLiteral)
 
             OperationRequestInvocationStyle.StatementOnly ->
-                addStatement("client.%L(%L)", request.httpMethodName, request.pathLiteral)
+                addStatement("%L.%L(%L)", request.client, request.httpMethodName, request.pathLiteral)
         }
         return
     }
 
     when (style) {
         OperationRequestInvocationStyle.ResponseBinding ->
-            beginControlFlow("val response = client.%L(%L)", request.httpMethodName, request.pathLiteral)
+            beginControlFlow("val response = %L.%L(%L)", request.client, request.httpMethodName, request.pathLiteral)
 
         OperationRequestInvocationStyle.StatementOnly ->
-            beginControlFlow("client.%L(%L)", request.httpMethodName, request.pathLiteral)
+            beginControlFlow("%L.%L(%L)", request.client, request.httpMethodName, request.pathLiteral)
     }
 
     route.addRequestConfigCode(
@@ -389,6 +401,7 @@ private fun CodeBlock.Builder.addRequestInvocation(
         bodyExpr = bodyExpr,
         acceptContentType = acceptContentType,
         requestType = requestType,
+        arguments = arguments,
     )
 
     endControlFlow()
@@ -403,9 +416,10 @@ private fun Route.buildSealedOperationBody(
     bodyExpr: CodeBlock?,
     contentType: ContentType?,
     requestType: RequestTypeArgument?,
+    arguments: OperationArguments,
 ): CodeBlock {
     val code = CodeBlock.builder()
-    val request = operationRequestInvocationContext(config, method, includeBody, selectedBody, contentType)
+    val request = operationRequestInvocationContext(config, method, includeBody, selectedBody, contentType, arguments)
 
     code.addRequestInvocation(
         route = this,
@@ -417,6 +431,7 @@ private fun Route.buildSealedOperationBody(
         bodyExpr = bodyExpr,
         acceptContentType = contentType,
         requestType = requestType,
+        arguments = arguments,
     )
 
     code.beginControlFlow("return when (response.status.value)")
@@ -437,9 +452,10 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
     selectedBody: Route.Body?,
     bodyExpr: CodeBlock?,
     requestType: RequestTypeArgument?,
+    arguments: OperationArguments,
 ): CodeBlock {
     val code = CodeBlock.builder()
-    val request = operationRequestInvocationContext(config, method, includeBody, selectedBody, contentType)
+    val request = operationRequestInvocationContext(config, method, includeBody, selectedBody, contentType, arguments)
 
     code.addRequestInvocation(
         route = this,
@@ -451,6 +467,7 @@ private fun Route.buildMultiContentTypeSealedOperationBody(
         bodyExpr = bodyExpr,
         acceptContentType = contentType,
         requestType = requestType,
+        arguments = arguments,
     )
 
     code.beginControlFlow("return when (response.status.value)")
@@ -475,12 +492,13 @@ private fun Route.buildDirectOperationBody(
     bodyExpr: CodeBlock?,
     contentType: ContentType?,
     requestType: RequestTypeArgument?,
+    arguments: OperationArguments,
 ): CodeBlock {
     val code = CodeBlock.builder()
     val model = returns.singlePreferredModelOrNull()
     val returnsBody = model != null && model !is Model.Primitive.Unit
     val declaredStatus = returns.responses.keys.singleOrNull()
-    val request = operationRequestInvocationContext(config, method, includeBody, selectedBody, contentType)
+    val request = operationRequestInvocationContext(config, method, includeBody, selectedBody, contentType, arguments)
 
     code.addRequestInvocation(
         route = this,
@@ -496,6 +514,7 @@ private fun Route.buildDirectOperationBody(
         bodyExpr = bodyExpr,
         acceptContentType = contentType,
         requestType = requestType,
+        arguments = arguments,
     )
 
     if (declaredStatus != null) {
@@ -872,6 +891,7 @@ private fun Route.addRequestConfigCode(
     bodyExpr: CodeBlock? = null,
     acceptContentType: ContentType? = null,
     requestType: RequestTypeArgument? = null,
+    arguments: OperationArguments,
 ) {
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
 
@@ -885,7 +905,7 @@ private fun Route.addRequestConfigCode(
     }
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Query }) {
-        code.addParameterPairsCode(config, PairTarget.Query, param)
+        code.addParameterPairsCode(config, PairTarget.Query, param, arguments.parameter(param))
     }
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Header && it.isSupported }) {
@@ -893,7 +913,7 @@ private fun Route.addRequestConfigCode(
             config = config,
             headerMember = HeaderMember,
             name = param.name,
-            expr = param.name.toParamName(),
+            expr = arguments.parameter(param),
             model = param.type.publicInputModelOrSelf(),
             mayBeNull = param.mayBeNull,
             explode = param.explode,
@@ -901,7 +921,7 @@ private fun Route.addRequestConfigCode(
     }
 
     for (param in nonPathParams.filter { it.input == Parameter.Input.Cookie }) {
-        code.addParameterPairsCode(config, PairTarget.Cookie, param)
+        code.addParameterPairsCode(config, PairTarget.Cookie, param, arguments.parameter(param))
     }
 
     if (includeBody && selectedBody != null) {
@@ -912,9 +932,10 @@ private fun Route.addRequestConfigCode(
             bodyMayBeNull = bodyMayBeNull,
             bodyExpr = bodyExpr,
             requestType = requestType,
-            callerContentType = callerContentTypeArgumentOrNull(config, selectedBody),
+            callerContentType = callerContentTypeArgumentOrNull(config, selectedBody, arguments),
             sentContentType = body?.variants()?.firstOrNull { it.body === selectedBody }?.sentContentType,
-            callerBlock = if (selectedBody is Route.Body.CallerSet) callerBlockParameterName() else null,
+            callerBlock = if (selectedBody is Route.Body.CallerSet) arguments.block else null,
+            arguments = arguments,
         )
     }
 }
@@ -924,13 +945,18 @@ private fun Route.addRequestConfigCode(
  * `content` is a scalar sent as is, and a parameter without a supported serialization is reported by
  * `GenerationDiagnostics` instead of sent.
  */
-private fun CodeBlock.Builder.addParameterPairsCode(config: RenderConfig, target: PairTarget, param: Route.Input) {
+private fun CodeBlock.Builder.addParameterPairsCode(
+    config: RenderConfig,
+    target: PairTarget,
+    param: Route.Input,
+    argument: String,
+) {
     if (!param.isSupported) return
     addPairsCode(
         config = config,
         target = target,
         name = param.name,
-        expr = param.name.toParamName(),
+        expr = argument,
         model = param.type.publicInputModelOrSelf(),
         mayBeNull = param.mayBeNull,
         style = param.formStyle ?: Route.Body.FormStyle.FormExploded,
@@ -1002,6 +1028,7 @@ private fun addBodyCode(
     callerContentType: CallerContentTypeArgument? = null,
     sentContentType: ContentType? = null,
     callerBlock: String? = null,
+    arguments: OperationArguments,
 ) {
     when (body) {
         is Route.Body.CallerSet -> code.addCallerSetBodyCode(
@@ -1015,7 +1042,7 @@ private fun addBodyCode(
                 ?: callerContentType?.let { CodeBlock.of("%N", it.name) }
                 ?: body.contentType.toContentTypeCodeBlock()
             val check = callerContentType?.requireCode()
-            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, check) { value ->
+            code.addSetLikeBodyCode(contentType, arguments.body, bodyExpr, bodyMayBeNull, check) { value ->
                 if (requestType == null) {
                     addStatement("%M(%L)", SetBodyMember, setBodyArgument(body.type, body.contentType, value))
                 } else {
@@ -1026,7 +1053,7 @@ private fun addBodyCode(
 
         is Route.Body.OverloadedBody -> {
             val contentType = requestType?.contentTypeCode ?: body.contentType.toContentTypeCodeBlock()
-            code.addSetLikeBodyCode(contentType, bodyExpr, bodyMayBeNull, contentTypeCheck = null) { value ->
+            code.addSetLikeBodyCode(contentType, arguments.body, bodyExpr, bodyMayBeNull, contentTypeCheck = null) { value ->
                 addStatement("%M(%L)", SetBodyMember, value)
             }
         }
@@ -1035,9 +1062,10 @@ private fun addBodyCode(
             config,
             body,
             requireNotNull(sentContentType) { "A form body is sent as the media type it is declared under." },
+            arguments,
         )
-        is Route.Body.Multipart.Value -> code.addMultipartValueBodyCode(config, body)
-        is Route.Body.Multipart.Ref -> code.addMultipartRefBodyCode(bodyMayBeNull)
+        is Route.Body.Multipart.Value -> code.addMultipartValueBodyCode(config, body, arguments)
+        is Route.Body.Multipart.Ref -> code.addMultipartRefBodyCode(bodyMayBeNull, arguments.body)
     }
 }
 
@@ -1093,7 +1121,7 @@ private fun CodeBlock.Builder.addRequestTypeSetBody(requestType: RequestTypeArgu
         addStatement("%M(%L)", SetBodyMember, arguments.first())
         return
     }
-    beginControlFlow("when (requestType)")
+    beginControlFlow("when (%L)", requestType.name)
     for ([name, argument] in requestType.constantNames.zip(arguments)) {
         addStatement("%T.%N -> %M(%L)", requestType.enumClassName, name, SetBodyMember, argument)
     }
@@ -1103,6 +1131,7 @@ private fun CodeBlock.Builder.addRequestTypeSetBody(requestType: RequestTypeArgu
 @Suppress("CanBeNonNullable")
 private fun CodeBlock.Builder.addSetLikeBodyCode(
     contentType: CodeBlock,
+    bodyArgument: String,
     bodyExpr: CodeBlock?,
     bodyMayBeNull: Boolean,
     contentTypeCheck: CodeBlock?,
@@ -1117,9 +1146,9 @@ private fun CodeBlock.Builder.addSetLikeBodyCode(
         addStatement("%M(%L)", SetBodyMember, bodyExpr)
     } else if (!bodyMayBeNull) {
         setContentType()
-        setBody("body")
+        setBody(bodyArgument)
     } else {
-        beginControlFlow("body?.let")
+        beginControlFlow("%L?.let", bodyArgument)
         setContentType()
         setBody("it")
         endControlFlow()
@@ -1145,6 +1174,7 @@ private fun CodeBlock.Builder.addFormUrlEncodedBodyCode(
     config: RenderConfig,
     body: Route.Body.FormUrlEncoded,
     contentType: ContentType,
+    arguments: OperationArguments,
 ) {
     addStatement("%M(%L)", ContentTypeFunMember, contentType.toContentTypeCodeBlock())
     add("%M(%T.build {\n", SetBodyMember, ParametersType)
@@ -1154,7 +1184,7 @@ private fun CodeBlock.Builder.addFormUrlEncodedBodyCode(
             config = config,
             target = PairTarget.FormBody,
             name = formData.name,
-            expr = formData.name.toParamName(),
+            expr = arguments.field(formData.name),
             model = formData.type,
             mayBeNull = formData.type.isNullable || !formData.isRequired,
             style = body.styleOf(formData),
@@ -1164,11 +1194,15 @@ private fun CodeBlock.Builder.addFormUrlEncodedBodyCode(
     add("}.%M())\n", FormUrlEncodeMember)
 }
 
-private fun CodeBlock.Builder.addMultipartValueBodyCode(config: RenderConfig, body: Route.Body.Multipart.Value) {
+private fun CodeBlock.Builder.addMultipartValueBodyCode(
+    config: RenderConfig,
+    body: Route.Body.Multipart.Value,
+    arguments: OperationArguments,
+) {
     add("%M(%T(%M {\n", SetBodyMember, MultiPartFormDataContentType, FormDataMember)
     indent()
     for (formData in body.parameters) {
-        val paramName = formData.name.toParamName()
+        val paramName = arguments.field(formData.name)
         val valueExpr = formData.multipartValueExpr(config, paramName)
         val headersExpr = formData.contentType?.let { contentType ->
             CodeBlock.of("%M(%T.ContentType, %S)", HeadersOfMember, HttpHeadersType, contentType.toString())
@@ -1197,16 +1231,16 @@ private fun CodeBlock.Builder.appendStatement(
     }
 }
 
-private fun CodeBlock.Builder.addMultipartRefBodyCode(bodyMayBeNull: Boolean) {
+private fun CodeBlock.Builder.addMultipartRefBodyCode(bodyMayBeNull: Boolean, bodyArgument: String) {
     if (!bodyMayBeNull) {
         addStatement(
             "%M(%T.MultiPart.FormData)",
             ContentTypeFunMember,
             ContentTypeType,
         )
-        addStatement("%M(body)", SetBodyMember)
+        addStatement("%M(%L)", SetBodyMember, bodyArgument)
     } else {
-        beginControlFlow("body?.let")
+        beginControlFlow("%L?.let", bodyArgument)
         addStatement(
             "%M(%T.MultiPart.FormData)",
             ContentTypeFunMember,

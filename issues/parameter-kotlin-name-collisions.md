@@ -1,6 +1,6 @@
 # Two parameters of one operation get the same Kotlin name (`maxResults` / `MaxResults`)
 
-**Status:** open
+**Status:** fixed (renderer; `ParameterNameCollisionRuntimeTest`, `client/parameter-name-collisions`). Parameters that want one Kotlin name are told apart (symbols spelled: `<=` `>=` `<` `>` `[]` `!`; then the location; then the first free number from 2) and each renamed one is a warning. Still open: Ktor `Parameters` compare names ignoring case, so `maxResults` and `MaxResults` are both written as `maxResults` by `url.encodedParameters.append`.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
 **Impact:** 30 of 1,547 documents fail to compile (amazonaws.com 26, alertersystem.com, api2cart.com, gsmtasks.com, twilio.com). 39 documents have the construct; the other 9 fail before compilation.

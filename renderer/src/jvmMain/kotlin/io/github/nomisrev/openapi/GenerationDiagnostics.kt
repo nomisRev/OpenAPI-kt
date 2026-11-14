@@ -41,8 +41,9 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
     )
 }
 
-internal fun ApiTree.generationDiagnostics(): List<GenerationDiagnostic> =
+internal fun ApiTree.generationDiagnostics(config: RenderConfig): List<GenerationDiagnostic> =
     requestBodyDiagnostics() + ignoredParameterDiagnostics() + parameterDiagnostics() +
+        renamedArgumentDiagnostics(config.withOptionalTypeName(this).withNamedModels(models)) +
         children.renamedPathDiagnostics(parentPath = "") + renamedServerDiagnostics() + propertyOverrideDiagnostics() + typedWarningDiagnostics()
 
 /** A warning for each server whose name is a last resort: the same name as an earlier server, or `Custom` ([serverNames]). */
@@ -70,6 +71,32 @@ private fun ApiTree.propertyOverrideDiagnostics(): List<GenerationDiagnostic> =
                 message = "Discriminated subtype ${override.schema} overrides property '${override.property}' it " +
                     "inherits from ${override.parent}: it declares ${override.declared}, which contradicts the " +
                     "inherited ${override.inherited} (${override.reason}). ${override.schema}'s declaration is used.",
+            )
+        }
+
+private fun ApiTree.renamedArgumentDiagnostics(config: RenderConfig): List<GenerationDiagnostic> =
+    operations.values.flatMap { it.renamedArgumentDiagnostics(config) } +
+        children.flatMap { it.renamedArgumentDiagnostics(config) }
+
+private fun PathNode.renamedArgumentDiagnostics(config: RenderConfig): List<GenerationDiagnostic> =
+    operations.values.flatMap { it.renamedArgumentDiagnostics(config) } +
+        children.flatMap { it.renamedArgumentDiagnostics(config) }
+
+/**
+ * A warning for each argument of an operation whose Kotlin name is not the one its wire name gives it, because another
+ * argument has that name ([operationArguments]): the parameter, property or field keeps its wire name, whatever the
+ * argument is called. The operation without a body, which an optional body also gets, is not looked at apart: it has
+ * the arguments of the others.
+ */
+private fun Route.renamedArgumentDiagnostics(config: RenderConfig): List<GenerationDiagnostic> =
+    withSupportedRequestBodiesOnly().overloadArguments(config)
+        .flatMap { it.renames }
+        .distinct()
+        .map { rename ->
+            GenerationDiagnostic(
+                severity = GenerationDiagnosticSeverity.Warning,
+                message = "${method.value} $path: ${rename.subject} is generated as argument " +
+                    "'${rename.name.unescapeBackticks()}': ${rename.reason.explanation}",
             )
         }
 

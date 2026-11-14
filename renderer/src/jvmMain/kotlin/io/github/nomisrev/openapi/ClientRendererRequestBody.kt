@@ -34,6 +34,8 @@ private data class FlattenedBodyPublicType(
 
 internal data class FlattenedBodyOverload(
     val parameters: List<ParameterSpec>,
+    /** The names of the arguments of every overload of the flattened body: the same, whatever union case they take. */
+    val arguments: OperationArguments,
     val bodyConstructorArgs: CodeBlock,
     val bodyHasConstructorArgs: Boolean,
     val bodyParamsBeforeOptionalParams: Boolean,
@@ -53,14 +55,16 @@ private data class FlattenedBodyOverloadContext(
     val selectedModels: Map<String, Model>,
     val bodyParamsBeforeOptionalParams: Boolean,
     val omitsBody: Boolean,
+    val arguments: OperationArguments,
 )
 
 /** The `requestType` argument choosing among request bodies whose Kotlin signatures clash. */
 internal data class RequestTypeArgument(
+    val name: String,
     val enumClassName: ClassName,
     val variants: List<Route.Bodies.Variant>,
 ) {
-    val contentTypeCode: CodeBlock get() = CodeBlock.of("requestType.contentType")
+    val contentTypeCode: CodeBlock get() = CodeBlock.of("%L.contentType", name)
     val constantNames: List<String> get() = requestTypeConstantNames(variants)
 }
 
@@ -110,21 +114,17 @@ internal data class CallerContentTypeArgument(
     }
 }
 
-/**
- * The [CallerContentTypeArgument] of the overload sending [selectedBody], which the body variants of this route with
- * the same Kotlin signature share (see [detectSignatureClashes]).
- */
-internal fun Route.callerContentTypeArgumentOrNull(
-    config: RenderConfig,
-    selectedBody: Route.Body?,
-): CallerContentTypeArgument? {
+/** The ranges the caller supplies the media type of [selectedBody] in, and whether the argument is optional. */
+private data class CallerContentTypeShape(val ranges: List<ContentType>, val nullable: Boolean)
+
+private fun Route.callerContentTypeShapeOrNull(config: RenderConfig, selectedBody: Route.Body?): CallerContentTypeShape? {
     if (selectedBody is Route.Body.CallerSet) {
         // The caller builds the body, so the media type is the declared one, set before the caller's block: unless
         // the body is declared under several media types, or one that is a range, which the caller then chooses.
         val declared = body?.types?.values.orEmpty().filterIsInstance<Route.Body.CallerSet>()
             .map { it.contentType.withoutParameters() }.distinct()
         if (declared.size == 1 && !declared.single().isWildcard()) return null
-        return CallerContentTypeArgument(callerContentTypeParameterName(), declared, nullable = body?.required != true)
+        return CallerContentTypeShape(declared, nullable = body?.required != true)
     }
     if ((selectedBody as? Route.Body.SetBody)?.callerContentTypeRange == null) return null
     val signature = selectedBody.toKotlinSignature(config)
@@ -132,30 +132,44 @@ internal fun Route.callerContentTypeArgumentOrNull(
         .filter { other -> other.toKotlinSignature(config) == signature }
         .mapNotNull { other -> (other as? Route.Body.SetBody)?.callerContentTypeRange?.withoutParameters() }
         .distinct()
-    return CallerContentTypeArgument(callerContentTypeParameterName(), ranges, nullable = body?.required != true)
+    return CallerContentTypeShape(ranges, nullable = body?.required != true)
 }
 
 /**
- * `contentType`, unless a parameter of the operation already takes that name (a query parameter `content_type`), as
- * the body argument and `requestType` already do: then `bodyContentType`, else a numbered `contentType`.
+ * The [CallerContentTypeArgument] of the overload sending [selectedBody], which the body variants of this route with
+ * the same Kotlin signature share (see [detectSignatureClashes]), named by [arguments].
  */
-/**
- * The request builder block of a [Route.Body.CallerSet] body: `block`, unless a parameter of the operation already
- * takes that name, as the body argument, `requestType` and `contentType` do: then `requestBlock`, else a numbered
- * `block`.
- */
-internal fun Route.callerBlockParameterName(): String {
-    val taken = parameters.mapTo(mutableSetOf("body", "requestType", callerContentTypeParameterName())) {
-        it.name.toParamName()
+internal fun Route.callerContentTypeArgumentOrNull(
+    config: RenderConfig,
+    selectedBody: Route.Body?,
+    arguments: OperationArguments,
+): CallerContentTypeArgument? =
+    callerContentTypeShapeOrNull(config, selectedBody)?.let { shape ->
+        CallerContentTypeArgument(arguments.contentType, shape.ranges, shape.nullable)
     }
-    return (sequenceOf("block", "requestBlock") + generateSequence(2) { it + 1 }.map { "block$it" })
-        .first { it !in taken }
-}
 
-private fun Route.callerContentTypeParameterName(): String {
-    val taken = parameters.mapTo(mutableSetOf("body", "requestType")) { it.name.toParamName() }
-    return (sequenceOf("contentType", "bodyContentType") + generateSequence(2) { it + 1 }.map { "contentType$it" })
-        .first { it !in taken }
+/**
+ * The arguments, other than the parameters of the operation, of the overload sending [selectedBody]: the arguments
+ * [OperationArguments] names. [requestType] is whether the overload chooses its body with `requestType`.
+ */
+internal fun Route.bodyArguments(
+    config: RenderConfig,
+    selectedBody: Route.Body?,
+    requestType: Boolean = false,
+): List<BodyArgument> {
+    val fields = when (selectedBody) {
+        is Route.Body.FormUrlEncoded -> selectedBody.parameters.map { BodyArgument.Field(it.name) }
+        is Route.Body.Multipart.Value -> selectedBody.parameters.map { BodyArgument.Field(it.name) }
+        is Route.Body.SetBody,
+        is Route.Body.OverloadedBody,
+        is Route.Body.Multipart.Ref -> listOf(BodyArgument.Payload)
+        is Route.Body.CallerSet,
+        null -> emptyList()
+    }
+    return fields +
+        listOfNotNull(BodyArgument.RequestType.takeIf { requestType }) +
+        listOfNotNull(BodyArgument.MediaType.takeIf { callerContentTypeShapeOrNull(config, selectedBody) != null }) +
+        listOfNotNull(BodyArgument.RequestBlock.takeIf { selectedBody is Route.Body.CallerSet })
 }
 
 /**
@@ -214,56 +228,72 @@ internal fun buildRequestTypeEnum(clashingVariants: List<Route.Bodies.Variant>):
  * single request body is flattened: with several, each body gets an overload of its own, and the JSON one takes the
  * public `Body` (see [exceedsFlattenedBodyOverloadLimit]).
  */
-internal fun Route.Bodies.flattenedBodyRendering(
+internal fun Route.flattenedBodyRendering(
     config: RenderConfig,
     methodClassName: ClassName,
 ): FlattenedBodyRendering? {
-    if (types.size != 1) return null
-    val body = defaultOrNull() as? Route.Body.SetBody
-    val model = body?.type?.nestedOrNull() as? Model.Object
-    val isInlineAdditionalProps = body == null || model == null || !model.isRouteInlineModel() ||
-            model.additionalProperties is Model.Object.AdditionalProperties.Schema
-    return if (isInlineAdditionalProps) {
-        null
-    } else {
-        val publicTypes = buildFlattenedBodyPublicTypes(
-            config = config,
-            methodClassName = methodClassName,
-            bodyModel = model,
-            requiredPrimitiveUnionFieldNames = model.properties.entries
-                .filter { [_, property] -> property.isRequired && property.model.isFlattenablePrimitiveUnion() }
-                .mapTo(mutableSetOf()) { it.key },
+    val bodies = body ?: return null
+    val model = bodies.flattenableModelOrNull() ?: return null
+    val publicTypes = buildFlattenedBodyPublicTypes(
+        config = config,
+        methodClassName = methodClassName,
+        bodyModel = model,
+        requiredPrimitiveUnionFieldNames = model.properties.entries
+            .filter { [_, property] -> property.isRequired && property.model.isFlattenablePrimitiveUnion() }
+            .mapTo(mutableSetOf()) { it.key },
+    )
+
+    val publicTypeSpecs = publicTypes.map(FlattenedBodyPublicType::typeSpec)
+    val publicTypeRemaps = publicTypes.associate { publicType ->
+        val contextHolder = publicType.model as? Model.ContextHolder
+            ?: error("Public body type must be context-aware: ${publicType.model}")
+        val nestedClassName = contextHolder.context.toClassName(config)
+        nestedClassName to methodClassName.nestedClass(
+            requireNotNull(publicType.typeSpec.name)
         )
+    }
 
-        val publicTypeSpecs = publicTypes.map(FlattenedBodyPublicType::typeSpec)
-        val publicTypeRemaps = publicTypes.associate { publicType ->
-            val contextHolder = publicType.model as? Model.ContextHolder
-                ?: error("Public body type must be context-aware: ${publicType.model}")
-            val nestedClassName = contextHolder.context.toClassName(config)
-            nestedClassName to methodClassName.nestedClass(
-                requireNotNull(publicType.typeSpec.name)
-            )
-        }
+    val overloads = buildFlattenedBodyOverloads(
+        config = config,
+        methodClassName = methodClassName,
+        bodyModel = model,
+        bodyRequired = bodies.required,
+        typeNameRemaps = publicTypeRemaps,
+        arguments = operationArguments(flattenedBodyArguments(model)),
+    )
 
-        val overloads = buildFlattenedBodyOverloads(
-            config = config,
-            methodClassName = methodClassName,
-            bodyModel = model,
-            bodyRequired = required,
-            typeNameRemaps = publicTypeRemaps,
+    return overloads?.let {
+        FlattenedBodyRendering(
+            publicTypeSpecs = publicTypeSpecs,
+            overloads = it,
+            externalTypeNames = publicTypeRemaps,
         )
-
-        if (overloads == null) {
-            null
-        } else {
-            FlattenedBodyRendering(
-                publicTypeSpecs = publicTypeSpecs,
-                overloads = overloads,
-                externalTypeNames = publicTypeRemaps,
-            )
-        }
     }
 }
+
+/** The inline object an operation with a single request body takes the properties of as arguments. */
+private fun Route.Bodies.flattenableModelOrNull(): Model.Object? {
+    if (types.size != 1) return null
+    val body = defaultOrNull() as? Route.Body.SetBody ?: return null
+    val model = body.type.nestedOrNull() as? Model.Object ?: return null
+    val isInlineAdditionalProps = !model.isRouteInlineModel() ||
+            model.additionalProperties is Model.Object.AdditionalProperties.Schema
+    return model.takeUnless { isInlineAdditionalProps }
+}
+
+/**
+ * The arguments of the overloads of a flattened inline body, [flattenedBodyArguments], when this operation's single
+ * request body is flattened (and does not exceed [FlattenedBodyMaxOverloads]), else `null`.
+ */
+internal fun Route.flattenedBodyArgumentsOrNull(): List<BodyArgument>? {
+    val bodies = body ?: return null
+    val model = bodies.flattenableModelOrNull() ?: return null
+    return flattenedBodyArguments(model).takeUnless { bodies.exceedsFlattenedBodyOverloadLimit() }
+}
+
+private fun flattenedBodyArguments(model: Model.Object): List<BodyArgument> =
+    model.properties.keys.map { BodyArgument.Field(it) } +
+        listOfNotNull(BodyArgument.Additional.takeIf { model.additionalProperties is Model.Object.AdditionalProperties.Schema })
 
 internal fun countFlattenedBodyOverloadsOrNull(
     optionCounts: Iterable<Int>,
@@ -312,6 +342,7 @@ private fun buildFlattenedBodyOverloads(
     bodyModel: Model.Object,
     bodyRequired: Boolean,
     typeNameRemaps: Map<ClassName, TypeName>,
+    arguments: OperationArguments,
     maxOverloads: Long = FlattenedBodyMaxOverloads
 ): List<FlattenedBodyOverload>? {
     val propertyOptions = bodyModel.properties.entries.map { [name, property] ->
@@ -348,6 +379,7 @@ private fun buildFlattenedBodyOverloads(
                 selectedModels = selectedModels,
                 bodyParamsBeforeOptionalParams = bodyParamsBeforeOptionalParams,
                 omitsBody = omitsBody,
+                arguments = arguments,
             )
         )
     }
@@ -362,7 +394,7 @@ private fun buildFlattenedBodyOverload(
     val bodyPackage = context.bodyModel.context.toClassName(context.config).packageName
 
     context.bodyModel.properties.entries.forEach { [propertyName, property] ->
-        val paramName = propertyName.toParamName()
+        val paramName = context.arguments.field(propertyName)
         val selectedCase = if (property.isRequired && property.model.isFlattenablePrimitiveUnion()) {
             context.selectedModels.getValue(propertyName)
         } else {
@@ -385,9 +417,10 @@ private fun buildFlattenedBodyOverload(
             }
         }.build()
         parameters += parameter
+        // The property of `Body`, which is named as it always was, takes the argument.
         constructorArgPieces += CodeBlock.of(
             "%L = %L",
-            paramName,
+            propertyName.toParamName(),
             flattenedBodyValueExpression(
                 propertyName = propertyName,
                 selectedCase = selectedCase,
@@ -402,14 +435,15 @@ private fun buildFlattenedBodyOverload(
             ClassName("kotlin", "String"),
             context.additionalProperty.value.publicInputTypeName(context.config).remapTypeNames(context.typeNameRemaps),
         ).copy(nullable = true)
-        parameters += ParameterSpec.builder("additional", additionalTypeName)
+        parameters += ParameterSpec.builder(context.arguments.additional, additionalTypeName)
             .defaultValue(CodeBlock.of("null"))
             .build()
-        constructorArgPieces += CodeBlock.of("additional = additional")
+        constructorArgPieces += CodeBlock.of("additional = %L", context.arguments.additional)
     }
 
     return FlattenedBodyOverload(
         parameters = parameters,
+        arguments = context.arguments,
         bodyConstructorArgs = constructorArgPieces.joinToCode(separator = ", "),
         bodyHasConstructorArgs = constructorArgPieces.isNotEmpty(),
         bodyParamsBeforeOptionalParams = context.bodyParamsBeforeOptionalParams,
@@ -489,6 +523,7 @@ internal fun Route.buildFlattenedBodyOperationBody(
         includeBody = !overload.omitsBody,
         bodyExpr = bodyExpr,
         contentType = contentType,
+        arguments = overload.arguments,
     )
 }
 

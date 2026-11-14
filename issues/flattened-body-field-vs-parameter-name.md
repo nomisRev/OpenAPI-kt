@@ -1,6 +1,6 @@
 # A flattened request-body field and an operation parameter get the same Kotlin name
 
-**Status:** open
+**Status:** fixed (renderer; `ParameterNameCollisionRuntimeTest`, `client/parameter-name-collisions`). A flattened body property or form/multipart field with the name of a parameter is `body` + its name (`bodyIds`); the parameter keeps its name. A warning names the operation and the property.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
 **Impact:** 44 of 1,547 documents fail to compile (amazonaws.com 40, spotify.com ×2, stellastra.com, gsmtasks.com). In 36 this is the only parameter-name collision; in 8 the document also has `issues/parameter-kotlin-name-collisions.md`.

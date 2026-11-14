@@ -69,7 +69,7 @@ internal fun Route.toOperationTypeSpec(
     val methodClassName = pathClassName.nestedClass(methodTypeName(method))
     val overloadedBody = body?.defaultOrNull() as? Route.Body.OverloadedBody
     val inlineModelScope = operationInlineModelScope(config, methodClassName)
-    val flattenedBody = body?.flattenedBodyRendering(config, methodClassName)
+    val flattenedBody = flattenedBodyRendering(config, methodClassName)
     val inlineBodyTypeSpec = body?.inlineBodyTypeSpec(
         config = config,
         ownerClassName = methodClassName,
@@ -416,8 +416,10 @@ private fun Route.toInvokeFunSpec(
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
     val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
 
-    val callerContentType = callerContentTypeArgumentOrNull(config, selectedBody)
+    val arguments = operationArguments(bodyArguments(config, selectedBody))
+    val callerContentType = callerContentTypeArgumentOrNull(config, selectedBody, arguments)
     val bodyParams = selectedBody?.toInvokeParameterSpecs(
+        arguments = arguments,
         config = config,
         methodClassName = methodClassName,
         usesNestedBodyType = usesNestedBodyType,
@@ -427,6 +429,7 @@ private fun Route.toInvokeFunSpec(
 
     for (input in requiredParams) {
         val parameter = input.toParameterSpec(
+            argumentName = arguments.parameter(input),
             config = config,
             pathClassName = pathClassName,
             methodClassName = methodClassName,
@@ -443,6 +446,7 @@ private fun Route.toInvokeFunSpec(
     }
     for (input in optionalParams) {
         val parameter = input.toParameterSpec(
+            argumentName = arguments.parameter(input),
             config = config,
             pathClassName = pathClassName,
             methodClassName = methodClassName,
@@ -463,7 +467,7 @@ private fun Route.toInvokeFunSpec(
         // body, that one leaves the body out (`body = null`, or its own overload), and a default here would make a
         // call without arguments ambiguous.
         val onlyBlock = body?.required != true && body?.types?.values.orEmpty().all { it is Route.Body.CallerSet }
-        val block = ParameterSpec.builder(callerBlockParameterName(), RequestBuilderBlockType).apply {
+        val block = ParameterSpec.builder(arguments.block, RequestBuilderBlockType).apply {
             if (onlyBlock) defaultValue(CodeBlock.of("{}"))
         }.build()
         builder.addParameter(block)
@@ -474,7 +478,14 @@ private fun Route.toInvokeFunSpec(
     @Suppress("SpreadOperator")
     return builder.returns(returnType)
         .addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
-        .addCode(buildOperationBody(config, method, methodClassName, selectedBody = selectedBody, contentType = contentType))
+        .addCode(
+            buildOperationBody(
+                config, method, methodClassName,
+                selectedBody = selectedBody,
+                contentType = contentType,
+                arguments = arguments,
+            )
+        )
         .build()
 }
 
@@ -506,7 +517,9 @@ private fun Route.toInvokeFunSpecWithRequestType(
     val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
 
     val selectedBody = clashingVariants.first().body
+    val arguments = operationArguments(bodyArguments(config, selectedBody, requestType = true))
     val bodyParams = selectedBody.toInvokeParameterSpecs(
+        arguments = arguments,
         config = config,
         methodClassName = methodClassName,
         usesNestedBodyType = usesNestedBodyType,
@@ -515,6 +528,7 @@ private fun Route.toInvokeFunSpecWithRequestType(
 
     for (input in requiredParams) {
         val parameter = input.toParameterSpec(
+            argumentName = arguments.parameter(input),
             config = config,
             pathClassName = pathClassName,
             methodClassName = methodClassName,
@@ -528,12 +542,13 @@ private fun Route.toInvokeFunSpecWithRequestType(
         signatureTypes += parameter.type
     }
 
-    val requestTypeParameter = ParameterSpec.builder("requestType", methodClassName.nestedClass("RequestType")).build()
+    val requestTypeParameter = ParameterSpec.builder(arguments.requestType, methodClassName.nestedClass("RequestType")).build()
     builder.addParameter(requestTypeParameter)
     signatureTypes += requestTypeParameter.type
 
     for (input in optionalParams) {
         val parameter = input.toParameterSpec(
+            argumentName = arguments.parameter(input),
             config = config,
             pathClassName = pathClassName,
             methodClassName = methodClassName,
@@ -554,7 +569,12 @@ private fun Route.toInvokeFunSpecWithRequestType(
                 methodClassName,
                 selectedBody = selectedBody,
                 contentType = contentType,
-                requestType = RequestTypeArgument(methodClassName.nestedClass("RequestType"), clashingVariants),
+                requestType = RequestTypeArgument(
+                    arguments.requestType,
+                    methodClassName.nestedClass("RequestType"),
+                    clashingVariants,
+                ),
+                arguments = arguments,
             )
         )
         .build()
@@ -575,6 +595,7 @@ private fun Route.toInvokeFunSpecForFlattenedBody(
     val builder = operationFunBuilder(functionName, operator)
         .addDeprecatedIfNeeded()
     val signatureTypes = mutableListOf<TypeName>()
+    val arguments = overload.arguments
 
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
@@ -582,6 +603,7 @@ private fun Route.toInvokeFunSpecForFlattenedBody(
 
     for (input in requiredParams) {
         val parameter = input.toParameterSpec(
+            argumentName = arguments.parameter(input),
             config = config,
             pathClassName = pathClassName,
             methodClassName = methodClassName,
@@ -600,6 +622,7 @@ private fun Route.toInvokeFunSpecForFlattenedBody(
 
     for (input in optionalParams) {
         val parameter = input.toParameterSpec(
+            argumentName = arguments.parameter(input),
             config = config,
             pathClassName = pathClassName,
             methodClassName = methodClassName,
@@ -658,10 +681,12 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
     val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
-    val bodyParameter = ParameterSpec.builder("body", bodyTypeName).build()
+    val arguments = operationArguments(listOf(BodyArgument.Payload))
+    val bodyParameter = ParameterSpec.builder(arguments.body, bodyTypeName).build()
 
     for (input in requiredParams) {
         val parameter = input.toParameterSpec(
+            argumentName = arguments.parameter(input),
             config = config,
             pathClassName = pathClassName,
             methodClassName = methodClassName,
@@ -674,6 +699,7 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     signatureTypes += bodyParameter.type
     for (input in optionalParams) {
         val parameter = input.toParameterSpec(
+            argumentName = arguments.parameter(input),
             config = config,
             pathClassName = pathClassName,
             methodClassName = methodClassName,
@@ -690,8 +716,15 @@ private fun Route.toInvokeFunSpecForOverloadedBodyCase(
     val caseModel = overloadedBody?.cases
         ?.firstOrNull { inlineModelScope.remap(it.model.toTypeName(config)) == bodyTypeName }
         ?.model
-    val bodyExpr = setBodyArgument(caseModel, overloadedBody?.contentType, "body")
-    builder.addCode(buildOperationBody(config, method, methodClassName, bodyExpr = bodyExpr, contentType = contentType))
+    val bodyExpr = setBodyArgument(caseModel, overloadedBody?.contentType, arguments.body)
+    builder.addCode(
+        buildOperationBody(
+            config, method, methodClassName,
+            bodyExpr = bodyExpr,
+            contentType = contentType,
+            arguments = arguments,
+        )
+    )
     return builder.build()
 }
 
@@ -710,12 +743,14 @@ private fun Route.toInvokeFunSpecWithoutBody(
         .addDeprecatedIfNeeded()
     val signatureTypes = mutableListOf<TypeName>()
 
+    val arguments = operationArguments()
     val nonPathParams = parameters.filter { it.input != Parameter.Input.Path }
     val requiredParams = nonPathParams.filter { it.isRequired }.sortedBy { it.input.sortOrder() }
     val optionalParams = nonPathParams.filter { !it.isRequired }.sortedBy { it.input.sortOrder() }
 
     for (input in requiredParams) {
         val parameter = input.toParameterSpec(
+            argumentName = arguments.parameter(input),
             config = config,
             pathClassName = pathClassName,
             methodClassName = methodClassName,
@@ -726,6 +761,7 @@ private fun Route.toInvokeFunSpecWithoutBody(
     }
     for (input in optionalParams) {
         val parameter = input.toParameterSpec(
+            argumentName = arguments.parameter(input),
             config = config,
             pathClassName = pathClassName,
             methodClassName = methodClassName,
@@ -738,7 +774,14 @@ private fun Route.toInvokeFunSpecWithoutBody(
     val returnType = invokeReturnType(config, methodClassName, inlineModelScope, contentType)
     builder.returns(returnType)
     builder.addExperimentalUuidOptInIfNeeded(signatureTypes + returnType)
-    builder.addCode(buildOperationBody(config, method, methodClassName, includeBody = false, contentType = contentType))
+    builder.addCode(
+        buildOperationBody(
+            config, method, methodClassName,
+            includeBody = false,
+            contentType = contentType,
+            arguments = arguments,
+        )
+    )
     return builder.build()
 }
 
@@ -752,12 +795,12 @@ private fun Parameter.Input.sortOrder(): Int = when (this) {
 
 @Suppress("CyclomaticComplexMethod")
 private fun Route.Input.toParameterSpec(
+    argumentName: String,
     config: RenderConfig,
     pathClassName: ClassName,
     methodClassName: ClassName,
     sharedInlineParameterKeys: Set<String>,
 ): ParameterSpec {
-    val paramName = name.toParamName()
     val model = type
     val publicModel = model.publicInputModelOrSelf()
     val resolvedInlineParameterClassName = inlineParameterClassName(
@@ -786,7 +829,7 @@ private fun Route.Input.toParameterSpec(
         publicModel.defaultLiteral(config)
     }
 
-    return ParameterSpec.builder(paramName, typeName).apply {
+    return ParameterSpec.builder(argumentName, typeName).apply {
         when {
             isRequired && literalDefault != null -> defaultValue(literalDefault)
             !isRequired && literalDefault != null -> defaultValue(literalDefault)
@@ -796,6 +839,7 @@ private fun Route.Input.toParameterSpec(
 }
 
 private fun Route.Body.toInvokeParameterSpecs(
+    arguments: OperationArguments,
     config: RenderConfig,
     methodClassName: ClassName,
     usesNestedBodyType: Boolean,
@@ -812,7 +856,7 @@ private fun Route.Body.toInvokeParameterSpecs(
         }
         val typeName = if (!required) bodyType.copy(nullable = true) else bodyType
         listOf(
-            ParameterSpec.builder("body", typeName).apply {
+            ParameterSpec.builder(arguments.body, typeName).apply {
                 if (!required) defaultValue(CodeBlock.of("null"))
             }.build()
         )
@@ -826,7 +870,7 @@ private fun Route.Body.toInvokeParameterSpecs(
         }
         val typeName = if (!required) bodyType.copy(nullable = true) else bodyType
         listOf(
-            ParameterSpec.builder("body", typeName).apply {
+            ParameterSpec.builder(arguments.body, typeName).apply {
                 if (!required) defaultValue(CodeBlock.of("null"))
             }.build()
         )
@@ -836,7 +880,7 @@ private fun Route.Body.toInvokeParameterSpecs(
         parameters.map { formData ->
             val typeName =
                 formData.type.toTypeName(config).copy(nullable = formData.type.isNullable || !formData.isRequired)
-            ParameterSpec.builder(formData.name.toParamName(), typeName).apply {
+            ParameterSpec.builder(arguments.field(formData.name), typeName).apply {
                 if (!formData.isRequired) {
                     defaultValue(CodeBlock.of("null"))
                 }
@@ -848,7 +892,7 @@ private fun Route.Body.toInvokeParameterSpecs(
         parameters.map { formData ->
             val typeName =
                 formData.type.toTypeName(config).copy(nullable = formData.type.isNullable || !formData.isRequired)
-            ParameterSpec.builder(formData.name.toParamName(), typeName).apply {
+            ParameterSpec.builder(arguments.field(formData.name), typeName).apply {
                 if (!formData.isRequired) {
                     defaultValue(CodeBlock.of("null"))
                 }
@@ -861,7 +905,7 @@ private fun Route.Body.toInvokeParameterSpecs(
             if (!required) it.copy(nullable = true) else it
         }
         listOf(
-            ParameterSpec.builder("body", typeName).apply {
+            ParameterSpec.builder(arguments.body, typeName).apply {
                 if (!required) defaultValue(CodeBlock.of("null"))
             }.build()
         )

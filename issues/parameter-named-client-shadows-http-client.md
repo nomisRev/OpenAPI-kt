@@ -1,6 +1,6 @@
 # A parameter named `client` shadows the generated `HttpClient` property
 
-**Status:** open
+**Status:** fixed for operation arguments (renderer; `client/parameter-name-collisions`): an operation with an argument named `client` reads the property as `this.client`. Still open: a path parameter `{client}` gives the path class two constructor properties named `client`.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
 **Impact:** 3 of 1,547 documents (cdcgov.local:prime-data-hub, gsmtasks.com, keycloak.local)
