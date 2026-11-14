@@ -1,6 +1,10 @@
 # An optional, nullable property cannot say "send null" separately from "leave it out"
 
-**Status:** open, needs a design decision
+**Status:** fixed on branch openapi-3.2-streaming with option 1 (generated tri-state `Optional<T>`: `Absent`, `Null`, `Value`).
+Proven by `OptionalPropertyEncodingTest`, `OptionalNullableVariantsTest` and `OptionalNullableWireRuntimeTest` under Ktor's
+`DefaultJson`, `Json {}` and `Json { explicitNulls = false }`. Still open: the `integration-tests` regeneration, and a
+separate finding: under `Json { explicitNulls = false }` a required nullable property set to `null` is not written either
+(`T?` without `@EncodeDefault`/tri-state), which the spec does not allow.
 **Confirmed:** 2026-11-14 (branch openapi-3.2-streaming), by `OptionalPropertyEncodingTest` and the golden `object/optional-encoding`
 **Stage:** wrong output (silent), depends on the caller's `Json` configuration
 **Impact:** not counted on the corpus. In `github.json`: 76 optional and nullable top-level request-body properties in 37 operations, 18 of them `PATCH`
@@ -57,7 +61,7 @@ The other three combinations do not depend on the `Json` configuration (same tes
 `T? = null` is used for both "optional" and "nullable", so for a property that is both, Kotlin `null` has to stand
 for two wire states. The property gets no `@EncodeDefault`, so kotlinx.serialization falls back to the configuration.
 
-## Correct final API (open decision)
+## Correct final API (decided: option 1)
 
 The untyped-parameter fix (`3fb0ba0b`) settled the same question for parameters: Kotlin `null` is "not sent", and a
 distinct value (`JsonNull`) is "the value null". A typed property needs an equivalent third state. Candidates:

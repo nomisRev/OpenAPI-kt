@@ -22,7 +22,8 @@ public value class SearchResultTextMatches(
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val objectUrl: String? = null,
     @SerialName("object_type")
-    public val objectType: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val objectType: Optional<String> = Optional.Absent,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val `property`: String? = null,
     @EncodeDefault(EncodeDefault.Mode.NEVER)

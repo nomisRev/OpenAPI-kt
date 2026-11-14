@@ -1,10 +1,14 @@
 package io.github.nomisrev.render.test.client.alias.own.nullable
 
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.collections.Map
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class AliasOwnNullableHolder(
   public val owner: NullableAllOfOwner?,
@@ -21,5 +25,6 @@ public data class AliasOwnNullableHolder(
   public val namesMap: Map<String, NullableAllOfNames?>,
   public val nullableTarget: AllOfNullableOwner?,
   public val nullableTargets: List<AllOfNullableOwner?>,
-  public val optionalOwner: NullableAllOfOwner? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val optionalOwner: Optional<NullableAllOfOwner> = Optional.Absent,
 )

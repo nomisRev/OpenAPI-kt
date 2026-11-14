@@ -21,7 +21,8 @@ import kotlinx.serialization.encoding.Encoder
 @Serializable
 public data class Meter(
   public val rate: Baudrate,
-  public val fallback: Baudrate? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val fallback: Optional<Baudrate> = Optional.Absent,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val rates: List<Baudrate>? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)

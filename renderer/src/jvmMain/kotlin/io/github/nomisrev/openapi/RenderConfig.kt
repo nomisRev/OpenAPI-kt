@@ -10,6 +10,12 @@ data class RenderConfig(
      * [generateModels] and [generateClient] fill it from [ApiTree.models] when it is empty.
      */
     val namedModels: Map<NamingContext, Model> = emptyMap(),
+    /**
+     * The simple name of the generated tri-state type of optional and nullable properties, `Optional` unless a
+     * top-level class of the rendered tree has that name. [generateModels] and [generateClient] choose it when it is
+     * `null`.
+     */
+    val optionalTypeName: String? = null,
 )
 
 enum class KmpTarget {

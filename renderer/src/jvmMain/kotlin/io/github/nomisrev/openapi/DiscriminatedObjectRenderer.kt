@@ -19,9 +19,9 @@ fun Model.DiscriminatedObject.toTypeSpec(
     classNameOverride: ClassName? = null,
 ): TypeSpec {
     val className = classNameOverride ?: context.toClassName(config)
-    val abstractProperties = consistentAbstractProperties(config)
+    val abstractProperties = consistentAbstractProperties(config, className.packageName)
     val renderedAbstractProperties = abstractProperties.map { [jsonName, property] ->
-        renderAbstractProperty(jsonName, property, config)
+        renderAbstractProperty(jsonName, property, config, className.packageName)
     }
 
     val builder = TypeSpec.interfaceBuilder(className.simpleName)
@@ -84,12 +84,15 @@ private data class RenderedAbstractProperty(
     val usesUuid: Boolean,
 )
 
-private fun Model.DiscriminatedObject.consistentAbstractProperties(config: RenderConfig): Map<String, Model.Object.Property> =
+private fun Model.DiscriminatedObject.consistentAbstractProperties(
+    config: RenderConfig,
+    packageName: String,
+): Map<String, Model.Object.Property> =
     abstractProperties.filter { [name, property] ->
-        val expected = property.renderedTypeName(config)
+        val expected = property.renderedTypeName(config, packageName)
         subtypes.all { subtype ->
             val subtypeProperty = subtype.properties[name]
-            subtypeProperty != null && subtypeProperty.renderedTypeName(config) == expected
+            subtypeProperty != null && subtypeProperty.renderedTypeName(config, packageName) == expected
         }
     }
 
@@ -97,16 +100,18 @@ private fun renderAbstractProperty(
     jsonName: String,
     property: Model.Object.Property,
     config: RenderConfig,
+    packageName: String,
 ): RenderedAbstractProperty {
-    val typeName = property.renderedTypeName(config)
+    val typeName = property.renderedTypeName(config, packageName)
     val propertySpec = PropertySpec.builder(jsonName.toParamName(), typeName)
         .addModifiers(KModifier.ABSTRACT)
         .build()
     return RenderedAbstractProperty(propertySpec, typeName.usesExperimentalUuid())
 }
 
-private fun Model.Object.Property.renderedTypeName(config: RenderConfig): TypeName =
-    model.toTypeName(config).copy(nullable = model.isNullable || !isRequired)
+private fun Model.Object.Property.renderedTypeName(config: RenderConfig, packageName: String): TypeName =
+    if (isOptionalNullable) config.optionalOf(packageName, model.toTypeName(config))
+    else model.toTypeName(config).copy(nullable = model.isNullable || !isRequired)
 
 private fun Model.Object.discriminatorValue(): String {
     val case =

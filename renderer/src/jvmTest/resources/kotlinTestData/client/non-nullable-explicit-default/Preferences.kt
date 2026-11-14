@@ -15,7 +15,8 @@ public data class Preferences(
   public val appId: String? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val optionalKind: OptionalKind? = null,
-  public val nullableName: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val nullableName: Optional<String> = Optional.Absent,
 ) {
   @Serializable
   public enum class Kind {

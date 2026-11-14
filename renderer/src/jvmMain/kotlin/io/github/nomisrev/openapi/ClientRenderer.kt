@@ -14,7 +14,7 @@ fun ApiTree.generateClientWithDiagnostics(config: RenderConfig): GenerationResul
     val diagnostics = generationDiagnostics()
     val filteredTree = withSupportedRequestBodiesOnly()
     return GenerationResult(
-        files = filteredTree.generateClientFiles(config.withNamedModels(models)),
+        files = filteredTree.generateClientFiles(config.withOptionalTypeName(this).withNamedModels(models)),
         diagnostics = diagnostics,
     )
 }
@@ -57,7 +57,17 @@ private fun ApiTree.generateClientFiles(config: RenderConfig): List<FileSpec> {
         listOf(generateSerializationUtils(config.copy(modelPackage = config.apiPackage)))
     } else emptyList()
 
-    return files + serializationUtils
+    // The inline models of the operations live in the api package; a model of the model package has its own copy,
+    // and when both packages are one, the models' file is the only one.
+    val apiPackage = config.apiPackage.toPackageName()
+    val optionalPackages = buildSet { collectOptionalPackages(config, this) }
+    val modelsGenerateIt = apiPackage == config.modelPackage.toPackageName() &&
+        apiPackage in buildSet { models.forEach { it.collectOptionalPackages(config, this) } }
+    val optional = if (apiPackage in optionalPackages && !modelsGenerateIt) {
+        listOf(generateOptionalSupport(config, apiPackage))
+    } else emptyList()
+
+    return files + serializationUtils + optional
 }
 
 private fun ApiTree.toRootTypeSpec(config: RenderConfig, className: ClassName): TypeSpec {

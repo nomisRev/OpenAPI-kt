@@ -9,6 +9,7 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -25,13 +26,16 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.doubleOrNull
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class TypeArrayNullable(
   public val requiredString: String?,
-  public val optionalString: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val optionalString: Optional<String> = Optional.Absent,
   public val nullFirst: String?,
   public val anyOfRequiredString: String?,
-  public val anyOfOptionalString: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val anyOfOptionalString: Optional<String> = Optional.Absent,
   public val int32: Int?,
   public val int64: Long?,
   public val number: Double?,

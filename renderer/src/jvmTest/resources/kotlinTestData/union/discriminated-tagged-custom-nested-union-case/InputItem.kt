@@ -2,6 +2,7 @@ package io.github.nomisrev.render.test.union.discriminated.tagged.custom.nested.
 
 import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -55,9 +56,11 @@ public sealed interface InputItem {
     ) : Item
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class ItemReference(
-    public val type: Type? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val type: Optional<Type> = Optional.Absent,
     public val id: String,
   ) : InputItem {
     @Serializable

@@ -335,6 +335,8 @@ private fun buildFlattenedBodyOverload(
 ): FlattenedBodyOverload {
     val parameters = mutableListOf<ParameterSpec>()
     val constructorArgPieces = mutableListOf<CodeBlock>()
+    // The `Body` class is rendered in the package of its own naming context, which has the `Optional` its properties use.
+    val bodyPackage = context.bodyModel.context.toClassName(context.config).packageName
 
     context.bodyModel.properties.entries.forEach { [propertyName, property] ->
         val paramName = propertyName.toParamName()
@@ -348,10 +350,15 @@ private fun buildFlattenedBodyOverload(
             propertyModel = property.model,
             typeNameRemaps = context.typeNameRemaps,
             selectedCase = selectedCase,
-        ).copy(nullable = property.model.isNullable || !property.isRequired)
+        ).let { valueType ->
+            // Optional and nullable: `invoke(description: Optional<String> = Optional.Absent)`.
+            if (property.isOptionalNullable) context.config.optionalOf(bodyPackage, valueType)
+            else valueType.copy(nullable = property.model.isNullable || !property.isRequired)
+        }
         val parameter = ParameterSpec.builder(paramName, typeName).apply {
-            if (!property.isRequired) {
-                defaultValue(CodeBlock.of("null"))
+            when {
+                property.isOptionalNullable -> defaultValue(context.config.optionalAbsent(bodyPackage))
+                !property.isRequired -> defaultValue(CodeBlock.of("null"))
             }
         }.build()
         parameters += parameter

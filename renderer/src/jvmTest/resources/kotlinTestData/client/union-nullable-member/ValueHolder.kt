@@ -1,14 +1,19 @@
 package io.github.nomisrev.render.test.client.union.nullable.member
 
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.collections.Map
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class ValueHolder(
   public val ref: RefMember?,
-  public val optionalRef: RefMember? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val optionalRef: Optional<RefMember> = Optional.Absent,
   public val refs: List<RefMember?>,
   public val refMap: Map<String, RefMember?>,
   public val anyOf: AnyOfRefMember?,

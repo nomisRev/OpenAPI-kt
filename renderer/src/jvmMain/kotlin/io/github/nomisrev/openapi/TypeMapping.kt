@@ -103,7 +103,7 @@ private fun NamingContext.Nested.toSimpleName(): String =
         NamingContext.Response -> "Response"
     }
 
-private fun String.toPackageName(): String =
+internal fun String.toPackageName(): String =
     split('.').filter(String::isNotBlank).joinToString(".") { it.sanitize() }
 
 private fun className(packageName: String, names: List<String>): ClassName {

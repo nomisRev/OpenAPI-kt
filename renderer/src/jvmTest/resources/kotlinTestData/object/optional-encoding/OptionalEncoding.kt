@@ -30,7 +30,8 @@ public data class OptionalEncoding(
   public val optionalNotNullable: String? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val optionalNotNullableWithDefault: Int? = null,
-  public val optionalNullable: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val optionalNullable: Optional<String> = Optional.Absent,
   public val requiredNullable: String?,
   @Required
   public val requiredNullableWithDefault: String? = null,
@@ -106,5 +107,7 @@ public data class OptionalEncoding(
     public val id: String,
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val note: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val maybe: Optional<String> = Optional.Absent,
   )
 }

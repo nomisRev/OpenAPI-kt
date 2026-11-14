@@ -2,6 +2,10 @@ package io.github.nomisrev.render
 
 import io.github.nomisrev.render.test.object_.optional.encoding.OptionalEncoding
 import io.github.nomisrev.render.test.object_.optional.encoding.additional.OptionalEncodingAdditional
+import io.github.nomisrev.render.test.object_.optional.encoding.Optional
+import io.github.nomisrev.render.test.object_.optional.encoding.OptionalSerializer
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
@@ -9,6 +13,7 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 /**
  * Encodes the `object/optional-encoding*` goldens with the `Json` configurations a generated client meets:
@@ -22,7 +27,12 @@ class OptionalPropertyEncodingTest {
         explicitNulls = true
     }
     private val plainJson = Json {}
-    private val configs = listOf("Ktor DefaultJson" to ktorDefaultJson, "Json {}" to plainJson)
+    private val noExplicitNullsJson = Json { explicitNulls = false }
+    private val jsonConfigs = listOf(
+        "Ktor DefaultJson" to ktorDefaultJson,
+        "Json {}" to plainJson,
+    )
+    private val configs = jsonConfigs + ("Json { explicitNulls = false }" to noExplicitNullsJson)
 
     private val unset = OptionalEncoding(
         requiredNotNullable = "x",
@@ -62,7 +72,7 @@ class OptionalPropertyEncodingTest {
 
     /** Required and nullable: the key must always be present, `null` included. */
     @Test
-    fun requiredNullablePropertyIsAlwaysEncoded() = configs.forEach { [name, json] ->
+    fun requiredNullablePropertyIsAlwaysEncoded() = jsonConfigs.forEach { [name, json] ->
         val encoded = json.encode(unset)
         assertEquals(JsonPrimitive("x"), encoded["requiredNotNullable"], name)
         assertEquals(JsonNull, encoded["requiredNullable"], "$name: $encoded")
@@ -71,16 +81,54 @@ class OptionalPropertyEncodingTest {
     }
 
     /**
-     * Characterization, not a contract: optional and nullable means `null` and absence are both valid and may
-     * mean different things (e.g. PATCH "clear" vs "leave unchanged"), but `T? = null` cannot tell them apart.
-     * Today the wire format follows the user's `Json` configuration.
+     * Optional and nullable: absent, `null` and a value are three different states, whatever the `Json`
+     * configuration (e.g. PATCH "clear" vs "leave unchanged").
      */
     @Test
-    fun optionalNullablePropertyFollowsJsonConfiguration() {
-        assertEquals(JsonNull, ktorDefaultJson.encode(unset)["optionalNullable"])
-        assertEquals(false, "optionalNullable" in plainJson.encode(unset))
-        configs.forEach { [name, json] ->
-            assertEquals(JsonPrimitive("v"), json.encode(unset.copy(optionalNullable = "v"))["optionalNullable"], name)
+    fun optionalNullablePropertySendsItsStateWhateverTheJsonConfiguration() = configs.forEach { [name, json] ->
+        val absent = json.encode(unset)
+        assertEquals(false, "optionalNullable" in absent, "$name unset: $absent")
+        val explicitNull = json.encode(unset.copy(optionalNullable = Optional.Null))
+        assertEquals(JsonNull, explicitNull["optionalNullable"], "$name Null: $explicitNull")
+        assertEquals(
+            JsonPrimitive("v"),
+            json.encode(unset.copy(optionalNullable = Optional.Value("v")))["optionalNullable"],
+            name,
+        )
+    }
+
+    @Test
+    fun optionalNullablePropertyDecodesToItsState() = configs.forEach { [name, json] ->
+        fun decode(body: String) =
+            json.decodeFromString(OptionalEncoding.serializer(), """{"requiredNotNullable":"x","requiredNullable":null,"requiredNullableWithDefault":null$body}""")
+        assertEquals(Optional.Absent, decode("").optionalNullable, name)
+        assertEquals(Optional.Null, decode(""","optionalNullable":null""").optionalNullable, name)
+        assertEquals(Optional.Value("v"), decode(""","optionalNullable":"v"""").optionalNullable, name)
+    }
+
+    @Test
+    fun optionalNullablePropertyDecodesToNullEvenWhenCoercingInputValues() {
+        val json = Json { coerceInputValues = true }
+        val decoded = json.decodeFromString(
+            OptionalEncoding.serializer(),
+            """{"requiredNotNullable":"x","requiredNullable":null,"requiredNullableWithDefault":null,"optionalNullable":null}""",
+        )
+        assertEquals(Optional.Null, decoded.optionalNullable)
+    }
+
+    @Test
+    fun nestedOptionalNullablePropertyFollowsTheSameContract() = configs.forEach { [name, json] ->
+        fun encode(nested: OptionalEncoding.Nested) =
+            json.encodeToString(OptionalEncoding.Nested.serializer(), nested)
+        assertEquals("""{"id":"n"}""", encode(OptionalEncoding.Nested("n")), name)
+        assertEquals("""{"id":"n","maybe":null}""", encode(OptionalEncoding.Nested("n", maybe = Optional.Null)), name)
+        assertEquals("""{"id":"n","maybe":"m"}""", encode(OptionalEncoding.Nested("n", maybe = Optional.Value("m"))), name)
+    }
+
+    @Test
+    fun absentIsNotEncodableOutsideAProperty() {
+        assertFailsWith<SerializationException> {
+            ktorDefaultJson.encodeToString(OptionalSerializer(String.serializer()), Optional.Absent)
         }
     }
 

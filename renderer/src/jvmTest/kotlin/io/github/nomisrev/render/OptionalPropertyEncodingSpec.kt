@@ -26,7 +26,8 @@ val optionalPropertyEncodingSpec by testSuite {
         |      "additionalProperties": false,
         |      "properties": {
         |        "id": { "type": "string" },
-        |        "note": { "type": "string" }
+        |        "note": { "type": "string" },
+        |        "maybe": { "type": ["string", "null"] }
         |      },
         |      "required": ["id"]
         |    },
@@ -64,5 +65,176 @@ val optionalPropertyEncodingSpec by testSuite {
         |}
         """.trimMargin(),
         "object/optional-encoding-additional"
+    )
+
+    // Every place a model gets a property: an allOf result, a discriminated object and its subtypes, an object
+    // with additional properties (a hand-written serializer), a spec default and a Read/Write split.
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/things/extended": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Extended" } } }
+                  }
+                }
+              }
+            },
+            "/things/pet": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Pet" } } }
+                  }
+                }
+              }
+            },
+            "/things/withadditional": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/WithAdditional" } } }
+                  }
+                }
+              }
+            },
+            "/things/account": {
+              "get": {
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Account" } } }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Base": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": { "type": "string" },
+                  "note": { "type": ["string", "null"] },
+                  "limit": { "type": ["integer", "null"], "default": 5 }
+                },
+                "required": ["id"]
+              },
+              "Extended": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/Base" },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "extra": { "type": ["integer", "null"], "format": "int32" }
+                    }
+                  }
+                ]
+              },
+              "Pet": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "type": { "type": "string", "enum": ["cat"] },
+                  "nickname": { "type": ["string", "null"] }
+                },
+                "required": ["type"],
+                "discriminator": {
+                  "propertyName": "type",
+                  "mapping": {
+                    "cat": "#/components/schemas/Pet",
+                    "dog": "#/components/schemas/Dog"
+                  }
+                }
+              },
+              "Dog": {
+                "allOf": [
+                  { "$ref": "#/components/schemas/Pet" },
+                  {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                      "tricks": { "type": ["array", "null"], "items": { "type": "string" } }
+                    }
+                  }
+                ]
+              },
+              "WithAdditional": {
+                "type": "object",
+                "additionalProperties": { "type": "string" },
+                "properties": {
+                  "id": { "type": "string" },
+                  "note": { "type": ["string", "null"] }
+                },
+                "required": ["id"]
+              },
+              "Account": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "id": { "type": "string", "readOnly": true },
+                  "token": { "type": ["string", "null"], "writeOnly": true },
+                  "label": { "type": ["string", "null"] }
+                },
+                "required": ["id"]
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/optional-nullable-variants",
+    )
+
+    // A model named `Optional` keeps its name: the tri-state type is called `OptionalProperty` then.
+    renderSpec(
+        $$"""
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/things": {
+              "patch": {
+                "requestBody": {
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "object",
+                        "properties": { "note": { "type": ["string", "null"] } }
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Optional" } } }
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Optional": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "value": { "type": ["string", "null"] }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/optional-name-collision",
     )
 }

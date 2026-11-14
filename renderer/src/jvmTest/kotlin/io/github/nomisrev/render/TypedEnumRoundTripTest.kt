@@ -1,5 +1,6 @@
 package io.github.nomisrev.render
 
+import io.github.nomisrev.render.test.`enum`.typed.wire.Optional
 import io.github.nomisrev.render.test.`enum`.typed.wire.Baudrate
 import io.github.nomisrev.render.test.`enum`.typed.wire.Meter
 import io.github.nomisrev.render.test.`enum`.typed.in_.union.Speed
@@ -63,13 +64,13 @@ class TypedEnumRoundTripTest {
 
     @Test
     fun nullableAndListPropertiesUseTheNumberToo() {
-        val meter = Meter(rate = Baudrate.`300`, fallback = Baudrate.`600`, rates = listOf(Baudrate.`300`, Baudrate.`1200`))
+        val meter = Meter(rate = Baudrate.`300`, fallback = Optional.Value(Baudrate.`600`), rates = listOf(Baudrate.`300`, Baudrate.`1200`))
         val wire = """{"rate":300,"fallback":600,"rates":[300,1200]}"""
 
         assertEquals(wire, json.encodeToString(meter))
         assertEquals(meter, json.decodeFromString<Meter>(wire))
-        assertNull(json.decodeFromString<Meter>("""{"rate":300,"fallback":null}""").fallback)
-        assertNull(json.decodeFromString<Meter>("""{"rate":300}""").fallback)
+        assertEquals(Optional.Null, json.decodeFromString<Meter>("""{"rate":300,"fallback":null}""").fallback)
+        assertEquals(Optional.Absent, json.decodeFromString<Meter>("""{"rate":300}""").fallback)
     }
 
     @Serializable private data class Longs(val rate: Long, val epoch: Long? = null)

@@ -129,16 +129,34 @@ internal fun CodeBlock.Builder.addPairsCode(
             when (style) {
                 Route.Body.FormStyle.FormExploded, Route.Body.FormStyle.DeepObject ->
                     for ([propertyName, property] in resolved.properties) {
-                        addPairsCode(
-                            config = config,
-                            target = target,
-                            name =
-                                if (style == Route.Body.FormStyle.DeepObject) "$name[$propertyName]" else propertyName,
-                            expr = "$expr.${propertyName.toParamName()}",
-                            model = property.model,
-                            mayBeNull = property.model.isNullable || !property.isRequired,
-                            style = Route.Body.FormStyle.FormExploded,
-                        )
+                        val pairName =
+                            if (style == Route.Body.FormStyle.DeepObject) "$name[$propertyName]" else propertyName
+                        val propertyExpr = "$expr.${propertyName.toParamName()}"
+                        if (property.isOptionalNullable) {
+                            // `Optional<T>`: `Absent` and `Null` have no form, `Value` is `T`.
+                            val valueName = optionalValueName(propertyExpr)
+                            beginControlFlow("%L?.let·{ %L ->", optionalValueOrNull(propertyExpr), valueName)
+                            addPairsCode(
+                                config = config,
+                                target = target,
+                                name = pairName,
+                                expr = valueName,
+                                model = property.model,
+                                mayBeNull = false,
+                                style = Route.Body.FormStyle.FormExploded,
+                            )
+                            endControlFlow()
+                        } else {
+                            addPairsCode(
+                                config = config,
+                                target = target,
+                                name = pairName,
+                                expr = propertyExpr,
+                                model = property.model,
+                                mayBeNull = property.model.isNullable || !property.isRequired,
+                                style = Route.Body.FormStyle.FormExploded,
+                            )
+                        }
                     }
 
                 Route.Body.FormStyle.Form, Route.Body.FormStyle.SpaceDelimited, Route.Body.FormStyle.PipeDelimited -> {
@@ -289,6 +307,8 @@ private fun objectCode(
             val propertyExpr = "$expr.${name.toParamName()}"
             if (!property.model.isNullable && property.isRequired) {
                 CodeBlock.of("\"%L\"", piece(name, property, propertyExpr))
+            } else if (property.isOptionalNullable) {
+                CodeBlock.of("%L?.let·{ \"%L\" }", optionalValueOrNull(propertyExpr), piece(name, property, "it"))
             } else {
                 CodeBlock.of("%L?.let·{ \"%L\" }", propertyExpr, piece(name, property, "it"))
             }
@@ -556,3 +576,8 @@ private fun CodeBlock.interpolated(): CodeBlock {
 /** [text] as the literal text of a Kotlin string template. */
 private fun templateText(text: String): String =
     text.replace("\\", "\\\\").replace("\"", "\\\"").replace("$", "\\$")
+
+/** The name of the lambda parameter that holds the value of the optional and nullable property [propertyExpr]. */
+private fun optionalValueName(propertyExpr: String): String =
+    propertyExpr.split('.').joinToString("") { it.trim('`').replaceFirstChar(Char::uppercase) }
+        .replaceFirstChar(Char::lowercase) + "Value"

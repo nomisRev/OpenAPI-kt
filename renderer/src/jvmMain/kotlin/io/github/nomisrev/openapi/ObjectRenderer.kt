@@ -79,6 +79,7 @@ fun Model.Object.toTypeSpec(
             effectiveClassName = effectiveClassName,
             isOverride = jsonName in overridePropertyNames,
             externalTypeNames = externalTypeNames,
+            packageName = className.packageName,
         )
     }
     val additionalProperty = renderAdditionalProperty(config)
@@ -258,15 +259,20 @@ private fun renderProperty(
     effectiveClassName: ClassName? = null,
     isOverride: Boolean = false,
     externalTypeNames: Map<ClassName, TypeName> = emptyMap(),
+    packageName: String = (effectiveClassName ?: originalClassName)?.packageName.orEmpty(),
 ): RenderedProperty {
     val paramName = jsonName.toParamName()
     val unescapedParamName = paramName.unescapeBackticks()
     val rawTypeName = property.model.toTypeName(config).remapTypeNames(externalTypeNames)
-    val typeName =
-        (if (originalClassName != null && effectiveClassName != null && originalClassName != effectiveClassName)
+    val remappedTypeName =
+        if (originalClassName != null && effectiveClassName != null && originalClassName != effectiveClassName)
             rawTypeName.remapNestedClassName(originalClassName, effectiveClassName)
-        else rawTypeName)
-            .copy(nullable = property.model.isNullable || !property.isRequired)
+        else rawTypeName
+    // Optional and nullable: absent, `null` and a value are three states (see `OptionalRenderer.kt`).
+    val isOptionalNullable = property.isOptionalNullable
+    val typeName =
+        if (isOptionalNullable) config.optionalOf(packageName, remappedTypeName)
+        else remappedTypeName.copy(nullable = property.model.isNullable || !property.isRequired)
     val literalDefault = property.model.defaultLiteral(
         config = config,
         originalClassName = originalClassName,
@@ -275,8 +281,9 @@ private fun renderProperty(
     )
     // An optional property that is not nullable renders as `T? = null`, but `null` is not a valid value on
     // the wire: when unset it must be omitted. `@EncodeDefault(NEVER)` makes that independent of the user's
-    // `Json { encodeDefaults }`, which is `true` in Ktor's `DefaultJson`.
-    val omitWhenUnset = !property.isRequired && !property.model.isNullable
+    // `Json { encodeDefaults }`, which is `true` in Ktor's `DefaultJson`. An optional and nullable property is
+    // `Optional<T>`, whose `Absent` default is omitted the same way while `Null` is still written.
+    val omitWhenUnset = !property.isRequired
 
     val parameter = ParameterSpec.builder(paramName, typeName)
         .apply {
@@ -306,6 +313,7 @@ private fun renderProperty(
             }
 
             when {
+                isOptionalNullable -> defaultValue(config.optionalAbsent(packageName))
                 !property.isRequired -> defaultValue(CodeBlock.of("null"))
                 property.model.isNullable && literalDefault != null -> defaultValue(CodeBlock.of("null"))
                 property.model.isNullable -> {}

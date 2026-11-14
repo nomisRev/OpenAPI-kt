@@ -1,5 +1,6 @@
 package io.github.nomisrev.render
 
+import io.github.nomisrev.render.test.object_.nullable.alias.reference.Optional
 import io.github.nomisrev.render.test.object_.nullable.alias.reference.AllOfNullableAlias
 import io.github.nomisrev.render.test.object_.nullable.alias.reference.AnyOfAlias
 import io.github.nomisrev.render.test.object_.nullable.alias.reference.NullFirstAnyOfAlias
@@ -40,7 +41,7 @@ class NullableAliasReferenceRoundTripTest {
         oneOfAlias = OneOfAlias("o"),
         nullableAlias = NullableAlias("a"),
         allOfNullableAlias = AllOfNullableAlias("simon"),
-        optionalAnyOfAlias = AnyOfAlias("opt"),
+        optionalAnyOfAlias = Optional.Value(AnyOfAlias("opt")),
         anyOfAliases = listOf(AnyOfAlias("x"), null),
         anyOfAliasMap = mapOf("a" to AnyOfAlias("x"), "b" to null),
     )
@@ -66,7 +67,7 @@ class NullableAliasReferenceRoundTripTest {
                 oneOfAlias = null,
                 nullableAlias = null,
                 allOfNullableAlias = null,
-                optionalAnyOfAlias = null,
+                optionalAnyOfAlias = Optional.Null,
             ),
             decoded
         )

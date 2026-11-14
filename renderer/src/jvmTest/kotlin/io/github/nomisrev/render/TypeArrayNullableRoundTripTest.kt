@@ -1,6 +1,8 @@
 package io.github.nomisrev.render
 
 import io.github.nomisrev.render.test.object_.type.array.nullable.AnyOfNullableAlias
+import io.github.nomisrev.render.test.object_.type.array.nullable.Optional
+import io.github.nomisrev.render.test.object_.type.array.nullable.optional.Optional as OptionalMessageOptional
 import io.github.nomisrev.render.test.object_.type.array.nullable.NullableAlias
 import io.github.nomisrev.render.test.object_.type.array.nullable.TypeArrayNullable
 import io.github.nomisrev.render.test.object_.type.array.nullable.optional.OptionalNullableMessage
@@ -34,10 +36,10 @@ class TypeArrayNullableRoundTripTest {
 
     @Test
     fun optionalNullablePropertyAcceptsNullValueAndAbsence() {
-        assertEquals(OptionalNullableMessage(null), json.decodeFromString<OptionalNullableMessage>("""{"message":null}"""))
-        assertEquals(OptionalNullableMessage("x"), json.decodeFromString<OptionalNullableMessage>("""{"message":"x"}"""))
-        assertEquals(OptionalNullableMessage(null), json.decodeFromString<OptionalNullableMessage>("""{}"""))
-        assertEquals("""{"message":"x"}""", json.encodeToString(OptionalNullableMessage("x")))
+        assertEquals(OptionalNullableMessage(OptionalMessageOptional.Null), json.decodeFromString<OptionalNullableMessage>("""{"message":null}"""))
+        assertEquals(OptionalNullableMessage(OptionalMessageOptional.Value("x")), json.decodeFromString<OptionalNullableMessage>("""{"message":"x"}"""))
+        assertEquals(OptionalNullableMessage(OptionalMessageOptional.Absent), json.decodeFromString<OptionalNullableMessage>("""{}"""))
+        assertEquals("""{"message":"x"}""", json.encodeToString(OptionalNullableMessage(OptionalMessageOptional.Value("x"))))
     }
 
     private val allValues = """
@@ -94,7 +96,7 @@ class TypeArrayNullableRoundTripTest {
         )
         val decoded = json.decodeFromJsonElement(TypeArrayNullable.serializer(), withNulls)
         assertEquals(
-            listOf(null, null, null, null, null, null, null, null, null, null, null, null, null, null),
+            listOf(null, Optional.Null, null, null, null, null, null, null, null, null, null, null, null, null),
             listOf(
                 decoded.requiredString, decoded.optionalString, decoded.nullFirst, decoded.int32, decoded.int64,
                 decoded.number, decoded.flag, decoded.createdAt, decoded.status, decoded.owner, decoded.tags,
