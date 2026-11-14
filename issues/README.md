@@ -66,6 +66,7 @@ Counts are documents affected; see each report for how they were counted.
 | [enum-and-default-values-stored-as-strings](enum-and-default-values-stored-as-strings.md) | Integer/number/boolean enums encode as `"300"` and reject `300` | 103 have it, 28 pass today |
 | [composite-path-segments](composite-path-segments.md) | `{id}.json`, `{a}.{b}`, `{name}:verb` treated as literals; braces sent on the wire | 303 have it |
 | [operation-parameter-shadows-path-parameter](operation-parameter-shadows-path-parameter.md) | A body/query field named like a path parameter replaces it in the path (GitHub integration client) | 14 |
+| [optional-nullable-property-cannot-send-explicit-null](optional-nullable-property-cannot-send-explicit-null.md) | An optional, nullable body property sends `null` or nothing depending on the caller's `Json`; `PATCH` cannot tell "clear" from "unchanged". Needs a design decision | not counted; 37 GitHub operations |
 | [enum-values-with-one-kotlin-name-silently-dropped](enum-values-with-one-kotlin-name-silently-dropped.md) | `last_activity` / `-last_activity` collapse to one entry | 31 have it |
 | [path-literal-segment-loses-navigation-property](path-literal-segment-loses-navigation-property.md) | Operations under a segment named `client` are unreachable | 13 |
 | [context-variants-of-one-schema-share-a-class-name](context-variants-of-one-schema-share-a-class-name.md) | Read/Write variants overwrite each other | 18 |
