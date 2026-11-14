@@ -1,6 +1,6 @@
 # A `$` in a literal path segment is written as a Kotlin string template
 
-**Status:** open
+**Status:** fixed on openapi-3.2-streaming: a literal path segment is written through `templateText` (`ParameterSerialization.kt`), so `$` is escaped (`\$count`, `\$links`). Covered by `DollarAndKeywordPathSpec` and `DollarAndKeywordPathRuntimeTest`. Not yet re-run against the census corpus.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile, and wrong output when the name after `$` happens to resolve
 **Impact:** 3 of 1,547 documents compile-fail on it (amazonaws.com:greengrass, windows.net:graphrbac, ideal-postcodes.co.uk); 5 more with such paths fail earlier (microsoft.com:graph with 1,574 `$count`/`$ref` paths, googleapis.com:healthcare, amazonaws.com:lex-models, amazonaws.com:iot-jobs-data, loket.nl)

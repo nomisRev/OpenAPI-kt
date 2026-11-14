@@ -1,6 +1,6 @@
 # Path parameters named `object`, `class` or `_` are escaped where declared but not where used
 
-**Status:** open
+**Status:** path parameters part fixed: keyword path parameters (`{object}`, `{package}`, `{in}`) are read and passed escaped at every use site on the current branch, covered by `DollarAndKeywordPathSpec` and `DollarAndKeywordPathRuntimeTest` (no production change needed for them). Still open: `_`/`__` operation parameter names and the empty-name diagnostic (`toParamName`, `NamingUtils.kt`). The `constructorArgs` and operation-parameter use sites were not re-checked by this change.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
 **Impact:** 4 of 1,547 documents compile-fail on it (googleapis.com:storage, monarchinitiative.org, flat.io, brainbi.net); 3 more with a keyword path parameter fail earlier (zuora.com, googleapis.com:datastream, gambitcomm.local:mimic)

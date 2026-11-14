@@ -486,7 +486,7 @@ internal fun Route.pathLiteral(config: RenderConfig): CodeBlock {
         when (segment) {
             is PathSegment.FixedValue -> CodeBlock.of("%L", templateText(segment.wireValue.encodeURLParameter()))
             // `·` keeps KotlinPoet from wrapping a line inside the template.
-            is PathSegment.Literal -> CodeBlock.of("%L", segment.name.replace(' ', '·'))
+            is PathSegment.Literal -> CodeBlock.of("%L", templateText(segment.name).replace(' ', '·'))
             is PathSegment.OverloadedParameter ->
                 CodeBlock.of("%L.%M()", segment.name.pathProperty(), EncodeURLParameterMember).interpolated()
             is PathSegment.Parameter -> parameter(segment.name, segment.model)
