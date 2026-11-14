@@ -7,8 +7,8 @@ package io.github.nomisrev.openapi
 internal fun PathSegment.routeSegmentSimpleName(): String = when (this) {
     is PathSegment.Parameter -> name.toPascalCase() + "Path"
     is PathSegment.OverloadedParameter -> name.toPascalCase() + "Path"
-    is PathSegment.FixedValue -> wireValue.toPascalCase()
-    is PathSegment.Literal -> navigationName.toPascalCase()
+    is PathSegment.FixedValue -> wireValue.pathNameSource().toPascalCase()
+    is PathSegment.Literal -> navigationName.pathNameSource().toPascalCase()
     is PathSegment.Composite -> composite()
 }
 
@@ -28,8 +28,8 @@ internal val PathSegment.Literal.navigationName: String
 private fun PathSegment.navigationMemberName(): String = when (this) {
     is PathSegment.Parameter -> name.toCamelCase()
     is PathSegment.OverloadedParameter -> name.toCamelCase()
-    is PathSegment.FixedValue -> name.toParamName()
-    is PathSegment.Literal -> navigationName.toParamName()
+    is PathSegment.FixedValue -> name.pathNameSource().toParamName()
+    is PathSegment.Literal -> navigationName.pathNameSource().toParamName()
     is PathSegment.Composite -> composite()
 }
 
@@ -48,7 +48,25 @@ private val SeparatorWords = mapOf(
     '.' to "dot", ':' to "colon", '-' to "dash", '_' to "underscore", ',' to "comma", ';' to "semicolon",
     '=' to "equals", '~' to "tilde", '@' to "at", '+' to "plus", '*' to "star", '#' to "hash", '!' to "bang",
     '$' to "dollar", '&' to "and", '|' to "pipe",
+    // The rest of what a path segment can hold without a letter or digit, so that it can be spelled ([pathNameSource]).
+    '\'' to "apostrophe", '(' to "openParen", ')' to "closeParen", '%' to "percent", '[' to "openBracket",
+    ']' to "closeBracket", '{' to "openBrace", '}' to "closeBrace", '?' to "question", '<' to "less",
+    '>' to "greater", '^' to "caret", '"' to "quote", '\\' to "backslash", '`' to "backtick",
+    ' ' to "space",
 )
+
+/**
+ * The text a literal segment is named from, for its class and its member, never for the request. A character that is
+ * not a letter or a digit is a word break (`secret-scanning`, `a@b` is `a b`), so the name has no character that
+ * needs back-ticks. A segment without any letter or digit (`-`, `*`, `...`) is spelled with the [SeparatorWords] of
+ * its characters (`dash`, `star`, `dotDotDot`), and a character without a word by its code (`u20ac`).
+ */
+internal fun String.pathNameSource(): String {
+    if (any(Char::isLetterOrDigit)) return map { if (it.isLetterOrDigit()) it else ' ' }.joinToString("")
+    return map { SeparatorWords[it] ?: "u${it.code.toString(16)}" }
+        .joinToString("") { it.replaceFirstChar(Char::uppercase) }
+        .replaceFirstChar(Char::lowercase)
+}
 
 /**
  * `dot` for a step joined to the one before it by `.` (`{id}.json`), `colon` for `:`; the words of every character of

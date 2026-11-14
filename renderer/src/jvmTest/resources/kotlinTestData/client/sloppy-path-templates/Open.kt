@@ -7,9 +7,9 @@ import io.ktor.client.request.`get`
 public class Open internal constructor(
   private val client: HttpClient,
 ) {
-  public val brace: `{brace` = `{brace`(client)
+  public val brace: Brace = Brace(client)
 
-  public class `{brace` internal constructor(
+  public class Brace internal constructor(
     private val client: HttpClient,
   ) {
     public val `get`: Get = Get(client)

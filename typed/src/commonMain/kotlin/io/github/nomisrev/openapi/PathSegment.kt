@@ -111,10 +111,11 @@ data class PathStep(
  * fragment is read as text that starts with `#`. It is not sent, but it names a step and is part of its identity.
  */
 fun PathSegment.toSteps(): List<PathStep> {
+    if (this is PathSegment.Literal) return literalSteps()
     if (this !is PathSegment.Composite) return listOf(PathStep(this))
     val steps = mutableListOf<PathStep>()
     var pending = "/"
-    fun text(value: String) {
+    fun textPiece(value: String) {
         val first = value.indexOfFirst(Char::isLetterOrDigit)
         if (first < 0) {
             pending += value
@@ -123,6 +124,13 @@ fun PathSegment.toSteps(): List<PathStep> {
         val last = value.indexOfLast(Char::isLetterOrDigit)
         steps += PathStep(PathSegment.Literal(value.substring(first, last + 1)), pending + value.substring(0, first))
         pending = value.substring(last + 1)
+    }
+    // A `:` splits a text as it splits a literal segment (`{name}:cancel:now`), and is part of what joins the steps.
+    fun text(value: String) {
+        value.split(':').forEachIndexed { index, piece ->
+            if (index > 0) pending += ":"
+            textPiece(piece)
+        }
     }
     for (part in parts) {
         when (part) {
@@ -136,6 +144,28 @@ fun PathSegment.toSteps(): List<PathStep> {
     }
     // Nothing to navigate (no parameter and no alphanumeric text): the segment stays one literal step, as written.
     if (steps.isEmpty()) return listOf(PathStep(PathSegment.Literal(name)))
+    steps[steps.lastIndex] = steps.last().copy(trailing = pending)
+    return steps
+}
+
+/**
+ * A literal segment is one step, except that a `:` splits it as it splits the text of a composite (`entities:search`,
+ * Google's custom verbs): one step per non-empty piece, the pieces joined on the wire by the `:`. Each piece is a
+ * step as written, so `$batch:run` shares its first step with `$batch`. A `:` at the start of the segment is part of
+ * what joins the first step to its parent (`:verb`), one at its end trails the last step (`entities:`), and a segment
+ * of colons only has nothing to navigate: it stays one step, as written. No other character splits a literal.
+ */
+private fun PathSegment.Literal.literalSteps(): List<PathStep> {
+    if (':' !in name) return listOf(PathStep(this))
+    val steps = mutableListOf<PathStep>()
+    var pending = "/"
+    name.split(':').forEachIndexed { index, piece ->
+        if (index > 0) pending += ":"
+        if (piece.isEmpty()) return@forEachIndexed
+        steps += PathStep(PathSegment.Literal(piece), pending)
+        pending = ""
+    }
+    if (steps.isEmpty()) return listOf(PathStep(this))
     steps[steps.lastIndex] = steps.last().copy(trailing = pending)
     return steps
 }

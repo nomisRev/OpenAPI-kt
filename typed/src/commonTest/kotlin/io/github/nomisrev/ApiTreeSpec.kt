@@ -965,6 +965,51 @@ val apiTreeSpec by testSuite {
         assertEquals(2, listOf(slash, post).buildTree("T").children.single().children.single().children.size)
     }
 
+    test("buildTree navigates a literal segment with a colon as one node per part") {
+        assertEquals(
+            listOf("v1(entities(search[GET]))"),
+            listOf(pathRoute(HttpMethod.Get, "/v1/entities:search")).shapes(),
+        )
+        assertEquals(
+            listOf("apps(-(config[GET]))"),
+            listOf(pathRoute(HttpMethod.Get, "/apps/-/config")).shapes(),
+        )
+        assertEquals(
+            listOf("a(b(c[GET]))"),
+            listOf(pathRoute(HttpMethod.Get, "/a:b:c")).shapes(),
+        )
+    }
+
+    test("buildTree shares the first node of a colon segment with the plain path") {
+        assertEquals(
+            listOf("v1(entities[GET](search[POST]))"),
+            listOf(
+                pathRoute(HttpMethod.Get, "/v1/entities"),
+                pathRoute(HttpMethod.Post, "/v1/entities:search"),
+            ).shapes(),
+        )
+        assertEquals(
+            listOf("v1(entities(search[GET],search[POST]))"),
+            listOf(
+                pathRoute(HttpMethod.Get, "/v1/entities/search"),
+                pathRoute(HttpMethod.Post, "/v1/entities:search"),
+            ).shapes(),
+        )
+    }
+
+    test("buildTree keeps /entities/search and /entities:search as two nodes, each requesting its own path") {
+        val slash = pathRoute(HttpMethod.Get, "/entities/search")
+        val colon = pathRoute(HttpMethod.Get, "/entities:search")
+        listOf(listOf(slash, colon), listOf(colon, slash)).forEach { routes ->
+            val entities = routes.buildTree("T").children.single()
+            assertEquals(2, entities.children.size)
+            assertEquals(
+                setOf("/entities/search", "/entities:search"),
+                entities.children.flatMap { it.operations.values }.map { it.path }.toSet(),
+            )
+        }
+    }
+
     test("buildTree does not share a parameter of a composite with a plain one of another type") {
         val plain = route(HttpMethod.Get, literal("a"), intParam("id"))
         val composite = route(

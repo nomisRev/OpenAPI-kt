@@ -374,4 +374,25 @@ val PathSegmentSpec by testSuite {
         // Plain segments are one step joined by `/`.
         assertEquals(listOf("/pets", "/{petId}", "/"), steps("/pets/{petId}/"))
     }
+
+    // A `:` splits a literal segment as it splits the text of a composite: `entities:search` is the step `entities`
+    // and below it the step `search`, joined on the wire by `:`. Nothing else splits a segment without braces.
+    test("toSteps splits a literal segment at a colon") {
+        assertEquals(listOf("/v1", "/entities", ":search"), steps("/v1/entities:search"))
+        assertEquals(listOf("/a", ":b", ":c"), steps("/a:b:c"))
+        assertEquals(listOf("/apps", "/-", "/appAttestConfig", ":batchGet"), steps("/apps/-/appAttestConfig:batchGet"))
+        assertEquals(listOf("/\$batch", ":run"), steps("/\$batch:run"))
+        // A leading colon is part of what joins the step to its parent, a trailing one trails the last step.
+        assertEquals(listOf("/v1", "/:verb"), steps("/v1/:verb"))
+        assertEquals(listOf("/v1", "/entities:"), steps("/v1/entities:"))
+        assertEquals(listOf("/a", "::b"), steps("/a::b"))
+        // Nothing to navigate: a segment of colons only stays one literal step.
+        assertEquals(listOf("/v1", "/:"), steps("/v1/:"))
+        // Other characters do not split.
+        assertEquals(listOf("/secret-scanning", "/a.b", "/lists.json", "/a@b"), steps("/secret-scanning/a.b/lists.json/a@b"))
+    }
+
+    test("toSteps splits the text of a composite segment at a colon too") {
+        assertEquals(listOf("/v1", "/{name}", ":cancel", ":now"), steps("/v1/{name}:cancel:now"))
+    }
 }
