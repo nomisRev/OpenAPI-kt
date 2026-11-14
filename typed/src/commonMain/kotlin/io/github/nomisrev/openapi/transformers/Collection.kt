@@ -6,7 +6,10 @@ import io.github.nomisrev.openapi.Model.Default
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.SchemaContext
-import io.github.nomisrev.openapi.parser.ExampleValue
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
 import io.github.nomisrev.openapi.registry.toModel
@@ -131,19 +134,14 @@ private fun Model.prependContextIfInline(prefix: NamingContext.Nested): Model = 
     is Model.Uuid -> this
 }
 
-private fun ResolvedSchema.collectionDefault() = when (val example = schema.default) {
+private fun ResolvedSchema.collectionDefault() = when (val default = schema.default) {
     null -> null
-    is ExampleValue.Multiple -> Default.Value(example.values)
-    is ExampleValue.Single -> {
-        val value = example.value
-        when {
-            value == "[]" -> Default.Value(emptyList())
-            value.equals("null", ignoreCase = true) -> {
-                require(schema.nullable == true) { "Null default for non-nullable collection." }
-                Default.Null
-            }
-
-            else -> Default.Value(listOf(value))
-        }
+    JsonNull -> {
+        require(schema.nullable == true) { "Null default for non-nullable collection at ${name.describe()}." }
+        Default.Null
     }
+
+    is JsonArray -> Default.Value(default.map { if (it is JsonPrimitive) it.content else it.toString() })
+    is JsonPrimitive -> Default.Value(listOf(default.content))
+    is JsonObject -> Default.Value(listOf(default.toString()))
 }

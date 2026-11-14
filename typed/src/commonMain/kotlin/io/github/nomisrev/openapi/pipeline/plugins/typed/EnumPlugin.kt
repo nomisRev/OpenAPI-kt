@@ -1,7 +1,7 @@
 package io.github.nomisrev.openapi.pipeline.plugins.typed
 
 import io.github.nomisrev.openapi.Model
-import io.github.nomisrev.openapi.enumLikeValues
+import io.github.nomisrev.openapi.enumMembers
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.pipeline.Phase
@@ -12,6 +12,7 @@ import io.github.nomisrev.openapi.pipeline.SchemaTransformerPlugin
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.routes.SchemaContext
+import io.github.nomisrev.openapi.transformers.describe
 import io.github.nomisrev.openapi.transformers.toClosedEnum
 
 private fun Schema.compositeShouldTakePrecedenceOverType(): Boolean =
@@ -45,18 +46,25 @@ object EnumPlugin : SchemaTransformerPlugin {
         next: suspend (ResolvedSchema, SchemaContext) -> Model
     ): Model? = with(ctx) {
         val s = schema.schema
-        if (s.type == null || s.addsStructuralCompositeShapeForEnum()) return null
+        if (s.type == null) return null
 
-        val enumLikeValues = s.enumLikeValues()
-        if (enumLikeValues == null) return null
+        val members = s.enumMembers() ?: return null
 
         val isTypedEnum = s.type == Schema.Type.Basic.String ||
                 s.type == Schema.Type.Basic.Number ||
                 s.type == Schema.Type.Basic.Boolean ||
                 s.type == Schema.Type.Basic.Integer
 
-        if (!isTypedEnum) return null
+        if (!isTypedEnum || s.addsStructuralCompositeShapeForEnum()) {
+            // The declared type is generated; its `enum` restricts values that the Kotlin type cannot restrict.
+            ctx.registry().warn(
+                "Enum of ${schema.name.describe()} is not generated as a Kotlin enum: a schema of type " +
+                    "${(s.type as? Schema.Type.Basic)?.value ?: s.type} with this shape has no enum constants; " +
+                    "the declared type is used. Members: ${members.joinToString(", ")}."
+            )
+            return null
+        }
 
-        return schema.toClosedEnum(context, enumLikeValues)
+        return schema.toClosedEnum(context, members)
     }
 }

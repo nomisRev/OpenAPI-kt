@@ -61,7 +61,7 @@ private suspend fun ResolvedSchema.resolveAllOf(
 }
 
 /** The schema this naming context names, such as `Pet` or `Pet.owner`, for error messages. */
-private fun NamingContext.describe(): String {
+internal fun NamingContext.describe(): String {
     val head = when (val head = head) {
         is NamingContext.Reference -> head.name
         is NamingContext.Path -> "${head.method.value} /${head.segments.joinToString("/") { it.name }}"

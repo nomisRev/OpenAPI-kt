@@ -23,7 +23,7 @@ public data class MediaType(
    * referencing a schema which contains an example, the example value SHALL override the example
    * provided by the schema.
    */
-  public val example: ExampleValue? = null,
+  public val example: @Serializable(DeclaredJsonElementSerializer::class) JsonElement? = null,
   /**
    * Examples of the media type. Each example object SHOULD match the media type and specified
    * schema if present. The examples field is mutually exclusive of the example field. Furthermore,

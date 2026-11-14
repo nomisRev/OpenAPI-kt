@@ -5,6 +5,8 @@ import io.github.nomisrev.openapi.parser.Parameter
 import io.github.nomisrev.openapi.routes.Route
 import io.github.nomisrev.openapi.routes.isWildcard
 import io.ktor.http.ContentType
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 
 data class GenerationResult(
     val files: List<FileSpec>,
@@ -41,7 +43,11 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
 
 internal fun ApiTree.generationDiagnostics(): List<GenerationDiagnostic> =
     requestBodyDiagnostics() + ignoredParameterDiagnostics() + parameterDiagnostics() +
-        children.renamedPathDiagnostics(parentPath = "") + propertyOverrideDiagnostics()
+        children.renamedPathDiagnostics(parentPath = "") + propertyOverrideDiagnostics() + typedWarningDiagnostics()
+
+/** The warnings `typed` recorded for schemas it generates differently from how they are declared. */
+private fun ApiTree.typedWarningDiagnostics(): List<GenerationDiagnostic> =
+    warnings.map { GenerationDiagnostic(GenerationDiagnosticSeverity.Warning, it) }
 
 /**
  * A warning for each property a discriminated subtype redeclares so that no value satisfies its declaration and the
@@ -249,7 +255,8 @@ private fun PathNode.ignoredParameterDiagnostics(): List<GenerationDiagnostic> =
 private fun Route.ignoredParameterDiagnostics(): List<GenerationDiagnostic> =
     ignoredParameters.map { parameter ->
         val allowed = parameter.schema?.valueOrNull()?.enum
-            ?.filterNotNull()
+            ?.filterNot { it is JsonNull }
+            ?.map { (it as? JsonPrimitive)?.content ?: it.toString() }
             ?.takeIf { it.isNotEmpty() }
             ?.let { values -> " (declared values: ${values.joinToString(", ")})" }
             .orEmpty()

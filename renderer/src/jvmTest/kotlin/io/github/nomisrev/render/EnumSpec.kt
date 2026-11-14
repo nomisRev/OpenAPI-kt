@@ -41,9 +41,20 @@ val enumSpec by testSuite {
 
     modelTest(
         """
+        |"Baudrate": {
+        |  "type": "integer",
+        |  "enum": [300, 600, 1200],
+        |  "default": 300
+        |}
+        """.trimMargin(),
+        "enum/int-default"
+    )
+
+    modelTest(
+        """
         |"Priority": {
         |  "type": "integer",
-        |  "enum": ["1", "2", "3"]
+        |  "enum": [1, 2, 3]
         |}
         """.trimMargin(),
         "enum/int"

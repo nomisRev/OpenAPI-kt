@@ -18,6 +18,8 @@ data class ApiTree(
     val children: List<PathNode>,
     val models: List<Model> = emptyList(),
     val servers: List<Server> = emptyList(),
+    /** Schemas that are generated differently from how they are declared, as the warning for each. */
+    val warnings: List<String> = emptyList(),
 )
 
 data class PathNode(
@@ -76,7 +78,7 @@ suspend fun OpenAPI.toApiTree(
                 .flatMapTo(mutableSetOf()) { it.topLevelNames() }
                 .topLevelModels(registry)
         }
-        routes.buildTree(name = name, models = models, servers = globalServers)
+        routes.buildTree(name = name, models = models, servers = globalServers).copy(warnings = registry.warnings())
     }
 }
 

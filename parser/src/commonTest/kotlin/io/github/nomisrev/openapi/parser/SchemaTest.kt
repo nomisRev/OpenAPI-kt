@@ -388,14 +388,14 @@ class SchemaTest {
     @Test
     fun `json enum with string values deserializes`() {
         val schema = Schema.fromJson("""{"type":"string","enum":["active","inactive","pending"]}""")
-        assertEquals(listOf("active", "inactive", "pending"), schema.enum)
+        assertEquals(listOf("active", "inactive", "pending").map(::JsonPrimitive), schema.enum)
     }
 
     @Test
     fun `json enum with null entry deserializes`() {
         val schema = Schema.fromJson("""{"enum":["active",null]}""")
         assertNotNull(schema.enum)
-        assertEquals(listOf("active", null), schema.enum)
+        assertEquals(listOf(JsonPrimitive("active"), JsonNull), schema.enum)
     }
 
     // ── const ─────────────────────────────────────────────────────────────────
@@ -473,15 +473,13 @@ class SchemaTest {
     @Test
     fun `json default string value deserializes`() {
         val schema = Schema.fromJson("""{"type":"string","default":"hello"}""")
-        val default = assertIs<ExampleValue.Single>(schema.default)
-        assertEquals("hello", default.value)
+        assertEquals(JsonPrimitive("hello"), schema.default)
     }
 
     @Test
     fun `json example string value deserializes`() {
         val schema = Schema.fromJson("""{"type":"string","example":"example-value"}""")
-        val example = assertIs<ExampleValue.Single>(schema.example)
-        assertEquals("example-value", example.value)
+        assertEquals(JsonPrimitive("example-value"), schema.example)
     }
 
     // ── readOnly / writeOnly / deprecated ─────────────────────────────────────

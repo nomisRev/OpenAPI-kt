@@ -236,7 +236,7 @@ val routeSpec by testSuite {
         val pathUnionSchema = Schema(
             oneOf = listOf(
                 ReferenceOr.value(Schema.integer.copy(format = "int32")),
-                ReferenceOr.value(Schema.string.copy(enum = listOf("queued", "in-progress"))),
+                ReferenceOr.value(Schema.string.copy(enum = enumOf("queued", "in-progress"))),
             )
         )
 
@@ -261,8 +261,8 @@ val routeSpec by testSuite {
     test("inline path parameter union with multiple enum cases expands only fixed routes") {
         val pathUnionSchema = Schema(
             oneOf = listOf(
-                ReferenceOr.value(Schema.string.copy(enum = listOf("queued"))),
-                ReferenceOr.value(Schema.string.copy(enum = listOf("in-progress"))),
+                ReferenceOr.value(Schema.string.copy(enum = enumOf("queued"))),
+                ReferenceOr.value(Schema.string.copy(enum = enumOf("in-progress"))),
             )
         )
 
@@ -289,7 +289,7 @@ val routeSpec by testSuite {
             openAPI(
                 path = "/workflows/{workflowId}",
                 parameters = listOf(
-                    pathParameter("workflowId", Schema.string.copy(enum = listOf("queued", "in-progress"))),
+                    pathParameter("workflowId", Schema.string.copy(enum = enumOf("queued", "in-progress"))),
                 ),
             )
         )
@@ -321,7 +321,7 @@ val routeSpec by testSuite {
                 components = Components(
                     schemas = mapOf(
                         "WorkflowState" to ReferenceOr.value(
-                            Schema.string.copy(enum = listOf("queued", "in-progress"))
+                            Schema.string.copy(enum = enumOf("queued", "in-progress"))
                         )
                     )
                 ),
@@ -343,7 +343,7 @@ val routeSpec by testSuite {
         val pathUnionSchema = Schema(
             oneOf = listOf(
                 ReferenceOr.value(Schema.integer.copy(format = "int32")),
-                ReferenceOr.value(Schema.string.copy(enum = listOf("queued", "in-progress"))),
+                ReferenceOr.value(Schema.string.copy(enum = enumOf("queued", "in-progress"))),
             )
         )
 
@@ -385,11 +385,11 @@ val routeSpec by testSuite {
                     pathParameter("org", Schema.string),
                     pathParameter(
                         "securityProduct",
-                        Schema.string.copy(enum = listOf("dependency-graph", "dependency-submission"))
+                        Schema.string.copy(enum = enumOf("dependency-graph", "dependency-submission"))
                     ),
                     pathParameter(
                         "enablement",
-                        Schema.string.copy(enum = listOf("enable-all", "disable-all"))
+                        Schema.string.copy(enum = enumOf("enable-all", "disable-all"))
                     ),
                 ),
             )
@@ -529,7 +529,7 @@ val routeSpec by testSuite {
                 "status" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("queued", "in_progress", "completed"),
+                        enum = enumOf("queued", "in_progress", "completed"),
                     )
                 ),
                 "conclusion" to ReferenceOr.value(Schema.string),
@@ -540,7 +540,7 @@ val routeSpec by testSuite {
                         properties = mapOf(
                             "status" to ReferenceOr.value(
                                 Schema(
-                                    enum = listOf("completed"),
+                                    enum = enumOf("completed"),
                                 )
                             )
                         ),
@@ -552,7 +552,7 @@ val routeSpec by testSuite {
                         properties = mapOf(
                             "status" to ReferenceOr.value(
                                 Schema(
-                                    enum = listOf("queued", "in_progress"),
+                                    enum = enumOf("queued", "in_progress"),
                                 )
                             )
                         ),

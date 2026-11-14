@@ -206,8 +206,7 @@ class ParameterTest {
     fun `parameter with string example deserializes`() {
         val json = """{"name":"status","in":"query","example":"active"}"""
         val param = decode(json)
-        val example = assertIs<ExampleValue.Single>(assertNotNull(param.example))
-        assertEquals("active", example.value)
+        assertEquals(JsonPrimitive("active"), param.example)
     }
 
     // ── examples ─────────────────────────────────────────────────────────────
@@ -287,7 +286,7 @@ class ParameterTest {
         assertIs<ReferenceOr.Value<Schema>>(assertNotNull(param.schema))
         assertEquals(Style.form, param.style)
         assertEquals(false, param.explode)
-        assertIs<ExampleValue.Single>(assertNotNull(param.example))
+        assertNotNull(param.example)
     }
 
     @Test

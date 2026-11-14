@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi.pipeline.plugins.implicit
 
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.enumLikeValues
+import io.github.nomisrev.openapi.enumMembers
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.pipeline.Phase
@@ -55,9 +56,8 @@ object ImplicitEnumPlugin : SchemaTransformerPlugin {
         val s = schema.schema
         if (s.type != null || s.isImplicitComposite()) return null
 
-        val enumLikeValues = s.enumLikeValues()
-        if (enumLikeValues == null) return null
+        val members = s.enumMembers() ?: return null
 
-        return schema.toClosedEnum(context, enumLikeValues)
+        return schema.toClosedEnum(context, members)
     }
 }

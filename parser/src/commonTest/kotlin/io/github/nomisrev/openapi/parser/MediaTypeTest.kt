@@ -1,6 +1,8 @@
 package io.github.nomisrev.openapi.parser
 
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -94,12 +96,11 @@ class MediaTypeTest {
         """.trimIndent()
 
         val mediaType = decode(json)
-        val example = assertIs<ExampleValue.Single>(assertNotNull(mediaType.example))
-        assertEquals("hello world", example.value)
+        assertEquals(JsonPrimitive("hello world"), mediaType.example)
     }
 
     @Test
-    fun `example object value deserializes to single`() {
+    fun `example object value deserializes to a JSON object`() {
         val json = """
             {
               "schema": {"type": "object"},
@@ -108,8 +109,7 @@ class MediaTypeTest {
         """.trimIndent()
 
         val mediaType = decode(json)
-        // JSON objects are encoded as a Single containing the JSON string
-        assertIs<ExampleValue.Single>(assertNotNull(mediaType.example))
+        assertEquals(buildJsonObject { put("id", 1); put("name", "Fido") }, mediaType.example)
     }
 
     // ── Examples map ──────────────────────────────────────────────────────────

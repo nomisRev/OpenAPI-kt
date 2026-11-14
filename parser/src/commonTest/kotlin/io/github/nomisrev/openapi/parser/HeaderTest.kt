@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi.parser
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlinx.serialization.json.JsonPrimitive
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 
@@ -156,8 +157,7 @@ class HeaderTest {
         """.trimIndent()
 
         val header = decode(json)
-        val example = assertIs<ExampleValue.Single>(assertNotNull(header.example))
-        assertEquals("Bearer eyJhbGci...", example.value)
+        assertEquals(JsonPrimitive("Bearer eyJhbGci..."), header.example)
     }
 
     // ── Examples map ──────────────────────────────────────────────────────────

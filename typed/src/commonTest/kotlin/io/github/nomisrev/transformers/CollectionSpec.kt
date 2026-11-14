@@ -1,5 +1,8 @@
 package io.github.nomisrev.transformers
 
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.ExpectedApi
 import io.github.nomisrev.all
@@ -12,7 +15,6 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.ResolvedSchema.Value
 import io.github.nomisrev.openapi.routes.SchemaContext
-import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type
@@ -188,7 +190,7 @@ val collectionSpec by testSuite {
 
     verify(
         "Default - empty JS array",
-        Schema(type = Type.Basic.Array, default = ExampleValue.Single("[]")),
+        Schema(type = Type.Basic.Array, default = JsonArray(emptyList())),
         Model.Collection(
             Model.FreeFormJson(null, null, false, null),
             Model.Default.Value(emptyList()),
@@ -201,14 +203,14 @@ val collectionSpec by testSuite {
 
     verify(
         "Default - null on nullable array",
-        Schema(type = Type.Basic.Array, default = ExampleValue.Single("null"), nullable = true),
+        Schema(type = Type.Basic.Array, default = JsonNull, nullable = true),
         Model.Collection(Model.FreeFormJson(null, null, false, null), Model.Default.Null, null, null, true, null)
     )
 
     verifyFails<IllegalArgumentException>(
         "Default - null on non-null array",
-        Schema(type = Type.Basic.Array, default = ExampleValue.Single("null"), nullable = false),
-        "Null default for non-nullable collection."
+        Schema(type = Type.Basic.Array, default = JsonNull, nullable = false),
+        "Null default for non-nullable collection at GET /test."
     )
 
     verify(
@@ -216,7 +218,7 @@ val collectionSpec by testSuite {
         Schema(
             type = Type.Basic.Array,
             items = ReferenceOr.value(Schema(type = Type.Basic.String)),
-            default = ExampleValue.Single("A"),
+            default = JsonPrimitive("A"),
             nullable = false
         ),
         Model.Collection(
@@ -234,7 +236,7 @@ val collectionSpec by testSuite {
         Schema(
             type = Type.Basic.Array,
             items = ReferenceOr.value(Schema(type = Type.Basic.String)),
-            default = ExampleValue.Multiple(listOf("A", "B")),
+            default = JsonArray(listOf(JsonPrimitive("A"), JsonPrimitive("B"))),
             nullable = false
         ),
         Model.Collection(

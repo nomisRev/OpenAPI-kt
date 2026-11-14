@@ -2,12 +2,15 @@ package io.github.nomisrev
 
 import io.github.nomisrev.openapi.Constraints
 import io.github.nomisrev.openapi.Model
-import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.Schema
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 
 fun Model.Default.Companion.string() = listOf(
-    ExampleValue.Single("text") expect Model.Default.Value("text"),
-    ExampleValue.Multiple(listOf("text1", "text2")) expect Model.Default.Value("text1, text2"),
+    JsonPrimitive("text") expect Model.Default.Value("text"),
+    JsonArray(listOf(JsonPrimitive("text1"), JsonPrimitive("text2"))) expect Model.Default.Value("text1, text2"),
     null expect null
 )
 
@@ -44,7 +47,7 @@ fun Model.Primitive.String.Companion.all(): List<Expect<Schema, Model.Primitive.
         constraint = constraint.expected
     )
 } + Expect(
-    Schema.string.copy(nullable = true, default = ExampleValue.Single("null")),
+    Schema.string.copy(nullable = true, default = JsonNull),
     Model.Primitive.String(Model.Default.Null, null, null, true, null),
 )
 
@@ -77,14 +80,14 @@ fun Model.DateTime.Companion.all() = listOf(
 }
 
 fun Model.Default.Companion.integer() = listOf(
-    ExampleValue.Single("7") expect Model.Default.Value(7),
-//    ExampleValue.Single("null") expect Model.Default.Null,
+    JsonPrimitive(7) expect Model.Default.Value(7),
+//    JsonNull expect Model.Default.Null,
     null expect null
 )
 
 fun Model.Default.Companion.bool() = listOf(
-    ExampleValue.Single("true") expect Model.Default.Value(true),
-    ExampleValue.Single("false") expect Model.Default.Value(false),
+    JsonPrimitive(true) expect Model.Default.Value(true),
+    JsonPrimitive(false) expect Model.Default.Value(false),
     null expect null
 )
 
@@ -100,7 +103,7 @@ fun Model.Primitive.Boolean.Companion.all() = listOf(
         default = default.expected
     )
 } + Expect(
-    Schema.boolean.copy(nullable = true, default = ExampleValue.Single("null")),
+    Schema.boolean.copy(nullable = true, default = JsonNull),
     Model.Primitive.Boolean(Model.Default.Null, null, true, null),
 )
 
@@ -179,13 +182,13 @@ fun Model.Primitive.Int.Companion.all() = listOf(
         constraint = constraints.expected
     )
 } + Expect(
-    Schema.integer.copy(nullable = true, format = "int32", default = ExampleValue.Single("null")),
+    Schema.integer.copy(nullable = true, format = "int32", default = JsonNull),
     Model.Primitive.Int(Model.Default.Null, null, null, true, null),
 )
 
 fun Model.Default.Companion.number() = listOf(
-    ExampleValue.Single("0.7") expect Model.Default.Value(0.7),
-//    ExampleValue.Single("null") expect Model.Default.Null,
+    JsonPrimitive(0.7) expect Model.Default.Value(0.7),
+//    JsonNull expect Model.Default.Null,
     null expect null
 )
 
@@ -209,7 +212,7 @@ fun Model.Primitive.Long.Companion.all() = listOf(
         constraint = constraints.expected
     )
 } + Expect(
-    Schema.integer.copy(nullable = true, default = ExampleValue.Single("null")),
+    Schema.integer.copy(nullable = true, default = JsonNull),
     Model.Primitive.Long(Model.Default.Null, null, null, true, null),
 )
 
@@ -233,7 +236,7 @@ fun Model.Primitive.Double.Companion.all() = listOf(
         constraint = constraints.expected
     )
 } + Expect(
-    Schema.number.copy(nullable = true, default = ExampleValue.Single("null")),
+    Schema.number.copy(nullable = true, default = JsonNull),
     Model.Primitive.Double(Model.Default.Null, null, null, true, null),
 )
 
@@ -255,7 +258,7 @@ fun Model.Primitive.Float.Companion.all() = listOf(
         constraint = constraints.expected
     )
 } + Expect(
-    Schema.number.copy(format = "float", nullable = true, default = ExampleValue.Single("null")),
+    Schema.number.copy(format = "float", nullable = true, default = JsonNull),
     Model.Primitive.Float(Model.Default.Null, null, null, true, null),
 )
 
@@ -290,3 +293,7 @@ fun Model.FreeFormJson.Companion.all(): List<Expect<Schema, Model.FreeFormJson>>
         maxProperties = constraints.actual.maxProperties
     ) expect schema.expected.copy(description = description.expected, constraint = constraints.expected)
 }
+
+/** The `enum` members of a schema of strings, where `null` is the JSON `null`. */
+fun enumOf(vararg values: String?): List<JsonElement> =
+    values.map { if (it == null) JsonNull else JsonPrimitive(it) }

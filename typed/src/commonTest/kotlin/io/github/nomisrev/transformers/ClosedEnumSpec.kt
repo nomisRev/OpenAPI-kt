@@ -11,7 +11,6 @@ import io.github.nomisrev.expect
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.UnionDispatch
-import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.registry.registry
@@ -20,62 +19,58 @@ import io.github.nomisrev.openapi.routes.SchemaContext
 import io.github.nomisrev.product
 import io.github.nomisrev.verifyFails
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonPrimitive
 
-private val nulls = listOf("null", "NULL", null)
+private val nulls: List<JsonElement> = listOf(JsonNull)
 
-private fun enumString(value: String?): Model.EnumValue = when (value) {
-    null -> Model.EnumValue.Null()
-    "null", "NULL" -> Model.EnumValue.Null(value)
-    else -> Model.EnumValue.String(value)
+private fun enumString(value: JsonElement): Model.EnumValue = when (value) {
+    JsonNull -> Model.EnumValue.Null()
+    else -> Model.EnumValue.String((value as JsonPrimitive).content)
 }
 
-private fun enumInt(value: String?): Model.EnumValue = when (value) {
-    null -> Model.EnumValue.Null()
-    "null", "NULL" -> Model.EnumValue.Null(value)
-    else -> Model.EnumValue.Int(value.toInt(), value)
+private fun enumInt(value: JsonElement): Model.EnumValue = when (value) {
+    JsonNull -> Model.EnumValue.Null()
+    else -> (value as JsonPrimitive).content.let { Model.EnumValue.Int(it.toInt(), it) }
 }
 
-private fun enumLong(value: String?): Model.EnumValue = when (value) {
-    null -> Model.EnumValue.Null()
-    "null", "NULL" -> Model.EnumValue.Null(value)
-    else -> Model.EnumValue.Long(value.toLong(), value)
+private fun enumLong(value: JsonElement): Model.EnumValue = when (value) {
+    JsonNull -> Model.EnumValue.Null()
+    else -> (value as JsonPrimitive).content.let { Model.EnumValue.Long(it.toLong(), it) }
 }
 
-private fun enumFloat(value: String?): Model.EnumValue = when (value) {
-    null -> Model.EnumValue.Null()
-    "null", "NULL" -> Model.EnumValue.Null(value)
-    else -> Model.EnumValue.Float(value.toFloat(), value)
+private fun enumFloat(value: JsonElement): Model.EnumValue = when (value) {
+    JsonNull -> Model.EnumValue.Null()
+    else -> (value as JsonPrimitive).content.let { Model.EnumValue.Float(it.toFloat(), it) }
 }
 
-private fun enumDouble(value: String?): Model.EnumValue = when (value) {
-    null -> Model.EnumValue.Null()
-    "null", "NULL" -> Model.EnumValue.Null(value)
-    else -> Model.EnumValue.Double(value.toDouble(), value)
+private fun enumDouble(value: JsonElement): Model.EnumValue = when (value) {
+    JsonNull -> Model.EnumValue.Null()
+    else -> (value as JsonPrimitive).content.let { Model.EnumValue.Double(it.toDouble(), it) }
 }
 
-private fun enumBoolean(value: String?): Model.EnumValue = when (value) {
-    null -> Model.EnumValue.Null()
-    "null", "NULL" -> Model.EnumValue.Null(value)
-    else -> Model.EnumValue.Boolean(value.toBooleanStrict(), value)
+private fun enumBoolean(value: JsonElement): Model.EnumValue = when (value) {
+    JsonNull -> Model.EnumValue.Null()
+    else -> (value as JsonPrimitive).content.let { Model.EnumValue.Boolean(it.toBooleanStrict(), it) }
 }
 
 private fun default(
-    values: List<String>,
-    parse: (String?) -> Model.EnumValue,
-): List<Expect<ExampleValue.Single?, Model.Default<Model.EnumValue>?>> =
-    values.map { ExampleValue.Single(it) expect Model.Default.Value(parse(it)) } + listOf(null expect null)
+    values: List<JsonPrimitive>,
+    parse: (JsonElement) -> Model.EnumValue,
+): List<Expect<JsonElement?, Model.Default<Model.EnumValue>?>> =
+    values.map { it expect Model.Default.Value(parse(it)) } + listOf(null expect null)
 
 private fun nullDefault(
-    values: List<String>,
-    parse: (String?) -> Model.EnumValue,
-): List<Expect<ExampleValue.Single?, Model.Default<Model.EnumValue>?>> =
-    default(values, parse) + listOf(ExampleValue.Single("null") expect Model.Default.Null)
+    values: List<JsonPrimitive>,
+    parse: (JsonElement) -> Model.EnumValue,
+): List<Expect<JsonElement?, Model.Default<Model.EnumValue>?>> =
+    default(values, parse) + listOf(JsonNull expect Model.Default.Null)
 
 private fun List<Expect<Schema, Model>>.enum(
     name: NamingContext,
-    values: List<String>,
-    parse: (String?) -> Model.EnumValue,
+    values: List<JsonPrimitive>,
+    parse: (JsonElement) -> Model.EnumValue,
 ) = product(description, default(values, parse)) { schema, description, default ->
     schema.actual.copy(
         description = description.actual,
@@ -107,22 +102,22 @@ private fun List<Expect<Schema, Model>>.enum(
 }
 
 fun Model.Enum.Companion.ints(name: NamingContext): List<Expect<Schema, Model>> =
-    Model.Primitive.Int.all().enum(name, listOf("1", "2", "3"), ::enumInt)
+    Model.Primitive.Int.all().enum(name, listOf(1, 2, 3).map(::JsonPrimitive), ::enumInt)
 
 fun Model.Enum.Companion.longs(name: NamingContext): List<Expect<Schema, Model>> =
-    Model.Primitive.Long.all().enum(name, listOf("1", "2", "3"), ::enumLong)
+    Model.Primitive.Long.all().enum(name, listOf(1, 2, 3).map(::JsonPrimitive), ::enumLong)
 
 fun Model.Enum.Companion.strings(name: NamingContext): List<Expect<Schema, Model>> =
-    Model.Primitive.String.all().enum(name, listOf("A", "B", "C"), ::enumString)
+    Model.Primitive.String.all().enum(name, listOf("A", "B", "C").map(::JsonPrimitive), ::enumString)
 
 fun Model.Enum.Companion.floats(name: NamingContext): List<Expect<Schema, Model>> =
-    Model.Primitive.Float.all().enum(name, listOf("1.1", "2.2", "3.3"), ::enumFloat)
+    Model.Primitive.Float.all().enum(name, listOf(1.1, 2.2, 3.3).map(::JsonPrimitive), ::enumFloat)
 
 fun Model.Enum.Companion.doubles(name: NamingContext): List<Expect<Schema, Model>> =
-    Model.Primitive.Double.all().enum(name, listOf("1.1", "2.2", "3.3"), ::enumDouble)
+    Model.Primitive.Double.all().enum(name, listOf(1.1, 2.2, 3.3).map(::JsonPrimitive), ::enumDouble)
 
 fun Model.Enum.Companion.booleans(name: NamingContext): List<Expect<Schema, Model>> =
-    Model.Primitive.Boolean.all().enum(name, listOf("true", "false"), ::enumBoolean)
+    Model.Primitive.Boolean.all().enum(name, listOf(true, false).map(::JsonPrimitive), ::enumBoolean)
 
 @OptIn(ExperimentalAtomicApi::class)
 val closedEnumSpec by testSuite {
@@ -192,7 +187,7 @@ val closedEnumSpec by testSuite {
 //        "multiple default values throws IllegalArgumentException",
 //        Schema(
 //            default = ExampleValue.Multiple(listOf("1", "2")),
-//            enum = listOf("1", "2"),
+//            enum = enumOf("1", "2"),
 //            type = Schema.Type.Basic.Integer
 //        ),
 //        "Multiple default values not supported for enums."
@@ -201,8 +196,8 @@ val closedEnumSpec by testSuite {
     verifyFails<IllegalArgumentException>(
         "Null default in non-null enum",
         Schema(
-            default = ExampleValue.Single("null"),
-            enum = listOf("1", "2"),
+            default = JsonNull,
+            enum = listOf(JsonPrimitive(1), JsonPrimitive(2)),
             type = Schema.Type.Basic.Integer,
             nullable = false
         ),
@@ -211,7 +206,7 @@ val closedEnumSpec by testSuite {
 
     fun List<Expect<Schema, Model.Primitive.String>>.openEnum(
         name: NamingContext,
-        values: List<String>
+        values: List<JsonPrimitive>
     ) = product(
         description,
         default(values, ::enumString),
@@ -228,7 +223,7 @@ val closedEnumSpec by testSuite {
 
         val nestedEnum = Model.Enum(
             name.nest(NamingContext.UnionCase(values.joinToString("Or") {
-                it.replaceFirstChar { c -> c.uppercase() }
+                it.content.replaceFirstChar { c -> c.uppercase() }
             })),
             Model.Primitive.String(null, null, null, false, null),
             values.map(::enumString),
@@ -274,7 +269,7 @@ val closedEnumSpec by testSuite {
 //        "OpenEnum multiple default values throws IllegalArgumentException",
 //        Schema(
 //            anyOf = listOf(
-//                ReferenceOr.value(Schema(enum = listOf("1", "2"), type = Schema.Type.Basic.Integer)),
+//                ReferenceOr.value(Schema(enum = enumOf("1", "2"), type = Schema.Type.Basic.Integer)),
 //                ReferenceOr.value(Schema(type = Schema.Type.Basic.String))
 //            ),
 //            default = ExampleValue.Multiple(listOf("1", "2"))

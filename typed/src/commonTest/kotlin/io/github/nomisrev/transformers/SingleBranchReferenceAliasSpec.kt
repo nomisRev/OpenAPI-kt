@@ -1,5 +1,7 @@
 package io.github.nomisrev.transformers
 
+import io.github.nomisrev.enumOf
+
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.api
 import io.github.nomisrev.assertEq
@@ -33,7 +35,7 @@ val singleBranchReferenceAliasSpec by testSuite {
             required = listOf("name"),
             additionalProperties = AdditionalProperties.Allowed(false),
         ),
-        "enum" to Schema(type = Type.Basic.String, enum = listOf("red", "green")),
+        "enum" to Schema(type = Type.Basic.String, enum = enumOf("red", "green")),
         "primitive" to Schema(type = Type.Basic.String, description = ReferenceOr.value("my string")),
         "collection" to Schema(type = Type.Basic.Array, items = string),
     )

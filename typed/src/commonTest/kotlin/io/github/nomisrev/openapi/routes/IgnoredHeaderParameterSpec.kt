@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi.routes
 
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.Parameter
@@ -92,7 +94,7 @@ val IgnoredHeaderParameterSpec by testSuite {
             ),
             route.ignoredParameters.map { Triple(it.name, it.required, it.description) },
         )
-        assertEquals(listOf("image/png"), route.ignoredParameters[1].schema?.valueOrNull()?.enum)
+        assertEquals(listOf<JsonElement>(JsonPrimitive("image/png")), route.ignoredParameters[1].schema?.valueOrNull()?.enum)
     }
 
     test("a route without such header parameters ignores none") {

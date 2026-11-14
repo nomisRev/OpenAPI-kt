@@ -1,5 +1,7 @@
 package io.github.nomisrev.transformers
 
+import io.github.nomisrev.enumOf
+
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.all
 import io.github.nomisrev.api
@@ -29,7 +31,7 @@ val anyOfSpec by testSuite {
         val schema = Schema(
             anyOf = listOf(
                 ReferenceOr.value(Schema.string),
-                ReferenceOr.value(Schema.string.copy(enum = listOf("a", "b"))),
+                ReferenceOr.value(Schema.string.copy(enum = enumOf("a", "b"))),
                 ReferenceOr.value(Schema.NULL)
             )
         )
@@ -70,7 +72,7 @@ val anyOfSpec by testSuite {
         val modelIdsResponses = Schema(
             anyOf = listOf(
                 ReferenceOr.value(Schema.string),
-                ReferenceOr.value(Schema.string.copy(enum = listOf("gpt-5", "gpt-4o")))
+                ReferenceOr.value(Schema.string.copy(enum = enumOf("gpt-5", "gpt-4o")))
             )
         )
         val modelIdsCompaction = Schema(

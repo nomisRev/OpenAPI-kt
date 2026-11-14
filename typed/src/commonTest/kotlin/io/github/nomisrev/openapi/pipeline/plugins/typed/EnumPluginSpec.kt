@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi.pipeline.plugins.typed
 
+import io.github.nomisrev.enumOf
+
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.Eq
 import io.github.nomisrev.all
@@ -78,7 +80,7 @@ val EnumPluginSpec by testSuite {
 
     test("ImplicitEnumPlugin: Typeless enum becomes closed enum") {
         Registry(api).use { reg ->
-            val schema = Schema(enum = listOf("A", "B"))
+            val schema = Schema(enum = enumOf("A", "B"))
             val resolved = ResolvedSchema.Value(root, schema)
             val actual = engine.transform(reg.scope(), reg, resolved, SchemaContext.Null)
             
@@ -115,7 +117,7 @@ val EnumPluginSpec by testSuite {
         Registry(api).use { reg ->
             // Schema with both enum and allOf
             val schema = Schema(
-                enum = listOf("A", "B"),
+                enum = enumOf("A", "B"),
                 allOf = listOf(io.github.nomisrev.openapi.parser.ReferenceOr.value(Schema(type = Schema.Type.Basic.String)))
             )
             val resolved = ResolvedSchema.Value(root, schema)

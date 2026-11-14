@@ -10,6 +10,7 @@ import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.SerialKind
+import kotlinx.serialization.descriptors.nullable
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -20,6 +21,22 @@ import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+
+/**
+ * [JsonElementWithYamlSerializer] for a property whose absence and explicit `null` mean different things (`default`,
+ * `example`): the descriptor is nullable, so the decoder hands a `null` token to [deserialize], which returns
+ * [JsonNull], instead of skipping it and yielding Kotlin `null`, which stands for "not declared".
+ */
+@OptIn(ExperimentalSerializationApi::class)
+internal object DeclaredJsonElementSerializer : KSerializer<JsonElement?> {
+    override val descriptor: SerialDescriptor = JsonElementWithYamlSerializer.descriptor.nullable
+
+    override fun deserialize(decoder: Decoder): JsonElement = JsonElementWithYamlSerializer.deserialize(decoder)
+
+    override fun serialize(encoder: Encoder, value: JsonElement?) {
+        if (value == null) encoder.encodeNull() else JsonElementWithYamlSerializer.serialize(encoder, value)
+    }
+}
 
 @OptIn(InternalSerializationApi::class, ExperimentalSerializationApi::class)
 internal object JsonElementWithYamlSerializer : KSerializer<JsonElement> {

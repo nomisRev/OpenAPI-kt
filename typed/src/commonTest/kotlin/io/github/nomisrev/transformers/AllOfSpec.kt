@@ -1,5 +1,7 @@
 package io.github.nomisrev.transformers
 
+import io.github.nomisrev.enumOf
+
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.all
 import io.github.nomisrev.api
@@ -257,8 +259,8 @@ val allOfSpec by testSuite {
             ReferenceOr.value(
                 Schema(
                     allOf = listOf(
-                        ReferenceOr.value(Schema(type = Schema.Type.Basic.String, enum = listOf("A", "B"))),
-                        ReferenceOr.value(Schema(type = Schema.Type.Basic.String, enum = listOf("B", "C")))
+                        ReferenceOr.value(Schema(type = Schema.Type.Basic.String, enum = enumOf("A", "B"))),
+                        ReferenceOr.value(Schema(type = Schema.Type.Basic.String, enum = enumOf("B", "C")))
                     )
                 )
             ).toModel(NamingContext.path("test"), SchemaContext.Write)
@@ -292,7 +294,7 @@ val allOfSpec by testSuite {
                         ReferenceOr.value(
                             Schema(
                                 type = Schema.Type.Basic.String,
-                                enum = listOf("A", "B")
+                                enum = enumOf("A", "B")
                             )
                         )
                     )

@@ -25,6 +25,15 @@ class Registry(
 
     fun names(): Set<NamingContext.Reference> = cache.toSet()
 
+    private val warnings: MutableSet<String> = linkedSetOf()
+
+    /** Records a warning about a schema that is generated differently from how it is declared. Repeats are kept once. */
+    fun warn(message: String) {
+        warnings += message
+    }
+
+    fun warnings(): List<String> = warnings.toList()
+
     @Suppress("RedundantSuspendModifier")
     private suspend fun remoteSchema(url: String): Schema =
         TODO("Remote schemas $url not supported yet.")

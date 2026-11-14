@@ -1,5 +1,7 @@
 package io.github.nomisrev.openapi.pipeline.plugins.typed
 
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.Eq
 import io.github.nomisrev.all
@@ -9,7 +11,6 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.SchemaContext
-import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type.Basic
@@ -51,13 +52,13 @@ val PrimitivePluginSpec by testSuite {
     /*
     verifyFails<IllegalArgumentException>(
         "Schema.Type.Basic.Number multiple default values throws IllegalArgumentException (Plugin)",
-        Schema.number.copy(default = ExampleValue.Multiple(listOf("1.3", "2.5"))),
+        Schema.number.copy(default = JsonArray(listOf(JsonPrimitive(1.3), JsonPrimitive(2.5)))),
         "Default value 1.3, 2.5 is not a Number."
     )
 
     verifyFails<IllegalArgumentException>(
         "Schema.Type.Basic.Number single default incorrect value throws IllegalArgumentException (Plugin)",
-        Schema.number.copy(default = ExampleValue.Single("no-number")),
+        Schema.number.copy(default = JsonPrimitive("no-number")),
         "Default value no-number is not a Number."
     )
     */

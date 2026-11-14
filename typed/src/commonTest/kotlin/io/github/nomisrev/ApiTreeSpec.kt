@@ -516,7 +516,7 @@ val apiTreeSpec by testSuite {
             Parameter(
                 name = "workflowId",
                 input = Parameter.Input.Path,
-                schema = ReferenceOr.value(Schema.string.copy(enum = listOf("queued", "in-progress"))),
+                schema = ReferenceOr.value(Schema.string.copy(enum = enumOf("queued", "in-progress"))),
             )
         )
         val api = OpenAPI(
@@ -880,7 +880,7 @@ val apiTreeSpec by testSuite {
             components = Components(
                 schemas = mapOf(
                     "WorkflowState" to ReferenceOr.value(
-                        Schema.string.copy(enum = listOf("queued", "in-progress"))
+                        Schema.string.copy(enum = enumOf("queued", "in-progress"))
                     )
                 )
             )

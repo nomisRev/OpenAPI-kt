@@ -1,5 +1,7 @@
 package io.github.nomisrev.transformers
 
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.Eq
 import io.github.nomisrev.all
@@ -9,7 +11,6 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.routes.SchemaContext
-import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
 import io.github.nomisrev.openapi.parser.Schema.Type.Basic
@@ -38,38 +39,38 @@ val PrimitiveSpec by testSuite {
 
     verifyFails<IllegalArgumentException>(
         "Schema.Type.Basic.Number multiple default values throws IllegalArgumentException",
-        Schema.number.copy(default = ExampleValue.Multiple(listOf("1.3", "2.5"))),
-        "Multiple default values not supported for Number."
+        Schema.number.copy(default = JsonArray(listOf(JsonPrimitive(1.3), JsonPrimitive(2.5)))),
+        "Multiple default values not supported for Number at GET /test."
     )
 
     verifyFails<IllegalArgumentException>(
         "Schema.Type.Basic.Number single default incorrect value throws IllegalArgumentException",
-        Schema.number.copy(default = ExampleValue.Single("no-number")),
-        "Default value no-number is not a Number."
+        Schema.number.copy(default = JsonPrimitive("no-number")),
+        "Default value \"no-number\" at GET /test is not a Number."
     )
 
     verifyFails<IllegalArgumentException>(
         "Schema.Type.Basic.Integer multiple default values throws IllegalArgumentException",
-        Schema.integer.copy(default = ExampleValue.Multiple(listOf("1", "2"))),
-        "Multiple default values not supported for Integer."
+        Schema.integer.copy(default = JsonArray(listOf(JsonPrimitive(1), JsonPrimitive(2)))),
+        "Multiple default values not supported for Integer at GET /test."
     )
 
     verifyFails<IllegalArgumentException>(
         "Schema.Type.Basic.Integer single default incorrect value throws IllegalArgumentException",
-        Schema.integer.copy(default = ExampleValue.Single("no-int")),
-        "Default value no-int is not a Integer."
+        Schema.integer.copy(default = JsonPrimitive("no-int")),
+        "Default value \"no-int\" at GET /test is not a Integer."
     )
 
     verifyFails<IllegalArgumentException>(
         "Schema.Type.Basic.Boolean multiple default values throws IllegalArgumentException",
-        Schema.boolean.copy(default = ExampleValue.Multiple(listOf("true", "false"))),
-        "Multiple default values not supported for Boolean."
+        Schema.boolean.copy(default = JsonArray(listOf(JsonPrimitive(true), JsonPrimitive(false)))),
+        "Multiple default values not supported for Boolean at GET /test."
     )
 
     verifyFails<IllegalArgumentException>(
         "Schema.Type.Basic.Boolean single default incorrect value throws IllegalArgumentException",
-        Schema.boolean.copy(default = ExampleValue.Single("no-bool")),
-        "Default value no-bool is not a Boolean."
+        Schema.boolean.copy(default = JsonPrimitive("no-bool")),
+        "Default value \"no-bool\" at GET /test is not a Boolean."
     )
 
     verifyFails<IllegalStateException>(

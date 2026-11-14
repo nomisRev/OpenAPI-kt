@@ -7,7 +7,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 
-/** Characterizations of unresolved data loss, not assertions of correct OpenAPI behavior. */
+/**
+ * Round trips of values seen in the corpus. The `$ref` sibling and root extension cases still characterize
+ * unresolved data loss, not correct OpenAPI behavior.
+ */
 class CorpusRoundTripAuditTest {
     private fun roundTripSchema(schema: String): JsonObject {
         val document = """{"openapi":"3.1.0","info":{"title":"Audit","version":"1"},"components":{"schemas":{"Name":{"type":"object"},"Value":$schema}}}"""
@@ -16,24 +19,24 @@ class CorpusRoundTripAuditTest {
     }
 
     @Test
-    fun `numeric enum members currently become strings`() {
+    fun `numeric enum members stay numbers`() {
         // mbus.local: /components/schemas/baudrate
         val actual = roundTripSchema("""{"type":"integer","enum":[300,600]}""")
-        assertEquals(Json.parseToJsonElement("""["300","600"]"""), actual["enum"])
+        assertEquals(Json.parseToJsonElement("""[300,600]"""), actual["enum"])
     }
 
     @Test
-    fun `numeric defaults currently become strings`() {
+    fun `numeric defaults stay numbers`() {
         // icons8.com: amount parameter schema
         val actual = roundTripSchema("""{"type":"number","default":25}""")
-        assertEquals(Json.parseToJsonElement(""""25""""), actual["default"])
+        assertEquals(Json.parseToJsonElement("""25"""), actual["default"])
     }
 
     @Test
-    fun `object examples currently become JSON encoded strings`() {
+    fun `object examples stay objects`() {
         // change.local: carbon_calculate response media example
         val actual = roundTripSchema("""{"type":"object","example":{"amount":18}}""")
-        assertEquals(Json.parseToJsonElement(""""{\"amount\":18}""""), actual["example"])
+        assertEquals(Json.parseToJsonElement("""{"amount":18}"""), actual["example"])
     }
 
     @Test

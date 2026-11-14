@@ -2,6 +2,7 @@ package io.github.nomisrev.openapi.parser
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Describes a single operation parameter.
@@ -77,7 +78,7 @@ public data class Parameter(
    * be represented in JSON or YAML, a string value can contain the example with escaping where
    * necessary.
    */
-  public val example: ExampleValue? = null,
+  public val example: @Serializable(DeclaredJsonElementSerializer::class) JsonElement? = null,
   /**
    * Examples of the parameter's potential value. Each example SHOULD contain a value in the correct
    * format as specified in the parameter encoding. The _paramExamples field is mutually exclusive

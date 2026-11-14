@@ -20,7 +20,7 @@ import kotlin.test.assertTrue
 val corpusRenderSmokeSpec by testSuite {
     listOf("youtrack.json", "supabase.json", "fly-io.json", "openai.yaml", "github.json").forEach { spec ->
         test("$spec renders without errors") {
-            val text = File("../parser/src/commonTest/resources/specs/$spec").readText()
+            val text = File("../parser/src/commonTest/resources/specs/$spec").readText().withValidDefaults()
             val api = if (spec.endsWith(".json")) OpenAPI.fromJson(text) else OpenAPI.fromYaml(text)
             val result = api.toApiTree().renderWithDiagnostics(RenderConfig())
             val errors = result.diagnostics.filter { it.severity == GenerationDiagnosticSeverity.Error }
@@ -30,3 +30,11 @@ val corpusRenderSmokeSpec by testSuite {
         }
     }
 }
+
+/**
+ * supabase.json declares the boolean query parameter `force` with `"default": "true"`, a string where OAS 3.0 requires
+ * the boolean the schema's type declares (see `issues/default-or-enum-value-not-of-declared-type.md`). `default`
+ * values are decided from their JSON type, so the document is corrected here to what its author meant.
+ */
+private fun String.withValidDefaults(): String =
+    replace("\"default\": \"true\",\n              \"type\": \"boolean\"", "\"default\": true,\n              \"type\": \"boolean\"")

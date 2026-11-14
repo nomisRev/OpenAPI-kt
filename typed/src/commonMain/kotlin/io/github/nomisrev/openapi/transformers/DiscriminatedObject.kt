@@ -7,6 +7,8 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.effectiveMaximum
 import io.github.nomisrev.openapi.effectiveMinimum
 import io.github.nomisrev.openapi.enumLikeValues
+import kotlinx.serialization.json.JsonElement
+import io.github.nomisrev.openapi.enumMembers
 import io.github.nomisrev.openapi.merge
 import io.github.nomisrev.openapi.mergeMaximumBound
 import io.github.nomisrev.openapi.mergeMinimumBound
@@ -569,8 +571,8 @@ private suspend fun Schema.mergeCompositeUnion(other: Schema): Schema {
 
 context(ctx: Registry.Scope)
 private suspend fun Schema.mergeEnum(other: Schema): Schema {
-    val leftValues = enumLikeValues()
-    val rightValues = other.enumLikeValues()
+    val leftValues = enumMembers()
+    val rightValues = other.enumMembers()
     return when {
         leftValues != null && rightValues != null -> {
             val mergedValues = leftValues.filter { it in rightValues }
@@ -597,15 +599,10 @@ private suspend fun Schema.mergeEnum(other: Schema): Schema {
 }
 
 private fun mergedEnumDefault(
-    values: List<String?>,
-    left: io.github.nomisrev.openapi.parser.DefaultValue?,
-    right: io.github.nomisrev.openapi.parser.DefaultValue?
-): io.github.nomisrev.openapi.parser.DefaultValue? {
-    val allowedValues = values.toSet()
-    return sequenceOf(left, right)
-        .filterIsInstance<io.github.nomisrev.openapi.parser.ExampleValue.Single>()
-        .firstOrNull { it.value in allowedValues }
-}
+    values: List<JsonElement>,
+    left: JsonElement?,
+    right: JsonElement?
+): JsonElement? = sequenceOf(left, right).filterNotNull().firstOrNull { it in values }
 
 fun Schema.mergeCommon(other: Schema): Schema = copy(
     type = type ?: other.type,

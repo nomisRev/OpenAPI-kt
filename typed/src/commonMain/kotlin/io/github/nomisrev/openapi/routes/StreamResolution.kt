@@ -1,5 +1,6 @@
 package io.github.nomisrev.openapi.routes
 
+import io.github.nomisrev.openapi.enumLikeValues
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.ReferenceOr
@@ -141,7 +142,7 @@ private fun Schema.Discriminator.namesFor(ref: String): List<String> {
 private fun EventShape.eventKinds(names: List<String>): List<String?> {
     val event = this[EVENT]
     val const = event?.first { (it.const as? JsonPrimitive)?.takeIf(JsonPrimitive::isString)?.content }
-    val enum = event?.first { schema -> schema.enum?.filterNotNull()?.takeIf { it.isNotEmpty() } }
+    val enum = event?.first { schema -> schema.enumLikeValues()?.filterNotNull()?.takeIf { it.isNotEmpty() } }
     return when {
         const != null -> listOf(const)
         enum != null -> enum

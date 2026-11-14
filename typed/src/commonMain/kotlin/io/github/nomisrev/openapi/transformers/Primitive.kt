@@ -5,7 +5,9 @@ import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.registry.Registry
 import io.github.nomisrev.openapi.registry.ResolvedSchema
 import io.github.nomisrev.openapi.registry.description
-import io.github.nomisrev.openapi.parser.ExampleValue
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.JsonPrimitive
 import io.github.nomisrev.openapi.parser.Schema
 
 context(ctx: Registry.Scope)
@@ -35,7 +37,7 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
 
         Schema.Type.Basic.Number -> when (schema.format) {
             "float" -> Model.Primitive.Float(
-                default = default("Number", String::toFloatOrNull),
+                default = default("Number", onLiteral = String::toFloatOrNull),
                 description = description(),
                 constraint = Constraints.Number(schema),
                 isNullable = isNullable,
@@ -43,7 +45,7 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
             )
 
             else -> Model.Primitive.Double(
-                default = default("Number", String::toDoubleOrNull),
+                default = default("Number", onLiteral = String::toDoubleOrNull),
                 description = description(),
                 constraint = Constraints.Number(schema),
                 isNullable = isNullable,
@@ -52,7 +54,7 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
         }
 
         Schema.Type.Basic.Boolean -> Model.Primitive.Boolean(
-            default = default("Boolean") { it.lowercase().toBooleanStrictOrNull() },
+            default = default("Boolean") { it.toBooleanStrictOrNull() },
             description = description(),
             isNullable = isNullable,
             title = schema.title
@@ -60,7 +62,7 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
 
         Schema.Type.Basic.Integer -> when (schema.format) {
             "int32" -> Model.Primitive.Int(
-                default = default("Integer", String::toIntOrNull),
+                default = default("Integer", onLiteral = String::toIntOrNull),
                 description = description(),
                 constraint = Constraints.Number(schema),
                 isNullable = isNullable,
@@ -68,7 +70,7 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
             )
 
             else -> Model.Primitive.Long(
-                default = default("Integer", String::toLongOrNull),
+                default = default("Integer", onLiteral = String::toLongOrNull),
                 description = description(),
                 constraint = Constraints.Number(schema),
                 isNullable = isNullable,
@@ -82,7 +84,7 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
             "date" -> Model.Date(description(), isNullable, schema.title)
             "date-time" -> Model.DateTime(description(), isNullable, schema.title)
             else -> Model.Primitive.String(
-                default = default("String", String::toString) { it.joinToString() },
+                default = default("String", acceptsString = true, onLiteral = String::toString) { it.joinToString() },
                 description = description(),
                 constraint = Constraints.Text(schema),
                 isNullable = isNullable,
@@ -91,21 +93,42 @@ private suspend fun ResolvedSchema.toPrimitive(): Model =
         }
     }
 
-private inline fun <A : Any> ResolvedSchema.default(
+/**
+ * The `default` of this schema as the Kotlin value of its declared type, decided from the JSON type of the default:
+ * a number or a boolean is parsed by [onLiteral], a string is only a string (`"7"` is not the integer `7`), and the
+ * JSON `null` is [Model.Default.Null], where the string `"null"` is the text `null`.
+ *
+ * A string schema takes the text of a number or a boolean default as it is, as YAML cannot tell `'1'` from `1`.
+ */
+private fun <A : Any> ResolvedSchema.default(
     label: String,
-    onSingle: (String) -> A?,
+    acceptsString: Boolean = false,
+    onLiteral: (String) -> A?,
     onMultiple: (List<String>) -> A,
+): Model.Default<A>? = when (val default = schema.default) {
+    null -> null
+    JsonNull -> Model.Default.Null
+    is JsonPrimitive -> Model.Default.Value(parseDefault(default, label, acceptsString, onLiteral))
+    is JsonArray if default.all { it is JsonPrimitive } ->
+        Model.Default.Value(onMultiple(default.map { (it as JsonPrimitive).content }))
+    // An object, or an array of structured values: only text can hold it.
+    else -> Model.Default.Value(parseDefault(JsonPrimitive(default.toString()), label, acceptsString, onLiteral))
+}
+
+private fun <A : Any> ResolvedSchema.parseDefault(
+    default: JsonPrimitive,
+    label: String,
+    acceptsString: Boolean,
+    onLiteral: (String) -> A?,
+): A = requireNotNull(if (default.isString && !acceptsString) null else onLiteral(default.content)) {
+    "Default value $default at ${name.describe()} is not a $label."
+}
+
+private fun <A : Any> ResolvedSchema.default(
+    label: String,
+    acceptsString: Boolean = false,
+    onLiteral: (String) -> A?,
 ): Model.Default<A>? =
-    when (val default = schema.default) {
-        is ExampleValue.Single if default.value.equals("null", ignoreCase = true) -> Model.Default.Null
-        is ExampleValue.Single ->
-            Model.Default.Value(requireNotNull(onSingle(default.value)) { "Default value ${default.value} is not a $label." })
-
-        is ExampleValue.Multiple -> Model.Default.Value(onMultiple(default.values))
-        null -> null
-    }
-
-private inline fun <A : Any> ResolvedSchema.default(label: String, onSingle: (String) -> A?): Model.Default<A>? =
-    default(label, onSingle) {
-        throw IllegalArgumentException("Multiple default values not supported for ${label}.")
+    default(label, acceptsString, onLiteral) {
+        throw IllegalArgumentException("Multiple default values not supported for ${label} at ${name.describe()}.")
     }

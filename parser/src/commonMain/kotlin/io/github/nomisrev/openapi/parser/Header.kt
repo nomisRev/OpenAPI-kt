@@ -1,6 +1,7 @@
 package io.github.nomisrev.openapi.parser
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Header fields have the same meaning as for 'Param'. Style is always treated as [Style.simple], as
@@ -14,7 +15,7 @@ public data class Header(
   public val deprecated: Boolean? = null,
   public val allowEmptyValue: Boolean? = null,
   public val explode: Boolean? = null,
-  public val example: ExampleValue? = null,
+  public val example: @Serializable(DeclaredJsonElementSerializer::class) JsonElement? = null,
   public val examples: Map<String, ReferenceOr<Example>>? = null,
   public val schema: ReferenceOr<Schema>? = null,
 )

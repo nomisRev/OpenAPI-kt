@@ -183,6 +183,33 @@ val clientSpec by testSuite {
         "client/deep-nesting"
     )
 
+    // An integer enum and integer, number and boolean defaults keep their JSON type through parser and typed layer.
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/meter": {
+              "get": {
+                "operationId": "readMeter",
+                "parameters": [
+                  { "name": "rate", "in": "query", "schema": { "type": "integer", "enum": [300, 600, 1200], "default": 300 } },
+                  { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 25 } },
+                  { "name": "ratio", "in": "query", "schema": { "type": "number", "default": 1.5 } },
+                  { "name": "on", "in": "query", "schema": { "type": "boolean", "default": true } }
+                ],
+                "responses": {
+                  "204": { "description": "No Content" }
+                }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/enum-int-default"
+    )
+
     clientTest(
         """
         {

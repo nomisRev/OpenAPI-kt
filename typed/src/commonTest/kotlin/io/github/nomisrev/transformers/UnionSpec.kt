@@ -1,5 +1,7 @@
 package io.github.nomisrev.transformers
 
+import io.github.nomisrev.enumOf
+
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.all
 import io.github.nomisrev.api
@@ -52,7 +54,7 @@ val unionSpec by testSuite {
                                                 "type" to ReferenceOr.value(
                                                     Schema(
                                                         type = Schema.Type.Basic.String,
-                                                        enum = listOf("image_url")
+                                                        enum = enumOf("image_url")
                                                     )
                                                 ),
                                                 "image_url" to ReferenceOr.value(
@@ -75,7 +77,7 @@ val unionSpec by testSuite {
                                                 "type" to ReferenceOr.value(
                                                     Schema(
                                                         type = Schema.Type.Basic.String,
-                                                        enum = listOf("text")
+                                                        enum = enumOf("text")
                                                     )
                                                 ),
                                                 "text" to ReferenceOr.value(Schema.string)
@@ -139,7 +141,7 @@ val unionSpec by testSuite {
         val openEnumSchema = Schema(
             anyOf = listOf(
                 ReferenceOr.value(Schema.string),
-                ReferenceOr.value(Schema.string.copy(enum = listOf("a", "b")))
+                ReferenceOr.value(Schema.string.copy(enum = enumOf("a", "b")))
             )
         )
         val testApi = api.reference("Model", openEnumSchema)
@@ -319,7 +321,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("speech.audio.delta")
+                        enum = enumOf("speech.audio.delta")
                     )
                 ),
                 "audio" to ReferenceOr.value(Schema.string)
@@ -332,7 +334,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("speech.audio.done")
+                        enum = enumOf("speech.audio.done")
                     )
                 ),
                 "usage" to ReferenceOr.value(
@@ -403,7 +405,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("message")
+                        enum = enumOf("message")
                     )
                 ),
                 "text" to ReferenceOr.value(Schema.string)
@@ -416,7 +418,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("function_call")
+                        enum = enumOf("function_call")
                     )
                 ),
                 "call_id" to ReferenceOr.value(Schema.string)
@@ -558,7 +560,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("message")
+                        enum = enumOf("message")
                     )
                 ),
                 "role" to ReferenceOr.value(Schema.string),
@@ -572,7 +574,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("message")
+                        enum = enumOf("message")
                     )
                 ),
                 "content" to ReferenceOr.value(Schema.string)
@@ -585,7 +587,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("function_call")
+                        enum = enumOf("function_call")
                     )
                 ),
                 "call_id" to ReferenceOr.value(Schema.string)
@@ -609,7 +611,7 @@ val unionSpec by testSuite {
                             ReferenceOr.value(
                                 Schema(
                                     type = Schema.Type.Basic.String,
-                                    enum = listOf("item_reference")
+                                    enum = enumOf("item_reference")
                                 )
                             ),
                             ReferenceOr.value(Schema.NULL)
@@ -675,7 +677,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("text")
+                        enum = enumOf("text")
                     )
                 ),
                 "text" to ReferenceOr.value(Schema.string)
@@ -688,7 +690,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("image_url")
+                        enum = enumOf("image_url")
                     )
                 ),
                 "image_url" to ReferenceOr.value(
@@ -816,7 +818,7 @@ val unionSpec by testSuite {
                             "type" to ReferenceOr.value(
                                 Schema(
                                     type = Schema.Type.Basic.String,
-                                    enum = listOf("auto")
+                                    enum = enumOf("auto")
                                 )
                             )
                         ),
@@ -830,7 +832,7 @@ val unionSpec by testSuite {
                             "type" to ReferenceOr.value(
                                 Schema(
                                     type = Schema.Type.Basic.String,
-                                    enum = listOf("static")
+                                    enum = enumOf("static")
                                 )
                             ),
                             "static" to ReferenceOr.value(
@@ -941,7 +943,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("eq", "ne")
+                        enum = enumOf("eq", "ne")
                     )
                 ),
                 "key" to ReferenceOr.value(Schema.string),
@@ -956,7 +958,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("and", "or")
+                        enum = enumOf("and", "or")
                     )
                 ),
                 "filters" to ReferenceOr.value(
@@ -1110,7 +1112,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("dir", "folder")
+                        enum = enumOf("dir", "folder")
                     )
                 )
             ),
@@ -1122,7 +1124,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("file")
+                        enum = enumOf("file")
                     )
                 )
             ),
@@ -1174,7 +1176,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("node")
+                        enum = enumOf("node")
                     )
                 )
             ),
@@ -1186,7 +1188,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("node")
+                        enum = enumOf("node")
                     )
                 )
             ),
@@ -1234,7 +1236,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("cat")
+                        enum = enumOf("cat")
                     )
                 )
             ),
@@ -1272,7 +1274,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("created", "updated")
+                        enum = enumOf("created", "updated")
                     )
                 )
             ),
@@ -1284,7 +1286,7 @@ val unionSpec by testSuite {
                 "type" to ReferenceOr.value(
                     Schema(
                         type = Schema.Type.Basic.String,
-                        enum = listOf("deleted")
+                        enum = enumOf("deleted")
                     )
                 )
             ),

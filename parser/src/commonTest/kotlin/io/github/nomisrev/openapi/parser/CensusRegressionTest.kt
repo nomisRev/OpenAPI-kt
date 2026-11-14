@@ -1,36 +1,57 @@
 package io.github.nomisrev.openapi.parser
 
 import com.goncalossilva.resources.Resource
-import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
 import kotlin.test.assertEquals
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
-/** Characterizes unresolved census failures; replace rejection with value assertions when fixed. */
+/** Census documents that once failed to parse, or lost data on the way through the model. */
 class CensusRegressionTest {
-    private fun rejects(name: String, jsonMessage: String, yamlMessage: String) {
-        val json = Resource("specs/census/$name.json").readText()
-        val yaml = Resource("specs/census/$name.yaml").readText()
-        val jsonFailure = assertFailsWith<SerializationException> { OpenAPI.fromJson(json) }
-        assertTrue(jsonFailure.message.orEmpty().contains(jsonMessage), jsonFailure.message)
-        val yamlFailure = assertFailsWith<SerializationException> { OpenAPI.fromYaml(yaml) }
-        assertTrue(yamlFailure.message.orEmpty().contains(yamlMessage), yamlFailure.message)
+    private fun parsed(name: String): OpenAPI {
+        val json = OpenAPI.fromJson(Resource("specs/census/$name.json").readText())
+        val yaml = OpenAPI.fromYaml(Resource("specs/census/$name.yaml").readText())
+        assertEquals(json, yaml)
+        assertEquals(json, OpenAPI.fromJson(json.toJson()))
+        assertEquals(json, OpenAPI.fromYaml(json.toYaml()))
+        return json
+    }
+
+    private fun enumOf(name: String): List<JsonElement> {
+        val json = parsed(name)
+        val schema = assertIs<ReferenceOr.Value<Schema>>(json.components.schemas.getValue("Value"))
+        return assertNotNull(schema.value.enum)
     }
 
     @Test
-    fun `array enum values are currently rejected`() {
-        rejects("apacta-array-enum", "JsonArray", "Expected a string, but got a list")
-        rejects("jobposting-array-enum", "JsonArray", "Expected a string, but got a list")
+    fun `array enum values are preserved`() {
+        assertEquals(
+            listOf(
+                JsonPrimitive("all"),
+                JsonPrimitive("none"),
+                buildJsonArray { add(JsonPrimitive("project1")) },
+            ),
+            enumOf("apacta-array-enum"),
+        )
+        assertEquals(
+            listOf<JsonElement>(buildJsonArray { add(JsonPrimitive(1)) }),
+            enumOf("jobposting-array-enum"),
+        )
     }
 
     @Test
-    fun `object enum values are currently rejected`() {
-        rejects("docker-object-enum", "JsonObject", "Expected a string, but got a map")
-        rejects("pandascore-object-enum", "JsonObject", "Expected a string, but got a map")
-        rejects("enode-object-enum", "JsonObject", "Expected a string, but got a map")
+    fun `object enum values are preserved`() {
+        assertEquals(listOf<JsonElement>(buildJsonObject {}), enumOf("docker-object-enum"))
+        val pandascore = enumOf("pandascore-object-enum")
+        assertTrue(pandascore.isNotEmpty() && pandascore.all { it is JsonObject }, pandascore.toString())
+        val enode = enumOf("enode-object-enum")
+        assertTrue(enode.any { it is JsonObject } && JsonPrimitive("DEFAULT") in enode, enode.toString())
     }
 
     @Test

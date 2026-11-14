@@ -1,5 +1,8 @@
 package io.github.nomisrev.transformers
 
+import kotlinx.serialization.json.JsonNull
+import io.github.nomisrev.enumOf
+
 import de.infix.testBalloon.framework.core.testSuite
 import io.github.nomisrev.api
 import io.github.nomisrev.assertEq
@@ -7,7 +10,6 @@ import io.github.nomisrev.reference
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.parser.AdditionalProperties
-import io.github.nomisrev.openapi.parser.ExampleValue
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
@@ -66,7 +68,7 @@ val typeArrayNullableSpec by testSuite {
         ),
         "string enum with null" to Schema(
             type = Type.Basic.String,
-            enum = listOf("active", "inactive", null)
+            enum = enumOf("active", "inactive", null)
         ),
         "string const" to Schema(type = Type.Basic.String, `const` = JsonPrimitive("fixed")),
         "object with properties" to Schema(
@@ -123,8 +125,8 @@ val typeArrayNullableSpec by testSuite {
 
     test("[string, null] with default null keeps the null default") {
         assertEq(
-            modelOf(Schema(type = Type.Basic.String, nullable = true, default = ExampleValue.Single("null"))),
-            modelOf(Schema(type = Type.Array(listOf(Type.Basic.String, Type.Basic.Null)), default = ExampleValue.Single("null")))
+            modelOf(Schema(type = Type.Basic.String, nullable = true, default = JsonNull)),
+            modelOf(Schema(type = Type.Array(listOf(Type.Basic.String, Type.Basic.Null)), default = JsonNull))
         )
     }
 }
