@@ -40,6 +40,8 @@ Read these numbers with three caveats:
 | [default-or-enum-value-not-of-declared-type](default-or-enum-value-not-of-declared-type.md) | `f39eb298` (partly) | values that cannot be read as the declared type still abort the document (12) |
 | [operation-parameter-shadows-path-parameter](operation-parameter-shadows-path-parameter.md) | `68db4e01` | nothing; the GitHub integration client compiles again |
 | [untyped-schema-parameters-and-form-fields-refused](untyped-schema-parameters-and-form-fields-refused.md) | `02be578d`, `3fb0ba0b` | a free-form object as a form field, arrays and maps of free-form objects, a free-form object path parameter |
+| [composite-path-segments](composite-path-segments.md) | `f9555f8b` | Google resource names are sent with `%2F`; a name repeated in one segment (`{a}-{a}`); `?` in a path key is sent as written; `{insight_id:}` |
+| [optional-nullable-property-cannot-send-explicit-null](optional-nullable-property-cannot-send-explicit-null.md) | `cae01e33`, `909e08bc` | a required nullable property is dropped under `explicitNulls = false` |
 
 A second census after these commits (`exploration/build/census-2026-11-14b/`, taken before `01f1fe46` and
 `fde99b78`): 457 generate and compile (was 445), 541 fail to compile (was 555), 387 fail in typed (was 380), none
@@ -51,6 +53,11 @@ A third census after `68db4e01` and `02be578d` (`exploration/build/census-2026-1
 538 fail to compile, 385 fail in typed, 99 fail at emit, 46 fail at render. Two of the 468 and one render failure
 were re-checked individually: the run recorded them one stage too early because the generator was rebuilt while it
 ran. No document stops earlier than in the second census.
+
+A fourth census after `f9555f8b`, `cae01e33` and `909e08bc` (`exploration/build/census-2026-11-14d/`): 550 generate
+and compile, 457 fail to compile, 385 fail in typed, 99 fail at emit, 45 fail at render. 82 documents newly compile,
+none stops earlier than before. The one compile error that names the new `Optional` type (alertersystem.com) comes
+from two properties, `@id` and `id`, sharing one Kotlin name (`property-kotlin-name-collisions`).
 
 The tables below still carry the counts of the first census.
 
