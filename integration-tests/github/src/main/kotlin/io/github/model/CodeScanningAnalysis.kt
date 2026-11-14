@@ -2,10 +2,14 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CodeScanningAnalysis(
   public val ref: CodeScanningRef,
@@ -14,6 +18,7 @@ public data class CodeScanningAnalysis(
   @SerialName("analysis_key")
   public val analysisKey: CodeScanningAnalysisAnalysisKey,
   public val environment: CodeScanningAnalysisEnvironment,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val category: CodeScanningAnalysisCategory? = null,
   public val error: String,
   @SerialName("created_at")

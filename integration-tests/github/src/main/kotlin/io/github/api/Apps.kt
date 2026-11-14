@@ -6,6 +6,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
+import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Apps internal constructor(
@@ -24,7 +25,7 @@ public class Apps internal constructor(
       private val appSlug: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("/apps/$appSlug")
+        val response = client.get("apps/${appSlug.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           403 -> Response.Forbidden(response.body())

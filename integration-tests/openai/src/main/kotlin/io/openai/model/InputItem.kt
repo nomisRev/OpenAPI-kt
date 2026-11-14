@@ -7,6 +7,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -21,6 +22,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
@@ -37,11 +39,13 @@ public sealed interface InputItem {
    * interactions.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Message(
     public val role: Role,
     public val content: Content,
     public val phase: MessagePhase? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: Type? = null,
   ) : InputItem {
     /**
@@ -77,11 +81,17 @@ public sealed interface InputItem {
         override fun deserialize(decoder: Decoder): Content {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseInputMessageContentList::class to { CaseInputMessageContentList(decodeFromJsonElement(InputMessageContentList.serializer(), it)) },
-            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+            )
+            value is JsonArray -> json.attemptDeserialize(
+              value,
+              CaseInputMessageContentList::class to { CaseInputMessageContentList(decodeFromJsonElement(InputMessageContentList.serializer(), it)) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
 
         override fun serialize(encoder: Encoder, `value`: Content) {
@@ -130,10 +140,13 @@ public sealed interface InputItem {
      * precedence over instructions given with the `user` role.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class InputMessage(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val type: Type? = null,
       public val role: Role,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val status: Status? = null,
       public val content: InputMessageContentList,
     ) : Item {
@@ -231,13 +244,18 @@ public sealed interface InputItem {
       public val queries: List<String>,
       public val results: List<Results>? = null,
     ) : Item {
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class Results(
         @SerialName("file_id")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val fileId: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val text: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val filename: String? = null,
         public val attributes: VectorStoreFileAttributes? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val score: Float? = null,
       )
 
@@ -273,6 +291,7 @@ public sealed interface InputItem {
      * [computer use guide](/docs/guides/tools-computer-use) for more information.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ComputerCall(
       @Required
@@ -280,7 +299,9 @@ public sealed interface InputItem {
       public val id: String,
       @SerialName("call_id")
       public val callId: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val action: ComputerAction? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val actions: ComputerActionList? = null,
       @SerialName("pending_safety_checks")
       public val pendingSafetyChecks: List<ComputerCallSafetyCheckParam>,
@@ -360,10 +381,13 @@ public sealed interface InputItem {
          *
          */
         @SerialName("search")
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Search(
           public val query: String,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val queries: List<String>? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val sources: List<Sources>? = null,
         ) : Action {
           /**
@@ -390,10 +414,9 @@ public sealed interface InputItem {
          * Action type "open_page" - Opens a specific URL from search results.
          *
          */
-        @JvmInline
         @SerialName("open_page")
         @Serializable
-        public value class OpenPage(
+        public data class OpenPage(
           public val url: String? = null,
         ) : Action
 
@@ -439,15 +462,19 @@ public sealed interface InputItem {
      * [function calling guide](/docs/guides/function-calling) for more information.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class FunctionCall(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val id: String? = null,
       public val type: Type,
       @SerialName("call_id")
       public val callId: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val namespace: String? = null,
       public val name: String,
       public val arguments: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val status: Status? = null,
     ) : Item {
       @Serializable
@@ -514,10 +541,9 @@ public sealed interface InputItem {
           /**
            * A text input to the model.
            */
-          @JvmInline
           @SerialName("input_text")
           @Serializable
-          public value class InputText(
+          public data class InputText(
             public val text: String,
           ) : InputTextContentParamOrInputImageContentParamAutoParamOrInputFileContentParam
 
@@ -564,11 +590,17 @@ public sealed interface InputItem {
           override fun deserialize(decoder: Decoder): Output {
             val value = decoder.decodeSerializableValue(JsonElement.serializer())
             val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            return json.attemptDeserialize(
-              value,
-              CaseInputTextContentParamOrInputImageContentParamAutoParamOrInputFileContentParamList::class to { CaseInputTextContentParamOrInputImageContentParamAutoParamOrInputFileContentParamList(decodeFromJsonElement(ListSerializer(InputTextContentParamOrInputImageContentParamAutoParamOrInputFileContentParam.serializer()), it)) },
-              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-            )
+            return when {
+              value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                value,
+                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+              )
+              value is JsonArray -> json.attemptDeserialize(
+                value,
+                CaseInputTextContentParamOrInputImageContentParamAutoParamOrInputFileContentParamList::class to { CaseInputTextContentParamOrInputImageContentParamAutoParamOrInputFileContentParamList(decodeFromJsonElement(ListSerializer(InputTextContentParamOrInputImageContentParamAutoParamOrInputFileContentParam.serializer()), it)) },
+              )
+              else -> throw UnionSerializationException(value, emptyMap())
+            }
           }
 
           override fun serialize(encoder: Encoder, `value`: Output) {
@@ -590,6 +622,7 @@ public sealed interface InputItem {
       }
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ToolSearchCall(
       public val id: String? = null,
@@ -597,6 +630,7 @@ public sealed interface InputItem {
       public val callId: String? = null,
       @Required
       public val type: Type = Type.ToolSearchCall,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val execution: ToolSearchExecutionType? = null,
       public val arguments: EmptyModelParam,
       public val status: FunctionCallItemStatus? = null,
@@ -611,6 +645,7 @@ public sealed interface InputItem {
       }
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ToolSearchOutput(
       public val id: String? = null,
@@ -618,6 +653,7 @@ public sealed interface InputItem {
       public val callId: String? = null,
       @Required
       public val type: Type = Type.ToolSearchOutput,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val execution: ToolSearchExecutionType? = null,
       public val tools: List<Tool>,
       public val status: FunctionCallItemStatus? = null,
@@ -639,6 +675,7 @@ public sealed interface InputItem {
      * [managing context](/docs/guides/conversation-state).
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Reasoning(
       public val type: Type,
@@ -646,7 +683,9 @@ public sealed interface InputItem {
       @SerialName("encrypted_content")
       public val encryptedContent: String? = null,
       public val summary: List<SummaryTextContent>,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val content: List<ReasoningTextContent>? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val status: Status? = null,
     ) : Item {
       @Serializable
@@ -751,20 +790,18 @@ public sealed interface InputItem {
         /**
          * The logs output from the code interpreter.
          */
-        @JvmInline
         @SerialName("logs")
         @Serializable
-        public value class Logs(
+        public data class Logs(
           public val logs: String,
         ) : Outputs
 
         /**
          * The image output from the code interpreter.
          */
-        @JvmInline
         @SerialName("image")
         @Serializable
-        public value class Image(
+        public data class Image(
           public val url: String,
         ) : Outputs
       }
@@ -887,17 +924,17 @@ public sealed interface InputItem {
       @JsonClassDiscriminator("type")
       @Serializable
       public sealed interface Environment {
-        @JvmInline
         @SerialName("local")
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
-        public value class Local(
+        public data class Local(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val skills: List<LocalSkillParam>? = null,
         ) : Environment
 
-        @JvmInline
         @SerialName("container_reference")
         @Serializable
-        public value class ContainerReference(
+        public data class ContainerReference(
           @SerialName("container_id")
           public val containerId: String,
         ) : Environment
@@ -1057,6 +1094,7 @@ public sealed interface InputItem {
      * An invocation of a tool on an MCP server.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class McpCall(
       public val type: Type,
@@ -1067,6 +1105,7 @@ public sealed interface InputItem {
       public val arguments: String,
       public val output: String? = null,
       public val error: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val status: MCPToolCallStatus? = null,
       @SerialName("approval_request_id")
       public val approvalRequestId: String? = null,
@@ -1085,9 +1124,11 @@ public sealed interface InputItem {
      * The output of a custom tool call from your code, being sent back to the model.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class CustomToolCallOutput(
       public val type: Type,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val id: String? = null,
       @SerialName("call_id")
       public val callId: String,
@@ -1126,11 +1167,17 @@ public sealed interface InputItem {
           override fun deserialize(decoder: Decoder): Output {
             val value = decoder.decodeSerializableValue(JsonElement.serializer())
             val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            return json.attemptDeserialize(
-              value,
-              CaseFunctionAndCustomToolCallOutputList::class to { CaseFunctionAndCustomToolCallOutputList(decodeFromJsonElement(ListSerializer(FunctionAndCustomToolCallOutput.serializer()), it)) },
-              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-            )
+            return when {
+              value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                value,
+                CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+              )
+              value is JsonArray -> json.attemptDeserialize(
+                value,
+                CaseFunctionAndCustomToolCallOutputList::class to { CaseFunctionAndCustomToolCallOutputList(decodeFromJsonElement(ListSerializer(FunctionAndCustomToolCallOutput.serializer()), it)) },
+              )
+              else -> throw UnionSerializationException(value, emptyMap())
+            }
           }
 
           override fun serialize(encoder: Encoder, `value`: Output) {
@@ -1156,12 +1203,15 @@ public sealed interface InputItem {
      * A call to a custom tool created by the model.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class CustomToolCall(
       public val type: Type,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val id: String? = null,
       @SerialName("call_id")
       public val callId: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val namespace: String? = null,
       public val name: String,
       public val input: String,

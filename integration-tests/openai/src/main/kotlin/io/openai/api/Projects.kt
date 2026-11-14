@@ -2,13 +2,14 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.openai.model.DeletedRoleAssignmentResource
 import io.openai.model.GroupRoleAssignment
 import io.openai.model.PublicAssignOrganizationGroupRoleBody
@@ -72,11 +73,21 @@ public class Projects internal constructor(
               limit: Long? = null,
               after: String? = null,
               order: Order? = null,
-            ): RoleListResource = client.get("/projects/$projectId/groups/$groupId/roles") {
-              limit?.let { parameter("limit", it) }
-              after?.let { parameter("after", it) }
-              order?.let { parameter("order", it.value) }
-            }.body()
+            ): RoleListResource {
+              val response = client.get("projects/${projectId.encodeURLParameter()}/groups/${groupId.encodeURLParameter()}/roles") {
+                if (limit != null) {
+                  url.encodedParameters.append("limit", limit.toString())
+                }
+                if (after != null) {
+                  url.encodedParameters.append("after", after.encodeURLParameter())
+                }
+                if (order != null) {
+                  url.encodedParameters.append("order", order.value.encodeURLParameter())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public enum class Order(
@@ -95,10 +106,14 @@ public class Projects internal constructor(
             private val projectId: String,
             private val groupId: String,
           ) {
-            public suspend operator fun invoke(body: PublicAssignOrganizationGroupRoleBody): GroupRoleAssignment = client.post("/projects/$projectId/groups/$groupId/roles") {
-              contentType(ContentType.Application.Json)
-              setBody(body)
-            }.body()
+            public suspend operator fun invoke(body: PublicAssignOrganizationGroupRoleBody): GroupRoleAssignment {
+              val response = client.post("projects/${projectId.encodeURLParameter()}/groups/${groupId.encodeURLParameter()}/roles") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class RoleIdPath internal constructor(
@@ -115,7 +130,11 @@ public class Projects internal constructor(
               private val groupId: String,
               private val roleId: String,
             ) {
-              public suspend operator fun invoke(): DeletedRoleAssignmentResource = client.delete("/projects/$projectId/groups/$groupId/roles/$roleId").body()
+              public suspend operator fun invoke(): DeletedRoleAssignmentResource {
+                val response = client.delete("projects/${projectId.encodeURLParameter()}/groups/${groupId.encodeURLParameter()}/roles/${roleId.encodeURLParameter()}")
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
             }
           }
         }
@@ -140,11 +159,21 @@ public class Projects internal constructor(
           limit: Long? = 1_000L,
           after: String? = null,
           order: Order? = Order.Asc,
-        ): PublicRoleListResource = client.get("/projects/$projectId/roles") {
-          limit?.let { parameter("limit", it) }
-          after?.let { parameter("after", it) }
-          order?.let { parameter("order", it.value) }
-        }.body()
+        ): PublicRoleListResource {
+          val response = client.get("projects/${projectId.encodeURLParameter()}/roles") {
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (after != null) {
+              url.encodedParameters.append("after", after.encodeURLParameter())
+            }
+            if (order != null) {
+              url.encodedParameters.append("order", order.value.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Order(
@@ -162,10 +191,14 @@ public class Projects internal constructor(
         private val client: HttpClient,
         private val projectId: String,
       ) {
-        public suspend operator fun invoke(body: PublicCreateOrganizationRoleBody): Role = client.post("/projects/$projectId/roles") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
+        public suspend operator fun invoke(body: PublicCreateOrganizationRoleBody): Role {
+          val response = client.post("projects/${projectId.encodeURLParameter()}/roles") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class RoleIdPath internal constructor(
@@ -182,7 +215,11 @@ public class Projects internal constructor(
           private val projectId: String,
           private val roleId: String,
         ) {
-          public suspend operator fun invoke(): RoleDeletedResource = client.delete("/projects/$projectId/roles/$roleId").body()
+          public suspend operator fun invoke(): RoleDeletedResource {
+            val response = client.delete("projects/${projectId.encodeURLParameter()}/roles/${roleId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Post internal constructor(
@@ -190,10 +227,14 @@ public class Projects internal constructor(
           private val projectId: String,
           private val roleId: String,
         ) {
-          public suspend operator fun invoke(body: PublicUpdateOrganizationRoleBody): Role = client.post("/projects/$projectId/roles/$roleId") {
-            contentType(ContentType.Application.Json)
-            setBody(body)
-          }.body()
+          public suspend operator fun invoke(body: PublicUpdateOrganizationRoleBody): Role {
+            val response = client.post("projects/${projectId.encodeURLParameter()}/roles/${roleId.encodeURLParameter()}") {
+              contentType(ContentType.Application.Json)
+              setBody(body)
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }
@@ -231,11 +272,21 @@ public class Projects internal constructor(
               limit: Long? = null,
               after: String? = null,
               order: Order? = null,
-            ): RoleListResource = client.get("/projects/$projectId/users/$userId/roles") {
-              limit?.let { parameter("limit", it) }
-              after?.let { parameter("after", it) }
-              order?.let { parameter("order", it.value) }
-            }.body()
+            ): RoleListResource {
+              val response = client.get("projects/${projectId.encodeURLParameter()}/users/${userId.encodeURLParameter()}/roles") {
+                if (limit != null) {
+                  url.encodedParameters.append("limit", limit.toString())
+                }
+                if (after != null) {
+                  url.encodedParameters.append("after", after.encodeURLParameter())
+                }
+                if (order != null) {
+                  url.encodedParameters.append("order", order.value.encodeURLParameter())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public enum class Order(
@@ -254,10 +305,14 @@ public class Projects internal constructor(
             private val projectId: String,
             private val userId: String,
           ) {
-            public suspend operator fun invoke(body: PublicAssignOrganizationGroupRoleBody): UserRoleAssignment = client.post("/projects/$projectId/users/$userId/roles") {
-              contentType(ContentType.Application.Json)
-              setBody(body)
-            }.body()
+            public suspend operator fun invoke(body: PublicAssignOrganizationGroupRoleBody): UserRoleAssignment {
+              val response = client.post("projects/${projectId.encodeURLParameter()}/users/${userId.encodeURLParameter()}/roles") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class RoleIdPath internal constructor(
@@ -274,7 +329,11 @@ public class Projects internal constructor(
               private val userId: String,
               private val roleId: String,
             ) {
-              public suspend operator fun invoke(): DeletedRoleAssignmentResource = client.delete("/projects/$projectId/users/$userId/roles/$roleId").body()
+              public suspend operator fun invoke(): DeletedRoleAssignmentResource {
+                val response = client.delete("projects/${projectId.encodeURLParameter()}/users/${userId.encodeURLParameter()}/roles/${roleId.encodeURLParameter()}")
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
             }
           }
         }

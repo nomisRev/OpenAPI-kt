@@ -1,11 +1,9 @@
 package io.github.model
 
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
-@JvmInline
 @Serializable
-public value class DeploymentBranchPolicyNamePattern(
+public data class DeploymentBranchPolicyNamePattern(
   public val name: String,
 )

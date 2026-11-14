@@ -1,15 +1,18 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Pull Request Reviews are reviews on pull requests.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class PullRequestReview(
   public val id: Long,
@@ -25,12 +28,15 @@ public data class PullRequestReview(
   @SerialName("_links")
   public val links: Links,
   @SerialName("submitted_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val submittedAt: Instant? = null,
   @SerialName("commit_id")
   public val commitId: String?,
   @SerialName("body_html")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val bodyHtml: String? = null,
   @SerialName("body_text")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val bodyText: String? = null,
   @SerialName("author_association")
   public val authorAssociation: AuthorAssociation,
@@ -41,15 +47,13 @@ public data class PullRequestReview(
     @SerialName("pull_request")
     public val pullRequest: PullRequest,
   ) {
-    @JvmInline
     @Serializable
-    public value class Html(
+    public data class Html(
       public val href: String,
     )
 
-    @JvmInline
     @Serializable
-    public value class PullRequest(
+    public data class PullRequest(
       public val href: String,
     )
   }

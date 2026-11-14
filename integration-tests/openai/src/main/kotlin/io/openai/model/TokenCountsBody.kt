@@ -5,6 +5,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -17,9 +18,12 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class TokenCountsBody(
   public val model: String? = null,
@@ -29,6 +33,7 @@ public data class TokenCountsBody(
   public val tools: List<Tool>? = null,
   public val text: ResponseTextParam? = null,
   public val reasoning: Reasoning? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val truncation: TruncationEnum? = null,
   public val instructions: String? = null,
   public val conversation: ConversationParam? = null,
@@ -68,11 +73,17 @@ public data class TokenCountsBody(
       override fun deserialize(decoder: Decoder): Input {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseInputItemList::class to { CaseInputItemList(decodeFromJsonElement(ListSerializer(InputItem.serializer()), it)) },
-          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+          )
+          value is JsonArray -> json.attemptDeserialize(
+            value,
+            CaseInputItemList::class to { CaseInputItemList(decodeFromJsonElement(ListSerializer(InputItem.serializer()), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: Input) {

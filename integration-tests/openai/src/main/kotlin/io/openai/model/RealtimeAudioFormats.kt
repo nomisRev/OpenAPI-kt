@@ -2,7 +2,7 @@ package io.openai.model
 
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -21,9 +21,12 @@ public sealed interface RealtimeAudioFormats {
   /**
    * The PCM audio format. Only a 24kHz sample rate is supported.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class AudioPcm(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: Type? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val rate: Rate? = null,
   ) : RealtimeAudioFormats {
     @Serializable
@@ -44,9 +47,10 @@ public sealed interface RealtimeAudioFormats {
   /**
    * The G.711 μ-law format.
    */
-  @JvmInline
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class AudioPcmu(
+  public data class AudioPcmu(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: Type? = null,
   ) : RealtimeAudioFormats {
     @Serializable
@@ -62,9 +66,10 @@ public sealed interface RealtimeAudioFormats {
   /**
    * The G.711 A-law format.
    */
-  @JvmInline
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class AudioPcma(
+  public data class AudioPcma(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: Type? = null,
   ) : RealtimeAudioFormats {
     @Serializable

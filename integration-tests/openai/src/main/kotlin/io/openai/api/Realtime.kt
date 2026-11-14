@@ -2,6 +2,7 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.post
@@ -9,6 +10,7 @@ import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.ktor.http.headersOf
 import io.openai.model.AudioTranscription
 import io.openai.model.MCPTool
@@ -38,6 +40,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -52,6 +55,9 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 
 public class Realtime internal constructor(
   private val client: HttpClient,
@@ -74,39 +80,57 @@ public class Realtime internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(sdp: String, session: RealtimeCallCreateRequest.Session? = null): String = client.post("/realtime/calls") {
-        setBody(MultiPartFormDataContent(formData {
-          append("sdp", sdp, headersOf(HttpHeaders.ContentType, "application/sdp"))
-          if (session != null) {
-            append("session", Json.encodeToString(RealtimeCallCreateRequest.Session.serializer(), session), headersOf(HttpHeaders.ContentType, "application/json"))
-          }
-        }))
-      }.body()
+      public suspend operator fun invoke(sdp: String, session: RealtimeCallCreateRequest.Session? = null): String {
+        val response = client.post("realtime/calls") {
+          setBody(MultiPartFormDataContent(formData {
+            append("sdp", sdp, headersOf(HttpHeaders.ContentType, "application/sdp"))
+            if (session != null) {
+              append("session", Json.encodeToString(RealtimeCallCreateRequest.Session.serializer(), session), headersOf(HttpHeaders.ContentType, "application/json"))
+            }
+          }))
+        }
+        if (response.status.value != 201) throw ResponseException(response, "")
+        return response.body()
+      }
 
-      public suspend operator fun invoke(body: String): String = client.post("/realtime/calls") {
-        contentType(ContentType("application", "sdp"))
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: String): String {
+        val response = client.post("realtime/calls") {
+          contentType(ContentType("application", "sdp"))
+          setBody(body)
+        }
+        if (response.status.value != 201) throw ResponseException(response, "")
+        return response.body()
+      }
 
       public object Body {
         /**
          * Realtime session object configuration.
          */
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Session(
           public val type: Type,
           @SerialName("output_modalities")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val outputModalities: List<OutputModalities>? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val model: Model? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val instructions: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val audio: Audio? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val include: List<Include>? = null,
           public val tracing: Tracing? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val tools: List<Tools>? = null,
           @SerialName("tool_choice")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val toolChoice: ToolChoice? = null,
           @SerialName("max_output_tokens")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val maxOutputTokens: MaxOutputTokens? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val truncation: RealtimeTruncation? = null,
           public val prompt: Prompt? = null,
         ) {
@@ -114,16 +138,23 @@ public class Realtime internal constructor(
            * Configuration for input and output audio.
            *
            */
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Audio(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val input: Input? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val output: Output? = null,
           ) {
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class Input(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val format: RealtimeAudioFormats? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val transcription: AudioTranscription? = null,
               @SerialName("noise_reduction")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val noiseReduction: NoiseReduction? = null,
               @SerialName("turn_detection")
               public val turnDetection: RealtimeTurnDetection? = null,
@@ -134,17 +165,22 @@ public class Realtime internal constructor(
                * Filtering the audio can improve VAD and turn detection accuracy (reducing false positives) and model performance by improving perception of the input audio.
                *
                */
-              @JvmInline
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
-              public value class NoiseReduction(
+              public data class NoiseReduction(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val type: NoiseReductionType? = null,
               )
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class Output(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val format: RealtimeAudioFormats? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val voice: VoiceIdsOrCustomVoice? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val speed: Double? = null,
             )
           }
@@ -196,11 +232,17 @@ public class Realtime internal constructor(
               override fun deserialize(decoder: Decoder): MaxOutputTokens {
                 val value = decoder.decodeSerializableValue(JsonElement.serializer())
                 val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                return json.attemptDeserialize(
-                  value,
-                  Inf::class to { decodeFromJsonElement(Inf.serializer(), it) },
-                  CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
-                )
+                return when {
+                  value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                    value,
+                    Inf::class to { decodeFromJsonElement(Inf.serializer(), it) },
+                  )
+                  value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+                    value,
+                    CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
+                  )
+                  else -> throw UnionSerializationException(value, emptyMap())
+                }
               }
 
               override fun serialize(encoder: Encoder, `value`: MaxOutputTokens) {
@@ -359,12 +401,18 @@ public class Realtime internal constructor(
               override fun deserialize(decoder: Decoder): ToolChoice {
                 val value = decoder.decodeSerializableValue(JsonElement.serializer())
                 val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                return json.attemptDeserialize(
-                  value,
-                  CaseToolChoiceOptions::class to { CaseToolChoiceOptions(decodeFromJsonElement(ToolChoiceOptions.serializer(), it)) },
-                  CaseToolChoiceFunction::class to { CaseToolChoiceFunction(decodeFromJsonElement(ToolChoiceFunction.serializer(), it)) },
-                  CaseToolChoiceMCP::class to { CaseToolChoiceMCP(decodeFromJsonElement(ToolChoiceMCP.serializer(), it)) },
-                )
+                return when {
+                  value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                    value,
+                    CaseToolChoiceOptions::class to { CaseToolChoiceOptions(decodeFromJsonElement(ToolChoiceOptions.serializer(), it)) },
+                  )
+                  value is JsonObject -> json.attemptDeserialize(
+                    value,
+                    CaseToolChoiceFunction::class to { CaseToolChoiceFunction(decodeFromJsonElement(ToolChoiceFunction.serializer(), it)) },
+                    CaseToolChoiceMCP::class to { CaseToolChoiceMCP(decodeFromJsonElement(ToolChoiceMCP.serializer(), it)) },
+                  )
+                  else -> throw UnionSerializationException(value, emptyMap())
+                }
               }
 
               override fun serialize(encoder: Encoder, `value`: ToolChoice) {
@@ -444,12 +492,16 @@ public class Realtime internal constructor(
              * Granular configuration for tracing.
              *
              */
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class TracingConfiguration(
               @SerialName("workflow_name")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val workflowName: String? = null,
               @SerialName("group_id")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val groupId: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val metadata: JsonElement? = null,
             ) : Tracing
 
@@ -467,11 +519,17 @@ public class Realtime internal constructor(
               override fun deserialize(decoder: Decoder): Tracing {
                 val value = decoder.decodeSerializableValue(JsonElement.serializer())
                 val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                return json.attemptDeserialize(
-                  value,
-                  TracingConfiguration::class to { decodeFromJsonElement(TracingConfiguration.serializer(), it) },
-                  Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-                )
+                return when {
+                  value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                    value,
+                    Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+                  )
+                  value is JsonObject -> json.attemptDeserialize(
+                    value,
+                    TracingConfiguration::class to { decodeFromJsonElement(TracingConfiguration.serializer(), it) },
+                  )
+                  else -> throw UnionSerializationException(value, emptyMap())
+                }
               }
 
               override fun serialize(encoder: Encoder, `value`: Tracing) {
@@ -518,10 +576,11 @@ public class Realtime internal constructor(
           private val callId: String,
         ) {
           public suspend operator fun invoke(body: RealtimeSessionCreateRequestGA) {
-            client.post("/realtime/calls/$callId/accept") {
+            val response = client.post("realtime/calls/${callId.encodeURLParameter()}/accept") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
       }
@@ -537,7 +596,8 @@ public class Realtime internal constructor(
           private val callId: String,
         ) {
           public suspend operator fun invoke() {
-            client.post("/realtime/calls/$callId/hangup")
+            val response = client.post("realtime/calls/${callId.encodeURLParameter()}/hangup")
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
       }
@@ -553,10 +613,11 @@ public class Realtime internal constructor(
           private val callId: String,
         ) {
           public suspend operator fun invoke(body: RealtimeCallReferRequest) {
-            client.post("/realtime/calls/$callId/refer") {
+            val response = client.post("realtime/calls/${callId.encodeURLParameter()}/refer") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
       }
@@ -572,12 +633,13 @@ public class Realtime internal constructor(
           private val callId: String,
         ) {
           public suspend operator fun invoke(body: RealtimeCallRejectRequest? = null) {
-            client.post("/realtime/calls/$callId/reject") {
+            val response = client.post("realtime/calls/${callId.encodeURLParameter()}/reject") {
               body?.let {
                 contentType(ContentType.Application.Json)
                 setBody(it)
               }
             }
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
       }
@@ -592,10 +654,14 @@ public class Realtime internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: RealtimeCreateClientSecretRequest): RealtimeCreateClientSecretResponse = client.post("/realtime/client_secrets") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: RealtimeCreateClientSecretRequest): RealtimeCreateClientSecretResponse {
+        val response = client.post("realtime/client_secrets") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 
@@ -607,10 +673,14 @@ public class Realtime internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: RealtimeSessionCreateRequest): RealtimeSessionCreateResponse = client.post("/realtime/sessions") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: RealtimeSessionCreateRequest): RealtimeSessionCreateResponse {
+        val response = client.post("realtime/sessions") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 
@@ -622,10 +692,14 @@ public class Realtime internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: RealtimeTranscriptionSessionCreateRequest): RealtimeTranscriptionSessionCreateResponse = client.post("/realtime/transcription_sessions") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: RealtimeTranscriptionSessionCreateRequest): RealtimeTranscriptionSessionCreateResponse {
+        val response = client.post("realtime/transcription_sessions") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 }

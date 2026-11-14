@@ -1,5 +1,8 @@
 package io.openai.model
 
+import kotlin.OptIn
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 /**
@@ -9,8 +12,10 @@ import kotlinx.serialization.Serializable
  * - [Structured Outputs](/docs/guides/structured-outputs)
  *
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class ResponseTextParam(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val format: TextResponseFormatConfiguration? = null,
   public val verbosity: Verbosity? = null,
 )

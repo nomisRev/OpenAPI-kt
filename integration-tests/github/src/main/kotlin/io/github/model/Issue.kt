@@ -7,6 +7,7 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -20,10 +21,13 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Issues are a great way to keep track of tasks, enhancements, and bugs for your projects.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Issue(
   public val id: Long,
@@ -49,6 +53,7 @@ public data class Issue(
   public val user: NullableSimpleUser?,
   public val labels: List<Labels>,
   public val assignee: NullableSimpleUser?,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val assignees: List<SimpleUser>? = null,
   public val milestone: NullableMilestone?,
   public val locked: Boolean,
@@ -56,6 +61,7 @@ public data class Issue(
   public val activeLockReason: String? = null,
   public val comments: Long,
   @SerialName("pull_request")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val pullRequest: PullRequest? = null,
   @SerialName("closed_at")
   public val closedAt: Instant?,
@@ -63,31 +69,41 @@ public data class Issue(
   public val createdAt: Instant,
   @SerialName("updated_at")
   public val updatedAt: Instant,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val draft: Boolean? = null,
   @SerialName("closed_by")
   public val closedBy: NullableSimpleUser? = null,
   @SerialName("body_html")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val bodyHtml: String? = null,
   @SerialName("body_text")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val bodyText: String? = null,
   @SerialName("timeline_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val timelineUrl: String? = null,
   public val type: IssueType? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val repository: Repository? = null,
   @SerialName("performed_via_github_app")
   public val performedViaGithubApp: NullableIntegration? = null,
   @SerialName("author_association")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val authorAssociation: AuthorAssociation? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val reactions: ReactionRollup? = null,
   @SerialName("sub_issues_summary")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val subIssuesSummary: SubIssuesSummary? = null,
   @SerialName("parent_issue_url")
   public val parentIssueUrl: String? = null,
   @SerialName("pinned_comment")
   public val pinnedComment: NullableIssueComment? = null,
   @SerialName("issue_dependencies_summary")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val issueDependenciesSummary: IssueDependenciesSummary? = null,
   @SerialName("issue_field_values")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val issueFieldValues: List<IssueFieldValue>? = null,
 ) {
   @Serializable(with = Labels.Serializer::class)
@@ -98,15 +114,21 @@ public data class Issue(
       public val `value`: String,
     ) : Labels
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class IdAndNodeIdAndUrlAndNameAndDescriptionAndColorAndDefault(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val id: Long? = null,
       @SerialName("node_id")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val nodeId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val url: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val name: String? = null,
       public val description: String? = null,
       public val color: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val default: Boolean? = null,
     ) : Labels
 
@@ -124,11 +146,17 @@ public data class Issue(
       override fun deserialize(decoder: Decoder): Labels {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          IdAndNodeIdAndUrlAndNameAndDescriptionAndColorAndDefault::class to { decodeFromJsonElement(IdAndNodeIdAndUrlAndNameAndDescriptionAndColorAndDefault.serializer(), it) },
-          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+          )
+          value is JsonObject -> json.attemptDeserialize(
+            value,
+            IdAndNodeIdAndUrlAndNameAndDescriptionAndColorAndDefault::class to { decodeFromJsonElement(IdAndNodeIdAndUrlAndNameAndDescriptionAndColorAndDefault.serializer(), it) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: Labels) {

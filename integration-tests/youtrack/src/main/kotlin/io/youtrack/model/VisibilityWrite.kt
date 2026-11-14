@@ -2,6 +2,7 @@ package io.youtrack.model
 
 import kotlin.OptIn
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -23,9 +24,12 @@ public sealed interface VisibilityWrite {
   public class UnlimitedVisibility() : VisibilityWrite
 
   @SerialName("LimitedVisibility")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class LimitedVisibility(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val permittedGroups: List<UserGroupWrite>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val permittedUsers: List<UserWrite>? = null,
   ) : VisibilityWrite
 }

@@ -2,8 +2,9 @@ package io.youtrack.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import io.youtrack.model.ActivityItem
 import kotlin.Boolean
 import kotlin.Int
@@ -30,17 +31,39 @@ public class Activities internal constructor(
       fields: String? = "${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp",
       skip: Int? = null,
       top: Int? = null,
-    ): List<ActivityItem> = client.get("/activities") {
-      categories?.let { parameter("categories", it) }
-      reverse?.let { parameter("reverse", it) }
-      start?.let { parameter("start", it) }
-      end?.let { parameter("end", it) }
-      author?.let { parameter("author", it) }
-      issueQuery?.let { parameter("issueQuery", it) }
-      fields?.let { parameter("fields", it) }
-      skip?.let { parameter("${'$'}skip", it) }
-      top?.let { parameter("${'$'}top", it) }
-    }.body()
+    ): List<ActivityItem> {
+      val response = client.get("activities") {
+        if (categories != null) {
+          url.encodedParameters.append("categories", categories.encodeURLParameter())
+        }
+        if (reverse != null) {
+          url.encodedParameters.append("reverse", reverse.toString())
+        }
+        if (start != null) {
+          url.encodedParameters.append("start", start.encodeURLParameter())
+        }
+        if (end != null) {
+          url.encodedParameters.append("end", end.encodeURLParameter())
+        }
+        if (author != null) {
+          url.encodedParameters.append("author", author.encodeURLParameter())
+        }
+        if (issueQuery != null) {
+          url.encodedParameters.append("issueQuery", issueQuery.encodeURLParameter())
+        }
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        if (skip != null) {
+          url.encodedParameters.append("%24skip", skip.toString())
+        }
+        if (top != null) {
+          url.encodedParameters.append("%24top", top.toString())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class IdPath internal constructor(
@@ -53,9 +76,15 @@ public class Activities internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp"): ActivityItem = client.get("/activities/$id") {
-        fields?.let { parameter("fields", it) }
-      }.body()
+      public suspend operator fun invoke(fields: String? = "${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp"): ActivityItem {
+        val response = client.get("activities/${id.encodeURLParameter()}") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 }

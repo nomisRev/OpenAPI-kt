@@ -1,15 +1,18 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Pull Request Review Comments are comments on a portion of the Pull Request's diff.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class PullRequestReviewComment(
   public val url: String,
@@ -21,14 +24,17 @@ public data class PullRequestReviewComment(
   @SerialName("diff_hunk")
   public val diffHunk: String,
   public val path: String,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val position: Long? = null,
   @SerialName("original_position")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val originalPosition: Long? = null,
   @SerialName("commit_id")
   public val commitId: String,
   @SerialName("original_commit_id")
   public val originalCommitId: String,
   @SerialName("in_reply_to_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val inReplyToId: Long? = null,
   public val user: NullableSimpleUser?,
   public val body: String,
@@ -50,16 +56,23 @@ public data class PullRequestReviewComment(
   public val originalStartLine: Long? = null,
   @SerialName("start_side")
   public val startSide: StartSide? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val line: Long? = null,
   @SerialName("original_line")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val originalLine: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val side: Side? = null,
   @SerialName("subject_type")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val subjectType: SubjectType? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val reactions: ReactionRollup? = null,
   @SerialName("body_html")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val bodyHtml: String? = null,
   @SerialName("body_text")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val bodyText: String? = null,
 ) {
   @Serializable
@@ -69,21 +82,18 @@ public data class PullRequestReviewComment(
     @SerialName("pull_request")
     public val pullRequest: PullRequest,
   ) {
-    @JvmInline
     @Serializable
-    public value class Html(
+    public data class Html(
       public val href: String,
     )
 
-    @JvmInline
     @Serializable
-    public value class PullRequest(
+    public data class PullRequest(
       public val href: String,
     )
 
-    @JvmInline
     @Serializable
-    public value class Self(
+    public data class Self(
       public val href: String,
     )
   }

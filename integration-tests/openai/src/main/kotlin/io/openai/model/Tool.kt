@@ -5,7 +5,9 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.Map
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -20,7 +22,6 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
@@ -36,16 +37,17 @@ public sealed interface Tool {
   /**
    * Defines a function in your own code the model can choose to call. Learn more about [function calling](https://platform.openai.com/docs/guides/function-calling).
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Function(
     @Required
     public val type: Type = Type.Function,
     public val name: String,
     public val description: String? = null,
-    @Required
-    public val parameters: JsonArray? = null,
+    public val parameters: Map<String, JsonElement>?,
     public val strict: Boolean?,
     @SerialName("defer_loading")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val deferLoading: Boolean? = null,
   ) : Tool {
     @Serializable
@@ -61,6 +63,7 @@ public sealed interface Tool {
   /**
    * A tool that searches for relevant content from uploaded files. Learn more about the [file search tool](https://platform.openai.com/docs/guides/tools-file-search).
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class FileSearch(
     @Required
@@ -68,8 +71,10 @@ public sealed interface Tool {
     @SerialName("vector_store_ids")
     public val vectorStoreIds: List<String>,
     @SerialName("max_num_results")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val maxNumResults: Long? = null,
     @SerialName("ranking_options")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val rankingOptions: RankingOptions? = null,
     public val filters: Filters? = null,
   ) : Tool {
@@ -86,9 +91,8 @@ public sealed interface Tool {
   /**
    * A tool that controls a virtual computer. Learn more about the [computer tool](https://platform.openai.com/docs/guides/tools-computer-use).
    */
-  @JvmInline
   @Serializable
-  public value class Computer(
+  public data class Computer(
     @Required
     public val type: Type = Type.Computer,
   ) : Tool {
@@ -130,6 +134,7 @@ public sealed interface Tool {
    * [web search tool](/docs/guides/tools-web-search).
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class WebSearchTool(
     @Required
@@ -138,15 +143,15 @@ public sealed interface Tool {
     @SerialName("user_location")
     public val userLocation: WebSearchApproximateLocation? = null,
     @SerialName("search_context_size")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val searchContextSize: SearchContextSize? = null,
   ) : Tool {
     /**
      * Filters for the search.
      *
      */
-    @JvmInline
     @Serializable
-    public value class Filters(
+    public data class Filters(
       @SerialName("allowed_domains")
       public val allowedDomains: List<String>? = null,
     )
@@ -181,24 +186,30 @@ public sealed interface Tool {
    * (MCP) servers. [Learn more about MCP](/docs/guides/tools-remote-mcp).
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Mcp(
     public val type: Type,
     @SerialName("server_label")
     public val serverLabel: String,
     @SerialName("server_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val serverUrl: String? = null,
     @SerialName("connector_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val connectorId: ConnectorId? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val authorization: String? = null,
     @SerialName("server_description")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val serverDescription: String? = null,
-    public val headers: List<String>? = null,
+    public val headers: Map<String, String>? = null,
     @SerialName("allowed_tools")
     public val allowedTools: AllowedTools? = null,
     @SerialName("require_approval")
     public val requireApproval: RequireApproval? = null,
     @SerialName("defer_loading")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val deferLoading: Boolean? = null,
   ) : Tool {
     /**
@@ -283,9 +294,12 @@ public sealed interface Tool {
        * that require approval.
        *
        */
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class MCPToolApprovalFilter(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val always: MCPToolFilter? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val never: MCPToolFilter? = null,
       ) : RequireApproval
 
@@ -314,11 +328,17 @@ public sealed interface Tool {
         override fun deserialize(decoder: Decoder): RequireApproval {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            MCPToolApprovalFilter::class to { decodeFromJsonElement(MCPToolApprovalFilter.serializer(), it) },
-            MCPToolApprovalSetting::class to { decodeFromJsonElement(MCPToolApprovalSetting.serializer(), it) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              MCPToolApprovalSetting::class to { decodeFromJsonElement(MCPToolApprovalSetting.serializer(), it) },
+            )
+            value is JsonObject -> json.attemptDeserialize(
+              value,
+              MCPToolApprovalFilter::class to { decodeFromJsonElement(MCPToolApprovalFilter.serializer(), it) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
 
         override fun serialize(encoder: Encoder, `value`: RequireApproval) {
@@ -383,11 +403,17 @@ public sealed interface Tool {
         override fun deserialize(decoder: Decoder): Container {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseAutoCodeInterpreterToolParam::class to { CaseAutoCodeInterpreterToolParam(decodeFromJsonElement(AutoCodeInterpreterToolParam.serializer(), it)) },
-            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+            )
+            value is JsonObject -> json.attemptDeserialize(
+              value,
+              CaseAutoCodeInterpreterToolParam::class to { CaseAutoCodeInterpreterToolParam(decodeFromJsonElement(AutoCodeInterpreterToolParam.serializer(), it)) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
 
         override fun serialize(encoder: Encoder, `value`: Container) {
@@ -413,24 +439,35 @@ public sealed interface Tool {
    * A tool that generates images using the GPT image models.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class ImageGeneration(
     public val type: Type,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val model: Model? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val quality: Quality? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val size: Size? = null,
     @SerialName("output_format")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val outputFormat: OutputFormat? = null,
     @SerialName("output_compression")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val outputCompression: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val moderation: Moderation? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val background: Background? = null,
     @SerialName("input_fidelity")
     public val inputFidelity: InputFidelity? = null,
     @SerialName("input_image_mask")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val inputImageMask: InputImageMask? = null,
     @SerialName("partial_images")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val partialImages: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val action: ImageGenActionEnum? = null,
   ) : Tool {
     @Serializable
@@ -451,11 +488,14 @@ public sealed interface Tool {
      * (string, optional) and `file_id` (string, optional).
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class InputImageMask(
       @SerialName("image_url")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val imageUrl: String? = null,
       @SerialName("file_id")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val fileId: String? = null,
     )
 
@@ -567,9 +607,8 @@ public sealed interface Tool {
   /**
    * A tool that allows the model to execute shell commands in a local environment.
    */
-  @JvmInline
   @Serializable
-  public value class LocalShell(
+  public data class LocalShell(
     @Required
     public val type: Type = Type.LocalShell,
   ) : Tool {
@@ -597,14 +636,18 @@ public sealed interface Tool {
     @Serializable
     public sealed interface Environment {
       @SerialName("container_auto")
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class ContainerAuto(
         @SerialName("file_ids")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val fileIds: List<String>? = null,
         @SerialName("memory_limit")
         public val memoryLimit: ContainerMemoryLimit? = null,
         @SerialName("network_policy")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val networkPolicy: NetworkPolicy? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val skills: List<Skills>? = null,
       ) : Environment {
         /**
@@ -619,11 +662,13 @@ public sealed interface Tool {
           public data object Disabled : NetworkPolicy
 
           @SerialName("allowlist")
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Allowlist(
             @SerialName("allowed_domains")
             public val allowedDomains: List<String>,
             @SerialName("domain_secrets")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val domainSecrets: List<ContainerNetworkPolicyDomainSecretParam>? = null,
           ) : NetworkPolicy
         }
@@ -633,10 +678,12 @@ public sealed interface Tool {
         @Serializable
         public sealed interface Skills {
           @SerialName("skill_reference")
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class SkillReference(
             @SerialName("skill_id")
             public val skillId: String,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val version: String? = null,
           ) : Skills
 
@@ -650,17 +697,17 @@ public sealed interface Tool {
         }
       }
 
-      @JvmInline
       @SerialName("local")
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
-      public value class Local(
+      public data class Local(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val skills: List<LocalSkillParam>? = null,
       ) : Environment
 
-      @JvmInline
       @SerialName("container_reference")
       @Serializable
-      public value class ContainerReference(
+      public data class ContainerReference(
         @SerialName("container_id")
         public val containerId: String,
       ) : Environment
@@ -679,14 +726,18 @@ public sealed interface Tool {
   /**
    * A custom tool that processes input using a specified format. Learn more about   [custom tools](/docs/guides/function-calling#custom-tools)
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Custom(
     @Required
     public val type: Type = Type.Custom,
     public val name: String,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val description: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val format: Format? = null,
     @SerialName("defer_loading")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val deferLoading: Boolean? = null,
   ) : Tool {
     /**
@@ -752,12 +803,16 @@ public sealed interface Tool {
        * A custom tool that processes input using a specified format. Learn more about   [custom tools](/docs/guides/function-calling#custom-tools)
        */
       @SerialName("custom")
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class Custom(
         public val name: String,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val description: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val format: Format? = null,
         @SerialName("defer_loading")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val deferLoading: Boolean? = null,
       ) : Tools {
         /**
@@ -797,10 +852,12 @@ public sealed interface Tool {
   /**
    * Hosted or BYOT tool search configuration for deferred tools.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class ToolSearch(
     @Required
     public val type: Type = Type.ToolSearch,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val execution: ToolSearchExecutionType? = null,
     public val description: String? = null,
     public val parameters: EmptyModelParam? = null,
@@ -818,6 +875,7 @@ public sealed interface Tool {
   /**
    * This tool searches the web for relevant results to use in a response. Learn more about the [web search tool](https://platform.openai.com/docs/guides/tools-web-search).
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class WebSearchPreviewTool(
     @Required
@@ -825,8 +883,10 @@ public sealed interface Tool {
     @SerialName("user_location")
     public val userLocation: ApproximateLocation? = null,
     @SerialName("search_context_size")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val searchContextSize: SearchContextSize? = null,
     @SerialName("search_content_types")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val searchContentTypes: List<SearchContentType>? = null,
   ) : Tool {
     @Serializable
@@ -844,9 +904,8 @@ public sealed interface Tool {
   /**
    * Allows the assistant to create, delete, or update files using unified diffs.
    */
-  @JvmInline
   @Serializable
-  public value class ApplyPatch(
+  public data class ApplyPatch(
     @Required
     public val type: Type = Type.ApplyPatch,
   ) : Tool {

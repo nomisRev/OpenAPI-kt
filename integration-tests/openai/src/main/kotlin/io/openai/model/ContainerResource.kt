@@ -1,11 +1,15 @@
 package io.openai.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class ContainerResource(
   public val id: String,
@@ -15,12 +19,16 @@ public data class ContainerResource(
   public val createdAt: Long,
   public val status: String,
   @SerialName("last_active_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val lastActiveAt: Long? = null,
   @SerialName("expires_after")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val expiresAfter: ExpiresAfter? = null,
   @SerialName("memory_limit")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val memoryLimit: MemoryLimit? = null,
   @SerialName("network_policy")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val networkPolicy: NetworkPolicy? = null,
 ) {
   /**
@@ -29,9 +37,12 @@ public data class ContainerResource(
    * The minutes is the number of minutes after the anchor before the container expires.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class ExpiresAfter(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val anchor: Anchor? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val minutes: Long? = null,
   ) {
     @Serializable
@@ -55,10 +66,12 @@ public data class ContainerResource(
   /**
    * Network access policy for the container.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class NetworkPolicy(
     public val type: Type,
     @SerialName("allowed_domains")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val allowedDomains: List<String>? = null,
   ) {
     @Serializable

@@ -2,9 +2,12 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -12,6 +15,7 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Minimal Repository
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class MinimalRepository(
   public val id: Long,
@@ -62,6 +66,7 @@ public data class MinimalRepository(
   @SerialName("git_tags_url")
   public val gitTagsUrl: String,
   @SerialName("git_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val gitUrl: String? = null,
   @SerialName("issue_comment_url")
   public val issueCommentUrl: String,
@@ -86,6 +91,7 @@ public data class MinimalRepository(
   @SerialName("releases_url")
   public val releasesUrl: String,
   @SerialName("ssh_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val sshUrl: String? = null,
   @SerialName("stargazers_url")
   public val stargazersUrl: String,
@@ -102,49 +108,71 @@ public data class MinimalRepository(
   @SerialName("trees_url")
   public val treesUrl: String,
   @SerialName("clone_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val cloneUrl: String? = null,
   @SerialName("mirror_url")
   public val mirrorUrl: String? = null,
   @SerialName("hooks_url")
   public val hooksUrl: String,
   @SerialName("svn_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val svnUrl: String? = null,
   public val homepage: String? = null,
   public val language: String? = null,
   @SerialName("forks_count")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val forksCount: Long? = null,
   @SerialName("stargazers_count")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val stargazersCount: Long? = null,
   @SerialName("watchers_count")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val watchersCount: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val size: Long? = null,
   @SerialName("default_branch")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val defaultBranch: String? = null,
   @SerialName("open_issues_count")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val openIssuesCount: Long? = null,
   @SerialName("is_template")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val isTemplate: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val topics: List<String>? = null,
   @SerialName("has_issues")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasIssues: Boolean? = null,
   @SerialName("has_projects")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasProjects: Boolean? = null,
   @SerialName("has_wiki")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasWiki: Boolean? = null,
   @SerialName("has_pages")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasPages: Boolean? = null,
   @SerialName("has_downloads")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasDownloads: Boolean? = null,
   @SerialName("has_discussions")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasDiscussions: Boolean? = null,
   @SerialName("has_pull_requests")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasPullRequests: Boolean? = null,
   @SerialName("pull_request_creation_policy")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val pullRequestCreationPolicy: PullRequestCreationPolicy? = null,
   @SerialName("has_commit_comments")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasCommitComments: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val archived: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val disabled: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val visibility: String? = null,
   @SerialName("pushed_at")
   public val pushedAt: Instant? = null,
@@ -152,50 +180,74 @@ public data class MinimalRepository(
   public val createdAt: Instant? = null,
   @SerialName("updated_at")
   public val updatedAt: Instant? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val permissions: Permissions? = null,
   @SerialName("role_name")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val roleName: String? = null,
   @SerialName("temp_clone_token")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tempCloneToken: String? = null,
   @SerialName("delete_branch_on_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val deleteBranchOnMerge: Boolean? = null,
   @SerialName("subscribers_count")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val subscribersCount: Long? = null,
   @SerialName("network_count")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val networkCount: Long? = null,
   @SerialName("code_of_conduct")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val codeOfConduct: CodeOfConduct? = null,
   public val license: License? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val forks: Long? = null,
   @SerialName("open_issues")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val openIssues: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val watchers: Long? = null,
   @SerialName("allow_forking")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowForking: Boolean? = null,
   @SerialName("web_commit_signoff_required")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val webCommitSignoffRequired: Boolean? = null,
   @SerialName("security_and_analysis")
   public val securityAndAnalysis: SecurityAndAnalysis? = null,
   @SerialName("custom_properties")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val customProperties: JsonElement? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class License(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val key: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
     @SerialName("spdx_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val spdxId: String? = null,
     public val url: String? = null,
     @SerialName("node_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val nodeId: String? = null,
   )
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Permissions(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val admin: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val maintain: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val push: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val triage: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val pull: Boolean? = null,
   )
 

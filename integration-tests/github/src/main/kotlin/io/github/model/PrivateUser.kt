@@ -2,19 +2,24 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Private User
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class PrivateUser(
   public val login: String,
   public val id: Long,
   @SerialName("user_view_type")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val userViewType: String? = null,
   @SerialName("node_id")
   public val nodeId: String,
@@ -78,10 +83,13 @@ public data class PrivateUser(
   public val collaborators: Long,
   @SerialName("two_factor_authentication")
   public val twoFactorAuthentication: Boolean,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val plan: Plan? = null,
   @SerialName("business_plus")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val businessPlus: Boolean? = null,
   @SerialName("ldap_dn")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val ldapDn: String? = null,
 ) {
   @Serializable

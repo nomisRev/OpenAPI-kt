@@ -5,6 +5,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.KeepGeneratedSerializer
@@ -26,27 +27,38 @@ import kotlinx.serialization.json.JsonObject
 @Serializable(with = CopilotDotcomPullRequests.Serializer::class)
 public data class CopilotDotcomPullRequests(
   @SerialName("total_engaged_users")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val totalEngagedUsers: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val repositories: List<Repositories>? = null,
   public val additional: JsonObject? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Repositories(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
     @SerialName("total_engaged_users")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val totalEngagedUsers: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val models: List<Models>? = null,
   ) {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Models(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val name: String? = null,
       @SerialName("is_custom_model")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val isCustomModel: Boolean? = null,
       @SerialName("custom_model_training_date")
       public val customModelTrainingDate: String? = null,
       @SerialName("total_pr_summaries_created")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val totalPrSummariesCreated: Long? = null,
       @SerialName("total_engaged_users")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val totalEngagedUsers: Long? = null,
     )
   }

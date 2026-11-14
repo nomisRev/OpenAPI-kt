@@ -4,7 +4,6 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -29,10 +28,9 @@ public sealed interface ResponseStreamEvent {
   /**
    * Emitted when the audio response is complete.
    */
-  @JvmInline
   @SerialName("response.audio.done")
   @Serializable
-  public value class ResponseAudioDone(
+  public data class ResponseAudioDone(
     @SerialName("sequence_number")
     public val sequenceNumber: Long,
   ) : ResponseStreamEvent
@@ -51,10 +49,9 @@ public sealed interface ResponseStreamEvent {
   /**
    * Emitted when the full audio transcript is completed.
    */
-  @JvmInline
   @SerialName("response.audio.transcript.done")
   @Serializable
-  public value class ResponseAudioTranscriptDone(
+  public data class ResponseAudioTranscriptDone(
     @SerialName("sequence_number")
     public val sequenceNumber: Long,
   ) : ResponseStreamEvent

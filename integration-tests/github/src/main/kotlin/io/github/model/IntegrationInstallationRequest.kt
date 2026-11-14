@@ -5,6 +5,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -21,10 +22,12 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Request to install an integration on a target
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class IntegrationInstallationRequest(
   public val id: Long,
   @SerialName("node_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val nodeId: String? = null,
   public val account: Account,
   public val requester: SimpleUser,

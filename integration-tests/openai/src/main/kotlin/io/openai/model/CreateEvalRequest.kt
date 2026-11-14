@@ -6,15 +6,17 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonElement
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateEvalRequest(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val name: String? = null,
   public val metadata: Metadata? = null,
   @SerialName("data_source_config")
@@ -37,11 +39,13 @@ public data class CreateEvalRequest(
      *
      */
     @SerialName("custom")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Custom(
       @SerialName("item_schema")
       public val itemSchema: JsonElement,
       @SerialName("include_sample_schema")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val includeSampleSchema: Boolean? = null,
     ) : DataSourceConfig
 
@@ -50,10 +54,11 @@ public data class CreateEvalRequest(
      * This is usually metadata like `usecase=chatbot` or `prompt-version=v2`, etc.
      *
      */
-    @JvmInline
     @SerialName("logs")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
-    public value class Logs(
+    public data class Logs(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val metadata: JsonElement? = null,
     ) : DataSourceConfig
 
@@ -61,10 +66,11 @@ public data class CreateEvalRequest(
      * Deprecated in favor of LogsDataSourceConfig.
      *
      */
-    @JvmInline
     @SerialName("stored_completions")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
-    public value class StoredCompletions(
+    public data class StoredCompletions(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val metadata: JsonElement? = null,
     ) : DataSourceConfig
   }
@@ -167,13 +173,16 @@ public data class CreateEvalRequest(
      *
      */
     @SerialName("python")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Python(
       public val name: String,
       public val source: String,
       @SerialName("image_tag")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val imageTag: String? = null,
       @SerialName("pass_threshold")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val passThreshold: Double? = null,
     ) : TestingCriteria
 
@@ -182,15 +191,19 @@ public data class CreateEvalRequest(
      *
      */
     @SerialName("score_model")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ScoreModel(
       public val name: String,
       public val model: String,
       @SerialName("sampling_params")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val samplingParams: SamplingParams? = null,
       public val input: List<EvalItem>,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val range: List<Double>? = null,
       @SerialName("pass_threshold")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val passThreshold: Double? = null,
     ) : TestingCriteria {
       /**

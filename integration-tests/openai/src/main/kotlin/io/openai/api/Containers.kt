@@ -2,15 +2,16 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.openai.model.ContainerFileListResource
 import io.openai.model.ContainerFileResource
 import io.openai.model.ContainerListResource
@@ -40,12 +41,24 @@ public class Containers internal constructor(
       order: Order? = Order.Desc,
       after: String? = null,
       name: String? = null,
-    ): ContainerListResource = client.get("/containers") {
-      limit?.let { parameter("limit", it) }
-      order?.let { parameter("order", it.value) }
-      after?.let { parameter("after", it) }
-      name?.let { parameter("name", it) }
-    }.body()
+    ): ContainerListResource {
+      val response = client.get("containers") {
+        if (limit != null) {
+          url.encodedParameters.append("limit", limit.toString())
+        }
+        if (order != null) {
+          url.encodedParameters.append("order", order.value.encodeURLParameter())
+        }
+        if (after != null) {
+          url.encodedParameters.append("after", after.encodeURLParameter())
+        }
+        if (name != null) {
+          url.encodedParameters.append("name", name.encodeURLParameter())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
     @Serializable
     public enum class Order(
@@ -62,12 +75,16 @@ public class Containers internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(body: CreateContainerBody? = null): ContainerResource = client.post("/containers") {
-      body?.let {
-        contentType(ContentType.Application.Json)
-        setBody(it)
+    public suspend operator fun invoke(body: CreateContainerBody? = null): ContainerResource {
+      val response = client.post("containers") {
+        body?.let {
+          contentType(ContentType.Application.Json)
+          setBody(it)
+        }
       }
-    }.body()
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class ContainerIdPath internal constructor(
@@ -85,7 +102,8 @@ public class Containers internal constructor(
       private val containerId: String,
     ) {
       public suspend operator fun invoke() {
-        client.delete("/containers/$containerId")
+        val response = client.delete("containers/${containerId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
 
@@ -93,7 +111,11 @@ public class Containers internal constructor(
       private val client: HttpClient,
       private val containerId: String,
     ) {
-      public suspend operator fun invoke(): ContainerResource = client.get("/containers/$containerId").body()
+      public suspend operator fun invoke(): ContainerResource {
+        val response = client.get("containers/${containerId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Files internal constructor(
@@ -114,11 +136,21 @@ public class Containers internal constructor(
           limit: Long? = 20L,
           order: Order? = Order.Desc,
           after: String? = null,
-        ): ContainerFileListResource = client.get("/containers/$containerId/files") {
-          limit?.let { parameter("limit", it) }
-          order?.let { parameter("order", it.value) }
-          after?.let { parameter("after", it) }
-        }.body()
+        ): ContainerFileListResource {
+          val response = client.get("containers/${containerId.encodeURLParameter()}/files") {
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (order != null) {
+              url.encodedParameters.append("order", order.value.encodeURLParameter())
+            }
+            if (after != null) {
+              url.encodedParameters.append("after", after.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Order(
@@ -136,21 +168,29 @@ public class Containers internal constructor(
         private val client: HttpClient,
         private val containerId: String,
       ) {
-        public suspend operator fun invoke(body: CreateContainerFileBody): ContainerFileResource = client.post("/containers/$containerId/files") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
+        public suspend operator fun invoke(body: CreateContainerFileBody): ContainerFileResource {
+          val response = client.post("containers/${containerId.encodeURLParameter()}/files") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
-        public suspend operator fun invoke(fileId: String? = null, `file`: ByteArray? = null): ContainerFileResource = client.post("/containers/$containerId/files") {
-          setBody(MultiPartFormDataContent(formData {
-            if (fileId != null) {
-              append("file_id", fileId)
-            }
-            if (file != null) {
-              append("file", file)
-            }
-          }))
-        }.body()
+        public suspend operator fun invoke(fileId: String? = null, `file`: ByteArray? = null): ContainerFileResource {
+          val response = client.post("containers/${containerId.encodeURLParameter()}/files") {
+            setBody(MultiPartFormDataContent(formData {
+              if (fileId != null) {
+                append("file_id", fileId)
+              }
+              if (file != null) {
+                append("file", file)
+              }
+            }))
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class FileIdPath internal constructor(
@@ -170,7 +210,8 @@ public class Containers internal constructor(
           private val fileId: String,
         ) {
           public suspend operator fun invoke() {
-            client.delete("/containers/$containerId/files/$fileId")
+            val response = client.delete("containers/${containerId.encodeURLParameter()}/files/${fileId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
 
@@ -179,7 +220,11 @@ public class Containers internal constructor(
           private val containerId: String,
           private val fileId: String,
         ) {
-          public suspend operator fun invoke(): ContainerFileResource = client.get("/containers/$containerId/files/$fileId").body()
+          public suspend operator fun invoke(): ContainerFileResource {
+            val response = client.get("containers/${containerId.encodeURLParameter()}/files/${fileId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Content internal constructor(
@@ -195,7 +240,8 @@ public class Containers internal constructor(
             private val fileId: String,
           ) {
             public suspend operator fun invoke() {
-              client.get("/containers/$containerId/files/$fileId/content")
+              val response = client.get("containers/${containerId.encodeURLParameter()}/files/${fileId.encodeURLParameter()}/content")
+              if (response.status.value != 200) throw ResponseException(response, "")
             }
           }
         }

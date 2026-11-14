@@ -17,7 +17,7 @@ public class Versions internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("/versions")
+      val response = client.get("versions")
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
         404 -> Response.NotFound(response.body())

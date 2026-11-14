@@ -8,7 +8,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
@@ -40,7 +40,7 @@ public class MarketplaceListing internal constructor(
         private val accountId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("/marketplace_listing/accounts/$accountId")
+          val response = client.get("marketplace_listing/accounts/$accountId")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             401 -> Response.Unauthorized(response.body())
@@ -77,9 +77,13 @@ public class MarketplaceListing internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("/marketplace_listing/plans") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
+        val response = client.get("marketplace_listing/plans") {
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
         }
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
@@ -126,11 +130,19 @@ public class MarketplaceListing internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("/marketplace_listing/plans/$planId/accounts") {
-              sort?.let { parameter("sort", it.value) }
-              direction?.let { parameter("direction", it.value) }
-              perPage?.let { parameter("per_page", it) }
-              page?.let { parameter("page", it) }
+            val response = client.get("marketplace_listing/plans/$planId/accounts") {
+              if (sort != null) {
+                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              }
+              if (direction != null) {
+                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              }
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -208,7 +220,7 @@ public class MarketplaceListing internal constructor(
           private val accountId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/marketplace_listing/stubbed/accounts/$accountId")
+            val response = client.get("marketplace_listing/stubbed/accounts/$accountId")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               401 -> Response.Unauthorized(response.body())
@@ -243,9 +255,13 @@ public class MarketplaceListing internal constructor(
         private val client: HttpClient,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("/marketplace_listing/stubbed/plans") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("marketplace_listing/stubbed/plans") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -287,11 +303,19 @@ public class MarketplaceListing internal constructor(
               perPage: Long? = 30L,
               page: Long? = 1L,
             ): Response {
-              val response = client.get("/marketplace_listing/stubbed/plans/$planId/accounts") {
-                sort?.let { parameter("sort", it.value) }
-                direction?.let { parameter("direction", it.value) }
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
+              val response = client.get("marketplace_listing/stubbed/plans/$planId/accounts") {
+                if (sort != null) {
+                  url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                }
+                if (direction != null) {
+                  url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                }
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())

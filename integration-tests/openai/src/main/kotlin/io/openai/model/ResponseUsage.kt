@@ -1,7 +1,6 @@
 package io.openai.model
 
 import kotlin.Long
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -26,9 +25,8 @@ public data class ResponseUsage(
   /**
    * A detailed breakdown of the input tokens.
    */
-  @JvmInline
   @Serializable
-  public value class InputTokensDetails(
+  public data class InputTokensDetails(
     @SerialName("cached_tokens")
     public val cachedTokens: Long,
   )
@@ -36,9 +34,8 @@ public data class ResponseUsage(
   /**
    * A detailed breakdown of the output tokens.
    */
-  @JvmInline
   @Serializable
-  public value class OutputTokensDetails(
+  public data class OutputTokensDetails(
     @SerialName("reasoning_tokens")
     public val reasoningTokens: Long,
   )

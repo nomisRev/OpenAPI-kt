@@ -7,7 +7,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
@@ -28,10 +28,16 @@ public class Licenses internal constructor(
       perPage: Long? = 30L,
       page: Long? = 1L,
     ): Response {
-      val response = client.get("/licenses") {
-        featured?.let { parameter("featured", it) }
-        perPage?.let { parameter("per_page", it) }
-        page?.let { parameter("page", it) }
+      val response = client.get("licenses") {
+        if (featured != null) {
+          url.encodedParameters.append("featured", featured.toString())
+        }
+        if (perPage != null) {
+          url.encodedParameters.append("per_page", perPage.toString())
+        }
+        if (page != null) {
+          url.encodedParameters.append("page", page.toString())
+        }
       }
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
@@ -60,7 +66,7 @@ public class Licenses internal constructor(
       private val license: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("/licenses/$license")
+        val response = client.get("licenses/${license.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           304 -> Response.NotModified

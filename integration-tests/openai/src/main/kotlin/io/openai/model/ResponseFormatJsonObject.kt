@@ -1,7 +1,6 @@
 package io.openai.model
 
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -12,9 +11,8 @@ import kotlinx.serialization.Serializable
  * to do so.
  *
  */
-@JvmInline
 @Serializable
-public value class ResponseFormatJsonObject(
+public data class ResponseFormatJsonObject(
   public val type: Type,
 ) {
   @Serializable

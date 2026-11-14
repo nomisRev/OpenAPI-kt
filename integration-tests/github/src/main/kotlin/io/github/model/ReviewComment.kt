@@ -1,14 +1,18 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Legacy Review Comment
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class ReviewComment(
   public val url: String,
@@ -28,6 +32,7 @@ public data class ReviewComment(
   @SerialName("original_commit_id")
   public val originalCommitId: String,
   @SerialName("in_reply_to_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val inReplyToId: Long? = null,
   public val user: NullableSimpleUser?,
   public val body: String,
@@ -44,21 +49,28 @@ public data class ReviewComment(
   @SerialName("_links")
   public val links: Links,
   @SerialName("body_text")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val bodyText: String? = null,
   @SerialName("body_html")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val bodyHtml: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val reactions: ReactionRollup? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val side: Side? = null,
   @SerialName("start_side")
   public val startSide: StartSide? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val line: Long? = null,
   @SerialName("original_line")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val originalLine: Long? = null,
   @SerialName("start_line")
   public val startLine: Long? = null,
   @SerialName("original_start_line")
   public val originalStartLine: Long? = null,
   @SerialName("subject_type")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val subjectType: SubjectType? = null,
 ) {
   @Serializable

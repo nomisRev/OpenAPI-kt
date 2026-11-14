@@ -12,6 +12,6 @@ public data class VectorStoreSearchResultItem(
   public val fileId: String,
   public val filename: String,
   public val score: Double,
-  public val attributes: VectorStoreFileAttributes,
+  public val attributes: VectorStoreFileAttributes?,
   public val content: List<VectorStoreSearchResultContentObject>,
 )

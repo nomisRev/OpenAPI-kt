@@ -30,20 +30,22 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.Map
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -57,11 +59,13 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 
 public class Users internal constructor(
   private val client: HttpClient,
@@ -76,9 +80,13 @@ public class Users internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(since: Long? = null, perPage: Long? = 30L): Response {
-      val response = client.get("/users") {
-        since?.let { parameter("since", it) }
-        perPage?.let { parameter("per_page", it) }
+      val response = client.get("users") {
+        if (since != null) {
+          url.encodedParameters.append("since", since.toString())
+        }
+        if (perPage != null) {
+          url.encodedParameters.append("per_page", perPage.toString())
+        }
       }
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
@@ -133,7 +141,7 @@ public class Users internal constructor(
               filter: String? = null,
               visibleFields: List<Long>? = null,
             ): Response {
-              val response = client.post("/users/$userId/projectsV2/$projectNumber/views") {
+              val response = client.post("users/${userId.encodeURLParameter()}/projectsV2/$projectNumber/views") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, layout = layout, filter = filter, visibleFields = visibleFields))
               }
@@ -162,12 +170,15 @@ public class Users internal constructor(
               ;
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               public val name: String,
               public val layout: Layout,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val filter: String? = null,
               @SerialName("visible_fields")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val visibleFields: List<Long>? = null,
             )
 
@@ -255,7 +266,7 @@ public class Users internal constructor(
       private val username: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("/users/$username")
+        val response = client.get("users/${username.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
           404 -> Response.NotFound(response.body())
@@ -272,6 +283,7 @@ public class Users internal constructor(
            * Private User
            */
           @SerialName("private")
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Private(
             public val login: String,
@@ -338,10 +350,13 @@ public class Users internal constructor(
             public val collaborators: Long,
             @SerialName("two_factor_authentication")
             public val twoFactorAuthentication: Boolean,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val plan: Plan? = null,
             @SerialName("business_plus")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val businessPlus: Boolean? = null,
             @SerialName("ldap_dn")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val ldapDn: String? = null,
           ) : Ok {
             @Serializable
@@ -358,6 +373,7 @@ public class Users internal constructor(
            * Public User
            */
           @SerialName("public")
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Public(
             public val login: String,
@@ -413,15 +429,21 @@ public class Users internal constructor(
             public val createdAt: Instant,
             @SerialName("updated_at")
             public val updatedAt: Instant,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val plan: Plan? = null,
             @SerialName("private_gists")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val privateGists: Long? = null,
             @SerialName("total_private_repos")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val totalPrivateRepos: Long? = null,
             @SerialName("owned_private_repos")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val ownedPrivateRepos: Long? = null,
             @SerialName("disk_usage")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val diskUsage: Long? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val collaborators: Long? = null,
           ) : Ok {
             @Serializable
@@ -471,44 +493,68 @@ public class Users internal constructor(
             perPage: Long? = 30L,
             before: String? = null,
             after: String? = null,
-          ): Response = client.post("/users/$username/attestations/bulk-list") {
-            perPage?.let { parameter("per_page", it) }
-            before?.let { parameter("before", it) }
-            after?.let { parameter("after", it) }
-            contentType(ContentType.Application.Json)
-            setBody(Body(subjectDigests = subjectDigests, predicateType = predicateType))
-          }.body()
+          ): Response {
+            val response = client.post("users/${username.encodeURLParameter()}/attestations/bulk-list") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (before != null) {
+                url.encodedParameters.append("before", before.encodeURLParameter())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              contentType(ContentType.Application.Json)
+              setBody(Body(subjectDigests = subjectDigests, predicateType = predicateType))
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             @SerialName("subject_digests")
             public val subjectDigests: List<String>,
             @SerialName("predicate_type")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val predicateType: String? = null,
           )
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Response(
             @SerialName("attestations_subject_digests")
-            public val attestationsSubjectDigests: List<List<AttestationsSubjectDigests>?>? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val attestationsSubjectDigests:
+                Map<String, List<AttestationsSubjectDigests>?>? = null,
             @SerialName("page_info")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val pageInfo: PageInfo? = null,
           ) {
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class AttestationsSubjectDigests(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val bundle: Bundle? = null,
               @SerialName("repository_id")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val repositoryId: Long? = null,
               @SerialName("bundle_url")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val bundleUrl: String? = null,
             ) {
               /**
                * The bundle of the attestation.
                */
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class Bundle(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val mediaType: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val verificationMaterial: JsonElement? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val dsseEnvelope: JsonElement? = null,
               )
             }
@@ -516,13 +562,18 @@ public class Users internal constructor(
             /**
              * Information about the current page.
              */
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class PageInfo(
               @SerialName("has_next")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val hasNext: Boolean? = null,
               @SerialName("has_previous")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val hasPrevious: Boolean? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val next: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val previous: String? = null,
             )
           }
@@ -540,7 +591,7 @@ public class Users internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke(body: JsonElement): Response {
-            val response = client.post("/users/$username/attestations/delete-request") {
+            val response = client.post("users/${username.encodeURLParameter()}/attestations/delete-request") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -580,7 +631,7 @@ public class Users internal constructor(
             private val subjectDigest: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/users/$username/attestations/digest/$subjectDigest")
+              val response = client.delete("users/${username.encodeURLParameter()}/attestations/digest/${subjectDigest.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok
                 204 -> Response.NoContent
@@ -615,7 +666,7 @@ public class Users internal constructor(
           private val attestationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/users/$username/attestations/$attestationId")
+            val response = client.delete("users/${username.encodeURLParameter()}/attestations/$attestationId")
             return when (response.status.value) {
               200 -> Response.Ok
               204 -> Response.NoContent
@@ -659,11 +710,19 @@ public class Users internal constructor(
             after: String? = null,
             predicateType: String? = null,
           ): Response {
-            val response = client.get("/users/$username/attestations/$subjectDigest") {
-              perPage?.let { parameter("per_page", it) }
-              before?.let { parameter("before", it) }
-              after?.let { parameter("after", it) }
-              predicateType?.let { parameter("predicate_type", it) }
+            val response = client.get("users/${username.encodeURLParameter()}/attestations/${subjectDigest.encodeURLParameter()}") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (before != null) {
+                url.encodedParameters.append("before", before.encodeURLParameter())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (predicateType != null) {
+                url.encodedParameters.append("predicate_type", predicateType.encodeURLParameter())
+              }
             }
             return when (response.status.value) {
               200 -> response.body<Response.Ok>()
@@ -675,28 +734,38 @@ public class Users internal constructor(
           }
 
           public sealed interface Response {
-            @JvmInline
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            public value class Ok(
+            public data class Ok(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val attestations: List<Attestations>? = null,
             ) : Response {
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class Attestations(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val bundle: Bundle? = null,
                 @SerialName("repository_id")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val repositoryId: Long? = null,
                 @SerialName("bundle_url")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val bundleUrl: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val initiator: String? = null,
               ) {
                 /**
                  * The attestation's Sigstore Bundle.
                  * Refer to the [Sigstore Bundle Specification](https://github.com/sigstore/protobuf-specs/blob/main/protos/sigstore_bundle.proto) for more information.
                  */
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class Bundle(
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val mediaType: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val verificationMaterial: JsonElement? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val dsseEnvelope: JsonElement? = null,
                 )
               }
@@ -733,7 +802,7 @@ public class Users internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/users/$username/docker/conflicts")
+            val response = client.get("users/${username.encodeURLParameter()}/docker/conflicts")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               401 -> Response.Unauthorized(response.body())
@@ -773,10 +842,18 @@ public class Users internal constructor(
         private val client: HttpClient,
         private val username: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> = client.get("/users/$username/events") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
+          val response = client.get("users/${username.encodeURLParameter()}/events") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Orgs internal constructor(
@@ -797,10 +874,18 @@ public class Users internal constructor(
             private val username: String,
             private val org: String,
           ) {
-            public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> = client.get("/users/$username/events/orgs/$org") {
-              perPage?.let { parameter("per_page", it) }
-              page?.let { parameter("page", it) }
-            }.body()
+            public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
+              val response = client.get("users/${username.encodeURLParameter()}/events/orgs/${org.encodeURLParameter()}") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }
@@ -815,10 +900,18 @@ public class Users internal constructor(
           private val client: HttpClient,
           private val username: String,
         ) {
-          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> = client.get("/users/$username/events/public") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-          }.body()
+          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
+            val response = client.get("users/${username.encodeURLParameter()}/events/public") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }
@@ -833,10 +926,18 @@ public class Users internal constructor(
         private val client: HttpClient,
         private val username: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> = client.get("/users/$username/followers") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
+          val response = client.get("users/${username.encodeURLParameter()}/followers") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -852,10 +953,18 @@ public class Users internal constructor(
         private val client: HttpClient,
         private val username: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> = client.get("/users/$username/following") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
+          val response = client.get("users/${username.encodeURLParameter()}/following") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class TargetUserPath internal constructor(
@@ -871,7 +980,7 @@ public class Users internal constructor(
           private val targetUser: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/users/$username/following/$targetUser")
+            val response = client.get("users/${username.encodeURLParameter()}/following/${targetUser.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound
@@ -903,10 +1012,16 @@ public class Users internal constructor(
           perPage: Long? = 30L,
           page: Long? = 1L,
         ): Response {
-          val response = client.get("/users/$username/gists") {
-            since?.let { parameter("since", it.toString()) }
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("users/${username.encodeURLParameter()}/gists") {
+            if (since != null) {
+              url.encodedParameters.append("since", since.toString().encodeURLParameter())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -937,10 +1052,18 @@ public class Users internal constructor(
         private val client: HttpClient,
         private val username: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<GpgKey> = client.get("/users/$username/gpg_keys") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<GpgKey> {
+          val response = client.get("users/${username.encodeURLParameter()}/gpg_keys") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -955,9 +1078,13 @@ public class Users internal constructor(
         private val username: String,
       ) {
         public suspend operator fun invoke(subjectType: SubjectType? = null, subjectId: String? = null): Response {
-          val response = client.get("/users/$username/hovercard") {
-            subjectType?.let { parameter("subject_type", it.value) }
-            subjectId?.let { parameter("subject_id", it) }
+          val response = client.get("users/${username.encodeURLParameter()}/hovercard") {
+            if (subjectType != null) {
+              url.encodedParameters.append("subject_type", subjectType.value.encodeURLParameter())
+            }
+            if (subjectId != null) {
+              url.encodedParameters.append("subject_id", subjectId.encodeURLParameter())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -1008,7 +1135,11 @@ public class Users internal constructor(
         private val client: HttpClient,
         private val username: String,
       ) {
-        public suspend operator fun invoke(): io.github.model.Installation = client.get("/users/$username/installation").body()
+        public suspend operator fun invoke(): io.github.model.Installation {
+          val response = client.get("users/${username.encodeURLParameter()}/installation")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -1022,10 +1153,18 @@ public class Users internal constructor(
         private val client: HttpClient,
         private val username: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<KeySimple> = client.get("/users/$username/keys") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<KeySimple> {
+          val response = client.get("users/${username.encodeURLParameter()}/keys") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -1039,10 +1178,18 @@ public class Users internal constructor(
         private val client: HttpClient,
         private val username: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<OrganizationSimple> = client.get("/users/$username/orgs") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<OrganizationSimple> {
+          val response = client.get("users/${username.encodeURLParameter()}/orgs") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -1074,11 +1221,17 @@ public class Users internal constructor(
           page: Long? = 1L,
           perPage: Long? = 30L,
         ): Response {
-          val response = client.get("/users/$username/packages") {
-            parameter("package_type", packageType.value)
-            visibility?.let { parameter("visibility", it.value) }
-            page?.let { parameter("page", it) }
-            perPage?.let { parameter("per_page", it) }
+          val response = client.get("users/${username.encodeURLParameter()}/packages") {
+            url.encodedParameters.append("package_type", packageType.value.encodeURLParameter())
+            if (visibility != null) {
+              url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -1163,7 +1316,7 @@ public class Users internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/users/$username/packages/npm/$packageName")
+              val response = client.delete("users/${username.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -1195,7 +1348,11 @@ public class Users internal constructor(
             private val username: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/users/$username/packages/npm/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("users/${username.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -1211,8 +1368,10 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/users/$username/packages/npm/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("users/${username.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -1256,7 +1415,7 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/users/$username/packages/npm/$packageName/versions")
+                val response = client.get("users/${username.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/versions")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   401 -> Response.Unauthorized(response.body())
@@ -1304,7 +1463,7 @@ public class Users internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/users/$username/packages/npm/$packageName/versions/$packageVersionId")
+                  val response = client.delete("users/${username.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -1337,7 +1496,11 @@ public class Users internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/users/$username/packages/npm/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("users/${username.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -1355,7 +1518,7 @@ public class Users internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/users/$username/packages/npm/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("users/${username.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -1412,7 +1575,7 @@ public class Users internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/users/$username/packages/maven/$packageName")
+              val response = client.delete("users/${username.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -1444,7 +1607,11 @@ public class Users internal constructor(
             private val username: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/users/$username/packages/maven/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("users/${username.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -1460,8 +1627,10 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/users/$username/packages/maven/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("users/${username.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -1505,7 +1674,7 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/users/$username/packages/maven/$packageName/versions")
+                val response = client.get("users/${username.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/versions")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   401 -> Response.Unauthorized(response.body())
@@ -1553,7 +1722,7 @@ public class Users internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/users/$username/packages/maven/$packageName/versions/$packageVersionId")
+                  val response = client.delete("users/${username.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -1586,7 +1755,11 @@ public class Users internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/users/$username/packages/maven/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("users/${username.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -1604,7 +1777,7 @@ public class Users internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/users/$username/packages/maven/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("users/${username.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -1661,7 +1834,7 @@ public class Users internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/users/$username/packages/rubygems/$packageName")
+              val response = client.delete("users/${username.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -1693,7 +1866,11 @@ public class Users internal constructor(
             private val username: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/users/$username/packages/rubygems/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("users/${username.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -1709,8 +1886,10 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/users/$username/packages/rubygems/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("users/${username.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -1754,7 +1933,7 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/users/$username/packages/rubygems/$packageName/versions")
+                val response = client.get("users/${username.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/versions")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   401 -> Response.Unauthorized(response.body())
@@ -1802,7 +1981,7 @@ public class Users internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/users/$username/packages/rubygems/$packageName/versions/$packageVersionId")
+                  val response = client.delete("users/${username.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -1835,7 +2014,11 @@ public class Users internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/users/$username/packages/rubygems/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("users/${username.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -1853,7 +2036,7 @@ public class Users internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/users/$username/packages/rubygems/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("users/${username.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -1910,7 +2093,7 @@ public class Users internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/users/$username/packages/docker/$packageName")
+              val response = client.delete("users/${username.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -1942,7 +2125,11 @@ public class Users internal constructor(
             private val username: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/users/$username/packages/docker/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("users/${username.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -1958,8 +2145,10 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/users/$username/packages/docker/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("users/${username.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -2003,7 +2192,7 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/users/$username/packages/docker/$packageName/versions")
+                val response = client.get("users/${username.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/versions")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   401 -> Response.Unauthorized(response.body())
@@ -2051,7 +2240,7 @@ public class Users internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/users/$username/packages/docker/$packageName/versions/$packageVersionId")
+                  val response = client.delete("users/${username.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -2084,7 +2273,11 @@ public class Users internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/users/$username/packages/docker/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("users/${username.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -2102,7 +2295,7 @@ public class Users internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/users/$username/packages/docker/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("users/${username.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -2159,7 +2352,7 @@ public class Users internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/users/$username/packages/nuget/$packageName")
+              val response = client.delete("users/${username.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -2191,7 +2384,11 @@ public class Users internal constructor(
             private val username: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/users/$username/packages/nuget/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("users/${username.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -2207,8 +2404,10 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/users/$username/packages/nuget/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("users/${username.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -2252,7 +2451,7 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/users/$username/packages/nuget/$packageName/versions")
+                val response = client.get("users/${username.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/versions")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   401 -> Response.Unauthorized(response.body())
@@ -2300,7 +2499,7 @@ public class Users internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/users/$username/packages/nuget/$packageName/versions/$packageVersionId")
+                  val response = client.delete("users/${username.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -2333,7 +2532,11 @@ public class Users internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/users/$username/packages/nuget/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("users/${username.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -2351,7 +2554,7 @@ public class Users internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/users/$username/packages/nuget/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("users/${username.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -2408,7 +2611,7 @@ public class Users internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/users/$username/packages/container/$packageName")
+              val response = client.delete("users/${username.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -2440,7 +2643,11 @@ public class Users internal constructor(
             private val username: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/users/$username/packages/container/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("users/${username.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -2456,8 +2663,10 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/users/$username/packages/container/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("users/${username.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -2501,7 +2710,7 @@ public class Users internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/users/$username/packages/container/$packageName/versions")
+                val response = client.get("users/${username.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/versions")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   401 -> Response.Unauthorized(response.body())
@@ -2549,7 +2758,7 @@ public class Users internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/users/$username/packages/container/$packageName/versions/$packageVersionId")
+                  val response = client.delete("users/${username.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -2582,7 +2791,11 @@ public class Users internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/users/$username/packages/container/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("users/${username.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -2600,7 +2813,7 @@ public class Users internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/users/$username/packages/container/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("users/${username.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -2651,11 +2864,19 @@ public class Users internal constructor(
           after: String? = null,
           perPage: Long? = 30L,
         ): Response {
-          val response = client.get("/users/$username/projectsV2") {
-            q?.let { parameter("q", it) }
-            before?.let { parameter("before", it) }
-            after?.let { parameter("after", it) }
-            perPage?.let { parameter("per_page", it) }
+          val response = client.get("users/${username.encodeURLParameter()}/projectsV2") {
+            if (q != null) {
+              url.encodedParameters.append("q", q.encodeURLParameter())
+            }
+            if (before != null) {
+              url.encodedParameters.append("before", before.encodeURLParameter())
+            }
+            if (after != null) {
+              url.encodedParameters.append("after", after.encodeURLParameter())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -2702,7 +2923,7 @@ public class Users internal constructor(
           private val projectNumber: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/users/$username/projectsV2/$projectNumber")
+            val response = client.get("users/${username.encodeURLParameter()}/projectsV2/$projectNumber")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               304 -> Response.NotModified
@@ -2750,10 +2971,16 @@ public class Users internal constructor(
               before: String? = null,
               after: String? = null,
             ): Response {
-              val response = client.get("/users/$username/projectsV2/$projectNumber/fields") {
-                perPage?.let { parameter("per_page", it) }
-                before?.let { parameter("before", it) }
-                after?.let { parameter("after", it) }
+              val response = client.get("users/${username.encodeURLParameter()}/projectsV2/$projectNumber/fields") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (before != null) {
+                  url.encodedParameters.append("before", before.encodeURLParameter())
+                }
+                if (after != null) {
+                  url.encodedParameters.append("after", after.encodeURLParameter())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -2787,7 +3014,7 @@ public class Users internal constructor(
             private val projectNumber: Long,
           ) {
             public suspend operator fun invoke(body: Body): Response {
-              val response = client.post("/users/$username/projectsV2/$projectNumber/fields") {
+              val response = client.post("users/${username.encodeURLParameter()}/projectsV2/$projectNumber/fields") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -2930,7 +3157,7 @@ public class Users internal constructor(
               private val fieldId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/users/$username/projectsV2/$projectNumber/fields/$fieldId")
+                val response = client.get("users/${username.encodeURLParameter()}/projectsV2/$projectNumber/fields/$fieldId")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   304 -> Response.NotModified
@@ -2982,12 +3209,29 @@ public class Users internal constructor(
               q: String? = null,
               fields: Fields? = null,
             ): Response {
-              val response = client.get("/users/$username/projectsV2/$projectNumber/items") {
-                before?.let { parameter("before", it) }
-                after?.let { parameter("after", it) }
-                perPage?.let { parameter("per_page", it) }
-                q?.let { parameter("q", it) }
-                fields?.let { parameter("fields", it) }
+              val response = client.get("users/${username.encodeURLParameter()}/projectsV2/$projectNumber/items") {
+                if (before != null) {
+                  url.encodedParameters.append("before", before.encodeURLParameter())
+                }
+                if (after != null) {
+                  url.encodedParameters.append("after", after.encodeURLParameter())
+                }
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (q != null) {
+                  url.encodedParameters.append("q", q.encodeURLParameter())
+                }
+                if (fields != null) {
+                  when (fields) {
+                    is Fields.CaseString -> {
+                      url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                    }
+                    is Fields.CaseStrings -> {
+                      fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                    }
+                  }
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -3026,11 +3270,17 @@ public class Users internal constructor(
                 override fun deserialize(decoder: Decoder): Fields {
                   val value = decoder.decodeSerializableValue(JsonElement.serializer())
                   val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                  return json.attemptDeserialize(
-                    value,
-                    CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-                    CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                  )
+                  return when {
+                    value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                      value,
+                      CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                    )
+                    value is JsonArray -> json.attemptDeserialize(
+                      value,
+                      CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
+                    )
+                    else -> throw UnionSerializationException(value, emptyMap())
+                  }
                 }
 
                 override fun serialize(encoder: Encoder, `value`: Fields) {
@@ -3071,7 +3321,7 @@ public class Users internal constructor(
               repo: String? = null,
               number: Long? = null,
             ): Response {
-              val response = client.post("/users/$username/projectsV2/$projectNumber/items") {
+              val response = client.post("users/${username.encodeURLParameter()}/projectsV2/$projectNumber/items") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(type = type, id = id, owner = owner, repo = repo, number = number))
               }
@@ -3090,12 +3340,17 @@ public class Users internal constructor(
               PullRequest,
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               public val type: Type,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val id: Long? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val owner: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val repo: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val number: Long? = null,
             )
 
@@ -3135,7 +3390,7 @@ public class Users internal constructor(
               private val itemId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("/users/$username/projectsV2/$projectNumber/items/$itemId")
+                val response = client.delete("users/${username.encodeURLParameter()}/projectsV2/$projectNumber/items/$itemId")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   401 -> Response.Unauthorized(response.body())
@@ -3164,8 +3419,17 @@ public class Users internal constructor(
               private val itemId: Long,
             ) {
               public suspend operator fun invoke(fields: Fields? = null): Response {
-                val response = client.get("/users/$username/projectsV2/$projectNumber/items/$itemId") {
-                  fields?.let { parameter("fields", it) }
+                val response = client.get("users/${username.encodeURLParameter()}/projectsV2/$projectNumber/items/$itemId") {
+                  if (fields != null) {
+                    when (fields) {
+                      is Fields.CaseString -> {
+                        url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                      }
+                      is Fields.CaseStrings -> {
+                        fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                      }
+                    }
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -3204,11 +3468,17 @@ public class Users internal constructor(
                   override fun deserialize(decoder: Decoder): Fields {
                     val value = decoder.decodeSerializableValue(JsonElement.serializer())
                     val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                    return json.attemptDeserialize(
-                      value,
-                      CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-                      CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                    )
+                    return when {
+                      value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                        value,
+                        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                      )
+                      value is JsonArray -> json.attemptDeserialize(
+                        value,
+                        CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
+                      )
+                      else -> throw UnionSerializationException(value, emptyMap())
+                    }
                   }
 
                   override fun serialize(encoder: Encoder, `value`: Fields) {
@@ -3244,7 +3514,7 @@ public class Users internal constructor(
               private val itemId: Long,
             ) {
               public suspend operator fun invoke(fields: List<Fields>): Response {
-                val response = client.patch("/users/$username/projectsV2/$projectNumber/items/$itemId") {
+                val response = client.patch("users/${username.encodeURLParameter()}/projectsV2/$projectNumber/items/$itemId") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(fields = fields))
                 }
@@ -3297,11 +3567,17 @@ public class Users internal constructor(
                     override fun deserialize(decoder: Decoder): Value {
                       val value = decoder.decodeSerializableValue(JsonElement.serializer())
                       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                      return json.attemptDeserialize(
-                        value,
-                        CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
-                        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                      )
+                      return when {
+                        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                          value,
+                          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                        )
+                        value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+                          value,
+                          CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
+                        )
+                        else -> throw UnionSerializationException(value, emptyMap())
+                      }
                     }
 
                     override fun serialize(encoder: Encoder, `value`: Value) {
@@ -3314,9 +3590,8 @@ public class Users internal constructor(
                 }
               }
 
-              @JvmInline
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 public val fields: List<Fields>,
               )
 
@@ -3380,11 +3655,26 @@ public class Users internal constructor(
                   after: String? = null,
                   perPage: Long? = 30L,
                 ): Response {
-                  val response = client.get("/users/$username/projectsV2/$projectNumber/views/$viewNumber/items") {
-                    fields?.let { parameter("fields", it) }
-                    before?.let { parameter("before", it) }
-                    after?.let { parameter("after", it) }
-                    perPage?.let { parameter("per_page", it) }
+                  val response = client.get("users/${username.encodeURLParameter()}/projectsV2/$projectNumber/views/$viewNumber/items") {
+                    if (fields != null) {
+                      when (fields) {
+                        is Fields.CaseString -> {
+                          url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                        }
+                        is Fields.CaseStrings -> {
+                          fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                        }
+                      }
+                    }
+                    if (before != null) {
+                      url.encodedParameters.append("before", before.encodeURLParameter())
+                    }
+                    if (after != null) {
+                      url.encodedParameters.append("after", after.encodeURLParameter())
+                    }
+                    if (perPage != null) {
+                      url.encodedParameters.append("per_page", perPage.toString())
+                    }
                   }
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
@@ -3424,11 +3714,17 @@ public class Users internal constructor(
                     override fun deserialize(decoder: Decoder): Fields {
                       val value = decoder.decodeSerializableValue(JsonElement.serializer())
                       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                      return json.attemptDeserialize(
-                        value,
-                        CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-                        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                      )
+                      return when {
+                        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                          value,
+                          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                        )
+                        value is JsonArray -> json.attemptDeserialize(
+                          value,
+                          CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
+                        )
+                        else -> throw UnionSerializationException(value, emptyMap())
+                      }
                     }
 
                     override fun serialize(encoder: Encoder, `value`: Fields) {
@@ -3478,10 +3774,18 @@ public class Users internal constructor(
         private val client: HttpClient,
         private val username: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> = client.get("/users/$username/received_events") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
+          val response = client.get("users/${username.encodeURLParameter()}/received_events") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Public internal constructor(
@@ -3494,10 +3798,18 @@ public class Users internal constructor(
           private val client: HttpClient,
           private val username: String,
         ) {
-          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> = client.get("/users/$username/received_events/public") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-          }.body()
+          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
+            val response = client.get("users/${username.encodeURLParameter()}/received_events/public") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }
@@ -3518,13 +3830,27 @@ public class Users internal constructor(
           direction: Direction? = null,
           perPage: Long? = 30L,
           page: Long? = 1L,
-        ): List<MinimalRepository> = client.get("/users/$username/repos") {
-          type?.let { parameter("type", it.value) }
-          sort?.let { parameter("sort", it.value) }
-          direction?.let { parameter("direction", it.value) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): List<MinimalRepository> {
+          val response = client.get("users/${username.encodeURLParameter()}/repos") {
+            if (type != null) {
+              url.encodedParameters.append("type", type.value.encodeURLParameter())
+            }
+            if (sort != null) {
+              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            }
+            if (direction != null) {
+              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Type(
@@ -3604,12 +3930,22 @@ public class Users internal constructor(
                 model: String? = null,
                 product: String? = null,
               ): Response {
-                val response = client.get("/users/$username/settings/billing/premium_request/usage") {
-                  year?.let { parameter("year", it) }
-                  month?.let { parameter("month", it) }
-                  day?.let { parameter("day", it) }
-                  model?.let { parameter("model", it) }
-                  product?.let { parameter("product", it) }
+                val response = client.get("users/${username.encodeURLParameter()}/settings/billing/premium_request/usage") {
+                  if (year != null) {
+                    url.encodedParameters.append("year", year.toString())
+                  }
+                  if (month != null) {
+                    url.encodedParameters.append("month", month.toString())
+                  }
+                  if (day != null) {
+                    url.encodedParameters.append("day", day.toString())
+                  }
+                  if (model != null) {
+                    url.encodedParameters.append("model", model.encodeURLParameter())
+                  }
+                  if (product != null) {
+                    url.encodedParameters.append("product", product.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -3643,11 +3979,15 @@ public class Users internal constructor(
                   public val `value`: BasicError,
                 ) : Response
 
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class ServiceUnavailable(
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val code: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val message: String? = null,
                   @SerialName("documentation_url")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val documentationUrl: String? = null,
                 ) : Response
               }
@@ -3672,10 +4012,16 @@ public class Users internal constructor(
               month: Long? = null,
               day: Long? = null,
             ): Response {
-              val response = client.get("/users/$username/settings/billing/usage") {
-                year?.let { parameter("year", it) }
-                month?.let { parameter("month", it) }
-                day?.let { parameter("day", it) }
+              val response = client.get("users/${username.encodeURLParameter()}/settings/billing/usage") {
+                if (year != null) {
+                  url.encodedParameters.append("year", year.toString())
+                }
+                if (month != null) {
+                  url.encodedParameters.append("month", month.toString())
+                }
+                if (day != null) {
+                  url.encodedParameters.append("day", day.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -3704,11 +4050,15 @@ public class Users internal constructor(
                 public val `value`: BasicError,
               ) : Response
 
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class ServiceUnavailable(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val code: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val message: String? = null,
                 @SerialName("documentation_url")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val documentationUrl: String? = null,
               ) : Response
             }
@@ -3732,13 +4082,25 @@ public class Users internal constructor(
                 product: String? = null,
                 sku: String? = null,
               ): Response {
-                val response = client.get("/users/$username/settings/billing/usage/summary") {
-                  year?.let { parameter("year", it) }
-                  month?.let { parameter("month", it) }
-                  day?.let { parameter("day", it) }
-                  repository?.let { parameter("repository", it) }
-                  product?.let { parameter("product", it) }
-                  sku?.let { parameter("sku", it) }
+                val response = client.get("users/${username.encodeURLParameter()}/settings/billing/usage/summary") {
+                  if (year != null) {
+                    url.encodedParameters.append("year", year.toString())
+                  }
+                  if (month != null) {
+                    url.encodedParameters.append("month", month.toString())
+                  }
+                  if (day != null) {
+                    url.encodedParameters.append("day", day.toString())
+                  }
+                  if (repository != null) {
+                    url.encodedParameters.append("repository", repository.encodeURLParameter())
+                  }
+                  if (product != null) {
+                    url.encodedParameters.append("product", product.encodeURLParameter())
+                  }
+                  if (sku != null) {
+                    url.encodedParameters.append("sku", sku.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -3772,11 +4134,15 @@ public class Users internal constructor(
                   public val `value`: BasicError,
                 ) : Response
 
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class ServiceUnavailable(
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val code: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val message: String? = null,
                   @SerialName("documentation_url")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val documentationUrl: String? = null,
                 ) : Response
               }
@@ -3796,10 +4162,18 @@ public class Users internal constructor(
         private val client: HttpClient,
         private val username: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SocialAccount> = client.get("/users/$username/social_accounts") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SocialAccount> {
+          val response = client.get("users/${username.encodeURLParameter()}/social_accounts") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -3813,10 +4187,18 @@ public class Users internal constructor(
         private val client: HttpClient,
         private val username: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SshSigningKey> = client.get("/users/$username/ssh_signing_keys") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SshSigningKey> {
+          val response = client.get("users/${username.encodeURLParameter()}/ssh_signing_keys") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -3835,12 +4217,24 @@ public class Users internal constructor(
           direction: Direction? = Direction.Desc,
           perPage: Long? = 30L,
           page: Long? = 1L,
-        ): Response = client.get("/users/$username/starred") {
-          sort?.let { parameter("sort", it.value) }
-          direction?.let { parameter("direction", it.value) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): Response {
+          val response = client.get("users/${username.encodeURLParameter()}/starred") {
+            if (sort != null) {
+              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            }
+            if (direction != null) {
+              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Sort(
@@ -3920,10 +4314,18 @@ public class Users internal constructor(
         private val client: HttpClient,
         private val username: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<MinimalRepository> = client.get("/users/$username/subscriptions") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<MinimalRepository> {
+          val response = client.get("users/${username.encodeURLParameter()}/subscriptions") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
   }

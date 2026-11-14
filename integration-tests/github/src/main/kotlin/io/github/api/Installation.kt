@@ -8,12 +8,14 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -34,9 +36,13 @@ public class Installation internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("/installation/repositories") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
+        val response = client.get("installation/repositories") {
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
         }
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
@@ -48,17 +54,20 @@ public class Installation internal constructor(
       }
 
       public sealed interface Response {
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Ok(
           @SerialName("total_count")
           public val totalCount: Long,
           public val repositories: List<Repositories>,
           @SerialName("repository_selection")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val repositorySelection: String? = null,
         ) : Response {
           /**
            * A repository on GitHub.
            */
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Repositories(
             public val id: Long,
@@ -69,6 +78,7 @@ public class Installation internal constructor(
             public val fullName: String,
             public val license: NullableLicenseSimple?,
             public val forks: Long,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val permissions: Permissions? = null,
             public val owner: SimpleUser,
             @Required
@@ -174,7 +184,9 @@ public class Installation internal constructor(
             @SerialName("open_issues_count")
             public val openIssuesCount: Long,
             @SerialName("is_template")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val isTemplate: Boolean? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val topics: List<String>? = null,
             @SerialName("has_issues")
             @Required
@@ -191,16 +203,21 @@ public class Installation internal constructor(
             @Required
             public val hasDownloads: Boolean = true,
             @SerialName("has_discussions")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val hasDiscussions: Boolean? = null,
             @SerialName("has_pull_requests")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val hasPullRequests: Boolean? = null,
             @SerialName("pull_request_creation_policy")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val pullRequestCreationPolicy: PullRequestCreationPolicy? = null,
             @SerialName("has_commit_comments")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val hasCommitComments: Boolean? = null,
             @Required
             public val archived: Boolean = false,
             public val disabled: Boolean,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val visibility: String? = null,
             @SerialName("pushed_at")
             public val pushedAt: Instant?,
@@ -209,53 +226,74 @@ public class Installation internal constructor(
             @SerialName("updated_at")
             public val updatedAt: Instant?,
             @SerialName("allow_rebase_merge")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val allowRebaseMerge: Boolean? = null,
             @SerialName("temp_clone_token")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val tempCloneToken: String? = null,
             @SerialName("allow_squash_merge")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val allowSquashMerge: Boolean? = null,
             @SerialName("allow_auto_merge")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val allowAutoMerge: Boolean? = null,
             @SerialName("delete_branch_on_merge")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val deleteBranchOnMerge: Boolean? = null,
             @SerialName("allow_update_branch")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val allowUpdateBranch: Boolean? = null,
             @SerialName("use_squash_pr_title_as_default")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val useSquashPrTitleAsDefault: Boolean? = null,
             @SerialName("squash_merge_commit_title")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val squashMergeCommitTitle: SquashMergeCommitTitle? = null,
             @SerialName("squash_merge_commit_message")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val squashMergeCommitMessage: SquashMergeCommitMessage? = null,
             @SerialName("merge_commit_title")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val mergeCommitTitle: MergeCommitTitle? = null,
             @SerialName("merge_commit_message")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val mergeCommitMessage: MergeCommitMessage? = null,
             @SerialName("allow_merge_commit")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val allowMergeCommit: Boolean? = null,
             @SerialName("allow_forking")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val allowForking: Boolean? = null,
             @SerialName("web_commit_signoff_required")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val webCommitSignoffRequired: Boolean? = null,
             @SerialName("open_issues")
             public val openIssues: Long,
             public val watchers: Long,
             @SerialName("master_branch")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val masterBranch: String? = null,
             @SerialName("starred_at")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val starredAt: String? = null,
             @SerialName("anonymous_access_enabled")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val anonymousAccessEnabled: Boolean? = null,
             @SerialName("code_search_index_status")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val codeSearchIndexStatus: CodeSearchIndexStatus? = null,
           ) {
             /**
              * The status of the code search index for this repository
              */
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class CodeSearchIndexStatus(
               @SerialName("lexical_search_ok")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val lexicalSearchOk: Boolean? = null,
               @SerialName("lexical_commit_sha")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val lexicalCommitSha: String? = null,
             )
 
@@ -282,12 +320,15 @@ public class Installation internal constructor(
               ;
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class Permissions(
               public val admin: Boolean,
               public val pull: Boolean,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val triage: Boolean? = null,
               public val push: Boolean,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val maintain: Boolean? = null,
             )
 
@@ -349,7 +390,8 @@ public class Installation internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke() {
-        client.delete("/installation/token")
+        val response = client.delete("installation/token")
+        if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
   }

@@ -5,7 +5,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
@@ -34,7 +34,7 @@ public data class Eval(
   public val testingCriteria: List<TestingCriteria>,
   @SerialName("created_at")
   public val createdAt: Long,
-  public val metadata: Metadata,
+  public val metadata: Metadata?,
 ) {
   /**
    * Configuration of data sources used in runs of the evaluation.
@@ -50,10 +50,9 @@ public data class Eval(
      * - What data is required when creating a run
      *
      */
-    @JvmInline
     @SerialName("custom")
     @Serializable
-    public value class Custom(
+    public data class Custom(
       public val schema: JsonElement,
     ) : DataSourceConfig
 
@@ -190,13 +189,16 @@ public data class Eval(
      *
      */
     @SerialName("python")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Python(
       public val name: String,
       public val source: String,
       @SerialName("image_tag")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val imageTag: String? = null,
       @SerialName("pass_threshold")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val passThreshold: Double? = null,
     ) : TestingCriteria
 
@@ -205,15 +207,19 @@ public data class Eval(
      *
      */
     @SerialName("score_model")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ScoreModel(
       public val name: String,
       public val model: String,
       @SerialName("sampling_params")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val samplingParams: SamplingParams? = null,
       public val input: List<EvalItem>,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val range: List<Double>? = null,
       @SerialName("pass_threshold")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val passThreshold: Double? = null,
     ) : TestingCriteria {
       /**

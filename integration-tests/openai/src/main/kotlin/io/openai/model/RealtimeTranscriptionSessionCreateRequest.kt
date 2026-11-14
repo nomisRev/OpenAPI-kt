@@ -2,25 +2,33 @@ package io.openai.model
 
 import kotlin.Double
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Realtime transcription session object configuration.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class RealtimeTranscriptionSessionCreateRequest(
   @SerialName("turn_detection")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val turnDetection: TurnDetection? = null,
   @SerialName("input_audio_noise_reduction")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val inputAudioNoiseReduction: InputAudioNoiseReduction? = null,
   @SerialName("input_audio_format")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val inputAudioFormat: InputAudioFormat? = null,
   @SerialName("input_audio_transcription")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val inputAudioTranscription: AudioTranscription? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val include: List<Include>? = null,
 ) {
   @Serializable
@@ -51,9 +59,10 @@ public data class RealtimeTranscriptionSessionCreateRequest(
    * Filtering the audio can improve VAD and turn detection accuracy (reducing false positives) and model performance by improving perception of the input audio.
    *
    */
-  @JvmInline
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class InputAudioNoiseReduction(
+  public data class InputAudioNoiseReduction(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: NoiseReductionType? = null,
   )
 
@@ -61,13 +70,18 @@ public data class RealtimeTranscriptionSessionCreateRequest(
    * Configuration for turn detection. Can be set to `null` to turn off. Server VAD means that the model will detect the start and end of speech based on audio volume and respond at the end of user speech.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class TurnDetection(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: Type? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val threshold: Double? = null,
     @SerialName("prefix_padding_ms")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val prefixPaddingMs: Long? = null,
     @SerialName("silence_duration_ms")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val silenceDurationMs: Long? = null,
   ) {
     @Serializable

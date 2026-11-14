@@ -2,7 +2,6 @@ package io.github.model
 
 import kotlin.Long
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -27,9 +26,8 @@ public data class DemilestonedIssueEvent(
   public val performedViaGithubApp: NullableIntegration?,
   public val milestone: Milestone,
 ) {
-  @JvmInline
   @Serializable
-  public value class Milestone(
+  public data class Milestone(
     public val title: String,
   )
 }

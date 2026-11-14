@@ -2,12 +2,14 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.openai.model.CompleteUploadRequest
 import io.openai.model.CreateUploadRequest
 import io.openai.model.Upload
@@ -25,10 +27,14 @@ public class Uploads internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(body: CreateUploadRequest): Upload = client.post("/uploads") {
-      contentType(ContentType.Application.Json)
-      setBody(body)
-    }.body()
+    public suspend operator fun invoke(body: CreateUploadRequest): Upload {
+      val response = client.post("uploads") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class UploadIdPath internal constructor(
@@ -51,7 +57,11 @@ public class Uploads internal constructor(
         private val client: HttpClient,
         private val uploadId: String,
       ) {
-        public suspend operator fun invoke(): Upload = client.post("/uploads/$uploadId/cancel").body()
+        public suspend operator fun invoke(): Upload {
+          val response = client.post("uploads/${uploadId.encodeURLParameter()}/cancel")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -65,10 +75,14 @@ public class Uploads internal constructor(
         private val client: HttpClient,
         private val uploadId: String,
       ) {
-        public suspend operator fun invoke(body: CompleteUploadRequest): Upload = client.post("/uploads/$uploadId/complete") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
+        public suspend operator fun invoke(body: CompleteUploadRequest): Upload {
+          val response = client.post("uploads/${uploadId.encodeURLParameter()}/complete") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -82,11 +96,15 @@ public class Uploads internal constructor(
         private val client: HttpClient,
         private val uploadId: String,
       ) {
-        public suspend operator fun invoke(`data`: ByteArray): UploadPart = client.post("/uploads/$uploadId/parts") {
-          setBody(MultiPartFormDataContent(formData {
-            append("data", data)
-          }))
-        }.body()
+        public suspend operator fun invoke(`data`: ByteArray): UploadPart {
+          val response = client.post("uploads/${uploadId.encodeURLParameter()}/parts") {
+            setBody(MultiPartFormDataContent(formData {
+              append("data", data)
+            }))
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
   }

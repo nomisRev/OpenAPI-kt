@@ -1,24 +1,31 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Group of enterprise owners and/or members
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class EnterpriseTeam(
   public val id: Long,
   public val name: String,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val description: String? = null,
   public val slug: String,
   public val url: String,
   @SerialName("sync_to_organizations")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val syncToOrganizations: String? = null,
   @SerialName("organization_selection_type")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val organizationSelectionType: String? = null,
   @SerialName("group_id")
   public val groupId: String?,

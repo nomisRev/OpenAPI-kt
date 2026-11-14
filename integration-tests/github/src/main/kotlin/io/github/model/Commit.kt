@@ -5,6 +5,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -21,6 +22,7 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Commit
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Commit(
   public val url: String,
@@ -35,7 +37,9 @@ public data class Commit(
   public val author: Author?,
   public val committer: Committer?,
   public val parents: List<Parents>,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val stats: Stats? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val files: List<DiffEntry>? = null,
 ) {
   @Serializable(with = Author.Serializer::class)
@@ -82,6 +86,7 @@ public data class Commit(
     }
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Commit(
     public val url: String,
@@ -91,6 +96,7 @@ public data class Commit(
     @SerialName("comment_count")
     public val commentCount: Long,
     public val tree: Tree,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val verification: Verification? = null,
   ) {
     @Serializable
@@ -144,18 +150,24 @@ public data class Commit(
     }
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Parents(
     public val sha: String,
     public val url: String,
     @SerialName("html_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val htmlUrl: String? = null,
   )
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Stats(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val additions: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val deletions: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val total: Long? = null,
   )
 }

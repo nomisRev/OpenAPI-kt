@@ -1,24 +1,33 @@
 package io.github.model
 
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Configuration for code scanning default setup.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CodeScanningDefaultSetupUpdate(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val state: State? = null,
   @SerialName("runner_type")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val runnerType: RunnerType? = null,
   @SerialName("runner_label")
   public val runnerLabel: String? = null,
   @SerialName("query_suite")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val querySuite: QuerySuite? = null,
   @SerialName("threat_model")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val threatModel: ThreatModel? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val languages: List<Languages>? = null,
 ) {
   @Serializable

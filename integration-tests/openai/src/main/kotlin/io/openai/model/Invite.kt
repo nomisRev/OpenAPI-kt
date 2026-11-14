@@ -1,14 +1,18 @@
 package io.openai.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Represents an individual `invite` to the organization.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Invite(
   public val `object`: Object,
@@ -21,7 +25,9 @@ public data class Invite(
   @SerialName("expires_at")
   public val expiresAt: Long,
   @SerialName("accepted_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val acceptedAt: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val projects: List<Projects>? = null,
 ) {
   @Serializable
@@ -33,9 +39,12 @@ public data class Invite(
     ;
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Projects(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val id: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val role: Role? = null,
   ) {
     @Serializable

@@ -2,15 +2,13 @@ package io.github.model
 
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
 /**
  * Hovercard
  */
-@JvmInline
 @Serializable
-public value class Hovercard(
+public data class Hovercard(
   public val contexts: List<Contexts>,
 ) {
   @Serializable

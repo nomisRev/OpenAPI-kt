@@ -9,7 +9,6 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
@@ -21,6 +20,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -34,6 +34,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 
 public class Repositories internal constructor(
   private val client: HttpClient,
@@ -46,8 +48,10 @@ public class Repositories internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(since: Long? = null): Response {
-      val response = client.get("/repositories") {
-        since?.let { parameter("since", it) }
+      val response = client.get("repositories") {
+        if (since != null) {
+          url.encodedParameters.append("since", since.toString())
+        }
       }
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
@@ -107,7 +111,7 @@ public class Repositories internal constructor(
             private val issueNumber: Long,
           ) {
             public suspend operator fun invoke(issueFieldValues: List<IssueFieldValues>? = null): Response {
-              val response = client.post("/repositories/$repositoryId/issues/$issueNumber/issue-field-values") {
+              val response = client.post("repositories/$repositoryId/issues/$issueNumber/issue-field-values") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(issueFieldValues = issueFieldValues))
               }
@@ -163,11 +167,17 @@ public class Repositories internal constructor(
                   override fun deserialize(decoder: Decoder): Value {
                     val value = decoder.decodeSerializableValue(JsonElement.serializer())
                     val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                    return json.attemptDeserialize(
-                      value,
-                      CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
-                      CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                    )
+                    return when {
+                      value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                        value,
+                        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                      )
+                      value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+                        value,
+                        CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
+                      )
+                      else -> throw UnionSerializationException(value, emptyMap())
+                    }
                   }
 
                   override fun serialize(encoder: Encoder, `value`: Value) {
@@ -180,10 +190,11 @@ public class Repositories internal constructor(
               }
             }
 
-            @JvmInline
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("issue_field_values")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val issueFieldValues: List<IssueFieldValues>? = null,
             )
 
@@ -208,11 +219,15 @@ public class Repositories internal constructor(
                 public val `value`: ValidationError,
               ) : Response
 
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class ServiceUnavailable(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val code: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val message: String? = null,
                 @SerialName("documentation_url")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val documentationUrl: String? = null,
               ) : Response
             }
@@ -224,7 +239,7 @@ public class Repositories internal constructor(
             private val issueNumber: Long,
           ) {
             public suspend operator fun invoke(issueFieldValues: List<IssueFieldValues>? = null): Response {
-              val response = client.put("/repositories/$repositoryId/issues/$issueNumber/issue-field-values") {
+              val response = client.put("repositories/$repositoryId/issues/$issueNumber/issue-field-values") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(issueFieldValues = issueFieldValues))
               }
@@ -280,11 +295,17 @@ public class Repositories internal constructor(
                   override fun deserialize(decoder: Decoder): Value {
                     val value = decoder.decodeSerializableValue(JsonElement.serializer())
                     val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                    return json.attemptDeserialize(
-                      value,
-                      CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
-                      CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                    )
+                    return when {
+                      value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                        value,
+                        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                      )
+                      value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+                        value,
+                        CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
+                      )
+                      else -> throw UnionSerializationException(value, emptyMap())
+                    }
                   }
 
                   override fun serialize(encoder: Encoder, `value`: Value) {
@@ -297,10 +318,11 @@ public class Repositories internal constructor(
               }
             }
 
-            @JvmInline
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("issue_field_values")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val issueFieldValues: List<IssueFieldValues>? = null,
             )
 
@@ -325,11 +347,15 @@ public class Repositories internal constructor(
                 public val `value`: ValidationError,
               ) : Response
 
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class ServiceUnavailable(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val code: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val message: String? = null,
                 @SerialName("documentation_url")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val documentationUrl: String? = null,
               ) : Response
             }
@@ -350,7 +376,7 @@ public class Repositories internal constructor(
               private val issueFieldId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("/repositories/$repositoryId/issues/$issueNumber/issue-field-values/$issueFieldId")
+                val response = client.delete("repositories/$repositoryId/issues/$issueNumber/issue-field-values/$issueFieldId")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden(response.body())
@@ -376,11 +402,15 @@ public class Repositories internal constructor(
                   public val `value`: ValidationError,
                 ) : Response
 
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class ServiceUnavailable(
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val code: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val message: String? = null,
                   @SerialName("documentation_url")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val documentationUrl: String? = null,
                 ) : Response
               }

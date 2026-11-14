@@ -2,26 +2,34 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Private registry configuration for an organization
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class OrgPrivateRegistryConfigurationWithSelectedRepositories(
   public val name: String,
   @SerialName("registry_type")
   public val registryType: RegistryType,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val url: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val username: String? = null,
   @SerialName("replaces_base")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val replacesBase: Boolean? = null,
   public val visibility: Visibility,
   @SerialName("selected_repository_ids")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val selectedRepositoryIds: List<Long>? = null,
   @SerialName("created_at")
   public val createdAt: Instant,

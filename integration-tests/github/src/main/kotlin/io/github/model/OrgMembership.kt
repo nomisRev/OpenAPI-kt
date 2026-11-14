@@ -1,33 +1,38 @@
 package io.github.model
 
 import kotlin.Boolean
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Org Membership
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class OrgMembership(
   public val url: String,
   public val state: State,
   public val role: Role,
   @SerialName("direct_membership")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val directMembership: Boolean? = null,
   @SerialName("enterprise_teams_providing_indirect_membership")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val enterpriseTeamsProvidingIndirectMembership: List<String>? = null,
   @SerialName("organization_url")
   public val organizationUrl: String,
   public val organization: OrganizationSimple,
   public val user: NullableSimpleUser?,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val permissions: Permissions? = null,
 ) {
-  @JvmInline
   @Serializable
-  public value class Permissions(
+  public data class Permissions(
     @SerialName("can_create_repository")
     public val canCreateRepository: Boolean,
   )

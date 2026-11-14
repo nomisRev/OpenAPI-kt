@@ -4,7 +4,7 @@ import kotlin.Boolean
 import kotlin.Double
 import kotlin.OptIn
 import kotlin.String
-import kotlin.collections.List
+import kotlin.collections.Map
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
@@ -18,6 +18,9 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.doubleOrNull
 
 /**
  * User-defined metadata to store domain-specific information limited to 8 keys with scalar values.
@@ -25,7 +28,7 @@ import kotlinx.serialization.json.JsonElement
 @JvmInline
 @Serializable
 public value class Metadata(
-  public val values: List<AdditionalProperties?>? = null,
+  public val values: Map<String, AdditionalProperties?>,
 ) {
   @Serializable(with = AdditionalProperties.Serializer::class)
   public sealed interface AdditionalProperties {
@@ -62,12 +65,21 @@ public value class Metadata(
       override fun deserialize(decoder: Decoder): AdditionalProperties {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
-          CaseBoolean::class to { CaseBoolean(decodeFromJsonElement(Boolean.serializer(), it)) },
-          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+          )
+          value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+            value,
+            CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
+          )
+          value is JsonPrimitive && !value.isString && value.booleanOrNull != null -> json.attemptDeserialize(
+            value,
+            CaseBoolean::class to { CaseBoolean(decodeFromJsonElement(Boolean.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: AdditionalProperties) {

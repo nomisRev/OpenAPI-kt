@@ -1,8 +1,11 @@
 package io.openai.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -12,6 +15,7 @@ import kotlinx.serialization.Serializable
  * [Learn more](/docs/guides/streaming-responses).
  *
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateChatCompletionStreamResponse(
   public val id: String,
@@ -21,8 +25,10 @@ public data class CreateChatCompletionStreamResponse(
   @SerialName("service_tier")
   public val serviceTier: ServiceTier? = null,
   @SerialName("system_fingerprint")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val systemFingerprint: String? = null,
   public val `object`: Object,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val usage: CompletionUsage? = null,
 ) {
   @Serializable

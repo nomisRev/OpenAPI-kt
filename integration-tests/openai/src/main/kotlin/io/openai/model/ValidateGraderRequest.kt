@@ -5,15 +5,14 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonClassDiscriminator
 
-@JvmInline
 @Serializable
-public value class ValidateGraderRequest(
+public data class ValidateGraderRequest(
   public val grader: Grader,
 ) {
   /**
@@ -99,11 +98,13 @@ public value class ValidateGraderRequest(
      *
      */
     @SerialName("python")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Python(
       public val name: String,
       public val source: String,
       @SerialName("image_tag")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val imageTag: String? = null,
     ) : Grader
 
@@ -112,13 +113,16 @@ public value class ValidateGraderRequest(
      *
      */
     @SerialName("score_model")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ScoreModel(
       public val name: String,
       public val model: String,
       @SerialName("sampling_params")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val samplingParams: SamplingParams? = null,
       public val input: List<EvalItem>,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val range: List<Double>? = null,
     ) : Grader {
       /**
@@ -228,11 +232,13 @@ public value class ValidateGraderRequest(
          *
          */
         @SerialName("python")
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Python(
           public val name: String,
           public val source: String,
           @SerialName("image_tag")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val imageTag: String? = null,
         ) : Graders
 
@@ -241,13 +247,16 @@ public value class ValidateGraderRequest(
          *
          */
         @SerialName("score_model")
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class ScoreModel(
           public val name: String,
           public val model: String,
           @SerialName("sampling_params")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val samplingParams: SamplingParams? = null,
           public val input: List<EvalItem>,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val range: List<Double>? = null,
         ) : Graders {
           /**

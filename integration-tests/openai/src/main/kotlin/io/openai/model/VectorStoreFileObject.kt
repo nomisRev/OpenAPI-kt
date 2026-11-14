@@ -3,6 +3,7 @@ package io.openai.model
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -11,6 +12,7 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 /**
  * A list of files attached to a vector store.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class VectorStoreFileObject(
   public val id: String,
@@ -25,6 +27,7 @@ public data class VectorStoreFileObject(
   @SerialName("last_error")
   public val lastError: LastError?,
   @SerialName("chunking_strategy")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val chunkingStrategy: ChunkingStrategy? = null,
   public val attributes: VectorStoreFileAttributes? = null,
 ) {

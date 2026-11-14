@@ -1,13 +1,11 @@
 package io.github.model
 
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@JvmInline
 @Serializable
-public value class ActionsForkPrContributorApproval(
+public data class ActionsForkPrContributorApproval(
   @SerialName("approval_policy")
   public val approvalPolicy: ApprovalPolicy,
 ) {

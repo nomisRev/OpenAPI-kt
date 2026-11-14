@@ -4,6 +4,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -16,13 +17,17 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateModerationRequest(
   public val input: Input,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val model: Model? = null,
 ) {
   /**
@@ -57,20 +62,18 @@ public data class CreateModerationRequest(
       /**
        * An object describing an image to classify.
        */
-      @JvmInline
       @SerialName("image_url")
       @Serializable
-      public value class ImageUrl(
+      public data class ImageUrl(
         public val url: String,
       ) : ImageUrlOrText
 
       /**
        * An object describing text to classify.
        */
-      @JvmInline
       @SerialName("text")
       @Serializable
-      public value class Text(
+      public data class Text(
         public val text: String,
       ) : ImageUrlOrText
     }
@@ -90,12 +93,18 @@ public data class CreateModerationRequest(
       override fun deserialize(decoder: Decoder): Input {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-          CaseImageUrlOrTextList::class to { CaseImageUrlOrTextList(decodeFromJsonElement(ListSerializer(ImageUrlOrText.serializer()), it)) },
-          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+          )
+          value is JsonArray -> json.attemptDeserialize(
+            value,
+            CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
+            CaseImageUrlOrTextList::class to { CaseImageUrlOrTextList(decodeFromJsonElement(ListSerializer(ImageUrlOrText.serializer()), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: Input) {

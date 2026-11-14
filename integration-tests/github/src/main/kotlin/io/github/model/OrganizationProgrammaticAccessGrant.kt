@@ -2,8 +2,11 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
-import kotlin.collections.List
+import kotlin.collections.Map
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -35,11 +38,15 @@ public data class OrganizationProgrammaticAccessGrant(
   /**
    * Permissions requested, categorized by type of permission.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Permissions(
-    public val organization: List<String>? = null,
-    public val repository: List<String>? = null,
-    public val other: List<String>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val organization: Map<String, String>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val repository: Map<String, String>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
+    public val other: Map<String, String>? = null,
   )
 
   @Serializable

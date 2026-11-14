@@ -1,13 +1,11 @@
 package io.github.model
 
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@JvmInline
 @Serializable
-public value class ActionsWorkflowAccessToRepository(
+public data class ActionsWorkflowAccessToRepository(
   @SerialName("access_level")
   public val accessLevel: AccessLevel,
 ) {

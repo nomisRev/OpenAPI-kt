@@ -1,14 +1,17 @@
 package io.openai.model
 
+import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 /**
  * The service account that performed the audit logged action.
  */
-@JvmInline
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-public value class AuditLogActorServiceAccount(
+public data class AuditLogActorServiceAccount(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val id: String? = null,
 )

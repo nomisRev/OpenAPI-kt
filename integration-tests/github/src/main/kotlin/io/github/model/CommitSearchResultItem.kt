@@ -2,15 +2,19 @@ package io.github.model
 
 import kotlin.Double
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Commit Search Result Item
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CommitSearchResultItem(
   public val url: String,
@@ -28,8 +32,10 @@ public data class CommitSearchResultItem(
   @SerialName("node_id")
   public val nodeId: String,
   @SerialName("text_matches")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val textMatches: SearchResultTextMatches? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Commit(
     public val author: Author,
@@ -39,6 +45,7 @@ public data class CommitSearchResultItem(
     public val message: String,
     public val tree: Tree,
     public val url: String,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val verification: Verification? = null,
   ) {
     @Serializable
@@ -55,11 +62,15 @@ public data class CommitSearchResultItem(
     )
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Parents(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val url: String? = null,
     @SerialName("html_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val htmlUrl: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val sha: String? = null,
   )
 }

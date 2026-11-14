@@ -2,14 +2,18 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Repository invitations let you manage who you collaborate with.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class RepositoryInvitation(
   public val id: Long,
@@ -19,6 +23,7 @@ public data class RepositoryInvitation(
   public val permissions: Permissions,
   @SerialName("created_at")
   public val createdAt: Instant,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val expired: Boolean? = null,
   public val url: String,
   @SerialName("html_url")

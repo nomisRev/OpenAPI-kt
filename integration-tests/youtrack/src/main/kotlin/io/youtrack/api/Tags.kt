@@ -2,13 +2,14 @@ package io.youtrack.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.youtrack.model.IssueFolderRead
 import io.youtrack.model.IssueFolderWrite
 import io.youtrack.model.IssueRead
@@ -33,24 +34,42 @@ public class Tags internal constructor(
       fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)",
       skip: Int? = null,
       top: Int? = null,
-    ): List<IssueFolderRead.Tag> = client.get("/tags") {
-      query?.let { parameter("query", it) }
-      fields?.let { parameter("fields", it) }
-      skip?.let { parameter("${'$'}skip", it) }
-      top?.let { parameter("${'$'}top", it) }
-    }.body()
+    ): List<IssueFolderRead.Tag> {
+      val response = client.get("tags") {
+        if (query != null) {
+          url.encodedParameters.append("query", query.encodeURLParameter())
+        }
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        if (skip != null) {
+          url.encodedParameters.append("%24skip", skip.toString())
+        }
+        if (top != null) {
+          url.encodedParameters.append("%24top", top.toString())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag = client.post("/tags") {
-      fields?.let { parameter("fields", it) }
-      body?.let {
-        contentType(ContentType.Application.Json)
-        setBody(it)
+    public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag {
+      val response = client.post("tags") {
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        body?.let {
+          contentType(ContentType.Application.Json)
+          setBody(it)
+        }
       }
-    }.body()
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class IdPath internal constructor(
@@ -70,7 +89,8 @@ public class Tags internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        client.delete("/tags/$id")
+        val response = client.delete("tags/${id.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
 
@@ -78,22 +98,34 @@ public class Tags internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)"): IssueFolderRead.Tag = client.get("/tags/$id") {
-        fields?.let { parameter("fields", it) }
-      }.body()
+      public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)"): IssueFolderRead.Tag {
+        val response = client.get("tags/${id.encodeURLParameter()}") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Post internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag = client.post("/tags/$id") {
-        fields?.let { parameter("fields", it) }
-        body?.let {
-          contentType(ContentType.Application.Json)
-          setBody(it)
+      public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag {
+        val response = client.post("tags/${id.encodeURLParameter()}") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+          body?.let {
+            contentType(ContentType.Application.Json)
+            setBody(it)
+          }
         }
-      }.body()
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Issues internal constructor(
@@ -111,12 +143,24 @@ public class Tags internal constructor(
           fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
           skip: Int? = null,
           top: Int? = null,
-        ): List<IssueRead> = client.get("/tags/$id/issues") {
-          customFields?.let { parameter("customFields", it) }
-          fields?.let { parameter("fields", it) }
-          skip?.let { parameter("${'$'}skip", it) }
-          top?.let { parameter("${'$'}top", it) }
-        }.body()
+        ): List<IssueRead> {
+          val response = client.get("tags/${id.encodeURLParameter()}/issues") {
+            if (customFields != null) {
+              url.encodedParameters.append("customFields", customFields.encodeURLParameter())
+            }
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            if (skip != null) {
+              url.encodedParameters.append("%24skip", skip.toString())
+            }
+            if (top != null) {
+              url.encodedParameters.append("%24top", top.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
   }

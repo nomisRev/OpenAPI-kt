@@ -4,7 +4,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -40,8 +40,8 @@ public data class RunStepObject(
   public val failedAt: Long?,
   @SerialName("completed_at")
   public val completedAt: Long?,
-  public val metadata: Metadata,
-  public val usage: RunStepCompletionUsage,
+  public val metadata: Metadata?,
+  public val usage: RunStepCompletionUsage?,
 ) {
   /**
    * The last error associated with this run step. Will be `null` if there are no errors.
@@ -99,10 +99,9 @@ public data class RunStepObject(
     /**
      * Details of the message creation by the run step.
      */
-    @JvmInline
     @SerialName("message_creation")
     @Serializable
-    public value class MessageCreation(
+    public data class MessageCreation(
       @SerialName("message_id")
       public val messageId: String,
     ) : StepDetails
@@ -110,10 +109,9 @@ public data class RunStepObject(
     /**
      * Details of the tool call.
      */
-    @JvmInline
     @SerialName("tool_calls")
     @Serializable
-    public value class ToolCalls(
+    public data class ToolCalls(
       @SerialName("tool_calls")
       public val toolCalls: List<ToolCalls>,
     ) : StepDetails {
@@ -146,17 +144,15 @@ public data class RunStepObject(
               /**
                * Text output from the Code Interpreter tool call as part of a run step.
                */
-              @JvmInline
               @SerialName("logs")
               @Serializable
-              public value class Logs(
+              public data class Logs(
                 public val logs: String,
               ) : Outputs
 
-              @JvmInline
               @SerialName("image")
               @Serializable
-              public value class Image(
+              public data class Image(
                 @SerialName("file_id")
                 public val fileId: String,
               ) : Outputs
@@ -174,11 +170,14 @@ public data class RunStepObject(
           /**
            * For now, this is always going to be an empty object.
            */
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class FileSearch(
             @SerialName("ranking_options")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val rankingOptions:
                 RunStepDetailsToolCallsFileSearchRankingOptionsObject? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val results: List<RunStepDetailsToolCallsFileSearchResultObject>? = null,
           )
         }

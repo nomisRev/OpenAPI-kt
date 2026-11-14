@@ -1,16 +1,19 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A check performed on the code of a given code change
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CheckRun(
   public val id: Long,
@@ -38,11 +41,11 @@ public data class CheckRun(
   public val app: NullableIntegration?,
   @SerialName("pull_requests")
   public val pullRequests: List<PullRequestMinimal>,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val deployment: DeploymentSimple? = null,
 ) {
-  @JvmInline
   @Serializable
-  public value class CheckSuite(
+  public data class CheckSuite(
     public val id: Long,
   )
 

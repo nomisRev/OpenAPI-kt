@@ -1,15 +1,19 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Information of a job execution in a workflow run
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Job(
   public val id: Long,
@@ -18,6 +22,7 @@ public data class Job(
   @SerialName("run_url")
   public val runUrl: String,
   @SerialName("run_attempt")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val runAttempt: Long? = null,
   @SerialName("node_id")
   public val nodeId: String,
@@ -35,6 +40,7 @@ public data class Job(
   @SerialName("completed_at")
   public val completedAt: Instant?,
   public val name: String,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val steps: List<Steps>? = null,
   @SerialName("check_run_url")
   public val checkRunUrl: String,

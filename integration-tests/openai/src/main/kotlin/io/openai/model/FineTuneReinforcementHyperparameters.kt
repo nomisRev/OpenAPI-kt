@@ -5,6 +5,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -18,25 +19,35 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 
 /**
  * The hyperparameters used for the reinforcement fine-tuning job.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class FineTuneReinforcementHyperparameters(
   @SerialName("batch_size")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val batchSize: BatchSize? = null,
   @SerialName("learning_rate_multiplier")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val learningRateMultiplier: LearningRateMultiplier? = null,
   @SerialName("n_epochs")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val nEpochs: NEpochs? = null,
   @SerialName("reasoning_effort")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val reasoningEffort: ReasoningEffort? = null,
   @SerialName("compute_multiplier")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val computeMultiplier: ComputeMultiplier? = null,
   @SerialName("eval_interval")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val evalInterval: EvalInterval? = null,
   @SerialName("eval_samples")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val evalSamples: EvalSamples? = null,
 ) {
   /**
@@ -74,11 +85,17 @@ public data class FineTuneReinforcementHyperparameters(
       override fun deserialize(decoder: Decoder): BatchSize {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-          CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+          )
+          value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+            value,
+            CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: BatchSize) {
@@ -125,11 +142,17 @@ public data class FineTuneReinforcementHyperparameters(
       override fun deserialize(decoder: Decoder): ComputeMultiplier {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-          CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+          )
+          value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+            value,
+            CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: ComputeMultiplier) {
@@ -176,11 +199,17 @@ public data class FineTuneReinforcementHyperparameters(
       override fun deserialize(decoder: Decoder): EvalInterval {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-          CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+          )
+          value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+            value,
+            CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: EvalInterval) {
@@ -227,11 +256,17 @@ public data class FineTuneReinforcementHyperparameters(
       override fun deserialize(decoder: Decoder): EvalSamples {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-          CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+          )
+          value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+            value,
+            CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: EvalSamples) {
@@ -278,11 +313,17 @@ public data class FineTuneReinforcementHyperparameters(
       override fun deserialize(decoder: Decoder): LearningRateMultiplier {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-          CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+          )
+          value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+            value,
+            CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: LearningRateMultiplier) {
@@ -329,11 +370,17 @@ public data class FineTuneReinforcementHyperparameters(
       override fun deserialize(decoder: Decoder): NEpochs {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-          CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+          )
+          value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+            value,
+            CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: NEpochs) {

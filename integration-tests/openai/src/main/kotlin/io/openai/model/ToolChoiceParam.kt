@@ -13,6 +13,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * How the model should select which tool (or tools) to use when generating
@@ -90,17 +92,23 @@ public sealed interface ToolChoiceParam {
     override fun deserialize(decoder: Decoder): ToolChoiceParam {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        CaseToolChoiceOptions::class to { CaseToolChoiceOptions(decodeFromJsonElement(ToolChoiceOptions.serializer(), it)) },
-        CaseToolChoiceAllowed::class to { CaseToolChoiceAllowed(decodeFromJsonElement(ToolChoiceAllowed.serializer(), it)) },
-        CaseToolChoiceTypes::class to { CaseToolChoiceTypes(decodeFromJsonElement(ToolChoiceTypes.serializer(), it)) },
-        CaseToolChoiceFunction::class to { CaseToolChoiceFunction(decodeFromJsonElement(ToolChoiceFunction.serializer(), it)) },
-        CaseToolChoiceMCP::class to { CaseToolChoiceMCP(decodeFromJsonElement(ToolChoiceMCP.serializer(), it)) },
-        CaseToolChoiceCustom::class to { CaseToolChoiceCustom(decodeFromJsonElement(ToolChoiceCustom.serializer(), it)) },
-        CaseSpecificApplyPatchParam::class to { CaseSpecificApplyPatchParam(decodeFromJsonElement(SpecificApplyPatchParam.serializer(), it)) },
-        CaseSpecificFunctionShellParam::class to { CaseSpecificFunctionShellParam(decodeFromJsonElement(SpecificFunctionShellParam.serializer(), it)) },
-      )
+      return when {
+        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+          value,
+          CaseToolChoiceOptions::class to { CaseToolChoiceOptions(decodeFromJsonElement(ToolChoiceOptions.serializer(), it)) },
+        )
+        value is JsonObject -> json.attemptDeserialize(
+          value,
+          CaseToolChoiceAllowed::class to { CaseToolChoiceAllowed(decodeFromJsonElement(ToolChoiceAllowed.serializer(), it)) },
+          CaseToolChoiceTypes::class to { CaseToolChoiceTypes(decodeFromJsonElement(ToolChoiceTypes.serializer(), it)) },
+          CaseToolChoiceFunction::class to { CaseToolChoiceFunction(decodeFromJsonElement(ToolChoiceFunction.serializer(), it)) },
+          CaseToolChoiceMCP::class to { CaseToolChoiceMCP(decodeFromJsonElement(ToolChoiceMCP.serializer(), it)) },
+          CaseToolChoiceCustom::class to { CaseToolChoiceCustom(decodeFromJsonElement(ToolChoiceCustom.serializer(), it)) },
+          CaseSpecificApplyPatchParam::class to { CaseSpecificApplyPatchParam(decodeFromJsonElement(SpecificApplyPatchParam.serializer(), it)) },
+          CaseSpecificFunctionShellParam::class to { CaseSpecificFunctionShellParam(decodeFromJsonElement(SpecificFunctionShellParam.serializer(), it)) },
+        )
+        else -> throw UnionSerializationException(value, emptyMap())
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: ToolChoiceParam) {

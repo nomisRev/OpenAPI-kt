@@ -1,8 +1,11 @@
 package io.github.model
 
 import kotlin.Boolean
+import kotlin.OptIn
 import kotlin.String
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,6 +13,7 @@ import kotlinx.serialization.Serializable
 /**
  * The configuration for GitHub Pages for a repository.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Page(
   public val url: String,
@@ -23,14 +27,18 @@ public data class Page(
   @Required
   public val custom404: Boolean = false,
   @SerialName("html_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val htmlUrl: String? = null,
   @SerialName("build_type")
   public val buildType: BuildType? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val source: PagesSourceHash? = null,
   public val `public`: Boolean,
   @SerialName("https_certificate")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val httpsCertificate: PagesHttpsCertificate? = null,
   @SerialName("https_enforced")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val httpsEnforced: Boolean? = null,
 ) {
   @Serializable

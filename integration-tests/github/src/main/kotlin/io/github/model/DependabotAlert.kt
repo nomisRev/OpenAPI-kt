@@ -1,13 +1,17 @@
 package io.github.model
 
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A Dependabot alert.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class DependabotAlert(
   public val number: AlertNumber,
@@ -38,15 +42,19 @@ public data class DependabotAlert(
   public val autoDismissedAt: AlertAutoDismissedAt? = null,
   @SerialName("dismissal_request")
   public val dismissalRequest: DependabotAlertDismissalRequestSimple? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val assignees: List<SimpleUser>? = null,
 ) {
   /**
    * Details for the vulnerable dependency.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Dependency(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val `package`: DependabotAlertPackage? = null,
     @SerialName("manifest_path")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val manifestPath: String? = null,
     public val scope: Scope? = null,
     public val relationship: Relationship? = null,

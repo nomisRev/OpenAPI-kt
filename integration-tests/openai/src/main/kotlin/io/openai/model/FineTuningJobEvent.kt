@@ -1,7 +1,10 @@
 package io.openai.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -9,6 +12,7 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Fine-tuning job event object
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class FineTuningJobEvent(
   public val `object`: Object,
@@ -17,7 +21,9 @@ public data class FineTuningJobEvent(
   public val createdAt: Long,
   public val level: Level,
   public val message: String,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val type: Type? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val `data`: JsonElement? = null,
 ) {
   @Serializable

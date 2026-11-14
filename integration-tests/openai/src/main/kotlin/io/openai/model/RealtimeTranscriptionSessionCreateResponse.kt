@@ -2,8 +2,11 @@ package io.openai.model
 
 import kotlin.Double
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -15,16 +18,21 @@ import kotlinx.serialization.Serializable
  * property is not present when a session is updated via the WebSocket API.
  *
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class RealtimeTranscriptionSessionCreateResponse(
   @SerialName("client_secret")
   public val clientSecret: ClientSecret,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val modalities: List<Modalities>? = null,
   @SerialName("input_audio_format")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val inputAudioFormat: String? = null,
   @SerialName("input_audio_transcription")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val inputAudioTranscription: AudioTranscription? = null,
   @SerialName("turn_detection")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val turnDetection: TurnDetection? = null,
 ) {
   /**
@@ -56,13 +64,18 @@ public data class RealtimeTranscriptionSessionCreateResponse(
    * audio volume and respond at the end of user speech.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class TurnDetection(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val threshold: Double? = null,
     @SerialName("prefix_padding_ms")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val prefixPaddingMs: Long? = null,
     @SerialName("silence_duration_ms")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val silenceDurationMs: Long? = null,
   )
 }

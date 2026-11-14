@@ -16,6 +16,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * A built-in voice name or a custom voice reference.
@@ -98,9 +100,8 @@ public sealed interface VoiceIdsOrCustomVoice {
   /**
    * Custom voice reference.
    */
-  @JvmInline
   @Serializable
-  public value class Id(
+  public data class Id(
     public val id: String,
   ) : VoiceIdsOrCustomVoice
 
@@ -118,11 +119,17 @@ public sealed interface VoiceIdsOrCustomVoice {
     override fun deserialize(decoder: Decoder): VoiceIdsOrCustomVoice {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        Id::class to { decodeFromJsonElement(Id.serializer(), it) },
-        CaseString::class to { decodeFromJsonElement(CaseString.serializer(), it) },
-      )
+      return when {
+        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+          value,
+          CaseString::class to { decodeFromJsonElement(CaseString.serializer(), it) },
+        )
+        value is JsonObject -> json.attemptDeserialize(
+          value,
+          Id::class to { decodeFromJsonElement(Id.serializer(), it) },
+        )
+        else -> throw UnionSerializationException(value, emptyMap())
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: VoiceIdsOrCustomVoice) {

@@ -6,10 +6,12 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -22,9 +24,13 @@ public class Events internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(perPage: Long? = 15L, page: Long? = 1L): Response {
-      val response = client.get("/events") {
-        perPage?.let { parameter("per_page", it) }
-        page?.let { parameter("page", it) }
+      val response = client.get("events") {
+        if (perPage != null) {
+          url.encodedParameters.append("per_page", perPage.toString())
+        }
+        if (page != null) {
+          url.encodedParameters.append("page", page.toString())
+        }
       }
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
@@ -46,11 +52,15 @@ public class Events internal constructor(
         public val `value`: BasicError,
       ) : Response
 
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class ServiceUnavailable(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val code: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val message: String? = null,
         @SerialName("documentation_url")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val documentationUrl: String? = null,
       ) : Response
     }

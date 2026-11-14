@@ -1,28 +1,36 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A field inside a projects v2 project
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class ProjectsV2Field(
   public val id: Long,
   @SerialName("issue_field_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val issueFieldId: Long? = null,
   @SerialName("node_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val nodeId: String? = null,
   @SerialName("project_url")
   public val projectUrl: String,
   public val name: String,
   @SerialName("data_type")
   public val dataType: DataType,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val options: List<ProjectsV2SingleSelectOptions>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val configuration: Configuration? = null,
   @SerialName("created_at")
   public val createdAt: Instant,
@@ -32,11 +40,15 @@ public data class ProjectsV2Field(
   /**
    * Configuration for iteration fields.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Configuration(
     @SerialName("start_day")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val startDay: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val duration: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val iterations: List<ProjectsV2IterationSettings>? = null,
   )
 

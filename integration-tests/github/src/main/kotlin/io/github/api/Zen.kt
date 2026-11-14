@@ -2,6 +2,7 @@ package io.github.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import kotlin.String
 
@@ -13,6 +14,10 @@ public class Zen internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(): String = client.get("/zen").body()
+    public suspend operator fun invoke(): String {
+      val response = client.get("zen")
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 }

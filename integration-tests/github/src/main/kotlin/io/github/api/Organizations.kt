@@ -17,19 +17,19 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.Boolean
 import kotlin.Float
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -42,6 +42,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Organizations internal constructor(
   private val client: HttpClient,
@@ -54,9 +55,13 @@ public class Organizations internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(since: Long? = null, perPage: Long? = 30L): Response {
-      val response = client.get("/organizations") {
-        since?.let { parameter("since", it) }
-        perPage?.let { parameter("per_page", it) }
+      val response = client.get("organizations") {
+        if (since != null) {
+          url.encodedParameters.append("since", since.toString())
+        }
+        if (perPage != null) {
+          url.encodedParameters.append("per_page", perPage.toString())
+        }
       }
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
@@ -111,7 +116,7 @@ public class Organizations internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/organizations/$org/actions/cache/retention-limit")
+              val response = client.get("organizations/${org.encodeURLParameter()}/actions/cache/retention-limit")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -140,7 +145,7 @@ public class Organizations internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(body: ActionsCacheRetentionLimitForOrganization): Response {
-              val response = client.put("/organizations/$org/actions/cache/retention-limit") {
+              val response = client.put("organizations/${org.encodeURLParameter()}/actions/cache/retention-limit") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -184,7 +189,7 @@ public class Organizations internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/organizations/$org/actions/cache/storage-limit")
+              val response = client.get("organizations/${org.encodeURLParameter()}/actions/cache/storage-limit")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -213,7 +218,7 @@ public class Organizations internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(body: ActionsCacheStorageLimitForOrganization): Response {
-              val response = client.put("/organizations/$org/actions/cache/storage-limit") {
+              val response = client.put("organizations/${org.encodeURLParameter()}/actions/cache/storage-limit") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -267,9 +272,13 @@ public class Organizations internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-            val response = client.get("/organizations/$org/dependabot/repository-access") {
-              page?.let { parameter("page", it) }
-              perPage?.let { parameter("per_page", it) }
+            val response = client.get("organizations/${org.encodeURLParameter()}/dependabot/repository-access") {
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -299,7 +308,7 @@ public class Organizations internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(repositoryIdsToAdd: List<Long>? = null, repositoryIdsToRemove: List<Long>? = null): Response {
-            val response = client.patch("/organizations/$org/dependabot/repository-access") {
+            val response = client.patch("organizations/${org.encodeURLParameter()}/dependabot/repository-access") {
               contentType(ContentType.Application.Json)
               setBody(Body(repositoryIdsToAdd = repositoryIdsToAdd, repositoryIdsToRemove = repositoryIdsToRemove))
             }
@@ -311,11 +320,14 @@ public class Organizations internal constructor(
             }
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             @SerialName("repository_ids_to_add")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val repositoryIdsToAdd: List<Long>? = null,
             @SerialName("repository_ids_to_remove")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val repositoryIdsToRemove: List<Long>? = null,
           )
 
@@ -343,7 +355,7 @@ public class Organizations internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(defaultLevel: DefaultLevel): Response {
-              val response = client.put("/organizations/$org/dependabot/repository-access/default-level") {
+              val response = client.put("organizations/${org.encodeURLParameter()}/dependabot/repository-access/default-level") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(defaultLevel = defaultLevel))
               }
@@ -366,9 +378,8 @@ public class Organizations internal constructor(
               ;
             }
 
-            @JvmInline
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("default_level")
               public val defaultLevel: DefaultLevel,
             )
@@ -422,10 +433,16 @@ public class Organizations internal constructor(
               perPage: Long? = 10L,
               scope: Scope? = null,
             ): Response {
-              val response = client.get("/organizations/$org/settings/billing/budgets") {
-                page?.let { parameter("page", it) }
-                perPage?.let { parameter("per_page", it) }
-                scope?.let { parameter("scope", it.value) }
+              val response = client.get("organizations/${org.encodeURLParameter()}/settings/billing/budgets") {
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (scope != null) {
+                  url.encodedParameters.append("scope", scope.value.encodeURLParameter())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -487,7 +504,7 @@ public class Organizations internal constructor(
               private val budgetId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("/organizations/$org/settings/billing/budgets/$budgetId")
+                val response = client.delete("organizations/${org.encodeURLParameter()}/settings/billing/budgets/${budgetId.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   400 -> Response.BadRequest(response.body())
@@ -520,11 +537,15 @@ public class Organizations internal constructor(
                   public val `value`: BasicError,
                 ) : Response
 
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class ServiceUnavailable(
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val code: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val message: String? = null,
                   @SerialName("documentation_url")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val documentationUrl: String? = null,
                 ) : Response
               }
@@ -536,7 +557,7 @@ public class Organizations internal constructor(
               private val budgetId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/organizations/$org/settings/billing/budgets/$budgetId")
+                val response = client.get("organizations/${org.encodeURLParameter()}/settings/billing/budgets/${budgetId.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   400 -> Response.BadRequest(response.body())
@@ -569,11 +590,15 @@ public class Organizations internal constructor(
                   public val `value`: BasicError,
                 ) : Response
 
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class ServiceUnavailable(
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val code: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val message: String? = null,
                   @SerialName("documentation_url")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val documentationUrl: String? = null,
                 ) : Response
               }
@@ -593,7 +618,7 @@ public class Organizations internal constructor(
                 budgetType: BudgetType? = null,
                 budgetProductSku: String? = null,
               ): Response {
-                val response = client.patch("/organizations/$org/settings/billing/budgets/$budgetId") {
+                val response = client.patch("organizations/${org.encodeURLParameter()}/settings/billing/budgets/${budgetId.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(budgetAmount = budgetAmount, preventFurtherUsage = preventFurtherUsage, budgetAlerting = budgetAlerting, budgetScope = budgetScope, budgetEntityName = budgetEntityName, budgetType = budgetType, budgetProductSku = budgetProductSku))
                 }
@@ -609,11 +634,14 @@ public class Organizations internal constructor(
                 }
               }
 
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class BudgetAlerting(
                 @SerialName("will_alert")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val willAlert: Boolean? = null,
                 @SerialName("alert_recipients")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val alertRecipients: List<String>? = null,
               )
 
@@ -661,11 +689,14 @@ public class Organizations internal constructor(
                   override fun deserialize(decoder: Decoder): BudgetType {
                     val value = decoder.decodeSerializableValue(JsonElement.serializer())
                     val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                    return json.attemptDeserialize(
-                      value,
-                      ProductPricing::class to { decodeFromJsonElement(ProductPricing.serializer(), it) },
-                      SkuPricing::class to { decodeFromJsonElement(SkuPricing.serializer(), it) },
-                    )
+                    return when {
+                      value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                        value,
+                        ProductPricing::class to { decodeFromJsonElement(ProductPricing.serializer(), it) },
+                        SkuPricing::class to { decodeFromJsonElement(SkuPricing.serializer(), it) },
+                      )
+                      else -> throw UnionSerializationException(value, emptyMap())
+                    }
                   }
 
                   override fun serialize(encoder: Encoder, `value`: BudgetType) {
@@ -677,46 +708,66 @@ public class Organizations internal constructor(
                 }
               }
 
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               internal data class Body(
                 @SerialName("budget_amount")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val budgetAmount: Long? = null,
                 @SerialName("prevent_further_usage")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val preventFurtherUsage: Boolean? = null,
                 @SerialName("budget_alerting")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val budgetAlerting: BudgetAlerting? = null,
                 @SerialName("budget_scope")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val budgetScope: BudgetScope? = null,
                 @SerialName("budget_entity_name")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val budgetEntityName: String? = null,
                 @SerialName("budget_type")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val budgetType: BudgetType? = null,
                 @SerialName("budget_product_sku")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val budgetProductSku: String? = null,
               )
 
               public sealed interface Response {
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class Ok(
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val message: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val budget: Budget? = null,
                 ) : Response {
+                  @OptIn(ExperimentalSerializationApi::class)
                   @Serializable
                   public data class Budget(
+                    @EncodeDefault(EncodeDefault.Mode.NEVER)
                     public val id: String? = null,
                     @SerialName("budget_amount")
+                    @EncodeDefault(EncodeDefault.Mode.NEVER)
                     public val budgetAmount: Float? = null,
                     @SerialName("prevent_further_usage")
+                    @EncodeDefault(EncodeDefault.Mode.NEVER)
                     public val preventFurtherUsage: Boolean? = null,
                     @SerialName("budget_alerting")
+                    @EncodeDefault(EncodeDefault.Mode.NEVER)
                     public val budgetAlerting: BudgetAlerting? = null,
                     @SerialName("budget_scope")
+                    @EncodeDefault(EncodeDefault.Mode.NEVER)
                     public val budgetScope: BudgetScope? = null,
                     @SerialName("budget_entity_name")
+                    @EncodeDefault(EncodeDefault.Mode.NEVER)
                     public val budgetEntityName: String? = null,
                     @SerialName("budget_type")
+                    @EncodeDefault(EncodeDefault.Mode.NEVER)
                     public val budgetType: BudgetType? = null,
                     @SerialName("budget_product_sku")
+                    @EncodeDefault(EncodeDefault.Mode.NEVER)
                     public val budgetProductSku: String? = null,
                   ) {
                     @Serializable
@@ -771,11 +822,14 @@ public class Organizations internal constructor(
                         override fun deserialize(decoder: Decoder): BudgetType {
                           val value = decoder.decodeSerializableValue(JsonElement.serializer())
                           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                          return json.attemptDeserialize(
-                            value,
-                            ProductPricing::class to { decodeFromJsonElement(ProductPricing.serializer(), it) },
-                            SkuPricing::class to { decodeFromJsonElement(SkuPricing.serializer(), it) },
-                          )
+                          return when {
+                            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                              value,
+                              ProductPricing::class to { decodeFromJsonElement(ProductPricing.serializer(), it) },
+                              SkuPricing::class to { decodeFromJsonElement(SkuPricing.serializer(), it) },
+                            )
+                            else -> throw UnionSerializationException(value, emptyMap())
+                          }
                         }
 
                         override fun serialize(encoder: Encoder, `value`: BudgetType) {
@@ -841,13 +895,25 @@ public class Organizations internal constructor(
                 model: String? = null,
                 product: String? = null,
               ): Response {
-                val response = client.get("/organizations/$org/settings/billing/premium_request/usage") {
-                  year?.let { parameter("year", it) }
-                  month?.let { parameter("month", it) }
-                  day?.let { parameter("day", it) }
-                  user?.let { parameter("user", it) }
-                  model?.let { parameter("model", it) }
-                  product?.let { parameter("product", it) }
+                val response = client.get("organizations/${org.encodeURLParameter()}/settings/billing/premium_request/usage") {
+                  if (year != null) {
+                    url.encodedParameters.append("year", year.toString())
+                  }
+                  if (month != null) {
+                    url.encodedParameters.append("month", month.toString())
+                  }
+                  if (day != null) {
+                    url.encodedParameters.append("day", day.toString())
+                  }
+                  if (user != null) {
+                    url.encodedParameters.append("user", user.encodeURLParameter())
+                  }
+                  if (model != null) {
+                    url.encodedParameters.append("model", model.encodeURLParameter())
+                  }
+                  if (product != null) {
+                    url.encodedParameters.append("product", product.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -881,11 +947,15 @@ public class Organizations internal constructor(
                   public val `value`: BasicError,
                 ) : Response
 
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class ServiceUnavailable(
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val code: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val message: String? = null,
                   @SerialName("documentation_url")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val documentationUrl: String? = null,
                 ) : Response
               }
@@ -910,10 +980,16 @@ public class Organizations internal constructor(
               month: Long? = null,
               day: Long? = null,
             ): Response {
-              val response = client.get("/organizations/$org/settings/billing/usage") {
-                year?.let { parameter("year", it) }
-                month?.let { parameter("month", it) }
-                day?.let { parameter("day", it) }
+              val response = client.get("organizations/${org.encodeURLParameter()}/settings/billing/usage") {
+                if (year != null) {
+                  url.encodedParameters.append("year", year.toString())
+                }
+                if (month != null) {
+                  url.encodedParameters.append("month", month.toString())
+                }
+                if (day != null) {
+                  url.encodedParameters.append("day", day.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -942,11 +1018,15 @@ public class Organizations internal constructor(
                 public val `value`: BasicError,
               ) : Response
 
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class ServiceUnavailable(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val code: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val message: String? = null,
                 @SerialName("documentation_url")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val documentationUrl: String? = null,
               ) : Response
             }
@@ -970,13 +1050,25 @@ public class Organizations internal constructor(
                 product: String? = null,
                 sku: String? = null,
               ): Response {
-                val response = client.get("/organizations/$org/settings/billing/usage/summary") {
-                  year?.let { parameter("year", it) }
-                  month?.let { parameter("month", it) }
-                  day?.let { parameter("day", it) }
-                  repository?.let { parameter("repository", it) }
-                  product?.let { parameter("product", it) }
-                  sku?.let { parameter("sku", it) }
+                val response = client.get("organizations/${org.encodeURLParameter()}/settings/billing/usage/summary") {
+                  if (year != null) {
+                    url.encodedParameters.append("year", year.toString())
+                  }
+                  if (month != null) {
+                    url.encodedParameters.append("month", month.toString())
+                  }
+                  if (day != null) {
+                    url.encodedParameters.append("day", day.toString())
+                  }
+                  if (repository != null) {
+                    url.encodedParameters.append("repository", repository.encodeURLParameter())
+                  }
+                  if (product != null) {
+                    url.encodedParameters.append("product", product.encodeURLParameter())
+                  }
+                  if (sku != null) {
+                    url.encodedParameters.append("sku", sku.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -1005,11 +1097,15 @@ public class Organizations internal constructor(
                   public val `value`: BasicError,
                 ) : Response
 
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class ServiceUnavailable(
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val code: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val message: String? = null,
                   @SerialName("documentation_url")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val documentationUrl: String? = null,
                 ) : Response
               }

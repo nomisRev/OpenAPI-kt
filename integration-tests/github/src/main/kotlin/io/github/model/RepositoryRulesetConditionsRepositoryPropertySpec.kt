@@ -1,18 +1,23 @@
 package io.github.model
 
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Parameters for a targeting a repository property
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class RepositoryRulesetConditionsRepositoryPropertySpec(
   public val name: String,
   @SerialName("property_values")
   public val propertyValues: List<String>,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val source: Source? = null,
 ) {
   @Serializable

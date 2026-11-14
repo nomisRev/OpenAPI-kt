@@ -1,13 +1,17 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Grade for a student or groups GitHub Classroom assignment
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class ClassroomAssignmentGrade(
   @SerialName("assignment_name")
@@ -31,5 +35,6 @@ public data class ClassroomAssignmentGrade(
   @SerialName("points_available")
   public val pointsAvailable: Long,
   @SerialName("group_name")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val groupName: String? = null,
 )

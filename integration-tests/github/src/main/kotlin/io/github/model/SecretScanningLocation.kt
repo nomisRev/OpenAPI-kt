@@ -3,6 +3,7 @@ package io.github.model
 import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -16,9 +17,12 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class SecretScanningLocation(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val type: Type? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val details: Details? = null,
 ) {
   @Serializable(with = Details.Serializer::class)

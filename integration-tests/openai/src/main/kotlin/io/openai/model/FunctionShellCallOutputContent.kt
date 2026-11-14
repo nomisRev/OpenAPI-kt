@@ -3,7 +3,7 @@ package io.openai.model
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,12 +12,14 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 /**
  * The content of a shell tool call output that was emitted.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class FunctionShellCallOutputContent(
   public val stdout: String,
   public val stderr: String,
   public val outcome: Outcome,
   @SerialName("created_by")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val createdBy: String? = null,
 ) {
   /**
@@ -34,10 +36,9 @@ public data class FunctionShellCallOutputContent(
     /**
      * Indicates that the shell commands finished and returned an exit code.
      */
-    @JvmInline
     @SerialName("exit")
     @Serializable
-    public value class Exit(
+    public data class Exit(
       @SerialName("exit_code")
       public val exitCode: Long,
     ) : Outcome

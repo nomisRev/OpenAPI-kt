@@ -5,6 +5,7 @@ import kotlin.Double
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -26,16 +27,22 @@ public sealed interface RealtimeTurnDetection {
    * Server-side voice activity detection (VAD) which flips on when user speech is detected and off after a period of silence.
    */
   @SerialName("server_vad")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class ServerVad(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val threshold: Double? = null,
     @SerialName("prefix_padding_ms")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val prefixPaddingMs: Long? = null,
     @SerialName("silence_duration_ms")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val silenceDurationMs: Long? = null,
     @SerialName("create_response")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val createResponse: Boolean? = null,
     @SerialName("interrupt_response")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val interruptResponse: Boolean? = null,
     @SerialName("idle_timeout_ms")
     public val idleTimeoutMs: Long? = null,
@@ -45,12 +52,16 @@ public sealed interface RealtimeTurnDetection {
    * Server-side semantic turn detection which uses a model to determine when the user has finished speaking.
    */
   @SerialName("semantic_vad")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class SemanticVad(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val eagerness: Eagerness? = null,
     @SerialName("create_response")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val createResponse: Boolean? = null,
     @SerialName("interrupt_response")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val interruptResponse: Boolean? = null,
   ) : RealtimeTurnDetection {
     @Serializable

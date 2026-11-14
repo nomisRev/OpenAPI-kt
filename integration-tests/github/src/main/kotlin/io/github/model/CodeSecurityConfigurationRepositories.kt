@@ -1,15 +1,21 @@
 package io.github.model
 
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Repositories associated with a code security configuration and attachment status
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CodeSecurityConfigurationRepositories(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val status: Status? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val repository: SimpleRepository? = null,
 ) {
   @Serializable

@@ -2,7 +2,6 @@ package io.openai.model
 
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -28,10 +27,9 @@ public sealed interface ApplyPatchOperationParam {
   /**
    * Instruction for deleting an existing file via the apply_patch tool.
    */
-  @JvmInline
   @SerialName("delete_file")
   @Serializable
-  public value class DeleteFile(
+  public data class DeleteFile(
     public val path: String,
   ) : ApplyPatchOperationParam
 

@@ -1,13 +1,17 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Moved Column in Project Issue Event
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class MovedColumnInProjectIssueEvent(
   public val id: Long,
@@ -25,8 +29,10 @@ public data class MovedColumnInProjectIssueEvent(
   @SerialName("performed_via_github_app")
   public val performedViaGithubApp: NullableIntegration?,
   @SerialName("project_card")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val projectCard: ProjectCard? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class ProjectCard(
     public val id: Long,
@@ -38,6 +44,7 @@ public data class MovedColumnInProjectIssueEvent(
     @SerialName("column_name")
     public val columnName: String,
     @SerialName("previous_column_name")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val previousColumnName: String? = null,
   )
 }

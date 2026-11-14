@@ -13,10 +13,13 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -44,7 +47,7 @@ public class Applications internal constructor(
         private val clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.delete("/applications/$clientId/grant") {
+          val response = client.delete("applications/${clientId.encodeURLParameter()}/grant") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -55,9 +58,8 @@ public class Applications internal constructor(
           }
         }
 
-        @JvmInline
         @Serializable
-        internal value class Body(
+        internal data class Body(
           @SerialName("access_token")
           public val accessToken: String,
         )
@@ -89,7 +91,7 @@ public class Applications internal constructor(
         private val clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.delete("/applications/$clientId/token") {
+          val response = client.delete("applications/${clientId.encodeURLParameter()}/token") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -100,9 +102,8 @@ public class Applications internal constructor(
           }
         }
 
-        @JvmInline
         @Serializable
-        internal value class Body(
+        internal data class Body(
           @SerialName("access_token")
           public val accessToken: String,
         )
@@ -121,7 +122,7 @@ public class Applications internal constructor(
         private val clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.patch("/applications/$clientId/token") {
+          val response = client.patch("applications/${clientId.encodeURLParameter()}/token") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -132,9 +133,8 @@ public class Applications internal constructor(
           }
         }
 
-        @JvmInline
         @Serializable
-        internal value class Body(
+        internal data class Body(
           @SerialName("access_token")
           public val accessToken: String,
         )
@@ -155,7 +155,7 @@ public class Applications internal constructor(
         private val clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.post("/applications/$clientId/token") {
+          val response = client.post("applications/${clientId.encodeURLParameter()}/token") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -167,9 +167,8 @@ public class Applications internal constructor(
           }
         }
 
-        @JvmInline
         @Serializable
-        internal value class Body(
+        internal data class Body(
           @SerialName("access_token")
           public val accessToken: String,
         )
@@ -207,7 +206,7 @@ public class Applications internal constructor(
             repositoryIds: List<Long>? = null,
             permissions: AppPermissions? = null,
           ): Response {
-            val response = client.post("/applications/$clientId/token/scoped") {
+            val response = client.post("applications/${clientId.encodeURLParameter()}/token/scoped") {
               contentType(ContentType.Application.Json)
               setBody(Body(accessToken = accessToken, target = target, targetId = targetId, repositories = repositories, repositoryIds = repositoryIds, permissions = permissions))
             }
@@ -221,16 +220,22 @@ public class Applications internal constructor(
             }
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             @SerialName("access_token")
             public val accessToken: String,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val target: String? = null,
             @SerialName("target_id")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val targetId: Long? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val repositories: List<String>? = null,
             @SerialName("repository_ids")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val repositoryIds: List<Long>? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val permissions: AppPermissions? = null,
           )
 

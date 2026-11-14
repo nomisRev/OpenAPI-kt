@@ -2,8 +2,11 @@ package io.openai.model
 
 import kotlin.ByteArray
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,6 +15,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateImageVariationRequest(
   public val image: ByteArray,
@@ -20,6 +24,7 @@ public data class CreateImageVariationRequest(
   @SerialName("response_format")
   public val responseFormat: ResponseFormat? = null,
   public val size: Size? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
 ) {
   @Serializable(with = Model.Serializer::class)

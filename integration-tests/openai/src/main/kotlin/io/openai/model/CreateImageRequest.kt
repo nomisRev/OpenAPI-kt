@@ -2,8 +2,11 @@ package io.openai.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,6 +15,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateImageRequest(
   public val prompt: String,
@@ -31,6 +35,7 @@ public data class CreateImageRequest(
   public val moderation: Moderation? = null,
   public val background: Background? = null,
   public val style: Style? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
 ) {
   @Serializable

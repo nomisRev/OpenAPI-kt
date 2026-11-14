@@ -2,8 +2,9 @@ package io.youtrack.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import io.youtrack.model.BaseWorkItemRead
 import kotlin.Int
 import kotlin.Long
@@ -36,22 +37,54 @@ public class WorkItems internal constructor(
       fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated",
       skip: Int? = null,
       top: Int? = null,
-    ): List<BaseWorkItemRead.IssueWorkItem> = client.get("/workItems") {
-      query?.let { parameter("query", it) }
-      startDate?.let { parameter("startDate", it.toString()) }
-      endDate?.let { parameter("endDate", it.toString()) }
-      start?.let { parameter("start", it) }
-      end?.let { parameter("end", it) }
-      createdStart?.let { parameter("createdStart", it) }
-      createdEnd?.let { parameter("createdEnd", it) }
-      updatedStart?.let { parameter("updatedStart", it) }
-      updatedEnd?.let { parameter("updatedEnd", it) }
-      author?.let { parameter("author", it) }
-      creator?.let { parameter("creator", it) }
-      fields?.let { parameter("fields", it) }
-      skip?.let { parameter("${'$'}skip", it) }
-      top?.let { parameter("${'$'}top", it) }
-    }.body()
+    ): List<BaseWorkItemRead.IssueWorkItem> {
+      val response = client.get("workItems") {
+        if (query != null) {
+          url.encodedParameters.append("query", query.encodeURLParameter())
+        }
+        if (startDate != null) {
+          url.encodedParameters.append("startDate", startDate.toString().encodeURLParameter())
+        }
+        if (endDate != null) {
+          url.encodedParameters.append("endDate", endDate.toString().encodeURLParameter())
+        }
+        if (start != null) {
+          url.encodedParameters.append("start", start.toString())
+        }
+        if (end != null) {
+          url.encodedParameters.append("end", end.toString())
+        }
+        if (createdStart != null) {
+          url.encodedParameters.append("createdStart", createdStart.toString())
+        }
+        if (createdEnd != null) {
+          url.encodedParameters.append("createdEnd", createdEnd.toString())
+        }
+        if (updatedStart != null) {
+          url.encodedParameters.append("updatedStart", updatedStart.toString())
+        }
+        if (updatedEnd != null) {
+          url.encodedParameters.append("updatedEnd", updatedEnd.toString())
+        }
+        if (author != null) {
+          url.encodedParameters.append("author", author.encodeURLParameter())
+        }
+        if (creator != null) {
+          url.encodedParameters.append("creator", creator.encodeURLParameter())
+        }
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        if (skip != null) {
+          url.encodedParameters.append("%24skip", skip.toString())
+        }
+        if (top != null) {
+          url.encodedParameters.append("%24top", top.toString())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class IdPath internal constructor(
@@ -64,9 +97,15 @@ public class WorkItems internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated"): BaseWorkItemRead.IssueWorkItem = client.get("/workItems/$id") {
-        fields?.let { parameter("fields", it) }
-      }.body()
+      public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated"): BaseWorkItemRead.IssueWorkItem {
+        val response = client.get("workItems/${id.encodeURLParameter()}") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 }

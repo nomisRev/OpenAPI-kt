@@ -3,6 +3,7 @@ package io.openai.model
 import kotlin.Boolean
 import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -38,8 +39,10 @@ public sealed interface TextResponseFormatConfiguration {
    *
    */
   @SerialName("json_schema")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class JsonSchema(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val description: String? = null,
     public val name: String,
     public val schema: ResponseFormatJsonSchemaSchema,

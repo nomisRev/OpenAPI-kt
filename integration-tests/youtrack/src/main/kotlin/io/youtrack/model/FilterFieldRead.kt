@@ -2,6 +2,7 @@ package io.youtrack.model
 
 import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -21,27 +22,40 @@ public sealed interface FilterFieldRead {
   public val name: String?
 
   @SerialName("FilterField")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Default(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val presentation: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val name: String? = null,
   ) : FilterFieldRead
 
   @SerialName("PredefinedFilterField")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class PredefinedFilterField(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val presentation: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val name: String? = null,
   ) : FilterFieldRead
 
   @SerialName("CustomFilterField")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class CustomFilterField(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val presentation: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val name: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val customField: CustomFieldRead? = null,
   ) : FilterFieldRead
 }

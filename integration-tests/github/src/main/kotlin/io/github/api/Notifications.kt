@@ -9,18 +9,20 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -44,13 +46,25 @@ public class Notifications internal constructor(
       page: Long? = 1L,
       perPage: Long? = 50L,
     ): Response {
-      val response = client.get("/notifications") {
-        all?.let { parameter("all", it) }
-        participating?.let { parameter("participating", it) }
-        since?.let { parameter("since", it.toString()) }
-        before?.let { parameter("before", it.toString()) }
-        page?.let { parameter("page", it) }
-        perPage?.let { parameter("per_page", it) }
+      val response = client.get("notifications") {
+        if (all != null) {
+          url.encodedParameters.append("all", all.toString())
+        }
+        if (participating != null) {
+          url.encodedParameters.append("participating", participating.toString())
+        }
+        if (since != null) {
+          url.encodedParameters.append("since", since.toString().encodeURLParameter())
+        }
+        if (before != null) {
+          url.encodedParameters.append("before", before.toString().encodeURLParameter())
+        }
+        if (page != null) {
+          url.encodedParameters.append("page", page.toString())
+        }
+        if (perPage != null) {
+          url.encodedParameters.append("per_page", perPage.toString())
+        }
       }
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
@@ -86,12 +100,22 @@ public class Notifications internal constructor(
   public class Put internal constructor(
     private val client: HttpClient,
   ) {
+    public suspend operator fun invoke(): Response {
+      val response = client.put("notifications")
+      return when (response.status.value) {
+        202 -> response.body<Response.Accepted>()
+        205 -> Response.ResetContent
+        304 -> Response.NotModified
+        401 -> Response.Unauthorized(response.body())
+        403 -> Response.Forbidden(response.body())
+        else -> throw ResponseException(response, "")
+      }
+    }
+
     public suspend operator fun invoke(lastReadAt: Instant? = null, read: Boolean? = null): Response {
-      val response = client.put("/notifications") {
-        if (lastReadAt != null || read != null) {
-          contentType(ContentType.Application.Json)
-          setBody(Body(lastReadAt = lastReadAt, read = read))
-        }
+      val response = client.put("notifications") {
+        contentType(ContentType.Application.Json)
+        setBody(Body(lastReadAt = lastReadAt, read = read))
       }
       return when (response.status.value) {
         202 -> response.body<Response.Accepted>()
@@ -103,17 +127,21 @@ public class Notifications internal constructor(
       }
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     internal data class Body(
       @SerialName("last_read_at")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val lastReadAt: Instant? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val read: Boolean? = null,
     )
 
     public sealed interface Response {
-      @JvmInline
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
-      public value class Accepted(
+      public data class Accepted(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val message: String? = null,
       ) : Response
 
@@ -153,7 +181,8 @@ public class Notifications internal constructor(
         private val threadId: Long,
       ) {
         public suspend operator fun invoke() {
-          client.delete("/notifications/threads/$threadId")
+          val response = client.delete("notifications/threads/$threadId")
+          if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
 
@@ -162,7 +191,7 @@ public class Notifications internal constructor(
         private val threadId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("/notifications/threads/$threadId")
+          val response = client.get("notifications/threads/$threadId")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             304 -> Response.NotModified
@@ -194,7 +223,7 @@ public class Notifications internal constructor(
         private val threadId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.patch("/notifications/threads/$threadId")
+          val response = client.patch("notifications/threads/$threadId")
           return when (response.status.value) {
             205 -> Response.ResetContent
             304 -> Response.NotModified
@@ -229,7 +258,7 @@ public class Notifications internal constructor(
           private val threadId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/notifications/threads/$threadId/subscription")
+            val response = client.delete("notifications/threads/$threadId/subscription")
             return when (response.status.value) {
               204 -> Response.NoContent
               304 -> Response.NotModified
@@ -259,7 +288,7 @@ public class Notifications internal constructor(
           private val threadId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/notifications/threads/$threadId/subscription")
+            val response = client.get("notifications/threads/$threadId/subscription")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               304 -> Response.NotModified
@@ -290,12 +319,21 @@ public class Notifications internal constructor(
           private val client: HttpClient,
           private val threadId: Long,
         ) {
+          public suspend operator fun invoke(): Response {
+            val response = client.put("notifications/threads/$threadId/subscription")
+            return when (response.status.value) {
+              200 -> Response.Ok(response.body())
+              304 -> Response.NotModified
+              401 -> Response.Unauthorized(response.body())
+              403 -> Response.Forbidden(response.body())
+              else -> throw ResponseException(response, "")
+            }
+          }
+
           public suspend operator fun invoke(ignored: Boolean? = null): Response {
-            val response = client.put("/notifications/threads/$threadId/subscription") {
-              if (ignored != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(ignored = ignored))
-              }
+            val response = client.put("notifications/threads/$threadId/subscription") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(ignored = ignored))
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -306,9 +344,10 @@ public class Notifications internal constructor(
             }
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val ignored: Boolean? = null,
           )
 

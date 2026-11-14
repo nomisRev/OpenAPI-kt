@@ -1,8 +1,11 @@
 package io.openai.model
 
 import kotlin.Boolean
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -18,9 +21,12 @@ public data class VectorStoreFileContentResponse(
   @SerialName("next_page")
   public val nextPage: String?,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Data(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val text: String? = null,
   )
 

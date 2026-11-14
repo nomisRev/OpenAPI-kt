@@ -2,11 +2,12 @@ package io.youtrack.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.request.parameter
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.youtrack.model.CommandListRead
 import io.youtrack.model.CommandListWrite
 import kotlin.Boolean
@@ -26,14 +27,22 @@ public class Commands internal constructor(
       muteUpdateNotifications: Boolean? = null,
       fields: String? = "${'$'}type,caret,commands(${'$'}type,description,error,id),comment,id,issues(${'$'}type,id,idReadable,numberInProject),query,suggestions(${'$'}type,caret,completionEnd,completionStart,description,id,matchingEnd,matchingStart,option,prefix,suffix)",
       body: CommandListWrite? = null,
-    ): CommandListRead = client.post("/commands") {
-      muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-      fields?.let { parameter("fields", it) }
-      body?.let {
-        contentType(ContentType.Application.Json)
-        setBody(it)
+    ): CommandListRead {
+      val response = client.post("commands") {
+        if (muteUpdateNotifications != null) {
+          url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+        }
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        body?.let {
+          contentType(ContentType.Application.Json)
+          setBody(it)
+        }
       }
-    }.body()
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class Assist internal constructor(
@@ -44,13 +53,19 @@ public class Commands internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,caret,commands(${'$'}type,description,error,id),comment,id,issues(${'$'}type,id,idReadable,numberInProject),query,suggestions(${'$'}type,caret,completionEnd,completionStart,description,id,matchingEnd,matchingStart,option,prefix,suffix)", body: CommandListWrite? = null): CommandListRead = client.post("/commands/assist") {
-        fields?.let { parameter("fields", it) }
-        body?.let {
-          contentType(ContentType.Application.Json)
-          setBody(it)
+      public suspend operator fun invoke(fields: String? = "${'$'}type,caret,commands(${'$'}type,description,error,id),comment,id,issues(${'$'}type,id,idReadable,numberInProject),query,suggestions(${'$'}type,caret,completionEnd,completionStart,description,id,matchingEnd,matchingStart,option,prefix,suffix)", body: CommandListWrite? = null): CommandListRead {
+        val response = client.post("commands/assist") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+          body?.let {
+            contentType(ContentType.Application.Json)
+            setBody(it)
+          }
         }
-      }.body()
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 }

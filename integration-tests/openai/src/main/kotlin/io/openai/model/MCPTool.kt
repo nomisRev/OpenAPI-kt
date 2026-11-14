@@ -4,7 +4,9 @@ import kotlin.Boolean
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.Map
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -19,30 +21,38 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Give the model access to additional tools via remote Model Context Protocol
  * (MCP) servers. [Learn more about MCP](/docs/guides/tools-remote-mcp).
  *
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class MCPTool(
   public val type: Type,
   @SerialName("server_label")
   public val serverLabel: String,
   @SerialName("server_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val serverUrl: String? = null,
   @SerialName("connector_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val connectorId: ConnectorId? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val authorization: String? = null,
   @SerialName("server_description")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val serverDescription: String? = null,
-  public val headers: List<String>? = null,
+  public val headers: Map<String, String>? = null,
   @SerialName("allowed_tools")
   public val allowedTools: AllowedTools? = null,
   @SerialName("require_approval")
   public val requireApproval: RequireApproval? = null,
   @SerialName("defer_loading")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val deferLoading: Boolean? = null,
 ) {
   /**
@@ -127,9 +137,12 @@ public data class MCPTool(
      * that require approval.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class MCPToolApprovalFilter(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val always: MCPToolFilter? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val never: MCPToolFilter? = null,
     ) : RequireApproval
 
@@ -158,11 +171,17 @@ public data class MCPTool(
       override fun deserialize(decoder: Decoder): RequireApproval {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          MCPToolApprovalFilter::class to { decodeFromJsonElement(MCPToolApprovalFilter.serializer(), it) },
-          MCPToolApprovalSetting::class to { decodeFromJsonElement(MCPToolApprovalSetting.serializer(), it) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            MCPToolApprovalSetting::class to { decodeFromJsonElement(MCPToolApprovalSetting.serializer(), it) },
+          )
+          value is JsonObject -> json.attemptDeserialize(
+            value,
+            MCPToolApprovalFilter::class to { decodeFromJsonElement(MCPToolApprovalFilter.serializer(), it) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: RequireApproval) {

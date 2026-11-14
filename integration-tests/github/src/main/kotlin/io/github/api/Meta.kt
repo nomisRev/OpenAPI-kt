@@ -15,7 +15,7 @@ public class Meta internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("/meta")
+      val response = client.get("meta")
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
         304 -> Response.NotModified

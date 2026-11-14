@@ -5,11 +5,11 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.openai.model.AdminApiKey
 import io.openai.model.ApiKeyList
 import io.openai.model.AuditLogEventType
@@ -76,9 +76,11 @@ import io.openai.model.UserRoleAssignment
 import io.openai.model.UserRoleUpdateRequest
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -121,11 +123,21 @@ public class Organization internal constructor(
         after: String? = null,
         order: Order? = Order.Asc,
         limit: Long? = 20L,
-      ): ApiKeyList = client.get("/organization/admin_api_keys") {
-        after?.let { parameter("after", it) }
-        order?.let { parameter("order", it.value) }
-        limit?.let { parameter("limit", it) }
-      }.body()
+      ): ApiKeyList {
+        val response = client.get("organization/admin_api_keys") {
+          if (after != null) {
+            url.encodedParameters.append("after", after.encodeURLParameter())
+          }
+          if (order != null) {
+            url.encodedParameters.append("order", order.value.encodeURLParameter())
+          }
+          if (limit != null) {
+            url.encodedParameters.append("limit", limit.toString())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
       @Serializable
       public enum class Order(
@@ -142,14 +154,17 @@ public class Organization internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(name: String): AdminApiKey = client.post("/organization/admin_api_keys") {
-        contentType(ContentType.Application.Json)
-        setBody(Body(name = name))
-      }.body()
+      public suspend operator fun invoke(name: String): AdminApiKey {
+        val response = client.post("organization/admin_api_keys") {
+          contentType(ContentType.Application.Json)
+          setBody(Body(name = name))
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
-      @JvmInline
       @Serializable
-      internal value class Body(
+      internal data class Body(
         public val name: String,
       )
     }
@@ -166,12 +181,20 @@ public class Organization internal constructor(
         private val client: HttpClient,
         private val keyId: String,
       ) {
-        public suspend operator fun invoke(): Response = client.delete("/organization/admin_api_keys/$keyId").body()
+        public suspend operator fun invoke(): Response {
+          val response = client.delete("organization/admin_api_keys/${keyId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Response(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val id: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val `object`: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val deleted: Boolean? = null,
         )
       }
@@ -180,7 +203,11 @@ public class Organization internal constructor(
         private val client: HttpClient,
         private val keyId: String,
       ) {
-        public suspend operator fun invoke(): AdminApiKey = client.get("/organization/admin_api_keys/$keyId").body()
+        public suspend operator fun invoke(): AdminApiKey {
+          val response = client.get("organization/admin_api_keys/${keyId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
   }
@@ -203,23 +230,51 @@ public class Organization internal constructor(
         limit: Long? = 20L,
         after: String? = null,
         before: String? = null,
-      ): ListAuditLogsResponse = client.get("/organization/audit_logs") {
-        effectiveAt?.let { parameter("effective_at", it) }
-        projectIds?.let { parameter("project_ids[]", it) }
-        eventTypes?.let { parameter("event_types[]", it) }
-        actorIds?.let { parameter("actor_ids[]", it) }
-        actorEmails?.let { parameter("actor_emails[]", it) }
-        resourceIds?.let { parameter("resource_ids[]", it) }
-        limit?.let { parameter("limit", it) }
-        after?.let { parameter("after", it) }
-        before?.let { parameter("before", it) }
-      }.body()
+      ): ListAuditLogsResponse {
+        val response = client.get("organization/audit_logs") {
+          if (effectiveAt != null) {
+            if (effectiveAt.gt != null) {
+              url.encodedParameters.append("gt", effectiveAt.gt.toString())
+            }
+            if (effectiveAt.gte != null) {
+              url.encodedParameters.append("gte", effectiveAt.gte.toString())
+            }
+            if (effectiveAt.lt != null) {
+              url.encodedParameters.append("lt", effectiveAt.lt.toString())
+            }
+            if (effectiveAt.lte != null) {
+              url.encodedParameters.append("lte", effectiveAt.lte.toString())
+            }
+          }
+          projectIds?.forEach { url.encodedParameters.append("project_ids%5B%5D", it.encodeURLParameter()) }
+          eventTypes?.forEach { url.encodedParameters.append("event_types%5B%5D", it.value.encodeURLParameter()) }
+          actorIds?.forEach { url.encodedParameters.append("actor_ids%5B%5D", it.encodeURLParameter()) }
+          actorEmails?.forEach { url.encodedParameters.append("actor_emails%5B%5D", it.encodeURLParameter()) }
+          resourceIds?.forEach { url.encodedParameters.append("resource_ids%5B%5D", it.encodeURLParameter()) }
+          if (limit != null) {
+            url.encodedParameters.append("limit", limit.toString())
+          }
+          if (after != null) {
+            url.encodedParameters.append("after", after.encodeURLParameter())
+          }
+          if (before != null) {
+            url.encodedParameters.append("before", before.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class EffectiveAt(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val gt: Long? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val gte: Long? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val lt: Long? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val lte: Long? = null,
       )
     }
@@ -245,11 +300,21 @@ public class Organization internal constructor(
         limit: Long? = 20L,
         after: String? = null,
         order: Order? = Order.Desc,
-      ): ListCertificatesResponse = client.get("/organization/certificates") {
-        limit?.let { parameter("limit", it) }
-        after?.let { parameter("after", it) }
-        order?.let { parameter("order", it.value) }
-      }.body()
+      ): ListCertificatesResponse {
+        val response = client.get("organization/certificates") {
+          if (limit != null) {
+            url.encodedParameters.append("limit", limit.toString())
+          }
+          if (after != null) {
+            url.encodedParameters.append("after", after.encodeURLParameter())
+          }
+          if (order != null) {
+            url.encodedParameters.append("order", order.value.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
       @Serializable
       public enum class Order(
@@ -266,10 +331,14 @@ public class Organization internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: UploadCertificateRequest): Certificate = client.post("/organization/certificates") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: UploadCertificateRequest): Certificate {
+        val response = client.post("organization/certificates") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Activate internal constructor(
@@ -280,10 +349,14 @@ public class Organization internal constructor(
       public class Post internal constructor(
         private val client: HttpClient,
       ) {
-        public suspend operator fun invoke(body: ToggleCertificatesRequest): ListCertificatesResponse = client.post("/organization/certificates/activate") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
+        public suspend operator fun invoke(body: ToggleCertificatesRequest): ListCertificatesResponse {
+          val response = client.post("organization/certificates/activate") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -295,10 +368,14 @@ public class Organization internal constructor(
       public class Post internal constructor(
         private val client: HttpClient,
       ) {
-        public suspend operator fun invoke(body: ToggleCertificatesRequest): ListCertificatesResponse = client.post("/organization/certificates/deactivate") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
+        public suspend operator fun invoke(body: ToggleCertificatesRequest): ListCertificatesResponse {
+          val response = client.post("organization/certificates/deactivate") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -316,16 +393,24 @@ public class Organization internal constructor(
         private val client: HttpClient,
         private val certificateId: String,
       ) {
-        public suspend operator fun invoke(): DeleteCertificateResponse = client.delete("/organization/certificates/$certificateId").body()
+        public suspend operator fun invoke(): DeleteCertificateResponse {
+          val response = client.delete("organization/certificates/${certificateId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Get internal constructor(
         private val client: HttpClient,
         private val certificateId: String,
       ) {
-        public suspend operator fun invoke(include: List<Include>? = null): Certificate = client.get("/organization/certificates/$certificateId") {
-          include?.let { parameter("include", it) }
-        }.body()
+        public suspend operator fun invoke(include: List<Include>? = null): Certificate {
+          val response = client.get("organization/certificates/${certificateId.encodeURLParameter()}") {
+            include?.forEach { url.encodedParameters.append("include", it.value.encodeURLParameter()) }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Include(
@@ -341,10 +426,14 @@ public class Organization internal constructor(
         private val client: HttpClient,
         private val certificateId: String,
       ) {
-        public suspend operator fun invoke(body: ModifyCertificateRequest): Certificate = client.post("/organization/certificates/$certificateId") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
+        public suspend operator fun invoke(body: ModifyCertificateRequest): Certificate {
+          val response = client.post("organization/certificates/${certificateId.encodeURLParameter()}") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
   }
@@ -365,15 +454,27 @@ public class Organization internal constructor(
         groupBy: List<GroupBy>? = null,
         limit: Long? = 7L,
         page: String? = null,
-      ): UsageResponse = client.get("/organization/costs") {
-        parameter("start_time", startTime)
-        endTime?.let { parameter("end_time", it) }
-        bucketWidth?.let { parameter("bucket_width", it.toString()) }
-        projectIds?.let { parameter("project_ids", it) }
-        groupBy?.let { parameter("group_by", it) }
-        limit?.let { parameter("limit", it) }
-        page?.let { parameter("page", it) }
-      }.body()
+      ): UsageResponse {
+        val response = client.get("organization/costs") {
+          url.encodedParameters.append("start_time", startTime.toString())
+          if (endTime != null) {
+            url.encodedParameters.append("end_time", endTime.toString())
+          }
+          if (bucketWidth != null) {
+            url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+          }
+          projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+          groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+          if (limit != null) {
+            url.encodedParameters.append("limit", limit.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
       @Serializable
       public enum class BucketWidth {
@@ -409,11 +510,21 @@ public class Organization internal constructor(
         limit: Long? = 100L,
         after: String? = null,
         order: Order? = Order.Asc,
-      ): GroupListResource = client.get("/organization/groups") {
-        limit?.let { parameter("limit", it) }
-        after?.let { parameter("after", it) }
-        order?.let { parameter("order", it.value) }
-      }.body()
+      ): GroupListResource {
+        val response = client.get("organization/groups") {
+          if (limit != null) {
+            url.encodedParameters.append("limit", limit.toString())
+          }
+          if (after != null) {
+            url.encodedParameters.append("after", after.encodeURLParameter())
+          }
+          if (order != null) {
+            url.encodedParameters.append("order", order.value.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
       @Serializable
       public enum class Order(
@@ -430,10 +541,14 @@ public class Organization internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: CreateGroupBody): GroupResponse = client.post("/organization/groups") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: CreateGroupBody): GroupResponse {
+        val response = client.post("organization/groups") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class GroupIdPath internal constructor(
@@ -452,17 +567,25 @@ public class Organization internal constructor(
         private val client: HttpClient,
         private val groupId: String,
       ) {
-        public suspend operator fun invoke(): GroupDeletedResource = client.delete("/organization/groups/$groupId").body()
+        public suspend operator fun invoke(): GroupDeletedResource {
+          val response = client.delete("organization/groups/${groupId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Post internal constructor(
         private val client: HttpClient,
         private val groupId: String,
       ) {
-        public suspend operator fun invoke(body: UpdateGroupBody): GroupResourceWithSuccess = client.post("/organization/groups/$groupId") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
+        public suspend operator fun invoke(body: UpdateGroupBody): GroupResourceWithSuccess {
+          val response = client.post("organization/groups/${groupId.encodeURLParameter()}") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Roles internal constructor(
@@ -483,11 +606,21 @@ public class Organization internal constructor(
             limit: Long? = null,
             after: String? = null,
             order: Order? = null,
-          ): RoleListResource = client.get("/organization/groups/$groupId/roles") {
-            limit?.let { parameter("limit", it) }
-            after?.let { parameter("after", it) }
-            order?.let { parameter("order", it.value) }
-          }.body()
+          ): RoleListResource {
+            val response = client.get("organization/groups/${groupId.encodeURLParameter()}/roles") {
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (order != null) {
+                url.encodedParameters.append("order", order.value.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public enum class Order(
@@ -505,10 +638,14 @@ public class Organization internal constructor(
           private val client: HttpClient,
           private val groupId: String,
         ) {
-          public suspend operator fun invoke(body: PublicAssignOrganizationGroupRoleBody): GroupRoleAssignment = client.post("/organization/groups/$groupId/roles") {
-            contentType(ContentType.Application.Json)
-            setBody(body)
-          }.body()
+          public suspend operator fun invoke(body: PublicAssignOrganizationGroupRoleBody): GroupRoleAssignment {
+            val response = client.post("organization/groups/${groupId.encodeURLParameter()}/roles") {
+              contentType(ContentType.Application.Json)
+              setBody(body)
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class RoleIdPath internal constructor(
@@ -523,7 +660,11 @@ public class Organization internal constructor(
             private val groupId: String,
             private val roleId: String,
           ) {
-            public suspend operator fun invoke(): DeletedRoleAssignmentResource = client.delete("/organization/groups/$groupId/roles/$roleId").body()
+            public suspend operator fun invoke(): DeletedRoleAssignmentResource {
+              val response = client.delete("organization/groups/${groupId.encodeURLParameter()}/roles/${roleId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }
@@ -546,11 +687,21 @@ public class Organization internal constructor(
             limit: Long? = 100L,
             after: String? = null,
             order: Order? = Order.Desc,
-          ): UserListResource = client.get("/organization/groups/$groupId/users") {
-            limit?.let { parameter("limit", it) }
-            after?.let { parameter("after", it) }
-            order?.let { parameter("order", it.value) }
-          }.body()
+          ): UserListResource {
+            val response = client.get("organization/groups/${groupId.encodeURLParameter()}/users") {
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (order != null) {
+                url.encodedParameters.append("order", order.value.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public enum class Order(
@@ -568,10 +719,14 @@ public class Organization internal constructor(
           private val client: HttpClient,
           private val groupId: String,
         ) {
-          public suspend operator fun invoke(body: CreateGroupUserBody): GroupUserAssignment = client.post("/organization/groups/$groupId/users") {
-            contentType(ContentType.Application.Json)
-            setBody(body)
-          }.body()
+          public suspend operator fun invoke(body: CreateGroupUserBody): GroupUserAssignment {
+            val response = client.post("organization/groups/${groupId.encodeURLParameter()}/users") {
+              contentType(ContentType.Application.Json)
+              setBody(body)
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class UserIdPath internal constructor(
@@ -586,7 +741,11 @@ public class Organization internal constructor(
             private val groupId: String,
             private val userId: String,
           ) {
-            public suspend operator fun invoke(): GroupUserDeletedResource = client.delete("/organization/groups/$groupId/users/$userId").body()
+            public suspend operator fun invoke(): GroupUserDeletedResource {
+              val response = client.delete("organization/groups/${groupId.encodeURLParameter()}/users/${userId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }
@@ -605,19 +764,31 @@ public class Organization internal constructor(
     public class Get internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): InviteListResponse = client.get("/organization/invites") {
-        limit?.let { parameter("limit", it) }
-        after?.let { parameter("after", it) }
-      }.body()
+      public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): InviteListResponse {
+        val response = client.get("organization/invites") {
+          if (limit != null) {
+            url.encodedParameters.append("limit", limit.toString())
+          }
+          if (after != null) {
+            url.encodedParameters.append("after", after.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: InviteRequest): Invite = client.post("/organization/invites") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: InviteRequest): Invite {
+        val response = client.post("organization/invites") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class InviteIdPath internal constructor(
@@ -632,14 +803,22 @@ public class Organization internal constructor(
         private val client: HttpClient,
         private val inviteId: String,
       ) {
-        public suspend operator fun invoke(): InviteDeleteResponse = client.delete("/organization/invites/$inviteId").body()
+        public suspend operator fun invoke(): InviteDeleteResponse {
+          val response = client.delete("organization/invites/${inviteId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Get internal constructor(
         private val client: HttpClient,
         private val inviteId: String,
       ) {
-        public suspend operator fun invoke(): Invite = client.get("/organization/invites/$inviteId").body()
+        public suspend operator fun invoke(): Invite {
+          val response = client.get("organization/invites/${inviteId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
   }
@@ -660,20 +839,34 @@ public class Organization internal constructor(
         limit: Long? = 20L,
         after: String? = null,
         includeArchived: Boolean? = false,
-      ): ProjectListResponse = client.get("/organization/projects") {
-        limit?.let { parameter("limit", it) }
-        after?.let { parameter("after", it) }
-        includeArchived?.let { parameter("include_archived", it) }
-      }.body()
+      ): ProjectListResponse {
+        val response = client.get("organization/projects") {
+          if (limit != null) {
+            url.encodedParameters.append("limit", limit.toString())
+          }
+          if (after != null) {
+            url.encodedParameters.append("after", after.encodeURLParameter())
+          }
+          if (includeArchived != null) {
+            url.encodedParameters.append("include_archived", includeArchived.toString())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: ProjectCreateRequest): Project = client.post("/organization/projects") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: ProjectCreateRequest): Project {
+        val response = client.post("organization/projects") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class ProjectIdPath internal constructor(
@@ -702,7 +895,11 @@ public class Organization internal constructor(
         private val client: HttpClient,
         private val projectId: String,
       ) {
-        public suspend operator fun invoke(): Project = client.get("/organization/projects/$projectId").body()
+        public suspend operator fun invoke(): Project {
+          val response = client.get("organization/projects/${projectId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Post internal constructor(
@@ -710,7 +907,7 @@ public class Organization internal constructor(
         private val projectId: String,
       ) {
         public suspend operator fun invoke(body: ProjectUpdateRequest): Response {
-          val response = client.post("/organization/projects/$projectId") {
+          val response = client.post("organization/projects/${projectId.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -744,10 +941,18 @@ public class Organization internal constructor(
           private val client: HttpClient,
           private val projectId: String,
         ) {
-          public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): ProjectApiKeyListResponse = client.get("/organization/projects/$projectId/api_keys") {
-            limit?.let { parameter("limit", it) }
-            after?.let { parameter("after", it) }
-          }.body()
+          public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): ProjectApiKeyListResponse {
+            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/api_keys") {
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class KeyIdPath internal constructor(
@@ -765,7 +970,7 @@ public class Organization internal constructor(
             private val keyId: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/organization/projects/$projectId/api_keys/$keyId")
+              val response = client.delete("organization/projects/${projectId.encodeURLParameter()}/api_keys/${keyId.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 400 -> Response.BadRequest(response.body())
@@ -789,7 +994,11 @@ public class Organization internal constructor(
             private val projectId: String,
             private val keyId: String,
           ) {
-            public suspend operator fun invoke(): ProjectApiKey = client.get("/organization/projects/$projectId/api_keys/$keyId").body()
+            public suspend operator fun invoke(): ProjectApiKey {
+              val response = client.get("organization/projects/${projectId.encodeURLParameter()}/api_keys/${keyId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }
@@ -804,7 +1013,11 @@ public class Organization internal constructor(
           private val client: HttpClient,
           private val projectId: String,
         ) {
-          public suspend operator fun invoke(): Project = client.post("/organization/projects/$projectId/archive").body()
+          public suspend operator fun invoke(): Project {
+            val response = client.post("organization/projects/${projectId.encodeURLParameter()}/archive")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
 
@@ -826,11 +1039,21 @@ public class Organization internal constructor(
             limit: Long? = 20L,
             after: String? = null,
             order: Order? = Order.Desc,
-          ): ListCertificatesResponse = client.get("/organization/projects/$projectId/certificates") {
-            limit?.let { parameter("limit", it) }
-            after?.let { parameter("after", it) }
-            order?.let { parameter("order", it.value) }
-          }.body()
+          ): ListCertificatesResponse {
+            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/certificates") {
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (order != null) {
+                url.encodedParameters.append("order", order.value.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public enum class Order(
@@ -854,10 +1077,14 @@ public class Organization internal constructor(
             private val client: HttpClient,
             private val projectId: String,
           ) {
-            public suspend operator fun invoke(body: ToggleCertificatesRequest): ListCertificatesResponse = client.post("/organization/projects/$projectId/certificates/activate") {
-              contentType(ContentType.Application.Json)
-              setBody(body)
-            }.body()
+            public suspend operator fun invoke(body: ToggleCertificatesRequest): ListCertificatesResponse {
+              val response = client.post("organization/projects/${projectId.encodeURLParameter()}/certificates/activate") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
 
@@ -871,10 +1098,14 @@ public class Organization internal constructor(
             private val client: HttpClient,
             private val projectId: String,
           ) {
-            public suspend operator fun invoke(body: ToggleCertificatesRequest): ListCertificatesResponse = client.post("/organization/projects/$projectId/certificates/deactivate") {
-              contentType(ContentType.Application.Json)
-              setBody(body)
-            }.body()
+            public suspend operator fun invoke(body: ToggleCertificatesRequest): ListCertificatesResponse {
+              val response = client.post("organization/projects/${projectId.encodeURLParameter()}/certificates/deactivate") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }
@@ -897,11 +1128,21 @@ public class Organization internal constructor(
             limit: Long? = 20L,
             after: String? = null,
             order: Order? = Order.Asc,
-          ): ProjectGroupListResource = client.get("/organization/projects/$projectId/groups") {
-            limit?.let { parameter("limit", it) }
-            after?.let { parameter("after", it) }
-            order?.let { parameter("order", it.value) }
-          }.body()
+          ): ProjectGroupListResource {
+            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/groups") {
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (order != null) {
+                url.encodedParameters.append("order", order.value.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public enum class Order(
@@ -919,10 +1160,14 @@ public class Organization internal constructor(
           private val client: HttpClient,
           private val projectId: String,
         ) {
-          public suspend operator fun invoke(body: InviteProjectGroupBody): ProjectGroup = client.post("/organization/projects/$projectId/groups") {
-            contentType(ContentType.Application.Json)
-            setBody(body)
-          }.body()
+          public suspend operator fun invoke(body: InviteProjectGroupBody): ProjectGroup {
+            val response = client.post("organization/projects/${projectId.encodeURLParameter()}/groups") {
+              contentType(ContentType.Application.Json)
+              setBody(body)
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class GroupIdPath internal constructor(
@@ -937,7 +1182,11 @@ public class Organization internal constructor(
             private val projectId: String,
             private val groupId: String,
           ) {
-            public suspend operator fun invoke(): ProjectGroupDeletedResource = client.delete("/organization/projects/$projectId/groups/$groupId").body()
+            public suspend operator fun invoke(): ProjectGroupDeletedResource {
+              val response = client.delete("organization/projects/${projectId.encodeURLParameter()}/groups/${groupId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }
@@ -958,11 +1207,21 @@ public class Organization internal constructor(
             limit: Long? = 100L,
             after: String? = null,
             before: String? = null,
-          ): ProjectRateLimitListResponse = client.get("/organization/projects/$projectId/rate_limits") {
-            limit?.let { parameter("limit", it) }
-            after?.let { parameter("after", it) }
-            before?.let { parameter("before", it) }
-          }.body()
+          ): ProjectRateLimitListResponse {
+            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/rate_limits") {
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (before != null) {
+                url.encodedParameters.append("before", before.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class RateLimitIdPath internal constructor(
@@ -978,7 +1237,7 @@ public class Organization internal constructor(
             private val rateLimitId: String,
           ) {
             public suspend operator fun invoke(body: ProjectRateLimitUpdateRequest): Response {
-              val response = client.post("/organization/projects/$projectId/rate_limits/$rateLimitId") {
+              val response = client.post("organization/projects/${projectId.encodeURLParameter()}/rate_limits/${rateLimitId.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -1017,9 +1276,13 @@ public class Organization internal constructor(
           private val projectId: String,
         ) {
           public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): Response {
-            val response = client.get("/organization/projects/$projectId/service_accounts") {
-              limit?.let { parameter("limit", it) }
-              after?.let { parameter("after", it) }
+            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/service_accounts") {
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -1044,7 +1307,7 @@ public class Organization internal constructor(
           private val projectId: String,
         ) {
           public suspend operator fun invoke(body: ProjectServiceAccountCreateRequest): Response {
-            val response = client.post("/organization/projects/$projectId/service_accounts") {
+            val response = client.post("organization/projects/${projectId.encodeURLParameter()}/service_accounts") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -1080,7 +1343,11 @@ public class Organization internal constructor(
             private val projectId: String,
             private val serviceAccountId: String,
           ) {
-            public suspend operator fun invoke(): ProjectServiceAccountDeleteResponse = client.delete("/organization/projects/$projectId/service_accounts/$serviceAccountId").body()
+            public suspend operator fun invoke(): ProjectServiceAccountDeleteResponse {
+              val response = client.delete("organization/projects/${projectId.encodeURLParameter()}/service_accounts/${serviceAccountId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Get internal constructor(
@@ -1088,7 +1355,11 @@ public class Organization internal constructor(
             private val projectId: String,
             private val serviceAccountId: String,
           ) {
-            public suspend operator fun invoke(): ProjectServiceAccount = client.get("/organization/projects/$projectId/service_accounts/$serviceAccountId").body()
+            public suspend operator fun invoke(): ProjectServiceAccount {
+              val response = client.get("organization/projects/${projectId.encodeURLParameter()}/service_accounts/${serviceAccountId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }
@@ -1108,9 +1379,13 @@ public class Organization internal constructor(
           private val projectId: String,
         ) {
           public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): Response {
-            val response = client.get("/organization/projects/$projectId/users") {
-              limit?.let { parameter("limit", it) }
-              after?.let { parameter("after", it) }
+            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/users") {
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -1135,7 +1410,7 @@ public class Organization internal constructor(
           private val projectId: String,
         ) {
           public suspend operator fun invoke(body: ProjectUserCreateRequest): Response {
-            val response = client.post("/organization/projects/$projectId/users") {
+            val response = client.post("organization/projects/${projectId.encodeURLParameter()}/users") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -1174,7 +1449,7 @@ public class Organization internal constructor(
             private val userId: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/organization/projects/$projectId/users/$userId")
+              val response = client.delete("organization/projects/${projectId.encodeURLParameter()}/users/${userId.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 400 -> Response.BadRequest(response.body())
@@ -1198,7 +1473,11 @@ public class Organization internal constructor(
             private val projectId: String,
             private val userId: String,
           ) {
-            public suspend operator fun invoke(): ProjectUser = client.get("/organization/projects/$projectId/users/$userId").body()
+            public suspend operator fun invoke(): ProjectUser {
+              val response = client.get("organization/projects/${projectId.encodeURLParameter()}/users/${userId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Post internal constructor(
@@ -1207,7 +1486,7 @@ public class Organization internal constructor(
             private val userId: String,
           ) {
             public suspend operator fun invoke(body: ProjectUserUpdateRequest): Response {
-              val response = client.post("/organization/projects/$projectId/users/$userId") {
+              val response = client.post("organization/projects/${projectId.encodeURLParameter()}/users/${userId.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -1249,11 +1528,21 @@ public class Organization internal constructor(
         limit: Long? = 1_000L,
         after: String? = null,
         order: Order? = Order.Asc,
-      ): PublicRoleListResource = client.get("/organization/roles") {
-        limit?.let { parameter("limit", it) }
-        after?.let { parameter("after", it) }
-        order?.let { parameter("order", it.value) }
-      }.body()
+      ): PublicRoleListResource {
+        val response = client.get("organization/roles") {
+          if (limit != null) {
+            url.encodedParameters.append("limit", limit.toString())
+          }
+          if (after != null) {
+            url.encodedParameters.append("after", after.encodeURLParameter())
+          }
+          if (order != null) {
+            url.encodedParameters.append("order", order.value.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
       @Serializable
       public enum class Order(
@@ -1270,10 +1559,14 @@ public class Organization internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: PublicCreateOrganizationRoleBody): Role = client.post("/organization/roles") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: PublicCreateOrganizationRoleBody): Role {
+        val response = client.post("organization/roles") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class RoleIdPath internal constructor(
@@ -1288,17 +1581,25 @@ public class Organization internal constructor(
         private val client: HttpClient,
         private val roleId: String,
       ) {
-        public suspend operator fun invoke(): RoleDeletedResource = client.delete("/organization/roles/$roleId").body()
+        public suspend operator fun invoke(): RoleDeletedResource {
+          val response = client.delete("organization/roles/${roleId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Post internal constructor(
         private val client: HttpClient,
         private val roleId: String,
       ) {
-        public suspend operator fun invoke(body: PublicUpdateOrganizationRoleBody): Role = client.post("/organization/roles/$roleId") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
+        public suspend operator fun invoke(body: PublicUpdateOrganizationRoleBody): Role {
+          val response = client.post("organization/roles/${roleId.encodeURLParameter()}") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
   }
@@ -1341,18 +1642,30 @@ public class Organization internal constructor(
           groupBy: List<GroupBy>? = null,
           limit: Long? = null,
           page: String? = null,
-        ): UsageResponse = client.get("/organization/usage/audio_speeches") {
-          parameter("start_time", startTime)
-          endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it.toString()) }
-          projectIds?.let { parameter("project_ids", it) }
-          userIds?.let { parameter("user_ids", it) }
-          apiKeyIds?.let { parameter("api_key_ids", it) }
-          models?.let { parameter("models", it) }
-          groupBy?.let { parameter("group_by", it) }
-          limit?.let { parameter("limit", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): UsageResponse {
+          val response = client.get("organization/usage/audio_speeches") {
+            url.encodedParameters.append("start_time", startTime.toString())
+            if (endTime != null) {
+              url.encodedParameters.append("end_time", endTime.toString())
+            }
+            if (bucketWidth != null) {
+              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+            }
+            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
+            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class BucketWidth {
@@ -1397,18 +1710,30 @@ public class Organization internal constructor(
           groupBy: List<GroupBy>? = null,
           limit: Long? = null,
           page: String? = null,
-        ): UsageResponse = client.get("/organization/usage/audio_transcriptions") {
-          parameter("start_time", startTime)
-          endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it.toString()) }
-          projectIds?.let { parameter("project_ids", it) }
-          userIds?.let { parameter("user_ids", it) }
-          apiKeyIds?.let { parameter("api_key_ids", it) }
-          models?.let { parameter("models", it) }
-          groupBy?.let { parameter("group_by", it) }
-          limit?.let { parameter("limit", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): UsageResponse {
+          val response = client.get("organization/usage/audio_transcriptions") {
+            url.encodedParameters.append("start_time", startTime.toString())
+            if (endTime != null) {
+              url.encodedParameters.append("end_time", endTime.toString())
+            }
+            if (bucketWidth != null) {
+              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+            }
+            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
+            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class BucketWidth {
@@ -1450,15 +1775,27 @@ public class Organization internal constructor(
           groupBy: List<GroupBy>? = null,
           limit: Long? = null,
           page: String? = null,
-        ): UsageResponse = client.get("/organization/usage/code_interpreter_sessions") {
-          parameter("start_time", startTime)
-          endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it.toString()) }
-          projectIds?.let { parameter("project_ids", it) }
-          groupBy?.let { parameter("group_by", it) }
-          limit?.let { parameter("limit", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): UsageResponse {
+          val response = client.get("organization/usage/code_interpreter_sessions") {
+            url.encodedParameters.append("start_time", startTime.toString())
+            if (endTime != null) {
+              url.encodedParameters.append("end_time", endTime.toString())
+            }
+            if (bucketWidth != null) {
+              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+            }
+            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class BucketWidth {
@@ -1498,19 +1835,33 @@ public class Organization internal constructor(
           groupBy: List<GroupBy>? = null,
           limit: Long? = null,
           page: String? = null,
-        ): UsageResponse = client.get("/organization/usage/completions") {
-          parameter("start_time", startTime)
-          endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it.toString()) }
-          projectIds?.let { parameter("project_ids", it) }
-          userIds?.let { parameter("user_ids", it) }
-          apiKeyIds?.let { parameter("api_key_ids", it) }
-          models?.let { parameter("models", it) }
-          batch?.let { parameter("batch", it) }
-          groupBy?.let { parameter("group_by", it) }
-          limit?.let { parameter("limit", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): UsageResponse {
+          val response = client.get("organization/usage/completions") {
+            url.encodedParameters.append("start_time", startTime.toString())
+            if (endTime != null) {
+              url.encodedParameters.append("end_time", endTime.toString())
+            }
+            if (bucketWidth != null) {
+              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+            }
+            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
+            if (batch != null) {
+              url.encodedParameters.append("batch", batch.toString())
+            }
+            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class BucketWidth {
@@ -1559,18 +1910,30 @@ public class Organization internal constructor(
           groupBy: List<GroupBy>? = null,
           limit: Long? = null,
           page: String? = null,
-        ): UsageResponse = client.get("/organization/usage/embeddings") {
-          parameter("start_time", startTime)
-          endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it.toString()) }
-          projectIds?.let { parameter("project_ids", it) }
-          userIds?.let { parameter("user_ids", it) }
-          apiKeyIds?.let { parameter("api_key_ids", it) }
-          models?.let { parameter("models", it) }
-          groupBy?.let { parameter("group_by", it) }
-          limit?.let { parameter("limit", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): UsageResponse {
+          val response = client.get("organization/usage/embeddings") {
+            url.encodedParameters.append("start_time", startTime.toString())
+            if (endTime != null) {
+              url.encodedParameters.append("end_time", endTime.toString())
+            }
+            if (bucketWidth != null) {
+              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+            }
+            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
+            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class BucketWidth {
@@ -1617,20 +1980,32 @@ public class Organization internal constructor(
           groupBy: List<GroupBy>? = null,
           limit: Long? = null,
           page: String? = null,
-        ): UsageResponse = client.get("/organization/usage/images") {
-          parameter("start_time", startTime)
-          endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it.toString()) }
-          sources?.let { parameter("sources", it) }
-          sizes?.let { parameter("sizes", it) }
-          projectIds?.let { parameter("project_ids", it) }
-          userIds?.let { parameter("user_ids", it) }
-          apiKeyIds?.let { parameter("api_key_ids", it) }
-          models?.let { parameter("models", it) }
-          groupBy?.let { parameter("group_by", it) }
-          limit?.let { parameter("limit", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): UsageResponse {
+          val response = client.get("organization/usage/images") {
+            url.encodedParameters.append("start_time", startTime.toString())
+            if (endTime != null) {
+              url.encodedParameters.append("end_time", endTime.toString())
+            }
+            if (bucketWidth != null) {
+              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+            }
+            sources?.forEach { url.encodedParameters.append("sources", it.value.encodeURLParameter()) }
+            sizes?.forEach { url.encodedParameters.append("sizes", it.toString().encodeURLParameter()) }
+            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
+            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class BucketWidth {
@@ -1701,18 +2076,30 @@ public class Organization internal constructor(
           groupBy: List<GroupBy>? = null,
           limit: Long? = null,
           page: String? = null,
-        ): UsageResponse = client.get("/organization/usage/moderations") {
-          parameter("start_time", startTime)
-          endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it.toString()) }
-          projectIds?.let { parameter("project_ids", it) }
-          userIds?.let { parameter("user_ids", it) }
-          apiKeyIds?.let { parameter("api_key_ids", it) }
-          models?.let { parameter("models", it) }
-          groupBy?.let { parameter("group_by", it) }
-          limit?.let { parameter("limit", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): UsageResponse {
+          val response = client.get("organization/usage/moderations") {
+            url.encodedParameters.append("start_time", startTime.toString())
+            if (endTime != null) {
+              url.encodedParameters.append("end_time", endTime.toString())
+            }
+            if (bucketWidth != null) {
+              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+            }
+            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
+            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class BucketWidth {
@@ -1754,15 +2141,27 @@ public class Organization internal constructor(
           groupBy: List<GroupBy>? = null,
           limit: Long? = null,
           page: String? = null,
-        ): UsageResponse = client.get("/organization/usage/vector_stores") {
-          parameter("start_time", startTime)
-          endTime?.let { parameter("end_time", it) }
-          bucketWidth?.let { parameter("bucket_width", it.toString()) }
-          projectIds?.let { parameter("project_ids", it) }
-          groupBy?.let { parameter("group_by", it) }
-          limit?.let { parameter("limit", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): UsageResponse {
+          val response = client.get("organization/usage/vector_stores") {
+            url.encodedParameters.append("start_time", startTime.toString())
+            if (endTime != null) {
+              url.encodedParameters.append("end_time", endTime.toString())
+            }
+            if (bucketWidth != null) {
+              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+            }
+            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class BucketWidth {
@@ -1797,11 +2196,19 @@ public class Organization internal constructor(
         limit: Long? = 20L,
         after: String? = null,
         emails: List<String>? = null,
-      ): UserListResponse = client.get("/organization/users") {
-        limit?.let { parameter("limit", it) }
-        after?.let { parameter("after", it) }
-        emails?.let { parameter("emails", it) }
-      }.body()
+      ): UserListResponse {
+        val response = client.get("organization/users") {
+          if (limit != null) {
+            url.encodedParameters.append("limit", limit.toString())
+          }
+          if (after != null) {
+            url.encodedParameters.append("after", after.encodeURLParameter())
+          }
+          emails?.forEach { url.encodedParameters.append("emails", it.encodeURLParameter()) }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class UserIdPath internal constructor(
@@ -1820,24 +2227,36 @@ public class Organization internal constructor(
         private val client: HttpClient,
         private val userId: String,
       ) {
-        public suspend operator fun invoke(): UserDeleteResponse = client.delete("/organization/users/$userId").body()
+        public suspend operator fun invoke(): UserDeleteResponse {
+          val response = client.delete("organization/users/${userId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Get internal constructor(
         private val client: HttpClient,
         private val userId: String,
       ) {
-        public suspend operator fun invoke(): User = client.get("/organization/users/$userId").body()
+        public suspend operator fun invoke(): User {
+          val response = client.get("organization/users/${userId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Post internal constructor(
         private val client: HttpClient,
         private val userId: String,
       ) {
-        public suspend operator fun invoke(body: UserRoleUpdateRequest): User = client.post("/organization/users/$userId") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
+        public suspend operator fun invoke(body: UserRoleUpdateRequest): User {
+          val response = client.post("organization/users/${userId.encodeURLParameter()}") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Roles internal constructor(
@@ -1858,11 +2277,21 @@ public class Organization internal constructor(
             limit: Long? = null,
             after: String? = null,
             order: Order? = null,
-          ): RoleListResource = client.get("/organization/users/$userId/roles") {
-            limit?.let { parameter("limit", it) }
-            after?.let { parameter("after", it) }
-            order?.let { parameter("order", it.value) }
-          }.body()
+          ): RoleListResource {
+            val response = client.get("organization/users/${userId.encodeURLParameter()}/roles") {
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (order != null) {
+                url.encodedParameters.append("order", order.value.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public enum class Order(
@@ -1880,10 +2309,14 @@ public class Organization internal constructor(
           private val client: HttpClient,
           private val userId: String,
         ) {
-          public suspend operator fun invoke(body: PublicAssignOrganizationGroupRoleBody): UserRoleAssignment = client.post("/organization/users/$userId/roles") {
-            contentType(ContentType.Application.Json)
-            setBody(body)
-          }.body()
+          public suspend operator fun invoke(body: PublicAssignOrganizationGroupRoleBody): UserRoleAssignment {
+            val response = client.post("organization/users/${userId.encodeURLParameter()}/roles") {
+              contentType(ContentType.Application.Json)
+              setBody(body)
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class RoleIdPath internal constructor(
@@ -1898,7 +2331,11 @@ public class Organization internal constructor(
             private val userId: String,
             private val roleId: String,
           ) {
-            public suspend operator fun invoke(): DeletedRoleAssignmentResource = client.delete("/organization/users/$userId/roles/$roleId").body()
+            public suspend operator fun invoke(): DeletedRoleAssignmentResource {
+              val response = client.delete("organization/users/${userId.encodeURLParameter()}/roles/${roleId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }

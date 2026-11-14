@@ -2,13 +2,14 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.openai.model.CreateFineTuningCheckpointPermissionRequest
 import io.openai.model.CreateFineTuningJobRequest
 import io.openai.model.DeleteFineTuningCheckpointPermissionResponse
@@ -23,7 +24,7 @@ import io.openai.model.ValidateGraderRequest
 import io.openai.model.ValidateGraderResponse
 import kotlin.Long
 import kotlin.String
-import kotlin.collections.List
+import kotlin.collections.Map
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -56,10 +57,14 @@ public class FineTuning internal constructor(
         public class Post internal constructor(
           private val client: HttpClient,
         ) {
-          public suspend operator fun invoke(body: RunGraderRequest): RunGraderResponse = client.post("/fine_tuning/alpha/graders/run") {
-            contentType(ContentType.Application.Json)
-            setBody(body)
-          }.body()
+          public suspend operator fun invoke(body: RunGraderRequest): RunGraderResponse {
+            val response = client.post("fine_tuning/alpha/graders/run") {
+              contentType(ContentType.Application.Json)
+              setBody(body)
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
 
@@ -71,10 +76,14 @@ public class FineTuning internal constructor(
         public class Post internal constructor(
           private val client: HttpClient,
         ) {
-          public suspend operator fun invoke(body: ValidateGraderRequest): ValidateGraderResponse = client.post("/fine_tuning/alpha/graders/validate") {
-            contentType(ContentType.Application.Json)
-            setBody(body)
-          }.body()
+          public suspend operator fun invoke(body: ValidateGraderRequest): ValidateGraderResponse {
+            val response = client.post("fine_tuning/alpha/graders/validate") {
+              contentType(ContentType.Application.Json)
+              setBody(body)
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }
@@ -110,12 +119,24 @@ public class FineTuning internal constructor(
             after: String? = null,
             limit: Long? = 10L,
             order: Order? = Order.Descending,
-          ): ListFineTuningCheckpointPermissionResponse = client.get("/fine_tuning/checkpoints/$fineTunedModelCheckpoint/permissions") {
-            projectId?.let { parameter("project_id", it) }
-            after?.let { parameter("after", it) }
-            limit?.let { parameter("limit", it) }
-            order?.let { parameter("order", it.value) }
-          }.body()
+          ): ListFineTuningCheckpointPermissionResponse {
+            val response = client.get("fine_tuning/checkpoints/${fineTunedModelCheckpoint.encodeURLParameter()}/permissions") {
+              if (projectId != null) {
+                url.encodedParameters.append("project_id", projectId.encodeURLParameter())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+              if (order != null) {
+                url.encodedParameters.append("order", order.value.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public enum class Order(
@@ -133,10 +154,14 @@ public class FineTuning internal constructor(
           private val client: HttpClient,
           private val fineTunedModelCheckpoint: String,
         ) {
-          public suspend operator fun invoke(body: CreateFineTuningCheckpointPermissionRequest): ListFineTuningCheckpointPermissionResponse = client.post("/fine_tuning/checkpoints/$fineTunedModelCheckpoint/permissions") {
-            contentType(ContentType.Application.Json)
-            setBody(body)
-          }.body()
+          public suspend operator fun invoke(body: CreateFineTuningCheckpointPermissionRequest): ListFineTuningCheckpointPermissionResponse {
+            val response = client.post("fine_tuning/checkpoints/${fineTunedModelCheckpoint.encodeURLParameter()}/permissions") {
+              contentType(ContentType.Application.Json)
+              setBody(body)
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class PermissionIdPath internal constructor(
@@ -151,7 +176,11 @@ public class FineTuning internal constructor(
             private val fineTunedModelCheckpoint: String,
             private val permissionId: String,
           ) {
-            public suspend operator fun invoke(): DeleteFineTuningCheckpointPermissionResponse = client.delete("/fine_tuning/checkpoints/$fineTunedModelCheckpoint/permissions/$permissionId").body()
+            public suspend operator fun invoke(): DeleteFineTuningCheckpointPermissionResponse {
+              val response = client.delete("fine_tuning/checkpoints/${fineTunedModelCheckpoint.encodeURLParameter()}/permissions/${permissionId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }
@@ -173,21 +202,33 @@ public class FineTuning internal constructor(
       public suspend operator fun invoke(
         after: String? = null,
         limit: Long? = 20L,
-        metadata: List<String>? = emptyList(),
-      ): ListPaginatedFineTuningJobsResponse = client.get("/fine_tuning/jobs") {
-        after?.let { parameter("after", it) }
-        limit?.let { parameter("limit", it) }
-        metadata?.let { parameter("metadata", it) }
-      }.body()
+        metadata: Map<String, String>? = null,
+      ): ListPaginatedFineTuningJobsResponse {
+        val response = client.get("fine_tuning/jobs") {
+          if (after != null) {
+            url.encodedParameters.append("after", after.encodeURLParameter())
+          }
+          if (limit != null) {
+            url.encodedParameters.append("limit", limit.toString())
+          }
+          metadata?.forEach { url.encodedParameters.append("metadata%5B${it.key.encodeURLParameter()}%5D", it.value.encodeURLParameter()) }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: CreateFineTuningJobRequest): FineTuningJob = client.post("/fine_tuning/jobs") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: CreateFineTuningJobRequest): FineTuningJob {
+        val response = client.post("fine_tuning/jobs") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class FineTuningJobIdPath internal constructor(
@@ -210,7 +251,11 @@ public class FineTuning internal constructor(
         private val client: HttpClient,
         private val fineTuningJobId: String,
       ) {
-        public suspend operator fun invoke(): FineTuningJob = client.get("/fine_tuning/jobs/$fineTuningJobId").body()
+        public suspend operator fun invoke(): FineTuningJob {
+          val response = client.get("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Cancel internal constructor(
@@ -223,7 +268,11 @@ public class FineTuning internal constructor(
           private val client: HttpClient,
           private val fineTuningJobId: String,
         ) {
-          public suspend operator fun invoke(): FineTuningJob = client.post("/fine_tuning/jobs/$fineTuningJobId/cancel").body()
+          public suspend operator fun invoke(): FineTuningJob {
+            val response = client.post("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/cancel")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
 
@@ -237,10 +286,18 @@ public class FineTuning internal constructor(
           private val client: HttpClient,
           private val fineTuningJobId: String,
         ) {
-          public suspend operator fun invoke(after: String? = null, limit: Long? = 10L): ListFineTuningJobCheckpointsResponse = client.get("/fine_tuning/jobs/$fineTuningJobId/checkpoints") {
-            after?.let { parameter("after", it) }
-            limit?.let { parameter("limit", it) }
-          }.body()
+          public suspend operator fun invoke(after: String? = null, limit: Long? = 10L): ListFineTuningJobCheckpointsResponse {
+            val response = client.get("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/checkpoints") {
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
 
@@ -254,10 +311,18 @@ public class FineTuning internal constructor(
           private val client: HttpClient,
           private val fineTuningJobId: String,
         ) {
-          public suspend operator fun invoke(after: String? = null, limit: Long? = 20L): ListFineTuningJobEventsResponse = client.get("/fine_tuning/jobs/$fineTuningJobId/events") {
-            after?.let { parameter("after", it) }
-            limit?.let { parameter("limit", it) }
-          }.body()
+          public suspend operator fun invoke(after: String? = null, limit: Long? = 20L): ListFineTuningJobEventsResponse {
+            val response = client.get("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/events") {
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
 
@@ -271,7 +336,11 @@ public class FineTuning internal constructor(
           private val client: HttpClient,
           private val fineTuningJobId: String,
         ) {
-          public suspend operator fun invoke(): FineTuningJob = client.post("/fine_tuning/jobs/$fineTuningJobId/pause").body()
+          public suspend operator fun invoke(): FineTuningJob {
+            val response = client.post("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/pause")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
 
@@ -285,7 +354,11 @@ public class FineTuning internal constructor(
           private val client: HttpClient,
           private val fineTuningJobId: String,
         ) {
-          public suspend operator fun invoke(): FineTuningJob = client.post("/fine_tuning/jobs/$fineTuningJobId/resume").body()
+          public suspend operator fun invoke(): FineTuningJob {
+            val response = client.post("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/resume")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }

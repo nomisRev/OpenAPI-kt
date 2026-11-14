@@ -6,6 +6,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -37,17 +38,21 @@ public data class UsageTimeBucket(
      * The aggregated completions usage details of the specific time bucket.
      */
     @SerialName("organization.usage.completions.result")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class OrganizationUsageCompletionsResult(
       @SerialName("input_tokens")
       public val inputTokens: Long,
       @SerialName("input_cached_tokens")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val inputCachedTokens: Long? = null,
       @SerialName("output_tokens")
       public val outputTokens: Long,
       @SerialName("input_audio_tokens")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val inputAudioTokens: Long? = null,
       @SerialName("output_audio_tokens")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val outputAudioTokens: Long? = null,
       @SerialName("num_model_requests")
       public val numModelRequests: Long,
@@ -173,9 +178,11 @@ public data class UsageTimeBucket(
      * The aggregated code interpreter sessions usage details of the specific time bucket.
      */
     @SerialName("organization.usage.code_interpreter_sessions.result")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class OrganizationUsageCodeInterpreterSessionsResult(
       @SerialName("num_sessions")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val numSessions: Long? = null,
       @SerialName("project_id")
       public val projectId: String? = null,
@@ -185,8 +192,10 @@ public data class UsageTimeBucket(
      * The aggregated costs details of the specific time bucket.
      */
     @SerialName("organization.costs.result")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class OrganizationCostsResult(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val amount: Amount? = null,
       @SerialName("line_item")
       public val lineItem: String? = null,
@@ -196,9 +205,12 @@ public data class UsageTimeBucket(
       /**
        * The monetary value in its associated currency.
        */
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class Amount(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val `value`: Double? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val currency: String? = null,
       )
     }

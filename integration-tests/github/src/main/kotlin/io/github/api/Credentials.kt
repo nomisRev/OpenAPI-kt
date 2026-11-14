@@ -11,7 +11,6 @@ import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
 
@@ -29,7 +28,7 @@ public class Credentials internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke(credentials: List<String>): Response {
-        val response = client.post("/credentials/revoke") {
+        val response = client.post("credentials/revoke") {
           contentType(ContentType.Application.Json)
           setBody(Body(credentials = credentials))
         }
@@ -41,9 +40,8 @@ public class Credentials internal constructor(
         }
       }
 
-      @JvmInline
       @Serializable
-      internal value class Body(
+      internal data class Body(
         public val credentials: List<String>,
       )
 

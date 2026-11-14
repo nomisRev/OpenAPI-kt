@@ -2,13 +2,14 @@ package io.youtrack.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.youtrack.model.IssueLinkTypeRead
 import io.youtrack.model.IssueLinkTypeWrite
 import kotlin.Int
@@ -31,23 +32,39 @@ public class IssueLinkTypes internal constructor(
       fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource",
       skip: Int? = null,
       top: Int? = null,
-    ): List<IssueLinkTypeRead> = client.get("/issueLinkTypes") {
-      fields?.let { parameter("fields", it) }
-      skip?.let { parameter("${'$'}skip", it) }
-      top?.let { parameter("${'$'}top", it) }
-    }.body()
+    ): List<IssueLinkTypeRead> {
+      val response = client.get("issueLinkTypes") {
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        if (skip != null) {
+          url.encodedParameters.append("%24skip", skip.toString())
+        }
+        if (top != null) {
+          url.encodedParameters.append("%24top", top.toString())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource", body: IssueLinkTypeWrite? = null): IssueLinkTypeRead = client.post("/issueLinkTypes") {
-      fields?.let { parameter("fields", it) }
-      body?.let {
-        contentType(ContentType.Application.Json)
-        setBody(it)
+    public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource", body: IssueLinkTypeWrite? = null): IssueLinkTypeRead {
+      val response = client.post("issueLinkTypes") {
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        body?.let {
+          contentType(ContentType.Application.Json)
+          setBody(it)
+        }
       }
-    }.body()
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class IdPath internal constructor(
@@ -65,7 +82,8 @@ public class IssueLinkTypes internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        client.delete("/issueLinkTypes/$id")
+        val response = client.delete("issueLinkTypes/${id.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
 
@@ -73,22 +91,34 @@ public class IssueLinkTypes internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource"): IssueLinkTypeRead = client.get("/issueLinkTypes/$id") {
-        fields?.let { parameter("fields", it) }
-      }.body()
+      public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource"): IssueLinkTypeRead {
+        val response = client.get("issueLinkTypes/${id.encodeURLParameter()}") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Post internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource", body: IssueLinkTypeWrite? = null): IssueLinkTypeRead = client.post("/issueLinkTypes/$id") {
-        fields?.let { parameter("fields", it) }
-        body?.let {
-          contentType(ContentType.Application.Json)
-          setBody(it)
+      public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource", body: IssueLinkTypeWrite? = null): IssueLinkTypeRead {
+        val response = client.post("issueLinkTypes/${id.encodeURLParameter()}") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+          body?.let {
+            contentType(ContentType.Application.Json)
+            setBody(it)
+          }
         }
-      }.body()
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 }

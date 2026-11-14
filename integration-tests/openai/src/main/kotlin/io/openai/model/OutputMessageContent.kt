@@ -3,7 +3,6 @@ package io.openai.model
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -27,10 +26,9 @@ public sealed interface OutputMessageContent {
   /**
    * A refusal from the model.
    */
-  @JvmInline
   @SerialName("refusal")
   @Serializable
-  public value class Refusal(
+  public data class Refusal(
     public val refusal: String,
   ) : OutputMessageContent
 }

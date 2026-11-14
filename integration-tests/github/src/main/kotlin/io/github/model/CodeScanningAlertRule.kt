@@ -1,19 +1,26 @@
 package io.github.model
 
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CodeScanningAlertRule(
   public val id: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val name: String? = null,
   public val severity: Severity? = null,
   @SerialName("security_severity_level")
   public val securitySeverityLevel: SecuritySeverityLevel? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val description: String? = null,
   @SerialName("full_description")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val fullDescription: String? = null,
   public val tags: List<String>? = null,
   public val help: String? = null,

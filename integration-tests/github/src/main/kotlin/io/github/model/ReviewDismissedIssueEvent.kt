@@ -1,7 +1,10 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -27,6 +30,7 @@ public data class ReviewDismissedIssueEvent(
   @SerialName("dismissed_review")
   public val dismissedReview: DismissedReview,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class DismissedReview(
     public val state: String,
@@ -35,6 +39,7 @@ public data class ReviewDismissedIssueEvent(
     @SerialName("dismissal_message")
     public val dismissalMessage: String?,
     @SerialName("dismissal_commit_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val dismissalCommitId: String? = null,
   )
 }

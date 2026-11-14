@@ -2,8 +2,10 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -15,10 +17,11 @@ public data class CheckSuitePreference(
   public val preferences: Preferences,
   public val repository: MinimalRepository,
 ) {
-  @JvmInline
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class Preferences(
+  public data class Preferences(
     @SerialName("auto_trigger_checks")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val autoTriggerChecks: List<AutoTriggerChecks>? = null,
   ) {
     @Serializable

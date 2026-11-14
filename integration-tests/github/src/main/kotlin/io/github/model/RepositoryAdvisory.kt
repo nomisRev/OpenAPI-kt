@@ -3,10 +3,12 @@ package io.github.model
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -25,8 +27,8 @@ public data class RepositoryAdvisory(
   public val summary: String,
   public val description: String?,
   public val severity: Severity?,
-  public val author: Author,
-  public val publisher: Publisher,
+  public val author: Author?,
+  public val publisher: Publisher?,
   public val identifiers: List<Identifiers>,
   public val state: State,
   @SerialName("created_at")
@@ -55,11 +57,12 @@ public data class RepositoryAdvisory(
   @SerialName("collaborating_teams")
   public val collaboratingTeams: List<Team>?,
   @SerialName("private_fork")
-  public val privateFork: PrivateFork,
+  public val privateFork: PrivateFork?,
 ) {
   /**
    * A GitHub user.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Author(
     public val name: String? = null,
@@ -97,14 +100,19 @@ public data class RepositoryAdvisory(
     @SerialName("site_admin")
     public val siteAdmin: Boolean,
     @SerialName("starred_at")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val starredAt: String? = null,
     @SerialName("user_view_type")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val userViewType: String? = null,
   )
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Credits(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val login: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: SecurityAdvisoryCreditTypes? = null,
   )
 
@@ -229,6 +237,7 @@ public data class RepositoryAdvisory(
   /**
    * A GitHub user.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Publisher(
     public val name: String? = null,
@@ -266,8 +275,10 @@ public data class RepositoryAdvisory(
     @SerialName("site_admin")
     public val siteAdmin: Boolean,
     @SerialName("starred_at")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val starredAt: String? = null,
     @SerialName("user_view_type")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val userViewType: String? = null,
   )
 
@@ -303,9 +314,8 @@ public data class RepositoryAdvisory(
     ;
   }
 
-  @JvmInline
   @Serializable
-  public value class Submission(
+  public data class Submission(
     public val accepted: Boolean,
   )
 }

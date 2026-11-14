@@ -1,11 +1,15 @@
 package io.github.model
 
 import kotlin.Boolean
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class RepositoryAdvisoryCreate(
   public val summary: String,
@@ -20,6 +24,7 @@ public data class RepositoryAdvisoryCreate(
   @SerialName("cvss_vector_string")
   public val cvssVectorString: String? = null,
   @SerialName("start_private_fork")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val startPrivateFork: Boolean? = null,
 ) {
   @Serializable

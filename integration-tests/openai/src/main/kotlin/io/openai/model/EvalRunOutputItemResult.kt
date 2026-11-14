@@ -4,6 +4,7 @@ import kotlin.Boolean
 import kotlin.Double
 import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.KeepGeneratedSerializer
@@ -25,6 +26,7 @@ import kotlinx.serialization.json.JsonObject
 @Serializable(with = EvalRunOutputItemResult.Serializer::class)
 public data class EvalRunOutputItemResult(
   public val name: String,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val type: String? = null,
   public val score: Double,
   public val passed: Boolean,

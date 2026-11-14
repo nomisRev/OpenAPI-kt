@@ -5,8 +5,9 @@ import kotlin.Double
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
-import kotlin.collections.List
+import kotlin.collections.Map
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -20,16 +21,23 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.doubleOrNull
 
 /**
  * Workflow reference and overrides applied to the chat session.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class WorkflowParam(
   public val id: String,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val version: String? = null,
   @SerialName("state_variables")
-  public val stateVariables: List<StateVariables>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
+  public val stateVariables: Map<String, StateVariables>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tracing: WorkflowTracingParam? = null,
 ) {
   @Serializable(with = StateVariables.Serializer::class)
@@ -74,13 +82,22 @@ public data class WorkflowParam(
       override fun deserialize(decoder: Decoder): StateVariables {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
-          CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
-          CaseBoolean::class to { CaseBoolean(decodeFromJsonElement(Boolean.serializer(), it)) },
-          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+          )
+          value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+            value,
+            CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
+            CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
+          )
+          value is JsonPrimitive && !value.isString && value.booleanOrNull != null -> json.attemptDeserialize(
+            value,
+            CaseBoolean::class to { CaseBoolean(decodeFromJsonElement(Boolean.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: StateVariables) {

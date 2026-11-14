@@ -4,7 +4,7 @@ import kotlin.Double
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -17,6 +17,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * When the number of tokens in a conversation exceeds the model's input token limit, the conversation be truncated, meaning messages (starting from the oldest) will not be included in the model's context. A 32k context model with 4,096 max output tokens can only include 28,224 tokens in the context before truncation occurs.
@@ -44,21 +46,24 @@ public sealed interface RealtimeTruncation {
   /**
    * Retain a fraction of the conversation tokens when the conversation exceeds the input token limit. This allows you to amortize truncations across multiple turns, which can help improve cached token usage.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class RetentionRatio(
     public val type: Type,
     @SerialName("retention_ratio")
     public val retentionRatio: Double,
     @SerialName("token_limits")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val tokenLimits: TokenLimits? = null,
   ) : RealtimeTruncation {
     /**
      * Optional custom token limits for this truncation strategy. If not provided, the model's default token limits will be used.
      */
-    @JvmInline
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
-    public value class TokenLimits(
+    public data class TokenLimits(
       @SerialName("post_instructions")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val postInstructions: Long? = null,
     )
 
@@ -86,11 +91,17 @@ public sealed interface RealtimeTruncation {
     override fun deserialize(decoder: Decoder): RealtimeTruncation {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        RetentionRatio::class to { decodeFromJsonElement(RetentionRatio.serializer(), it) },
-        AutoOrDisabled::class to { decodeFromJsonElement(AutoOrDisabled.serializer(), it) },
-      )
+      return when {
+        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+          value,
+          AutoOrDisabled::class to { decodeFromJsonElement(AutoOrDisabled.serializer(), it) },
+        )
+        value is JsonObject -> json.attemptDeserialize(
+          value,
+          RetentionRatio::class to { decodeFromJsonElement(RetentionRatio.serializer(), it) },
+        )
+        else -> throw UnionSerializationException(value, emptyMap())
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: RealtimeTruncation) {

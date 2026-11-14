@@ -7,7 +7,10 @@ import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -26,7 +29,7 @@ public class Markdown internal constructor(
       mode: Mode? = null,
       context: String? = null,
     ): Response {
-      val response = client.post("/markdown") {
+      val response = client.post("markdown") {
         contentType(ContentType.Application.Json)
         setBody(Body(text = text, mode = mode, context = context))
       }
@@ -48,10 +51,13 @@ public class Markdown internal constructor(
       ;
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     internal data class Body(
       public val text: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val mode: Mode? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val context: String? = null,
     )
 
@@ -73,7 +79,7 @@ public class Markdown internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke(body: String? = null, requestType: RequestType): Response {
-        val response = client.post("/markdown/raw") {
+        val response = client.post("markdown/raw") {
           body?.let {
             contentType(requestType.contentType)
             setBody(it)

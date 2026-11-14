@@ -1,16 +1,19 @@
 package io.github.model
 
 import kotlin.Long
-import kotlin.jvm.JvmInline
+import kotlin.OptIn
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * GitHub Actions cache storage policy for an enterprise.
  */
-@JvmInline
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-public value class ActionsCacheStorageLimitForEnterprise(
+public data class ActionsCacheStorageLimitForEnterprise(
   @SerialName("max_cache_size_gb")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val maxCacheSizeGb: Long? = null,
 )

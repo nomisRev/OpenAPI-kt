@@ -1,17 +1,22 @@
 package io.github.model
 
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class PagesHttpsCertificate(
   public val state: State,
   public val description: String,
   public val domains: List<String>,
   @SerialName("expires_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val expiresAt: LocalDate? = null,
 ) {
   @Serializable

@@ -6,6 +6,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
+import io.ktor.http.encodeURLParameter
 import kotlin.String
 import kotlin.collections.List
 
@@ -20,7 +21,7 @@ public class CodesOfConduct internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("/codes_of_conduct")
+      val response = client.get("codes_of_conduct")
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
         304 -> Response.NotModified
@@ -48,7 +49,7 @@ public class CodesOfConduct internal constructor(
       private val key: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("/codes_of_conduct/$key")
+        val response = client.get("codes_of_conduct/${key.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           304 -> Response.NotModified

@@ -1,7 +1,6 @@
 package io.openai.model
 
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -10,9 +9,8 @@ import kotlinx.serialization.Serializable
  * [Learn more about built-in tools](/docs/guides/tools).
  *
  */
-@JvmInline
 @Serializable
-public value class ToolChoiceTypes(
+public data class ToolChoiceTypes(
   public val type: Type,
 ) {
   @Serializable

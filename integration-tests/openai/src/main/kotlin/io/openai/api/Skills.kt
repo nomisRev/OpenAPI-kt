@@ -2,19 +2,21 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.Parameters
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.ktor.http.formUrlEncode
+import io.ktor.serialization.JsonConvertException
 import io.openai.model.CreateSkillBody
 import io.openai.model.CreateSkillVersionBody
 import io.openai.model.DeletedSkillResource
@@ -30,6 +32,7 @@ import kotlin.ByteArray
 import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Skills internal constructor(
   private val client: HttpClient,
@@ -47,28 +50,52 @@ public class Skills internal constructor(
       limit: Long? = null,
       order: OrderEnum? = null,
       after: String? = null,
-    ): SkillListResource = client.get("/skills") {
-      limit?.let { parameter("limit", it) }
-      order?.let { parameter("order", it.value) }
-      after?.let { parameter("after", it) }
-    }.body()
+    ): SkillListResource {
+      val response = client.get("skills") {
+        if (limit != null) {
+          url.encodedParameters.append("limit", limit.toString())
+        }
+        if (order != null) {
+          url.encodedParameters.append("order", order.value.encodeURLParameter())
+        }
+        if (after != null) {
+          url.encodedParameters.append("after", after.encodeURLParameter())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(files: CreateSkillBody.Files): SkillResource = client.post("/skills") {
-      setBody(MultiPartFormDataContent(formData {
-        append("files", Json.encodeToString(files))
-      }))
-    }.body()
+    public suspend operator fun invoke(): SkillResource {
+      val response = client.post("skills")
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
-    public suspend operator fun invoke(body: CreateSkillBody? = null): SkillResource = client.post("/skills") {
-      body?.let {
-        contentType(ContentType.Application.Json)
-        setBody(it)
+    public suspend operator fun invoke(files: CreateSkillBody.Files): SkillResource {
+      val response = client.post("skills") {
+        setBody(MultiPartFormDataContent(formData {
+          append("files", Json.encodeToString(files))
+        }))
       }
-    }.body()
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
+
+    public suspend operator fun invoke(body: CreateSkillBody? = null): SkillResource {
+      val response = client.post("skills") {
+        body?.let {
+          contentType(ContentType.Application.Json)
+          setBody(it)
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class SkillIdPath internal constructor(
@@ -89,32 +116,55 @@ public class Skills internal constructor(
       private val client: HttpClient,
       private val skillId: String,
     ) {
-      public suspend operator fun invoke(): DeletedSkillResource = client.delete("/skills/$skillId").body()
+      public suspend operator fun invoke(): DeletedSkillResource {
+        val response = client.delete("skills/${skillId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Get internal constructor(
       private val client: HttpClient,
       private val skillId: String,
     ) {
-      public suspend operator fun invoke(): SkillResource = client.get("/skills/$skillId").body()
+      public suspend operator fun invoke(): SkillResource {
+        val response = client.get("skills/${skillId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Post internal constructor(
       private val client: HttpClient,
       private val skillId: String,
     ) {
-      public suspend operator fun invoke(body: SetDefaultSkillVersionBody? = null): SkillResource = client.post("/skills/$skillId") {
-        body?.let {
-          contentType(ContentType.Application.Json)
-          setBody(it)
-        }
-      }.body()
+      public suspend operator fun invoke(): SkillResource {
+        val response = client.post("skills/${skillId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
-      public suspend operator fun invoke(defaultVersion: String): SkillResource = client.post("/skills/$skillId") {
-        setBody(Parameters.build {
-          append("default_version", defaultVersion)
-        }.formUrlEncode())
-      }.body()
+      public suspend operator fun invoke(body: SetDefaultSkillVersionBody? = null): SkillResource {
+        val response = client.post("skills/${skillId.encodeURLParameter()}") {
+          body?.let {
+            contentType(ContentType.Application.Json)
+            setBody(it)
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
+
+      public suspend operator fun invoke(defaultVersion: String): SkillResource {
+        val response = client.post("skills/${skillId.encodeURLParameter()}") {
+          contentType(ContentType.Application.FormUrlEncoded)
+          setBody(Parameters.build {
+            append("default_version", defaultVersion)
+          }.formUrlEncode())
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Content internal constructor(
@@ -127,13 +177,21 @@ public class Skills internal constructor(
         private val client: HttpClient,
         private val skillId: String,
       ) {
-        public suspend fun zip(): ByteArray = client.get("/skills/$skillId/content") {
-          `header`(HttpHeaders.Accept, ContentType.Application.Zip)
-        }.body()
+        public suspend fun zip(): ByteArray {
+          val response = client.get("skills/${skillId.encodeURLParameter()}/content") {
+            `header`(HttpHeaders.Accept, ContentType.Application.Zip)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
-        public suspend fun json(): String = client.get("/skills/$skillId/content") {
-          `header`(HttpHeaders.Accept, ContentType.Application.Json)
-        }.body()
+        public suspend fun json(): String {
+          val response = client.get("skills/${skillId.encodeURLParameter()}/content") {
+            `header`(HttpHeaders.Accept, ContentType.Application.Json)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
+        }
       }
     }
 
@@ -155,32 +213,56 @@ public class Skills internal constructor(
           limit: Long? = null,
           order: OrderEnum? = null,
           after: String? = null,
-        ): SkillVersionListResource = client.get("/skills/$skillId/versions") {
-          limit?.let { parameter("limit", it) }
-          order?.let { parameter("order", it.value) }
-          after?.let { parameter("after", it) }
-        }.body()
+        ): SkillVersionListResource {
+          val response = client.get("skills/${skillId.encodeURLParameter()}/versions") {
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (order != null) {
+              url.encodedParameters.append("order", order.value.encodeURLParameter())
+            }
+            if (after != null) {
+              url.encodedParameters.append("after", after.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Post internal constructor(
         private val client: HttpClient,
         private val skillId: String,
       ) {
-        public suspend operator fun invoke(files: CreateSkillVersionBody.Files, default: Boolean? = null): SkillVersionResource = client.post("/skills/$skillId/versions") {
-          setBody(MultiPartFormDataContent(formData {
-            append("files", Json.encodeToString(files))
-            if (default != null) {
-              append("default", default)
-            }
-          }))
-        }.body()
+        public suspend operator fun invoke(): SkillVersionResource {
+          val response = client.post("skills/${skillId.encodeURLParameter()}/versions")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
-        public suspend operator fun invoke(body: CreateSkillVersionBody? = null): SkillVersionResource = client.post("/skills/$skillId/versions") {
-          body?.let {
-            contentType(ContentType.Application.Json)
-            setBody(it)
+        public suspend operator fun invoke(files: CreateSkillVersionBody.Files, default: Boolean? = null): SkillVersionResource {
+          val response = client.post("skills/${skillId.encodeURLParameter()}/versions") {
+            setBody(MultiPartFormDataContent(formData {
+              append("files", Json.encodeToString(files))
+              if (default != null) {
+                append("default", default)
+              }
+            }))
           }
-        }.body()
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
+
+        public suspend operator fun invoke(body: CreateSkillVersionBody? = null): SkillVersionResource {
+          val response = client.post("skills/${skillId.encodeURLParameter()}/versions") {
+            body?.let {
+              contentType(ContentType.Application.Json)
+              setBody(it)
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class VersionPath internal constructor(
@@ -199,7 +281,11 @@ public class Skills internal constructor(
           private val skillId: String,
           private val version: String,
         ) {
-          public suspend operator fun invoke(): DeletedSkillVersionResource = client.delete("/skills/$skillId/versions/$version").body()
+          public suspend operator fun invoke(): DeletedSkillVersionResource {
+            val response = client.delete("skills/${skillId.encodeURLParameter()}/versions/${version.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Get internal constructor(
@@ -207,7 +293,11 @@ public class Skills internal constructor(
           private val skillId: String,
           private val version: String,
         ) {
-          public suspend operator fun invoke(): SkillVersionResource = client.get("/skills/$skillId/versions/$version").body()
+          public suspend operator fun invoke(): SkillVersionResource {
+            val response = client.get("skills/${skillId.encodeURLParameter()}/versions/${version.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Content internal constructor(
@@ -222,13 +312,21 @@ public class Skills internal constructor(
             private val skillId: String,
             private val version: String,
           ) {
-            public suspend fun zip(): ByteArray = client.get("/skills/$skillId/versions/$version/content") {
-              `header`(HttpHeaders.Accept, ContentType.Application.Zip)
-            }.body()
+            public suspend fun zip(): ByteArray {
+              val response = client.get("skills/${skillId.encodeURLParameter()}/versions/${version.encodeURLParameter()}/content") {
+                `header`(HttpHeaders.Accept, ContentType.Application.Zip)
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
-            public suspend fun json(): String = client.get("/skills/$skillId/versions/$version/content") {
-              `header`(HttpHeaders.Accept, ContentType.Application.Json)
-            }.body()
+            public suspend fun json(): String {
+              val response = client.get("skills/${skillId.encodeURLParameter()}/versions/${version.encodeURLParameter()}/content") {
+                `header`(HttpHeaders.Accept, ContentType.Application.Json)
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
+            }
           }
         }
       }

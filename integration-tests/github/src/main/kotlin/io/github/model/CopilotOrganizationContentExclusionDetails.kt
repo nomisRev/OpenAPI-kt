@@ -2,6 +2,7 @@ package io.github.model
 
 import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.Map
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
@@ -11,5 +12,5 @@ import kotlinx.serialization.Serializable
 @JvmInline
 @Serializable
 public value class CopilotOrganizationContentExclusionDetails(
-  public val values: List<List<String>>? = null,
+  public val values: Map<String, List<String>>,
 )

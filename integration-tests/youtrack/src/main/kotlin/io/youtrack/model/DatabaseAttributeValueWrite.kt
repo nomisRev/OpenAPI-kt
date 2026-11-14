@@ -2,6 +2,7 @@ package io.youtrack.model
 
 import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -19,14 +20,18 @@ public sealed interface DatabaseAttributeValueWrite {
   public data object Default : DatabaseAttributeValueWrite
 
   @SerialName("SwimlaneEntityAttributeValue")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class SwimlaneEntityAttributeValue(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
   ) : DatabaseAttributeValueWrite
 
   @SerialName("AgileColumnFieldValue")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class AgileColumnFieldValue(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
   ) : DatabaseAttributeValueWrite
 }

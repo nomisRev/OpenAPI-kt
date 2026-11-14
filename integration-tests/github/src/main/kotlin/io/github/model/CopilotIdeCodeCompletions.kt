@@ -5,6 +5,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.KeepGeneratedSerializer
@@ -26,8 +27,11 @@ import kotlinx.serialization.json.JsonObject
 @Serializable(with = CopilotIdeCodeCompletions.Serializer::class)
 public data class CopilotIdeCodeCompletions(
   @SerialName("total_engaged_users")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val totalEngagedUsers: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val languages: List<Languages>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val editors: List<Editors>? = null,
   public val additional: JsonObject? = null,
 ) {
@@ -38,38 +42,53 @@ public data class CopilotIdeCodeCompletions(
   @KeepGeneratedSerializer
   @Serializable(with = Editors.Serializer::class)
   public data class Editors(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
     @SerialName("total_engaged_users")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val totalEngagedUsers: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val models: List<Models>? = null,
     public val additional: JsonObject? = null,
   ) {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Models(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val name: String? = null,
       @SerialName("is_custom_model")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val isCustomModel: Boolean? = null,
       @SerialName("custom_model_training_date")
       public val customModelTrainingDate: String? = null,
       @SerialName("total_engaged_users")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val totalEngagedUsers: Long? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val languages: List<Languages>? = null,
     ) {
       /**
        * Usage metrics for a given language for the given editor for Copilot code completions.
        */
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class Languages(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val name: String? = null,
         @SerialName("total_engaged_users")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val totalEngagedUsers: Long? = null,
         @SerialName("total_code_suggestions")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val totalCodeSuggestions: Long? = null,
         @SerialName("total_code_acceptances")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val totalCodeAcceptances: Long? = null,
         @SerialName("total_code_lines_suggested")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val totalCodeLinesSuggested: Long? = null,
         @SerialName("total_code_lines_accepted")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val totalCodeLinesAccepted: Long? = null,
       )
     }
@@ -106,10 +125,13 @@ public data class CopilotIdeCodeCompletions(
   /**
    * Usage metrics for a given language for the given editor for Copilot code completions.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Languages(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
     @SerialName("total_engaged_users")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val totalEngagedUsers: Long? = null,
   )
 

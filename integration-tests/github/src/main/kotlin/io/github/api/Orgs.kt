@@ -129,13 +129,13 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.Boolean
 import kotlin.Deprecated
 import kotlin.Double
@@ -146,6 +146,7 @@ import kotlin.collections.List
 import kotlin.collections.Map
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -159,10 +160,13 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonEncoder
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 
 public class Orgs internal constructor(
   private val client: HttpClient,
@@ -284,7 +288,7 @@ public class Orgs internal constructor(
       private val org: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.delete("/orgs/$org")
+        val response = client.delete("orgs/${org.encodeURLParameter()}")
         return when (response.status.value) {
           202 -> Response.Accepted(response.body())
           403 -> Response.Forbidden(response.body())
@@ -313,7 +317,7 @@ public class Orgs internal constructor(
       private val org: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("/orgs/$org")
+        val response = client.get("orgs/${org.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           404 -> Response.NotFound(response.body())
@@ -336,6 +340,16 @@ public class Orgs internal constructor(
       private val client: HttpClient,
       private val org: String,
     ) {
+      public suspend operator fun invoke(): Response {
+        val response = client.patch("orgs/${org.encodeURLParameter()}")
+        return when (response.status.value) {
+          200 -> Response.Ok(response.body())
+          409 -> Response.Conflict(response.body())
+          422 -> response.body<Response.UnprocessableEntity>()
+          else -> throw ResponseException(response, "")
+        }
+      }
+
       public suspend operator fun invoke(
         billingEmail: String? = null,
         company: String? = null,
@@ -368,11 +382,9 @@ public class Orgs internal constructor(
         secretScanningPushProtectionCustomLink: String? = null,
         deployKeysEnabledForRepositories: Boolean? = null,
       ): Response {
-        val response = client.patch("/orgs/$org") {
-          if (billingEmail != null || company != null || email != null || twitterUsername != null || location != null || name != null || description != null || hasOrganizationProjects != null || hasRepositoryProjects != null || defaultRepositoryPermission != null || membersCanCreateRepositories != null || membersCanCreateInternalRepositories != null || membersCanCreatePrivateRepositories != null || membersCanCreatePublicRepositories != null || membersAllowedRepositoryCreationType != null || membersCanCreatePages != null || membersCanCreatePublicPages != null || membersCanCreatePrivatePages != null || membersCanForkPrivateRepositories != null || webCommitSignoffRequired != null || blog != null || advancedSecurityEnabledForNewRepositories != null || dependabotAlertsEnabledForNewRepositories != null || dependabotSecurityUpdatesEnabledForNewRepositories != null || dependencyGraphEnabledForNewRepositories != null || secretScanningEnabledForNewRepositories != null || secretScanningPushProtectionEnabledForNewRepositories != null || secretScanningPushProtectionCustomLinkEnabled != null || secretScanningPushProtectionCustomLink != null || deployKeysEnabledForRepositories != null) {
-            contentType(ContentType.Application.Json)
-            setBody(Body(billingEmail = billingEmail, company = company, email = email, twitterUsername = twitterUsername, location = location, name = name, description = description, hasOrganizationProjects = hasOrganizationProjects, hasRepositoryProjects = hasRepositoryProjects, defaultRepositoryPermission = defaultRepositoryPermission, membersCanCreateRepositories = membersCanCreateRepositories, membersCanCreateInternalRepositories = membersCanCreateInternalRepositories, membersCanCreatePrivateRepositories = membersCanCreatePrivateRepositories, membersCanCreatePublicRepositories = membersCanCreatePublicRepositories, membersAllowedRepositoryCreationType = membersAllowedRepositoryCreationType, membersCanCreatePages = membersCanCreatePages, membersCanCreatePublicPages = membersCanCreatePublicPages, membersCanCreatePrivatePages = membersCanCreatePrivatePages, membersCanForkPrivateRepositories = membersCanForkPrivateRepositories, webCommitSignoffRequired = webCommitSignoffRequired, blog = blog, advancedSecurityEnabledForNewRepositories = advancedSecurityEnabledForNewRepositories, dependabotAlertsEnabledForNewRepositories = dependabotAlertsEnabledForNewRepositories, dependabotSecurityUpdatesEnabledForNewRepositories = dependabotSecurityUpdatesEnabledForNewRepositories, dependencyGraphEnabledForNewRepositories = dependencyGraphEnabledForNewRepositories, secretScanningEnabledForNewRepositories = secretScanningEnabledForNewRepositories, secretScanningPushProtectionEnabledForNewRepositories = secretScanningPushProtectionEnabledForNewRepositories, secretScanningPushProtectionCustomLinkEnabled = secretScanningPushProtectionCustomLinkEnabled, secretScanningPushProtectionCustomLink = secretScanningPushProtectionCustomLink, deployKeysEnabledForRepositories = deployKeysEnabledForRepositories))
-          }
+        val response = client.patch("orgs/${org.encodeURLParameter()}") {
+          contentType(ContentType.Application.Json)
+          setBody(Body(billingEmail = billingEmail, company = company, email = email, twitterUsername = twitterUsername, location = location, name = name, description = description, hasOrganizationProjects = hasOrganizationProjects, hasRepositoryProjects = hasRepositoryProjects, defaultRepositoryPermission = defaultRepositoryPermission, membersCanCreateRepositories = membersCanCreateRepositories, membersCanCreateInternalRepositories = membersCanCreateInternalRepositories, membersCanCreatePrivateRepositories = membersCanCreatePrivateRepositories, membersCanCreatePublicRepositories = membersCanCreatePublicRepositories, membersAllowedRepositoryCreationType = membersAllowedRepositoryCreationType, membersCanCreatePages = membersCanCreatePages, membersCanCreatePublicPages = membersCanCreatePublicPages, membersCanCreatePrivatePages = membersCanCreatePrivatePages, membersCanForkPrivateRepositories = membersCanForkPrivateRepositories, webCommitSignoffRequired = webCommitSignoffRequired, blog = blog, advancedSecurityEnabledForNewRepositories = advancedSecurityEnabledForNewRepositories, dependabotAlertsEnabledForNewRepositories = dependabotAlertsEnabledForNewRepositories, dependabotSecurityUpdatesEnabledForNewRepositories = dependabotSecurityUpdatesEnabledForNewRepositories, dependencyGraphEnabledForNewRepositories = dependencyGraphEnabledForNewRepositories, secretScanningEnabledForNewRepositories = secretScanningEnabledForNewRepositories, secretScanningPushProtectionEnabledForNewRepositories = secretScanningPushProtectionEnabledForNewRepositories, secretScanningPushProtectionCustomLinkEnabled = secretScanningPushProtectionCustomLinkEnabled, secretScanningPushProtectionCustomLink = secretScanningPushProtectionCustomLink, deployKeysEnabledForRepositories = deployKeysEnabledForRepositories))
         }
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
@@ -410,62 +422,93 @@ public class Orgs internal constructor(
         ;
       }
 
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       internal data class Body(
         @SerialName("billing_email")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val billingEmail: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val company: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val email: String? = null,
         @SerialName("twitter_username")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val twitterUsername: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val location: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val name: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val description: String? = null,
         @SerialName("has_organization_projects")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val hasOrganizationProjects: Boolean? = null,
         @SerialName("has_repository_projects")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val hasRepositoryProjects: Boolean? = null,
         @SerialName("default_repository_permission")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val defaultRepositoryPermission: DefaultRepositoryPermission? = null,
         @SerialName("members_can_create_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val membersCanCreateRepositories: Boolean? = null,
         @SerialName("members_can_create_internal_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val membersCanCreateInternalRepositories: Boolean? = null,
         @SerialName("members_can_create_private_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val membersCanCreatePrivateRepositories: Boolean? = null,
         @SerialName("members_can_create_public_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val membersCanCreatePublicRepositories: Boolean? = null,
         @SerialName("members_allowed_repository_creation_type")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val membersAllowedRepositoryCreationType:
             MembersAllowedRepositoryCreationType? = null,
         @SerialName("members_can_create_pages")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val membersCanCreatePages: Boolean? = null,
         @SerialName("members_can_create_public_pages")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val membersCanCreatePublicPages: Boolean? = null,
         @SerialName("members_can_create_private_pages")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val membersCanCreatePrivatePages: Boolean? = null,
         @SerialName("members_can_fork_private_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val membersCanForkPrivateRepositories: Boolean? = null,
         @SerialName("web_commit_signoff_required")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val webCommitSignoffRequired: Boolean? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val blog: String? = null,
         @SerialName("advanced_security_enabled_for_new_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val advancedSecurityEnabledForNewRepositories: Boolean? = null,
         @SerialName("dependabot_alerts_enabled_for_new_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val dependabotAlertsEnabledForNewRepositories: Boolean? = null,
         @SerialName("dependabot_security_updates_enabled_for_new_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val dependabotSecurityUpdatesEnabledForNewRepositories: Boolean? = null,
         @SerialName("dependency_graph_enabled_for_new_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val dependencyGraphEnabledForNewRepositories: Boolean? = null,
         @SerialName("secret_scanning_enabled_for_new_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val secretScanningEnabledForNewRepositories: Boolean? = null,
         @SerialName("secret_scanning_push_protection_enabled_for_new_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val secretScanningPushProtectionEnabledForNewRepositories: Boolean? = null,
         @SerialName("secret_scanning_push_protection_custom_link_enabled")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val secretScanningPushProtectionCustomLinkEnabled: Boolean? = null,
         @SerialName("secret_scanning_push_protection_custom_link")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val secretScanningPushProtectionCustomLink: String? = null,
         @SerialName("deploy_keys_enabled_for_repositories")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val deployKeysEnabledForRepositories: Boolean? = null,
       )
 
@@ -562,7 +605,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): ActionsCacheUsageOrgEnterprise = client.get("/orgs/$org/actions/cache/usage").body()
+            public suspend operator fun invoke(): ActionsCacheUsageOrgEnterprise {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/cache/usage")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
 
@@ -576,10 +623,18 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response = client.get("/orgs/$org/actions/cache/usage-by-repository") {
-              perPage?.let { parameter("per_page", it) }
-              page?.let { parameter("page", it) }
-            }.body()
+            public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/cache/usage-by-repository") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public data class Response(
@@ -614,10 +669,18 @@ public class Orgs internal constructor(
           private val client: HttpClient,
           private val org: String,
         ) {
-          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response = client.get("/orgs/$org/actions/hosted-runners") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-          }.body()
+          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
+            val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public data class Response(
@@ -639,17 +702,24 @@ public class Orgs internal constructor(
             maximumRunners: Long? = null,
             enableStaticIp: Boolean? = null,
             imageGen: Boolean? = null,
-          ): ActionsHostedRunner = client.post("/orgs/$org/actions/hosted-runners") {
-            contentType(ContentType.Application.Json)
-            setBody(Body(name = name, image = image, size = size, runnerGroupId = runnerGroupId, maximumRunners = maximumRunners, enableStaticIp = enableStaticIp, imageGen = imageGen))
-          }.body()
+          ): ActionsHostedRunner {
+            val response = client.post("orgs/${org.encodeURLParameter()}/actions/hosted-runners") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(name = name, image = image, size = size, runnerGroupId = runnerGroupId, maximumRunners = maximumRunners, enableStaticIp = enableStaticIp, imageGen = imageGen))
+            }
+            if (response.status.value != 201) throw ResponseException(response, "")
+            return response.body()
+          }
 
           /**
            * The image of runner. To list all available images, use `GET /actions/hosted-runners/images/github-owned` or `GET /actions/hosted-runners/images/partner`.
            */
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Image(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val id: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val source: Source? = null,
             public val version: String? = null,
           ) {
@@ -667,6 +737,7 @@ public class Orgs internal constructor(
             }
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             public val name: String,
@@ -675,10 +746,13 @@ public class Orgs internal constructor(
             @SerialName("runner_group_id")
             public val runnerGroupId: Long,
             @SerialName("maximum_runners")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val maximumRunners: Long? = null,
             @SerialName("enable_static_ip")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val enableStaticIp: Boolean? = null,
             @SerialName("image_gen")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val imageGen: Boolean? = null,
           )
         }
@@ -705,7 +779,11 @@ public class Orgs internal constructor(
               private val client: HttpClient,
               private val org: String,
             ) {
-              public suspend operator fun invoke(): Response = client.get("/orgs/$org/actions/hosted-runners/images/custom").body()
+              public suspend operator fun invoke(): Response {
+                val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners/images/custom")
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @Serializable
               public data class Response(
@@ -732,7 +810,8 @@ public class Orgs internal constructor(
                 private val imageDefinitionId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  client.delete("/orgs/$org/actions/hosted-runners/images/custom/$imageDefinitionId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/actions/hosted-runners/images/custom/$imageDefinitionId")
+                  if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
 
@@ -741,7 +820,11 @@ public class Orgs internal constructor(
                 private val org: String,
                 private val imageDefinitionId: Long,
               ) {
-                public suspend operator fun invoke(): ActionsHostedRunnerCustomImage = client.get("/orgs/$org/actions/hosted-runners/images/custom/$imageDefinitionId").body()
+                public suspend operator fun invoke(): ActionsHostedRunnerCustomImage {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners/images/custom/$imageDefinitionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Versions internal constructor(
@@ -758,7 +841,11 @@ public class Orgs internal constructor(
                   private val org: String,
                   private val imageDefinitionId: Long,
                 ) {
-                  public suspend operator fun invoke(): Response = client.get("/orgs/$org/actions/hosted-runners/images/custom/$imageDefinitionId/versions").body()
+                  public suspend operator fun invoke(): Response {
+                    val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners/images/custom/$imageDefinitionId/versions")
+                    if (response.status.value != 200) throw ResponseException(response, "")
+                    return response.body()
+                  }
 
                   @Serializable
                   public data class Response(
@@ -786,7 +873,8 @@ public class Orgs internal constructor(
                     private val version: String,
                   ) {
                     public suspend operator fun invoke() {
-                      client.delete("/orgs/$org/actions/hosted-runners/images/custom/$imageDefinitionId/versions/$version")
+                      val response = client.delete("orgs/${org.encodeURLParameter()}/actions/hosted-runners/images/custom/$imageDefinitionId/versions/${version.encodeURLParameter()}")
+                      if (response.status.value != 204) throw ResponseException(response, "")
                     }
                   }
 
@@ -796,7 +884,11 @@ public class Orgs internal constructor(
                     private val imageDefinitionId: Long,
                     private val version: String,
                   ) {
-                    public suspend operator fun invoke(): ActionsHostedRunnerCustomImageVersion = client.get("/orgs/$org/actions/hosted-runners/images/custom/$imageDefinitionId/versions/$version").body()
+                    public suspend operator fun invoke(): ActionsHostedRunnerCustomImageVersion {
+                      val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners/images/custom/$imageDefinitionId/versions/${version.encodeURLParameter()}")
+                      if (response.status.value != 200) throw ResponseException(response, "")
+                      return response.body()
+                    }
                   }
                 }
               }
@@ -813,7 +905,11 @@ public class Orgs internal constructor(
               private val client: HttpClient,
               private val org: String,
             ) {
-              public suspend operator fun invoke(): Response = client.get("/orgs/$org/actions/hosted-runners/images/github-owned").body()
+              public suspend operator fun invoke(): Response {
+                val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners/images/github-owned")
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @Serializable
               public data class Response(
@@ -834,7 +930,11 @@ public class Orgs internal constructor(
               private val client: HttpClient,
               private val org: String,
             ) {
-              public suspend operator fun invoke(): Response = client.get("/orgs/$org/actions/hosted-runners/images/partner").body()
+              public suspend operator fun invoke(): Response {
+                val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners/images/partner")
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @Serializable
               public data class Response(
@@ -856,7 +956,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): ActionsHostedRunnerLimits = client.get("/orgs/$org/actions/hosted-runners/limits").body()
+            public suspend operator fun invoke(): ActionsHostedRunnerLimits {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners/limits")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
 
@@ -870,7 +974,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): Response = client.get("/orgs/$org/actions/hosted-runners/machine-sizes").body()
+            public suspend operator fun invoke(): Response {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners/machine-sizes")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public data class Response(
@@ -892,7 +1000,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): Response = client.get("/orgs/$org/actions/hosted-runners/platforms").body()
+            public suspend operator fun invoke(): Response {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners/platforms")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public data class Response(
@@ -919,7 +1031,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val hostedRunnerId: Long,
           ) {
-            public suspend operator fun invoke(): ActionsHostedRunner = client.delete("/orgs/$org/actions/hosted-runners/$hostedRunnerId").body()
+            public suspend operator fun invoke(): ActionsHostedRunner {
+              val response = client.delete("orgs/${org.encodeURLParameter()}/actions/hosted-runners/$hostedRunnerId")
+              if (response.status.value != 202) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Get internal constructor(
@@ -927,7 +1043,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val hostedRunnerId: Long,
           ) {
-            public suspend operator fun invoke(): ActionsHostedRunner = client.get("/orgs/$org/actions/hosted-runners/$hostedRunnerId").body()
+            public suspend operator fun invoke(): ActionsHostedRunner {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners/$hostedRunnerId")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Patch internal constructor(
@@ -943,22 +1063,33 @@ public class Orgs internal constructor(
               size: String? = null,
               imageId: String? = null,
               imageVersion: String? = null,
-            ): ActionsHostedRunner = client.patch("/orgs/$org/actions/hosted-runners/$hostedRunnerId") {
-              contentType(ContentType.Application.Json)
-              setBody(Body(name = name, runnerGroupId = runnerGroupId, maximumRunners = maximumRunners, enableStaticIp = enableStaticIp, size = size, imageId = imageId, imageVersion = imageVersion))
-            }.body()
+            ): ActionsHostedRunner {
+              val response = client.patch("orgs/${org.encodeURLParameter()}/actions/hosted-runners/$hostedRunnerId") {
+                contentType(ContentType.Application.Json)
+                setBody(Body(name = name, runnerGroupId = runnerGroupId, maximumRunners = maximumRunners, enableStaticIp = enableStaticIp, size = size, imageId = imageId, imageVersion = imageVersion))
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val name: String? = null,
               @SerialName("runner_group_id")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val runnerGroupId: Long? = null,
               @SerialName("maximum_runners")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val maximumRunners: Long? = null,
               @SerialName("enable_static_ip")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val enableStaticIp: Boolean? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val size: String? = null,
               @SerialName("image_id")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val imageId: String? = null,
               @SerialName("image_version")
               public val imageVersion: String? = null,
@@ -1002,7 +1133,7 @@ public class Orgs internal constructor(
                 private val org: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("/orgs/$org/actions/oidc/customization/properties/repo")
+                  val response = client.get("orgs/${org.encodeURLParameter()}/actions/oidc/customization/properties/repo")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     403 -> Response.Forbidden(response.body())
@@ -1031,7 +1162,7 @@ public class Orgs internal constructor(
                 private val org: String,
               ) {
                 public suspend operator fun invoke(body: OidcCustomPropertyInclusionInput): Response {
-                  val response = client.post("/orgs/$org/actions/oidc/customization/properties/repo") {
+                  val response = client.post("orgs/${org.encodeURLParameter()}/actions/oidc/customization/properties/repo") {
                     contentType(ContentType.Application.Json)
                     setBody(body)
                   }
@@ -1072,7 +1203,7 @@ public class Orgs internal constructor(
                   private val customPropertyName: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.delete("/orgs/$org/actions/oidc/customization/properties/repo/$customPropertyName")
+                    val response = client.delete("orgs/${org.encodeURLParameter()}/actions/oidc/customization/properties/repo/${customPropertyName.encodeURLParameter()}")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       400 -> Response.BadRequest
@@ -1110,7 +1241,11 @@ public class Orgs internal constructor(
               private val client: HttpClient,
               private val org: String,
             ) {
-              public suspend operator fun invoke(): OidcCustomSub = client.get("/orgs/$org/actions/oidc/customization/sub").body()
+              public suspend operator fun invoke(): OidcCustomSub {
+                val response = client.get("orgs/${org.encodeURLParameter()}/actions/oidc/customization/sub")
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
             }
 
             public class Put internal constructor(
@@ -1118,7 +1253,7 @@ public class Orgs internal constructor(
               private val org: String,
             ) {
               public suspend operator fun invoke(body: OidcCustomSub): Response {
-                val response = client.put("/orgs/$org/actions/oidc/customization/sub") {
+                val response = client.put("orgs/${org.encodeURLParameter()}/actions/oidc/customization/sub") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1177,7 +1312,11 @@ public class Orgs internal constructor(
           private val client: HttpClient,
           private val org: String,
         ) {
-          public suspend operator fun invoke(): ActionsOrganizationPermissions = client.get("/orgs/$org/actions/permissions").body()
+          public suspend operator fun invoke(): ActionsOrganizationPermissions {
+            val response = client.get("orgs/${org.encodeURLParameter()}/actions/permissions")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Put internal constructor(
@@ -1189,19 +1328,23 @@ public class Orgs internal constructor(
             allowedActions: AllowedActions? = null,
             shaPinningRequired: ShaPinningRequired? = null,
           ) {
-            client.put("/orgs/$org/actions/permissions") {
+            val response = client.put("orgs/${org.encodeURLParameter()}/actions/permissions") {
               contentType(ContentType.Application.Json)
               setBody(Body(enabledRepositories = enabledRepositories, allowedActions = allowedActions, shaPinningRequired = shaPinningRequired))
             }
+            if (response.status.value != 204) throw ResponseException(response, "")
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             @SerialName("enabled_repositories")
             public val enabledRepositories: EnabledRepositories,
             @SerialName("allowed_actions")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val allowedActions: AllowedActions? = null,
             @SerialName("sha_pinning_required")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val shaPinningRequired: ShaPinningRequired? = null,
           )
         }
@@ -1219,7 +1362,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/orgs/$org/actions/permissions/artifact-and-log-retention")
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/permissions/artifact-and-log-retention")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -1248,7 +1391,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(body: ActionsArtifactAndLogRetention): Response {
-              val response = client.put("/orgs/$org/actions/permissions/artifact-and-log-retention") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/actions/permissions/artifact-and-log-retention") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -1297,7 +1440,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/orgs/$org/actions/permissions/fork-pr-contributor-approval")
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/permissions/fork-pr-contributor-approval")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -1321,7 +1464,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(body: ActionsForkPrContributorApproval): Response {
-              val response = client.put("/orgs/$org/actions/permissions/fork-pr-contributor-approval") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/actions/permissions/fork-pr-contributor-approval") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -1360,7 +1503,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/orgs/$org/actions/permissions/fork-pr-workflows-private-repos")
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/permissions/fork-pr-workflows-private-repos")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -1389,7 +1532,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(body: ActionsForkPrWorkflowsPrivateReposRequest): Response {
-              val response = client.put("/orgs/$org/actions/permissions/fork-pr-workflows-private-repos") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/actions/permissions/fork-pr-workflows-private-repos") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -1434,10 +1577,18 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response = client.get("/orgs/$org/actions/permissions/repositories") {
-              perPage?.let { parameter("per_page", it) }
-              page?.let { parameter("page", it) }
-            }.body()
+            public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/permissions/repositories") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public data class Response(
@@ -1452,15 +1603,15 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(selectedRepositoryIds: List<Long>) {
-              client.put("/orgs/$org/actions/permissions/repositories") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/actions/permissions/repositories") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(selectedRepositoryIds = selectedRepositoryIds))
               }
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
 
-            @JvmInline
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("selected_repository_ids")
               public val selectedRepositoryIds: List<Long>,
             )
@@ -1481,7 +1632,8 @@ public class Orgs internal constructor(
               private val repositoryId: Long,
             ) {
               public suspend operator fun invoke() {
-                client.delete("/orgs/$org/actions/permissions/repositories/$repositoryId")
+                val response = client.delete("orgs/${org.encodeURLParameter()}/actions/permissions/repositories/$repositoryId")
+                if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
@@ -1491,7 +1643,8 @@ public class Orgs internal constructor(
               private val repositoryId: Long,
             ) {
               public suspend operator fun invoke() {
-                client.put("/orgs/$org/actions/permissions/repositories/$repositoryId")
+                val response = client.put("orgs/${org.encodeURLParameter()}/actions/permissions/repositories/$repositoryId")
+                if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
           }
@@ -1509,7 +1662,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): io.github.model.SelectedActions = client.get("/orgs/$org/actions/permissions/selected-actions").body()
+            public suspend operator fun invoke(): io.github.model.SelectedActions {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/permissions/selected-actions")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Put internal constructor(
@@ -1517,12 +1674,13 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(body: io.github.model.SelectedActions? = null) {
-              client.put("/orgs/$org/actions/permissions/selected-actions") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/actions/permissions/selected-actions") {
                 body?.let {
                   contentType(ContentType.Application.Json)
                   setBody(it)
                 }
               }
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
         }
@@ -1542,7 +1700,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/orgs/$org/actions/permissions/self-hosted-runners")
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/permissions/self-hosted-runners")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -1571,7 +1729,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(enabledRepositories: EnabledRepositories): Response {
-              val response = client.put("/orgs/$org/actions/permissions/self-hosted-runners") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/actions/permissions/self-hosted-runners") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(enabledRepositories = enabledRepositories))
               }
@@ -1598,9 +1756,8 @@ public class Orgs internal constructor(
               ;
             }
 
-            @JvmInline
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("enabled_repositories")
               public val enabledRepositories: EnabledRepositories,
             )
@@ -1641,9 +1798,13 @@ public class Orgs internal constructor(
               private val org: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("/orgs/$org/actions/permissions/self-hosted-runners/repositories") {
-                  perPage?.let { parameter("per_page", it) }
-                  page?.let { parameter("page", it) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/actions/permissions/self-hosted-runners/repositories") {
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> response.body<Response.Ok>()
@@ -1654,10 +1815,13 @@ public class Orgs internal constructor(
               }
 
               public sealed interface Response {
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class Ok(
                   @SerialName("total_count")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val totalCount: Long? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val repositories: List<Repository>? = null,
                 ) : Response
 
@@ -1676,7 +1840,7 @@ public class Orgs internal constructor(
               private val org: String,
             ) {
               public suspend operator fun invoke(selectedRepositoryIds: List<Long>): Response {
-                val response = client.put("/orgs/$org/actions/permissions/self-hosted-runners/repositories") {
+                val response = client.put("orgs/${org.encodeURLParameter()}/actions/permissions/self-hosted-runners/repositories") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(selectedRepositoryIds = selectedRepositoryIds))
                 }
@@ -1689,9 +1853,8 @@ public class Orgs internal constructor(
                 }
               }
 
-              @JvmInline
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 @SerialName("selected_repository_ids")
                 public val selectedRepositoryIds: List<Long>,
               )
@@ -1728,7 +1891,7 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/actions/permissions/self-hosted-runners/repositories/$repositoryId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/actions/permissions/self-hosted-runners/repositories/$repositoryId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     403 -> Response.Forbidden(response.body())
@@ -1766,7 +1929,7 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.put("/orgs/$org/actions/permissions/self-hosted-runners/repositories/$repositoryId")
+                  val response = client.put("orgs/${org.encodeURLParameter()}/actions/permissions/self-hosted-runners/repositories/$repositoryId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     403 -> Response.Forbidden(response.body())
@@ -1813,7 +1976,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): ActionsGetDefaultWorkflowPermissions = client.get("/orgs/$org/actions/permissions/workflow").body()
+            public suspend operator fun invoke(): ActionsGetDefaultWorkflowPermissions {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/permissions/workflow")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Put internal constructor(
@@ -1821,12 +1988,13 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(body: ActionsSetDefaultWorkflowPermissions? = null) {
-              client.put("/orgs/$org/actions/permissions/workflow") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/actions/permissions/workflow") {
                 body?.let {
                   contentType(ContentType.Application.Json)
                   setBody(it)
                 }
               }
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
         }
@@ -1850,11 +2018,21 @@ public class Orgs internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
             visibleToRepository: String? = null,
-          ): Response = client.get("/orgs/$org/actions/runner-groups") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-            visibleToRepository?.let { parameter("visible_to_repository", it) }
-          }.body()
+          ): Response {
+            val response = client.get("orgs/${org.encodeURLParameter()}/actions/runner-groups") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+              if (visibleToRepository != null) {
+                url.encodedParameters.append("visible_to_repository", visibleToRepository.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public data class Response(
@@ -1878,10 +2056,14 @@ public class Orgs internal constructor(
             restrictedToWorkflows: Boolean? = null,
             selectedWorkflows: List<String>? = null,
             networkConfigurationId: String? = null,
-          ): RunnerGroupsOrg = client.post("/orgs/$org/actions/runner-groups") {
-            contentType(ContentType.Application.Json)
-            setBody(Body(name = name, visibility = visibility, selectedRepositoryIds = selectedRepositoryIds, runners = runners, allowsPublicRepositories = allowsPublicRepositories, restrictedToWorkflows = restrictedToWorkflows, selectedWorkflows = selectedWorkflows, networkConfigurationId = networkConfigurationId))
-          }.body()
+          ): RunnerGroupsOrg {
+            val response = client.post("orgs/${org.encodeURLParameter()}/actions/runner-groups") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(name = name, visibility = visibility, selectedRepositoryIds = selectedRepositoryIds, runners = runners, allowsPublicRepositories = allowsPublicRepositories, restrictedToWorkflows = restrictedToWorkflows, selectedWorkflows = selectedWorkflows, networkConfigurationId = networkConfigurationId))
+            }
+            if (response.status.value != 201) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public enum class Visibility(
@@ -1896,20 +2078,28 @@ public class Orgs internal constructor(
             ;
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             public val name: String,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val visibility: Visibility? = null,
             @SerialName("selected_repository_ids")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val selectedRepositoryIds: List<Long>? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val runners: List<Long>? = null,
             @SerialName("allows_public_repositories")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val allowsPublicRepositories: Boolean? = null,
             @SerialName("restricted_to_workflows")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val restrictedToWorkflows: Boolean? = null,
             @SerialName("selected_workflows")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val selectedWorkflows: List<String>? = null,
             @SerialName("network_configuration_id")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val networkConfigurationId: String? = null,
           )
         }
@@ -1937,7 +2127,8 @@ public class Orgs internal constructor(
             private val runnerGroupId: Long,
           ) {
             public suspend operator fun invoke() {
-              client.delete("/orgs/$org/actions/runner-groups/$runnerGroupId")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId")
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
@@ -1946,7 +2137,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val runnerGroupId: Long,
           ) {
-            public suspend operator fun invoke(): RunnerGroupsOrg = client.get("/orgs/$org/actions/runner-groups/$runnerGroupId").body()
+            public suspend operator fun invoke(): RunnerGroupsOrg {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Patch internal constructor(
@@ -1961,10 +2156,14 @@ public class Orgs internal constructor(
               restrictedToWorkflows: Boolean? = null,
               selectedWorkflows: List<String>? = null,
               networkConfigurationId: String? = null,
-            ): RunnerGroupsOrg = client.patch("/orgs/$org/actions/runner-groups/$runnerGroupId") {
-              contentType(ContentType.Application.Json)
-              setBody(Body(name = name, visibility = visibility, allowsPublicRepositories = allowsPublicRepositories, restrictedToWorkflows = restrictedToWorkflows, selectedWorkflows = selectedWorkflows, networkConfigurationId = networkConfigurationId))
-            }.body()
+            ): RunnerGroupsOrg {
+              val response = client.patch("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId") {
+                contentType(ContentType.Application.Json)
+                setBody(Body(name = name, visibility = visibility, allowsPublicRepositories = allowsPublicRepositories, restrictedToWorkflows = restrictedToWorkflows, selectedWorkflows = selectedWorkflows, networkConfigurationId = networkConfigurationId))
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public enum class Visibility(
@@ -1979,15 +2178,20 @@ public class Orgs internal constructor(
               ;
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               public val name: String,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val visibility: Visibility? = null,
               @SerialName("allows_public_repositories")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val allowsPublicRepositories: Boolean? = null,
               @SerialName("restricted_to_workflows")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val restrictedToWorkflows: Boolean? = null,
               @SerialName("selected_workflows")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val selectedWorkflows: List<String>? = null,
               @SerialName("network_configuration_id")
               public val networkConfigurationId: String? = null,
@@ -2006,10 +2210,18 @@ public class Orgs internal constructor(
               private val org: String,
               private val runnerGroupId: Long,
             ) {
-              public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response = client.get("/orgs/$org/actions/runner-groups/$runnerGroupId/hosted-runners") {
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
-              }.body()
+              public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
+                val response = client.get("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/hosted-runners") {
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @Serializable
               public data class Response(
@@ -2036,10 +2248,18 @@ public class Orgs internal constructor(
               private val org: String,
               private val runnerGroupId: Long,
             ) {
-              public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response = client.get("/orgs/$org/actions/runner-groups/$runnerGroupId/repositories") {
-                page?.let { parameter("page", it) }
-                perPage?.let { parameter("per_page", it) }
-              }.body()
+              public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
+                val response = client.get("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/repositories") {
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @Serializable
               public data class Response(
@@ -2055,15 +2275,15 @@ public class Orgs internal constructor(
               private val runnerGroupId: Long,
             ) {
               public suspend operator fun invoke(selectedRepositoryIds: List<Long>) {
-                client.put("/orgs/$org/actions/runner-groups/$runnerGroupId/repositories") {
+                val response = client.put("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/repositories") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(selectedRepositoryIds = selectedRepositoryIds))
                 }
+                if (response.status.value != 204) throw ResponseException(response, "")
               }
 
-              @JvmInline
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 @SerialName("selected_repository_ids")
                 public val selectedRepositoryIds: List<Long>,
               )
@@ -2086,7 +2306,8 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  client.delete("/orgs/$org/actions/runner-groups/$runnerGroupId/repositories/$repositoryId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/repositories/$repositoryId")
+                  if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
 
@@ -2097,7 +2318,8 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  client.put("/orgs/$org/actions/runner-groups/$runnerGroupId/repositories/$repositoryId")
+                  val response = client.put("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/repositories/$repositoryId")
+                  if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
             }
@@ -2119,10 +2341,18 @@ public class Orgs internal constructor(
               private val org: String,
               private val runnerGroupId: Long,
             ) {
-              public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response = client.get("/orgs/$org/actions/runner-groups/$runnerGroupId/runners") {
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
-              }.body()
+              public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
+                val response = client.get("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/runners") {
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @Serializable
               public data class Response(
@@ -2138,15 +2368,15 @@ public class Orgs internal constructor(
               private val runnerGroupId: Long,
             ) {
               public suspend operator fun invoke(runners: List<Long>) {
-                client.put("/orgs/$org/actions/runner-groups/$runnerGroupId/runners") {
+                val response = client.put("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/runners") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(runners = runners))
                 }
+                if (response.status.value != 204) throw ResponseException(response, "")
               }
 
-              @JvmInline
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 public val runners: List<Long>,
               )
             }
@@ -2168,7 +2398,8 @@ public class Orgs internal constructor(
                 private val runnerId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  client.delete("/orgs/$org/actions/runner-groups/$runnerGroupId/runners/$runnerId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/runners/$runnerId")
+                  if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
 
@@ -2179,7 +2410,8 @@ public class Orgs internal constructor(
                 private val runnerId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  client.put("/orgs/$org/actions/runner-groups/$runnerGroupId/runners/$runnerId")
+                  val response = client.put("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/runners/$runnerId")
+                  if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
             }
@@ -2211,11 +2443,21 @@ public class Orgs internal constructor(
             name: String? = null,
             perPage: Long? = 30L,
             page: Long? = 1L,
-          ): Response = client.get("/orgs/$org/actions/runners") {
-            name?.let { parameter("name", it) }
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-          }.body()
+          ): Response {
+            val response = client.get("orgs/${org.encodeURLParameter()}/actions/runners") {
+              if (name != null) {
+                url.encodedParameters.append("name", name.encodeURLParameter())
+              }
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public data class Response(
@@ -2235,7 +2477,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): List<RunnerApplication> = client.get("/orgs/$org/actions/runners/downloads").body()
+            public suspend operator fun invoke(): List<RunnerApplication> {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/runners/downloads")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
 
@@ -2255,7 +2501,7 @@ public class Orgs internal constructor(
               labels: List<String>,
               workFolder: String? = null,
             ): Response {
-              val response = client.post("/orgs/$org/actions/runners/generate-jitconfig") {
+              val response = client.post("orgs/${org.encodeURLParameter()}/actions/runners/generate-jitconfig") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, runnerGroupId = runnerGroupId, labels = labels, workFolder = workFolder))
               }
@@ -2268,6 +2514,7 @@ public class Orgs internal constructor(
               }
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               public val name: String,
@@ -2275,6 +2522,7 @@ public class Orgs internal constructor(
               public val runnerGroupId: Long,
               public val labels: List<String>,
               @SerialName("work_folder")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val workFolder: String? = null,
             )
 
@@ -2311,7 +2559,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): AuthenticationToken = client.post("/orgs/$org/actions/runners/registration-token").body()
+            public suspend operator fun invoke(): AuthenticationToken {
+              val response = client.post("orgs/${org.encodeURLParameter()}/actions/runners/registration-token")
+              if (response.status.value != 201) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
 
@@ -2325,7 +2577,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): AuthenticationToken = client.post("/orgs/$org/actions/runners/remove-token").body()
+            public suspend operator fun invoke(): AuthenticationToken {
+              val response = client.post("orgs/${org.encodeURLParameter()}/actions/runners/remove-token")
+              if (response.status.value != 201) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
 
@@ -2346,7 +2602,7 @@ public class Orgs internal constructor(
             private val runnerId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/actions/runners/$runnerId")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/actions/runners/$runnerId")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 422 -> Response.UnprocessableEntity(response.body())
@@ -2368,7 +2624,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val runnerId: Long,
           ) {
-            public suspend operator fun invoke(): Runner = client.get("/orgs/$org/actions/runners/$runnerId").body()
+            public suspend operator fun invoke(): Runner {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/runners/$runnerId")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Labels internal constructor(
@@ -2392,7 +2652,7 @@ public class Orgs internal constructor(
               private val runnerId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("/orgs/$org/actions/runners/$runnerId/labels")
+                val response = client.delete("orgs/${org.encodeURLParameter()}/actions/runners/$runnerId/labels")
                 return when (response.status.value) {
                   200 -> response.body<Response.Ok>()
                   404 -> Response.NotFound(response.body())
@@ -2420,7 +2680,7 @@ public class Orgs internal constructor(
               private val runnerId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/orgs/$org/actions/runners/$runnerId/labels")
+                val response = client.get("orgs/${org.encodeURLParameter()}/actions/runners/$runnerId/labels")
                 return when (response.status.value) {
                   200 -> response.body<Response.Ok>()
                   404 -> Response.NotFound(response.body())
@@ -2448,7 +2708,7 @@ public class Orgs internal constructor(
               private val runnerId: Long,
             ) {
               public suspend operator fun invoke(labels: List<String>): Response {
-                val response = client.post("/orgs/$org/actions/runners/$runnerId/labels") {
+                val response = client.post("orgs/${org.encodeURLParameter()}/actions/runners/$runnerId/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(labels = labels))
                 }
@@ -2460,9 +2720,8 @@ public class Orgs internal constructor(
                 }
               }
 
-              @JvmInline
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 public val labels: List<String>,
               )
 
@@ -2490,7 +2749,7 @@ public class Orgs internal constructor(
               private val runnerId: Long,
             ) {
               public suspend operator fun invoke(labels: List<String>): Response {
-                val response = client.put("/orgs/$org/actions/runners/$runnerId/labels") {
+                val response = client.put("orgs/${org.encodeURLParameter()}/actions/runners/$runnerId/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(labels = labels))
                 }
@@ -2502,9 +2761,8 @@ public class Orgs internal constructor(
                 }
               }
 
-              @JvmInline
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 public val labels: List<String>,
               )
 
@@ -2541,7 +2799,7 @@ public class Orgs internal constructor(
                 private val name: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/actions/runners/$runnerId/labels/$name")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/actions/runners/$runnerId/labels/${name.encodeURLParameter()}")
                   return when (response.status.value) {
                     200 -> response.body<Response.Ok>()
                     404 -> Response.NotFound(response.body())
@@ -2586,10 +2844,18 @@ public class Orgs internal constructor(
           private val client: HttpClient,
           private val org: String,
         ) {
-          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response = client.get("/orgs/$org/actions/secrets") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-          }.body()
+          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
+            val response = client.get("orgs/${org.encodeURLParameter()}/actions/secrets") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public data class Response(
@@ -2609,7 +2875,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): ActionsPublicKey = client.get("/orgs/$org/actions/secrets/public-key").body()
+            public suspend operator fun invoke(): ActionsPublicKey {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/secrets/public-key")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
 
@@ -2632,7 +2902,8 @@ public class Orgs internal constructor(
             private val secretName: String,
           ) {
             public suspend operator fun invoke() {
-              client.delete("/orgs/$org/actions/secrets/$secretName")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/actions/secrets/${secretName.encodeURLParameter()}")
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
@@ -2641,7 +2912,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val secretName: String,
           ) {
-            public suspend operator fun invoke(): OrganizationActionsSecret = client.get("/orgs/$org/actions/secrets/$secretName").body()
+            public suspend operator fun invoke(): OrganizationActionsSecret {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/secrets/${secretName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Put internal constructor(
@@ -2655,7 +2930,7 @@ public class Orgs internal constructor(
               visibility: Visibility,
               selectedRepositoryIds: List<Long>? = null,
             ): Response {
-              val response = client.put("/orgs/$org/actions/secrets/$secretName") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/actions/secrets/${secretName.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(encryptedValue = encryptedValue, keyId = keyId, visibility = visibility, selectedRepositoryIds = selectedRepositoryIds))
               }
@@ -2679,6 +2954,7 @@ public class Orgs internal constructor(
               ;
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               @SerialName("encrypted_value")
@@ -2687,6 +2963,7 @@ public class Orgs internal constructor(
               public val keyId: String,
               public val visibility: Visibility,
               @SerialName("selected_repository_ids")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val selectedRepositoryIds: List<Long>? = null,
             )
 
@@ -2715,10 +2992,18 @@ public class Orgs internal constructor(
               private val org: String,
               private val secretName: String,
             ) {
-              public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response = client.get("/orgs/$org/actions/secrets/$secretName/repositories") {
-                page?.let { parameter("page", it) }
-                perPage?.let { parameter("per_page", it) }
-              }.body()
+              public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
+                val response = client.get("orgs/${org.encodeURLParameter()}/actions/secrets/${secretName.encodeURLParameter()}/repositories") {
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @Serializable
               public data class Response(
@@ -2734,15 +3019,15 @@ public class Orgs internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke(selectedRepositoryIds: List<Long>) {
-                client.put("/orgs/$org/actions/secrets/$secretName/repositories") {
+                val response = client.put("orgs/${org.encodeURLParameter()}/actions/secrets/${secretName.encodeURLParameter()}/repositories") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(selectedRepositoryIds = selectedRepositoryIds))
                 }
+                if (response.status.value != 204) throw ResponseException(response, "")
               }
 
-              @JvmInline
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 @SerialName("selected_repository_ids")
                 public val selectedRepositoryIds: List<Long>,
               )
@@ -2765,7 +3050,7 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/actions/secrets/$secretName/repositories/$repositoryId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/actions/secrets/${secretName.encodeURLParameter()}/repositories/$repositoryId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     409 -> Response.Conflict
@@ -2787,7 +3072,7 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.put("/orgs/$org/actions/secrets/$secretName/repositories/$repositoryId")
+                  val response = client.put("orgs/${org.encodeURLParameter()}/actions/secrets/${secretName.encodeURLParameter()}/repositories/$repositoryId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     409 -> Response.Conflict
@@ -2820,10 +3105,18 @@ public class Orgs internal constructor(
           private val client: HttpClient,
           private val org: String,
         ) {
-          public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response = client.get("/orgs/$org/actions/variables") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-          }.body()
+          public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response {
+            val response = client.get("orgs/${org.encodeURLParameter()}/actions/variables") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public data class Response(
@@ -2842,10 +3135,14 @@ public class Orgs internal constructor(
             `value`: String,
             visibility: Visibility,
             selectedRepositoryIds: List<Long>? = null,
-          ): EmptyObject = client.post("/orgs/$org/actions/variables") {
-            contentType(ContentType.Application.Json)
-            setBody(Body(name = name, value = value, visibility = visibility, selectedRepositoryIds = selectedRepositoryIds))
-          }.body()
+          ): EmptyObject {
+            val response = client.post("orgs/${org.encodeURLParameter()}/actions/variables") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(name = name, value = value, visibility = visibility, selectedRepositoryIds = selectedRepositoryIds))
+            }
+            if (response.status.value != 201) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public enum class Visibility(
@@ -2860,12 +3157,14 @@ public class Orgs internal constructor(
             ;
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             public val name: String,
             public val `value`: String,
             public val visibility: Visibility,
             @SerialName("selected_repository_ids")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val selectedRepositoryIds: List<Long>? = null,
           )
         }
@@ -2889,7 +3188,8 @@ public class Orgs internal constructor(
             private val name: String,
           ) {
             public suspend operator fun invoke() {
-              client.delete("/orgs/$org/actions/variables/$name")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/actions/variables/${name.encodeURLParameter()}")
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
@@ -2898,7 +3198,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val name: String,
           ) {
-            public suspend operator fun invoke(): OrganizationActionsVariable = client.get("/orgs/$org/actions/variables/$name").body()
+            public suspend operator fun invoke(): OrganizationActionsVariable {
+              val response = client.get("orgs/${org.encodeURLParameter()}/actions/variables/${name.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Patch internal constructor(
@@ -2912,10 +3216,11 @@ public class Orgs internal constructor(
               visibility: Visibility? = null,
               selectedRepositoryIds: List<Long>? = null,
             ) {
-              client.patch("/orgs/$org/actions/variables/$name") {
+              val response = client.patch("orgs/${org.encodeURLParameter()}/actions/variables/${name.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, value = value, visibility = visibility, selectedRepositoryIds = selectedRepositoryIds))
               }
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
 
             @Serializable
@@ -2931,12 +3236,17 @@ public class Orgs internal constructor(
               ;
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val name: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val `value`: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val visibility: Visibility? = null,
               @SerialName("selected_repository_ids")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val selectedRepositoryIds: List<Long>? = null,
             )
           }
@@ -2958,9 +3268,13 @@ public class Orgs internal constructor(
               private val name: String,
             ) {
               public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-                val response = client.get("/orgs/$org/actions/variables/$name/repositories") {
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/actions/variables/${name.encodeURLParameter()}/repositories") {
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> response.body<Response.Ok>()
@@ -2987,7 +3301,7 @@ public class Orgs internal constructor(
               private val name: String,
             ) {
               public suspend operator fun invoke(selectedRepositoryIds: List<Long>): Response {
-                val response = client.put("/orgs/$org/actions/variables/$name/repositories") {
+                val response = client.put("orgs/${org.encodeURLParameter()}/actions/variables/${name.encodeURLParameter()}/repositories") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(selectedRepositoryIds = selectedRepositoryIds))
                 }
@@ -2998,9 +3312,8 @@ public class Orgs internal constructor(
                 }
               }
 
-              @JvmInline
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 @SerialName("selected_repository_ids")
                 public val selectedRepositoryIds: List<Long>,
               )
@@ -3029,7 +3342,7 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/actions/variables/$name/repositories/$repositoryId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/actions/variables/${name.encodeURLParameter()}/repositories/$repositoryId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     409 -> Response.Conflict
@@ -3051,7 +3364,7 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.put("/orgs/$org/actions/variables/$name/repositories/$repositoryId")
+                  val response = client.put("orgs/${org.encodeURLParameter()}/actions/variables/${name.encodeURLParameter()}/repositories/$repositoryId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     409 -> Response.Conflict
@@ -3108,13 +3421,17 @@ public class Orgs internal constructor(
               physicalEnvironment: String? = null,
               cluster: String? = null,
               deploymentName: String,
-              tags: List<String>? = null,
+              tags: Map<String, String>? = null,
               runtimeRisks: List<RuntimeRisks>? = null,
               githubRepository: String? = null,
-            ): Response = client.post("/orgs/$org/artifacts/metadata/deployment-record") {
-              contentType(ContentType.Application.Json)
-              setBody(Body(name = name, digest = digest, version = version, status = status, logicalEnvironment = logicalEnvironment, physicalEnvironment = physicalEnvironment, cluster = cluster, deploymentName = deploymentName, tags = tags, runtimeRisks = runtimeRisks, githubRepository = githubRepository))
-            }.body()
+            ): Response {
+              val response = client.post("orgs/${org.encodeURLParameter()}/artifacts/metadata/deployment-record") {
+                contentType(ContentType.Application.Json)
+                setBody(Body(name = name, digest = digest, version = version, status = status, logicalEnvironment = logicalEnvironment, physicalEnvironment = physicalEnvironment, cluster = cluster, deploymentName = deploymentName, tags = tags, runtimeRisks = runtimeRisks, githubRepository = githubRepository))
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public enum class Status(
@@ -3142,31 +3459,41 @@ public class Orgs internal constructor(
               ;
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               public val name: String,
               public val digest: String,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val version: String? = null,
               public val status: Status,
               @SerialName("logical_environment")
               public val logicalEnvironment: String,
               @SerialName("physical_environment")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val physicalEnvironment: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val cluster: String? = null,
               @SerialName("deployment_name")
               public val deploymentName: String,
-              public val tags: List<String>? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
+              public val tags: Map<String, String>? = null,
               @SerialName("runtime_risks")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val runtimeRisks: List<RuntimeRisks>? = null,
               @SerialName("github_repository")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val githubRepository: String? = null,
             )
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class Response(
               @SerialName("total_count")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val totalCount: Long? = null,
               @SerialName("deployment_records")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val deploymentRecords: List<ArtifactDeploymentRecord>? = null,
             )
           }
@@ -3193,23 +3520,33 @@ public class Orgs internal constructor(
                   logicalEnvironment: String,
                   physicalEnvironment: String? = null,
                   deployments: List<Deployments>,
-                ): Response = client.post("/orgs/$org/artifacts/metadata/deployment-record/cluster/$cluster") {
-                  contentType(ContentType.Application.Json)
-                  setBody(Body(logicalEnvironment = logicalEnvironment, physicalEnvironment = physicalEnvironment, deployments = deployments))
-                }.body()
+                ): Response {
+                  val response = client.post("orgs/${org.encodeURLParameter()}/artifacts/metadata/deployment-record/cluster/${cluster.encodeURLParameter()}") {
+                    contentType(ContentType.Application.Json)
+                    setBody(Body(logicalEnvironment = logicalEnvironment, physicalEnvironment = physicalEnvironment, deployments = deployments))
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
 
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class Deployments(
                   public val name: String,
                   public val digest: String,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val version: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val status: Status? = null,
                   @SerialName("deployment_name")
                   public val deploymentName: String,
                   @SerialName("github_repository")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val githubRepository: String? = null,
-                  public val tags: List<String>? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
+                  public val tags: Map<String, String>? = null,
                   @SerialName("runtime_risks")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val runtimeRisks: List<RuntimeRisks>? = null,
                 ) {
                   @Serializable
@@ -3239,20 +3576,25 @@ public class Orgs internal constructor(
                   }
                 }
 
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 internal data class Body(
                   @SerialName("logical_environment")
                   public val logicalEnvironment: String,
                   @SerialName("physical_environment")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val physicalEnvironment: String? = null,
                   public val deployments: List<Deployments>,
                 )
 
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class Response(
                   @SerialName("total_count")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val totalCount: Long? = null,
                   @SerialName("deployment_records")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val deploymentRecords: List<ArtifactDeploymentRecord>? = null,
                 )
               }
@@ -3280,10 +3622,14 @@ public class Orgs internal constructor(
               repository: String? = null,
               status: Status? = null,
               githubRepository: String? = null,
-            ): Response = client.post("/orgs/$org/artifacts/metadata/storage-record") {
-              contentType(ContentType.Application.Json)
-              setBody(Body(name = name, digest = digest, version = version, artifactUrl = artifactUrl, path = path, registryUrl = registryUrl, repository = repository, status = status, githubRepository = githubRepository))
-            }.body()
+            ): Response {
+              val response = client.post("orgs/${org.encodeURLParameter()}/artifacts/metadata/storage-record") {
+                contentType(ContentType.Application.Json)
+                setBody(Body(name = name, digest = digest, version = version, artifactUrl = artifactUrl, path = path, registryUrl = registryUrl, repository = repository, status = status, githubRepository = githubRepository))
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public enum class Status(
@@ -3298,43 +3644,61 @@ public class Orgs internal constructor(
               ;
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               public val name: String,
               public val digest: String,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val version: String? = null,
               @SerialName("artifact_url")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val artifactUrl: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val path: String? = null,
               @SerialName("registry_url")
               public val registryUrl: String,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val repository: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val status: Status? = null,
               @SerialName("github_repository")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val githubRepository: String? = null,
             )
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class Response(
               @SerialName("total_count")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val totalCount: Long? = null,
               @SerialName("storage_records")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val storageRecords: List<StorageRecords>? = null,
             ) {
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class StorageRecords(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val id: Long? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val name: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val digest: String? = null,
                 @SerialName("artifact_url")
                 public val artifactUrl: String? = null,
                 @SerialName("registry_url")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val registryUrl: String? = null,
                 public val repository: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val status: String? = null,
                 @SerialName("created_at")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val createdAt: String? = null,
                 @SerialName("updated_at")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val updatedAt: String? = null,
               )
             }
@@ -3371,13 +3735,20 @@ public class Orgs internal constructor(
               private val org: String,
               private val subjectDigest: String,
             ) {
-              public suspend operator fun invoke(): Response = client.get("/orgs/$org/artifacts/$subjectDigest/metadata/deployment-records").body()
+              public suspend operator fun invoke(): Response {
+                val response = client.get("orgs/${org.encodeURLParameter()}/artifacts/${subjectDigest.encodeURLParameter()}/metadata/deployment-records")
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class Response(
                 @SerialName("total_count")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val totalCount: Long? = null,
                 @SerialName("deployment_records")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val deploymentRecords: List<ArtifactDeploymentRecord>? = null,
               )
             }
@@ -3395,29 +3766,46 @@ public class Orgs internal constructor(
               private val org: String,
               private val subjectDigest: String,
             ) {
-              public suspend operator fun invoke(): Response = client.get("/orgs/$org/artifacts/$subjectDigest/metadata/storage-records").body()
+              public suspend operator fun invoke(): Response {
+                val response = client.get("orgs/${org.encodeURLParameter()}/artifacts/${subjectDigest.encodeURLParameter()}/metadata/storage-records")
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class Response(
                 @SerialName("total_count")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val totalCount: Long? = null,
                 @SerialName("storage_records")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val storageRecords: List<StorageRecords>? = null,
               ) {
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class StorageRecords(
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val id: Long? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val name: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val digest: String? = null,
                   @SerialName("artifact_url")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val artifactUrl: String? = null,
                   @SerialName("registry_url")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val registryUrl: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val repository: String? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val status: String? = null,
                   @SerialName("created_at")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val createdAt: String? = null,
                   @SerialName("updated_at")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val updatedAt: String? = null,
                 )
               }
@@ -3459,44 +3847,68 @@ public class Orgs internal constructor(
             perPage: Long? = 30L,
             before: String? = null,
             after: String? = null,
-          ): Response = client.post("/orgs/$org/attestations/bulk-list") {
-            perPage?.let { parameter("per_page", it) }
-            before?.let { parameter("before", it) }
-            after?.let { parameter("after", it) }
-            contentType(ContentType.Application.Json)
-            setBody(Body(subjectDigests = subjectDigests, predicateType = predicateType))
-          }.body()
+          ): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/attestations/bulk-list") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (before != null) {
+                url.encodedParameters.append("before", before.encodeURLParameter())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              contentType(ContentType.Application.Json)
+              setBody(Body(subjectDigests = subjectDigests, predicateType = predicateType))
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             @SerialName("subject_digests")
             public val subjectDigests: List<String>,
             @SerialName("predicate_type")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val predicateType: String? = null,
           )
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Response(
             @SerialName("attestations_subject_digests")
-            public val attestationsSubjectDigests: List<List<AttestationsSubjectDigests>?>? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
+            public val attestationsSubjectDigests:
+                Map<String, List<AttestationsSubjectDigests>?>? = null,
             @SerialName("page_info")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val pageInfo: PageInfo? = null,
           ) {
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class AttestationsSubjectDigests(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val bundle: Bundle? = null,
               @SerialName("repository_id")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val repositoryId: Long? = null,
               @SerialName("bundle_url")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val bundleUrl: String? = null,
             ) {
               /**
                * The bundle of the attestation.
                */
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class Bundle(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val mediaType: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val verificationMaterial: JsonElement? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val dsseEnvelope: JsonElement? = null,
               )
             }
@@ -3504,13 +3916,18 @@ public class Orgs internal constructor(
             /**
              * Information about the current page.
              */
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class PageInfo(
               @SerialName("has_next")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val hasNext: Boolean? = null,
               @SerialName("has_previous")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val hasPrevious: Boolean? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val next: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val previous: String? = null,
             )
           }
@@ -3528,7 +3945,7 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(body: JsonElement): Response {
-            val response = client.post("/orgs/$org/attestations/delete-request") {
+            val response = client.post("orgs/${org.encodeURLParameter()}/attestations/delete-request") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -3568,7 +3985,7 @@ public class Orgs internal constructor(
             private val subjectDigest: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/attestations/digest/$subjectDigest")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/attestations/digest/${subjectDigest.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok
                 204 -> Response.NoContent
@@ -3605,16 +4022,31 @@ public class Orgs internal constructor(
             before: String? = null,
             after: String? = null,
             predicateType: String? = null,
-          ): List<IdAndName> = client.get("/orgs/$org/attestations/repositories") {
-            perPage?.let { parameter("per_page", it) }
-            before?.let { parameter("before", it) }
-            after?.let { parameter("after", it) }
-            predicateType?.let { parameter("predicate_type", it) }
-          }.body()
+          ): List<IdAndName> {
+            val response = client.get("orgs/${org.encodeURLParameter()}/attestations/repositories") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (before != null) {
+                url.encodedParameters.append("before", before.encodeURLParameter())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (predicateType != null) {
+                url.encodedParameters.append("predicate_type", predicateType.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class IdAndName(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val id: Long? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val name: String? = null,
           )
         }
@@ -3633,7 +4065,7 @@ public class Orgs internal constructor(
           private val attestationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/attestations/$attestationId")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/attestations/$attestationId")
             return when (response.status.value) {
               200 -> Response.Ok
               204 -> Response.NoContent
@@ -3676,35 +4108,56 @@ public class Orgs internal constructor(
             before: String? = null,
             after: String? = null,
             predicateType: String? = null,
-          ): Response = client.get("/orgs/$org/attestations/$subjectDigest") {
-            perPage?.let { parameter("per_page", it) }
-            before?.let { parameter("before", it) }
-            after?.let { parameter("after", it) }
-            predicateType?.let { parameter("predicate_type", it) }
-          }.body()
+          ): Response {
+            val response = client.get("orgs/${org.encodeURLParameter()}/attestations/${subjectDigest.encodeURLParameter()}") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (before != null) {
+                url.encodedParameters.append("before", before.encodeURLParameter())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (predicateType != null) {
+                url.encodedParameters.append("predicate_type", predicateType.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          public value class Response(
+          public data class Response(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val attestations: List<Attestations>? = null,
           ) {
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class Attestations(
               public val bundle: Bundle? = null,
               @SerialName("repository_id")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val repositoryId: Long? = null,
               @SerialName("bundle_url")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val bundleUrl: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val initiator: String? = null,
             ) {
               /**
                * The attestation's Sigstore Bundle.
                * Refer to the [Sigstore Bundle Specification](https://github.com/sigstore/protobuf-specs/blob/main/protos/sigstore_bundle.proto) for more information.
                */
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class Bundle(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val mediaType: String? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val verificationMaterial: JsonElement? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val dsseEnvelope: JsonElement? = null,
               )
             }
@@ -3725,10 +4178,18 @@ public class Orgs internal constructor(
         private val client: HttpClient,
         private val org: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> = client.get("/orgs/$org/blocks") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
+          val response = client.get("orgs/${org.encodeURLParameter()}/blocks") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class UsernamePath internal constructor(
@@ -3748,7 +4209,8 @@ public class Orgs internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke() {
-            client.delete("/orgs/$org/blocks/$username")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/blocks/${username.encodeURLParameter()}")
+            if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
 
@@ -3758,7 +4220,7 @@ public class Orgs internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/blocks/$username")
+            val response = client.get("orgs/${org.encodeURLParameter()}/blocks/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -3781,7 +4243,7 @@ public class Orgs internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("/orgs/$org/blocks/$username")
+            val response = client.put("orgs/${org.encodeURLParameter()}/blocks/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               422 -> Response.UnprocessableEntity(response.body())
@@ -3821,12 +4283,22 @@ public class Orgs internal constructor(
           state: CampaignState? = null,
           sort: Sort? = Sort.Created,
         ): Response {
-          val response = client.get("/orgs/$org/campaigns") {
-            page?.let { parameter("page", it) }
-            perPage?.let { parameter("per_page", it) }
-            direction?.let { parameter("direction", it.value) }
-            state?.let { parameter("state", it.value) }
-            sort?.let { parameter("sort", it.value) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/campaigns") {
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (direction != null) {
+              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            }
+            if (state != null) {
+              url.encodedParameters.append("state", state.value.encodeURLParameter())
+            }
+            if (sort != null) {
+              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -3871,11 +4343,15 @@ public class Orgs internal constructor(
             public val `value`: BasicError,
           ) : Response
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class ServiceUnavailable(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val code: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val message: String? = null,
             @SerialName("documentation_url")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val documentationUrl: String? = null,
           ) : Response
         }
@@ -3895,7 +4371,7 @@ public class Orgs internal constructor(
           codeScanningAlerts: List<CodeScanningAlerts>? = null,
           generateIssues: Boolean? = null,
         ): Response {
-          val response = client.post("/orgs/$org/campaigns") {
+          val response = client.post("orgs/${org.encodeURLParameter()}/campaigns") {
             contentType(ContentType.Application.Json)
             setBody(Body(name = name, description = description, managers = managers, teamManagers = teamManagers, endsAt = endsAt, contactLink = contactLink, codeScanningAlerts = codeScanningAlerts, generateIssues = generateIssues))
           }
@@ -3918,12 +4394,15 @@ public class Orgs internal constructor(
           public val alertNumbers: List<Long>,
         )
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         internal data class Body(
           public val name: String,
           public val description: String,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val managers: List<String>? = null,
           @SerialName("team_managers")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val teamManagers: List<String>? = null,
           @SerialName("ends_at")
           public val endsAt: Instant,
@@ -3932,6 +4411,7 @@ public class Orgs internal constructor(
           @SerialName("code_scanning_alerts")
           public val codeScanningAlerts: List<CodeScanningAlerts>? = null,
           @SerialName("generate_issues")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val generateIssues: Boolean? = null,
         )
 
@@ -3954,11 +4434,15 @@ public class Orgs internal constructor(
 
           public data object TooManyRequests : Response
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class ServiceUnavailable(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val code: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val message: String? = null,
             @SerialName("documentation_url")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val documentationUrl: String? = null,
           ) : Response
         }
@@ -3981,7 +4465,7 @@ public class Orgs internal constructor(
           private val campaignNumber: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/campaigns/$campaignNumber")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/campaigns/$campaignNumber")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -3997,11 +4481,15 @@ public class Orgs internal constructor(
               public val `value`: BasicError,
             ) : Response
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class ServiceUnavailable(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val code: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val message: String? = null,
               @SerialName("documentation_url")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val documentationUrl: String? = null,
             ) : Response
           }
@@ -4013,7 +4501,7 @@ public class Orgs internal constructor(
           private val campaignNumber: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/campaigns/$campaignNumber")
+            val response = client.get("orgs/${org.encodeURLParameter()}/campaigns/$campaignNumber")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -4036,11 +4524,15 @@ public class Orgs internal constructor(
               public val `value`: BasicError,
             ) : Response
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class ServiceUnavailable(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val code: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val message: String? = null,
               @SerialName("documentation_url")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val documentationUrl: String? = null,
             ) : Response
           }
@@ -4060,7 +4552,7 @@ public class Orgs internal constructor(
             contactLink: String? = null,
             state: CampaignState? = null,
           ): Response {
-            val response = client.patch("/orgs/$org/campaigns/$campaignNumber") {
+            val response = client.patch("orgs/${org.encodeURLParameter()}/campaigns/$campaignNumber") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, description = description, managers = managers, teamManagers = teamManagers, endsAt = endsAt, contactLink = contactLink, state = state))
             }
@@ -4074,17 +4566,24 @@ public class Orgs internal constructor(
             }
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val name: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val description: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val managers: List<String>? = null,
             @SerialName("team_managers")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val teamManagers: List<String>? = null,
             @SerialName("ends_at")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val endsAt: Instant? = null,
             @SerialName("contact_link")
             public val contactLink: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val state: CampaignState? = null,
           )
 
@@ -4105,11 +4604,15 @@ public class Orgs internal constructor(
               public val `value`: BasicError,
             ) : Response
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class ServiceUnavailable(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val code: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val message: String? = null,
               @SerialName("documentation_url")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val documentationUrl: String? = null,
             ) : Response
           }
@@ -4146,18 +4649,40 @@ public class Orgs internal constructor(
             severity: CodeScanningAlertSeverity? = null,
             assignees: String? = null,
           ): Response {
-            val response = client.get("/orgs/$org/code-scanning/alerts") {
-              toolName?.let { parameter("tool_name", it) }
-              toolGuid?.let { parameter("tool_guid", it) }
-              before?.let { parameter("before", it) }
-              after?.let { parameter("after", it) }
-              page?.let { parameter("page", it) }
-              perPage?.let { parameter("per_page", it) }
-              direction?.let { parameter("direction", it.value) }
-              state?.let { parameter("state", it.value) }
-              sort?.let { parameter("sort", it.value) }
-              severity?.let { parameter("severity", it.value) }
-              assignees?.let { parameter("assignees", it) }
+            val response = client.get("orgs/${org.encodeURLParameter()}/code-scanning/alerts") {
+              if (toolName != null) {
+                url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
+              }
+              if (toolGuid != null) {
+                url.encodedParameters.append("tool_guid", toolGuid.encodeURLParameter())
+              }
+              if (before != null) {
+                url.encodedParameters.append("before", before.encodeURLParameter())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (direction != null) {
+                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              }
+              if (state != null) {
+                url.encodedParameters.append("state", state.value.encodeURLParameter())
+              }
+              if (sort != null) {
+                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              }
+              if (severity != null) {
+                url.encodedParameters.append("severity", severity.value.encodeURLParameter())
+              }
+              if (assignees != null) {
+                url.encodedParameters.append("assignees", assignees.encodeURLParameter())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -4198,11 +4723,15 @@ public class Orgs internal constructor(
               public val `value`: BasicError,
             ) : Response
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class ServiceUnavailable(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val code: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val message: String? = null,
               @SerialName("documentation_url")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val documentationUrl: String? = null,
             ) : Response
           }
@@ -4240,11 +4769,19 @@ public class Orgs internal constructor(
             before: String? = null,
             after: String? = null,
           ): Response {
-            val response = client.get("/orgs/$org/code-security/configurations") {
-              targetType?.let { parameter("target_type", it.value) }
-              perPage?.let { parameter("per_page", it) }
-              before?.let { parameter("before", it) }
-              after?.let { parameter("after", it) }
+            val response = client.get("orgs/${org.encodeURLParameter()}/code-security/configurations") {
+              if (targetType != null) {
+                url.encodedParameters.append("target_type", targetType.value.encodeURLParameter())
+              }
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (before != null) {
+                url.encodedParameters.append("before", before.encodeURLParameter())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -4311,10 +4848,14 @@ public class Orgs internal constructor(
             secretScanningExtendedMetadata: SecretScanningExtendedMetadata? = null,
             privateVulnerabilityReporting: PrivateVulnerabilityReporting? = null,
             enforcement: Enforcement? = null,
-          ): CodeSecurityConfiguration = client.post("/orgs/$org/code-security/configurations") {
-            contentType(ContentType.Application.Json)
-            setBody(Body(name = name, description = description, advancedSecurity = advancedSecurity, codeSecurity = codeSecurity, dependencyGraph = dependencyGraph, dependencyGraphAutosubmitAction = dependencyGraphAutosubmitAction, dependencyGraphAutosubmitActionOptions = dependencyGraphAutosubmitActionOptions, dependabotAlerts = dependabotAlerts, dependabotSecurityUpdates = dependabotSecurityUpdates, dependabotDelegatedAlertDismissal = dependabotDelegatedAlertDismissal, codeScanningOptions = codeScanningOptions, codeScanningDefaultSetup = codeScanningDefaultSetup, codeScanningDefaultSetupOptions = codeScanningDefaultSetupOptions, codeScanningDelegatedAlertDismissal = codeScanningDelegatedAlertDismissal, secretProtection = secretProtection, secretScanning = secretScanning, secretScanningPushProtection = secretScanningPushProtection, secretScanningDelegatedBypass = secretScanningDelegatedBypass, secretScanningDelegatedBypassOptions = secretScanningDelegatedBypassOptions, secretScanningValidityChecks = secretScanningValidityChecks, secretScanningNonProviderPatterns = secretScanningNonProviderPatterns, secretScanningGenericSecrets = secretScanningGenericSecrets, secretScanningDelegatedAlertDismissal = secretScanningDelegatedAlertDismissal, secretScanningExtendedMetadata = secretScanningExtendedMetadata, privateVulnerabilityReporting = privateVulnerabilityReporting, enforcement = enforcement))
-          }.body()
+          ): CodeSecurityConfiguration {
+            val response = client.post("orgs/${org.encodeURLParameter()}/code-security/configurations") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(name = name, description = description, advancedSecurity = advancedSecurity, codeSecurity = codeSecurity, dependencyGraph = dependencyGraph, dependencyGraphAutosubmitAction = dependencyGraphAutosubmitAction, dependencyGraphAutosubmitActionOptions = dependencyGraphAutosubmitActionOptions, dependabotAlerts = dependabotAlerts, dependabotSecurityUpdates = dependabotSecurityUpdates, dependabotDelegatedAlertDismissal = dependabotDelegatedAlertDismissal, codeScanningOptions = codeScanningOptions, codeScanningDefaultSetup = codeScanningDefaultSetup, codeScanningDefaultSetupOptions = codeScanningDefaultSetupOptions, codeScanningDelegatedAlertDismissal = codeScanningDelegatedAlertDismissal, secretProtection = secretProtection, secretScanning = secretScanning, secretScanningPushProtection = secretScanningPushProtection, secretScanningDelegatedBypass = secretScanningDelegatedBypass, secretScanningDelegatedBypassOptions = secretScanningDelegatedBypassOptions, secretScanningValidityChecks = secretScanningValidityChecks, secretScanningNonProviderPatterns = secretScanningNonProviderPatterns, secretScanningGenericSecrets = secretScanningGenericSecrets, secretScanningDelegatedAlertDismissal = secretScanningDelegatedAlertDismissal, secretScanningExtendedMetadata = secretScanningExtendedMetadata, privateVulnerabilityReporting = privateVulnerabilityReporting, enforcement = enforcement))
+            }
+            if (response.status.value != 201) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public enum class AdvancedSecurity(
@@ -4373,10 +4914,11 @@ public class Orgs internal constructor(
           /**
            * Feature options for Automatic dependency submission
            */
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          public value class DependencyGraphAutosubmitActionOptions(
+          public data class DependencyGraphAutosubmitActionOptions(
             @SerialName("labeled_runners")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val labeledRunners: Boolean? = null,
           )
 
@@ -4500,9 +5042,10 @@ public class Orgs internal constructor(
           /**
            * Feature options for secret scanning delegated bypass
            */
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          public value class SecretScanningDelegatedBypassOptions(
+          public data class SecretScanningDelegatedBypassOptions(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val reviewers: List<Reviewers>? = null,
           ) {
             @Serializable
@@ -4609,60 +5152,83 @@ public class Orgs internal constructor(
             ;
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             public val name: String,
             public val description: String,
             @SerialName("advanced_security")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val advancedSecurity: AdvancedSecurity? = null,
             @SerialName("code_security")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val codeSecurity: CodeSecurity? = null,
             @SerialName("dependency_graph")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val dependencyGraph: DependencyGraph? = null,
             @SerialName("dependency_graph_autosubmit_action")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val dependencyGraphAutosubmitAction: DependencyGraphAutosubmitAction? = null,
             @SerialName("dependency_graph_autosubmit_action_options")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val dependencyGraphAutosubmitActionOptions:
                 DependencyGraphAutosubmitActionOptions? = null,
             @SerialName("dependabot_alerts")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val dependabotAlerts: DependabotAlerts? = null,
             @SerialName("dependabot_security_updates")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val dependabotSecurityUpdates: DependabotSecurityUpdates? = null,
             @SerialName("dependabot_delegated_alert_dismissal")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val dependabotDelegatedAlertDismissal: DependabotDelegatedAlertDismissal? = null,
             @SerialName("code_scanning_options")
             public val codeScanningOptions: CodeScanningOptions? = null,
             @SerialName("code_scanning_default_setup")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val codeScanningDefaultSetup: CodeScanningDefaultSetup? = null,
             @SerialName("code_scanning_default_setup_options")
             public val codeScanningDefaultSetupOptions: CodeScanningDefaultSetupOptions? = null,
             @SerialName("code_scanning_delegated_alert_dismissal")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val codeScanningDelegatedAlertDismissal:
                 CodeScanningDelegatedAlertDismissal? = null,
             @SerialName("secret_protection")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val secretProtection: SecretProtection? = null,
             @SerialName("secret_scanning")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val secretScanning: SecretScanning? = null,
             @SerialName("secret_scanning_push_protection")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val secretScanningPushProtection: SecretScanningPushProtection? = null,
             @SerialName("secret_scanning_delegated_bypass")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val secretScanningDelegatedBypass: SecretScanningDelegatedBypass? = null,
             @SerialName("secret_scanning_delegated_bypass_options")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val secretScanningDelegatedBypassOptions:
                 SecretScanningDelegatedBypassOptions? = null,
             @SerialName("secret_scanning_validity_checks")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val secretScanningValidityChecks: SecretScanningValidityChecks? = null,
             @SerialName("secret_scanning_non_provider_patterns")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val secretScanningNonProviderPatterns: SecretScanningNonProviderPatterns? = null,
             @SerialName("secret_scanning_generic_secrets")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val secretScanningGenericSecrets: SecretScanningGenericSecrets? = null,
             @SerialName("secret_scanning_delegated_alert_dismissal")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val secretScanningDelegatedAlertDismissal:
                 SecretScanningDelegatedAlertDismissal? = null,
             @SerialName("secret_scanning_extended_metadata")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val secretScanningExtendedMetadata: SecretScanningExtendedMetadata? = null,
             @SerialName("private_vulnerability_reporting")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val privateVulnerabilityReporting: PrivateVulnerabilityReporting? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val enforcement: Enforcement? = null,
           )
         }
@@ -4678,7 +5244,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/orgs/$org/code-security/configurations/defaults")
+              val response = client.get("orgs/${org.encodeURLParameter()}/code-security/configurations/defaults")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 304 -> Response.NotModified
@@ -4717,7 +5283,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(selectedRepositoryIds: List<Long>? = null): Response {
-              val response = client.delete("/orgs/$org/code-security/configurations/detach") {
+              val response = client.delete("orgs/${org.encodeURLParameter()}/code-security/configurations/detach") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(selectedRepositoryIds = selectedRepositoryIds))
               }
@@ -4731,10 +5297,11 @@ public class Orgs internal constructor(
               }
             }
 
-            @JvmInline
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("selected_repository_ids")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val selectedRepositoryIds: List<Long>? = null,
             )
 
@@ -4783,7 +5350,7 @@ public class Orgs internal constructor(
             private val configurationId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/code-security/configurations/$configurationId")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/code-security/configurations/$configurationId")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 400 -> Response.BadRequest(response.body())
@@ -4821,7 +5388,7 @@ public class Orgs internal constructor(
             private val configurationId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/orgs/$org/code-security/configurations/$configurationId")
+              val response = client.get("orgs/${org.encodeURLParameter()}/code-security/configurations/$configurationId")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 304 -> Response.NotModified
@@ -4881,7 +5448,7 @@ public class Orgs internal constructor(
               privateVulnerabilityReporting: PrivateVulnerabilityReporting? = null,
               enforcement: Enforcement? = null,
             ): Response {
-              val response = client.patch("/orgs/$org/code-security/configurations/$configurationId") {
+              val response = client.patch("orgs/${org.encodeURLParameter()}/code-security/configurations/$configurationId") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, description = description, advancedSecurity = advancedSecurity, codeSecurity = codeSecurity, dependencyGraph = dependencyGraph, dependencyGraphAutosubmitAction = dependencyGraphAutosubmitAction, dependencyGraphAutosubmitActionOptions = dependencyGraphAutosubmitActionOptions, dependabotAlerts = dependabotAlerts, dependabotSecurityUpdates = dependabotSecurityUpdates, dependabotDelegatedAlertDismissal = dependabotDelegatedAlertDismissal, codeScanningDefaultSetup = codeScanningDefaultSetup, codeScanningDefaultSetupOptions = codeScanningDefaultSetupOptions, codeScanningOptions = codeScanningOptions, codeScanningDelegatedAlertDismissal = codeScanningDelegatedAlertDismissal, secretProtection = secretProtection, secretScanning = secretScanning, secretScanningPushProtection = secretScanningPushProtection, secretScanningDelegatedBypass = secretScanningDelegatedBypass, secretScanningDelegatedBypassOptions = secretScanningDelegatedBypassOptions, secretScanningValidityChecks = secretScanningValidityChecks, secretScanningNonProviderPatterns = secretScanningNonProviderPatterns, secretScanningGenericSecrets = secretScanningGenericSecrets, secretScanningDelegatedAlertDismissal = secretScanningDelegatedAlertDismissal, secretScanningExtendedMetadata = secretScanningExtendedMetadata, privateVulnerabilityReporting = privateVulnerabilityReporting, enforcement = enforcement))
               }
@@ -4949,10 +5516,11 @@ public class Orgs internal constructor(
             /**
              * Feature options for Automatic dependency submission
              */
-            @JvmInline
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            public value class DependencyGraphAutosubmitActionOptions(
+            public data class DependencyGraphAutosubmitActionOptions(
               @SerialName("labeled_runners")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val labeledRunners: Boolean? = null,
             )
 
@@ -5076,9 +5644,10 @@ public class Orgs internal constructor(
             /**
              * Feature options for secret scanning delegated bypass
              */
-            @JvmInline
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            public value class SecretScanningDelegatedBypassOptions(
+            public data class SecretScanningDelegatedBypassOptions(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val reviewers: List<Reviewers>? = null,
             ) {
               @Serializable
@@ -5185,62 +5754,87 @@ public class Orgs internal constructor(
               ;
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val name: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val description: String? = null,
               @SerialName("advanced_security")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val advancedSecurity: AdvancedSecurity? = null,
               @SerialName("code_security")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val codeSecurity: CodeSecurity? = null,
               @SerialName("dependency_graph")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val dependencyGraph: DependencyGraph? = null,
               @SerialName("dependency_graph_autosubmit_action")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val dependencyGraphAutosubmitAction: DependencyGraphAutosubmitAction? = null,
               @SerialName("dependency_graph_autosubmit_action_options")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val dependencyGraphAutosubmitActionOptions:
                   DependencyGraphAutosubmitActionOptions? = null,
               @SerialName("dependabot_alerts")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val dependabotAlerts: DependabotAlerts? = null,
               @SerialName("dependabot_security_updates")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val dependabotSecurityUpdates: DependabotSecurityUpdates? = null,
               @SerialName("dependabot_delegated_alert_dismissal")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val dependabotDelegatedAlertDismissal:
                   DependabotDelegatedAlertDismissal? = null,
               @SerialName("code_scanning_default_setup")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val codeScanningDefaultSetup: CodeScanningDefaultSetup? = null,
               @SerialName("code_scanning_default_setup_options")
               public val codeScanningDefaultSetupOptions: CodeScanningDefaultSetupOptions? = null,
               @SerialName("code_scanning_options")
               public val codeScanningOptions: CodeScanningOptions? = null,
               @SerialName("code_scanning_delegated_alert_dismissal")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val codeScanningDelegatedAlertDismissal:
                   CodeScanningDelegatedAlertDismissal? = null,
               @SerialName("secret_protection")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val secretProtection: SecretProtection? = null,
               @SerialName("secret_scanning")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val secretScanning: SecretScanning? = null,
               @SerialName("secret_scanning_push_protection")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val secretScanningPushProtection: SecretScanningPushProtection? = null,
               @SerialName("secret_scanning_delegated_bypass")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val secretScanningDelegatedBypass: SecretScanningDelegatedBypass? = null,
               @SerialName("secret_scanning_delegated_bypass_options")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val secretScanningDelegatedBypassOptions:
                   SecretScanningDelegatedBypassOptions? = null,
               @SerialName("secret_scanning_validity_checks")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val secretScanningValidityChecks: SecretScanningValidityChecks? = null,
               @SerialName("secret_scanning_non_provider_patterns")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val secretScanningNonProviderPatterns:
                   SecretScanningNonProviderPatterns? = null,
               @SerialName("secret_scanning_generic_secrets")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val secretScanningGenericSecrets: SecretScanningGenericSecrets? = null,
               @SerialName("secret_scanning_delegated_alert_dismissal")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val secretScanningDelegatedAlertDismissal:
                   SecretScanningDelegatedAlertDismissal? = null,
               @SerialName("secret_scanning_extended_metadata")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val secretScanningExtendedMetadata: SecretScanningExtendedMetadata? = null,
               @SerialName("private_vulnerability_reporting")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val privateVulnerabilityReporting: PrivateVulnerabilityReporting? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val enforcement: Enforcement? = null,
             )
 
@@ -5265,10 +5859,14 @@ public class Orgs internal constructor(
               private val org: String,
               private val configurationId: Long,
             ) {
-              public suspend operator fun invoke(scope: Scope, selectedRepositoryIds: List<Long>? = null): JsonElement = client.post("/orgs/$org/code-security/configurations/$configurationId/attach") {
-                contentType(ContentType.Application.Json)
-                setBody(Body(scope = scope, selectedRepositoryIds = selectedRepositoryIds))
-              }.body()
+              public suspend operator fun invoke(scope: Scope, selectedRepositoryIds: List<Long>? = null): JsonElement {
+                val response = client.post("orgs/${org.encodeURLParameter()}/code-security/configurations/$configurationId/attach") {
+                  contentType(ContentType.Application.Json)
+                  setBody(Body(scope = scope, selectedRepositoryIds = selectedRepositoryIds))
+                }
+                if (response.status.value != 202) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @Serializable
               public enum class Scope(
@@ -5287,10 +5885,12 @@ public class Orgs internal constructor(
                 ;
               }
 
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               internal data class Body(
                 public val scope: Scope,
                 @SerialName("selected_repository_ids")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val selectedRepositoryIds: List<Long>? = null,
               )
             }
@@ -5309,7 +5909,7 @@ public class Orgs internal constructor(
               private val configurationId: Long,
             ) {
               public suspend operator fun invoke(defaultForNewRepos: DefaultForNewRepos? = null): Response {
-                val response = client.put("/orgs/$org/code-security/configurations/$configurationId/defaults") {
+                val response = client.put("orgs/${org.encodeURLParameter()}/code-security/configurations/$configurationId/defaults") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(defaultForNewRepos = defaultForNewRepos))
                 }
@@ -5336,18 +5936,22 @@ public class Orgs internal constructor(
                 ;
               }
 
-              @JvmInline
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 @SerialName("default_for_new_repos")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val defaultForNewRepos: DefaultForNewRepos? = null,
               )
 
               public sealed interface Response {
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
                 public data class Ok(
                   @SerialName("default_for_new_repos")
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val defaultForNewRepos: DefaultForNewRepos? = null,
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val configuration: CodeSecurityConfiguration? = null,
                 ) : Response {
                   @Serializable
@@ -5395,11 +5999,19 @@ public class Orgs internal constructor(
                 after: String? = null,
                 status: String? = "all",
               ): Response {
-                val response = client.get("/orgs/$org/code-security/configurations/$configurationId/repositories") {
-                  perPage?.let { parameter("per_page", it) }
-                  before?.let { parameter("before", it) }
-                  after?.let { parameter("after", it) }
-                  status?.let { parameter("status", it) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/code-security/configurations/$configurationId/repositories") {
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                  if (before != null) {
+                    url.encodedParameters.append("before", before.encodeURLParameter())
+                  }
+                  if (after != null) {
+                    url.encodedParameters.append("after", after.encodeURLParameter())
+                  }
+                  if (status != null) {
+                    url.encodedParameters.append("status", status.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -5443,9 +6055,13 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("/orgs/$org/codespaces") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/codespaces") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> response.body<Response.Ok>()
@@ -5502,7 +6118,7 @@ public class Orgs internal constructor(
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(visibility: Visibility, selectedUsernames: List<String>? = null): Response {
-            val response = client.put("/orgs/$org/codespaces/access") {
+            val response = client.put("orgs/${org.encodeURLParameter()}/codespaces/access") {
               contentType(ContentType.Application.Json)
               setBody(Body(visibility = visibility, selectedUsernames = selectedUsernames))
             }
@@ -5532,10 +6148,12 @@ public class Orgs internal constructor(
             ;
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             public val visibility: Visibility,
             @SerialName("selected_usernames")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val selectedUsernames: List<String>? = null,
           )
 
@@ -5577,7 +6195,7 @@ public class Orgs internal constructor(
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(selectedUsernames: List<String>): Response {
-              val response = client.delete("/orgs/$org/codespaces/access/selected_users") {
+              val response = client.delete("orgs/${org.encodeURLParameter()}/codespaces/access/selected_users") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(selectedUsernames = selectedUsernames))
               }
@@ -5592,9 +6210,8 @@ public class Orgs internal constructor(
               }
             }
 
-            @JvmInline
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("selected_usernames")
               public val selectedUsernames: List<String>,
             )
@@ -5627,7 +6244,7 @@ public class Orgs internal constructor(
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(selectedUsernames: List<String>): Response {
-              val response = client.post("/orgs/$org/codespaces/access/selected_users") {
+              val response = client.post("orgs/${org.encodeURLParameter()}/codespaces/access/selected_users") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(selectedUsernames = selectedUsernames))
               }
@@ -5642,9 +6259,8 @@ public class Orgs internal constructor(
               }
             }
 
-            @JvmInline
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("selected_usernames")
               public val selectedUsernames: List<String>,
             )
@@ -5686,10 +6302,18 @@ public class Orgs internal constructor(
           private val client: HttpClient,
           private val org: String,
         ) {
-          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response = client.get("/orgs/$org/codespaces/secrets") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-          }.body()
+          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
+            val response = client.get("orgs/${org.encodeURLParameter()}/codespaces/secrets") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public data class Response(
@@ -5709,7 +6333,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): CodespacesPublicKey = client.get("/orgs/$org/codespaces/secrets/public-key").body()
+            public suspend operator fun invoke(): CodespacesPublicKey {
+              val response = client.get("orgs/${org.encodeURLParameter()}/codespaces/secrets/public-key")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
 
@@ -5732,7 +6360,7 @@ public class Orgs internal constructor(
             private val secretName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/codespaces/secrets/$secretName")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/codespaces/secrets/${secretName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -5754,7 +6382,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val secretName: String,
           ) {
-            public suspend operator fun invoke(): CodespacesOrgSecret = client.get("/orgs/$org/codespaces/secrets/$secretName").body()
+            public suspend operator fun invoke(): CodespacesOrgSecret {
+              val response = client.get("orgs/${org.encodeURLParameter()}/codespaces/secrets/${secretName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Put internal constructor(
@@ -5768,7 +6400,7 @@ public class Orgs internal constructor(
               visibility: Visibility,
               selectedRepositoryIds: List<Long>? = null,
             ): Response {
-              val response = client.put("/orgs/$org/codespaces/secrets/$secretName") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/codespaces/secrets/${secretName.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(encryptedValue = encryptedValue, keyId = keyId, visibility = visibility, selectedRepositoryIds = selectedRepositoryIds))
               }
@@ -5794,14 +6426,18 @@ public class Orgs internal constructor(
               ;
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               @SerialName("encrypted_value")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val encryptedValue: String? = null,
               @SerialName("key_id")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val keyId: String? = null,
               public val visibility: Visibility,
               @SerialName("selected_repository_ids")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val selectedRepositoryIds: List<Long>? = null,
             )
 
@@ -5839,9 +6475,13 @@ public class Orgs internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-                val response = client.get("/orgs/$org/codespaces/secrets/$secretName/repositories") {
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/codespaces/secrets/${secretName.encodeURLParameter()}/repositories") {
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> response.body<Response.Ok>()
@@ -5870,7 +6510,7 @@ public class Orgs internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke(selectedRepositoryIds: List<Long>): Response {
-                val response = client.put("/orgs/$org/codespaces/secrets/$secretName/repositories") {
+                val response = client.put("orgs/${org.encodeURLParameter()}/codespaces/secrets/${secretName.encodeURLParameter()}/repositories") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(selectedRepositoryIds = selectedRepositoryIds))
                 }
@@ -5882,9 +6522,8 @@ public class Orgs internal constructor(
                 }
               }
 
-              @JvmInline
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 @SerialName("selected_repository_ids")
                 public val selectedRepositoryIds: List<Long>,
               )
@@ -5917,7 +6556,7 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/codespaces/secrets/$secretName/repositories/$repositoryId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/codespaces/secrets/${secretName.encodeURLParameter()}/repositories/$repositoryId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -5949,7 +6588,7 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.put("/orgs/$org/codespaces/secrets/$secretName/repositories/$repositoryId")
+                  val response = client.put("orgs/${org.encodeURLParameter()}/codespaces/secrets/${secretName.encodeURLParameter()}/repositories/$repositoryId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -6006,7 +6645,7 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/copilot/billing")
+            val response = client.get("orgs/${org.encodeURLParameter()}/copilot/billing")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               401 -> Response.Unauthorized(response.body())
@@ -6054,9 +6693,13 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 50L): Response {
-              val response = client.get("/orgs/$org/copilot/billing/seats") {
-                page?.let { parameter("page", it) }
-                perPage?.let { parameter("per_page", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/copilot/billing/seats") {
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> response.body<Response.Ok>()
@@ -6069,10 +6712,13 @@ public class Orgs internal constructor(
             }
 
             public sealed interface Response {
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class Ok(
                 @SerialName("total_seats")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val totalSeats: Long? = null,
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val seats: List<CopilotSeatDetails>? = null,
               ) : Response
 
@@ -6108,7 +6754,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(selectedTeams: List<String>): Response {
-              val response = client.delete("/orgs/$org/copilot/billing/selected_teams") {
+              val response = client.delete("orgs/${org.encodeURLParameter()}/copilot/billing/selected_teams") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(selectedTeams = selectedTeams))
               }
@@ -6123,9 +6769,8 @@ public class Orgs internal constructor(
               }
             }
 
-            @JvmInline
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("selected_teams")
               public val selectedTeams: List<String>,
             )
@@ -6134,9 +6779,8 @@ public class Orgs internal constructor(
               /**
                * The total number of seats set to "pending cancellation" for members of the specified team(s).
                */
-              @JvmInline
               @Serializable
-              public value class Ok(
+              public data class Ok(
                 @SerialName("seats_cancelled")
                 public val seatsCancelled: Long,
               ) : Response
@@ -6166,7 +6810,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(selectedTeams: List<String>): Response {
-              val response = client.post("/orgs/$org/copilot/billing/selected_teams") {
+              val response = client.post("orgs/${org.encodeURLParameter()}/copilot/billing/selected_teams") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(selectedTeams = selectedTeams))
               }
@@ -6181,9 +6825,8 @@ public class Orgs internal constructor(
               }
             }
 
-            @JvmInline
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("selected_teams")
               public val selectedTeams: List<String>,
             )
@@ -6192,9 +6835,8 @@ public class Orgs internal constructor(
               /**
                * The total number of seats created for members of the specified team(s).
                */
-              @JvmInline
               @Serializable
-              public value class Created(
+              public data class Created(
                 @SerialName("seats_created")
                 public val seatsCreated: Long,
               ) : Response
@@ -6233,7 +6875,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(selectedUsernames: List<String>): Response {
-              val response = client.delete("/orgs/$org/copilot/billing/selected_users") {
+              val response = client.delete("orgs/${org.encodeURLParameter()}/copilot/billing/selected_users") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(selectedUsernames = selectedUsernames))
               }
@@ -6248,9 +6890,8 @@ public class Orgs internal constructor(
               }
             }
 
-            @JvmInline
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("selected_usernames")
               public val selectedUsernames: List<String>,
             )
@@ -6259,9 +6900,8 @@ public class Orgs internal constructor(
               /**
                * The total number of seats set to "pending cancellation" for the specified users.
                */
-              @JvmInline
               @Serializable
-              public value class Ok(
+              public data class Ok(
                 @SerialName("seats_cancelled")
                 public val seatsCancelled: Long,
               ) : Response
@@ -6291,7 +6931,7 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(selectedUsernames: List<String>): Response {
-              val response = client.post("/orgs/$org/copilot/billing/selected_users") {
+              val response = client.post("orgs/${org.encodeURLParameter()}/copilot/billing/selected_users") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(selectedUsernames = selectedUsernames))
               }
@@ -6306,9 +6946,8 @@ public class Orgs internal constructor(
               }
             }
 
-            @JvmInline
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("selected_usernames")
               public val selectedUsernames: List<String>,
             )
@@ -6317,9 +6956,8 @@ public class Orgs internal constructor(
               /**
                * The total number of seats created for the specified user(s).
                */
-              @JvmInline
               @Serializable
-              public value class Created(
+              public data class Created(
                 @SerialName("seats_created")
                 public val seatsCreated: Long,
               ) : Response
@@ -6359,7 +6997,7 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/copilot/content_exclusion")
+            val response = client.get("orgs/${org.encodeURLParameter()}/copilot/content_exclusion")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               401 -> Response.Unauthorized(response.body())
@@ -6398,7 +7036,7 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(body: Body): Response {
-            val response = client.put("/orgs/$org/copilot/content_exclusion") {
+            val response = client.put("orgs/${org.encodeURLParameter()}/copilot/content_exclusion") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -6428,15 +7066,13 @@ public class Orgs internal constructor(
                 public val `value`: String,
               ) : AdditionalProperties
 
-              @JvmInline
               @Serializable
-              public value class IfAnyMatchStrings(
+              public data class IfAnyMatchStrings(
                 public val ifAnyMatch: List<String>,
               ) : AdditionalProperties
 
-              @JvmInline
               @Serializable
-              public value class IfNoneMatchStrings(
+              public data class IfNoneMatchStrings(
                 public val ifNoneMatch: List<String>,
               ) : AdditionalProperties
 
@@ -6455,12 +7091,18 @@ public class Orgs internal constructor(
                 override fun deserialize(decoder: Decoder): AdditionalProperties {
                   val value = decoder.decodeSerializableValue(JsonElement.serializer())
                   val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                  return json.attemptDeserialize(
-                    value,
-                    IfAnyMatchStrings::class to { decodeFromJsonElement(IfAnyMatchStrings.serializer(), it) },
-                    IfNoneMatchStrings::class to { decodeFromJsonElement(IfNoneMatchStrings.serializer(), it) },
-                    CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                  )
+                  return when {
+                    value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                      value,
+                      CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                    )
+                    value is JsonObject -> json.attemptDeserialize(
+                      value,
+                      IfAnyMatchStrings::class to { decodeFromJsonElement(IfAnyMatchStrings.serializer(), it) },
+                      IfNoneMatchStrings::class to { decodeFromJsonElement(IfNoneMatchStrings.serializer(), it) },
+                    )
+                    else -> throw UnionSerializationException(value, emptyMap())
+                  }
                 }
 
                 override fun serialize(encoder: Encoder, `value`: AdditionalProperties) {
@@ -6505,9 +7147,10 @@ public class Orgs internal constructor(
           }
 
           public sealed interface Response {
-            @JvmInline
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            public value class Ok(
+            public data class Ok(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val message: String? = null,
             ) : Response
 
@@ -6554,11 +7197,19 @@ public class Orgs internal constructor(
             page: Long? = 1L,
             perPage: Long? = 100L,
           ): Response {
-            val response = client.get("/orgs/$org/copilot/metrics") {
-              since?.let { parameter("since", it) }
-              until?.let { parameter("until", it) }
-              page?.let { parameter("page", it) }
-              perPage?.let { parameter("per_page", it) }
+            val response = client.get("orgs/${org.encodeURLParameter()}/copilot/metrics") {
+              if (since != null) {
+                url.encodedParameters.append("since", since.encodeURLParameter())
+              }
+              if (until != null) {
+                url.encodedParameters.append("until", until.encodeURLParameter())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -6631,23 +7282,62 @@ public class Orgs internal constructor(
             after: String? = null,
             perPage: Long? = 30L,
           ): Response {
-            val response = client.get("/orgs/$org/dependabot/alerts") {
-              state?.let { parameter("state", it) }
-              severity?.let { parameter("severity", it) }
-              ecosystem?.let { parameter("ecosystem", it) }
-              `package`?.let { parameter("package", it) }
-              epssPercentage?.let { parameter("epss_percentage", it) }
-              artifactRegistryUrl?.let { parameter("artifact_registry_url", it) }
-              artifactRegistry?.let { parameter("artifact_registry", it) }
-              has?.let { parameter("has", it) }
-              assignee?.let { parameter("assignee", it) }
-              runtimeRisk?.let { parameter("runtime_risk", it) }
-              scope?.let { parameter("scope", it.value) }
-              sort?.let { parameter("sort", it.value) }
-              direction?.let { parameter("direction", it.value) }
-              before?.let { parameter("before", it) }
-              after?.let { parameter("after", it) }
-              perPage?.let { parameter("per_page", it) }
+            val response = client.get("orgs/${org.encodeURLParameter()}/dependabot/alerts") {
+              if (state != null) {
+                url.encodedParameters.append("state", state.encodeURLParameter())
+              }
+              if (severity != null) {
+                url.encodedParameters.append("severity", severity.encodeURLParameter())
+              }
+              if (ecosystem != null) {
+                url.encodedParameters.append("ecosystem", ecosystem.encodeURLParameter())
+              }
+              if (`package` != null) {
+                url.encodedParameters.append("package", `package`.encodeURLParameter())
+              }
+              if (epssPercentage != null) {
+                url.encodedParameters.append("epss_percentage", epssPercentage.encodeURLParameter())
+              }
+              if (artifactRegistryUrl != null) {
+                url.encodedParameters.append("artifact_registry_url", artifactRegistryUrl.encodeURLParameter())
+              }
+              if (artifactRegistry != null) {
+                url.encodedParameters.append("artifact_registry", artifactRegistry.encodeURLParameter())
+              }
+              if (has != null) {
+                when (has) {
+                  is Has.CaseString -> {
+                    url.encodedParameters.append("has", has.value.encodeURLParameter())
+                  }
+                  is Has.CasePatchOrDeploymentList -> {
+                    has.value.forEach { url.encodedParameters.append("has", it.value.encodeURLParameter()) }
+                  }
+                }
+              }
+              if (assignee != null) {
+                url.encodedParameters.append("assignee", assignee.encodeURLParameter())
+              }
+              if (runtimeRisk != null) {
+                url.encodedParameters.append("runtime_risk", runtimeRisk.encodeURLParameter())
+              }
+              if (scope != null) {
+                url.encodedParameters.append("scope", scope.value.encodeURLParameter())
+              }
+              if (sort != null) {
+                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              }
+              if (direction != null) {
+                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              }
+              if (before != null) {
+                url.encodedParameters.append("before", before.encodeURLParameter())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -6699,11 +7389,17 @@ public class Orgs internal constructor(
               override fun deserialize(decoder: Decoder): Has {
                 val value = decoder.decodeSerializableValue(JsonElement.serializer())
                 val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                return json.attemptDeserialize(
-                  value,
-                  CasePatchOrDeploymentList::class to { CasePatchOrDeploymentList(decodeFromJsonElement(ListSerializer(PatchOrDeployment.serializer()), it)) },
-                  CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                )
+                return when {
+                  value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                    value,
+                    CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                  )
+                  value is JsonArray -> json.attemptDeserialize(
+                    value,
+                    CasePatchOrDeploymentList::class to { CasePatchOrDeploymentList(decodeFromJsonElement(ListSerializer(PatchOrDeployment.serializer()), it)) },
+                  )
+                  else -> throw UnionSerializationException(value, emptyMap())
+                }
               }
 
               override fun serialize(encoder: Encoder, `value`: Has) {
@@ -6790,10 +7486,18 @@ public class Orgs internal constructor(
           private val client: HttpClient,
           private val org: String,
         ) {
-          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response = client.get("/orgs/$org/dependabot/secrets") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-          }.body()
+          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
+            val response = client.get("orgs/${org.encodeURLParameter()}/dependabot/secrets") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public data class Response(
@@ -6813,7 +7517,11 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(): DependabotPublicKey = client.get("/orgs/$org/dependabot/secrets/public-key").body()
+            public suspend operator fun invoke(): DependabotPublicKey {
+              val response = client.get("orgs/${org.encodeURLParameter()}/dependabot/secrets/public-key")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
 
@@ -6836,7 +7544,8 @@ public class Orgs internal constructor(
             private val secretName: String,
           ) {
             public suspend operator fun invoke() {
-              client.delete("/orgs/$org/dependabot/secrets/$secretName")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/dependabot/secrets/${secretName.encodeURLParameter()}")
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
@@ -6845,7 +7554,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val secretName: String,
           ) {
-            public suspend operator fun invoke(): OrganizationDependabotSecret = client.get("/orgs/$org/dependabot/secrets/$secretName").body()
+            public suspend operator fun invoke(): OrganizationDependabotSecret {
+              val response = client.get("orgs/${org.encodeURLParameter()}/dependabot/secrets/${secretName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Put internal constructor(
@@ -6859,7 +7572,7 @@ public class Orgs internal constructor(
               visibility: Visibility,
               selectedRepositoryIds: List<SelectedRepositoryIds>? = null,
             ): Response {
-              val response = client.put("/orgs/$org/dependabot/secrets/$secretName") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/dependabot/secrets/${secretName.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(encryptedValue = encryptedValue, keyId = keyId, visibility = visibility, selectedRepositoryIds = selectedRepositoryIds))
               }
@@ -6911,11 +7624,17 @@ public class Orgs internal constructor(
                 override fun deserialize(decoder: Decoder): SelectedRepositoryIds {
                   val value = decoder.decodeSerializableValue(JsonElement.serializer())
                   val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                  return json.attemptDeserialize(
-                    value,
-                    CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
-                    CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                  )
+                  return when {
+                    value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                      value,
+                      CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                    )
+                    value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+                      value,
+                      CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
+                    )
+                    else -> throw UnionSerializationException(value, emptyMap())
+                  }
                 }
 
                 override fun serialize(encoder: Encoder, `value`: SelectedRepositoryIds) {
@@ -6927,14 +7646,18 @@ public class Orgs internal constructor(
               }
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               @SerialName("encrypted_value")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val encryptedValue: String? = null,
               @SerialName("key_id")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val keyId: String? = null,
               public val visibility: Visibility,
               @SerialName("selected_repository_ids")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val selectedRepositoryIds: List<SelectedRepositoryIds>? = null,
             )
 
@@ -6963,10 +7686,18 @@ public class Orgs internal constructor(
               private val org: String,
               private val secretName: String,
             ) {
-              public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response = client.get("/orgs/$org/dependabot/secrets/$secretName/repositories") {
-                page?.let { parameter("page", it) }
-                perPage?.let { parameter("per_page", it) }
-              }.body()
+              public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
+                val response = client.get("orgs/${org.encodeURLParameter()}/dependabot/secrets/${secretName.encodeURLParameter()}/repositories") {
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @Serializable
               public data class Response(
@@ -6982,15 +7713,15 @@ public class Orgs internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke(selectedRepositoryIds: List<Long>) {
-                client.put("/orgs/$org/dependabot/secrets/$secretName/repositories") {
+                val response = client.put("orgs/${org.encodeURLParameter()}/dependabot/secrets/${secretName.encodeURLParameter()}/repositories") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(selectedRepositoryIds = selectedRepositoryIds))
                 }
+                if (response.status.value != 204) throw ResponseException(response, "")
               }
 
-              @JvmInline
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 @SerialName("selected_repository_ids")
                 public val selectedRepositoryIds: List<Long>,
               )
@@ -7013,7 +7744,7 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/dependabot/secrets/$secretName/repositories/$repositoryId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/dependabot/secrets/${secretName.encodeURLParameter()}/repositories/$repositoryId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     409 -> Response.Conflict
@@ -7035,7 +7766,7 @@ public class Orgs internal constructor(
                 private val repositoryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.put("/orgs/$org/dependabot/secrets/$secretName/repositories/$repositoryId")
+                  val response = client.put("orgs/${org.encodeURLParameter()}/dependabot/secrets/${secretName.encodeURLParameter()}/repositories/$repositoryId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     409 -> Response.Conflict
@@ -7072,7 +7803,7 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/docker/conflicts")
+            val response = client.get("orgs/${org.encodeURLParameter()}/docker/conflicts")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               401 -> Response.Unauthorized(response.body())
@@ -7108,10 +7839,18 @@ public class Orgs internal constructor(
         private val client: HttpClient,
         private val org: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> = client.get("/orgs/$org/events") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
+          val response = client.get("orgs/${org.encodeURLParameter()}/events") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -7126,9 +7865,13 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("/orgs/$org/failed_invitations") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/failed_invitations") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -7164,9 +7907,13 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("/orgs/$org/hooks") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/hooks") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -7196,7 +7943,7 @@ public class Orgs internal constructor(
           events: List<String>? = null,
           active: Boolean? = null,
         ): Response {
-          val response = client.post("/orgs/$org/hooks") {
+          val response = client.post("orgs/${org.encodeURLParameter()}/hooks") {
             contentType(ContentType.Application.Json)
             setBody(Body(name = name, config = config, events = events, active = active))
           }
@@ -7211,23 +7958,32 @@ public class Orgs internal constructor(
         /**
          * Key/value pairs to provide settings for this webhook.
          */
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Config(
           public val url: WebhookConfigUrl,
           @SerialName("content_type")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val contentType: WebhookConfigContentType? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val secret: WebhookConfigSecret? = null,
           @SerialName("insecure_ssl")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val insecureSsl: WebhookConfigInsecureSsl? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val username: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val password: String? = null,
         )
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         internal data class Body(
           public val name: String,
           public val config: Config,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val events: List<String>? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val active: Boolean? = null,
         )
 
@@ -7269,7 +8025,7 @@ public class Orgs internal constructor(
           private val hookId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/hooks/$hookId")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/hooks/$hookId")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -7292,7 +8048,7 @@ public class Orgs internal constructor(
           private val hookId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/hooks/$hookId")
+            val response = client.get("orgs/${org.encodeURLParameter()}/hooks/$hookId")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -7316,17 +8072,25 @@ public class Orgs internal constructor(
           private val org: String,
           private val hookId: Long,
         ) {
+          public suspend operator fun invoke(): Response {
+            val response = client.patch("orgs/${org.encodeURLParameter()}/hooks/$hookId")
+            return when (response.status.value) {
+              200 -> Response.Ok(response.body())
+              404 -> Response.NotFound(response.body())
+              422 -> Response.UnprocessableEntity(response.body())
+              else -> throw ResponseException(response, "")
+            }
+          }
+
           public suspend operator fun invoke(
             config: Config? = null,
             events: List<String>? = null,
             active: Boolean? = null,
             name: String? = null,
           ): Response {
-            val response = client.patch("/orgs/$org/hooks/$hookId") {
-              if (config != null || events != null || active != null || name != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(config = config, events = events, active = active, name = name))
-              }
+            val response = client.patch("orgs/${org.encodeURLParameter()}/hooks/$hookId") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(config = config, events = events, active = active, name = name))
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -7339,21 +8103,30 @@ public class Orgs internal constructor(
           /**
            * Key/value pairs to provide settings for this webhook.
            */
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Config(
             public val url: WebhookConfigUrl,
             @SerialName("content_type")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val contentType: WebhookConfigContentType? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val secret: WebhookConfigSecret? = null,
             @SerialName("insecure_ssl")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val insecureSsl: WebhookConfigInsecureSsl? = null,
           )
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val config: Config? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val events: List<String>? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val active: Boolean? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val name: String? = null,
           )
 
@@ -7386,7 +8159,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val hookId: Long,
           ) {
-            public suspend operator fun invoke(): WebhookConfig = client.get("/orgs/$org/hooks/$hookId/config").body()
+            public suspend operator fun invoke(): WebhookConfig {
+              val response = client.get("orgs/${org.encodeURLParameter()}/hooks/$hookId/config")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Patch internal constructor(
@@ -7394,25 +8171,38 @@ public class Orgs internal constructor(
             private val org: String,
             private val hookId: Long,
           ) {
+            public suspend operator fun invoke(): WebhookConfig {
+              val response = client.patch("orgs/${org.encodeURLParameter()}/hooks/$hookId/config")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
+
             public suspend operator fun invoke(
               url: WebhookConfigUrl? = null,
               contentType: WebhookConfigContentType? = null,
               secret: WebhookConfigSecret? = null,
               insecureSsl: WebhookConfigInsecureSsl? = null,
-            ): WebhookConfig = client.patch("/orgs/$org/hooks/$hookId/config") {
-              if (url != null || contentType != null || secret != null || insecureSsl != null) {
+            ): WebhookConfig {
+              val response = client.patch("orgs/${org.encodeURLParameter()}/hooks/$hookId/config") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(url = url, contentType = contentType, secret = secret, insecureSsl = insecureSsl))
               }
-            }.body()
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val url: WebhookConfigUrl? = null,
               @SerialName("content_type")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val contentType: WebhookConfigContentType? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val secret: WebhookConfigSecret? = null,
               @SerialName("insecure_ssl")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val insecureSsl: WebhookConfigInsecureSsl? = null,
             )
           }
@@ -7433,9 +8223,13 @@ public class Orgs internal constructor(
             private val hookId: Long,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, cursor: String? = null): Response {
-              val response = client.get("/orgs/$org/hooks/$hookId/deliveries") {
-                perPage?.let { parameter("per_page", it) }
-                cursor?.let { parameter("cursor", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/hooks/$hookId/deliveries") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (cursor != null) {
+                  url.encodedParameters.append("cursor", cursor.encodeURLParameter())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -7477,7 +8271,7 @@ public class Orgs internal constructor(
               private val deliveryId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/orgs/$org/hooks/$hookId/deliveries/$deliveryId")
+                val response = client.get("orgs/${org.encodeURLParameter()}/hooks/$hookId/deliveries/$deliveryId")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   400 -> Response.BadRequest(response.body())
@@ -7516,7 +8310,7 @@ public class Orgs internal constructor(
                 private val deliveryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("/orgs/$org/hooks/$hookId/deliveries/$deliveryId/attempts")
+                  val response = client.post("orgs/${org.encodeURLParameter()}/hooks/$hookId/deliveries/$deliveryId/attempts")
                   return when (response.status.value) {
                     202 -> Response.Accepted(response.body())
                     400 -> Response.BadRequest(response.body())
@@ -7556,7 +8350,7 @@ public class Orgs internal constructor(
             private val hookId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.post("/orgs/$org/hooks/$hookId/pings")
+              val response = client.post("orgs/${org.encodeURLParameter()}/hooks/$hookId/pings")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -7637,15 +8431,29 @@ public class Orgs internal constructor(
                   direction: Direction? = Direction.Desc,
                   sort: List<Sort>? = null,
                   apiRouteSubstring: String? = null,
-                ): ApiInsightsRouteStats = client.get("/orgs/$org/insights/api/route-stats/installation/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
-                  direction?.let { parameter("direction", it.value) }
-                  sort?.let { parameter("sort", it) }
-                  apiRouteSubstring?.let { parameter("api_route_substring", it) }
-                }.body()
+                ): ApiInsightsRouteStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/route-stats/installation/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                    if (page != null) {
+                      url.encodedParameters.append("page", page.toString())
+                    }
+                    if (perPage != null) {
+                      url.encodedParameters.append("per_page", perPage.toString())
+                    }
+                    if (direction != null) {
+                      url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                    }
+                    sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                    if (apiRouteSubstring != null) {
+                      url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
+                    }
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
 
                 @Serializable
                 public enum class Direction(
@@ -7706,15 +8514,29 @@ public class Orgs internal constructor(
                   direction: Direction? = Direction.Desc,
                   sort: List<Sort>? = null,
                   apiRouteSubstring: String? = null,
-                ): ApiInsightsRouteStats = client.get("/orgs/$org/insights/api/route-stats/classic_pat/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
-                  direction?.let { parameter("direction", it.value) }
-                  sort?.let { parameter("sort", it) }
-                  apiRouteSubstring?.let { parameter("api_route_substring", it) }
-                }.body()
+                ): ApiInsightsRouteStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/route-stats/classic_pat/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                    if (page != null) {
+                      url.encodedParameters.append("page", page.toString())
+                    }
+                    if (perPage != null) {
+                      url.encodedParameters.append("per_page", perPage.toString())
+                    }
+                    if (direction != null) {
+                      url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                    }
+                    sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                    if (apiRouteSubstring != null) {
+                      url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
+                    }
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
 
                 @Serializable
                 public enum class Direction(
@@ -7775,15 +8597,29 @@ public class Orgs internal constructor(
                   direction: Direction? = Direction.Desc,
                   sort: List<Sort>? = null,
                   apiRouteSubstring: String? = null,
-                ): ApiInsightsRouteStats = client.get("/orgs/$org/insights/api/route-stats/fine_grained_pat/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
-                  direction?.let { parameter("direction", it.value) }
-                  sort?.let { parameter("sort", it) }
-                  apiRouteSubstring?.let { parameter("api_route_substring", it) }
-                }.body()
+                ): ApiInsightsRouteStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/route-stats/fine_grained_pat/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                    if (page != null) {
+                      url.encodedParameters.append("page", page.toString())
+                    }
+                    if (perPage != null) {
+                      url.encodedParameters.append("per_page", perPage.toString())
+                    }
+                    if (direction != null) {
+                      url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                    }
+                    sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                    if (apiRouteSubstring != null) {
+                      url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
+                    }
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
 
                 @Serializable
                 public enum class Direction(
@@ -7844,15 +8680,29 @@ public class Orgs internal constructor(
                   direction: Direction? = Direction.Desc,
                   sort: List<Sort>? = null,
                   apiRouteSubstring: String? = null,
-                ): ApiInsightsRouteStats = client.get("/orgs/$org/insights/api/route-stats/oauth_app/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
-                  direction?.let { parameter("direction", it.value) }
-                  sort?.let { parameter("sort", it) }
-                  apiRouteSubstring?.let { parameter("api_route_substring", it) }
-                }.body()
+                ): ApiInsightsRouteStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/route-stats/oauth_app/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                    if (page != null) {
+                      url.encodedParameters.append("page", page.toString())
+                    }
+                    if (perPage != null) {
+                      url.encodedParameters.append("per_page", perPage.toString())
+                    }
+                    if (direction != null) {
+                      url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                    }
+                    sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                    if (apiRouteSubstring != null) {
+                      url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
+                    }
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
 
                 @Serializable
                 public enum class Direction(
@@ -7913,15 +8763,29 @@ public class Orgs internal constructor(
                   direction: Direction? = Direction.Desc,
                   sort: List<Sort>? = null,
                   apiRouteSubstring: String? = null,
-                ): ApiInsightsRouteStats = client.get("/orgs/$org/insights/api/route-stats/github_app_user_to_server/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
-                  direction?.let { parameter("direction", it.value) }
-                  sort?.let { parameter("sort", it) }
-                  apiRouteSubstring?.let { parameter("api_route_substring", it) }
-                }.body()
+                ): ApiInsightsRouteStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/route-stats/github_app_user_to_server/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                    if (page != null) {
+                      url.encodedParameters.append("page", page.toString())
+                    }
+                    if (perPage != null) {
+                      url.encodedParameters.append("per_page", perPage.toString())
+                    }
+                    if (direction != null) {
+                      url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                    }
+                    sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                    if (apiRouteSubstring != null) {
+                      url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
+                    }
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
 
                 @Serializable
                 public enum class Direction(
@@ -7975,15 +8839,29 @@ public class Orgs internal constructor(
               direction: Direction? = Direction.Desc,
               sort: List<Sort>? = null,
               subjectNameSubstring: String? = null,
-            ): ApiInsightsSubjectStats = client.get("/orgs/$org/insights/api/subject-stats") {
-              parameter("min_timestamp", minTimestamp)
-              maxTimestamp?.let { parameter("max_timestamp", it) }
-              page?.let { parameter("page", it) }
-              perPage?.let { parameter("per_page", it) }
-              direction?.let { parameter("direction", it.value) }
-              sort?.let { parameter("sort", it) }
-              subjectNameSubstring?.let { parameter("subject_name_substring", it) }
-            }.body()
+            ): ApiInsightsSubjectStats {
+              val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/subject-stats") {
+                url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                if (maxTimestamp != null) {
+                  url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (direction != null) {
+                  url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                }
+                sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                if (subjectNameSubstring != null) {
+                  url.encodedParameters.append("subject_name_substring", subjectNameSubstring.encodeURLParameter())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public enum class Direction(
@@ -8038,10 +8916,16 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats = client.get("/orgs/$org/insights/api/summary-stats") {
-              parameter("min_timestamp", minTimestamp)
-              maxTimestamp?.let { parameter("max_timestamp", it) }
-            }.body()
+            public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
+              val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats") {
+                url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                if (maxTimestamp != null) {
+                  url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Users internal constructor(
@@ -8062,10 +8946,16 @@ public class Orgs internal constructor(
                 private val org: String,
                 private val userId: String,
               ) {
-                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats = client.get("/orgs/$org/insights/api/summary-stats/users/$userId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                }.body()
+                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/users/${userId.encodeURLParameter()}") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8088,10 +8978,16 @@ public class Orgs internal constructor(
                 private val org: String,
                 private val actorId: Long,
               ) {
-                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats = client.get("/orgs/$org/insights/api/summary-stats/installation/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                }.body()
+                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/installation/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8114,10 +9010,16 @@ public class Orgs internal constructor(
                 private val org: String,
                 private val actorId: Long,
               ) {
-                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats = client.get("/orgs/$org/insights/api/summary-stats/classic_pat/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                }.body()
+                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/classic_pat/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8140,10 +9042,16 @@ public class Orgs internal constructor(
                 private val org: String,
                 private val actorId: Long,
               ) {
-                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats = client.get("/orgs/$org/insights/api/summary-stats/fine_grained_pat/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                }.body()
+                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/fine_grained_pat/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8166,10 +9074,16 @@ public class Orgs internal constructor(
                 private val org: String,
                 private val actorId: Long,
               ) {
-                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats = client.get("/orgs/$org/insights/api/summary-stats/oauth_app/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                }.body()
+                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/oauth_app/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8192,10 +9106,16 @@ public class Orgs internal constructor(
                 private val org: String,
                 private val actorId: Long,
               ) {
-                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats = client.get("/orgs/$org/insights/api/summary-stats/github_app_user_to_server/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                }.body()
+                public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/github_app_user_to_server/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8228,11 +9148,17 @@ public class Orgs internal constructor(
               minTimestamp: String,
               timestampIncrement: String,
               maxTimestamp: String? = null,
-            ): ApiInsightsTimeStats = client.get("/orgs/$org/insights/api/time-stats") {
-              parameter("min_timestamp", minTimestamp)
-              maxTimestamp?.let { parameter("max_timestamp", it) }
-              parameter("timestamp_increment", timestampIncrement)
-            }.body()
+            ): ApiInsightsTimeStats {
+              val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats") {
+                url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                if (maxTimestamp != null) {
+                  url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                }
+                url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Users internal constructor(
@@ -8257,11 +9183,17 @@ public class Orgs internal constructor(
                   minTimestamp: String,
                   timestampIncrement: String,
                   maxTimestamp: String? = null,
-                ): ApiInsightsTimeStats = client.get("/orgs/$org/insights/api/time-stats/users/$userId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                  parameter("timestamp_increment", timestampIncrement)
-                }.body()
+                ): ApiInsightsTimeStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/users/${userId.encodeURLParameter()}") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8288,11 +9220,17 @@ public class Orgs internal constructor(
                   minTimestamp: String,
                   timestampIncrement: String,
                   maxTimestamp: String? = null,
-                ): ApiInsightsTimeStats = client.get("/orgs/$org/insights/api/time-stats/installation/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                  parameter("timestamp_increment", timestampIncrement)
-                }.body()
+                ): ApiInsightsTimeStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/installation/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8319,11 +9257,17 @@ public class Orgs internal constructor(
                   minTimestamp: String,
                   timestampIncrement: String,
                   maxTimestamp: String? = null,
-                ): ApiInsightsTimeStats = client.get("/orgs/$org/insights/api/time-stats/classic_pat/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                  parameter("timestamp_increment", timestampIncrement)
-                }.body()
+                ): ApiInsightsTimeStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/classic_pat/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8350,11 +9294,17 @@ public class Orgs internal constructor(
                   minTimestamp: String,
                   timestampIncrement: String,
                   maxTimestamp: String? = null,
-                ): ApiInsightsTimeStats = client.get("/orgs/$org/insights/api/time-stats/fine_grained_pat/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                  parameter("timestamp_increment", timestampIncrement)
-                }.body()
+                ): ApiInsightsTimeStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/fine_grained_pat/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8381,11 +9331,17 @@ public class Orgs internal constructor(
                   minTimestamp: String,
                   timestampIncrement: String,
                   maxTimestamp: String? = null,
-                ): ApiInsightsTimeStats = client.get("/orgs/$org/insights/api/time-stats/oauth_app/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                  parameter("timestamp_increment", timestampIncrement)
-                }.body()
+                ): ApiInsightsTimeStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/oauth_app/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8412,11 +9368,17 @@ public class Orgs internal constructor(
                   minTimestamp: String,
                   timestampIncrement: String,
                   maxTimestamp: String? = null,
-                ): ApiInsightsTimeStats = client.get("/orgs/$org/insights/api/time-stats/github_app_user_to_server/$actorId") {
-                  parameter("min_timestamp", minTimestamp)
-                  maxTimestamp?.let { parameter("max_timestamp", it) }
-                  parameter("timestamp_increment", timestampIncrement)
-                }.body()
+                ): ApiInsightsTimeStats {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/github_app_user_to_server/$actorId") {
+                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    if (maxTimestamp != null) {
+                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    }
+                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                  }
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
             }
           }
@@ -8448,15 +9410,29 @@ public class Orgs internal constructor(
                 direction: Direction? = Direction.Desc,
                 sort: List<Sort>? = null,
                 actorNameSubstring: String? = null,
-              ): ApiInsightsUserStats = client.get("/orgs/$org/insights/api/user-stats/$userId") {
-                parameter("min_timestamp", minTimestamp)
-                maxTimestamp?.let { parameter("max_timestamp", it) }
-                page?.let { parameter("page", it) }
-                perPage?.let { parameter("per_page", it) }
-                direction?.let { parameter("direction", it.value) }
-                sort?.let { parameter("sort", it) }
-                actorNameSubstring?.let { parameter("actor_name_substring", it) }
-              }.body()
+              ): ApiInsightsUserStats {
+                val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/user-stats/${userId.encodeURLParameter()}") {
+                  url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                  if (maxTimestamp != null) {
+                    url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                  }
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                  if (direction != null) {
+                    url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                  }
+                  sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                  if (actorNameSubstring != null) {
+                    url.encodedParameters.append("actor_name_substring", actorNameSubstring.encodeURLParameter())
+                  }
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @Serializable
               public enum class Direction(
@@ -8501,7 +9477,11 @@ public class Orgs internal constructor(
         private val client: HttpClient,
         private val org: String,
       ) {
-        public suspend operator fun invoke(): io.github.model.Installation = client.get("/orgs/$org/installation").body()
+        public suspend operator fun invoke(): io.github.model.Installation {
+          val response = client.get("orgs/${org.encodeURLParameter()}/installation")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -8515,10 +9495,18 @@ public class Orgs internal constructor(
         private val client: HttpClient,
         private val org: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response = client.get("/orgs/$org/installations") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
+          val response = client.get("orgs/${org.encodeURLParameter()}/installations") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public data class Response(
@@ -8544,7 +9532,8 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke() {
-          client.delete("/orgs/$org/interaction-limits")
+          val response = client.delete("orgs/${org.encodeURLParameter()}/interaction-limits")
+          if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
 
@@ -8552,7 +9541,11 @@ public class Orgs internal constructor(
         private val client: HttpClient,
         private val org: String,
       ) {
-        public suspend operator fun invoke(): Response = client.get("/orgs/$org/interaction-limits").body()
+        public suspend operator fun invoke(): Response {
+          val response = client.get("orgs/${org.encodeURLParameter()}/interaction-limits")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable(with = Response.Serializer::class)
         public sealed interface Response {
@@ -8601,7 +9594,7 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke(body: InteractionLimit): Response {
-          val response = client.put("/orgs/$org/interaction-limits") {
+          val response = client.put("orgs/${org.encodeURLParameter()}/interaction-limits") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -8644,11 +9637,19 @@ public class Orgs internal constructor(
           role: Role? = Role.All,
           invitationSource: InvitationSource? = InvitationSource.All,
         ): Response {
-          val response = client.get("/orgs/$org/invitations") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-            role?.let { parameter("role", it.value) }
-            invitationSource?.let { parameter("invitation_source", it.value) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/invitations") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+            if (role != null) {
+              url.encodedParameters.append("role", role.value.encodeURLParameter())
+            }
+            if (invitationSource != null) {
+              url.encodedParameters.append("invitation_source", invitationSource.value.encodeURLParameter())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -8702,17 +9703,25 @@ public class Orgs internal constructor(
         private val client: HttpClient,
         private val org: String,
       ) {
+        public suspend operator fun invoke(): Response {
+          val response = client.post("orgs/${org.encodeURLParameter()}/invitations")
+          return when (response.status.value) {
+            201 -> Response.Created(response.body())
+            404 -> Response.NotFound(response.body())
+            422 -> Response.UnprocessableEntity(response.body())
+            else -> throw ResponseException(response, "")
+          }
+        }
+
         public suspend operator fun invoke(
           inviteeId: Long? = null,
           email: String? = null,
           role: Role? = null,
           teamIds: List<Long>? = null,
         ): Response {
-          val response = client.post("/orgs/$org/invitations") {
-            if (inviteeId != null || email != null || role != null || teamIds != null) {
-              contentType(ContentType.Application.Json)
-              setBody(Body(inviteeId = inviteeId, email = email, role = role, teamIds = teamIds))
-            }
+          val response = client.post("orgs/${org.encodeURLParameter()}/invitations") {
+            contentType(ContentType.Application.Json)
+            setBody(Body(inviteeId = inviteeId, email = email, role = role, teamIds = teamIds))
           }
           return when (response.status.value) {
             201 -> Response.Created(response.body())
@@ -8737,13 +9746,18 @@ public class Orgs internal constructor(
           ;
         }
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         internal data class Body(
           @SerialName("invitee_id")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val inviteeId: Long? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val email: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val role: Role? = null,
           @SerialName("team_ids")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val teamIds: List<Long>? = null,
         )
 
@@ -8777,7 +9791,7 @@ public class Orgs internal constructor(
           private val invitationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/invitations/$invitationId")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/invitations/$invitationId")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -8812,9 +9826,13 @@ public class Orgs internal constructor(
             private val invitationId: Long,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("/orgs/$org/invitations/$invitationId/teams") {
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/invitations/$invitationId/teams") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -8852,7 +9870,7 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("/orgs/$org/issue-fields")
+          val response = client.get("orgs/${org.encodeURLParameter()}/issue-fields")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             404 -> Response.NotFound(response.body())
@@ -8876,7 +9894,7 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke(body: OrganizationCreateIssueField): Response {
-          val response = client.post("/orgs/$org/issue-fields") {
+          val response = client.post("orgs/${org.encodeURLParameter()}/issue-fields") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -8918,7 +9936,7 @@ public class Orgs internal constructor(
           private val issueFieldId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/issue-fields/$issueFieldId")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/issue-fields/$issueFieldId")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -8946,7 +9964,7 @@ public class Orgs internal constructor(
           private val issueFieldId: Long,
         ) {
           public suspend operator fun invoke(body: OrganizationUpdateIssueField): Response {
-            val response = client.patch("/orgs/$org/issue-fields/$issueFieldId") {
+            val response = client.patch("orgs/${org.encodeURLParameter()}/issue-fields/$issueFieldId") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -8990,7 +10008,7 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("/orgs/$org/issue-types")
+          val response = client.get("orgs/${org.encodeURLParameter()}/issue-types")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             404 -> Response.NotFound(response.body())
@@ -9014,7 +10032,7 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke(body: OrganizationCreateIssueType): Response {
-          val response = client.post("/orgs/$org/issue-types") {
+          val response = client.post("orgs/${org.encodeURLParameter()}/issue-types") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -9056,7 +10074,7 @@ public class Orgs internal constructor(
           private val issueTypeId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/issue-types/$issueTypeId")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/issue-types/$issueTypeId")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -9084,7 +10102,7 @@ public class Orgs internal constructor(
           private val issueTypeId: Long,
         ) {
           public suspend operator fun invoke(body: OrganizationUpdateIssueType): Response {
-            val response = client.put("/orgs/$org/issue-types/$issueTypeId") {
+            val response = client.put("orgs/${org.encodeURLParameter()}/issue-types/$issueTypeId") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -9134,16 +10152,34 @@ public class Orgs internal constructor(
           perPage: Long? = 30L,
           page: Long? = 1L,
         ): Response {
-          val response = client.get("/orgs/$org/issues") {
-            filter?.let { parameter("filter", it.value) }
-            state?.let { parameter("state", it.value) }
-            labels?.let { parameter("labels", it) }
-            type?.let { parameter("type", it) }
-            sort?.let { parameter("sort", it.value) }
-            direction?.let { parameter("direction", it.value) }
-            since?.let { parameter("since", it.toString()) }
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/issues") {
+            if (filter != null) {
+              url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+            }
+            if (state != null) {
+              url.encodedParameters.append("state", state.value.encodeURLParameter())
+            }
+            if (labels != null) {
+              url.encodedParameters.append("labels", labels.encodeURLParameter())
+            }
+            if (type != null) {
+              url.encodedParameters.append("type", type.encodeURLParameter())
+            }
+            if (sort != null) {
+              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            }
+            if (direction != null) {
+              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            }
+            if (since != null) {
+              url.encodedParameters.append("since", since.toString().encodeURLParameter())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -9238,11 +10274,19 @@ public class Orgs internal constructor(
           perPage: Long? = 30L,
           page: Long? = 1L,
         ): Response {
-          val response = client.get("/orgs/$org/members") {
-            filter?.let { parameter("filter", it.value) }
-            role?.let { parameter("role", it.value) }
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/members") {
+            if (filter != null) {
+              url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+            }
+            if (role != null) {
+              url.encodedParameters.append("role", role.value.encodeURLParameter())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -9307,7 +10351,7 @@ public class Orgs internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/members/$username")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/members/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               403 -> Response.Forbidden(response.body())
@@ -9330,7 +10374,7 @@ public class Orgs internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/members/$username")
+            val response = client.get("orgs/${org.encodeURLParameter()}/members/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               302 -> Response.Found
@@ -9363,9 +10407,13 @@ public class Orgs internal constructor(
             private val username: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("/orgs/$org/members/$username/codespaces") {
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/members/${username.encodeURLParameter()}/codespaces") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> response.body<Response.Ok>()
@@ -9423,7 +10471,7 @@ public class Orgs internal constructor(
               private val codespaceName: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("/orgs/$org/members/$username/codespaces/$codespaceName")
+                val response = client.delete("orgs/${org.encodeURLParameter()}/members/${username.encodeURLParameter()}/codespaces/${codespaceName.encodeURLParameter()}")
                 return when (response.status.value) {
                   202 -> Response.Accepted(response.body())
                   304 -> Response.NotModified
@@ -9475,7 +10523,7 @@ public class Orgs internal constructor(
                 private val codespaceName: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("/orgs/$org/members/$username/codespaces/$codespaceName/stop")
+                  val response = client.post("orgs/${org.encodeURLParameter()}/members/${username.encodeURLParameter()}/codespaces/${codespaceName.encodeURLParameter()}/stop")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     304 -> Response.NotModified
@@ -9528,7 +10576,7 @@ public class Orgs internal constructor(
             private val username: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/orgs/$org/members/$username/copilot")
+              val response = client.get("orgs/${org.encodeURLParameter()}/members/${username.encodeURLParameter()}/copilot")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 401 -> Response.Unauthorized(response.body())
@@ -9591,7 +10639,7 @@ public class Orgs internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/memberships/$username")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/memberships/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               403 -> Response.Forbidden(response.body())
@@ -9619,7 +10667,7 @@ public class Orgs internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/memberships/$username")
+            val response = client.get("orgs/${org.encodeURLParameter()}/memberships/${username.encodeURLParameter()}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               403 -> Response.Forbidden(response.body())
@@ -9648,12 +10696,20 @@ public class Orgs internal constructor(
           private val org: String,
           private val username: String,
         ) {
+          public suspend operator fun invoke(): Response {
+            val response = client.put("orgs/${org.encodeURLParameter()}/memberships/${username.encodeURLParameter()}")
+            return when (response.status.value) {
+              200 -> Response.Ok(response.body())
+              403 -> Response.Forbidden(response.body())
+              422 -> Response.UnprocessableEntity(response.body())
+              else -> throw ResponseException(response, "")
+            }
+          }
+
           public suspend operator fun invoke(role: Role? = null): Response {
-            val response = client.put("/orgs/$org/memberships/$username") {
-              if (role != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(role = role))
-              }
+            val response = client.put("orgs/${org.encodeURLParameter()}/memberships/${username.encodeURLParameter()}") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(role = role))
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -9674,9 +10730,10 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val role: Role? = null,
           )
 
@@ -9715,11 +10772,19 @@ public class Orgs internal constructor(
           perPage: Long? = 30L,
           page: Long? = 1L,
           exclude: List<Exclude>? = null,
-        ): List<Migration> = client.get("/orgs/$org/migrations") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-          exclude?.let { parameter("exclude", it) }
-        }.body()
+        ): List<Migration> {
+          val response = client.get("orgs/${org.encodeURLParameter()}/migrations") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+            exclude?.forEach { url.encodedParameters.append("exclude", it.value.encodeURLParameter()) }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Exclude(
@@ -9746,7 +10811,7 @@ public class Orgs internal constructor(
           orgMetadataOnly: Boolean? = null,
           exclude: List<Exclude>? = null,
         ): Response {
-          val response = client.post("/orgs/$org/migrations") {
+          val response = client.post("orgs/${org.encodeURLParameter()}/migrations") {
             contentType(ContentType.Application.Json)
             setBody(Body(repositories = repositories, lockRepositories = lockRepositories, excludeMetadata = excludeMetadata, excludeGitData = excludeGitData, excludeAttachments = excludeAttachments, excludeReleases = excludeReleases, excludeOwnerProjects = excludeOwnerProjects, orgMetadataOnly = orgMetadataOnly, exclude = exclude))
           }
@@ -9767,23 +10832,32 @@ public class Orgs internal constructor(
           ;
         }
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         internal data class Body(
           public val repositories: List<String>,
           @SerialName("lock_repositories")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val lockRepositories: Boolean? = null,
           @SerialName("exclude_metadata")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val excludeMetadata: Boolean? = null,
           @SerialName("exclude_git_data")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val excludeGitData: Boolean? = null,
           @SerialName("exclude_attachments")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val excludeAttachments: Boolean? = null,
           @SerialName("exclude_releases")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val excludeReleases: Boolean? = null,
           @SerialName("exclude_owner_projects")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val excludeOwnerProjects: Boolean? = null,
           @SerialName("org_metadata_only")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val orgMetadataOnly: Boolean? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val exclude: List<Exclude>? = null,
         )
 
@@ -9821,8 +10895,8 @@ public class Orgs internal constructor(
           private val migrationId: Long,
         ) {
           public suspend operator fun invoke(exclude: List<Exclude>? = null): Response {
-            val response = client.get("/orgs/$org/migrations/$migrationId") {
-              exclude?.let { parameter("exclude", it) }
+            val response = client.get("orgs/${org.encodeURLParameter()}/migrations/$migrationId") {
+              exclude?.forEach { url.encodedParameters.append("exclude", it.value.encodeURLParameter()) }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -9866,7 +10940,7 @@ public class Orgs internal constructor(
             private val migrationId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/migrations/$migrationId/archive")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/migrations/$migrationId/archive")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -9889,7 +10963,7 @@ public class Orgs internal constructor(
             private val migrationId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/orgs/$org/migrations/$migrationId/archive")
+              val response = client.get("orgs/${org.encodeURLParameter()}/migrations/$migrationId/archive")
               return when (response.status.value) {
                 302 -> Response.Found
                 404 -> Response.NotFound(response.body())
@@ -9937,7 +11011,7 @@ public class Orgs internal constructor(
                 private val repoName: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/migrations/$migrationId/repos/$repoName/lock")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/migrations/$migrationId/repos/${repoName.encodeURLParameter()}/lock")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -9970,9 +11044,13 @@ public class Orgs internal constructor(
             private val migrationId: Long,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("/orgs/$org/migrations/$migrationId/repositories") {
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/migrations/$migrationId/repositories") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -10012,7 +11090,7 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("/orgs/$org/organization-roles")
+          val response = client.get("orgs/${org.encodeURLParameter()}/organization-roles")
           return when (response.status.value) {
             200 -> response.body<Response.Ok>()
             404 -> Response.NotFound(response.body())
@@ -10022,10 +11100,13 @@ public class Orgs internal constructor(
         }
 
         public sealed interface Response {
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Ok(
             @SerialName("total_count")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val totalCount: Long? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val roles: List<OrganizationRole>? = null,
           ) : Response
 
@@ -10060,7 +11141,8 @@ public class Orgs internal constructor(
             private val teamSlug: String,
           ) {
             public suspend operator fun invoke() {
-              client.delete("/orgs/$org/organization-roles/teams/$teamSlug")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/organization-roles/teams/${teamSlug.encodeURLParameter()}")
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
@@ -10081,7 +11163,8 @@ public class Orgs internal constructor(
               private val roleId: Long,
             ) {
               public suspend operator fun invoke() {
-                client.delete("/orgs/$org/organization-roles/teams/$teamSlug/$roleId")
+                val response = client.delete("orgs/${org.encodeURLParameter()}/organization-roles/teams/${teamSlug.encodeURLParameter()}/$roleId")
+                if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
@@ -10092,7 +11175,7 @@ public class Orgs internal constructor(
               private val roleId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.put("/orgs/$org/organization-roles/teams/$teamSlug/$roleId")
+                val response = client.put("orgs/${org.encodeURLParameter()}/organization-roles/teams/${teamSlug.encodeURLParameter()}/$roleId")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   404 -> Response.NotFound
@@ -10134,7 +11217,8 @@ public class Orgs internal constructor(
             private val username: String,
           ) {
             public suspend operator fun invoke() {
-              client.delete("/orgs/$org/organization-roles/users/$username")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/organization-roles/users/${username.encodeURLParameter()}")
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
@@ -10155,7 +11239,8 @@ public class Orgs internal constructor(
               private val roleId: Long,
             ) {
               public suspend operator fun invoke() {
-                client.delete("/orgs/$org/organization-roles/users/$username/$roleId")
+                val response = client.delete("orgs/${org.encodeURLParameter()}/organization-roles/users/${username.encodeURLParameter()}/$roleId")
+                if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
@@ -10166,7 +11251,7 @@ public class Orgs internal constructor(
               private val roleId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.put("/orgs/$org/organization-roles/users/$username/$roleId")
+                val response = client.put("orgs/${org.encodeURLParameter()}/organization-roles/users/${username.encodeURLParameter()}/$roleId")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   404 -> Response.NotFound
@@ -10204,7 +11289,7 @@ public class Orgs internal constructor(
           private val roleId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/organization-roles/$roleId")
+            val response = client.get("orgs/${org.encodeURLParameter()}/organization-roles/$roleId")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -10241,9 +11326,13 @@ public class Orgs internal constructor(
             private val roleId: Long,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("/orgs/$org/organization-roles/$roleId/teams") {
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/organization-roles/$roleId/teams") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -10278,9 +11367,13 @@ public class Orgs internal constructor(
             private val roleId: Long,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("/orgs/$org/organization-roles/$roleId/users") {
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/organization-roles/$roleId/users") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -10320,11 +11413,21 @@ public class Orgs internal constructor(
           filter: Filter? = Filter.All,
           perPage: Long? = 30L,
           page: Long? = 1L,
-        ): List<SimpleUser> = client.get("/orgs/$org/outside_collaborators") {
-          filter?.let { parameter("filter", it.value) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): List<SimpleUser> {
+          val response = client.get("orgs/${org.encodeURLParameter()}/outside_collaborators") {
+            if (filter != null) {
+              url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Filter(
@@ -10355,7 +11458,7 @@ public class Orgs internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/outside_collaborators/$username")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/outside_collaborators/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               422 -> response.body<Response.UnprocessableEntity>()
@@ -10366,10 +11469,13 @@ public class Orgs internal constructor(
           public sealed interface Response {
             public data object NoContent : Response
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class UnprocessableEntity(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val message: String? = null,
               @SerialName("documentation_url")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val documentationUrl: String? = null,
             ) : Response
           }
@@ -10380,12 +11486,21 @@ public class Orgs internal constructor(
           private val org: String,
           private val username: String,
         ) {
+          public suspend operator fun invoke(): Response {
+            val response = client.put("orgs/${org.encodeURLParameter()}/outside_collaborators/${username.encodeURLParameter()}")
+            return when (response.status.value) {
+              202 -> Response.Accepted
+              204 -> Response.NoContent
+              403 -> Response.Forbidden
+              404 -> Response.NotFound(response.body())
+              else -> throw ResponseException(response, "")
+            }
+          }
+
           public suspend operator fun invoke(async: Boolean? = null): Response {
-            val response = client.put("/orgs/$org/outside_collaborators/$username") {
-              if (async != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(async = async))
-              }
+            val response = client.put("orgs/${org.encodeURLParameter()}/outside_collaborators/${username.encodeURLParameter()}") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(async = async))
             }
             return when (response.status.value) {
               202 -> Response.Accepted
@@ -10396,9 +11511,10 @@ public class Orgs internal constructor(
             }
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val async: Boolean? = null,
           )
 
@@ -10445,11 +11561,17 @@ public class Orgs internal constructor(
           page: Long? = 1L,
           perPage: Long? = 30L,
         ): Response {
-          val response = client.get("/orgs/$org/packages") {
-            parameter("package_type", packageType.value)
-            visibility?.let { parameter("visibility", it.value) }
-            page?.let { parameter("page", it) }
-            perPage?.let { parameter("per_page", it) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/packages") {
+            url.encodedParameters.append("package_type", packageType.value.encodeURLParameter())
+            if (visibility != null) {
+              url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -10534,7 +11656,7 @@ public class Orgs internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/packages/npm/$packageName")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -10566,7 +11688,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/orgs/$org/packages/npm/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("orgs/${org.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -10582,8 +11708,10 @@ public class Orgs internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/orgs/$org/packages/npm/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("orgs/${org.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -10631,10 +11759,16 @@ public class Orgs internal constructor(
                 perPage: Long? = 30L,
                 state: State? = State.Active,
               ): Response {
-                val response = client.get("/orgs/$org/packages/npm/$packageName/versions") {
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
-                  state?.let { parameter("state", it.value) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/versions") {
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                  if (state != null) {
+                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -10694,7 +11828,7 @@ public class Orgs internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/packages/npm/$packageName/versions/$packageVersionId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -10727,7 +11861,11 @@ public class Orgs internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/orgs/$org/packages/npm/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -10745,7 +11883,7 @@ public class Orgs internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/orgs/$org/packages/npm/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("orgs/${org.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -10802,7 +11940,7 @@ public class Orgs internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/packages/maven/$packageName")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -10834,7 +11972,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/orgs/$org/packages/maven/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("orgs/${org.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -10850,8 +11992,10 @@ public class Orgs internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/orgs/$org/packages/maven/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("orgs/${org.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -10899,10 +12043,16 @@ public class Orgs internal constructor(
                 perPage: Long? = 30L,
                 state: State? = State.Active,
               ): Response {
-                val response = client.get("/orgs/$org/packages/maven/$packageName/versions") {
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
-                  state?.let { parameter("state", it.value) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/versions") {
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                  if (state != null) {
+                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -10962,7 +12112,7 @@ public class Orgs internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/packages/maven/$packageName/versions/$packageVersionId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -10995,7 +12145,11 @@ public class Orgs internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/orgs/$org/packages/maven/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -11013,7 +12167,7 @@ public class Orgs internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/orgs/$org/packages/maven/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("orgs/${org.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -11070,7 +12224,7 @@ public class Orgs internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/packages/rubygems/$packageName")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -11102,7 +12256,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/orgs/$org/packages/rubygems/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("orgs/${org.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -11118,8 +12276,10 @@ public class Orgs internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/orgs/$org/packages/rubygems/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("orgs/${org.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -11167,10 +12327,16 @@ public class Orgs internal constructor(
                 perPage: Long? = 30L,
                 state: State? = State.Active,
               ): Response {
-                val response = client.get("/orgs/$org/packages/rubygems/$packageName/versions") {
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
-                  state?.let { parameter("state", it.value) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/versions") {
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                  if (state != null) {
+                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -11230,7 +12396,7 @@ public class Orgs internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/packages/rubygems/$packageName/versions/$packageVersionId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -11263,7 +12429,11 @@ public class Orgs internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/orgs/$org/packages/rubygems/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -11281,7 +12451,7 @@ public class Orgs internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/orgs/$org/packages/rubygems/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("orgs/${org.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -11338,7 +12508,7 @@ public class Orgs internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/packages/docker/$packageName")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -11370,7 +12540,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/orgs/$org/packages/docker/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("orgs/${org.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -11386,8 +12560,10 @@ public class Orgs internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/orgs/$org/packages/docker/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("orgs/${org.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -11435,10 +12611,16 @@ public class Orgs internal constructor(
                 perPage: Long? = 30L,
                 state: State? = State.Active,
               ): Response {
-                val response = client.get("/orgs/$org/packages/docker/$packageName/versions") {
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
-                  state?.let { parameter("state", it.value) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/versions") {
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                  if (state != null) {
+                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -11498,7 +12680,7 @@ public class Orgs internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/packages/docker/$packageName/versions/$packageVersionId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -11531,7 +12713,11 @@ public class Orgs internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/orgs/$org/packages/docker/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -11549,7 +12735,7 @@ public class Orgs internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/orgs/$org/packages/docker/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("orgs/${org.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -11606,7 +12792,7 @@ public class Orgs internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/packages/nuget/$packageName")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -11638,7 +12824,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/orgs/$org/packages/nuget/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("orgs/${org.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -11654,8 +12844,10 @@ public class Orgs internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/orgs/$org/packages/nuget/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("orgs/${org.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -11703,10 +12895,16 @@ public class Orgs internal constructor(
                 perPage: Long? = 30L,
                 state: State? = State.Active,
               ): Response {
-                val response = client.get("/orgs/$org/packages/nuget/$packageName/versions") {
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
-                  state?.let { parameter("state", it.value) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/versions") {
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                  if (state != null) {
+                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -11766,7 +12964,7 @@ public class Orgs internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/packages/nuget/$packageName/versions/$packageVersionId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -11799,7 +12997,11 @@ public class Orgs internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/orgs/$org/packages/nuget/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -11817,7 +13019,7 @@ public class Orgs internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/orgs/$org/packages/nuget/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("orgs/${org.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -11874,7 +13076,7 @@ public class Orgs internal constructor(
             private val packageName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/packages/container/$packageName")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 401 -> Response.Unauthorized(response.body())
@@ -11906,7 +13108,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val packageName: String,
           ) {
-            public suspend operator fun invoke(): Package = client.get("/orgs/$org/packages/container/$packageName").body()
+            public suspend operator fun invoke(): Package {
+              val response = client.get("orgs/${org.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Restore internal constructor(
@@ -11922,8 +13128,10 @@ public class Orgs internal constructor(
               private val packageName: String,
             ) {
               public suspend operator fun invoke(token: String? = null): Response {
-                val response = client.post("/orgs/$org/packages/container/$packageName/restore") {
-                  token?.let { parameter("token", it) }
+                val response = client.post("orgs/${org.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/restore") {
+                  if (token != null) {
+                    url.encodedParameters.append("token", token.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   204 -> Response.NoContent
@@ -11971,10 +13179,16 @@ public class Orgs internal constructor(
                 perPage: Long? = 30L,
                 state: State? = State.Active,
               ): Response {
-                val response = client.get("/orgs/$org/packages/container/$packageName/versions") {
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
-                  state?.let { parameter("state", it.value) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/versions") {
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
+                  if (state != null) {
+                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -12034,7 +13248,7 @@ public class Orgs internal constructor(
                 private val packageVersionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("/orgs/$org/packages/container/$packageName/versions/$packageVersionId")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/versions/$packageVersionId")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -12067,7 +13281,11 @@ public class Orgs internal constructor(
                 private val packageName: String,
                 private val packageVersionId: Long,
               ) {
-                public suspend operator fun invoke(): PackageVersion = client.get("/orgs/$org/packages/container/$packageName/versions/$packageVersionId").body()
+                public suspend operator fun invoke(): PackageVersion {
+                  val response = client.get("orgs/${org.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/versions/$packageVersionId")
+                  if (response.status.value != 200) throw ResponseException(response, "")
+                  return response.body()
+                }
               }
 
               public class Restore internal constructor(
@@ -12085,7 +13303,7 @@ public class Orgs internal constructor(
                   private val packageVersionId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("/orgs/$org/packages/container/$packageName/versions/$packageVersionId/restore")
+                    val response = client.post("orgs/${org.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/versions/$packageVersionId/restore")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       401 -> Response.Unauthorized(response.body())
@@ -12144,17 +13362,33 @@ public class Orgs internal constructor(
           lastUsedAfter: Instant? = null,
           tokenId: List<String>? = null,
         ): Response {
-          val response = client.get("/orgs/$org/personal-access-token-requests") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-            sort?.let { parameter("sort", it.value) }
-            direction?.let { parameter("direction", it.value) }
-            owner?.let { parameter("owner", it) }
-            repository?.let { parameter("repository", it) }
-            permission?.let { parameter("permission", it) }
-            lastUsedBefore?.let { parameter("last_used_before", it.toString()) }
-            lastUsedAfter?.let { parameter("last_used_after", it.toString()) }
-            tokenId?.let { parameter("token_id", it) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/personal-access-token-requests") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+            if (sort != null) {
+              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            }
+            if (direction != null) {
+              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            }
+            owner?.forEach { url.encodedParameters.append("owner", it.encodeURLParameter()) }
+            if (repository != null) {
+              url.encodedParameters.append("repository", repository.encodeURLParameter())
+            }
+            if (permission != null) {
+              url.encodedParameters.append("permission", permission.encodeURLParameter())
+            }
+            if (lastUsedBefore != null) {
+              url.encodedParameters.append("last_used_before", lastUsedBefore.toString().encodeURLParameter())
+            }
+            if (lastUsedAfter != null) {
+              url.encodedParameters.append("last_used_after", lastUsedAfter.toString().encodeURLParameter())
+            }
+            tokenId?.forEach { url.encodedParameters.append("token_id", it.encodeURLParameter()) }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -12218,7 +13452,7 @@ public class Orgs internal constructor(
           action: Action,
           reason: String? = null,
         ): Response {
-          val response = client.post("/orgs/$org/personal-access-token-requests") {
+          val response = client.post("orgs/${org.encodeURLParameter()}/personal-access-token-requests") {
             contentType(ContentType.Application.Json)
             setBody(Body(patRequestIds = patRequestIds, action = action, reason = reason))
           }
@@ -12243,9 +13477,11 @@ public class Orgs internal constructor(
           ;
         }
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         internal data class Body(
           @SerialName("pat_request_ids")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val patRequestIds: List<Long>? = null,
           public val action: Action,
           public val reason: String? = null,
@@ -12289,7 +13525,7 @@ public class Orgs internal constructor(
           private val patRequestId: Long,
         ) {
           public suspend operator fun invoke(action: Action, reason: String? = null): Response {
-            val response = client.post("/orgs/$org/personal-access-token-requests/$patRequestId") {
+            val response = client.post("orgs/${org.encodeURLParameter()}/personal-access-token-requests/$patRequestId") {
               contentType(ContentType.Application.Json)
               setBody(Body(action = action, reason = reason))
             }
@@ -12354,9 +13590,13 @@ public class Orgs internal constructor(
             private val patRequestId: Long,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("/orgs/$org/personal-access-token-requests/$patRequestId/repositories") {
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/personal-access-token-requests/$patRequestId/repositories") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -12415,17 +13655,33 @@ public class Orgs internal constructor(
           lastUsedAfter: Instant? = null,
           tokenId: List<String>? = null,
         ): Response {
-          val response = client.get("/orgs/$org/personal-access-tokens") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-            sort?.let { parameter("sort", it.value) }
-            direction?.let { parameter("direction", it.value) }
-            owner?.let { parameter("owner", it) }
-            repository?.let { parameter("repository", it) }
-            permission?.let { parameter("permission", it) }
-            lastUsedBefore?.let { parameter("last_used_before", it.toString()) }
-            lastUsedAfter?.let { parameter("last_used_after", it.toString()) }
-            tokenId?.let { parameter("token_id", it) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/personal-access-tokens") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+            if (sort != null) {
+              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            }
+            if (direction != null) {
+              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            }
+            owner?.forEach { url.encodedParameters.append("owner", it.encodeURLParameter()) }
+            if (repository != null) {
+              url.encodedParameters.append("repository", repository.encodeURLParameter())
+            }
+            if (permission != null) {
+              url.encodedParameters.append("permission", permission.encodeURLParameter())
+            }
+            if (lastUsedBefore != null) {
+              url.encodedParameters.append("last_used_before", lastUsedBefore.toString().encodeURLParameter())
+            }
+            if (lastUsedAfter != null) {
+              url.encodedParameters.append("last_used_after", lastUsedAfter.toString().encodeURLParameter())
+            }
+            tokenId?.forEach { url.encodedParameters.append("token_id", it.encodeURLParameter()) }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -12485,7 +13741,7 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke(action: Action, patIds: List<Long>): Response {
-          val response = client.post("/orgs/$org/personal-access-tokens") {
+          val response = client.post("orgs/${org.encodeURLParameter()}/personal-access-tokens") {
             contentType(ContentType.Application.Json)
             setBody(Body(action = action, patIds = patIds))
           }
@@ -12553,7 +13809,7 @@ public class Orgs internal constructor(
           private val patId: Long,
         ) {
           public suspend operator fun invoke(action: Action): Response {
-            val response = client.post("/orgs/$org/personal-access-tokens/$patId") {
+            val response = client.post("orgs/${org.encodeURLParameter()}/personal-access-tokens/$patId") {
               contentType(ContentType.Application.Json)
               setBody(Body(action = action))
             }
@@ -12576,9 +13832,8 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
           @Serializable
-          internal value class Body(
+          internal data class Body(
             public val action: Action,
           )
 
@@ -12616,9 +13871,13 @@ public class Orgs internal constructor(
             private val patId: Long,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("/orgs/$org/personal-access-tokens/$patId/repositories") {
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/personal-access-tokens/$patId/repositories") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -12668,9 +13927,13 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("/orgs/$org/private-registries") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/private-registries") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> response.body<Response.Ok>()
@@ -12712,7 +13975,7 @@ public class Orgs internal constructor(
           visibility: Visibility,
           selectedRepositoryIds: List<Long>? = null,
         ): Response {
-          val response = client.post("/orgs/$org/private-registries") {
+          val response = client.post("orgs/${org.encodeURLParameter()}/private-registries") {
             contentType(ContentType.Application.Json)
             setBody(Body(registryType = registryType, url = url, username = username, replacesBase = replacesBase, encryptedValue = encryptedValue, keyId = keyId, visibility = visibility, selectedRepositoryIds = selectedRepositoryIds))
           }
@@ -12774,6 +14037,7 @@ public class Orgs internal constructor(
           ;
         }
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         internal data class Body(
           @SerialName("registry_type")
@@ -12781,6 +14045,7 @@ public class Orgs internal constructor(
           public val url: String,
           public val username: String? = null,
           @SerialName("replaces_base")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val replacesBase: Boolean? = null,
           @SerialName("encrypted_value")
           public val encryptedValue: String,
@@ -12788,6 +14053,7 @@ public class Orgs internal constructor(
           public val keyId: String,
           public val visibility: Visibility,
           @SerialName("selected_repository_ids")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val selectedRepositoryIds: List<Long>? = null,
         )
 
@@ -12817,7 +14083,7 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/private-registries/public-key")
+            val response = client.get("orgs/${org.encodeURLParameter()}/private-registries/public-key")
             return when (response.status.value) {
               200 -> response.body<Response.Ok>()
               404 -> Response.NotFound(response.body())
@@ -12857,7 +14123,7 @@ public class Orgs internal constructor(
           private val secretName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/private-registries/$secretName")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/private-registries/${secretName.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               400 -> Response.BadRequest(response.body())
@@ -12885,7 +14151,7 @@ public class Orgs internal constructor(
           private val secretName: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/private-registries/$secretName")
+            val response = client.get("orgs/${org.encodeURLParameter()}/private-registries/${secretName.encodeURLParameter()}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -12919,7 +14185,7 @@ public class Orgs internal constructor(
             visibility: Visibility? = null,
             selectedRepositoryIds: List<Long>? = null,
           ): Response {
-            val response = client.patch("/orgs/$org/private-registries/$secretName") {
+            val response = client.patch("orgs/${org.encodeURLParameter()}/private-registries/${secretName.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
               setBody(Body(registryType = registryType, url = url, username = username, replacesBase = replacesBase, encryptedValue = encryptedValue, keyId = keyId, visibility = visibility, selectedRepositoryIds = selectedRepositoryIds))
             }
@@ -12981,20 +14247,28 @@ public class Orgs internal constructor(
             ;
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             @SerialName("registry_type")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val registryType: RegistryType? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val url: String? = null,
             public val username: String? = null,
             @SerialName("replaces_base")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val replacesBase: Boolean? = null,
             @SerialName("encrypted_value")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val encryptedValue: String? = null,
             @SerialName("key_id")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val keyId: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val visibility: Visibility? = null,
             @SerialName("selected_repository_ids")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val selectedRepositoryIds: List<Long>? = null,
           )
 
@@ -13031,11 +14305,19 @@ public class Orgs internal constructor(
           after: String? = null,
           perPage: Long? = 30L,
         ): Response {
-          val response = client.get("/orgs/$org/projectsV2") {
-            q?.let { parameter("q", it) }
-            before?.let { parameter("before", it) }
-            after?.let { parameter("after", it) }
-            perPage?.let { parameter("per_page", it) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/projectsV2") {
+            if (q != null) {
+              url.encodedParameters.append("q", q.encodeURLParameter())
+            }
+            if (before != null) {
+              url.encodedParameters.append("before", before.encodeURLParameter())
+            }
+            if (after != null) {
+              url.encodedParameters.append("after", after.encodeURLParameter())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -13084,7 +14366,7 @@ public class Orgs internal constructor(
           private val projectNumber: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/projectsV2/$projectNumber")
+            val response = client.get("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               304 -> Response.NotModified
@@ -13124,7 +14406,7 @@ public class Orgs internal constructor(
             private val projectNumber: Long,
           ) {
             public suspend operator fun invoke(title: String, body: String? = null): Response {
-              val response = client.post("/orgs/$org/projectsV2/$projectNumber/drafts") {
+              val response = client.post("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/drafts") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(title = title, body = body))
               }
@@ -13137,9 +14419,11 @@ public class Orgs internal constructor(
               }
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               public val title: String,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val body: String? = null,
             )
 
@@ -13182,10 +14466,16 @@ public class Orgs internal constructor(
               before: String? = null,
               after: String? = null,
             ): Response {
-              val response = client.get("/orgs/$org/projectsV2/$projectNumber/fields") {
-                perPage?.let { parameter("per_page", it) }
-                before?.let { parameter("before", it) }
-                after?.let { parameter("after", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/fields") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (before != null) {
+                  url.encodedParameters.append("before", before.encodeURLParameter())
+                }
+                if (after != null) {
+                  url.encodedParameters.append("after", after.encodeURLParameter())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -13219,7 +14509,7 @@ public class Orgs internal constructor(
             private val projectNumber: Long,
           ) {
             public suspend operator fun invoke(body: IssueFieldId): Response {
-              val response = client.post("/orgs/$org/projectsV2/$projectNumber/fields") {
+              val response = client.post("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/fields") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -13234,7 +14524,7 @@ public class Orgs internal constructor(
             }
 
             public suspend operator fun invoke(body: NameAndDataType): Response {
-              val response = client.post("/orgs/$org/projectsV2/$projectNumber/fields") {
+              val response = client.post("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/fields") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -13249,7 +14539,7 @@ public class Orgs internal constructor(
             }
 
             public suspend operator fun invoke(body: NameAndDataTypeAndSingleSelectOptions): Response {
-              val response = client.post("/orgs/$org/projectsV2/$projectNumber/fields") {
+              val response = client.post("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/fields") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -13264,7 +14554,7 @@ public class Orgs internal constructor(
             }
 
             public suspend operator fun invoke(body: NameAndDataTypeAndIterationConfiguration): Response {
-              val response = client.post("/orgs/$org/projectsV2/$projectNumber/fields") {
+              val response = client.post("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/fields") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -13278,9 +14568,8 @@ public class Orgs internal constructor(
               }
             }
 
-            @JvmInline
             @Serializable
-            public value class IssueFieldId(
+            public data class IssueFieldId(
               @SerialName("issue_field_id")
               public val issueFieldId: Long,
             )
@@ -13377,7 +14666,7 @@ public class Orgs internal constructor(
               private val fieldId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/orgs/$org/projectsV2/$projectNumber/fields/$fieldId")
+                val response = client.get("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/fields/$fieldId")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   304 -> Response.NotModified
@@ -13429,12 +14718,29 @@ public class Orgs internal constructor(
               after: String? = null,
               perPage: Long? = 30L,
             ): Response {
-              val response = client.get("/orgs/$org/projectsV2/$projectNumber/items") {
-                q?.let { parameter("q", it) }
-                fields?.let { parameter("fields", it) }
-                before?.let { parameter("before", it) }
-                after?.let { parameter("after", it) }
-                perPage?.let { parameter("per_page", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/items") {
+                if (q != null) {
+                  url.encodedParameters.append("q", q.encodeURLParameter())
+                }
+                if (fields != null) {
+                  when (fields) {
+                    is Fields.CaseString -> {
+                      url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                    }
+                    is Fields.CaseStrings -> {
+                      fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                    }
+                  }
+                }
+                if (before != null) {
+                  url.encodedParameters.append("before", before.encodeURLParameter())
+                }
+                if (after != null) {
+                  url.encodedParameters.append("after", after.encodeURLParameter())
+                }
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -13473,11 +14779,17 @@ public class Orgs internal constructor(
                 override fun deserialize(decoder: Decoder): Fields {
                   val value = decoder.decodeSerializableValue(JsonElement.serializer())
                   val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                  return json.attemptDeserialize(
-                    value,
-                    CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-                    CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                  )
+                  return when {
+                    value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                      value,
+                      CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                    )
+                    value is JsonArray -> json.attemptDeserialize(
+                      value,
+                      CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
+                    )
+                    else -> throw UnionSerializationException(value, emptyMap())
+                  }
                 }
 
                 override fun serialize(encoder: Encoder, `value`: Fields) {
@@ -13518,7 +14830,7 @@ public class Orgs internal constructor(
               repo: String? = null,
               number: Long? = null,
             ): Response {
-              val response = client.post("/orgs/$org/projectsV2/$projectNumber/items") {
+              val response = client.post("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/items") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(type = type, id = id, owner = owner, repo = repo, number = number))
               }
@@ -13537,12 +14849,17 @@ public class Orgs internal constructor(
               PullRequest,
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               public val type: Type,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val id: Long? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val owner: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val repo: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val number: Long? = null,
             )
 
@@ -13582,7 +14899,7 @@ public class Orgs internal constructor(
               private val itemId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("/orgs/$org/projectsV2/$projectNumber/items/$itemId")
+                val response = client.delete("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/items/$itemId")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   401 -> Response.Unauthorized(response.body())
@@ -13611,8 +14928,17 @@ public class Orgs internal constructor(
               private val itemId: Long,
             ) {
               public suspend operator fun invoke(fields: Fields? = null): Response {
-                val response = client.get("/orgs/$org/projectsV2/$projectNumber/items/$itemId") {
-                  fields?.let { parameter("fields", it) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/items/$itemId") {
+                  if (fields != null) {
+                    when (fields) {
+                      is Fields.CaseString -> {
+                        url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                      }
+                      is Fields.CaseStrings -> {
+                        fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                      }
+                    }
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -13651,11 +14977,17 @@ public class Orgs internal constructor(
                   override fun deserialize(decoder: Decoder): Fields {
                     val value = decoder.decodeSerializableValue(JsonElement.serializer())
                     val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                    return json.attemptDeserialize(
-                      value,
-                      CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-                      CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                    )
+                    return when {
+                      value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                        value,
+                        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                      )
+                      value is JsonArray -> json.attemptDeserialize(
+                        value,
+                        CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
+                      )
+                      else -> throw UnionSerializationException(value, emptyMap())
+                    }
                   }
 
                   override fun serialize(encoder: Encoder, `value`: Fields) {
@@ -13691,7 +15023,7 @@ public class Orgs internal constructor(
               private val itemId: Long,
             ) {
               public suspend operator fun invoke(fields: List<Fields>): Response {
-                val response = client.patch("/orgs/$org/projectsV2/$projectNumber/items/$itemId") {
+                val response = client.patch("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/items/$itemId") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(fields = fields))
                 }
@@ -13744,11 +15076,17 @@ public class Orgs internal constructor(
                     override fun deserialize(decoder: Decoder): Value {
                       val value = decoder.decodeSerializableValue(JsonElement.serializer())
                       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                      return json.attemptDeserialize(
-                        value,
-                        CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
-                        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                      )
+                      return when {
+                        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                          value,
+                          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                        )
+                        value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+                          value,
+                          CaseDouble::class to { CaseDouble(decodeFromJsonElement(Double.serializer(), it)) },
+                        )
+                        else -> throw UnionSerializationException(value, emptyMap())
+                      }
                     }
 
                     override fun serialize(encoder: Encoder, `value`: Value) {
@@ -13761,9 +15099,8 @@ public class Orgs internal constructor(
                 }
               }
 
-              @JvmInline
               @Serializable
-              internal value class Body(
+              internal data class Body(
                 public val fields: List<Fields>,
               )
 
@@ -13812,7 +15149,7 @@ public class Orgs internal constructor(
               filter: String? = null,
               visibleFields: List<Long>? = null,
             ): Response {
-              val response = client.post("/orgs/$org/projectsV2/$projectNumber/views") {
+              val response = client.post("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/views") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, layout = layout, filter = filter, visibleFields = visibleFields))
               }
@@ -13841,12 +15178,15 @@ public class Orgs internal constructor(
               ;
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
               public val name: String,
               public val layout: Layout,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val filter: String? = null,
               @SerialName("visible_fields")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val visibleFields: List<Long>? = null,
             )
 
@@ -13907,11 +15247,26 @@ public class Orgs internal constructor(
                   after: String? = null,
                   perPage: Long? = 30L,
                 ): Response {
-                  val response = client.get("/orgs/$org/projectsV2/$projectNumber/views/$viewNumber/items") {
-                    fields?.let { parameter("fields", it) }
-                    before?.let { parameter("before", it) }
-                    after?.let { parameter("after", it) }
-                    perPage?.let { parameter("per_page", it) }
+                  val response = client.get("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/views/$viewNumber/items") {
+                    if (fields != null) {
+                      when (fields) {
+                        is Fields.CaseString -> {
+                          url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                        }
+                        is Fields.CaseStrings -> {
+                          fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                        }
+                      }
+                    }
+                    if (before != null) {
+                      url.encodedParameters.append("before", before.encodeURLParameter())
+                    }
+                    if (after != null) {
+                      url.encodedParameters.append("after", after.encodeURLParameter())
+                    }
+                    if (perPage != null) {
+                      url.encodedParameters.append("per_page", perPage.toString())
+                    }
                   }
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
@@ -13951,11 +15306,17 @@ public class Orgs internal constructor(
                     override fun deserialize(decoder: Decoder): Fields {
                       val value = decoder.decodeSerializableValue(JsonElement.serializer())
                       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                      return json.attemptDeserialize(
-                        value,
-                        CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-                        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                      )
+                      return when {
+                        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                          value,
+                          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                        )
+                        value is JsonArray -> json.attemptDeserialize(
+                          value,
+                          CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
+                        )
+                        else -> throw UnionSerializationException(value, emptyMap())
+                      }
                     }
 
                     override fun serialize(encoder: Encoder, `value`: Fields) {
@@ -14016,7 +15377,7 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/properties/schema")
+            val response = client.get("orgs/${org.encodeURLParameter()}/properties/schema")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               403 -> Response.Forbidden(response.body())
@@ -14045,7 +15406,7 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(properties: List<CustomProperty>): Response {
-            val response = client.patch("/orgs/$org/properties/schema") {
+            val response = client.patch("orgs/${org.encodeURLParameter()}/properties/schema") {
               contentType(ContentType.Application.Json)
               setBody(Body(properties = properties))
             }
@@ -14057,9 +15418,8 @@ public class Orgs internal constructor(
             }
           }
 
-          @JvmInline
           @Serializable
-          internal value class Body(
+          internal data class Body(
             public val properties: List<CustomProperty>,
           )
 
@@ -14095,7 +15455,7 @@ public class Orgs internal constructor(
             private val customPropertyName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("/orgs/$org/properties/schema/$customPropertyName")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/properties/schema/${customPropertyName.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 403 -> Response.Forbidden(response.body())
@@ -14123,7 +15483,7 @@ public class Orgs internal constructor(
             private val customPropertyName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/orgs/$org/properties/schema/$customPropertyName")
+              val response = client.get("orgs/${org.encodeURLParameter()}/properties/schema/${customPropertyName.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -14153,7 +15513,7 @@ public class Orgs internal constructor(
             private val customPropertyName: String,
           ) {
             public suspend operator fun invoke(body: CustomPropertySetPayload): Response {
-              val response = client.put("/orgs/$org/properties/schema/$customPropertyName") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/properties/schema/${customPropertyName.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -14199,10 +15559,16 @@ public class Orgs internal constructor(
             page: Long? = 1L,
             repositoryQuery: String? = null,
           ): Response {
-            val response = client.get("/orgs/$org/properties/values") {
-              perPage?.let { parameter("per_page", it) }
-              page?.let { parameter("page", it) }
-              repositoryQuery?.let { parameter("repository_query", it) }
+            val response = client.get("orgs/${org.encodeURLParameter()}/properties/values") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+              if (repositoryQuery != null) {
+                url.encodedParameters.append("repository_query", repositoryQuery.encodeURLParameter())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -14232,7 +15598,7 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(repositoryNames: List<String>, properties: List<CustomPropertyValue>): Response {
-            val response = client.patch("/orgs/$org/properties/values") {
+            val response = client.patch("orgs/${org.encodeURLParameter()}/properties/values") {
               contentType(ContentType.Application.Json)
               setBody(Body(repositoryNames = repositoryNames, properties = properties))
             }
@@ -14283,10 +15649,18 @@ public class Orgs internal constructor(
         private val client: HttpClient,
         private val org: String,
       ) {
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> = client.get("/orgs/$org/public_members") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
+          val response = client.get("orgs/${org.encodeURLParameter()}/public_members") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class UsernamePath internal constructor(
@@ -14306,7 +15680,8 @@ public class Orgs internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke() {
-            client.delete("/orgs/$org/public_members/$username")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/public_members/${username.encodeURLParameter()}")
+            if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
 
@@ -14316,7 +15691,7 @@ public class Orgs internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/public_members/$username")
+            val response = client.get("orgs/${org.encodeURLParameter()}/public_members/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound
@@ -14337,7 +15712,7 @@ public class Orgs internal constructor(
           private val username: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("/orgs/$org/public_members/$username")
+            val response = client.put("orgs/${org.encodeURLParameter()}/public_members/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               403 -> Response.Forbidden(response.body())
@@ -14374,13 +15749,27 @@ public class Orgs internal constructor(
           direction: Direction? = null,
           perPage: Long? = 30L,
           page: Long? = 1L,
-        ): List<MinimalRepository> = client.get("/orgs/$org/repos") {
-          type?.let { parameter("type", it.value) }
-          sort?.let { parameter("sort", it.value) }
-          direction?.let { parameter("direction", it.value) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        ): List<MinimalRepository> {
+          val response = client.get("orgs/${org.encodeURLParameter()}/repos") {
+            if (type != null) {
+              url.encodedParameters.append("type", type.value.encodeURLParameter())
+            }
+            if (sort != null) {
+              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            }
+            if (direction != null) {
+              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Type(
@@ -14459,7 +15848,7 @@ public class Orgs internal constructor(
           mergeCommitMessage: MergeCommitMessage? = null,
           customProperties: JsonElement? = null,
         ): Response {
-          val response = client.post("/orgs/$org/repos") {
+          val response = client.post("orgs/${org.encodeURLParameter()}/repos") {
             contentType(ContentType.Application.Json)
             setBody(Body(name = name, description = description, homepage = homepage, private = private, visibility = visibility, hasIssues = hasIssues, hasProjects = hasProjects, hasWiki = hasWiki, hasDownloads = hasDownloads, isTemplate = isTemplate, teamId = teamId, autoInit = autoInit, gitignoreTemplate = gitignoreTemplate, licenseTemplate = licenseTemplate, allowSquashMerge = allowSquashMerge, allowMergeCommit = allowMergeCommit, allowRebaseMerge = allowRebaseMerge, allowAutoMerge = allowAutoMerge, deleteBranchOnMerge = deleteBranchOnMerge, useSquashPrTitleAsDefault = useSquashPrTitleAsDefault, squashMergeCommitTitle = squashMergeCommitTitle, squashMergeCommitMessage = squashMergeCommitMessage, mergeCommitTitle = mergeCommitTitle, mergeCommitMessage = mergeCommitMessage, customProperties = customProperties))
           }
@@ -14528,52 +15917,77 @@ public class Orgs internal constructor(
           ;
         }
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         internal data class Body(
           public val name: String,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val description: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val homepage: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val `private`: Boolean? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val visibility: Visibility? = null,
           @SerialName("has_issues")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val hasIssues: Boolean? = null,
           @SerialName("has_projects")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val hasProjects: Boolean? = null,
           @SerialName("has_wiki")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val hasWiki: Boolean? = null,
           @SerialName("has_downloads")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val hasDownloads: Boolean? = null,
           @SerialName("is_template")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val isTemplate: Boolean? = null,
           @SerialName("team_id")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val teamId: Long? = null,
           @SerialName("auto_init")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val autoInit: Boolean? = null,
           @SerialName("gitignore_template")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val gitignoreTemplate: String? = null,
           @SerialName("license_template")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val licenseTemplate: String? = null,
           @SerialName("allow_squash_merge")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val allowSquashMerge: Boolean? = null,
           @SerialName("allow_merge_commit")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val allowMergeCommit: Boolean? = null,
           @SerialName("allow_rebase_merge")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val allowRebaseMerge: Boolean? = null,
           @SerialName("allow_auto_merge")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val allowAutoMerge: Boolean? = null,
           @SerialName("delete_branch_on_merge")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val deleteBranchOnMerge: Boolean? = null,
           @SerialName("use_squash_pr_title_as_default")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val useSquashPrTitleAsDefault: Boolean? = null,
           @SerialName("squash_merge_commit_title")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val squashMergeCommitTitle: SquashMergeCommitTitle? = null,
           @SerialName("squash_merge_commit_message")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val squashMergeCommitMessage: SquashMergeCommitMessage? = null,
           @SerialName("merge_commit_title")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val mergeCommitTitle: MergeCommitTitle? = null,
           @SerialName("merge_commit_message")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val mergeCommitMessage: MergeCommitMessage? = null,
           @SerialName("custom_properties")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val customProperties: JsonElement? = null,
         )
 
@@ -14614,10 +16028,16 @@ public class Orgs internal constructor(
           page: Long? = 1L,
           targets: String? = null,
         ): Response {
-          val response = client.get("/orgs/$org/rulesets") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-            targets?.let { parameter("targets", it) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/rulesets") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+            if (targets != null) {
+              url.encodedParameters.append("targets", targets.encodeURLParameter())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -14654,7 +16074,7 @@ public class Orgs internal constructor(
           conditions: OrgRulesetConditions? = null,
           rules: List<OrgRules>? = null,
         ): Response {
-          val response = client.post("/orgs/$org/rulesets") {
+          val response = client.post("orgs/${org.encodeURLParameter()}/rulesets") {
             contentType(ContentType.Application.Json)
             setBody(Body(name = name, target = target, enforcement = enforcement, bypassActors = bypassActors, conditions = conditions, rules = rules))
           }
@@ -14682,14 +16102,19 @@ public class Orgs internal constructor(
           ;
         }
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         internal data class Body(
           public val name: String,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val target: Target? = null,
           public val enforcement: RepositoryRuleEnforcement,
           @SerialName("bypass_actors")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val bypassActors: List<RepositoryRulesetBypassActor>? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val conditions: OrgRulesetConditions? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val rules: List<OrgRules>? = null,
         )
 
@@ -14733,14 +16158,28 @@ public class Orgs internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("/orgs/$org/rulesets/rule-suites") {
-              ref?.let { parameter("ref", it) }
-              repositoryName?.let { parameter("repository_name", it) }
-              timePeriod?.let { parameter("time_period", it.value) }
-              actorName?.let { parameter("actor_name", it) }
-              ruleSuiteResult?.let { parameter("rule_suite_result", it.value) }
-              perPage?.let { parameter("per_page", it) }
-              page?.let { parameter("page", it) }
+            val response = client.get("orgs/${org.encodeURLParameter()}/rulesets/rule-suites") {
+              if (ref != null) {
+                url.encodedParameters.append("ref", ref.encodeURLParameter())
+              }
+              if (repositoryName != null) {
+                url.encodedParameters.append("repository_name", repositoryName.encodeURLParameter())
+              }
+              if (timePeriod != null) {
+                url.encodedParameters.append("time_period", timePeriod.value.encodeURLParameter())
+              }
+              if (actorName != null) {
+                url.encodedParameters.append("actor_name", actorName.encodeURLParameter())
+              }
+              if (ruleSuiteResult != null) {
+                url.encodedParameters.append("rule_suite_result", ruleSuiteResult.value.encodeURLParameter())
+              }
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -14808,7 +16247,7 @@ public class Orgs internal constructor(
             private val ruleSuiteId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("/orgs/$org/rulesets/rule-suites/$ruleSuiteId")
+              val response = client.get("orgs/${org.encodeURLParameter()}/rulesets/rule-suites/$ruleSuiteId")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -14853,7 +16292,7 @@ public class Orgs internal constructor(
           private val rulesetId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/rulesets/$rulesetId")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/rulesets/$rulesetId")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -14881,7 +16320,7 @@ public class Orgs internal constructor(
           private val rulesetId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/rulesets/$rulesetId")
+            val response = client.get("orgs/${org.encodeURLParameter()}/rulesets/$rulesetId")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -14910,6 +16349,17 @@ public class Orgs internal constructor(
           private val org: String,
           private val rulesetId: Long,
         ) {
+          public suspend operator fun invoke(): Response {
+            val response = client.put("orgs/${org.encodeURLParameter()}/rulesets/$rulesetId")
+            return when (response.status.value) {
+              200 -> Response.Ok(response.body())
+              404 -> Response.NotFound(response.body())
+              422 -> Response.UnprocessableEntity(response.body())
+              500 -> Response.InternalServerError(response.body())
+              else -> throw ResponseException(response, "")
+            }
+          }
+
           public suspend operator fun invoke(
             name: String? = null,
             target: Target? = null,
@@ -14918,11 +16368,9 @@ public class Orgs internal constructor(
             conditions: OrgRulesetConditions? = null,
             rules: List<OrgRules>? = null,
           ): Response {
-            val response = client.put("/orgs/$org/rulesets/$rulesetId") {
-              if (name != null || target != null || enforcement != null || bypassActors != null || conditions != null || rules != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(name = name, target = target, enforcement = enforcement, bypassActors = bypassActors, conditions = conditions, rules = rules))
-              }
+            val response = client.put("orgs/${org.encodeURLParameter()}/rulesets/$rulesetId") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(name = name, target = target, enforcement = enforcement, bypassActors = bypassActors, conditions = conditions, rules = rules))
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -14948,14 +16396,21 @@ public class Orgs internal constructor(
             ;
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val name: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val target: Target? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val enforcement: RepositoryRuleEnforcement? = null,
             @SerialName("bypass_actors")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val bypassActors: List<RepositoryRulesetBypassActor>? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val conditions: OrgRulesetConditions? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val rules: List<OrgRules>? = null,
           )
 
@@ -14993,9 +16448,13 @@ public class Orgs internal constructor(
             private val rulesetId: Long,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("/orgs/$org/rulesets/$rulesetId/history") {
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/rulesets/$rulesetId/history") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -15035,7 +16494,7 @@ public class Orgs internal constructor(
               private val versionId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/orgs/$org/rulesets/$rulesetId/history/$versionId")
+                val response = client.get("orgs/${org.encodeURLParameter()}/rulesets/$rulesetId/history/$versionId")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -15101,21 +16560,49 @@ public class Orgs internal constructor(
             isMultiRepo: Boolean? = false,
             hideSecret: Boolean? = false,
           ): Response {
-            val response = client.get("/orgs/$org/secret-scanning/alerts") {
-              state?.let { parameter("state", it.value) }
-              secretType?.let { parameter("secret_type", it) }
-              resolution?.let { parameter("resolution", it) }
-              assignee?.let { parameter("assignee", it) }
-              sort?.let { parameter("sort", it.value) }
-              direction?.let { parameter("direction", it.value) }
-              page?.let { parameter("page", it) }
-              perPage?.let { parameter("per_page", it) }
-              before?.let { parameter("before", it) }
-              after?.let { parameter("after", it) }
-              validity?.let { parameter("validity", it) }
-              isPubliclyLeaked?.let { parameter("is_publicly_leaked", it) }
-              isMultiRepo?.let { parameter("is_multi_repo", it) }
-              hideSecret?.let { parameter("hide_secret", it) }
+            val response = client.get("orgs/${org.encodeURLParameter()}/secret-scanning/alerts") {
+              if (state != null) {
+                url.encodedParameters.append("state", state.value.encodeURLParameter())
+              }
+              if (secretType != null) {
+                url.encodedParameters.append("secret_type", secretType.encodeURLParameter())
+              }
+              if (resolution != null) {
+                url.encodedParameters.append("resolution", resolution.encodeURLParameter())
+              }
+              if (assignee != null) {
+                url.encodedParameters.append("assignee", assignee.encodeURLParameter())
+              }
+              if (sort != null) {
+                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              }
+              if (direction != null) {
+                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (before != null) {
+                url.encodedParameters.append("before", before.encodeURLParameter())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (validity != null) {
+                url.encodedParameters.append("validity", validity.encodeURLParameter())
+              }
+              if (isPubliclyLeaked != null) {
+                url.encodedParameters.append("is_publicly_leaked", isPubliclyLeaked.toString())
+              }
+              if (isMultiRepo != null) {
+                url.encodedParameters.append("is_multi_repo", isMultiRepo.toString())
+              }
+              if (hideSecret != null) {
+                url.encodedParameters.append("hide_secret", hideSecret.toString())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -15167,11 +16654,15 @@ public class Orgs internal constructor(
               public val `value`: BasicError,
             ) : Response
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class ServiceUnavailable(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val code: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val message: String? = null,
               @SerialName("documentation_url")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val documentationUrl: String? = null,
             ) : Response
           }
@@ -15191,7 +16682,7 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/secret-scanning/pattern-configurations")
+            val response = client.get("orgs/${org.encodeURLParameter()}/secret-scanning/pattern-configurations")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               403 -> Response.Forbidden(response.body())
@@ -15224,7 +16715,7 @@ public class Orgs internal constructor(
             providerPatternSettings: List<ProviderPatternSettings>? = null,
             customPatternSettings: List<CustomPatternSettings>? = null,
           ): Response {
-            val response = client.patch("/orgs/$org/secret-scanning/pattern-configurations") {
+            val response = client.patch("orgs/${org.encodeURLParameter()}/secret-scanning/pattern-configurations") {
               contentType(ContentType.Application.Json)
               setBody(Body(patternConfigVersion = patternConfigVersion, providerPatternSettings = providerPatternSettings, customPatternSettings = customPatternSettings))
             }
@@ -15239,11 +16730,14 @@ public class Orgs internal constructor(
             }
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class ProviderPatternSettings(
             @SerialName("token_type")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val tokenType: String? = null,
             @SerialName("push_protection_setting")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val pushProtectionSetting: PushProtectionSetting? = null,
           ) {
             @Serializable
@@ -15260,13 +16754,16 @@ public class Orgs internal constructor(
             }
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class CustomPatternSettings(
             @SerialName("token_type")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val tokenType: String? = null,
             @SerialName("custom_pattern_version")
             public val customPatternVersion: SecretScanningRowVersion? = null,
             @SerialName("push_protection_setting")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val pushProtectionSetting: PushProtectionSetting? = null,
           ) {
             @Serializable
@@ -15281,21 +16778,25 @@ public class Orgs internal constructor(
             }
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             @SerialName("pattern_config_version")
             public val patternConfigVersion: SecretScanningRowVersion? = null,
             @SerialName("provider_pattern_settings")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val providerPatternSettings: List<ProviderPatternSettings>? = null,
             @SerialName("custom_pattern_settings")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val customPatternSettings: List<CustomPatternSettings>? = null,
           )
 
           public sealed interface Response {
-            @JvmInline
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            public value class Ok(
+            public data class Ok(
               @SerialName("pattern_config_version")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val patternConfigVersion: String? = null,
             ) : Response
 
@@ -15335,12 +16836,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/secret_scanning/enable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/secret_scanning/enable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/secret_scanning/enable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -15360,10 +16869,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -15388,12 +16898,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/secret_scanning/disable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/secret_scanning/disable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/secret_scanning/disable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -15413,10 +16931,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -15447,13 +16966,25 @@ public class Orgs internal constructor(
           perPage: Long? = 30L,
           state: State? = null,
         ): Response {
-          val response = client.get("/orgs/$org/security-advisories") {
-            direction?.let { parameter("direction", it.value) }
-            sort?.let { parameter("sort", it.value) }
-            before?.let { parameter("before", it) }
-            after?.let { parameter("after", it) }
-            perPage?.let { parameter("per_page", it) }
-            state?.let { parameter("state", it.value) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/security-advisories") {
+            if (direction != null) {
+              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            }
+            if (sort != null) {
+              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            }
+            if (before != null) {
+              url.encodedParameters.append("before", before.encodeURLParameter())
+            }
+            if (after != null) {
+              url.encodedParameters.append("after", after.encodeURLParameter())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (state != null) {
+              url.encodedParameters.append("state", state.value.encodeURLParameter())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -15533,7 +17064,11 @@ public class Orgs internal constructor(
         private val org: String,
       ) {
         @Deprecated("Deprecated by the API provider")
-        public suspend operator fun invoke(): List<TeamSimple> = client.get("/orgs/$org/security-managers").body()
+        public suspend operator fun invoke(): List<TeamSimple> {
+          val response = client.get("orgs/${org.encodeURLParameter()}/security-managers")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Teams internal constructor(
@@ -15561,7 +17096,8 @@ public class Orgs internal constructor(
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke() {
-              client.delete("/orgs/$org/security-managers/teams/$teamSlug")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/security-managers/teams/${teamSlug.encodeURLParameter()}")
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
@@ -15573,7 +17109,8 @@ public class Orgs internal constructor(
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke() {
-              client.put("/orgs/$org/security-managers/teams/$teamSlug")
+              val response = client.put("orgs/${org.encodeURLParameter()}/security-managers/teams/${teamSlug.encodeURLParameter()}")
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
         }
@@ -15604,7 +17141,11 @@ public class Orgs internal constructor(
           private val client: HttpClient,
           private val org: String,
         ) {
-          public suspend operator fun invoke(): ImmutableReleasesOrganizationSettings = client.get("/orgs/$org/settings/immutable-releases").body()
+          public suspend operator fun invoke(): ImmutableReleasesOrganizationSettings {
+            val response = client.get("orgs/${org.encodeURLParameter()}/settings/immutable-releases")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Put internal constructor(
@@ -15612,10 +17153,11 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           public suspend operator fun invoke(enforcedRepositories: EnforcedRepositories, selectedRepositoryIds: List<Long>? = null) {
-            client.put("/orgs/$org/settings/immutable-releases") {
+            val response = client.put("orgs/${org.encodeURLParameter()}/settings/immutable-releases") {
               contentType(ContentType.Application.Json)
               setBody(Body(enforcedRepositories = enforcedRepositories, selectedRepositoryIds = selectedRepositoryIds))
             }
+            if (response.status.value != 204) throw ResponseException(response, "")
           }
 
           @Serializable
@@ -15631,11 +17173,13 @@ public class Orgs internal constructor(
             ;
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             @SerialName("enforced_repositories")
             public val enforcedRepositories: EnforcedRepositories,
             @SerialName("selected_repository_ids")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val selectedRepositoryIds: List<Long>? = null,
           )
         }
@@ -15654,10 +17198,18 @@ public class Orgs internal constructor(
             private val client: HttpClient,
             private val org: String,
           ) {
-            public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response = client.get("/orgs/$org/settings/immutable-releases/repositories") {
-              page?.let { parameter("page", it) }
-              perPage?.let { parameter("per_page", it) }
-            }.body()
+            public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
+              val response = client.get("orgs/${org.encodeURLParameter()}/settings/immutable-releases/repositories") {
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public data class Response(
@@ -15672,15 +17224,15 @@ public class Orgs internal constructor(
             private val org: String,
           ) {
             public suspend operator fun invoke(selectedRepositoryIds: List<Long>) {
-              client.put("/orgs/$org/settings/immutable-releases/repositories") {
+              val response = client.put("orgs/${org.encodeURLParameter()}/settings/immutable-releases/repositories") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(selectedRepositoryIds = selectedRepositoryIds))
               }
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
 
-            @JvmInline
             @Serializable
-            internal value class Body(
+            internal data class Body(
               @SerialName("selected_repository_ids")
               public val selectedRepositoryIds: List<Long>,
             )
@@ -15701,7 +17253,8 @@ public class Orgs internal constructor(
               private val repositoryId: Long,
             ) {
               public suspend operator fun invoke() {
-                client.delete("/orgs/$org/settings/immutable-releases/repositories/$repositoryId")
+                val response = client.delete("orgs/${org.encodeURLParameter()}/settings/immutable-releases/repositories/$repositoryId")
+                if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
 
@@ -15711,7 +17264,8 @@ public class Orgs internal constructor(
               private val repositoryId: Long,
             ) {
               public suspend operator fun invoke() {
-                client.put("/orgs/$org/settings/immutable-releases/repositories/$repositoryId")
+                val response = client.put("orgs/${org.encodeURLParameter()}/settings/immutable-releases/repositories/$repositoryId")
+                if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
           }
@@ -15732,10 +17286,18 @@ public class Orgs internal constructor(
           private val client: HttpClient,
           private val org: String,
         ) {
-          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response = client.get("/orgs/$org/settings/network-configurations") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-          }.body()
+          public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
+            val response = client.get("orgs/${org.encodeURLParameter()}/settings/network-configurations") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public data class Response(
@@ -15754,10 +17316,14 @@ public class Orgs internal constructor(
             name: String,
             computeService: ComputeService? = null,
             networkSettingsIds: List<String>,
-          ): NetworkConfiguration = client.post("/orgs/$org/settings/network-configurations") {
-            contentType(ContentType.Application.Json)
-            setBody(Body(name = name, computeService = computeService, networkSettingsIds = networkSettingsIds))
-          }.body()
+          ): NetworkConfiguration {
+            val response = client.post("orgs/${org.encodeURLParameter()}/settings/network-configurations") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(name = name, computeService = computeService, networkSettingsIds = networkSettingsIds))
+            }
+            if (response.status.value != 201) throw ResponseException(response, "")
+            return response.body()
+          }
 
           @Serializable
           public enum class ComputeService(
@@ -15770,10 +17336,12 @@ public class Orgs internal constructor(
             ;
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
             public val name: String,
             @SerialName("compute_service")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val computeService: ComputeService? = null,
             @SerialName("network_settings_ids")
             public val networkSettingsIds: List<String>,
@@ -15797,7 +17365,8 @@ public class Orgs internal constructor(
             private val networkConfigurationId: String,
           ) {
             public suspend operator fun invoke() {
-              client.delete("/orgs/$org/settings/network-configurations/$networkConfigurationId")
+              val response = client.delete("orgs/${org.encodeURLParameter()}/settings/network-configurations/${networkConfigurationId.encodeURLParameter()}")
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
@@ -15806,7 +17375,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val networkConfigurationId: String,
           ) {
-            public suspend operator fun invoke(): NetworkConfiguration = client.get("/orgs/$org/settings/network-configurations/$networkConfigurationId").body()
+            public suspend operator fun invoke(): NetworkConfiguration {
+              val response = client.get("orgs/${org.encodeURLParameter()}/settings/network-configurations/${networkConfigurationId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Patch internal constructor(
@@ -15818,10 +17391,14 @@ public class Orgs internal constructor(
               name: String? = null,
               computeService: ComputeService? = null,
               networkSettingsIds: List<String>? = null,
-            ): NetworkConfiguration = client.patch("/orgs/$org/settings/network-configurations/$networkConfigurationId") {
-              contentType(ContentType.Application.Json)
-              setBody(Body(name = name, computeService = computeService, networkSettingsIds = networkSettingsIds))
-            }.body()
+            ): NetworkConfiguration {
+              val response = client.patch("orgs/${org.encodeURLParameter()}/settings/network-configurations/${networkConfigurationId.encodeURLParameter()}") {
+                contentType(ContentType.Application.Json)
+                setBody(Body(name = name, computeService = computeService, networkSettingsIds = networkSettingsIds))
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public enum class ComputeService(
@@ -15834,12 +17411,16 @@ public class Orgs internal constructor(
               ;
             }
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             internal data class Body(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val name: String? = null,
               @SerialName("compute_service")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val computeService: ComputeService? = null,
               @SerialName("network_settings_ids")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val networkSettingsIds: List<String>? = null,
             )
           }
@@ -15864,7 +17445,11 @@ public class Orgs internal constructor(
             private val org: String,
             private val networkSettingsId: String,
           ) {
-            public suspend operator fun invoke(): io.github.model.NetworkSettings = client.get("/orgs/$org/settings/network-settings/$networkSettingsId").body()
+            public suspend operator fun invoke(): io.github.model.NetworkSettings {
+              val response = client.get("orgs/${org.encodeURLParameter()}/settings/network-settings/${networkSettingsId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }
@@ -15908,11 +17493,19 @@ public class Orgs internal constructor(
                 page: Long? = 1L,
                 perPage: Long? = 100L,
               ): Response {
-                val response = client.get("/orgs/$org/team/$teamSlug/copilot/metrics") {
-                  since?.let { parameter("since", it) }
-                  until?.let { parameter("until", it) }
-                  page?.let { parameter("page", it) }
-                  perPage?.let { parameter("per_page", it) }
+                val response = client.get("orgs/${org.encodeURLParameter()}/team/${teamSlug.encodeURLParameter()}/copilot/metrics") {
+                  if (since != null) {
+                    url.encodedParameters.append("since", since.encodeURLParameter())
+                  }
+                  if (until != null) {
+                    url.encodedParameters.append("until", until.encodeURLParameter())
+                  }
+                  if (page != null) {
+                    url.encodedParameters.append("page", page.toString())
+                  }
+                  if (perPage != null) {
+                    url.encodedParameters.append("per_page", perPage.toString())
+                  }
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -15970,10 +17563,16 @@ public class Orgs internal constructor(
           page: Long? = 1L,
           teamType: TeamType? = TeamType.All,
         ): Response {
-          val response = client.get("/orgs/$org/teams") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
-            teamType?.let { parameter("team_type", it.value) }
+          val response = client.get("orgs/${org.encodeURLParameter()}/teams") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+            if (teamType != null) {
+              url.encodedParameters.append("team_type", teamType.value.encodeURLParameter())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -16020,7 +17619,7 @@ public class Orgs internal constructor(
           permission: Permission? = null,
           parentTeamId: Long? = null,
         ): Response {
-          val response = client.post("/orgs/$org/teams") {
+          val response = client.post("orgs/${org.encodeURLParameter()}/teams") {
             contentType(ContentType.Application.Json)
             setBody(Body(name = name, description = description, maintainers = maintainers, repoNames = repoNames, privacy = privacy, notificationSetting = notificationSetting, permission = permission, parentTeamId = parentTeamId))
           }
@@ -16065,18 +17664,26 @@ public class Orgs internal constructor(
           ;
         }
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         internal data class Body(
           public val name: String,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val description: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val maintainers: List<String>? = null,
           @SerialName("repo_names")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val repoNames: List<String>? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val privacy: Privacy? = null,
           @SerialName("notification_setting")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val notificationSetting: NotificationSetting? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val permission: Permission? = null,
           @SerialName("parent_team_id")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val parentTeamId: Long? = null,
         )
 
@@ -16122,7 +17729,7 @@ public class Orgs internal constructor(
           private val teamSlug: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/orgs/$org/teams/$teamSlug")
+            val response = client.delete("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               422 -> Response.UnprocessableEntity
@@ -16143,7 +17750,7 @@ public class Orgs internal constructor(
           private val teamSlug: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/orgs/$org/teams/$teamSlug")
+            val response = client.get("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -16167,6 +17774,18 @@ public class Orgs internal constructor(
           private val org: String,
           private val teamSlug: String,
         ) {
+          public suspend operator fun invoke(): Response {
+            val response = client.patch("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}")
+            return when (response.status.value) {
+              200 -> Response.Ok(response.body())
+              201 -> Response.Created(response.body())
+              403 -> Response.Forbidden(response.body())
+              404 -> Response.NotFound(response.body())
+              422 -> Response.UnprocessableEntity(response.body())
+              else -> throw ResponseException(response, "")
+            }
+          }
+
           public suspend operator fun invoke(
             name: String? = null,
             description: String? = null,
@@ -16175,11 +17794,9 @@ public class Orgs internal constructor(
             permission: Permission? = null,
             parentTeamId: Long? = null,
           ): Response {
-            val response = client.patch("/orgs/$org/teams/$teamSlug") {
-              if (name != null || description != null || privacy != null || notificationSetting != null || permission != null || parentTeamId != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(name = name, description = description, privacy = privacy, notificationSetting = notificationSetting, permission = permission, parentTeamId = parentTeamId))
-              }
+            val response = client.patch("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(name = name, description = description, privacy = privacy, notificationSetting = notificationSetting, permission = permission, parentTeamId = parentTeamId))
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -16226,13 +17843,19 @@ public class Orgs internal constructor(
             ;
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val name: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val description: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val privacy: Privacy? = null,
             @SerialName("notification_setting")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val notificationSetting: NotificationSetting? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val permission: Permission? = null,
             @SerialName("parent_team_id")
             public val parentTeamId: Long? = null,
@@ -16274,9 +17897,13 @@ public class Orgs internal constructor(
             private val teamSlug: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("/orgs/$org/teams/$teamSlug/invitations") {
-                perPage?.let { parameter("per_page", it) }
-                page?.let { parameter("page", it) }
+              val response = client.get("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/invitations") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -16311,11 +17938,21 @@ public class Orgs internal constructor(
               role: Role? = Role.All,
               perPage: Long? = 30L,
               page: Long? = 1L,
-            ): List<SimpleUser> = client.get("/orgs/$org/teams/$teamSlug/members") {
-              role?.let { parameter("role", it.value) }
-              perPage?.let { parameter("per_page", it) }
-              page?.let { parameter("page", it) }
-            }.body()
+            ): List<SimpleUser> {
+              val response = client.get("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/members") {
+                if (role != null) {
+                  url.encodedParameters.append("role", role.value.encodeURLParameter())
+                }
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public enum class Role(
@@ -16358,7 +17995,7 @@ public class Orgs internal constructor(
               private val username: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("/orgs/$org/teams/$teamSlug/memberships/$username")
+                val response = client.delete("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/memberships/${username.encodeURLParameter()}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden
@@ -16380,7 +18017,7 @@ public class Orgs internal constructor(
               private val username: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("/orgs/$org/teams/$teamSlug/memberships/$username")
+                val response = client.get("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/memberships/${username.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound
@@ -16403,12 +18040,20 @@ public class Orgs internal constructor(
               private val teamSlug: String,
               private val username: String,
             ) {
+              public suspend operator fun invoke(): Response {
+                val response = client.put("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/memberships/${username.encodeURLParameter()}")
+                return when (response.status.value) {
+                  200 -> Response.Ok(response.body())
+                  403 -> Response.Forbidden
+                  422 -> Response.UnprocessableEntity
+                  else -> throw ResponseException(response, "")
+                }
+              }
+
               public suspend operator fun invoke(role: Role? = null): Response {
-                val response = client.put("/orgs/$org/teams/$teamSlug/memberships/$username") {
-                  if (role != null) {
-                    contentType(ContentType.Application.Json)
-                    setBody(Body(role = role))
-                  }
+                val response = client.put("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/memberships/${username.encodeURLParameter()}") {
+                  contentType(ContentType.Application.Json)
+                  setBody(Body(role = role))
                 }
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
@@ -16429,9 +18074,10 @@ public class Orgs internal constructor(
                 ;
               }
 
-              @JvmInline
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
-              internal value class Body(
+              internal data class Body(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val role: Role? = null,
               )
 
@@ -16462,10 +18108,18 @@ public class Orgs internal constructor(
             private val org: String,
             private val teamSlug: String,
           ) {
-            public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<MinimalRepository> = client.get("/orgs/$org/teams/$teamSlug/repos") {
-              perPage?.let { parameter("per_page", it) }
-              page?.let { parameter("page", it) }
-            }.body()
+            public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<MinimalRepository> {
+              val response = client.get("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/repos") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class OwnerPath internal constructor(
@@ -16497,7 +18151,8 @@ public class Orgs internal constructor(
                 private val repo: String,
               ) {
                 public suspend operator fun invoke() {
-                  client.delete("/orgs/$org/teams/$teamSlug/repos/$owner/$repo")
+                  val response = client.delete("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}")
+                  if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
 
@@ -16509,7 +18164,7 @@ public class Orgs internal constructor(
                 private val repo: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("/orgs/$org/teams/$teamSlug/repos/$owner/$repo")
+                  val response = client.get("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     204 -> Response.NoContent
@@ -16536,18 +18191,23 @@ public class Orgs internal constructor(
                 private val owner: String,
                 private val repo: String,
               ) {
-                public suspend operator fun invoke(permission: String? = null) {
-                  client.put("/orgs/$org/teams/$teamSlug/repos/$owner/$repo") {
-                    if (permission != null) {
-                      contentType(ContentType.Application.Json)
-                      setBody(Body(permission = permission))
-                    }
-                  }
+                public suspend operator fun invoke() {
+                  val response = client.put("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}")
+                  if (response.status.value != 204) throw ResponseException(response, "")
                 }
 
-                @JvmInline
+                public suspend operator fun invoke(permission: String? = null) {
+                  val response = client.put("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}") {
+                    contentType(ContentType.Application.Json)
+                    setBody(Body(permission = permission))
+                  }
+                  if (response.status.value != 204) throw ResponseException(response, "")
+                }
+
+                @OptIn(ExperimentalSerializationApi::class)
                 @Serializable
-                internal value class Body(
+                internal data class Body(
+                  @EncodeDefault(EncodeDefault.Mode.NEVER)
                   public val permission: String? = null,
                 )
               }
@@ -16567,10 +18227,18 @@ public class Orgs internal constructor(
             private val org: String,
             private val teamSlug: String,
           ) {
-            public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<io.github.model.Team> = client.get("/orgs/$org/teams/$teamSlug/teams") {
-              perPage?.let { parameter("per_page", it) }
-              page?.let { parameter("page", it) }
-            }.body()
+            public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<io.github.model.Team> {
+              val response = client.get("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/teams") {
+                if (perPage != null) {
+                  url.encodedParameters.append("per_page", perPage.toString())
+                }
+                if (page != null) {
+                  url.encodedParameters.append("page", page.toString())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }
@@ -16597,12 +18265,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependency_graph/enable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/dependency_graph/enable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependency_graph/enable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -16622,10 +18298,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -16650,12 +18327,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependency_graph/disable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/dependency_graph/disable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependency_graph/disable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -16675,10 +18360,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -16712,12 +18398,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependabot_alerts/enable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/dependabot_alerts/enable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependabot_alerts/enable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -16737,10 +18431,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -16765,12 +18460,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependabot_alerts/disable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/dependabot_alerts/disable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependabot_alerts/disable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -16790,10 +18493,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -16827,12 +18531,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependabot_security_updates/enable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/dependabot_security_updates/enable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependabot_security_updates/enable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -16852,10 +18564,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -16880,12 +18593,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependabot_security_updates/disable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/dependabot_security_updates/disable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/dependabot_security_updates/disable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -16905,10 +18626,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -16942,12 +18664,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/advanced_security/enable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/advanced_security/enable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/advanced_security/enable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -16967,10 +18697,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -16995,12 +18726,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/advanced_security/disable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/advanced_security/disable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/advanced_security/disable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -17020,10 +18759,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -17057,12 +18797,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/code_scanning_default_setup/enable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/code_scanning_default_setup/enable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/code_scanning_default_setup/enable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -17082,10 +18830,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -17110,12 +18859,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/code_scanning_default_setup/disable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/code_scanning_default_setup/disable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/code_scanning_default_setup/disable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -17135,10 +18892,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -17172,12 +18930,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/secret_scanning_push_protection/enable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/secret_scanning_push_protection/enable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/secret_scanning_push_protection/enable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -17197,10 +18963,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 
@@ -17225,12 +18992,20 @@ public class Orgs internal constructor(
           private val org: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.post("orgs/${org.encodeURLParameter()}/secret_scanning_push_protection/disable_all")
+            return when (response.status.value) {
+              204 -> Response.NoContent
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(querySuite: QuerySuite? = null): Response {
-            val response = client.post("/orgs/$org/secret_scanning_push_protection/disable_all") {
-              if (querySuite != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(querySuite = querySuite))
-              }
+            val response = client.post("orgs/${org.encodeURLParameter()}/secret_scanning_push_protection/disable_all") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(querySuite = querySuite))
             }
             return when (response.status.value) {
               204 -> Response.NoContent
@@ -17250,10 +19025,11 @@ public class Orgs internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
             @SerialName("query_suite")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val querySuite: QuerySuite? = null,
           )
 

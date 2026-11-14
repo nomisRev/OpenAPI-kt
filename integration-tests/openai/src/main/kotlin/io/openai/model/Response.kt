@@ -7,9 +7,11 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
@@ -19,21 +21,29 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Response(
-  public val metadata: Metadata? = null,
+  public val metadata: Metadata?,
   @SerialName("top_logprobs")
   public val topLogprobs: Long? = null,
+  @Required
   public val temperature: Double? = null,
   @SerialName("top_p")
+  @Required
   public val topP: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
   @SerialName("safety_identifier")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val safetyIdentifier: String? = null,
   @SerialName("prompt_cache_key")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val promptCacheKey: String? = null,
   @SerialName("service_tier")
   public val serviceTier: ServiceTier? = null,
@@ -41,45 +51,50 @@ public data class Response(
   public val promptCacheRetention: PromptCacheRetention? = null,
   @SerialName("previous_response_id")
   public val previousResponseId: String? = null,
-  public val model: ModelIdsResponses? = null,
+  public val model: ModelIdsResponses,
   public val reasoning: Reasoning? = null,
   public val background: Boolean? = null,
   @SerialName("max_output_tokens")
   public val maxOutputTokens: Long? = null,
   @SerialName("max_tool_calls")
   public val maxToolCalls: Long? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val text: ResponseTextParam? = null,
-  public val tools: ToolsArray? = null,
+  public val tools: ToolsArray,
   @SerialName("tool_choice")
-  public val toolChoice: ToolChoiceParam? = null,
+  public val toolChoice: ToolChoiceParam,
   public val prompt: Prompt? = null,
   public val truncation: Truncation? = null,
-  public val id: String? = null,
-  public val `object`: Object? = null,
+  public val id: String,
+  public val `object`: Object,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val status: Status? = null,
   @SerialName("created_at")
-  public val createdAt: Double? = null,
+  public val createdAt: Double,
   @SerialName("completed_at")
   public val completedAt: Double? = null,
-  public val error: ResponseError? = null,
+  public val error: ResponseError?,
   @SerialName("incomplete_details")
-  public val incompleteDetails: IncompleteDetails? = null,
-  public val output: List<OutputItem>? = null,
-  public val instructions: Instructions? = null,
+  public val incompleteDetails: IncompleteDetails?,
+  public val output: List<OutputItem>,
+  public val instructions: Instructions?,
   @SerialName("output_text")
   public val outputText: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val usage: ResponseUsage? = null,
   @SerialName("parallel_tool_calls")
-  public val parallelToolCalls: Boolean? = null,
+  @Required
+  public val parallelToolCalls: Boolean = true,
   public val conversation: Conversation2? = null,
 ) {
   /**
    * Details about why the response is incomplete.
    *
    */
-  @JvmInline
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class IncompleteDetails(
+  public data class IncompleteDetails(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val reason: Reason? = null,
   ) {
     @Serializable
@@ -130,11 +145,17 @@ public data class Response(
       override fun deserialize(decoder: Decoder): Instructions {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseInputItemList::class to { CaseInputItemList(decodeFromJsonElement(ListSerializer(InputItem.serializer()), it)) },
-          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+          )
+          value is JsonArray -> json.attemptDeserialize(
+            value,
+            CaseInputItemList::class to { CaseInputItemList(decodeFromJsonElement(ListSerializer(InputItem.serializer()), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: Instructions) {

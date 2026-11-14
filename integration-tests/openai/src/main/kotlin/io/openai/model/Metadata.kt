@@ -1,7 +1,7 @@
 package io.openai.model
 
 import kotlin.String
-import kotlin.collections.List
+import kotlin.collections.Map
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
@@ -17,5 +17,5 @@ import kotlinx.serialization.Serializable
 @JvmInline
 @Serializable
 public value class Metadata(
-  public val values: List<String>? = null,
+  public val values: Map<String, String>,
 )

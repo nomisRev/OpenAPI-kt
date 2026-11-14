@@ -4,6 +4,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -16,9 +17,11 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 @OptIn(ExperimentalSerializationApi::class)
 @JsonClassDiscriminator("role")
@@ -31,9 +34,11 @@ public sealed interface ChatCompletionRequestMessage {
    *
    */
   @SerialName("developer")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Developer(
     public val content: Content,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
   ) : ChatCompletionRequestMessage {
     /**
@@ -67,11 +72,17 @@ public sealed interface ChatCompletionRequestMessage {
         override fun deserialize(decoder: Decoder): Content {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseChatCompletionRequestMessageContentPartTextList::class to { CaseChatCompletionRequestMessageContentPartTextList(decodeFromJsonElement(ListSerializer(ChatCompletionRequestMessageContentPartText.serializer()), it)) },
-            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+            )
+            value is JsonArray -> json.attemptDeserialize(
+              value,
+              CaseChatCompletionRequestMessageContentPartTextList::class to { CaseChatCompletionRequestMessageContentPartTextList(decodeFromJsonElement(ListSerializer(ChatCompletionRequestMessageContentPartText.serializer()), it)) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
 
         override fun serialize(encoder: Encoder, `value`: Content) {
@@ -91,9 +102,11 @@ public sealed interface ChatCompletionRequestMessage {
    *
    */
   @SerialName("system")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class System(
     public val content: Content,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
   ) : ChatCompletionRequestMessage {
     /**
@@ -109,8 +122,8 @@ public sealed interface ChatCompletionRequestMessage {
 
       @Serializable
       @JvmInline
-      public value class CaseChatCompletionRequestMessageContentPartTextList(
-        public val `value`: List<ChatCompletionRequestMessageContentPartText>,
+      public value class CaseChatCompletionRequestSystemMessageContentPartList(
+        public val `value`: List<ChatCompletionRequestSystemMessageContentPart>,
       ) : Content
 
       public object Serializer : KSerializer<Content> {
@@ -121,23 +134,29 @@ public sealed interface ChatCompletionRequestMessage {
         override val descriptor: SerialDescriptor =
             buildSerialDescriptor("io.openai.model.ChatCompletionRequestMessage.System.Content", PolymorphicKind.SEALED) {
           element("CaseString", String.serializer().descriptor)
-          element("CaseChatCompletionRequestMessageContentPartTextList", ListSerializer(ChatCompletionRequestMessageContentPartText.serializer()).descriptor)
+          element("CaseChatCompletionRequestSystemMessageContentPartList", ListSerializer(ChatCompletionRequestSystemMessageContentPart.serializer()).descriptor)
         }
 
         override fun deserialize(decoder: Decoder): Content {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseChatCompletionRequestMessageContentPartTextList::class to { CaseChatCompletionRequestMessageContentPartTextList(decodeFromJsonElement(ListSerializer(ChatCompletionRequestMessageContentPartText.serializer()), it)) },
-            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+            )
+            value is JsonArray -> json.attemptDeserialize(
+              value,
+              CaseChatCompletionRequestSystemMessageContentPartList::class to { CaseChatCompletionRequestSystemMessageContentPartList(decodeFromJsonElement(ListSerializer(ChatCompletionRequestSystemMessageContentPart.serializer()), it)) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
 
         override fun serialize(encoder: Encoder, `value`: Content) {
           when(value) {
             is CaseString -> encoder.encodeSerializableValue(String.serializer(), value.value)
-            is CaseChatCompletionRequestMessageContentPartTextList -> encoder.encodeSerializableValue(ListSerializer(ChatCompletionRequestMessageContentPartText.serializer()), value.value)
+            is CaseChatCompletionRequestSystemMessageContentPartList -> encoder.encodeSerializableValue(ListSerializer(ChatCompletionRequestSystemMessageContentPart.serializer()), value.value)
           }
         }
       }
@@ -150,9 +169,11 @@ public sealed interface ChatCompletionRequestMessage {
    *
    */
   @SerialName("user")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class User(
     public val content: Content,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
   ) : ChatCompletionRequestMessage {
     /**
@@ -187,11 +208,17 @@ public sealed interface ChatCompletionRequestMessage {
         override fun deserialize(decoder: Decoder): Content {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseChatCompletionRequestUserMessageContentPartList::class to { CaseChatCompletionRequestUserMessageContentPartList(decodeFromJsonElement(ListSerializer(ChatCompletionRequestUserMessageContentPart.serializer()), it)) },
-            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+            )
+            value is JsonArray -> json.attemptDeserialize(
+              value,
+              CaseChatCompletionRequestUserMessageContentPartList::class to { CaseChatCompletionRequestUserMessageContentPartList(decodeFromJsonElement(ListSerializer(ChatCompletionRequestUserMessageContentPart.serializer()), it)) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
 
         override fun serialize(encoder: Encoder, `value`: Content) {
@@ -209,13 +236,16 @@ public sealed interface ChatCompletionRequestMessage {
    *
    */
   @SerialName("assistant")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Assistant(
     public val content: Content? = null,
     public val refusal: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
     public val audio: Audio? = null,
     @SerialName("tool_calls")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val toolCalls: ChatCompletionMessageToolCalls? = null,
     @SerialName("function_call")
     public val functionCall: FunctionCall? = null,
@@ -225,9 +255,8 @@ public sealed interface ChatCompletionRequestMessage {
      * [Learn more](/docs/guides/audio).
      *
      */
-    @JvmInline
     @Serializable
-    public value class Audio(
+    public data class Audio(
       public val id: String,
     )
 
@@ -263,11 +292,17 @@ public sealed interface ChatCompletionRequestMessage {
         override fun deserialize(decoder: Decoder): Content {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseChatCompletionRequestAssistantMessageContentPartList::class to { CaseChatCompletionRequestAssistantMessageContentPartList(decodeFromJsonElement(ListSerializer(ChatCompletionRequestAssistantMessageContentPart.serializer()), it)) },
-            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+            )
+            value is JsonArray -> json.attemptDeserialize(
+              value,
+              CaseChatCompletionRequestAssistantMessageContentPartList::class to { CaseChatCompletionRequestAssistantMessageContentPartList(decodeFromJsonElement(ListSerializer(ChatCompletionRequestAssistantMessageContentPart.serializer()), it)) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
 
         override fun serialize(encoder: Encoder, `value`: Content) {
@@ -309,8 +344,8 @@ public sealed interface ChatCompletionRequestMessage {
 
       @Serializable
       @JvmInline
-      public value class CaseChatCompletionRequestMessageContentPartTextList(
-        public val `value`: List<ChatCompletionRequestMessageContentPartText>,
+      public value class CaseChatCompletionRequestToolMessageContentPartList(
+        public val `value`: List<ChatCompletionRequestToolMessageContentPart>,
       ) : Content
 
       public object Serializer : KSerializer<Content> {
@@ -321,23 +356,29 @@ public sealed interface ChatCompletionRequestMessage {
         override val descriptor: SerialDescriptor =
             buildSerialDescriptor("io.openai.model.ChatCompletionRequestMessage.Tool.Content", PolymorphicKind.SEALED) {
           element("CaseString", String.serializer().descriptor)
-          element("CaseChatCompletionRequestMessageContentPartTextList", ListSerializer(ChatCompletionRequestMessageContentPartText.serializer()).descriptor)
+          element("CaseChatCompletionRequestToolMessageContentPartList", ListSerializer(ChatCompletionRequestToolMessageContentPart.serializer()).descriptor)
         }
 
         override fun deserialize(decoder: Decoder): Content {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseChatCompletionRequestMessageContentPartTextList::class to { CaseChatCompletionRequestMessageContentPartTextList(decodeFromJsonElement(ListSerializer(ChatCompletionRequestMessageContentPartText.serializer()), it)) },
-            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+            )
+            value is JsonArray -> json.attemptDeserialize(
+              value,
+              CaseChatCompletionRequestToolMessageContentPartList::class to { CaseChatCompletionRequestToolMessageContentPartList(decodeFromJsonElement(ListSerializer(ChatCompletionRequestToolMessageContentPart.serializer()), it)) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
 
         override fun serialize(encoder: Encoder, `value`: Content) {
           when(value) {
             is CaseString -> encoder.encodeSerializableValue(String.serializer(), value.value)
-            is CaseChatCompletionRequestMessageContentPartTextList -> encoder.encodeSerializableValue(ListSerializer(ChatCompletionRequestMessageContentPartText.serializer()), value.value)
+            is CaseChatCompletionRequestToolMessageContentPartList -> encoder.encodeSerializableValue(ListSerializer(ChatCompletionRequestToolMessageContentPart.serializer()), value.value)
           }
         }
       }

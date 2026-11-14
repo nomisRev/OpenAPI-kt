@@ -1,6 +1,9 @@
 package io.openai.model
 
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -12,10 +15,12 @@ import kotlinx.serialization.Serializable
  * interactions.
  *
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class EvalItem(
   public val role: Role,
   public val content: EvalItemContent,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val type: Type? = null,
 ) {
   @Serializable

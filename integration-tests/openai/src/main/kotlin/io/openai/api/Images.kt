@@ -2,6 +2,7 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`header`
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
@@ -66,58 +67,66 @@ public class Images internal constructor(
         stream: Boolean? = null,
         partialImages: PartialImages? = null,
         quality: CreateImageEditRequest.Quality? = null,
-      ): ImagesResponse = client.post("/images/edits") {
-        `header`(HttpHeaders.Accept, ContentType.Application.Json)
-        setBody(MultiPartFormDataContent(formData {
-          append("image", Json.encodeToString(image))
-          append("prompt", prompt)
-          if (mask != null) {
-            append("mask", mask)
-          }
-          if (background != null) {
-            append("background", background.value)
-          }
-          if (model != null) {
-            append("model", Json.encodeToString(model))
-          }
-          if (n != null) {
-            append("n", n)
-          }
-          if (size != null) {
-            append("size", size.value)
-          }
-          if (responseFormat != null) {
-            append("response_format", responseFormat.value)
-          }
-          if (outputFormat != null) {
-            append("output_format", outputFormat.value)
-          }
-          if (outputCompression != null) {
-            append("output_compression", outputCompression)
-          }
-          if (user != null) {
-            append("user", user)
-          }
-          if (inputFidelity != null) {
-            append("input_fidelity", inputFidelity.value)
-          }
-          if (stream != null) {
-            append("stream", stream)
-          }
-          if (partialImages != null) {
-            append("partial_images", Json.encodeToString(partialImages))
-          }
-          if (quality != null) {
-            append("quality", quality.value)
-          }
-        }))
-      }.body()
+      ): ImagesResponse {
+        val response = client.post("images/edits") {
+          `header`(HttpHeaders.Accept, ContentType.Application.Json)
+          setBody(MultiPartFormDataContent(formData {
+            append("image", Json.encodeToString(image))
+            append("prompt", prompt)
+            if (mask != null) {
+              append("mask", mask)
+            }
+            if (background != null) {
+              append("background", background.value)
+            }
+            if (model != null) {
+              append("model", Json.encodeToString(model))
+            }
+            if (n != null) {
+              append("n", n)
+            }
+            if (size != null) {
+              append("size", size.value)
+            }
+            if (responseFormat != null) {
+              append("response_format", responseFormat.value)
+            }
+            if (outputFormat != null) {
+              append("output_format", outputFormat.value)
+            }
+            if (outputCompression != null) {
+              append("output_compression", outputCompression)
+            }
+            if (user != null) {
+              append("user", user)
+            }
+            if (inputFidelity != null) {
+              append("input_fidelity", inputFidelity.value)
+            }
+            if (stream != null) {
+              append("stream", stream)
+            }
+            if (partialImages != null) {
+              append("partial_images", Json.encodeToString(partialImages))
+            }
+            if (quality != null) {
+              append("quality", quality.value)
+            }
+          }))
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
-      public suspend fun json(body: EditImageBodyJsonParam): ImagesResponse = client.post("/images/edits") {
-        `header`(HttpHeaders.Accept, ContentType.Application.Json)
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend fun json(body: EditImageBodyJsonParam): ImagesResponse {
+        val response = client.post("images/edits") {
+          `header`(HttpHeaders.Accept, ContentType.Application.Json)
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
       public suspend fun textEventStream(
         image: CreateImageEditRequest.Image,
@@ -135,58 +144,66 @@ public class Images internal constructor(
         stream: Boolean? = null,
         partialImages: PartialImages? = null,
         quality: CreateImageEditRequest.Quality? = null,
-      ): ImageEditStreamEvent = client.post("/images/edits") {
-        `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
-        setBody(MultiPartFormDataContent(formData {
-          append("image", Json.encodeToString(image))
-          append("prompt", prompt)
-          if (mask != null) {
-            append("mask", mask)
-          }
-          if (background != null) {
-            append("background", background.value)
-          }
-          if (model != null) {
-            append("model", Json.encodeToString(model))
-          }
-          if (n != null) {
-            append("n", n)
-          }
-          if (size != null) {
-            append("size", size.value)
-          }
-          if (responseFormat != null) {
-            append("response_format", responseFormat.value)
-          }
-          if (outputFormat != null) {
-            append("output_format", outputFormat.value)
-          }
-          if (outputCompression != null) {
-            append("output_compression", outputCompression)
-          }
-          if (user != null) {
-            append("user", user)
-          }
-          if (inputFidelity != null) {
-            append("input_fidelity", inputFidelity.value)
-          }
-          if (stream != null) {
-            append("stream", stream)
-          }
-          if (partialImages != null) {
-            append("partial_images", Json.encodeToString(partialImages))
-          }
-          if (quality != null) {
-            append("quality", quality.value)
-          }
-        }))
-      }.body()
+      ): ImageEditStreamEvent {
+        val response = client.post("images/edits") {
+          `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
+          setBody(MultiPartFormDataContent(formData {
+            append("image", Json.encodeToString(image))
+            append("prompt", prompt)
+            if (mask != null) {
+              append("mask", mask)
+            }
+            if (background != null) {
+              append("background", background.value)
+            }
+            if (model != null) {
+              append("model", Json.encodeToString(model))
+            }
+            if (n != null) {
+              append("n", n)
+            }
+            if (size != null) {
+              append("size", size.value)
+            }
+            if (responseFormat != null) {
+              append("response_format", responseFormat.value)
+            }
+            if (outputFormat != null) {
+              append("output_format", outputFormat.value)
+            }
+            if (outputCompression != null) {
+              append("output_compression", outputCompression)
+            }
+            if (user != null) {
+              append("user", user)
+            }
+            if (inputFidelity != null) {
+              append("input_fidelity", inputFidelity.value)
+            }
+            if (stream != null) {
+              append("stream", stream)
+            }
+            if (partialImages != null) {
+              append("partial_images", Json.encodeToString(partialImages))
+            }
+            if (quality != null) {
+              append("quality", quality.value)
+            }
+          }))
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
-      public suspend fun textEventStream(body: EditImageBodyJsonParam): ImageEditStreamEvent = client.post("/images/edits") {
-        `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend fun textEventStream(body: EditImageBodyJsonParam): ImageEditStreamEvent {
+        val response = client.post("images/edits") {
+          `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 
@@ -198,17 +215,25 @@ public class Images internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend fun json(body: CreateImageRequest): ImagesResponse = client.post("/images/generations") {
-        `header`(HttpHeaders.Accept, ContentType.Application.Json)
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend fun json(body: CreateImageRequest): ImagesResponse {
+        val response = client.post("images/generations") {
+          `header`(HttpHeaders.Accept, ContentType.Application.Json)
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
-      public suspend fun textEventStream(body: CreateImageRequest): ImageGenStreamEvent = client.post("/images/generations") {
-        `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend fun textEventStream(body: CreateImageRequest): ImageGenStreamEvent {
+        val response = client.post("images/generations") {
+          `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 
@@ -227,26 +252,30 @@ public class Images internal constructor(
         responseFormat: CreateImageVariationRequest.ResponseFormat? = null,
         size: CreateImageVariationRequest.Size? = null,
         user: String? = null,
-      ): ImagesResponse = client.post("/images/variations") {
-        setBody(MultiPartFormDataContent(formData {
-          append("image", image)
-          if (model != null) {
-            append("model", Json.encodeToString(model))
-          }
-          if (n != null) {
-            append("n", n)
-          }
-          if (responseFormat != null) {
-            append("response_format", responseFormat.value)
-          }
-          if (size != null) {
-            append("size", size.toString())
-          }
-          if (user != null) {
-            append("user", user)
-          }
-        }))
-      }.body()
+      ): ImagesResponse {
+        val response = client.post("images/variations") {
+          setBody(MultiPartFormDataContent(formData {
+            append("image", image)
+            if (model != null) {
+              append("model", Json.encodeToString(model))
+            }
+            if (n != null) {
+              append("n", n)
+            }
+            if (responseFormat != null) {
+              append("response_format", responseFormat.value)
+            }
+            if (size != null) {
+              append("size", size.toString())
+            }
+            if (user != null) {
+              append("user", user)
+            }
+          }))
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
       public object Body {
         @Serializable(with = Model.Serializer::class)

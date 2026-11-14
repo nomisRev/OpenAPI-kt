@@ -1,14 +1,17 @@
 package io.openai.model
 
 import kotlin.Boolean
-import kotlin.jvm.JvmInline
+import kotlin.OptIn
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 /**
  * Controls whether ChatKit automatically generates thread titles.
  */
-@JvmInline
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-public value class AutomaticThreadTitlingParam(
+public data class AutomaticThreadTitlingParam(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val enabled: Boolean? = null,
 )

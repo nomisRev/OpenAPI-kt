@@ -3,7 +3,6 @@ package io.github.model
 import kotlin.Double
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlin.time.Instant
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -73,9 +72,8 @@ public data class DependabotAlertSecurityAdvisory(
   /**
    * A link to additional advisory information.
    */
-  @JvmInline
   @Serializable
-  public value class References(
+  public data class References(
     public val url: String,
   )
 

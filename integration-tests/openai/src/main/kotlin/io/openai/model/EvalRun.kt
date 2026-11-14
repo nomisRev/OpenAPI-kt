@@ -7,6 +7,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -20,6 +21,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
@@ -52,7 +54,7 @@ public data class EvalRun(
   public val perTestingCriteriaResults: List<PerTestingCriteriaResults>,
   @SerialName("data_source")
   public val dataSource: DataSource,
-  public val metadata: Metadata,
+  public val metadata: Metadata?,
   public val error: EvalApiError,
 ) {
   /**
@@ -66,10 +68,9 @@ public data class EvalRun(
      * A JsonlRunDataSource object with that specifies a JSONL file that matches the eval 
      *
      */
-    @JvmInline
     @SerialName("jsonl")
     @Serializable
-    public value class Jsonl(
+    public data class Jsonl(
       public val source: Source,
     ) : DataSource {
       /**
@@ -79,23 +80,23 @@ public data class EvalRun(
       @JsonClassDiscriminator("type")
       @Serializable
       public sealed interface Source {
-        @JvmInline
         @SerialName("file_content")
         @Serializable
-        public value class FileContent(
+        public data class FileContent(
           public val content: List<Content>,
         ) : Source {
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Content(
             public val item: JsonElement,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val sample: JsonElement? = null,
           )
         }
 
-        @JvmInline
         @SerialName("file_id")
         @Serializable
-        public value class FileId(
+        public data class FileId(
           public val id: String,
         ) : Source
       }
@@ -106,12 +107,16 @@ public data class EvalRun(
      *
      */
     @SerialName("completions")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Completions(
       @SerialName("input_messages")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val inputMessages: InputMessages? = null,
       @SerialName("sampling_params")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val samplingParams: SamplingParams? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val model: String? = null,
       public val source: Source,
     ) : DataSource {
@@ -122,10 +127,9 @@ public data class EvalRun(
       @JsonClassDiscriminator("type")
       @Serializable
       public sealed interface InputMessages {
-        @JvmInline
         @SerialName("template")
         @Serializable
-        public value class Template(
+        public data class Template(
           public val template: List<Template>,
         ) : InputMessages {
           @Serializable(with = Template.Serializer::class)
@@ -138,11 +142,13 @@ public data class EvalRun(
              * interactions.
              *
              */
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class EasyInputMessage(
               public val role: Role,
               public val content: Content,
               public val phase: MessagePhase? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val type: Type? = null,
             ) : Template {
               /**
@@ -178,11 +184,17 @@ public data class EvalRun(
                   override fun deserialize(decoder: Decoder): Content {
                     val value = decoder.decodeSerializableValue(JsonElement.serializer())
                     val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-                    return json.attemptDeserialize(
-                      value,
-                      CaseInputMessageContentList::class to { CaseInputMessageContentList(decodeFromJsonElement(InputMessageContentList.serializer(), it)) },
-                      CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-                    )
+                    return when {
+                      value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                        value,
+                        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+                      )
+                      value is JsonArray -> json.attemptDeserialize(
+                        value,
+                        CaseInputMessageContentList::class to { CaseInputMessageContentList(decodeFromJsonElement(InputMessageContentList.serializer(), it)) },
+                      )
+                      else -> throw UnionSerializationException(value, emptyMap())
+                    }
                   }
 
                   override fun serialize(encoder: Encoder, `value`: Content) {
@@ -227,10 +239,12 @@ public data class EvalRun(
              * interactions.
              *
              */
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class EvalItem(
               public val role: Role,
               public val content: EvalItemContent,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val type: Type? = null,
             ) : Template {
               @Serializable
@@ -333,27 +347,33 @@ public data class EvalRun(
           }
         }
 
-        @JvmInline
         @SerialName("item_reference")
         @Serializable
-        public value class ItemReference(
+        public data class ItemReference(
           @SerialName("item_reference")
           public val itemReference: String,
         ) : InputMessages
       }
 
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class SamplingParams(
         @SerialName("reasoning_effort")
         public val reasoningEffort: ReasoningEffort? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val temperature: Double? = null,
         @SerialName("max_completion_tokens")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val maxCompletionTokens: Long? = null,
         @SerialName("top_p")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val topP: Double? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val seed: Long? = null,
         @SerialName("response_format")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val responseFormat: ResponseFormat? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val tools: List<ChatCompletionTool>? = null,
       ) {
         /**
@@ -383,10 +403,13 @@ public data class EvalRun(
            *
            */
           @SerialName("json_schema")
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class JsonSchema(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val description: String? = null,
             public val name: String,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val schema: ResponseFormatJsonSchemaSchema? = null,
             public val strict: Boolean? = null,
           ) : ResponseFormat
@@ -404,23 +427,23 @@ public data class EvalRun(
       @JsonClassDiscriminator("type")
       @Serializable
       public sealed interface Source {
-        @JvmInline
         @SerialName("file_content")
         @Serializable
-        public value class FileContent(
+        public data class FileContent(
           public val content: List<Content>,
         ) : Source {
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Content(
             public val item: JsonElement,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val sample: JsonElement? = null,
           )
         }
 
-        @JvmInline
         @SerialName("file_id")
         @Serializable
-        public value class FileId(
+        public data class FileId(
           public val id: String,
         ) : Source
 
@@ -447,12 +470,16 @@ public data class EvalRun(
      *
      */
     @SerialName("responses")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Responses(
       @SerialName("input_messages")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val inputMessages: InputMessages? = null,
       @SerialName("sampling_params")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val samplingParams: SamplingParams? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val model: String? = null,
       public val source: Source,
     ) : DataSource {
@@ -463,10 +490,9 @@ public data class EvalRun(
       @JsonClassDiscriminator("type")
       @Serializable
       public sealed interface InputMessages {
-        @JvmInline
         @SerialName("template")
         @Serializable
-        public value class Template(
+        public data class Template(
           public val template: List<Template>,
         ) : InputMessages {
           @Serializable(with = Template.Serializer::class)
@@ -514,26 +540,32 @@ public data class EvalRun(
           }
         }
 
-        @JvmInline
         @SerialName("item_reference")
         @Serializable
-        public value class ItemReference(
+        public data class ItemReference(
           @SerialName("item_reference")
           public val itemReference: String,
         ) : InputMessages
       }
 
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class SamplingParams(
         @SerialName("reasoning_effort")
         public val reasoningEffort: ReasoningEffort? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val temperature: Double? = null,
         @SerialName("max_completion_tokens")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val maxCompletionTokens: Long? = null,
         @SerialName("top_p")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val topP: Double? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val seed: Long? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val tools: List<Tool>? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val text: Text? = null,
       ) {
         /**
@@ -543,9 +575,10 @@ public data class EvalRun(
          * - [Structured Outputs](/docs/guides/structured-outputs)
          *
          */
-        @JvmInline
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
-        public value class Text(
+        public data class Text(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val format: TextResponseFormatConfiguration? = null,
         )
       }
@@ -557,23 +590,23 @@ public data class EvalRun(
       @JsonClassDiscriminator("type")
       @Serializable
       public sealed interface Source {
-        @JvmInline
         @SerialName("file_content")
         @Serializable
-        public value class FileContent(
+        public data class FileContent(
           public val content: List<Content>,
         ) : Source {
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Content(
             public val item: JsonElement,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val sample: JsonElement? = null,
           )
         }
 
-        @JvmInline
         @SerialName("file_id")
         @Serializable
-        public value class FileId(
+        public data class FileId(
           public val id: String,
         ) : Source
 

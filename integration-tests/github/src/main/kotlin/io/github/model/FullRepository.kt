@@ -2,9 +2,12 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -12,6 +15,7 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Full Repository
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class FullRepository(
   public val id: Long,
@@ -123,7 +127,9 @@ public data class FullRepository(
   @SerialName("open_issues_count")
   public val openIssuesCount: Long,
   @SerialName("is_template")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val isTemplate: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val topics: List<String>? = null,
   @SerialName("has_issues")
   public val hasIssues: Boolean,
@@ -134,17 +140,22 @@ public data class FullRepository(
   @SerialName("has_pages")
   public val hasPages: Boolean,
   @SerialName("has_downloads")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasDownloads: Boolean? = null,
   @SerialName("has_discussions")
   public val hasDiscussions: Boolean,
   @SerialName("has_pull_requests")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasPullRequests: Boolean? = null,
   @SerialName("pull_request_creation_policy")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val pullRequestCreationPolicy: PullRequestCreationPolicy? = null,
   @SerialName("has_commit_comments")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasCommitComments: Boolean? = null,
   public val archived: Boolean,
   public val disabled: Boolean,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val visibility: String? = null,
   @SerialName("pushed_at")
   public val pushedAt: Instant,
@@ -152,36 +163,50 @@ public data class FullRepository(
   public val createdAt: Instant,
   @SerialName("updated_at")
   public val updatedAt: Instant,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val permissions: Permissions? = null,
   @SerialName("allow_rebase_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowRebaseMerge: Boolean? = null,
   @SerialName("template_repository")
   public val templateRepository: NullableRepository? = null,
   @SerialName("temp_clone_token")
   public val tempCloneToken: String? = null,
   @SerialName("allow_squash_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowSquashMerge: Boolean? = null,
   @SerialName("allow_auto_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowAutoMerge: Boolean? = null,
   @SerialName("delete_branch_on_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val deleteBranchOnMerge: Boolean? = null,
   @SerialName("allow_merge_commit")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowMergeCommit: Boolean? = null,
   @SerialName("allow_update_branch")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowUpdateBranch: Boolean? = null,
   @SerialName("use_squash_pr_title_as_default")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val useSquashPrTitleAsDefault: Boolean? = null,
   @SerialName("squash_merge_commit_title")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val squashMergeCommitTitle: SquashMergeCommitTitle? = null,
   @SerialName("squash_merge_commit_message")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val squashMergeCommitMessage: SquashMergeCommitMessage? = null,
   @SerialName("merge_commit_title")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val mergeCommitTitle: MergeCommitTitle? = null,
   @SerialName("merge_commit_message")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val mergeCommitMessage: MergeCommitMessage? = null,
   @SerialName("allow_forking")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowForking: Boolean? = null,
   @SerialName("web_commit_signoff_required")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val webCommitSignoffRequired: Boolean? = null,
   @SerialName("subscribers_count")
   public val subscribersCount: Long,
@@ -189,21 +214,27 @@ public data class FullRepository(
   public val networkCount: Long,
   public val license: NullableLicenseSimple?,
   public val organization: NullableSimpleUser? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val parent: Repository? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val source: Repository? = null,
   public val forks: Long,
   @SerialName("master_branch")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val masterBranch: String? = null,
   @SerialName("open_issues")
   public val openIssues: Long,
   public val watchers: Long,
   @SerialName("anonymous_access_enabled")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val anonymousAccessEnabled: Boolean? = null,
   @SerialName("code_of_conduct")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val codeOfConduct: CodeOfConductSimple? = null,
   @SerialName("security_and_analysis")
   public val securityAndAnalysis: SecurityAndAnalysis? = null,
   @SerialName("custom_properties")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val customProperties: JsonElement? = null,
 ) {
   @Serializable
@@ -229,11 +260,14 @@ public data class FullRepository(
     ;
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Permissions(
     public val admin: Boolean,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val maintain: Boolean? = null,
     public val push: Boolean,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val triage: Boolean? = null,
     public val pull: Boolean,
   )

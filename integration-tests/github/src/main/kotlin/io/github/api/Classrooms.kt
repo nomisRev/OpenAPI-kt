@@ -8,7 +8,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
 import kotlin.Long
 import kotlin.collections.List
 
@@ -22,10 +21,18 @@ public class Classrooms internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<SimpleClassroom> = client.get("/classrooms") {
-      page?.let { parameter("page", it) }
-      perPage?.let { parameter("per_page", it) }
-    }.body()
+    public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<SimpleClassroom> {
+      val response = client.get("classrooms") {
+        if (page != null) {
+          url.encodedParameters.append("page", page.toString())
+        }
+        if (perPage != null) {
+          url.encodedParameters.append("per_page", perPage.toString())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class ClassroomIdPath internal constructor(
@@ -41,7 +48,7 @@ public class Classrooms internal constructor(
       private val classroomId: Long,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("/classrooms/$classroomId")
+        val response = client.get("classrooms/$classroomId")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           404 -> Response.NotFound(response.body())
@@ -70,10 +77,18 @@ public class Classrooms internal constructor(
         private val client: HttpClient,
         private val classroomId: Long,
       ) {
-        public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<SimpleClassroomAssignment> = client.get("/classrooms/$classroomId/assignments") {
-          page?.let { parameter("page", it) }
-          perPage?.let { parameter("per_page", it) }
-        }.body()
+        public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<SimpleClassroomAssignment> {
+          val response = client.get("classrooms/$classroomId/assignments") {
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
   }

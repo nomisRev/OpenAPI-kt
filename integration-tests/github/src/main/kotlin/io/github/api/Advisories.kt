@@ -8,7 +8,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.OptIn
@@ -27,8 +27,10 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Advisories internal constructor(
   private val client: HttpClient,
@@ -60,25 +62,75 @@ public class Advisories internal constructor(
       perPage: Long? = 30L,
       sort: Sort? = Sort.Published,
     ): Response {
-      val response = client.get("/advisories") {
-        ghsaId?.let { parameter("ghsa_id", it) }
-        type?.let { parameter("type", it.value) }
-        cveId?.let { parameter("cve_id", it) }
-        ecosystem?.let { parameter("ecosystem", it.value) }
-        severity?.let { parameter("severity", it.value) }
-        cwes?.let { parameter("cwes", it) }
-        isWithdrawn?.let { parameter("is_withdrawn", it) }
-        affects?.let { parameter("affects", it) }
-        published?.let { parameter("published", it) }
-        updated?.let { parameter("updated", it) }
-        modified?.let { parameter("modified", it) }
-        epssPercentage?.let { parameter("epss_percentage", it) }
-        epssPercentile?.let { parameter("epss_percentile", it) }
-        before?.let { parameter("before", it) }
-        after?.let { parameter("after", it) }
-        direction?.let { parameter("direction", it.value) }
-        perPage?.let { parameter("per_page", it) }
-        sort?.let { parameter("sort", it.value) }
+      val response = client.get("advisories") {
+        if (ghsaId != null) {
+          url.encodedParameters.append("ghsa_id", ghsaId.encodeURLParameter())
+        }
+        if (type != null) {
+          url.encodedParameters.append("type", type.value.encodeURLParameter())
+        }
+        if (cveId != null) {
+          url.encodedParameters.append("cve_id", cveId.encodeURLParameter())
+        }
+        if (ecosystem != null) {
+          url.encodedParameters.append("ecosystem", ecosystem.value.encodeURLParameter())
+        }
+        if (severity != null) {
+          url.encodedParameters.append("severity", severity.value.encodeURLParameter())
+        }
+        if (cwes != null) {
+          when (cwes) {
+            is Cwes.CaseString -> {
+              url.encodedParameters.append("cwes", cwes.value.encodeURLParameter())
+            }
+            is Cwes.CaseStrings -> {
+              cwes.value.forEach { url.encodedParameters.append("cwes", it.encodeURLParameter()) }
+            }
+          }
+        }
+        if (isWithdrawn != null) {
+          url.encodedParameters.append("is_withdrawn", isWithdrawn.toString())
+        }
+        if (affects != null) {
+          when (affects) {
+            is Affects.CaseString -> {
+              url.encodedParameters.append("affects", affects.value.encodeURLParameter())
+            }
+            is Affects.CaseStrings -> {
+              affects.value.forEach { url.encodedParameters.append("affects", it.encodeURLParameter()) }
+            }
+          }
+        }
+        if (published != null) {
+          url.encodedParameters.append("published", published.encodeURLParameter())
+        }
+        if (updated != null) {
+          url.encodedParameters.append("updated", updated.encodeURLParameter())
+        }
+        if (modified != null) {
+          url.encodedParameters.append("modified", modified.encodeURLParameter())
+        }
+        if (epssPercentage != null) {
+          url.encodedParameters.append("epss_percentage", epssPercentage.encodeURLParameter())
+        }
+        if (epssPercentile != null) {
+          url.encodedParameters.append("epss_percentile", epssPercentile.encodeURLParameter())
+        }
+        if (before != null) {
+          url.encodedParameters.append("before", before.encodeURLParameter())
+        }
+        if (after != null) {
+          url.encodedParameters.append("after", after.encodeURLParameter())
+        }
+        if (direction != null) {
+          url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+        }
+        if (perPage != null) {
+          url.encodedParameters.append("per_page", perPage.toString())
+        }
+        if (sort != null) {
+          url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+        }
       }
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
@@ -146,11 +198,17 @@ public class Advisories internal constructor(
         override fun deserialize(decoder: Decoder): Cwes {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+            )
+            value is JsonArray -> json.attemptDeserialize(
+              value,
+              CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
 
         override fun serialize(encoder: Encoder, `value`: Cwes) {
@@ -190,11 +248,17 @@ public class Advisories internal constructor(
         override fun deserialize(decoder: Decoder): Affects {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+            )
+            value is JsonArray -> json.attemptDeserialize(
+              value,
+              CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
 
         override fun serialize(encoder: Encoder, `value`: Affects) {
@@ -258,7 +322,7 @@ public class Advisories internal constructor(
       private val ghsaId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("/advisories/$ghsaId")
+        val response = client.get("advisories/${ghsaId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           404 -> Response.NotFound(response.body())

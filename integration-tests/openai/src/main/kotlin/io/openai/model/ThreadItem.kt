@@ -4,7 +4,6 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
@@ -43,20 +42,18 @@ public sealed interface ThreadItem {
       /**
        * Text block that a user contributed to the thread.
        */
-      @JvmInline
       @SerialName("input_text")
       @Serializable
-      public value class InputText(
+      public data class InputText(
         public val text: String,
       ) : Content
 
       /**
        * Quoted snippet that the user referenced in their message.
        */
-      @JvmInline
       @SerialName("quoted_text")
       @Serializable
-      public value class QuotedText(
+      public data class QuotedText(
         public val text: String,
       ) : Content
     }

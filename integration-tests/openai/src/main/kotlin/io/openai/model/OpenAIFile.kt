@@ -1,13 +1,17 @@
 package io.openai.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * The `File` object represents a document that has been uploaded to OpenAI.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class OpenAIFile(
   public val id: String,
@@ -15,12 +19,14 @@ public data class OpenAIFile(
   @SerialName("created_at")
   public val createdAt: Long,
   @SerialName("expires_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val expiresAt: Long? = null,
   public val filename: String,
   public val `object`: Object,
   public val purpose: Purpose,
   public val status: Status,
   @SerialName("status_details")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val statusDetails: String? = null,
 ) {
   @Serializable

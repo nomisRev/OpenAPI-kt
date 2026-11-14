@@ -2,7 +2,7 @@ package io.openai.model
 
 import kotlin.OptIn
 import kotlin.String
-import kotlin.collections.List
+import kotlin.collections.Map
 import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
@@ -16,6 +16,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Optional map of values to substitute in for variables in your
@@ -26,7 +28,7 @@ import kotlinx.serialization.json.JsonElement
 @JvmInline
 @Serializable
 public value class ResponsePromptVariables(
-  public val values: List<AdditionalProperties>? = null,
+  public val values: Map<String, AdditionalProperties>,
 ) {
   @Serializable(with = AdditionalProperties.Serializer::class)
   public sealed interface AdditionalProperties {
@@ -70,13 +72,19 @@ public value class ResponsePromptVariables(
       override fun deserialize(decoder: Decoder): AdditionalProperties {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseInputTextContent::class to { CaseInputTextContent(decodeFromJsonElement(InputTextContent.serializer(), it)) },
-          CaseInputImageContent::class to { CaseInputImageContent(decodeFromJsonElement(InputImageContent.serializer(), it)) },
-          CaseInputFileContent::class to { CaseInputFileContent(decodeFromJsonElement(InputFileContent.serializer(), it)) },
-          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+          )
+          value is JsonObject -> json.attemptDeserialize(
+            value,
+            CaseInputTextContent::class to { CaseInputTextContent(decodeFromJsonElement(InputTextContent.serializer(), it)) },
+            CaseInputImageContent::class to { CaseInputImageContent(decodeFromJsonElement(InputImageContent.serializer(), it)) },
+            CaseInputFileContent::class to { CaseInputFileContent(decodeFromJsonElement(InputFileContent.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: AdditionalProperties) {

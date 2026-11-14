@@ -2,13 +2,14 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.openai.model.AssistantObject
 import io.openai.model.CreateAssistantRequest
 import io.openai.model.DeleteAssistantResponse
@@ -41,12 +42,24 @@ public class Assistants internal constructor(
       order: Order? = Order.Desc,
       after: String? = null,
       before: String? = null,
-    ): ListAssistantsResponse = client.get("/assistants") {
-      limit?.let { parameter("limit", it) }
-      order?.let { parameter("order", it.value) }
-      after?.let { parameter("after", it) }
-      before?.let { parameter("before", it) }
-    }.body()
+    ): ListAssistantsResponse {
+      val response = client.get("assistants") {
+        if (limit != null) {
+          url.encodedParameters.append("limit", limit.toString())
+        }
+        if (order != null) {
+          url.encodedParameters.append("order", order.value.encodeURLParameter())
+        }
+        if (after != null) {
+          url.encodedParameters.append("after", after.encodeURLParameter())
+        }
+        if (before != null) {
+          url.encodedParameters.append("before", before.encodeURLParameter())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
     @Serializable
     public enum class Order(
@@ -65,10 +78,14 @@ public class Assistants internal constructor(
     private val client: HttpClient,
   ) {
     @Deprecated("Deprecated by the API provider")
-    public suspend operator fun invoke(body: CreateAssistantRequest): AssistantObject = client.post("/assistants") {
-      contentType(ContentType.Application.Json)
-      setBody(body)
-    }.body()
+    public suspend operator fun invoke(body: CreateAssistantRequest): AssistantObject {
+      val response = client.post("assistants") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class AssistantIdPath internal constructor(
@@ -90,7 +107,11 @@ public class Assistants internal constructor(
       private val assistantId: String,
     ) {
       @Deprecated("Deprecated by the API provider")
-      public suspend operator fun invoke(): DeleteAssistantResponse = client.delete("/assistants/$assistantId").body()
+      public suspend operator fun invoke(): DeleteAssistantResponse {
+        val response = client.delete("assistants/${assistantId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     @Deprecated("Deprecated by the API provider")
@@ -99,7 +120,11 @@ public class Assistants internal constructor(
       private val assistantId: String,
     ) {
       @Deprecated("Deprecated by the API provider")
-      public suspend operator fun invoke(): AssistantObject = client.get("/assistants/$assistantId").body()
+      public suspend operator fun invoke(): AssistantObject {
+        val response = client.get("assistants/${assistantId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     @Deprecated("Deprecated by the API provider")
@@ -108,10 +133,14 @@ public class Assistants internal constructor(
       private val assistantId: String,
     ) {
       @Deprecated("Deprecated by the API provider")
-      public suspend operator fun invoke(body: ModifyAssistantRequest): AssistantObject = client.post("/assistants/$assistantId") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: ModifyAssistantRequest): AssistantObject {
+        val response = client.post("assistants/${assistantId.encodeURLParameter()}") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 }

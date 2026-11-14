@@ -2,6 +2,7 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -17,9 +18,13 @@ public class Moderations internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(body: CreateModerationRequest): CreateModerationResponse = client.post("/moderations") {
-      contentType(ContentType.Application.Json)
-      setBody(body)
-    }.body()
+    public suspend operator fun invoke(body: CreateModerationRequest): CreateModerationResponse {
+      val response = client.post("moderations") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 }

@@ -11,24 +11,25 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.Map
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
@@ -39,6 +40,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
 
 public class Gists internal constructor(
   private val client: HttpClient,
@@ -61,10 +64,16 @@ public class Gists internal constructor(
       perPage: Long? = 30L,
       page: Long? = 1L,
     ): Response {
-      val response = client.get("/gists") {
-        since?.let { parameter("since", it.toString()) }
-        perPage?.let { parameter("per_page", it) }
-        page?.let { parameter("page", it) }
+      val response = client.get("gists") {
+        if (since != null) {
+          url.encodedParameters.append("since", since.toString().encodeURLParameter())
+        }
+        if (perPage != null) {
+          url.encodedParameters.append("per_page", perPage.toString())
+        }
+        if (page != null) {
+          url.encodedParameters.append("page", page.toString())
+        }
       }
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
@@ -92,10 +101,10 @@ public class Gists internal constructor(
   ) {
     public suspend operator fun invoke(
       description: String? = null,
-      files: List<Files>,
+      files: Map<String, Files>,
       `public`: Public? = null,
     ): Response {
-      val response = client.post("/gists") {
+      val response = client.post("gists") {
         contentType(ContentType.Application.Json)
         setBody(Body(description = description, files = files, public = public))
       }
@@ -109,9 +118,8 @@ public class Gists internal constructor(
       }
     }
 
-    @JvmInline
     @Serializable
-    public value class Files(
+    public data class Files(
       public val content: String,
     )
 
@@ -148,11 +156,17 @@ public class Gists internal constructor(
         override fun deserialize(decoder: Decoder): Public {
           val value = decoder.decodeSerializableValue(JsonElement.serializer())
           val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-          return json.attemptDeserialize(
-            value,
-            TrueOrFalse::class to { decodeFromJsonElement(TrueOrFalse.serializer(), it) },
-            CaseBoolean::class to { CaseBoolean(decodeFromJsonElement(Boolean.serializer(), it)) },
-          )
+          return when {
+            value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+              value,
+              TrueOrFalse::class to { decodeFromJsonElement(TrueOrFalse.serializer(), it) },
+            )
+            value is JsonPrimitive && !value.isString && value.booleanOrNull != null -> json.attemptDeserialize(
+              value,
+              CaseBoolean::class to { CaseBoolean(decodeFromJsonElement(Boolean.serializer(), it)) },
+            )
+            else -> throw UnionSerializationException(value, emptyMap())
+          }
         }
 
         override fun serialize(encoder: Encoder, `value`: Public) {
@@ -164,11 +178,13 @@ public class Gists internal constructor(
       }
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     internal data class Body(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val description: String? = null,
-      @Required
-      public val files: List<Files> = emptyList(),
+      public val files: Map<String, Files>,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val `public`: Public? = null,
     )
 
@@ -206,10 +222,16 @@ public class Gists internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("/gists/public") {
-          since?.let { parameter("since", it.toString()) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
+        val response = client.get("gists/public") {
+          if (since != null) {
+            url.encodedParameters.append("since", since.toString().encodeURLParameter())
+          }
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
         }
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
@@ -251,10 +273,16 @@ public class Gists internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("/gists/starred") {
-          since?.let { parameter("since", it.toString()) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
+        val response = client.get("gists/starred") {
+          if (since != null) {
+            url.encodedParameters.append("since", since.toString().encodeURLParameter())
+          }
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
         }
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
@@ -308,7 +336,7 @@ public class Gists internal constructor(
       private val gistId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.delete("/gists/$gistId")
+        val response = client.delete("gists/${gistId.encodeURLParameter()}")
         return when (response.status.value) {
           204 -> Response.NoContent
           304 -> Response.NotModified
@@ -338,7 +366,7 @@ public class Gists internal constructor(
       private val gistId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("/gists/$gistId")
+        val response = client.get("gists/${gistId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           304 -> Response.NotModified
@@ -355,17 +383,24 @@ public class Gists internal constructor(
 
         public data object NotModified : Response
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Forbidden(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val block: Block? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val message: String? = null,
           @SerialName("documentation_url")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val documentationUrl: String? = null,
         ) : Response {
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class Block(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val reason: String? = null,
             @SerialName("created_at")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val createdAt: String? = null,
             @SerialName("html_url")
             public val htmlUrl: String? = null,
@@ -382,8 +417,8 @@ public class Gists internal constructor(
       private val client: HttpClient,
       private val gistId: String,
     ) {
-      public suspend operator fun invoke(description: String? = null, files: List<Files?>? = null): Response {
-        val response = client.patch("/gists/$gistId") {
+      public suspend operator fun invoke(description: String? = null, files: Map<String, Files?>? = null): Response {
+        val response = client.patch("gists/${gistId.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(Body(description = description, files = files))
         }
@@ -395,16 +430,21 @@ public class Gists internal constructor(
         }
       }
 
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class Files(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val content: String? = null,
         public val filename: String? = null,
       )
 
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       internal data class Body(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val description: String? = null,
-        public val files: List<Files?>? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
+        public val files: Map<String, Files?>? = null,
       )
 
       public sealed interface Response {
@@ -437,9 +477,13 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("/gists/$gistId/comments") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("gists/${gistId.encodeURLParameter()}/comments") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -472,7 +516,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(body: String): Response {
-          val response = client.post("/gists/$gistId/comments") {
+          val response = client.post("gists/${gistId.encodeURLParameter()}/comments") {
             contentType(ContentType.Application.Json)
             setBody(Body(body = body))
           }
@@ -485,9 +529,8 @@ public class Gists internal constructor(
           }
         }
 
-        @JvmInline
         @Serializable
-        internal value class Body(
+        internal data class Body(
           public val body: String,
         )
 
@@ -525,7 +568,7 @@ public class Gists internal constructor(
           private val commentId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/gists/$gistId/comments/$commentId")
+            val response = client.delete("gists/${gistId.encodeURLParameter()}/comments/$commentId")
             return when (response.status.value) {
               204 -> Response.NoContent
               304 -> Response.NotModified
@@ -556,7 +599,7 @@ public class Gists internal constructor(
           private val commentId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/gists/$gistId/comments/$commentId")
+            val response = client.get("gists/${gistId.encodeURLParameter()}/comments/$commentId")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               304 -> Response.NotModified
@@ -573,17 +616,24 @@ public class Gists internal constructor(
 
             public data object NotModified : Response
 
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class Forbidden(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val block: Block? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val message: String? = null,
               @SerialName("documentation_url")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val documentationUrl: String? = null,
             ) : Response {
+              @OptIn(ExperimentalSerializationApi::class)
               @Serializable
               public data class Block(
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val reason: String? = null,
                 @SerialName("created_at")
+                @EncodeDefault(EncodeDefault.Mode.NEVER)
                 public val createdAt: String? = null,
                 @SerialName("html_url")
                 public val htmlUrl: String? = null,
@@ -602,7 +652,7 @@ public class Gists internal constructor(
           private val commentId: Long,
         ) {
           public suspend operator fun invoke(body: String): Response {
-            val response = client.patch("/gists/$gistId/comments/$commentId") {
+            val response = client.patch("gists/${gistId.encodeURLParameter()}/comments/$commentId") {
               contentType(ContentType.Application.Json)
               setBody(Body(body = body))
             }
@@ -613,9 +663,8 @@ public class Gists internal constructor(
             }
           }
 
-          @JvmInline
           @Serializable
-          internal value class Body(
+          internal data class Body(
             public val body: String,
           )
 
@@ -643,9 +692,13 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("/gists/$gistId/commits") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("gists/${gistId.encodeURLParameter()}/commits") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -687,9 +740,13 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("/gists/$gistId/forks") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("gists/${gistId.encodeURLParameter()}/forks") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -722,7 +779,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.post("/gists/$gistId/forks")
+          val response = client.post("gists/${gistId.encodeURLParameter()}/forks")
           return when (response.status.value) {
             201 -> Response.Created(response.body())
             304 -> Response.NotModified
@@ -770,7 +827,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("/gists/$gistId/star")
+          val response = client.delete("gists/${gistId.encodeURLParameter()}/star")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -800,7 +857,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("/gists/$gistId/star")
+          val response = client.get("gists/${gistId.encodeURLParameter()}/star")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -828,7 +885,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.put("/gists/$gistId/star")
+          val response = client.put("gists/${gistId.encodeURLParameter()}/star")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -867,7 +924,7 @@ public class Gists internal constructor(
         private val sha: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("/gists/$gistId/$sha")
+          val response = client.get("gists/${gistId.encodeURLParameter()}/${sha.encodeURLParameter()}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             403 -> Response.Forbidden(response.body())

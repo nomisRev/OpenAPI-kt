@@ -2,8 +2,9 @@ package io.github.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.String
 
 public class Octocat internal constructor(
@@ -14,8 +15,14 @@ public class Octocat internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(s: String? = null): String = client.get("/octocat") {
-      s?.let { parameter("s", it) }
-    }.body()
+    public suspend operator fun invoke(s: String? = null): String {
+      val response = client.get("octocat") {
+        if (s != null) {
+          url.encodedParameters.append("s", s.encodeURLParameter())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 }

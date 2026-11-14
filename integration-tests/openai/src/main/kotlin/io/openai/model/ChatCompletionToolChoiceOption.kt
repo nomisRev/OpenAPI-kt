@@ -15,6 +15,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Controls which (if any) tool is called by the model.
@@ -75,13 +77,19 @@ public sealed interface ChatCompletionToolChoiceOption {
     override fun deserialize(decoder: Decoder): ChatCompletionToolChoiceOption {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        ToolChoiceMode::class to { decodeFromJsonElement(ToolChoiceMode.serializer(), it) },
-        CaseChatCompletionAllowedToolsChoice::class to { CaseChatCompletionAllowedToolsChoice(decodeFromJsonElement(ChatCompletionAllowedToolsChoice.serializer(), it)) },
-        CaseChatCompletionNamedToolChoice::class to { CaseChatCompletionNamedToolChoice(decodeFromJsonElement(ChatCompletionNamedToolChoice.serializer(), it)) },
-        CaseChatCompletionNamedToolChoiceCustom::class to { CaseChatCompletionNamedToolChoiceCustom(decodeFromJsonElement(ChatCompletionNamedToolChoiceCustom.serializer(), it)) },
-      )
+      return when {
+        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+          value,
+          ToolChoiceMode::class to { decodeFromJsonElement(ToolChoiceMode.serializer(), it) },
+        )
+        value is JsonObject -> json.attemptDeserialize(
+          value,
+          CaseChatCompletionAllowedToolsChoice::class to { CaseChatCompletionAllowedToolsChoice(decodeFromJsonElement(ChatCompletionAllowedToolsChoice.serializer(), it)) },
+          CaseChatCompletionNamedToolChoice::class to { CaseChatCompletionNamedToolChoice(decodeFromJsonElement(ChatCompletionNamedToolChoice.serializer(), it)) },
+          CaseChatCompletionNamedToolChoiceCustom::class to { CaseChatCompletionNamedToolChoiceCustom(decodeFromJsonElement(ChatCompletionNamedToolChoiceCustom.serializer(), it)) },
+        )
+        else -> throw UnionSerializationException(value, emptyMap())
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: ChatCompletionToolChoiceOption) {

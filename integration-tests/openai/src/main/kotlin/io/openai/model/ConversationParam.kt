@@ -15,6 +15,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * The conversation that this response belongs to. Items from this conversation are prepended to `input_items` for this response request.
@@ -49,11 +51,17 @@ public sealed interface ConversationParam {
     override fun deserialize(decoder: Decoder): ConversationParam {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        CaseConversationParam2::class to { CaseConversationParam2(decodeFromJsonElement(ConversationParam2.serializer(), it)) },
-        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-      )
+      return when {
+        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+          value,
+          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+        )
+        value is JsonObject -> json.attemptDeserialize(
+          value,
+          CaseConversationParam2::class to { CaseConversationParam2(decodeFromJsonElement(ConversationParam2.serializer(), it)) },
+        )
+        else -> throw UnionSerializationException(value, emptyMap())
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: ConversationParam) {

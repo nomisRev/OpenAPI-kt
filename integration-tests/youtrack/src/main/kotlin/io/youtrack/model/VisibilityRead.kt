@@ -3,7 +3,7 @@ package io.youtrack.model
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -18,25 +18,31 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface VisibilityRead {
   public val id: String?
 
-  @JvmInline
   @SerialName("Visibility")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class Default(
+  public data class Default(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
   ) : VisibilityRead
 
-  @JvmInline
   @SerialName("UnlimitedVisibility")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class UnlimitedVisibility(
+  public data class UnlimitedVisibility(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
   ) : VisibilityRead
 
   @SerialName("LimitedVisibility")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class LimitedVisibility(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val permittedGroups: List<UserGroupRead>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val permittedUsers: List<UserRead>? = null,
   ) : VisibilityRead
 }

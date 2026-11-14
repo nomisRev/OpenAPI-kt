@@ -13,6 +13,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * A single content item: input text, output text, input image, or input audio.
@@ -67,14 +69,20 @@ public sealed interface EvalItemContentItem {
     override fun deserialize(decoder: Decoder): EvalItemContentItem {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        CaseEvalItemContentText::class to { CaseEvalItemContentText(decodeFromJsonElement(EvalItemContentText.serializer(), it)) },
-        CaseInputTextContent::class to { CaseInputTextContent(decodeFromJsonElement(InputTextContent.serializer(), it)) },
-        CaseEvalItemContentOutputText::class to { CaseEvalItemContentOutputText(decodeFromJsonElement(EvalItemContentOutputText.serializer(), it)) },
-        CaseEvalItemInputImage::class to { CaseEvalItemInputImage(decodeFromJsonElement(EvalItemInputImage.serializer(), it)) },
-        CaseInputAudio::class to { CaseInputAudio(decodeFromJsonElement(InputAudio.serializer(), it)) },
-      )
+      return when {
+        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+          value,
+          CaseEvalItemContentText::class to { CaseEvalItemContentText(decodeFromJsonElement(EvalItemContentText.serializer(), it)) },
+        )
+        value is JsonObject -> json.attemptDeserialize(
+          value,
+          CaseInputTextContent::class to { CaseInputTextContent(decodeFromJsonElement(InputTextContent.serializer(), it)) },
+          CaseEvalItemContentOutputText::class to { CaseEvalItemContentOutputText(decodeFromJsonElement(EvalItemContentOutputText.serializer(), it)) },
+          CaseEvalItemInputImage::class to { CaseEvalItemInputImage(decodeFromJsonElement(EvalItemInputImage.serializer(), it)) },
+          CaseInputAudio::class to { CaseInputAudio(decodeFromJsonElement(InputAudio.serializer(), it)) },
+        )
+        else -> throw UnionSerializationException(value, emptyMap())
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: EvalItemContentItem) {

@@ -5,11 +5,11 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.openai.model.CreateEvalRequest
 import io.openai.model.CreateEvalRunRequest
 import io.openai.model.Error
@@ -22,7 +22,10 @@ import io.openai.model.EvalRunOutputItemList
 import io.openai.model.Metadata
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -43,12 +46,24 @@ public class Evals internal constructor(
       limit: Long? = 20L,
       order: Order? = Order.Asc,
       orderBy: OrderBy? = OrderBy.CreatedAt,
-    ): EvalList = client.get("/evals") {
-      after?.let { parameter("after", it) }
-      limit?.let { parameter("limit", it) }
-      order?.let { parameter("order", it.value) }
-      orderBy?.let { parameter("order_by", it.value) }
-    }.body()
+    ): EvalList {
+      val response = client.get("evals") {
+        if (after != null) {
+          url.encodedParameters.append("after", after.encodeURLParameter())
+        }
+        if (limit != null) {
+          url.encodedParameters.append("limit", limit.toString())
+        }
+        if (order != null) {
+          url.encodedParameters.append("order", order.value.encodeURLParameter())
+        }
+        if (orderBy != null) {
+          url.encodedParameters.append("order_by", orderBy.value.encodeURLParameter())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
     @Serializable
     public enum class Order(
@@ -76,10 +91,14 @@ public class Evals internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(body: CreateEvalRequest): Eval = client.post("/evals") {
-      contentType(ContentType.Application.Json)
-      setBody(body)
-    }.body()
+    public suspend operator fun invoke(body: CreateEvalRequest): Eval {
+      val response = client.post("evals") {
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
+      if (response.status.value != 201) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class EvalIdPath internal constructor(
@@ -99,7 +118,7 @@ public class Evals internal constructor(
       private val evalId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.delete("/evals/$evalId")
+        val response = client.delete("evals/${evalId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
           404 -> Response.NotFound(response.body())
@@ -126,20 +145,30 @@ public class Evals internal constructor(
       private val client: HttpClient,
       private val evalId: String,
     ) {
-      public suspend operator fun invoke(): Eval = client.get("/evals/$evalId").body()
+      public suspend operator fun invoke(): Eval {
+        val response = client.get("evals/${evalId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Post internal constructor(
       private val client: HttpClient,
       private val evalId: String,
     ) {
-      public suspend operator fun invoke(name: String? = null, metadata: Metadata? = null): Eval = client.post("/evals/$evalId") {
-        contentType(ContentType.Application.Json)
-        setBody(Body(name = name, metadata = metadata))
-      }.body()
+      public suspend operator fun invoke(name: String? = null, metadata: Metadata? = null): Eval {
+        val response = client.post("evals/${evalId.encodeURLParameter()}") {
+          contentType(ContentType.Application.Json)
+          setBody(Body(name = name, metadata = metadata))
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
 
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       internal data class Body(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val name: String? = null,
         public val metadata: Metadata? = null,
       )
@@ -164,12 +193,24 @@ public class Evals internal constructor(
           limit: Long? = 20L,
           order: Order? = Order.Asc,
           status: Status? = null,
-        ): EvalRunList = client.get("/evals/$evalId/runs") {
-          after?.let { parameter("after", it) }
-          limit?.let { parameter("limit", it) }
-          order?.let { parameter("order", it.value) }
-          status?.let { parameter("status", it.value) }
-        }.body()
+        ): EvalRunList {
+          val response = client.get("evals/${evalId.encodeURLParameter()}/runs") {
+            if (after != null) {
+              url.encodedParameters.append("after", after.encodeURLParameter())
+            }
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (order != null) {
+              url.encodedParameters.append("order", order.value.encodeURLParameter())
+            }
+            if (status != null) {
+              url.encodedParameters.append("status", status.value.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Order(
@@ -205,7 +246,7 @@ public class Evals internal constructor(
         private val evalId: String,
       ) {
         public suspend operator fun invoke(body: CreateEvalRunRequest): Response {
-          val response = client.post("/evals/$evalId/runs") {
+          val response = client.post("evals/${evalId.encodeURLParameter()}/runs") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -246,7 +287,7 @@ public class Evals internal constructor(
           private val runId: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/evals/$evalId/runs/$runId")
+            val response = client.delete("evals/${evalId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}")
             return when (response.status.value) {
               200 -> response.body<Response.Ok>()
               404 -> Response.NotFound(response.body())
@@ -255,11 +296,15 @@ public class Evals internal constructor(
           }
 
           public sealed interface Response {
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
             public data class Ok(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val `object`: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val deleted: Boolean? = null,
               @SerialName("run_id")
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val runId: String? = null,
             ) : Response
 
@@ -274,7 +319,11 @@ public class Evals internal constructor(
           private val evalId: String,
           private val runId: String,
         ) {
-          public suspend operator fun invoke(): EvalRun = client.get("/evals/$evalId/runs/$runId").body()
+          public suspend operator fun invoke(): EvalRun {
+            val response = client.get("evals/${evalId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Post internal constructor(
@@ -282,7 +331,11 @@ public class Evals internal constructor(
           private val evalId: String,
           private val runId: String,
         ) {
-          public suspend operator fun invoke(): EvalRun = client.post("/evals/$evalId/runs/$runId").body()
+          public suspend operator fun invoke(): EvalRun {
+            val response = client.post("evals/${evalId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class OutputItems internal constructor(
@@ -304,12 +357,24 @@ public class Evals internal constructor(
               limit: Long? = 20L,
               status: Status? = null,
               order: Order? = Order.Asc,
-            ): EvalRunOutputItemList = client.get("/evals/$evalId/runs/$runId/output_items") {
-              after?.let { parameter("after", it) }
-              limit?.let { parameter("limit", it) }
-              status?.let { parameter("status", it.value) }
-              order?.let { parameter("order", it.value) }
-            }.body()
+            ): EvalRunOutputItemList {
+              val response = client.get("evals/${evalId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}/output_items") {
+                if (after != null) {
+                  url.encodedParameters.append("after", after.encodeURLParameter())
+                }
+                if (limit != null) {
+                  url.encodedParameters.append("limit", limit.toString())
+                }
+                if (status != null) {
+                  url.encodedParameters.append("status", status.value.encodeURLParameter())
+                }
+                if (order != null) {
+                  url.encodedParameters.append("order", order.value.encodeURLParameter())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public enum class Status(
@@ -348,7 +413,11 @@ public class Evals internal constructor(
               private val runId: String,
               private val outputItemId: String,
             ) {
-              public suspend operator fun invoke(): EvalRunOutputItem = client.get("/evals/$evalId/runs/$runId/output_items/$outputItemId").body()
+              public suspend operator fun invoke(): EvalRunOutputItem {
+                val response = client.get("evals/${evalId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}/output_items/${outputItemId.encodeURLParameter()}")
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
             }
           }
         }

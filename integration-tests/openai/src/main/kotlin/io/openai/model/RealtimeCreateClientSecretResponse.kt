@@ -6,6 +6,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -20,6 +21,9 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 
 /**
  * Response from creating a session and client secret for the Realtime API.
@@ -46,22 +50,32 @@ public data class RealtimeCreateClientSecretResponse(
      *
      */
     @SerialName("realtime")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Realtime(
       @SerialName("client_secret")
       public val clientSecret: ClientSecret,
       @SerialName("output_modalities")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val outputModalities: List<OutputModalities>? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val model: Model? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val instructions: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val audio: Audio? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val include: List<Include>? = null,
       public val tracing: Tracing? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val tools: List<Tools>? = null,
       @SerialName("tool_choice")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val toolChoice: ToolChoice? = null,
       @SerialName("max_output_tokens")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val maxOutputTokens: MaxOutputTokens? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val truncation: RealtimeTruncation? = null,
       public val prompt: Prompt? = null,
     ) : Session {
@@ -69,16 +83,23 @@ public data class RealtimeCreateClientSecretResponse(
        * Configuration for input and output audio.
        *
        */
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class Audio(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val input: Input? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val output: Output? = null,
       ) {
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Input(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val format: RealtimeAudioFormats? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val transcription: AudioTranscription? = null,
           @SerialName("noise_reduction")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val noiseReduction: NoiseReduction? = null,
           @SerialName("turn_detection")
           public val turnDetection: RealtimeTurnDetection? = null,
@@ -89,17 +110,22 @@ public data class RealtimeCreateClientSecretResponse(
            * Filtering the audio can improve VAD and turn detection accuracy (reducing false positives) and model performance by improving perception of the input audio.
            *
            */
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          public value class NoiseReduction(
+          public data class NoiseReduction(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val type: NoiseReductionType? = null,
           )
         }
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Output(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val format: RealtimeAudioFormats? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val voice: VoiceIdsShared? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val speed: Double? = null,
         )
       }
@@ -161,11 +187,17 @@ public data class RealtimeCreateClientSecretResponse(
           override fun deserialize(decoder: Decoder): MaxOutputTokens {
             val value = decoder.decodeSerializableValue(JsonElement.serializer())
             val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            return json.attemptDeserialize(
-              value,
-              Inf::class to { decodeFromJsonElement(Inf.serializer(), it) },
-              CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
-            )
+            return when {
+              value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                value,
+                Inf::class to { decodeFromJsonElement(Inf.serializer(), it) },
+              )
+              value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+                value,
+                CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
+              )
+              else -> throw UnionSerializationException(value, emptyMap())
+            }
           }
 
           override fun serialize(encoder: Encoder, `value`: MaxOutputTokens) {
@@ -324,12 +356,18 @@ public data class RealtimeCreateClientSecretResponse(
           override fun deserialize(decoder: Decoder): ToolChoice {
             val value = decoder.decodeSerializableValue(JsonElement.serializer())
             val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            return json.attemptDeserialize(
-              value,
-              CaseToolChoiceOptions::class to { CaseToolChoiceOptions(decodeFromJsonElement(ToolChoiceOptions.serializer(), it)) },
-              CaseToolChoiceFunction::class to { CaseToolChoiceFunction(decodeFromJsonElement(ToolChoiceFunction.serializer(), it)) },
-              CaseToolChoiceMCP::class to { CaseToolChoiceMCP(decodeFromJsonElement(ToolChoiceMCP.serializer(), it)) },
-            )
+            return when {
+              value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                value,
+                CaseToolChoiceOptions::class to { CaseToolChoiceOptions(decodeFromJsonElement(ToolChoiceOptions.serializer(), it)) },
+              )
+              value is JsonObject -> json.attemptDeserialize(
+                value,
+                CaseToolChoiceFunction::class to { CaseToolChoiceFunction(decodeFromJsonElement(ToolChoiceFunction.serializer(), it)) },
+                CaseToolChoiceMCP::class to { CaseToolChoiceMCP(decodeFromJsonElement(ToolChoiceMCP.serializer(), it)) },
+              )
+              else -> throw UnionSerializationException(value, emptyMap())
+            }
           }
 
           override fun serialize(encoder: Encoder, `value`: ToolChoice) {
@@ -409,12 +447,16 @@ public data class RealtimeCreateClientSecretResponse(
          * Granular configuration for tracing.
          *
          */
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class TracingConfiguration(
           @SerialName("workflow_name")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val workflowName: String? = null,
           @SerialName("group_id")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val groupId: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val metadata: JsonElement? = null,
         ) : Tracing
 
@@ -432,11 +474,17 @@ public data class RealtimeCreateClientSecretResponse(
           override fun deserialize(decoder: Decoder): Tracing {
             val value = decoder.decodeSerializableValue(JsonElement.serializer())
             val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-            return json.attemptDeserialize(
-              value,
-              TracingConfiguration::class to { decodeFromJsonElement(TracingConfiguration.serializer(), it) },
-              Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-            )
+            return when {
+              value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+                value,
+                Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+              )
+              value is JsonObject -> json.attemptDeserialize(
+                value,
+                TracingConfiguration::class to { decodeFromJsonElement(TracingConfiguration.serializer(), it) },
+              )
+              else -> throw UnionSerializationException(value, emptyMap())
+            }
           }
 
           override fun serialize(encoder: Encoder, `value`: Tracing) {
@@ -454,40 +502,51 @@ public data class RealtimeCreateClientSecretResponse(
      *
      */
     @SerialName("transcription")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Transcription(
       public val id: String,
       public val `object`: String,
       @SerialName("expires_at")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val expiresAt: Long? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val include: List<Include>? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val audio: Audio? = null,
     ) : Session {
       /**
        * Configuration for input audio for the session.
        *
        */
-      @JvmInline
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
-      public value class Audio(
+      public data class Audio(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val input: Input? = null,
       ) {
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Input(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val format: RealtimeAudioFormats? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val transcription: AudioTranscription? = null,
           @SerialName("noise_reduction")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val noiseReduction: NoiseReduction? = null,
           @SerialName("turn_detection")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val turnDetection: TurnDetection? = null,
         ) {
           /**
            * Configuration for input audio noise reduction.
            *
            */
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          public value class NoiseReduction(
+          public data class NoiseReduction(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val type: NoiseReductionType? = null,
           )
 
@@ -497,13 +556,18 @@ public data class RealtimeCreateClientSecretResponse(
            * audio volume and respond at the end of user speech.
            *
            */
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           public data class TurnDetection(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val type: String? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val threshold: Double? = null,
             @SerialName("prefix_padding_ms")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val prefixPaddingMs: Long? = null,
             @SerialName("silence_duration_ms")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val silenceDurationMs: Long? = null,
           )
         }

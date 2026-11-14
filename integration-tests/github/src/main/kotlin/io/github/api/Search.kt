@@ -13,11 +13,14 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -53,12 +56,20 @@ public class Search internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("/search/code") {
-          parameter("q", q)
-          sort?.let { parameter("sort", it.value) }
-          order?.let { parameter("order", it.value) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
+        val response = client.get("search/code") {
+          url.encodedParameters.append("q", q.encodeURLParameter())
+          if (sort != null) {
+            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+          }
+          if (order != null) {
+            url.encodedParameters.append("order", order.value.encodeURLParameter())
+          }
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
         }
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
@@ -110,11 +121,15 @@ public class Search internal constructor(
           public val `value`: ValidationError,
         ) : Response
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class ServiceUnavailable(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val code: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val message: String? = null,
           @SerialName("documentation_url")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val documentationUrl: String? = null,
         ) : Response
       }
@@ -136,12 +151,20 @@ public class Search internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("/search/commits") {
-          parameter("q", q)
-          sort?.let { parameter("sort", it.value) }
-          order?.let { parameter("order", it.value) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
+        val response = client.get("search/commits") {
+          url.encodedParameters.append("q", q.encodeURLParameter())
+          if (sort != null) {
+            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+          }
+          if (order != null) {
+            url.encodedParameters.append("order", order.value.encodeURLParameter())
+          }
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
         }
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
@@ -203,13 +226,23 @@ public class Search internal constructor(
         page: Long? = 1L,
         advancedSearch: String? = null,
       ): Response {
-        val response = client.get("/search/issues") {
-          parameter("q", q)
-          sort?.let { parameter("sort", it.value) }
-          order?.let { parameter("order", it.value) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-          advancedSearch?.let { parameter("advanced_search", it) }
+        val response = client.get("search/issues") {
+          url.encodedParameters.append("q", q.encodeURLParameter())
+          if (sort != null) {
+            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+          }
+          if (order != null) {
+            url.encodedParameters.append("order", order.value.encodeURLParameter())
+          }
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
+          if (advancedSearch != null) {
+            url.encodedParameters.append("advanced_search", advancedSearch.encodeURLParameter())
+          }
         }
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
@@ -281,11 +314,15 @@ public class Search internal constructor(
           public val `value`: ValidationError,
         ) : Response
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class ServiceUnavailable(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val code: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val message: String? = null,
           @SerialName("documentation_url")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val documentationUrl: String? = null,
         ) : Response
       }
@@ -308,13 +345,21 @@ public class Search internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("/search/labels") {
-          parameter("repository_id", repositoryId)
-          parameter("q", q)
-          sort?.let { parameter("sort", it.value) }
-          order?.let { parameter("order", it.value) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
+        val response = client.get("search/labels") {
+          url.encodedParameters.append("repository_id", repositoryId.toString())
+          url.encodedParameters.append("q", q.encodeURLParameter())
+          if (sort != null) {
+            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+          }
+          if (order != null) {
+            url.encodedParameters.append("order", order.value.encodeURLParameter())
+          }
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
         }
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
@@ -390,12 +435,20 @@ public class Search internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("/search/repositories") {
-          parameter("q", q)
-          sort?.let { parameter("sort", it.value) }
-          order?.let { parameter("order", it.value) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
+        val response = client.get("search/repositories") {
+          url.encodedParameters.append("q", q.encodeURLParameter())
+          if (sort != null) {
+            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+          }
+          if (order != null) {
+            url.encodedParameters.append("order", order.value.encodeURLParameter())
+          }
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
         }
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
@@ -448,11 +501,15 @@ public class Search internal constructor(
           public val `value`: ValidationError,
         ) : Response
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class ServiceUnavailable(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val code: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val message: String? = null,
           @SerialName("documentation_url")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val documentationUrl: String? = null,
         ) : Response
       }
@@ -472,10 +529,14 @@ public class Search internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("/search/topics") {
-          parameter("q", q)
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
+        val response = client.get("search/topics") {
+          url.encodedParameters.append("q", q.encodeURLParameter())
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
         }
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
@@ -514,12 +575,20 @@ public class Search internal constructor(
         perPage: Long? = 30L,
         page: Long? = 1L,
       ): Response {
-        val response = client.get("/search/users") {
-          parameter("q", q)
-          sort?.let { parameter("sort", it.value) }
-          order?.let { parameter("order", it.value) }
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
+        val response = client.get("search/users") {
+          url.encodedParameters.append("q", q.encodeURLParameter())
+          if (sort != null) {
+            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+          }
+          if (order != null) {
+            url.encodedParameters.append("order", order.value.encodeURLParameter())
+          }
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
         }
         return when (response.status.value) {
           200 -> response.body<Response.Ok>()
@@ -570,11 +639,15 @@ public class Search internal constructor(
           public val `value`: ValidationError,
         ) : Response
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class ServiceUnavailable(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val code: String? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val message: String? = null,
           @SerialName("documentation_url")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val documentationUrl: String? = null,
         ) : Response
       }

@@ -6,7 +6,9 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.Map
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -20,26 +22,33 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateChatCompletionRequest(
   public val metadata: Metadata? = null,
   @SerialName("top_logprobs")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val topLogprobs: Long? = null,
   public val temperature: Double? = null,
   @SerialName("top_p")
   public val topP: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
   @SerialName("safety_identifier")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val safetyIdentifier: String? = null,
   @SerialName("prompt_cache_key")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val promptCacheKey: String? = null,
   @SerialName("service_tier")
   public val serviceTier: ServiceTier? = null,
   @SerialName("prompt_cache_retention")
   public val promptCacheRetention: PromptCacheRetention? = null,
-  public val messages: List<ChatCompletionRequestMessage>? = null,
-  public val model: ModelIdsShared? = null,
+  public val messages: List<ChatCompletionRequestMessage>,
+  public val model: ModelIdsShared,
   public val modalities: ResponseModalities? = null,
   public val verbosity: Verbosity? = null,
   @SerialName("reasoning_effort")
@@ -51,15 +60,17 @@ public data class CreateChatCompletionRequest(
   @SerialName("presence_penalty")
   public val presencePenalty: Double? = null,
   @SerialName("web_search_options")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val webSearchOptions: WebSearchOptions? = null,
   @SerialName("response_format")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val responseFormat: ResponseFormat? = null,
   public val audio: Audio? = null,
   public val store: Boolean? = null,
   public val stream: Boolean? = null,
   public val stop: StopConfiguration? = null,
   @SerialName("logit_bias")
-  public val logitBias: List<Long>? = null,
+  public val logitBias: Map<String, Long>? = null,
   public val logprobs: Boolean? = null,
   @SerialName("max_tokens")
   public val maxTokens: Long? = null,
@@ -68,13 +79,18 @@ public data class CreateChatCompletionRequest(
   public val seed: Long? = null,
   @SerialName("stream_options")
   public val streamOptions: ChatCompletionStreamOptions? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tools: List<Tools>? = null,
   @SerialName("tool_choice")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val toolChoice: ChatCompletionToolChoiceOption? = null,
   @SerialName("parallel_tool_calls")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val parallelToolCalls: ParallelToolCalls? = null,
   @SerialName("function_call")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val functionCall: FunctionCall? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val functions: List<ChatCompletionFunctions>? = null,
 ) {
   /**
@@ -158,11 +174,17 @@ public data class CreateChatCompletionRequest(
       override fun deserialize(decoder: Decoder): FunctionCall {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          NoneOrAuto::class to { decodeFromJsonElement(NoneOrAuto.serializer(), it) },
-          CaseChatCompletionFunctionCallOption::class to { CaseChatCompletionFunctionCallOption(decodeFromJsonElement(ChatCompletionFunctionCallOption.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            NoneOrAuto::class to { decodeFromJsonElement(NoneOrAuto.serializer(), it) },
+          )
+          value is JsonObject -> json.attemptDeserialize(
+            value,
+            CaseChatCompletionFunctionCallOption::class to { CaseChatCompletionFunctionCallOption(decodeFromJsonElement(ChatCompletionFunctionCallOption.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: FunctionCall) {
@@ -211,10 +233,13 @@ public data class CreateChatCompletionRequest(
      *
      */
     @SerialName("json_schema")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class JsonSchema(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val description: String? = null,
       public val name: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val schema: ResponseFormatJsonSchemaSchema? = null,
       public val strict: Boolean? = null,
     ) : ResponseFormat
@@ -233,10 +258,13 @@ public data class CreateChatCompletionRequest(
      *
      */
     @SerialName("function")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Function(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val description: String? = null,
       public val name: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val parameters: FunctionParameters? = null,
       public val strict: Boolean? = null,
     ) : Tools
@@ -246,10 +274,13 @@ public data class CreateChatCompletionRequest(
      *
      */
     @SerialName("custom")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Custom(
       public val name: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val description: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val format: Format? = null,
     ) : Tools {
       /**
@@ -293,11 +324,13 @@ public data class CreateChatCompletionRequest(
    * Learn more about the [web search tool](/docs/guides/tools-web-search?api-mode=chat).
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class WebSearchOptions(
     @SerialName("user_location")
     public val userLocation: UserLocation? = null,
     @SerialName("search_context_size")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val searchContextSize: WebSearchContextSize? = null,
   ) {
     /**

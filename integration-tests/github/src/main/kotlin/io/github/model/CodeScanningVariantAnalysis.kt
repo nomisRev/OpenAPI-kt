@@ -1,15 +1,19 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A run of a CodeQL query against one or more repositories.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CodeScanningVariantAnalysis(
   public val id: Long,
@@ -21,19 +25,25 @@ public data class CodeScanningVariantAnalysis(
   @SerialName("query_pack_url")
   public val queryPackUrl: String,
   @SerialName("created_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val createdAt: Instant? = null,
   @SerialName("updated_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val updatedAt: Instant? = null,
   @SerialName("completed_at")
   public val completedAt: Instant? = null,
   public val status: Status,
   @SerialName("actions_workflow_run_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val actionsWorkflowRunId: Long? = null,
   @SerialName("failure_reason")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val failureReason: FailureReason? = null,
   @SerialName("scanned_repositories")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val scannedRepositories: List<ScannedRepositories>? = null,
   @SerialName("skipped_repositories")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val skippedRepositories: SkippedRepositories? = null,
 ) {
   @Serializable
@@ -49,16 +59,20 @@ public data class CodeScanningVariantAnalysis(
     ;
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class ScannedRepositories(
     public val repository: CodeScanningVariantAnalysisRepository,
     @SerialName("analysis_status")
     public val analysisStatus: CodeScanningVariantAnalysisStatus,
     @SerialName("result_count")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val resultCount: Long? = null,
     @SerialName("artifact_size_in_bytes")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val artifactSizeInBytes: Long? = null,
     @SerialName("failure_message")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val failureMessage: String? = null,
   )
 

@@ -2,13 +2,14 @@ package io.youtrack.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.youtrack.model.IssueFolderRead
 import io.youtrack.model.IssueFolderWrite
 import kotlin.Int
@@ -31,23 +32,39 @@ public class SavedQueries internal constructor(
       fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query",
       skip: Int? = null,
       top: Int? = null,
-    ): List<IssueFolderRead.SavedQuery> = client.get("/savedQueries") {
-      fields?.let { parameter("fields", it) }
-      skip?.let { parameter("${'$'}skip", it) }
-      top?.let { parameter("${'$'}top", it) }
-    }.body()
+    ): List<IssueFolderRead.SavedQuery> {
+      val response = client.get("savedQueries") {
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        if (skip != null) {
+          url.encodedParameters.append("%24skip", skip.toString())
+        }
+        if (top != null) {
+          url.encodedParameters.append("%24top", top.toString())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query", body: IssueFolderWrite.SavedQuery? = null): IssueFolderRead.SavedQuery = client.post("/savedQueries") {
-      fields?.let { parameter("fields", it) }
-      body?.let {
-        contentType(ContentType.Application.Json)
-        setBody(it)
+    public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query", body: IssueFolderWrite.SavedQuery? = null): IssueFolderRead.SavedQuery {
+      val response = client.post("savedQueries") {
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        body?.let {
+          contentType(ContentType.Application.Json)
+          setBody(it)
+        }
       }
-    }.body()
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class IdPath internal constructor(
@@ -65,7 +82,8 @@ public class SavedQueries internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        client.delete("/savedQueries/$id")
+        val response = client.delete("savedQueries/${id.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
 
@@ -73,22 +91,34 @@ public class SavedQueries internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query"): IssueFolderRead.SavedQuery = client.get("/savedQueries/$id") {
-        fields?.let { parameter("fields", it) }
-      }.body()
+      public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query"): IssueFolderRead.SavedQuery {
+        val response = client.get("savedQueries/${id.encodeURLParameter()}") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Post internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query", body: IssueFolderWrite.SavedQuery? = null): IssueFolderRead.SavedQuery = client.post("/savedQueries/$id") {
-        fields?.let { parameter("fields", it) }
-        body?.let {
-          contentType(ContentType.Application.Json)
-          setBody(it)
+      public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query", body: IssueFolderWrite.SavedQuery? = null): IssueFolderRead.SavedQuery {
+        val response = client.post("savedQueries/${id.encodeURLParameter()}") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+          body?.let {
+            contentType(ContentType.Application.Json)
+            setBody(it)
+          }
         }
-      }.body()
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 }

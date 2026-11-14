@@ -2,7 +2,10 @@ package io.openai.model
 
 import kotlin.Double
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -27,20 +30,28 @@ public data class FineTuningJobCheckpoint(
   /**
    * Metrics at the step number during the fine-tuning job.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Metrics(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val step: Double? = null,
     @SerialName("train_loss")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val trainLoss: Double? = null,
     @SerialName("train_mean_token_accuracy")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val trainMeanTokenAccuracy: Double? = null,
     @SerialName("valid_loss")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val validLoss: Double? = null,
     @SerialName("valid_mean_token_accuracy")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val validMeanTokenAccuracy: Double? = null,
     @SerialName("full_valid_loss")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val fullValidLoss: Double? = null,
     @SerialName("full_valid_mean_token_accuracy")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val fullValidMeanTokenAccuracy: Double? = null,
   )
 

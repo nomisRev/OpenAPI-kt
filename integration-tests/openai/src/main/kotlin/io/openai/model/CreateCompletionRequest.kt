@@ -6,7 +6,9 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.Map
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -19,9 +21,12 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateCompletionRequest(
   public val model: Model,
@@ -32,7 +37,7 @@ public data class CreateCompletionRequest(
   @SerialName("frequency_penalty")
   public val frequencyPenalty: Double? = null,
   @SerialName("logit_bias")
-  public val logitBias: List<Long>? = null,
+  public val logitBias: Map<String, Long>? = null,
   public val logprobs: Long? = null,
   @SerialName("max_tokens")
   public val maxTokens: Long? = null,
@@ -48,6 +53,7 @@ public data class CreateCompletionRequest(
   public val temperature: Double? = null,
   @SerialName("top_p")
   public val topP: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
 ) {
   @Serializable(with = Model.Serializer::class)
@@ -142,13 +148,19 @@ public data class CreateCompletionRequest(
       override fun deserialize(decoder: Decoder): Prompt {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-          CaseLongs::class to { CaseLongs(decodeFromJsonElement(ListSerializer(Long.serializer()), it)) },
-          CaseLongsList::class to { CaseLongsList(decodeFromJsonElement(ListSerializer(ListSerializer(Long.serializer())), it)) },
-          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+          )
+          value is JsonArray -> json.attemptDeserialize(
+            value,
+            CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
+            CaseLongs::class to { CaseLongs(decodeFromJsonElement(ListSerializer(Long.serializer()), it)) },
+            CaseLongsList::class to { CaseLongsList(decodeFromJsonElement(ListSerializer(ListSerializer(Long.serializer())), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: Prompt) {

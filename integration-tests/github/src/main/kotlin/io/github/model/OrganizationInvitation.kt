@@ -1,13 +1,17 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Organization Invitation
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class OrganizationInvitation(
   public val id: Long,
@@ -28,5 +32,6 @@ public data class OrganizationInvitation(
   @SerialName("invitation_teams_url")
   public val invitationTeamsUrl: String,
   @SerialName("invitation_source")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val invitationSource: String? = null,
 )

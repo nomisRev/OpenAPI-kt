@@ -7,6 +7,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -20,25 +21,36 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateTranscriptionRequest(
   public val `file`: ByteArray,
   public val model: Model,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val language: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val prompt: String? = null,
   @SerialName("response_format")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val responseFormat: AudioResponseFormat? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val temperature: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val include: List<TranscriptionInclude>? = null,
   @SerialName("timestamp_granularities")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val timestampGranularities: List<TimestampGranularities>? = null,
   public val stream: Boolean? = null,
   @SerialName("chunking_strategy")
   public val chunkingStrategy: ChunkingStrategy? = null,
   @SerialName("known_speaker_names")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val knownSpeakerNames: List<String>? = null,
   @SerialName("known_speaker_references")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val knownSpeakerReferences: List<String>? = null,
 ) {
   /**
@@ -75,11 +87,17 @@ public data class CreateTranscriptionRequest(
       override fun deserialize(decoder: Decoder): ChunkingStrategy {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-          CaseVadConfig::class to { CaseVadConfig(decodeFromJsonElement(VadConfig.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+          )
+          value is JsonObject -> json.attemptDeserialize(
+            value,
+            CaseVadConfig::class to { CaseVadConfig(decodeFromJsonElement(VadConfig.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: ChunkingStrategy) {

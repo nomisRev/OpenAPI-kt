@@ -2,16 +2,20 @@ package io.github.model
 
 import kotlin.Double
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
-@JvmInline
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-public value class BillingUsageReport(
+public data class BillingUsageReport(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val usageItems: List<UsageItems>? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class UsageItems(
     public val date: String,
@@ -24,6 +28,7 @@ public value class BillingUsageReport(
     public val discountAmount: Double,
     public val netAmount: Double,
     public val organizationName: String,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val repositoryName: String? = null,
   )
 }

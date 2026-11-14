@@ -2,13 +2,15 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.http.encodeURLParameter
+import io.ktor.serialization.JsonConvertException
 import io.openai.model.CreateFileRequest
 import io.openai.model.DeleteFileResponse
 import io.openai.model.FileExpirationAfter
@@ -20,6 +22,7 @@ import kotlin.String
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Files internal constructor(
   private val client: HttpClient,
@@ -38,12 +41,24 @@ public class Files internal constructor(
       limit: Long? = 10_000L,
       order: Order? = Order.Desc,
       after: String? = null,
-    ): ListFilesResponse = client.get("/files") {
-      purpose?.let { parameter("purpose", it) }
-      limit?.let { parameter("limit", it) }
-      order?.let { parameter("order", it.value) }
-      after?.let { parameter("after", it) }
-    }.body()
+    ): ListFilesResponse {
+      val response = client.get("files") {
+        if (purpose != null) {
+          url.encodedParameters.append("purpose", purpose.encodeURLParameter())
+        }
+        if (limit != null) {
+          url.encodedParameters.append("limit", limit.toString())
+        }
+        if (order != null) {
+          url.encodedParameters.append("order", order.value.encodeURLParameter())
+        }
+        if (after != null) {
+          url.encodedParameters.append("after", after.encodeURLParameter())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
     @Serializable
     public enum class Order(
@@ -64,15 +79,19 @@ public class Files internal constructor(
       `file`: ByteArray,
       purpose: CreateFileRequest.Purpose,
       expiresAfter: FileExpirationAfter? = null,
-    ): OpenAIFile = client.post("/files") {
-      setBody(MultiPartFormDataContent(formData {
-        append("file", file)
-        append("purpose", purpose.value)
-        if (expiresAfter != null) {
-          append("expires_after", Json.encodeToString(expiresAfter))
-        }
-      }))
-    }.body()
+    ): OpenAIFile {
+      val response = client.post("files") {
+        setBody(MultiPartFormDataContent(formData {
+          append("file", file)
+          append("purpose", purpose.value)
+          if (expiresAfter != null) {
+            append("expires_after", Json.encodeToString(expiresAfter))
+          }
+        }))
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
     public object Body {
       @Serializable
@@ -110,14 +129,22 @@ public class Files internal constructor(
       private val client: HttpClient,
       private val fileId: String,
     ) {
-      public suspend operator fun invoke(): DeleteFileResponse = client.delete("/files/$fileId").body()
+      public suspend operator fun invoke(): DeleteFileResponse {
+        val response = client.delete("files/${fileId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Get internal constructor(
       private val client: HttpClient,
       private val fileId: String,
     ) {
-      public suspend operator fun invoke(): OpenAIFile = client.get("/files/$fileId").body()
+      public suspend operator fun invoke(): OpenAIFile {
+        val response = client.get("files/${fileId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Content internal constructor(
@@ -130,7 +157,11 @@ public class Files internal constructor(
         private val client: HttpClient,
         private val fileId: String,
       ) {
-        public suspend operator fun invoke(): String = client.get("/files/$fileId/content").body()
+        public suspend operator fun invoke(): String {
+          val response = client.get("files/${fileId.encodeURLParameter()}/content")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
+        }
       }
     }
   }

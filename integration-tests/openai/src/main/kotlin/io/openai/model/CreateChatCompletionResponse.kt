@@ -1,14 +1,18 @@
 package io.openai.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Represents a chat completion response returned by model, based on the provided input.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateChatCompletionResponse(
   public val id: String,
@@ -18,8 +22,10 @@ public data class CreateChatCompletionResponse(
   @SerialName("service_tier")
   public val serviceTier: ServiceTier? = null,
   @SerialName("system_fingerprint")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val systemFingerprint: String? = null,
   public val `object`: Object,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val usage: CompletionUsage? = null,
 ) {
   @Serializable

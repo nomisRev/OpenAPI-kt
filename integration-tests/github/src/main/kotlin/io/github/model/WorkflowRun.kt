@@ -1,15 +1,19 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * An invocation of a workflow
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class WorkflowRun(
   public val id: Long,
@@ -17,8 +21,10 @@ public data class WorkflowRun(
   @SerialName("node_id")
   public val nodeId: String,
   @SerialName("check_suite_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val checkSuiteId: Long? = null,
   @SerialName("check_suite_node_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val checkSuiteNodeId: String? = null,
   @SerialName("head_branch")
   public val headBranch: String?,
@@ -28,6 +34,7 @@ public data class WorkflowRun(
   @SerialName("run_number")
   public val runNumber: Long,
   @SerialName("run_attempt")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val runAttempt: Long? = null,
   @SerialName("referenced_workflows")
   public val referencedWorkflows: List<ReferencedWorkflow>? = null,
@@ -45,10 +52,13 @@ public data class WorkflowRun(
   public val createdAt: Instant,
   @SerialName("updated_at")
   public val updatedAt: Instant,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val actor: SimpleUser? = null,
   @SerialName("triggering_actor")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val triggeringActor: SimpleUser? = null,
   @SerialName("run_started_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val runStartedAt: Instant? = null,
   @SerialName("jobs_url")
   public val jobsUrl: String,
@@ -72,6 +82,7 @@ public data class WorkflowRun(
   @SerialName("head_repository")
   public val headRepository: MinimalRepository,
   @SerialName("head_repository_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val headRepositoryId: Long? = null,
   @SerialName("display_title")
   public val displayTitle: String,

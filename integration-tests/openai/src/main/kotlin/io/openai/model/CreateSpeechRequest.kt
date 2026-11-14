@@ -1,8 +1,11 @@
 package io.openai.model
 
 import kotlin.Double
+import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -11,16 +14,21 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateSpeechRequest(
   public val model: Model,
   public val input: String,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val instructions: String? = null,
   public val voice: VoiceIdsOrCustomVoice,
   @SerialName("response_format")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val responseFormat: ResponseFormat? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val speed: Double? = null,
   @SerialName("stream_format")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val streamFormat: StreamFormat? = null,
 ) {
   @Serializable(with = Model.Serializer::class)

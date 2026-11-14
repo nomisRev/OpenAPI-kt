@@ -2,13 +2,14 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.openai.model.ChatSessionResource
 import io.openai.model.CreateChatSessionBody
 import io.openai.model.DeletedThreadResource
@@ -36,12 +37,16 @@ public class Chatkit internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: CreateChatSessionBody? = null): ChatSessionResource = client.post("/chatkit/sessions") {
-        body?.let {
-          contentType(ContentType.Application.Json)
-          setBody(it)
+      public suspend operator fun invoke(body: CreateChatSessionBody? = null): ChatSessionResource {
+        val response = client.post("chatkit/sessions") {
+          body?.let {
+            contentType(ContentType.Application.Json)
+            setBody(it)
+          }
         }
-      }.body()
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class SessionIdPath internal constructor(
@@ -60,7 +65,11 @@ public class Chatkit internal constructor(
           private val client: HttpClient,
           private val sessionId: String,
         ) {
-          public suspend operator fun invoke(): ChatSessionResource = client.post("/chatkit/sessions/$sessionId/cancel").body()
+          public suspend operator fun invoke(): ChatSessionResource {
+            val response = client.post("chatkit/sessions/${sessionId.encodeURLParameter()}/cancel")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }
@@ -82,13 +91,27 @@ public class Chatkit internal constructor(
         after: String? = null,
         before: String? = null,
         user: String? = null,
-      ): ThreadListResource = client.get("/chatkit/threads") {
-        limit?.let { parameter("limit", it) }
-        order?.let { parameter("order", it.value) }
-        after?.let { parameter("after", it) }
-        before?.let { parameter("before", it) }
-        user?.let { parameter("user", it) }
-      }.body()
+      ): ThreadListResource {
+        val response = client.get("chatkit/threads") {
+          if (limit != null) {
+            url.encodedParameters.append("limit", limit.toString())
+          }
+          if (order != null) {
+            url.encodedParameters.append("order", order.value.encodeURLParameter())
+          }
+          if (after != null) {
+            url.encodedParameters.append("after", after.encodeURLParameter())
+          }
+          if (before != null) {
+            url.encodedParameters.append("before", before.encodeURLParameter())
+          }
+          if (user != null) {
+            url.encodedParameters.append("user", user.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class ThreadIdPath internal constructor(
@@ -105,14 +128,22 @@ public class Chatkit internal constructor(
         private val client: HttpClient,
         private val threadId: String,
       ) {
-        public suspend operator fun invoke(): DeletedThreadResource = client.delete("/chatkit/threads/$threadId").body()
+        public suspend operator fun invoke(): DeletedThreadResource {
+          val response = client.delete("chatkit/threads/${threadId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Get internal constructor(
         private val client: HttpClient,
         private val threadId: String,
       ) {
-        public suspend operator fun invoke(): ThreadResource = client.get("/chatkit/threads/$threadId").body()
+        public suspend operator fun invoke(): ThreadResource {
+          val response = client.get("chatkit/threads/${threadId.encodeURLParameter()}")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Items internal constructor(
@@ -130,12 +161,24 @@ public class Chatkit internal constructor(
             order: OrderEnum? = null,
             after: String? = null,
             before: String? = null,
-          ): ThreadItemListResource = client.get("/chatkit/threads/$threadId/items") {
-            limit?.let { parameter("limit", it) }
-            order?.let { parameter("order", it.value) }
-            after?.let { parameter("after", it) }
-            before?.let { parameter("before", it) }
-          }.body()
+          ): ThreadItemListResource {
+            val response = client.get("chatkit/threads/${threadId.encodeURLParameter()}/items") {
+              if (limit != null) {
+                url.encodedParameters.append("limit", limit.toString())
+              }
+              if (order != null) {
+                url.encodedParameters.append("order", order.value.encodeURLParameter())
+              }
+              if (after != null) {
+                url.encodedParameters.append("after", after.encodeURLParameter())
+              }
+              if (before != null) {
+                url.encodedParameters.append("before", before.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }

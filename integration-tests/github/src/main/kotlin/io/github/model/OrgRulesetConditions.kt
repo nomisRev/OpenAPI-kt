@@ -5,7 +5,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -30,23 +30,32 @@ public sealed interface OrgRulesetConditions {
   /**
    * Parameters for a repository ruleset ref name condition
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class RepositoryNameAndRefName(
     @SerialName("ref_name")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val refName: RefName? = null,
     @SerialName("repository_name")
-    public val repositoryName: RepositoryName? = null,
+    public val repositoryName: RepositoryName,
   ) : OrgRulesetConditions {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class RefName(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val include: List<String>? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val exclude: List<String>? = null,
     )
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class RepositoryName(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val include: List<String>? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val exclude: List<String>? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val `protected`: Boolean? = null,
     )
   }
@@ -54,23 +63,29 @@ public sealed interface OrgRulesetConditions {
   /**
    * Parameters for a repository ruleset ref name condition
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class RepositoryIdAndRefName(
     @SerialName("ref_name")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val refName: RefName? = null,
     @SerialName("repository_id")
-    public val repositoryId: RepositoryId? = null,
+    public val repositoryId: RepositoryId,
   ) : OrgRulesetConditions {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class RefName(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val include: List<String>? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val exclude: List<String>? = null,
     )
 
-    @JvmInline
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
-    public value class RepositoryId(
+    public data class RepositoryId(
       @SerialName("repository_ids")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val repositoryIds: List<Long>? = null,
     )
   }
@@ -78,22 +93,30 @@ public sealed interface OrgRulesetConditions {
   /**
    * Parameters for a repository ruleset ref name condition
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class RepositoryPropertyAndRefName(
     @SerialName("ref_name")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val refName: RefName? = null,
     @SerialName("repository_property")
-    public val repositoryProperty: RepositoryProperty? = null,
+    public val repositoryProperty: RepositoryProperty,
   ) : OrgRulesetConditions {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class RefName(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val include: List<String>? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val exclude: List<String>? = null,
     )
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class RepositoryProperty(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val include: List<RepositoryRulesetConditionsRepositoryPropertySpec>? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val exclude: List<RepositoryRulesetConditionsRepositoryPropertySpec>? = null,
     )
   }

@@ -2,15 +2,19 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Pull requests let you tell others about changes you've pushed to a repository on GitHub. Once a pull request is sent, interested parties can review the set of changes, discuss potential modifications, and even push follow-up commits if necessary.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class PullRequest(
   public val url: String,
@@ -56,10 +60,13 @@ public data class PullRequest(
   @SerialName("merge_commit_sha")
   public val mergeCommitSha: String?,
   public val assignee: NullableSimpleUser?,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val assignees: List<SimpleUser>? = null,
   @SerialName("requested_reviewers")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val requestedReviewers: List<SimpleUser>? = null,
   @SerialName("requested_teams")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val requestedTeams: List<TeamSimple>? = null,
   public val head: Head,
   public val base: Base,
@@ -69,6 +76,7 @@ public data class PullRequest(
   public val authorAssociation: AuthorAssociation,
   @SerialName("auto_merge")
   public val autoMerge: AutoMerge?,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val draft: Boolean? = null,
   public val merged: Boolean,
   public val mergeable: Boolean?,

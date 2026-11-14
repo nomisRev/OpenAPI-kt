@@ -5,6 +5,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -21,14 +22,18 @@ import kotlinx.serialization.json.JsonElement
 /**
  * An item belonging to a project
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class ProjectsV2ItemSimple(
   public val id: Double,
   @SerialName("node_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val nodeId: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val content: Content? = null,
   @SerialName("content_type")
   public val contentType: ProjectsV2ItemContentType,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val creator: SimpleUser? = null,
   @SerialName("created_at")
   public val createdAt: Instant,
@@ -37,8 +42,10 @@ public data class ProjectsV2ItemSimple(
   @SerialName("archived_at")
   public val archivedAt: Instant?,
   @SerialName("project_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val projectUrl: String? = null,
   @SerialName("item_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val itemUrl: String? = null,
 ) {
   /**

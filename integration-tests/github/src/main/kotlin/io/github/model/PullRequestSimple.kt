@@ -2,15 +2,19 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Pull Request Simple
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class PullRequestSimple(
   public val url: String,
@@ -56,10 +60,13 @@ public data class PullRequestSimple(
   @SerialName("merge_commit_sha")
   public val mergeCommitSha: String?,
   public val assignee: NullableSimpleUser?,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val assignees: List<SimpleUser>? = null,
   @SerialName("requested_reviewers")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val requestedReviewers: List<SimpleUser>? = null,
   @SerialName("requested_teams")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val requestedTeams: List<Team>? = null,
   public val head: Head,
   public val base: Base,
@@ -69,6 +76,7 @@ public data class PullRequestSimple(
   public val authorAssociation: AuthorAssociation,
   @SerialName("auto_merge")
   public val autoMerge: AutoMerge?,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val draft: Boolean? = null,
 ) {
   @Serializable

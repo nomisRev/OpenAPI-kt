@@ -2,9 +2,12 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonArray
@@ -40,42 +43,61 @@ public data class GpgKey(
   @SerialName("raw_key")
   public val rawKey: String?,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Emails(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val email: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val verified: Boolean? = null,
   )
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Subkeys(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val id: Long? = null,
     @SerialName("primary_key_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val primaryKeyId: Long? = null,
     @SerialName("key_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val keyId: String? = null,
     @SerialName("public_key")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val publicKey: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val emails: List<Emails>? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val subkeys: JsonArray? = null,
     @SerialName("can_sign")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val canSign: Boolean? = null,
     @SerialName("can_encrypt_comms")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val canEncryptComms: Boolean? = null,
     @SerialName("can_encrypt_storage")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val canEncryptStorage: Boolean? = null,
     @SerialName("can_certify")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val canCertify: Boolean? = null,
     @SerialName("created_at")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val createdAt: String? = null,
     @SerialName("expires_at")
     public val expiresAt: String? = null,
     @SerialName("raw_key")
     public val rawKey: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val revoked: Boolean? = null,
   ) {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Emails(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val email: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val verified: Boolean? = null,
     )
   }

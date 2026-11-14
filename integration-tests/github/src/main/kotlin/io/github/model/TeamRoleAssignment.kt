@@ -2,15 +2,20 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * The Relationship a Team has with a role.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class TeamRoleAssignment(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val assignment: Assignment? = null,
   public val id: Long,
   @SerialName("node_id")
@@ -18,10 +23,13 @@ public data class TeamRoleAssignment(
   public val name: String,
   public val slug: String,
   public val description: String?,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val privacy: String? = null,
   @SerialName("notification_setting")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val notificationSetting: String? = null,
   public val permission: String,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val permissions: Permissions? = null,
   public val url: String,
   @SerialName("html_url")
@@ -33,8 +41,10 @@ public data class TeamRoleAssignment(
   public val parent: NullableTeamSimple?,
   public val type: Type,
   @SerialName("organization_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val organizationId: Long? = null,
   @SerialName("enterprise_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val enterpriseId: Long? = null,
 ) {
   @Serializable

@@ -7,6 +7,7 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -23,6 +24,7 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Installation
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Installation(
   public val id: Long,
@@ -38,6 +40,7 @@ public data class Installation(
   @SerialName("app_id")
   public val appId: Long,
   @SerialName("client_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val clientId: String? = null,
   @SerialName("target_id")
   public val targetId: Long,
@@ -52,8 +55,10 @@ public data class Installation(
   @SerialName("single_file_name")
   public val singleFileName: String?,
   @SerialName("has_multiple_single_files")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasMultipleSingleFiles: Boolean? = null,
   @SerialName("single_file_paths")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val singleFilePaths: List<String>? = null,
   @SerialName("app_slug")
   public val appSlug: String,

@@ -2,9 +2,12 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -12,6 +15,7 @@ import kotlinx.serialization.Serializable
 /**
  * A team's access to a repository.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class TeamRepository(
   public val id: Long,
@@ -22,8 +26,10 @@ public data class TeamRepository(
   public val fullName: String,
   public val license: NullableLicenseSimple?,
   public val forks: Long,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val permissions: Permissions? = null,
   @SerialName("role_name")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val roleName: String? = null,
   public val owner: NullableSimpleUser?,
   @Required
@@ -129,7 +135,9 @@ public data class TeamRepository(
   @SerialName("open_issues_count")
   public val openIssuesCount: Long,
   @SerialName("is_template")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val isTemplate: Boolean? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val topics: List<String>? = null,
   @SerialName("has_issues")
   @Required
@@ -148,6 +156,7 @@ public data class TeamRepository(
   @Required
   public val archived: Boolean = false,
   public val disabled: Boolean,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val visibility: String? = null,
   @SerialName("pushed_at")
   public val pushedAt: Instant?,
@@ -156,37 +165,51 @@ public data class TeamRepository(
   @SerialName("updated_at")
   public val updatedAt: Instant?,
   @SerialName("allow_rebase_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowRebaseMerge: Boolean? = null,
   @SerialName("temp_clone_token")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tempCloneToken: String? = null,
   @SerialName("allow_squash_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowSquashMerge: Boolean? = null,
   @SerialName("allow_auto_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowAutoMerge: Boolean? = null,
   @SerialName("delete_branch_on_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val deleteBranchOnMerge: Boolean? = null,
   @SerialName("allow_merge_commit")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowMergeCommit: Boolean? = null,
   @SerialName("allow_forking")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowForking: Boolean? = null,
   @SerialName("web_commit_signoff_required")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val webCommitSignoffRequired: Boolean? = null,
   @SerialName("subscribers_count")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val subscribersCount: Long? = null,
   @SerialName("network_count")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val networkCount: Long? = null,
   @SerialName("open_issues")
   public val openIssues: Long,
   public val watchers: Long,
   @SerialName("master_branch")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val masterBranch: String? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Permissions(
     public val admin: Boolean,
     public val pull: Boolean,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val triage: Boolean? = null,
     public val push: Boolean,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val maintain: Boolean? = null,
   )
 }

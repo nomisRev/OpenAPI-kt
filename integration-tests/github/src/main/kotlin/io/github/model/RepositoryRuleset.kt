@@ -6,6 +6,7 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -22,28 +23,38 @@ import kotlinx.serialization.json.JsonElement
 /**
  * A set of rules to apply when specified conditions are met.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class RepositoryRuleset(
   public val id: Long,
   public val name: String,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val target: Target? = null,
   @SerialName("source_type")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val sourceType: SourceType? = null,
   public val source: String,
   public val enforcement: RepositoryRuleEnforcement,
   @SerialName("bypass_actors")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val bypassActors: List<RepositoryRulesetBypassActor>? = null,
   @SerialName("current_user_can_bypass")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val currentUserCanBypass: CurrentUserCanBypass? = null,
   @SerialName("node_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val nodeId: String? = null,
   @SerialName("_links")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val links: Links? = null,
   public val conditions: Conditions? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val rules: List<RepositoryRule>? = null,
   @SerialName("created_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val createdAt: Instant? = null,
   @SerialName("updated_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val updatedAt: Instant? = null,
 ) {
   @Serializable(with = Conditions.Serializer::class)
@@ -105,20 +116,24 @@ public data class RepositoryRuleset(
     ;
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Links(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val self: Self? = null,
     public val html: Html? = null,
   ) {
-    @JvmInline
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
-    public value class Html(
+    public data class Html(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val href: String? = null,
     )
 
-    @JvmInline
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
-    public value class Self(
+    public data class Self(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val href: String? = null,
     )
   }

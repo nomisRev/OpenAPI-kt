@@ -15,6 +15,8 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Specifies the format that the model must output. Compatible with [GPT-4o](/docs/models#gpt-4o), [GPT-4 Turbo](/docs/models#gpt-4-turbo-and-gpt-4), and all GPT-3.5 Turbo models since `gpt-3.5-turbo-1106`.
@@ -71,13 +73,19 @@ public sealed interface AssistantsApiResponseFormatOption {
     override fun deserialize(decoder: Decoder): AssistantsApiResponseFormatOption {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-        CaseResponseFormatText::class to { CaseResponseFormatText(decodeFromJsonElement(ResponseFormatText.serializer(), it)) },
-        CaseResponseFormatJsonObject::class to { CaseResponseFormatJsonObject(decodeFromJsonElement(ResponseFormatJsonObject.serializer(), it)) },
-        CaseResponseFormatJsonSchema::class to { CaseResponseFormatJsonSchema(decodeFromJsonElement(ResponseFormatJsonSchema.serializer(), it)) },
-      )
+      return when {
+        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+          value,
+          Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+        )
+        value is JsonObject -> json.attemptDeserialize(
+          value,
+          CaseResponseFormatText::class to { CaseResponseFormatText(decodeFromJsonElement(ResponseFormatText.serializer(), it)) },
+          CaseResponseFormatJsonObject::class to { CaseResponseFormatJsonObject(decodeFromJsonElement(ResponseFormatJsonObject.serializer(), it)) },
+          CaseResponseFormatJsonSchema::class to { CaseResponseFormatJsonSchema(decodeFromJsonElement(ResponseFormatJsonSchema.serializer(), it)) },
+        )
+        else -> throw UnionSerializationException(value, emptyMap())
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: AssistantsApiResponseFormatOption) {

@@ -6,12 +6,12 @@ import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.openai.model.CompactResource
 import io.openai.model.CompactResponseMethodPublicBody
 import io.openai.model.CreateResponse
@@ -43,17 +43,25 @@ public class Responses internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend fun json(body: CreateResponse): Response = client.post("/responses") {
-      `header`(HttpHeaders.Accept, ContentType.Application.Json)
-      contentType(ContentType.Application.Json)
-      setBody(body)
-    }.body()
+    public suspend fun json(body: CreateResponse): Response {
+      val response = client.post("responses") {
+        `header`(HttpHeaders.Accept, ContentType.Application.Json)
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
 
-    public suspend fun textEventStream(body: CreateResponse): ResponseStreamEvent = client.post("/responses") {
-      `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
-      contentType(ContentType.Application.Json)
-      setBody(body)
-    }.body()
+    public suspend fun textEventStream(body: CreateResponse): ResponseStreamEvent {
+      val response = client.post("responses") {
+        `header`(HttpHeaders.Accept, ContentType("text", "event-stream"))
+        contentType(ContentType.Application.Json)
+        setBody(body)
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class ResponseIdPath internal constructor(
@@ -73,7 +81,7 @@ public class Responses internal constructor(
       private val responseId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.delete("/responses/$responseId")
+        val response = client.delete("responses/${responseId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok
           404 -> Response.NotFound(response.body())
@@ -99,12 +107,22 @@ public class Responses internal constructor(
         stream: Boolean? = null,
         startingAfter: Long? = null,
         includeObfuscation: Boolean? = null,
-      ): Response = client.get("/responses/$responseId") {
-        include?.let { parameter("include", it) }
-        stream?.let { parameter("stream", it) }
-        startingAfter?.let { parameter("starting_after", it) }
-        includeObfuscation?.let { parameter("include_obfuscation", it) }
-      }.body()
+      ): Response {
+        val response = client.get("responses/${responseId.encodeURLParameter()}") {
+          include?.forEach { url.encodedParameters.append("include", it.value.encodeURLParameter()) }
+          if (stream != null) {
+            url.encodedParameters.append("stream", stream.toString())
+          }
+          if (startingAfter != null) {
+            url.encodedParameters.append("starting_after", startingAfter.toString())
+          }
+          if (includeObfuscation != null) {
+            url.encodedParameters.append("include_obfuscation", includeObfuscation.toString())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Cancel internal constructor(
@@ -118,7 +136,7 @@ public class Responses internal constructor(
         private val responseId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.post("/responses/$responseId/cancel")
+          val response = client.post("responses/${responseId.encodeURLParameter()}/cancel")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             404 -> Response.NotFound(response.body())
@@ -153,12 +171,22 @@ public class Responses internal constructor(
           order: Order? = null,
           after: String? = null,
           include: List<IncludeEnum>? = null,
-        ): ResponseItemList = client.get("/responses/$responseId/input_items") {
-          limit?.let { parameter("limit", it) }
-          order?.let { parameter("order", it.value) }
-          after?.let { parameter("after", it) }
-          include?.let { parameter("include", it) }
-        }.body()
+        ): ResponseItemList {
+          val response = client.get("responses/${responseId.encodeURLParameter()}/input_items") {
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (order != null) {
+              url.encodedParameters.append("order", order.value.encodeURLParameter())
+            }
+            if (after != null) {
+              url.encodedParameters.append("after", after.encodeURLParameter())
+            }
+            include?.forEach { url.encodedParameters.append("include", it.value.encodeURLParameter()) }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Order(
@@ -182,12 +210,16 @@ public class Responses internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: TokenCountsBody? = null): TokenCountsResource = client.post("/responses/input_tokens") {
-        body?.let {
-          contentType(ContentType.Application.Json)
-          setBody(it)
+      public suspend operator fun invoke(body: TokenCountsBody? = null): TokenCountsResource {
+        val response = client.post("responses/input_tokens") {
+          body?.let {
+            contentType(ContentType.Application.Json)
+            setBody(it)
+          }
         }
-      }.body()
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 
@@ -199,12 +231,16 @@ public class Responses internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: CompactResponseMethodPublicBody? = null): CompactResource = client.post("/responses/compact") {
-        body?.let {
-          contentType(ContentType.Application.Json)
-          setBody(it)
+      public suspend operator fun invoke(body: CompactResponseMethodPublicBody? = null): CompactResource {
+        val response = client.post("responses/compact") {
+          body?.let {
+            contentType(ContentType.Application.Json)
+            setBody(it)
+          }
         }
-      }.body()
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 }

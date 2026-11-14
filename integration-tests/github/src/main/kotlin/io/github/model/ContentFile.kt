@@ -1,13 +1,17 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Content File
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class ContentFile(
   public val type: Type,
@@ -26,8 +30,10 @@ public data class ContentFile(
   public val downloadUrl: String?,
   @SerialName("_links")
   public val links: Links,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val target: String? = null,
   @SerialName("submodule_git_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val submoduleGitUrl: String? = null,
 ) {
   @Serializable

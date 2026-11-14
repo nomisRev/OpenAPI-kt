@@ -7,7 +7,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.Boolean
 import kotlin.Long
 import kotlin.String
@@ -38,19 +38,43 @@ public class Issues internal constructor(
       perPage: Long? = 30L,
       page: Long? = 1L,
     ): Response {
-      val response = client.get("/issues") {
-        filter?.let { parameter("filter", it.value) }
-        state?.let { parameter("state", it.value) }
-        labels?.let { parameter("labels", it) }
-        sort?.let { parameter("sort", it.value) }
-        direction?.let { parameter("direction", it.value) }
-        since?.let { parameter("since", it.toString()) }
-        collab?.let { parameter("collab", it) }
-        orgs?.let { parameter("orgs", it) }
-        owned?.let { parameter("owned", it) }
-        pulls?.let { parameter("pulls", it) }
-        perPage?.let { parameter("per_page", it) }
-        page?.let { parameter("page", it) }
+      val response = client.get("issues") {
+        if (filter != null) {
+          url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+        }
+        if (state != null) {
+          url.encodedParameters.append("state", state.value.encodeURLParameter())
+        }
+        if (labels != null) {
+          url.encodedParameters.append("labels", labels.encodeURLParameter())
+        }
+        if (sort != null) {
+          url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+        }
+        if (direction != null) {
+          url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+        }
+        if (since != null) {
+          url.encodedParameters.append("since", since.toString().encodeURLParameter())
+        }
+        if (collab != null) {
+          url.encodedParameters.append("collab", collab.toString())
+        }
+        if (orgs != null) {
+          url.encodedParameters.append("orgs", orgs.toString())
+        }
+        if (owned != null) {
+          url.encodedParameters.append("owned", owned.toString())
+        }
+        if (pulls != null) {
+          url.encodedParameters.append("pulls", pulls.toString())
+        }
+        if (perPage != null) {
+          url.encodedParameters.append("per_page", perPage.toString())
+        }
+        if (page != null) {
+          url.encodedParameters.append("page", page.toString())
+        }
       }
       return when (response.status.value) {
         200 -> Response.Ok(response.body())

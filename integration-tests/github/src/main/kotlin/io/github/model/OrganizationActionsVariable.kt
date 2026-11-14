@@ -1,13 +1,17 @@
 package io.github.model
 
+import kotlin.OptIn
 import kotlin.String
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Organization variable for GitHub Actions.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class OrganizationActionsVariable(
   public val name: String,
@@ -18,6 +22,7 @@ public data class OrganizationActionsVariable(
   public val updatedAt: Instant,
   public val visibility: Visibility,
   @SerialName("selected_repositories_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val selectedRepositoriesUrl: String? = null,
 ) {
   @Serializable

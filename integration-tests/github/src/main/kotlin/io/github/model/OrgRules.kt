@@ -5,7 +5,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -25,15 +25,15 @@ public sealed interface OrgRules {
   /**
    * Only allow users with bypass permission to update matching refs.
    */
-  @JvmInline
   @SerialName("update")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class Update(
+  public data class Update(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
-    @JvmInline
     @Serializable
-    public value class Parameters(
+    public data class Parameters(
       @SerialName("update_allows_fetch_and_merge")
       public val updateAllowsFetchAndMerge: Boolean,
     )
@@ -50,15 +50,15 @@ public sealed interface OrgRules {
   /**
    * Choose which environments must be successfully deployed to before refs can be pushed into a ref that matches this rule.
    */
-  @JvmInline
   @SerialName("required_deployments")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class RequiredDeployments(
+  public data class RequiredDeployments(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
-    @JvmInline
     @Serializable
-    public value class Parameters(
+    public data class Parameters(
       @SerialName("required_deployment_environments")
       public val requiredDeploymentEnvironments: List<String>,
     )
@@ -71,15 +71,18 @@ public sealed interface OrgRules {
   /**
    * Require all commits be made to a non-target branch and submitted via a pull request before they can be merged.
    */
-  @JvmInline
   @SerialName("pull_request")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class PullRequest(
+  public data class PullRequest(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Parameters(
       @SerialName("allowed_merge_methods")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val allowedMergeMethods: List<AllowedMergeMethods>? = null,
       @SerialName("dismiss_stale_reviews_on_push")
       public val dismissStaleReviewsOnPush: Boolean,
@@ -92,6 +95,7 @@ public sealed interface OrgRules {
       @SerialName("required_review_thread_resolution")
       public val requiredReviewThreadResolution: Boolean,
       @SerialName("required_reviewers")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val requiredReviewers: List<RepositoryRuleParamsRequiredReviewerConfiguration>? = null,
     ) {
       @Serializable
@@ -112,15 +116,18 @@ public sealed interface OrgRules {
   /**
    * Choose which status checks must pass before the ref is updated. When enabled, commits must first be pushed to another ref where the checks pass.
    */
-  @JvmInline
   @SerialName("required_status_checks")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class RequiredStatusChecks(
+  public data class RequiredStatusChecks(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Parameters(
       @SerialName("do_not_enforce_on_create")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val doNotEnforceOnCreate: Boolean? = null,
       @SerialName("required_status_checks")
       public val requiredStatusChecks: List<RepositoryRuleParamsStatusCheckConfiguration>,
@@ -136,15 +143,19 @@ public sealed interface OrgRules {
   /**
    * Parameters to be used for the commit_message_pattern rule
    */
-  @JvmInline
   @SerialName("commit_message_pattern")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class CommitMessagePattern(
+  public data class CommitMessagePattern(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Parameters(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val name: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val negate: Boolean? = null,
       public val `operator`: Operator,
       public val pattern: String,
@@ -169,15 +180,19 @@ public sealed interface OrgRules {
   /**
    * Parameters to be used for the commit_author_email_pattern rule
    */
-  @JvmInline
   @SerialName("commit_author_email_pattern")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class CommitAuthorEmailPattern(
+  public data class CommitAuthorEmailPattern(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Parameters(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val name: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val negate: Boolean? = null,
       public val `operator`: Operator,
       public val pattern: String,
@@ -202,15 +217,19 @@ public sealed interface OrgRules {
   /**
    * Parameters to be used for the committer_email_pattern rule
    */
-  @JvmInline
   @SerialName("committer_email_pattern")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class CommitterEmailPattern(
+  public data class CommitterEmailPattern(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Parameters(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val name: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val negate: Boolean? = null,
       public val `operator`: Operator,
       public val pattern: String,
@@ -235,15 +254,19 @@ public sealed interface OrgRules {
   /**
    * Parameters to be used for the branch_name_pattern rule
    */
-  @JvmInline
   @SerialName("branch_name_pattern")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class BranchNamePattern(
+  public data class BranchNamePattern(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Parameters(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val name: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val negate: Boolean? = null,
       public val `operator`: Operator,
       public val pattern: String,
@@ -268,15 +291,19 @@ public sealed interface OrgRules {
   /**
    * Parameters to be used for the tag_name_pattern rule
    */
-  @JvmInline
   @SerialName("tag_name_pattern")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class TagNamePattern(
+  public data class TagNamePattern(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Parameters(
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val name: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val negate: Boolean? = null,
       public val `operator`: Operator,
       public val pattern: String,
@@ -301,15 +328,15 @@ public sealed interface OrgRules {
   /**
    * Prevent commits that include changes in specified file and folder paths from being pushed to the commit graph. This includes absolute paths that contain file names.
    */
-  @JvmInline
   @SerialName("file_path_restriction")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class FilePathRestriction(
+  public data class FilePathRestriction(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
-    @JvmInline
     @Serializable
-    public value class Parameters(
+    public data class Parameters(
       @SerialName("restricted_file_paths")
       public val restrictedFilePaths: List<String>,
     )
@@ -318,15 +345,15 @@ public sealed interface OrgRules {
   /**
    * Prevent commits that include file paths that exceed the specified character limit from being pushed to the commit graph.
    */
-  @JvmInline
   @SerialName("max_file_path_length")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class MaxFilePathLength(
+  public data class MaxFilePathLength(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
-    @JvmInline
     @Serializable
-    public value class Parameters(
+    public data class Parameters(
       @SerialName("max_file_path_length")
       public val maxFilePathLength: Long,
     )
@@ -335,15 +362,15 @@ public sealed interface OrgRules {
   /**
    * Prevent commits that include files with specified file extensions from being pushed to the commit graph.
    */
-  @JvmInline
   @SerialName("file_extension_restriction")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class FileExtensionRestriction(
+  public data class FileExtensionRestriction(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
-    @JvmInline
     @Serializable
-    public value class Parameters(
+    public data class Parameters(
       @SerialName("restricted_file_extensions")
       public val restrictedFileExtensions: List<String>,
     )
@@ -352,15 +379,15 @@ public sealed interface OrgRules {
   /**
    * Prevent commits with individual files that exceed the specified limit from being pushed to the commit graph.
    */
-  @JvmInline
   @SerialName("max_file_size")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class MaxFileSize(
+  public data class MaxFileSize(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
-    @JvmInline
     @Serializable
-    public value class Parameters(
+    public data class Parameters(
       @SerialName("max_file_size")
       public val maxFileSize: Long,
     )
@@ -369,15 +396,18 @@ public sealed interface OrgRules {
   /**
    * Require all changes made to a targeted branch to pass the specified workflows before they can be merged.
    */
-  @JvmInline
   @SerialName("workflows")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class Workflows(
+  public data class Workflows(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Parameters(
       @SerialName("do_not_enforce_on_create")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val doNotEnforceOnCreate: Boolean? = null,
       public val workflows: List<RepositoryRuleParamsWorkflowFileReference>,
     )
@@ -386,15 +416,15 @@ public sealed interface OrgRules {
   /**
    * Choose which tools must provide code scanning results before the reference is updated. When configured, code scanning must be enabled and have results for both the commit and the reference being updated.
    */
-  @JvmInline
   @SerialName("code_scanning")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class CodeScanning(
+  public data class CodeScanning(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
-    @JvmInline
     @Serializable
-    public value class Parameters(
+    public data class Parameters(
       @SerialName("code_scanning_tools")
       public val codeScanningTools: List<RepositoryRuleParamsCodeScanningTool>,
     )
@@ -403,17 +433,21 @@ public sealed interface OrgRules {
   /**
    * Request Copilot code review for new pull requests automatically if the author has access to Copilot code review and their premium requests quota has not reached the limit.
    */
-  @JvmInline
   @SerialName("copilot_code_review")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class CopilotCodeReview(
+  public data class CopilotCodeReview(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: Parameters? = null,
   ) : OrgRules {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Parameters(
       @SerialName("review_draft_pull_requests")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val reviewDraftPullRequests: Boolean? = null,
       @SerialName("review_on_push")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val reviewOnPush: Boolean? = null,
     )
   }

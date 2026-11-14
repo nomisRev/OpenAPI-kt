@@ -1,15 +1,19 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A custom attribute defined at the organization level for attaching structured data to issues.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class IssueField(
   public val id: Long,
@@ -19,11 +23,14 @@ public data class IssueField(
   public val description: String? = null,
   @SerialName("data_type")
   public val dataType: DataType,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val visibility: Visibility? = null,
   public val options: List<Options>? = null,
   @SerialName("created_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val createdAt: Instant? = null,
   @SerialName("updated_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val updatedAt: Instant? = null,
 ) {
   @Serializable
@@ -41,6 +48,7 @@ public data class IssueField(
     ;
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Options(
     public val id: Long,
@@ -49,8 +57,10 @@ public data class IssueField(
     public val color: Color? = null,
     public val priority: Long? = null,
     @SerialName("created_at")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val createdAt: Instant? = null,
     @SerialName("updated_at")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val updatedAt: Instant? = null,
   ) {
     @Serializable

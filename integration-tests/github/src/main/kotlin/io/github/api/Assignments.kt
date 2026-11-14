@@ -8,7 +8,6 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
 import kotlin.Long
 import kotlin.collections.List
 
@@ -32,7 +31,7 @@ public class Assignments internal constructor(
       private val assignmentId: Long,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("/assignments/$assignmentId")
+        val response = client.get("assignments/$assignmentId")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           404 -> Response.NotFound(response.body())
@@ -61,10 +60,18 @@ public class Assignments internal constructor(
         private val client: HttpClient,
         private val assignmentId: Long,
       ) {
-        public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<ClassroomAcceptedAssignment> = client.get("/assignments/$assignmentId/accepted_assignments") {
-          page?.let { parameter("page", it) }
-          perPage?.let { parameter("per_page", it) }
-        }.body()
+        public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<ClassroomAcceptedAssignment> {
+          val response = client.get("assignments/$assignmentId/accepted_assignments") {
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -79,7 +86,7 @@ public class Assignments internal constructor(
         private val assignmentId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("/assignments/$assignmentId/grades")
+          val response = client.get("assignments/$assignmentId/grades")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             404 -> Response.NotFound(response.body())

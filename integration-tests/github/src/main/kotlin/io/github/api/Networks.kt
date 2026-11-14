@@ -6,7 +6,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
-import io.ktor.client.request.parameter
+import io.ktor.http.encodeURLParameter
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
@@ -42,9 +42,13 @@ public class Networks internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("/networks/$owner/$repo/events") {
-              perPage?.let { parameter("per_page", it) }
-              page?.let { parameter("page", it) }
+            val response = client.get("networks/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/events") {
+              if (perPage != null) {
+                url.encodedParameters.append("per_page", perPage.toString())
+              }
+              if (page != null) {
+                url.encodedParameters.append("page", page.toString())
+              }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())

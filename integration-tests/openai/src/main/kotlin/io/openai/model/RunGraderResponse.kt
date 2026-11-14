@@ -4,21 +4,19 @@ import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
 import kotlin.String
-import kotlinx.serialization.Required
+import kotlin.collections.Map
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 
 @Serializable
 public data class RunGraderResponse(
   public val reward: Double,
   public val metadata: Metadata,
   @SerialName("sub_rewards")
-  @Required
-  public val subRewards: JsonArray = JsonArray(emptyList()),
+  public val subRewards: Map<String, JsonElement>,
   @SerialName("model_grader_token_usage_per_model")
-  @Required
-  public val modelGraderTokenUsagePerModel: JsonArray = JsonArray(emptyList()),
+  public val modelGraderTokenUsagePerModel: Map<String, JsonElement>,
 ) {
   @Serializable
   public data class Metadata(
@@ -27,8 +25,7 @@ public data class RunGraderResponse(
     public val errors: Errors,
     @SerialName("execution_time")
     public val executionTime: Double,
-    @Required
-    public val scores: JsonArray = JsonArray(emptyList()),
+    public val scores: Map<String, JsonElement>,
     @SerialName("token_usage")
     public val tokenUsage: Long?,
     @SerialName("sampled_model_name")

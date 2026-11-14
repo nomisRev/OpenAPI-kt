@@ -5,6 +5,7 @@ import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -21,6 +22,7 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Information about a Copilot Business seat assignment for a user, team, or organization.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CopilotSeatDetails(
   public val assignee: NullableSimpleUser? = null,
@@ -38,8 +40,10 @@ public data class CopilotSeatDetails(
   @SerialName("created_at")
   public val createdAt: Instant,
   @SerialName("updated_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val updatedAt: Instant? = null,
   @SerialName("plan_type")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val planType: PlanType? = null,
 ) {
   /**

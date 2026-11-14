@@ -2,17 +2,19 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.`header`
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.HttpHeaders
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
+import io.ktor.serialization.JsonConvertException
 import io.openai.model.CreateVideoBody
 import io.openai.model.CreateVideoRemixBody
 import io.openai.model.DeletedVideoResource
@@ -28,6 +30,7 @@ import kotlin.ByteArray
 import kotlin.Long
 import kotlin.String
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonPrimitive
 
 public class Videos internal constructor(
   private val client: HttpClient,
@@ -45,16 +48,32 @@ public class Videos internal constructor(
       limit: Long? = null,
       order: OrderEnum? = null,
       after: String? = null,
-    ): VideoListResource = client.get("/videos") {
-      limit?.let { parameter("limit", it) }
-      order?.let { parameter("order", it.value) }
-      after?.let { parameter("after", it) }
-    }.body()
+    ): VideoListResource {
+      val response = client.get("videos") {
+        if (limit != null) {
+          url.encodedParameters.append("limit", limit.toString())
+        }
+        if (order != null) {
+          url.encodedParameters.append("order", order.value.encodeURLParameter())
+        }
+        if (after != null) {
+          url.encodedParameters.append("after", after.encodeURLParameter())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
+    public suspend operator fun invoke(): VideoResource {
+      val response = client.post("videos")
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
+
     public suspend operator fun invoke(
       model: VideoModel? = null,
       prompt: String,
@@ -62,33 +81,41 @@ public class Videos internal constructor(
       imageReference: ImageRefParam2? = null,
       seconds: VideoSeconds? = null,
       size: VideoSize? = null,
-    ): VideoResource = client.post("/videos") {
-      setBody(MultiPartFormDataContent(formData {
-        if (model != null) {
-          append("model", Json.encodeToString(model))
-        }
-        append("prompt", prompt)
-        if (inputReference != null) {
-          append("input_reference", inputReference)
-        }
-        if (imageReference != null) {
-          append("image_reference", Json.encodeToString(imageReference))
-        }
-        if (seconds != null) {
-          append("seconds", Json.encodeToString(seconds))
-        }
-        if (size != null) {
-          append("size", Json.encodeToString(size))
-        }
-      }))
-    }.body()
-
-    public suspend operator fun invoke(body: CreateVideoBody? = null): VideoResource = client.post("/videos") {
-      body?.let {
-        contentType(ContentType.Application.Json)
-        setBody(it)
+    ): VideoResource {
+      val response = client.post("videos") {
+        setBody(MultiPartFormDataContent(formData {
+          if (model != null) {
+            append("model", Json.encodeToString(model))
+          }
+          append("prompt", prompt)
+          if (inputReference != null) {
+            append("input_reference", inputReference)
+          }
+          if (imageReference != null) {
+            append("image_reference", Json.encodeToString(imageReference))
+          }
+          if (seconds != null) {
+            append("seconds", Json.encodeToString(seconds))
+          }
+          if (size != null) {
+            append("size", Json.encodeToString(size))
+          }
+        }))
       }
-    }.body()
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
+
+    public suspend operator fun invoke(body: CreateVideoBody? = null): VideoResource {
+      val response = client.post("videos") {
+        body?.let {
+          contentType(ContentType.Application.Json)
+          setBody(it)
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class VideoIdPath internal constructor(
@@ -107,14 +134,22 @@ public class Videos internal constructor(
       private val client: HttpClient,
       private val videoId: String,
     ) {
-      public suspend operator fun invoke(): DeletedVideoResource = client.delete("/videos/$videoId").body()
+      public suspend operator fun invoke(): DeletedVideoResource {
+        val response = client.delete("videos/${videoId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Get internal constructor(
       private val client: HttpClient,
       private val videoId: String,
     ) {
-      public suspend operator fun invoke(): VideoResource = client.get("/videos/$videoId").body()
+      public suspend operator fun invoke(): VideoResource {
+        val response = client.get("videos/${videoId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Content internal constructor(
@@ -127,20 +162,38 @@ public class Videos internal constructor(
         private val client: HttpClient,
         private val videoId: String,
       ) {
-        public suspend fun videoMp4(variant: VideoContentVariant? = null): ByteArray = client.get("/videos/$videoId/content") {
-          `header`(HttpHeaders.Accept, ContentType("video", "mp4"))
-          variant?.let { parameter("variant", it.value) }
-        }.body()
+        public suspend fun videoMp4(variant: VideoContentVariant? = null): ByteArray {
+          val response = client.get("videos/${videoId.encodeURLParameter()}/content") {
+            `header`(HttpHeaders.Accept, ContentType("video", "mp4"))
+            if (variant != null) {
+              url.encodedParameters.append("variant", variant.value.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
-        public suspend fun imageWebp(variant: VideoContentVariant? = null): ByteArray = client.get("/videos/$videoId/content") {
-          `header`(HttpHeaders.Accept, ContentType("image", "webp"))
-          variant?.let { parameter("variant", it.value) }
-        }.body()
+        public suspend fun imageWebp(variant: VideoContentVariant? = null): ByteArray {
+          val response = client.get("videos/${videoId.encodeURLParameter()}/content") {
+            `header`(HttpHeaders.Accept, ContentType("image", "webp"))
+            if (variant != null) {
+              url.encodedParameters.append("variant", variant.value.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
-        public suspend fun json(variant: VideoContentVariant? = null): String = client.get("/videos/$videoId/content") {
-          `header`(HttpHeaders.Accept, ContentType.Application.Json)
-          variant?.let { parameter("variant", it.value) }
-        }.body()
+        public suspend fun json(variant: VideoContentVariant? = null): String {
+          val response = client.get("videos/${videoId.encodeURLParameter()}/content") {
+            `header`(HttpHeaders.Accept, ContentType.Application.Json)
+            if (variant != null) {
+              url.encodedParameters.append("variant", variant.value.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
+        }
       }
     }
 
@@ -154,18 +207,32 @@ public class Videos internal constructor(
         private val client: HttpClient,
         private val videoId: String,
       ) {
-        public suspend operator fun invoke(prompt: String): VideoResource = client.post("/videos/$videoId/remix") {
-          setBody(MultiPartFormDataContent(formData {
-            append("prompt", prompt)
-          }))
-        }.body()
+        public suspend operator fun invoke(): VideoResource {
+          val response = client.post("videos/${videoId.encodeURLParameter()}/remix")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
-        public suspend operator fun invoke(body: CreateVideoRemixBody? = null): VideoResource = client.post("/videos/$videoId/remix") {
-          body?.let {
-            contentType(ContentType.Application.Json)
-            setBody(it)
+        public suspend operator fun invoke(prompt: String): VideoResource {
+          val response = client.post("videos/${videoId.encodeURLParameter()}/remix") {
+            setBody(MultiPartFormDataContent(formData {
+              append("prompt", prompt)
+            }))
           }
-        }.body()
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
+
+        public suspend operator fun invoke(body: CreateVideoRemixBody? = null): VideoResource {
+          val response = client.post("videos/${videoId.encodeURLParameter()}/remix") {
+            body?.let {
+              contentType(ContentType.Application.Json)
+              setBody(it)
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
   }

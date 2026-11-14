@@ -1,8 +1,11 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,6 +13,7 @@ import kotlinx.serialization.Serializable
 /**
  * The status of a deployment.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class DeploymentStatus(
   public val url: String,
@@ -20,6 +24,7 @@ public data class DeploymentStatus(
   public val creator: NullableSimpleUser?,
   @Required
   public val description: String = "",
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val environment: String? = null,
   @SerialName("target_url")
   @Required
@@ -33,8 +38,10 @@ public data class DeploymentStatus(
   @SerialName("repository_url")
   public val repositoryUrl: String,
   @SerialName("environment_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val environmentUrl: String? = null,
   @SerialName("log_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val logUrl: String? = null,
   @SerialName("performed_via_github_app")
   public val performedViaGithubApp: NullableIntegration? = null,

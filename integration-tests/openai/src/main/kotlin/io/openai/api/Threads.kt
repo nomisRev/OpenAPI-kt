@@ -2,13 +2,14 @@ package io.openai.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.openai.model.CreateMessageRequest
 import io.openai.model.CreateRunRequest
 import io.openai.model.CreateThreadAndRunRequest
@@ -44,12 +45,16 @@ public class Threads internal constructor(
   public class Post internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(body: CreateThreadRequest? = null): ThreadObject = client.post("/threads") {
-      body?.let {
-        contentType(ContentType.Application.Json)
-        setBody(it)
+    public suspend operator fun invoke(body: CreateThreadRequest? = null): ThreadObject {
+      val response = client.post("threads") {
+        body?.let {
+          contentType(ContentType.Application.Json)
+          setBody(it)
+        }
       }
-    }.body()
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class Runs internal constructor(
@@ -60,10 +65,14 @@ public class Threads internal constructor(
     public class Post internal constructor(
       private val client: HttpClient,
     ) {
-      public suspend operator fun invoke(body: CreateThreadAndRunRequest): RunObject = client.post("/threads/runs") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: CreateThreadAndRunRequest): RunObject {
+        val response = client.post("threads/runs") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
   }
 
@@ -85,24 +94,36 @@ public class Threads internal constructor(
       private val client: HttpClient,
       private val threadId: String,
     ) {
-      public suspend operator fun invoke(): DeleteThreadResponse = client.delete("/threads/$threadId").body()
+      public suspend operator fun invoke(): DeleteThreadResponse {
+        val response = client.delete("threads/${threadId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Get internal constructor(
       private val client: HttpClient,
       private val threadId: String,
     ) {
-      public suspend operator fun invoke(): ThreadObject = client.get("/threads/$threadId").body()
+      public suspend operator fun invoke(): ThreadObject {
+        val response = client.get("threads/${threadId.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Post internal constructor(
       private val client: HttpClient,
       private val threadId: String,
     ) {
-      public suspend operator fun invoke(body: ModifyThreadRequest): ThreadObject = client.post("/threads/$threadId") {
-        contentType(ContentType.Application.Json)
-        setBody(body)
-      }.body()
+      public suspend operator fun invoke(body: ModifyThreadRequest): ThreadObject {
+        val response = client.post("threads/${threadId.encodeURLParameter()}") {
+          contentType(ContentType.Application.Json)
+          setBody(body)
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Messages internal constructor(
@@ -125,13 +146,27 @@ public class Threads internal constructor(
           after: String? = null,
           before: String? = null,
           runId: String? = null,
-        ): ListMessagesResponse = client.get("/threads/$threadId/messages") {
-          limit?.let { parameter("limit", it) }
-          order?.let { parameter("order", it.value) }
-          after?.let { parameter("after", it) }
-          before?.let { parameter("before", it) }
-          runId?.let { parameter("run_id", it) }
-        }.body()
+        ): ListMessagesResponse {
+          val response = client.get("threads/${threadId.encodeURLParameter()}/messages") {
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (order != null) {
+              url.encodedParameters.append("order", order.value.encodeURLParameter())
+            }
+            if (after != null) {
+              url.encodedParameters.append("after", after.encodeURLParameter())
+            }
+            if (before != null) {
+              url.encodedParameters.append("before", before.encodeURLParameter())
+            }
+            if (runId != null) {
+              url.encodedParameters.append("run_id", runId.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Order(
@@ -149,10 +184,14 @@ public class Threads internal constructor(
         private val client: HttpClient,
         private val threadId: String,
       ) {
-        public suspend operator fun invoke(body: CreateMessageRequest): MessageObject = client.post("/threads/$threadId/messages") {
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
+        public suspend operator fun invoke(body: CreateMessageRequest): MessageObject {
+          val response = client.post("threads/${threadId.encodeURLParameter()}/messages") {
+            contentType(ContentType.Application.Json)
+            setBody(body)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class MessageIdPath internal constructor(
@@ -171,7 +210,11 @@ public class Threads internal constructor(
           private val threadId: String,
           private val messageId: String,
         ) {
-          public suspend operator fun invoke(): DeleteMessageResponse = client.delete("/threads/$threadId/messages/$messageId").body()
+          public suspend operator fun invoke(): DeleteMessageResponse {
+            val response = client.delete("threads/${threadId.encodeURLParameter()}/messages/${messageId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Get internal constructor(
@@ -179,7 +222,11 @@ public class Threads internal constructor(
           private val threadId: String,
           private val messageId: String,
         ) {
-          public suspend operator fun invoke(): MessageObject = client.get("/threads/$threadId/messages/$messageId").body()
+          public suspend operator fun invoke(): MessageObject {
+            val response = client.get("threads/${threadId.encodeURLParameter()}/messages/${messageId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Post internal constructor(
@@ -187,10 +234,14 @@ public class Threads internal constructor(
           private val threadId: String,
           private val messageId: String,
         ) {
-          public suspend operator fun invoke(body: ModifyMessageRequest): MessageObject = client.post("/threads/$threadId/messages/$messageId") {
-            contentType(ContentType.Application.Json)
-            setBody(body)
-          }.body()
+          public suspend operator fun invoke(body: ModifyMessageRequest): MessageObject {
+            val response = client.post("threads/${threadId.encodeURLParameter()}/messages/${messageId.encodeURLParameter()}") {
+              contentType(ContentType.Application.Json)
+              setBody(body)
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }
@@ -214,12 +265,24 @@ public class Threads internal constructor(
           order: Order? = Order.Desc,
           after: String? = null,
           before: String? = null,
-        ): ListRunsResponse = client.get("/threads/$threadId/runs") {
-          limit?.let { parameter("limit", it) }
-          order?.let { parameter("order", it.value) }
-          after?.let { parameter("after", it) }
-          before?.let { parameter("before", it) }
-        }.body()
+        ): ListRunsResponse {
+          val response = client.get("threads/${threadId.encodeURLParameter()}/runs") {
+            if (limit != null) {
+              url.encodedParameters.append("limit", limit.toString())
+            }
+            if (order != null) {
+              url.encodedParameters.append("order", order.value.encodeURLParameter())
+            }
+            if (after != null) {
+              url.encodedParameters.append("after", after.encodeURLParameter())
+            }
+            if (before != null) {
+              url.encodedParameters.append("before", before.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Order(
@@ -237,11 +300,15 @@ public class Threads internal constructor(
         private val client: HttpClient,
         private val threadId: String,
       ) {
-        public suspend operator fun invoke(body: CreateRunRequest, include: List<Include>? = null): RunObject = client.post("/threads/$threadId/runs") {
-          include?.let { parameter("include[]", it) }
-          contentType(ContentType.Application.Json)
-          setBody(body)
-        }.body()
+        public suspend operator fun invoke(body: CreateRunRequest, include: List<Include>? = null): RunObject {
+          val response = client.post("threads/${threadId.encodeURLParameter()}/runs") {
+            include?.forEach { url.encodedParameters.append("include%5B%5D", it.value.encodeURLParameter()) }
+            contentType(ContentType.Application.Json)
+            setBody(body)
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
         @Serializable
         public enum class Include(
@@ -273,7 +340,11 @@ public class Threads internal constructor(
           private val threadId: String,
           private val runId: String,
         ) {
-          public suspend operator fun invoke(): RunObject = client.get("/threads/$threadId/runs/$runId").body()
+          public suspend operator fun invoke(): RunObject {
+            val response = client.get("threads/${threadId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Post internal constructor(
@@ -281,10 +352,14 @@ public class Threads internal constructor(
           private val threadId: String,
           private val runId: String,
         ) {
-          public suspend operator fun invoke(body: ModifyRunRequest): RunObject = client.post("/threads/$threadId/runs/$runId") {
-            contentType(ContentType.Application.Json)
-            setBody(body)
-          }.body()
+          public suspend operator fun invoke(body: ModifyRunRequest): RunObject {
+            val response = client.post("threads/${threadId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}") {
+              contentType(ContentType.Application.Json)
+              setBody(body)
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Cancel internal constructor(
@@ -299,7 +374,11 @@ public class Threads internal constructor(
             private val threadId: String,
             private val runId: String,
           ) {
-            public suspend operator fun invoke(): RunObject = client.post("/threads/$threadId/runs/$runId/cancel").body()
+            public suspend operator fun invoke(): RunObject {
+              val response = client.post("threads/${threadId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}/cancel")
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
 
@@ -323,13 +402,25 @@ public class Threads internal constructor(
               after: String? = null,
               before: String? = null,
               include: List<Include>? = null,
-            ): ListRunStepsResponse = client.get("/threads/$threadId/runs/$runId/steps") {
-              limit?.let { parameter("limit", it) }
-              order?.let { parameter("order", it.value) }
-              after?.let { parameter("after", it) }
-              before?.let { parameter("before", it) }
-              include?.let { parameter("include[]", it) }
-            }.body()
+            ): ListRunStepsResponse {
+              val response = client.get("threads/${threadId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}/steps") {
+                if (limit != null) {
+                  url.encodedParameters.append("limit", limit.toString())
+                }
+                if (order != null) {
+                  url.encodedParameters.append("order", order.value.encodeURLParameter())
+                }
+                if (after != null) {
+                  url.encodedParameters.append("after", after.encodeURLParameter())
+                }
+                if (before != null) {
+                  url.encodedParameters.append("before", before.encodeURLParameter())
+                }
+                include?.forEach { url.encodedParameters.append("include%5B%5D", it.value.encodeURLParameter()) }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
 
             @Serializable
             public enum class Order(
@@ -366,9 +457,13 @@ public class Threads internal constructor(
               private val runId: String,
               private val stepId: String,
             ) {
-              public suspend operator fun invoke(include: List<Include>? = null): RunStepObject = client.get("/threads/$threadId/runs/$runId/steps/$stepId") {
-                include?.let { parameter("include[]", it) }
-              }.body()
+              public suspend operator fun invoke(include: List<Include>? = null): RunStepObject {
+                val response = client.get("threads/${threadId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}/steps/${stepId.encodeURLParameter()}") {
+                  include?.forEach { url.encodedParameters.append("include%5B%5D", it.value.encodeURLParameter()) }
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
 
               @Serializable
               public enum class Include(
@@ -394,10 +489,14 @@ public class Threads internal constructor(
             private val threadId: String,
             private val runId: String,
           ) {
-            public suspend operator fun invoke(body: SubmitToolOutputsRunRequest): RunObject = client.post("/threads/$threadId/runs/$runId/submit_tool_outputs") {
-              contentType(ContentType.Application.Json)
-              setBody(body)
-            }.body()
+            public suspend operator fun invoke(body: SubmitToolOutputsRunRequest): RunObject {
+              val response = client.post("threads/${threadId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}/submit_tool_outputs") {
+                contentType(ContentType.Application.Json)
+                setBody(body)
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }

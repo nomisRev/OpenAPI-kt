@@ -1,17 +1,22 @@
 package io.github.model
 
 import kotlin.Boolean
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Timeline Committed Event
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class TimelineCommittedEvent(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val event: String? = null,
   public val sha: String,
   @SerialName("node_id")

@@ -9,15 +9,16 @@ import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.nullable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.PolymorphicKind
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Not supported with latest reasoning models `o3` and `o4-mini`.
@@ -31,7 +32,7 @@ public sealed interface StopConfiguration {
   @Serializable
   @JvmInline
   public value class CaseString(
-    public val `value`: String?,
+    public val `value`: String,
   ) : StopConfiguration
 
   @Serializable
@@ -47,23 +48,29 @@ public sealed interface StopConfiguration {
     )
     override val descriptor: SerialDescriptor =
         buildSerialDescriptor("io.openai.model.StopConfiguration", PolymorphicKind.SEALED) {
-      element("CaseString", String.serializer().nullable.descriptor)
+      element("CaseString", String.serializer().descriptor)
       element("CaseStrings", ListSerializer(String.serializer()).descriptor)
     }
 
     override fun deserialize(decoder: Decoder): StopConfiguration {
       val value = decoder.decodeSerializableValue(JsonElement.serializer())
       val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-      return json.attemptDeserialize(
-        value,
-        CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
-        CaseString::class to { CaseString(decodeFromJsonElement(String.serializer().nullable, it)) },
-      )
+      return when {
+        value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+          value,
+          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+        )
+        value is JsonArray -> json.attemptDeserialize(
+          value,
+          CaseStrings::class to { CaseStrings(decodeFromJsonElement(ListSerializer(String.serializer()), it)) },
+        )
+        else -> throw UnionSerializationException(value, emptyMap())
+      }
     }
 
     override fun serialize(encoder: Encoder, `value`: StopConfiguration) {
       when(value) {
-        is CaseString -> encoder.encodeSerializableValue(String.serializer().nullable, value.value)
+        is CaseString -> encoder.encodeSerializableValue(String.serializer(), value.value)
         is CaseStrings -> encoder.encodeSerializableValue(ListSerializer(String.serializer()), value.value)
       }
     }

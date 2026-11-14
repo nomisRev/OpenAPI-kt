@@ -3,15 +3,19 @@ package io.github.model
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Repo Search Result Item
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class RepoSearchResultItem(
   public val id: Long,
@@ -45,6 +49,7 @@ public data class RepoSearchResultItem(
   @SerialName("open_issues_count")
   public val openIssuesCount: Long,
   @SerialName("master_branch")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val masterBranch: String? = null,
   @SerialName("default_branch")
   public val defaultBranch: String,
@@ -133,6 +138,7 @@ public data class RepoSearchResultItem(
   @SerialName("open_issues")
   public val openIssues: Long,
   public val watchers: Long,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val topics: List<String>? = null,
   @SerialName("mirror_url")
   public val mirrorUrl: String?,
@@ -147,44 +153,63 @@ public data class RepoSearchResultItem(
   @SerialName("has_downloads")
   public val hasDownloads: Boolean,
   @SerialName("has_discussions")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasDiscussions: Boolean? = null,
   @SerialName("has_pull_requests")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasPullRequests: Boolean? = null,
   @SerialName("pull_request_creation_policy")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val pullRequestCreationPolicy: PullRequestCreationPolicy? = null,
   @SerialName("has_commit_comments")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hasCommitComments: Boolean? = null,
   public val archived: Boolean,
   public val disabled: Boolean,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val visibility: String? = null,
   public val license: NullableLicenseSimple?,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val permissions: Permissions? = null,
   @SerialName("text_matches")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val textMatches: SearchResultTextMatches? = null,
   @SerialName("temp_clone_token")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tempCloneToken: String? = null,
   @SerialName("allow_merge_commit")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowMergeCommit: Boolean? = null,
   @SerialName("allow_squash_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowSquashMerge: Boolean? = null,
   @SerialName("allow_rebase_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowRebaseMerge: Boolean? = null,
   @SerialName("allow_auto_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowAutoMerge: Boolean? = null,
   @SerialName("delete_branch_on_merge")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val deleteBranchOnMerge: Boolean? = null,
   @SerialName("allow_forking")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val allowForking: Boolean? = null,
   @SerialName("is_template")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val isTemplate: Boolean? = null,
   @SerialName("web_commit_signoff_required")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val webCommitSignoffRequired: Boolean? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Permissions(
     public val admin: Boolean,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val maintain: Boolean? = null,
     public val push: Boolean,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val triage: Boolean? = null,
     public val pull: Boolean,
   )

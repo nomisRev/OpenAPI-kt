@@ -7,6 +7,7 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -34,20 +35,29 @@ public data class PendingDeployment(
   public val currentUserCanApprove: Boolean,
   public val reviewers: List<Reviewers>,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Environment(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val id: Long? = null,
     @SerialName("node_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val nodeId: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val url: String? = null,
     @SerialName("html_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val htmlUrl: String? = null,
   )
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Reviewers(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: DeploymentReviewerType? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val reviewer: Reviewer? = null,
   ) {
     @Serializable(with = Reviewer.Serializer::class)

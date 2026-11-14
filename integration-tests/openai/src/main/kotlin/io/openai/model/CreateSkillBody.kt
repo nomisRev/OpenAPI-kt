@@ -21,9 +21,8 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Uploads a skill either as a directory (multipart `files[]`) or as a single zip file.
  */
-@JvmInline
 @Serializable
-public value class CreateSkillBody(
+public data class CreateSkillBody(
   public val files: Files,
 ) {
   @Serializable(with = Files.Serializer::class)

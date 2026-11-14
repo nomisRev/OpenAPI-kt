@@ -2,15 +2,19 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A release.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Release(
   public val url: String,
@@ -35,6 +39,7 @@ public data class Release(
   public val body: String? = null,
   public val draft: Boolean,
   public val prerelease: Boolean,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val immutable: Boolean? = null,
   @SerialName("created_at")
   public val createdAt: Instant,
@@ -45,12 +50,17 @@ public data class Release(
   public val author: SimpleUser,
   public val assets: List<ReleaseAsset>,
   @SerialName("body_html")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val bodyHtml: String? = null,
   @SerialName("body_text")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val bodyText: String? = null,
   @SerialName("mentions_count")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val mentionsCount: Long? = null,
   @SerialName("discussion_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val discussionUrl: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val reactions: ReactionRollup? = null,
 )

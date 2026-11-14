@@ -2,6 +2,7 @@ package io.github.model
 
 import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.KeepGeneratedSerializer
@@ -27,13 +28,17 @@ public data class CopilotOrganizationDetails(
   @SerialName("public_code_suggestions")
   public val publicCodeSuggestions: PublicCodeSuggestions,
   @SerialName("ide_chat")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val ideChat: IdeChat? = null,
   @SerialName("platform_chat")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val platformChat: PlatformChat? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val cli: Cli? = null,
   @SerialName("seat_management_setting")
   public val seatManagementSetting: SeatManagementSetting,
   @SerialName("plan_type")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val planType: PlanType? = null,
   public val additional: JsonObject? = null,
 ) {

@@ -1,7 +1,6 @@
 package io.openai.model
 
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -13,9 +12,8 @@ public data class ChatCompletionNamedToolChoiceCustom(
   public val type: Type,
   public val custom: Custom,
 ) {
-  @JvmInline
   @Serializable
-  public value class Custom(
+  public data class Custom(
     public val name: String,
   )
 

@@ -2,15 +2,16 @@ package io.youtrack.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
 import io.ktor.client.request.forms.MultiPartFormDataContent
 import io.ktor.client.request.forms.formData
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.youtrack.model.ActivityCursorPage
 import io.youtrack.model.ActivityItem
 import io.youtrack.model.BaseWorkItemRead
@@ -56,13 +57,27 @@ public class Issues internal constructor(
       fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
       skip: Int? = null,
       top: Int? = null,
-    ): List<IssueRead> = client.get("/issues") {
-      query?.let { parameter("query", it) }
-      customFields?.let { parameter("customFields", it) }
-      fields?.let { parameter("fields", it) }
-      skip?.let { parameter("${'$'}skip", it) }
-      top?.let { parameter("${'$'}top", it) }
-    }.body()
+    ): List<IssueRead> {
+      val response = client.get("issues") {
+        if (query != null) {
+          url.encodedParameters.append("query", query.encodeURLParameter())
+        }
+        if (customFields != null) {
+          url.encodedParameters.append("customFields", customFields.encodeURLParameter())
+        }
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        if (skip != null) {
+          url.encodedParameters.append("%24skip", skip.toString())
+        }
+        if (top != null) {
+          url.encodedParameters.append("%24top", top.toString())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class Post internal constructor(
@@ -73,15 +88,25 @@ public class Issues internal constructor(
       muteUpdateNotifications: Boolean? = null,
       fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
       body: IssueWrite? = null,
-    ): IssueRead = client.post("/issues") {
-      draftId?.let { parameter("draftId", it) }
-      muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-      fields?.let { parameter("fields", it) }
-      body?.let {
-        contentType(ContentType.Application.Json)
-        setBody(it)
+    ): IssueRead {
+      val response = client.post("issues") {
+        if (draftId != null) {
+          url.encodedParameters.append("draftId", draftId.encodeURLParameter())
+        }
+        if (muteUpdateNotifications != null) {
+          url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+        }
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        body?.let {
+          contentType(ContentType.Application.Json)
+          setBody(it)
+        }
       }
-    }.body()
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class IdPath internal constructor(
@@ -121,7 +146,8 @@ public class Issues internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        client.delete("/issues/$id")
+        val response = client.delete("issues/${id.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
 
@@ -129,9 +155,15 @@ public class Issues internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))"): IssueRead = client.get("/issues/$id") {
-        fields?.let { parameter("fields", it) }
-      }.body()
+      public suspend operator fun invoke(fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))"): IssueRead {
+        val response = client.get("issues/${id.encodeURLParameter()}") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Post internal constructor(
@@ -142,14 +174,22 @@ public class Issues internal constructor(
         muteUpdateNotifications: Boolean? = null,
         fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
         body: IssueWrite? = null,
-      ): IssueRead = client.post("/issues/$id") {
-        muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-        fields?.let { parameter("fields", it) }
-        body?.let {
-          contentType(ContentType.Application.Json)
-          setBody(it)
+      ): IssueRead {
+        val response = client.post("issues/${id.encodeURLParameter()}") {
+          if (muteUpdateNotifications != null) {
+            url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+          }
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+          body?.let {
+            contentType(ContentType.Application.Json)
+            setBody(it)
+          }
         }
-      }.body()
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Activities internal constructor(
@@ -173,16 +213,36 @@ public class Issues internal constructor(
           fields: String? = "${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp",
           skip: Int? = null,
           top: Int? = null,
-        ): List<ActivityItem> = client.get("/issues/$id/activities") {
-          categories?.let { parameter("categories", it) }
-          reverse?.let { parameter("reverse", it) }
-          start?.let { parameter("start", it) }
-          end?.let { parameter("end", it) }
-          author?.let { parameter("author", it) }
-          fields?.let { parameter("fields", it) }
-          skip?.let { parameter("${'$'}skip", it) }
-          top?.let { parameter("${'$'}top", it) }
-        }.body()
+        ): List<ActivityItem> {
+          val response = client.get("issues/${id.encodeURLParameter()}/activities") {
+            if (categories != null) {
+              url.encodedParameters.append("categories", categories.encodeURLParameter())
+            }
+            if (reverse != null) {
+              url.encodedParameters.append("reverse", reverse.toString())
+            }
+            if (start != null) {
+              url.encodedParameters.append("start", start.encodeURLParameter())
+            }
+            if (end != null) {
+              url.encodedParameters.append("end", end.encodeURLParameter())
+            }
+            if (author != null) {
+              url.encodedParameters.append("author", author.encodeURLParameter())
+            }
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            if (skip != null) {
+              url.encodedParameters.append("%24skip", skip.toString())
+            }
+            if (top != null) {
+              url.encodedParameters.append("%24top", top.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class ActivityItemIdPath internal constructor(
@@ -197,9 +257,15 @@ public class Issues internal constructor(
           private val id: String,
           private val activityItemId: String,
         ) {
-          public suspend operator fun invoke(fields: String? = "${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp"): ActivityItem = client.get("/issues/$id/activities/$activityItemId") {
-            fields?.let { parameter("fields", it) }
-          }.body()
+          public suspend operator fun invoke(fields: String? = "${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp"): ActivityItem {
+            val response = client.get("issues/${id.encodeURLParameter()}/activities/${activityItemId.encodeURLParameter()}") {
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }
@@ -223,16 +289,36 @@ public class Issues internal constructor(
           cursor: String? = null,
           activityId: String? = null,
           fields: String? = "${'$'}type,activities(${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp),afterCursor,beforeCursor,hasAfter,hasBefore,id",
-        ): ActivityCursorPage = client.get("/issues/$id/activitiesPage") {
-          categories?.let { parameter("categories", it) }
-          reverse?.let { parameter("reverse", it) }
-          start?.let { parameter("start", it) }
-          end?.let { parameter("end", it) }
-          author?.let { parameter("author", it) }
-          cursor?.let { parameter("cursor", it) }
-          activityId?.let { parameter("activityId", it) }
-          fields?.let { parameter("fields", it) }
-        }.body()
+        ): ActivityCursorPage {
+          val response = client.get("issues/${id.encodeURLParameter()}/activitiesPage") {
+            if (categories != null) {
+              url.encodedParameters.append("categories", categories.encodeURLParameter())
+            }
+            if (reverse != null) {
+              url.encodedParameters.append("reverse", reverse.toString())
+            }
+            if (start != null) {
+              url.encodedParameters.append("start", start.encodeURLParameter())
+            }
+            if (end != null) {
+              url.encodedParameters.append("end", end.encodeURLParameter())
+            }
+            if (author != null) {
+              url.encodedParameters.append("author", author.encodeURLParameter())
+            }
+            if (cursor != null) {
+              url.encodedParameters.append("cursor", cursor.encodeURLParameter())
+            }
+            if (activityId != null) {
+              url.encodedParameters.append("activityId", activityId.encodeURLParameter())
+            }
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -254,30 +340,61 @@ public class Issues internal constructor(
           fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url",
           skip: Int? = null,
           top: Int? = null,
-        ): List<IssueAttachmentRead> = client.get("/issues/$id/attachments") {
-          fields?.let { parameter("fields", it) }
-          skip?.let { parameter("${'$'}skip", it) }
-          top?.let { parameter("${'$'}top", it) }
-        }.body()
+        ): List<IssueAttachmentRead> {
+          val response = client.get("issues/${id.encodeURLParameter()}/attachments") {
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            if (skip != null) {
+              url.encodedParameters.append("%24skip", skip.toString())
+            }
+            if (top != null) {
+              url.encodedParameters.append("%24top", top.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Post internal constructor(
         private val client: HttpClient,
         private val id: String,
       ) {
+        public suspend operator fun invoke(muteUpdateNotifications: Boolean? = null, fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url"): List<IssueAttachmentRead> {
+          val response = client.post("issues/${id.encodeURLParameter()}/attachments") {
+            if (muteUpdateNotifications != null) {
+              url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+            }
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
+
         public suspend operator fun invoke(
           muteUpdateNotifications: Boolean? = null,
           fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url",
           files0: ByteArray? = null,
-        ): List<IssueAttachmentRead> = client.post("/issues/$id/attachments") {
-          muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-          fields?.let { parameter("fields", it) }
-          setBody(MultiPartFormDataContent(formData {
-            if (files0 != null) {
-              append("files[0]", files0)
+        ): List<IssueAttachmentRead> {
+          val response = client.post("issues/${id.encodeURLParameter()}/attachments") {
+            if (muteUpdateNotifications != null) {
+              url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
-          }))
-        }.body()
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            setBody(MultiPartFormDataContent(formData {
+              if (files0 != null) {
+                append("files[0]", files0)
+              }
+            }))
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class IssueAttachmentIdPath internal constructor(
@@ -297,7 +414,8 @@ public class Issues internal constructor(
           private val issueAttachmentId: String,
         ) {
           public suspend operator fun invoke() {
-            client.delete("/issues/$id/attachments/$issueAttachmentId")
+            val response = client.delete("issues/${id.encodeURLParameter()}/attachments/${issueAttachmentId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
 
@@ -306,9 +424,15 @@ public class Issues internal constructor(
           private val id: String,
           private val issueAttachmentId: String,
         ) {
-          public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url"): IssueAttachmentRead = client.get("/issues/$id/attachments/$issueAttachmentId") {
-            fields?.let { parameter("fields", it) }
-          }.body()
+          public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url"): IssueAttachmentRead {
+            val response = client.get("issues/${id.encodeURLParameter()}/attachments/${issueAttachmentId.encodeURLParameter()}") {
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Post internal constructor(
@@ -316,13 +440,19 @@ public class Issues internal constructor(
           private val id: String,
           private val issueAttachmentId: String,
         ) {
-          public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url", body: IssueAttachmentWrite? = null): IssueAttachmentRead = client.post("/issues/$id/attachments/$issueAttachmentId") {
-            fields?.let { parameter("fields", it) }
-            body?.let {
-              contentType(ContentType.Application.Json)
-              setBody(it)
+          public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url", body: IssueAttachmentWrite? = null): IssueAttachmentRead {
+            val response = client.post("issues/${id.encodeURLParameter()}/attachments/${issueAttachmentId.encodeURLParameter()}") {
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+              body?.let {
+                contentType(ContentType.Application.Json)
+                setBody(it)
+              }
             }
-          }.body()
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }
@@ -345,11 +475,21 @@ public class Issues internal constructor(
           fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,deleted,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
           skip: Int? = null,
           top: Int? = null,
-        ): List<IssueCommentRead> = client.get("/issues/$id/comments") {
-          fields?.let { parameter("fields", it) }
-          skip?.let { parameter("${'$'}skip", it) }
-          top?.let { parameter("${'$'}top", it) }
-        }.body()
+        ): List<IssueCommentRead> {
+          val response = client.get("issues/${id.encodeURLParameter()}/comments") {
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            if (skip != null) {
+              url.encodedParameters.append("%24skip", skip.toString())
+            }
+            if (top != null) {
+              url.encodedParameters.append("%24top", top.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Post internal constructor(
@@ -361,15 +501,25 @@ public class Issues internal constructor(
           muteUpdateNotifications: Boolean? = null,
           fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,deleted,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
           body: IssueCommentWrite? = null,
-        ): IssueCommentRead = client.post("/issues/$id/comments") {
-          draftId?.let { parameter("draftId", it) }
-          muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-          fields?.let { parameter("fields", it) }
-          body?.let {
-            contentType(ContentType.Application.Json)
-            setBody(it)
+        ): IssueCommentRead {
+          val response = client.post("issues/${id.encodeURLParameter()}/comments") {
+            if (draftId != null) {
+              url.encodedParameters.append("draftId", draftId.encodeURLParameter())
+            }
+            if (muteUpdateNotifications != null) {
+              url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+            }
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            body?.let {
+              contentType(ContentType.Application.Json)
+              setBody(it)
+            }
           }
-        }.body()
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class IssueCommentIdPath internal constructor(
@@ -391,7 +541,8 @@ public class Issues internal constructor(
           private val issueCommentId: String,
         ) {
           public suspend operator fun invoke() {
-            client.delete("/issues/$id/comments/$issueCommentId")
+            val response = client.delete("issues/${id.encodeURLParameter()}/comments/${issueCommentId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
 
@@ -400,9 +551,15 @@ public class Issues internal constructor(
           private val id: String,
           private val issueCommentId: String,
         ) {
-          public suspend operator fun invoke(fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,deleted,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))"): IssueCommentRead = client.get("/issues/$id/comments/$issueCommentId") {
-            fields?.let { parameter("fields", it) }
-          }.body()
+          public suspend operator fun invoke(fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,deleted,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))"): IssueCommentRead {
+            val response = client.get("issues/${id.encodeURLParameter()}/comments/${issueCommentId.encodeURLParameter()}") {
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Post internal constructor(
@@ -414,14 +571,22 @@ public class Issues internal constructor(
             muteUpdateNotifications: Boolean? = null,
             fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,deleted,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
             body: IssueCommentWrite? = null,
-          ): IssueCommentRead = client.post("/issues/$id/comments/$issueCommentId") {
-            muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-            fields?.let { parameter("fields", it) }
-            body?.let {
-              contentType(ContentType.Application.Json)
-              setBody(it)
+          ): IssueCommentRead {
+            val response = client.post("issues/${id.encodeURLParameter()}/comments/${issueCommentId.encodeURLParameter()}") {
+              if (muteUpdateNotifications != null) {
+                url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+              }
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+              body?.let {
+                contentType(ContentType.Application.Json)
+                setBody(it)
+              }
             }
-          }.body()
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Reactions internal constructor(
@@ -444,11 +609,21 @@ public class Issues internal constructor(
               fields: String? = "${'$'}type,id",
               skip: Int? = null,
               top: Int? = null,
-            ): List<ReactionRead> = client.get("/issues/$id/comments/$issueCommentId/reactions") {
-              fields?.let { parameter("fields", it) }
-              skip?.let { parameter("${'$'}skip", it) }
-              top?.let { parameter("${'$'}top", it) }
-            }.body()
+            ): List<ReactionRead> {
+              val response = client.get("issues/${id.encodeURLParameter()}/comments/${issueCommentId.encodeURLParameter()}/reactions") {
+                if (fields != null) {
+                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                }
+                if (skip != null) {
+                  url.encodedParameters.append("%24skip", skip.toString())
+                }
+                if (top != null) {
+                  url.encodedParameters.append("%24top", top.toString())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Post internal constructor(
@@ -456,13 +631,19 @@ public class Issues internal constructor(
             private val id: String,
             private val issueCommentId: String,
           ) {
-            public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: ReactionWrite? = null): ReactionRead = client.post("/issues/$id/comments/$issueCommentId/reactions") {
-              fields?.let { parameter("fields", it) }
-              body?.let {
-                contentType(ContentType.Application.Json)
-                setBody(it)
+            public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: ReactionWrite? = null): ReactionRead {
+              val response = client.post("issues/${id.encodeURLParameter()}/comments/${issueCommentId.encodeURLParameter()}/reactions") {
+                if (fields != null) {
+                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                }
+                body?.let {
+                  contentType(ContentType.Application.Json)
+                  setBody(it)
+                }
               }
-            }.body()
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class ReactionIdPath internal constructor(
@@ -482,7 +663,8 @@ public class Issues internal constructor(
               private val reactionId: String,
             ) {
               public suspend operator fun invoke() {
-                client.delete("/issues/$id/comments/$issueCommentId/reactions/$reactionId")
+                val response = client.delete("issues/${id.encodeURLParameter()}/comments/${issueCommentId.encodeURLParameter()}/reactions/${reactionId.encodeURLParameter()}")
+                if (response.status.value != 200) throw ResponseException(response, "")
               }
             }
 
@@ -492,9 +674,15 @@ public class Issues internal constructor(
               private val issueCommentId: String,
               private val reactionId: String,
             ) {
-              public suspend operator fun invoke(fields: String? = "${'$'}type,id"): ReactionRead = client.get("/issues/$id/comments/$issueCommentId/reactions/$reactionId") {
-                fields?.let { parameter("fields", it) }
-              }.body()
+              public suspend operator fun invoke(fields: String? = "${'$'}type,id"): ReactionRead {
+                val response = client.get("issues/${id.encodeURLParameter()}/comments/${issueCommentId.encodeURLParameter()}/reactions/${reactionId.encodeURLParameter()}") {
+                  if (fields != null) {
+                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  }
+                }
+                if (response.status.value != 200) throw ResponseException(response, "")
+                return response.body()
+              }
             }
           }
         }
@@ -517,11 +705,21 @@ public class Issues internal constructor(
           fields: String? = "${'$'}type,id,name,value(${'$'}type,id,name)",
           skip: Int? = null,
           top: Int? = null,
-        ): List<IssueCustomFieldRead> = client.get("/issues/$id/customFields") {
-          fields?.let { parameter("fields", it) }
-          skip?.let { parameter("${'$'}skip", it) }
-          top?.let { parameter("${'$'}top", it) }
-        }.body()
+        ): List<IssueCustomFieldRead> {
+          val response = client.get("issues/${id.encodeURLParameter()}/customFields") {
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            if (skip != null) {
+              url.encodedParameters.append("%24skip", skip.toString())
+            }
+            if (top != null) {
+              url.encodedParameters.append("%24top", top.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class IssueCustomFieldIdPath internal constructor(
@@ -538,9 +736,15 @@ public class Issues internal constructor(
           private val id: String,
           private val issueCustomFieldId: String,
         ) {
-          public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,value(${'$'}type,id,name)"): IssueCustomFieldRead = client.get("/issues/$id/customFields/$issueCustomFieldId") {
-            fields?.let { parameter("fields", it) }
-          }.body()
+          public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,value(${'$'}type,id,name)"): IssueCustomFieldRead {
+            val response = client.get("issues/${id.encodeURLParameter()}/customFields/${issueCustomFieldId.encodeURLParameter()}") {
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Post internal constructor(
@@ -552,14 +756,22 @@ public class Issues internal constructor(
             muteUpdateNotifications: Boolean? = null,
             fields: String? = "${'$'}type,id,name,value(${'$'}type,id,name)",
             body: IssueCustomFieldWrite? = null,
-          ): IssueCustomFieldRead = client.post("/issues/$id/customFields/$issueCustomFieldId") {
-            muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-            fields?.let { parameter("fields", it) }
-            body?.let {
-              contentType(ContentType.Application.Json)
-              setBody(it)
+          ): IssueCustomFieldRead {
+            val response = client.post("issues/${id.encodeURLParameter()}/customFields/${issueCustomFieldId.encodeURLParameter()}") {
+              if (muteUpdateNotifications != null) {
+                url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+              }
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+              body?.let {
+                contentType(ContentType.Application.Json)
+                setBody(it)
+              }
             }
-          }.body()
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }
@@ -580,11 +792,21 @@ public class Issues internal constructor(
           fields: String? = "${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)",
           skip: Int? = null,
           top: Int? = null,
-        ): List<IssueLink> = client.get("/issues/$id/links") {
-          fields?.let { parameter("fields", it) }
-          skip?.let { parameter("${'$'}skip", it) }
-          top?.let { parameter("${'$'}top", it) }
-        }.body()
+        ): List<IssueLink> {
+          val response = client.get("issues/${id.encodeURLParameter()}/links") {
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            if (skip != null) {
+              url.encodedParameters.append("%24skip", skip.toString())
+            }
+            if (top != null) {
+              url.encodedParameters.append("%24top", top.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class IssueLinkIdPath internal constructor(
@@ -601,9 +823,15 @@ public class Issues internal constructor(
           private val id: String,
           private val issueLinkId: String,
         ) {
-          public suspend operator fun invoke(fields: String? = "${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)"): IssueLink = client.get("/issues/$id/links/$issueLinkId") {
-            fields?.let { parameter("fields", it) }
-          }.body()
+          public suspend operator fun invoke(fields: String? = "${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)"): IssueLink {
+            val response = client.get("issues/${id.encodeURLParameter()}/links/${issueLinkId.encodeURLParameter()}") {
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Issues internal constructor(
@@ -626,11 +854,21 @@ public class Issues internal constructor(
               fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
               skip: Int? = null,
               top: Int? = null,
-            ): List<IssueRead> = client.get("/issues/$id/links/$issueLinkId/issues") {
-              fields?.let { parameter("fields", it) }
-              skip?.let { parameter("${'$'}skip", it) }
-              top?.let { parameter("${'$'}top", it) }
-            }.body()
+            ): List<IssueRead> {
+              val response = client.get("issues/${id.encodeURLParameter()}/links/${issueLinkId.encodeURLParameter()}/issues") {
+                if (fields != null) {
+                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                }
+                if (skip != null) {
+                  url.encodedParameters.append("%24skip", skip.toString())
+                }
+                if (top != null) {
+                  url.encodedParameters.append("%24top", top.toString())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Post internal constructor(
@@ -642,14 +880,22 @@ public class Issues internal constructor(
               muteUpdateNotifications: Boolean? = null,
               fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
               body: IssueWrite? = null,
-            ): IssueRead = client.post("/issues/$id/links/$issueLinkId/issues") {
-              muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-              fields?.let { parameter("fields", it) }
-              body?.let {
-                contentType(ContentType.Application.Json)
-                setBody(it)
+            ): IssueRead {
+              val response = client.post("issues/${id.encodeURLParameter()}/links/${issueLinkId.encodeURLParameter()}/issues") {
+                if (muteUpdateNotifications != null) {
+                  url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+                }
+                if (fields != null) {
+                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                }
+                body?.let {
+                  contentType(ContentType.Application.Json)
+                  setBody(it)
+                }
               }
-            }.body()
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class IssueIdPath internal constructor(
@@ -667,7 +913,8 @@ public class Issues internal constructor(
               private val issueId: String,
             ) {
               public suspend operator fun invoke() {
-                client.delete("/issues/$id/links/$issueLinkId/issues/$issueId")
+                val response = client.delete("issues/${id.encodeURLParameter()}/links/${issueLinkId.encodeURLParameter()}/issues/${issueId.encodeURLParameter()}")
+                if (response.status.value != 200) throw ResponseException(response, "")
               }
             }
           }
@@ -687,9 +934,15 @@ public class Issues internal constructor(
         private val client: HttpClient,
         private val id: String,
       ) {
-        public suspend operator fun invoke(fields: String? = "${'$'}type,archived,customFields,id,leader(${'$'}type,id,login,ringId),name,shortName"): IssueFolderRead.Project = client.get("/issues/$id/project") {
-          fields?.let { parameter("fields", it) }
-        }.body()
+        public suspend operator fun invoke(fields: String? = "${'$'}type,archived,customFields,id,leader(${'$'}type,id,login,ringId),name,shortName"): IssueFolderRead.Project {
+          val response = client.get("issues/${id.encodeURLParameter()}/project") {
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Post internal constructor(
@@ -700,14 +953,22 @@ public class Issues internal constructor(
           muteUpdateNotifications: Boolean? = null,
           fields: String? = "${'$'}type,archived,customFields,id,leader(${'$'}type,id,login,ringId),name,shortName",
           body: IssueFolderWrite.Project? = null,
-        ): IssueFolderRead.Project = client.post("/issues/$id/project") {
-          muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-          fields?.let { parameter("fields", it) }
-          body?.let {
-            contentType(ContentType.Application.Json)
-            setBody(it)
+        ): IssueFolderRead.Project {
+          val response = client.post("issues/${id.encodeURLParameter()}/project") {
+            if (muteUpdateNotifications != null) {
+              url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+            }
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            body?.let {
+              contentType(ContentType.Application.Json)
+              setBody(it)
+            }
           }
-        }.body()
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -725,11 +986,21 @@ public class Issues internal constructor(
           fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start",
           skip: Int? = null,
           top: Int? = null,
-        ): List<SprintRead> = client.get("/issues/$id/sprints") {
-          fields?.let { parameter("fields", it) }
-          skip?.let { parameter("${'$'}skip", it) }
-          top?.let { parameter("${'$'}top", it) }
-        }.body()
+        ): List<SprintRead> {
+          val response = client.get("issues/${id.encodeURLParameter()}/sprints") {
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            if (skip != null) {
+              url.encodedParameters.append("%24skip", skip.toString())
+            }
+            if (top != null) {
+              url.encodedParameters.append("%24top", top.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -751,24 +1022,40 @@ public class Issues internal constructor(
           fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)",
           skip: Int? = null,
           top: Int? = null,
-        ): List<IssueFolderRead.Tag> = client.get("/issues/$id/tags") {
-          fields?.let { parameter("fields", it) }
-          skip?.let { parameter("${'$'}skip", it) }
-          top?.let { parameter("${'$'}top", it) }
-        }.body()
+        ): List<IssueFolderRead.Tag> {
+          val response = client.get("issues/${id.encodeURLParameter()}/tags") {
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            if (skip != null) {
+              url.encodedParameters.append("%24skip", skip.toString())
+            }
+            if (top != null) {
+              url.encodedParameters.append("%24top", top.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Post internal constructor(
         private val client: HttpClient,
         private val id: String,
       ) {
-        public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag = client.post("/issues/$id/tags") {
-          fields?.let { parameter("fields", it) }
-          body?.let {
-            contentType(ContentType.Application.Json)
-            setBody(it)
+        public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag {
+          val response = client.post("issues/${id.encodeURLParameter()}/tags") {
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            body?.let {
+              contentType(ContentType.Application.Json)
+              setBody(it)
+            }
           }
-        }.body()
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class TagIdPath internal constructor(
@@ -786,7 +1073,8 @@ public class Issues internal constructor(
           private val tagId: String,
         ) {
           public suspend operator fun invoke() {
-            client.delete("/issues/$id/tags/$tagId")
+            val response = client.delete("issues/${id.encodeURLParameter()}/tags/${tagId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
 
@@ -795,9 +1083,15 @@ public class Issues internal constructor(
           private val id: String,
           private val tagId: String,
         ) {
-          public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)"): IssueFolderRead.Tag = client.get("/issues/$id/tags/$tagId") {
-            fields?.let { parameter("fields", it) }
-          }.body()
+          public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)"): IssueFolderRead.Tag {
+            val response = client.get("issues/${id.encodeURLParameter()}/tags/${tagId.encodeURLParameter()}") {
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }
@@ -814,9 +1108,15 @@ public class Issues internal constructor(
         private val client: HttpClient,
         private val id: String,
       ) {
-        public suspend operator fun invoke(fields: String? = "${'$'}type,enabled,id"): IssueTimeTracker = client.get("/issues/$id/timeTracking") {
-          fields?.let { parameter("fields", it) }
-        }.body()
+        public suspend operator fun invoke(fields: String? = "${'$'}type,enabled,id"): IssueTimeTracker {
+          val response = client.get("issues/${id.encodeURLParameter()}/timeTracking") {
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class WorkItems internal constructor(
@@ -837,11 +1137,21 @@ public class Issues internal constructor(
             fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated",
             skip: Int? = null,
             top: Int? = null,
-          ): List<BaseWorkItemRead.IssueWorkItem> = client.get("/issues/$id/timeTracking/workItems") {
-            fields?.let { parameter("fields", it) }
-            skip?.let { parameter("${'$'}skip", it) }
-            top?.let { parameter("${'$'}top", it) }
-          }.body()
+          ): List<BaseWorkItemRead.IssueWorkItem> {
+            val response = client.get("issues/${id.encodeURLParameter()}/timeTracking/workItems") {
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+              if (skip != null) {
+                url.encodedParameters.append("%24skip", skip.toString())
+              }
+              if (top != null) {
+                url.encodedParameters.append("%24top", top.toString())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Post internal constructor(
@@ -852,14 +1162,22 @@ public class Issues internal constructor(
             muteUpdateNotifications: Boolean? = null,
             fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated",
             body: BaseWorkItemWrite.IssueWorkItem? = null,
-          ): BaseWorkItemRead.IssueWorkItem = client.post("/issues/$id/timeTracking/workItems") {
-            muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-            fields?.let { parameter("fields", it) }
-            body?.let {
-              contentType(ContentType.Application.Json)
-              setBody(it)
+          ): BaseWorkItemRead.IssueWorkItem {
+            val response = client.post("issues/${id.encodeURLParameter()}/timeTracking/workItems") {
+              if (muteUpdateNotifications != null) {
+                url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+              }
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+              body?.let {
+                contentType(ContentType.Application.Json)
+                setBody(it)
+              }
             }
-          }.body()
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class IssueWorkItemIdPath internal constructor(
@@ -879,7 +1197,8 @@ public class Issues internal constructor(
             private val issueWorkItemId: String,
           ) {
             public suspend operator fun invoke() {
-              client.delete("/issues/$id/timeTracking/workItems/$issueWorkItemId")
+              val response = client.delete("issues/${id.encodeURLParameter()}/timeTracking/workItems/${issueWorkItemId.encodeURLParameter()}")
+              if (response.status.value != 200) throw ResponseException(response, "")
             }
           }
 
@@ -888,9 +1207,15 @@ public class Issues internal constructor(
             private val id: String,
             private val issueWorkItemId: String,
           ) {
-            public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated"): BaseWorkItemRead.IssueWorkItem = client.get("/issues/$id/timeTracking/workItems/$issueWorkItemId") {
-              fields?.let { parameter("fields", it) }
-            }.body()
+            public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated"): BaseWorkItemRead.IssueWorkItem {
+              val response = client.get("issues/${id.encodeURLParameter()}/timeTracking/workItems/${issueWorkItemId.encodeURLParameter()}") {
+                if (fields != null) {
+                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                }
+              }
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
 
           public class Post internal constructor(
@@ -902,14 +1227,22 @@ public class Issues internal constructor(
               muteUpdateNotifications: Boolean? = null,
               fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated",
               body: BaseWorkItemWrite.IssueWorkItem? = null,
-            ): BaseWorkItemRead.IssueWorkItem = client.post("/issues/$id/timeTracking/workItems/$issueWorkItemId") {
-              muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-              fields?.let { parameter("fields", it) }
-              body?.let {
-                contentType(ContentType.Application.Json)
-                setBody(it)
+            ): BaseWorkItemRead.IssueWorkItem {
+              val response = client.post("issues/${id.encodeURLParameter()}/timeTracking/workItems/${issueWorkItemId.encodeURLParameter()}") {
+                if (muteUpdateNotifications != null) {
+                  url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+                }
+                if (fields != null) {
+                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                }
+                body?.let {
+                  contentType(ContentType.Application.Json)
+                  setBody(it)
+                }
               }
-            }.body()
+              if (response.status.value != 200) throw ResponseException(response, "")
+              return response.body()
+            }
           }
         }
       }
@@ -933,11 +1266,21 @@ public class Issues internal constructor(
           fields: String? = "${'$'}type,id",
           skip: Int? = null,
           top: Int? = null,
-        ): List<VcsChangeRead> = client.get("/issues/$id/vcsChanges") {
-          fields?.let { parameter("fields", it) }
-          skip?.let { parameter("${'$'}skip", it) }
-          top?.let { parameter("${'$'}top", it) }
-        }.body()
+        ): List<VcsChangeRead> {
+          val response = client.get("issues/${id.encodeURLParameter()}/vcsChanges") {
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            if (skip != null) {
+              url.encodedParameters.append("%24skip", skip.toString())
+            }
+            if (top != null) {
+              url.encodedParameters.append("%24top", top.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Post internal constructor(
@@ -948,14 +1291,22 @@ public class Issues internal constructor(
           muteUpdateNotifications: Boolean? = null,
           fields: String? = "${'$'}type,id",
           body: VcsChangeWrite? = null,
-        ): VcsChangeRead = client.post("/issues/$id/vcsChanges") {
-          muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-          fields?.let { parameter("fields", it) }
-          body?.let {
-            contentType(ContentType.Application.Json)
-            setBody(it)
+        ): VcsChangeRead {
+          val response = client.post("issues/${id.encodeURLParameter()}/vcsChanges") {
+            if (muteUpdateNotifications != null) {
+              url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+            }
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            body?.let {
+              contentType(ContentType.Application.Json)
+              setBody(it)
+            }
           }
-        }.body()
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class VcsChangeIdPath internal constructor(
@@ -975,7 +1326,8 @@ public class Issues internal constructor(
           private val vcsChangeId: String,
         ) {
           public suspend operator fun invoke() {
-            client.delete("/issues/$id/vcsChanges/$vcsChangeId")
+            val response = client.delete("issues/${id.encodeURLParameter()}/vcsChanges/${vcsChangeId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
 
@@ -984,9 +1336,15 @@ public class Issues internal constructor(
           private val id: String,
           private val vcsChangeId: String,
         ) {
-          public suspend operator fun invoke(fields: String? = "${'$'}type,id"): VcsChangeRead = client.get("/issues/$id/vcsChanges/$vcsChangeId") {
-            fields?.let { parameter("fields", it) }
-          }.body()
+          public suspend operator fun invoke(fields: String? = "${'$'}type,id"): VcsChangeRead {
+            val response = client.get("issues/${id.encodeURLParameter()}/vcsChanges/${vcsChangeId.encodeURLParameter()}") {
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Post internal constructor(
@@ -998,14 +1356,22 @@ public class Issues internal constructor(
             muteUpdateNotifications: Boolean? = null,
             fields: String? = "${'$'}type,id",
             body: VcsChangeWrite? = null,
-          ): VcsChangeRead = client.post("/issues/$id/vcsChanges/$vcsChangeId") {
-            muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-            fields?.let { parameter("fields", it) }
-            body?.let {
-              contentType(ContentType.Application.Json)
-              setBody(it)
+          ): VcsChangeRead {
+            val response = client.post("issues/${id.encodeURLParameter()}/vcsChanges/${vcsChangeId.encodeURLParameter()}") {
+              if (muteUpdateNotifications != null) {
+                url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+              }
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+              body?.let {
+                contentType(ContentType.Application.Json)
+                setBody(it)
+              }
             }
-          }.body()
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }

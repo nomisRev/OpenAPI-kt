@@ -1,16 +1,23 @@
 package io.github.model
 
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class RepositoryAdvisoryUpdate(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val summary: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val description: String? = null,
   @SerialName("cve_id")
   public val cveId: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val vulnerabilities: List<Vulnerabilities>? = null,
   @SerialName("cwe_ids")
   public val cweIds: List<String>? = null,
@@ -18,6 +25,7 @@ public data class RepositoryAdvisoryUpdate(
   public val severity: Severity? = null,
   @SerialName("cvss_vector_string")
   public val cvssVectorString: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val state: State? = null,
   @SerialName("collaborating_users")
   public val collaboratingUsers: List<String>? = null,

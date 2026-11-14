@@ -2,7 +2,7 @@ package io.openai.model
 
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -15,10 +15,9 @@ public sealed interface FunctionAndCustomToolCallOutput {
   /**
    * A text input to the model.
    */
-  @JvmInline
   @SerialName("input_text")
   @Serializable
-  public value class InputText(
+  public data class InputText(
     public val text: String,
   ) : FunctionAndCustomToolCallOutput
 
@@ -39,14 +38,18 @@ public sealed interface FunctionAndCustomToolCallOutput {
    * A file input to the model.
    */
   @SerialName("input_file")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class InputFile(
     @SerialName("file_id")
     public val fileId: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val filename: String? = null,
     @SerialName("file_data")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val fileData: String? = null,
     @SerialName("file_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val fileUrl: String? = null,
   ) : FunctionAndCustomToolCallOutput
 }

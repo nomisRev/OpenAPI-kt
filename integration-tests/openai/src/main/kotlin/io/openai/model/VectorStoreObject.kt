@@ -1,13 +1,17 @@
 package io.openai.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A vector store is a collection of processed files can be used by the `file_search` tool.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class VectorStoreObject(
   public val id: String,
@@ -21,12 +25,13 @@ public data class VectorStoreObject(
   public val fileCounts: FileCounts,
   public val status: Status,
   @SerialName("expires_after")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val expiresAfter: VectorStoreExpirationAfter? = null,
   @SerialName("expires_at")
   public val expiresAt: Long? = null,
   @SerialName("last_active_at")
   public val lastActiveAt: Long?,
-  public val metadata: Metadata,
+  public val metadata: Metadata?,
 ) {
   @Serializable
   public data class FileCounts(

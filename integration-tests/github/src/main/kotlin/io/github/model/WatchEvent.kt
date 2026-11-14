@@ -1,11 +1,9 @@
 package io.github.model
 
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.Serializable
 
-@JvmInline
 @Serializable
-public value class WatchEvent(
+public data class WatchEvent(
   public val action: String,
 )

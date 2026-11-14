@@ -1,13 +1,16 @@
 package io.github.model
 
+import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@JvmInline
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-public value class PagesDeploymentStatus(
+public data class PagesDeploymentStatus(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val status: Status? = null,
 ) {
   @Serializable

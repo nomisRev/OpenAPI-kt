@@ -2,9 +2,12 @@ package io.openai.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -21,10 +24,12 @@ import kotlinx.serialization.encoding.Encoder
  * JSON edits support GPT image models only; DALL-E edits require multipart (`dall-e-2` only).
  *
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class EditImageBodyJsonParam(
   public val model: Model? = null,
   public val images: List<ImageRefParam>,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val mask: ImageRefParam? = null,
   public val prompt: String,
   public val n: Long? = null,
@@ -32,6 +37,7 @@ public data class EditImageBodyJsonParam(
   @SerialName("input_fidelity")
   public val inputFidelity: InputFidelity? = null,
   public val size: Size? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val user: String? = null,
   @SerialName("output_format")
   public val outputFormat: OutputFormat? = null,

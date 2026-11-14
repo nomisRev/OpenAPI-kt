@@ -2,16 +2,19 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A codespace.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CodespaceWithFullRepository(
   public val id: Long,
@@ -56,6 +59,7 @@ public data class CodespaceWithFullRepository(
   @SerialName("recent_folders")
   public val recentFolders: List<String>,
   @SerialName("runtime_constraints")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val runtimeConstraints: RuntimeConstraints? = null,
   @SerialName("pending_operation")
   public val pendingOperation: Boolean? = null,
@@ -71,14 +75,20 @@ public data class CodespaceWithFullRepository(
   /**
    * Details about the codespace's git repository.
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class GitStatus(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val ahead: Long? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val behind: Long? = null,
     @SerialName("has_unpushed_changes")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val hasUnpushedChanges: Boolean? = null,
     @SerialName("has_uncommitted_changes")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val hasUncommittedChanges: Boolean? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val ref: String? = null,
   )
 
@@ -90,9 +100,8 @@ public data class CodespaceWithFullRepository(
     WestUs2,
   }
 
-  @JvmInline
   @Serializable
-  public value class RuntimeConstraints(
+  public data class RuntimeConstraints(
     @SerialName("allowed_port_privacy_settings")
     public val allowedPortPrivacySettings: List<String>? = null,
   )

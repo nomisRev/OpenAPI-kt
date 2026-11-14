@@ -3,7 +3,6 @@ package io.openai.model
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
@@ -47,20 +46,18 @@ public data class ThreadResource(
     /**
      * Indicates that a thread is locked and cannot accept new input.
      */
-    @JvmInline
     @SerialName("locked")
     @Serializable
-    public value class Locked(
+    public data class Locked(
       public val reason: String?,
     ) : Status
 
     /**
      * Indicates that a thread has been closed.
      */
-    @JvmInline
     @SerialName("closed")
     @Serializable
-    public value class Closed(
+    public data class Closed(
       public val reason: String?,
     ) : Status
   }

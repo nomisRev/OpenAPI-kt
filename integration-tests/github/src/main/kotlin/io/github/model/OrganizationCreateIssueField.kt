@@ -1,17 +1,22 @@
 package io.github.model
 
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class OrganizationCreateIssueField(
   public val name: String,
   public val description: String? = null,
   @SerialName("data_type")
   public val dataType: DataType,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val visibility: Visibility? = null,
   public val options: List<Options>? = null,
 ) {

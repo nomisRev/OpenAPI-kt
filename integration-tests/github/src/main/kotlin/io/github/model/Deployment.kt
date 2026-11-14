@@ -6,6 +6,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -19,10 +20,12 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * A request for a specific ref(branch,sha,tag) to be deployed
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Deployment(
   public val url: String,
@@ -34,6 +37,7 @@ public data class Deployment(
   public val task: String,
   public val payload: Payload,
   @SerialName("original_environment")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val originalEnvironment: String? = null,
   public val environment: String,
   public val description: String?,
@@ -47,8 +51,10 @@ public data class Deployment(
   @SerialName("repository_url")
   public val repositoryUrl: String,
   @SerialName("transient_environment")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val transientEnvironment: Boolean? = null,
   @SerialName("production_environment")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val productionEnvironment: Boolean? = null,
   @SerialName("performed_via_github_app")
   public val performedViaGithubApp: NullableIntegration? = null,
@@ -81,11 +87,17 @@ public data class Deployment(
       override fun deserialize(decoder: Decoder): Payload {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-          CaseJsonElement::class to { CaseJsonElement(decodeFromJsonElement(JsonElement.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+            CaseJsonElement::class to { CaseJsonElement(decodeFromJsonElement(JsonElement.serializer(), it)) },
+          )
+          else -> json.attemptDeserialize(
+            value,
+            CaseJsonElement::class to { CaseJsonElement(decodeFromJsonElement(JsonElement.serializer(), it)) },
+          )
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: Payload) {

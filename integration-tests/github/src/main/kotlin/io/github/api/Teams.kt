@@ -14,17 +14,19 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.Deprecated
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -63,7 +65,7 @@ public class Teams internal constructor(
     ) {
       @Deprecated("Deprecated by the API provider")
       public suspend operator fun invoke(): Response {
-        val response = client.delete("/teams/$teamId")
+        val response = client.delete("teams/$teamId")
         return when (response.status.value) {
           204 -> Response.NoContent
           404 -> Response.NotFound(response.body())
@@ -92,7 +94,7 @@ public class Teams internal constructor(
     ) {
       @Deprecated("Deprecated by the API provider")
       public suspend operator fun invoke(): Response {
-        val response = client.get("/teams/$teamId")
+        val response = client.get("teams/$teamId")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           404 -> Response.NotFound(response.body())
@@ -125,7 +127,7 @@ public class Teams internal constructor(
         permission: Permission? = null,
         parentTeamId: Long? = null,
       ): Response {
-        val response = client.patch("/teams/$teamId") {
+        val response = client.patch("teams/$teamId") {
           contentType(ContentType.Application.Json)
           setBody(Body(name = name, description = description, privacy = privacy, notificationSetting = notificationSetting, permission = permission, parentTeamId = parentTeamId))
         }
@@ -174,13 +176,18 @@ public class Teams internal constructor(
         ;
       }
 
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       internal data class Body(
         public val name: String,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val description: String? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val privacy: Privacy? = null,
         @SerialName("notification_setting")
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val notificationSetting: NotificationSetting? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val permission: Permission? = null,
         @SerialName("parent_team_id")
         public val parentTeamId: Long? = null,
@@ -222,10 +229,18 @@ public class Teams internal constructor(
         private val teamId: Long,
       ) {
         @Deprecated("Deprecated by the API provider")
-        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<OrganizationInvitation> = client.get("/teams/$teamId/invitations") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
-        }.body()
+        public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<OrganizationInvitation> {
+          val response = client.get("teams/$teamId/invitations") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
     }
 
@@ -249,10 +264,16 @@ public class Teams internal constructor(
           perPage: Long? = 30L,
           page: Long? = 1L,
         ): Response {
-          val response = client.get("/teams/$teamId/members") {
-            role?.let { parameter("role", it.value) }
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("teams/$teamId/members") {
+            if (role != null) {
+              url.encodedParameters.append("role", role.value.encodeURLParameter())
+            }
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -307,7 +328,7 @@ public class Teams internal constructor(
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/teams/$teamId/members/$username")
+            val response = client.delete("teams/$teamId/members/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound
@@ -330,7 +351,7 @@ public class Teams internal constructor(
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.get("/teams/$teamId/members/$username")
+            val response = client.get("teams/$teamId/members/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound
@@ -353,7 +374,7 @@ public class Teams internal constructor(
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.put("/teams/$teamId/members/$username")
+            val response = client.put("teams/$teamId/members/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               403 -> Response.Forbidden(response.body())
@@ -406,7 +427,7 @@ public class Teams internal constructor(
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/teams/$teamId/memberships/$username")
+            val response = client.delete("teams/$teamId/memberships/${username.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               403 -> Response.Forbidden
@@ -429,7 +450,7 @@ public class Teams internal constructor(
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.get("/teams/$teamId/memberships/$username")
+            val response = client.get("teams/$teamId/memberships/${username.encodeURLParameter()}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -455,12 +476,22 @@ public class Teams internal constructor(
           private val username: String,
         ) {
           @Deprecated("Deprecated by the API provider")
+          public suspend operator fun invoke(): Response {
+            val response = client.put("teams/$teamId/memberships/${username.encodeURLParameter()}")
+            return when (response.status.value) {
+              200 -> Response.Ok(response.body())
+              403 -> Response.Forbidden
+              404 -> Response.NotFound(response.body())
+              422 -> Response.UnprocessableEntity
+              else -> throw ResponseException(response, "")
+            }
+          }
+
+          @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(role: Role? = null): Response {
-            val response = client.put("/teams/$teamId/memberships/$username") {
-              if (role != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(role = role))
-              }
+            val response = client.put("teams/$teamId/memberships/${username.encodeURLParameter()}") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(role = role))
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -482,9 +513,10 @@ public class Teams internal constructor(
             ;
           }
 
-          @JvmInline
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
-          internal value class Body(
+          internal data class Body(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val role: Role? = null,
           )
 
@@ -521,9 +553,13 @@ public class Teams internal constructor(
       ) {
         @Deprecated("Deprecated by the API provider")
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("/teams/$teamId/repos") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("teams/$teamId/repos") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -574,7 +610,8 @@ public class Teams internal constructor(
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke() {
-              client.delete("/teams/$teamId/repos/$owner/$repo")
+              val response = client.delete("teams/$teamId/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}")
+              if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
 
@@ -587,7 +624,7 @@ public class Teams internal constructor(
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(): Response {
-              val response = client.get("/teams/$teamId/repos/$owner/$repo")
+              val response = client.get("teams/$teamId/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 204 -> Response.NoContent
@@ -615,12 +652,21 @@ public class Teams internal constructor(
             private val repo: String,
           ) {
             @Deprecated("Deprecated by the API provider")
+            public suspend operator fun invoke(): Response {
+              val response = client.put("teams/$teamId/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}")
+              return when (response.status.value) {
+                204 -> Response.NoContent
+                403 -> Response.Forbidden(response.body())
+                422 -> Response.UnprocessableEntity(response.body())
+                else -> throw ResponseException(response, "")
+              }
+            }
+
+            @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(permission: Permission? = null): Response {
-              val response = client.put("/teams/$teamId/repos/$owner/$repo") {
-                if (permission != null) {
-                  contentType(ContentType.Application.Json)
-                  setBody(Body(permission = permission))
-                }
+              val response = client.put("teams/$teamId/repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}") {
+                contentType(ContentType.Application.Json)
+                setBody(Body(permission = permission))
               }
               return when (response.status.value) {
                 204 -> Response.NoContent
@@ -643,9 +689,10 @@ public class Teams internal constructor(
               ;
             }
 
-            @JvmInline
+            @OptIn(ExperimentalSerializationApi::class)
             @Serializable
-            internal value class Body(
+            internal data class Body(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val permission: Permission? = null,
             )
 
@@ -679,9 +726,13 @@ public class Teams internal constructor(
       ) {
         @Deprecated("Deprecated by the API provider")
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("/teams/$teamId/teams") {
-            perPage?.let { parameter("per_page", it) }
-            page?.let { parameter("page", it) }
+          val response = client.get("teams/$teamId/teams") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (page != null) {
+              url.encodedParameters.append("page", page.toString())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())

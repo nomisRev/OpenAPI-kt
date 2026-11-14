@@ -1,13 +1,11 @@
 package io.github.model
 
 import kotlin.Long
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-@JvmInline
 @Serializable
-public value class ActionsHostedRunnerLimits(
+public data class ActionsHostedRunnerLimits(
   @SerialName("public_ips")
   public val publicIps: PublicIps,
 ) {

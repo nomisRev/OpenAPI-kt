@@ -3,6 +3,7 @@ package io.openai.model
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
@@ -12,15 +13,18 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 /**
  * Configuration for a code interpreter container. Optionally specify the IDs of the files to run the code on.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class AutoCodeInterpreterToolParam(
   @Required
   public val type: Type = Type.Auto,
   @SerialName("file_ids")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val fileIds: List<String>? = null,
   @SerialName("memory_limit")
   public val memoryLimit: ContainerMemoryLimit? = null,
   @SerialName("network_policy")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val networkPolicy: NetworkPolicy? = null,
 ) {
   /**
@@ -35,11 +39,13 @@ public data class AutoCodeInterpreterToolParam(
     public data object Disabled : NetworkPolicy
 
     @SerialName("allowlist")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Allowlist(
       @SerialName("allowed_domains")
       public val allowedDomains: List<String>,
       @SerialName("domain_secrets")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val domainSecrets: List<ContainerNetworkPolicyDomainSecretParam>? = null,
     ) : NetworkPolicy
   }

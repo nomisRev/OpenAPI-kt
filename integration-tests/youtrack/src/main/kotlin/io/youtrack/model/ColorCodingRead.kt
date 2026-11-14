@@ -3,7 +3,7 @@ package io.youtrack.model
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -18,24 +18,31 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 public sealed interface ColorCodingRead {
   public val id: String?
 
-  @JvmInline
   @SerialName("ColorCoding")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class Default(
+  public data class Default(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
   ) : ColorCodingRead
 
   @SerialName("FieldBasedColorCoding")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class FieldBasedColorCoding(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val prototype: CustomFieldRead? = null,
   ) : ColorCodingRead
 
   @SerialName("ProjectBasedColorCoding")
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class ProjectBasedColorCoding(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     override val id: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val projectColors: List<ProjectColorRead>? = null,
   ) : ColorCodingRead
 }

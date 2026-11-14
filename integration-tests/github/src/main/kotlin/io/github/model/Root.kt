@@ -1,9 +1,13 @@
 package io.github.model
 
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Root(
   @SerialName("current_user_url")
@@ -31,6 +35,7 @@ public data class Root(
   @SerialName("gists_url")
   public val gistsUrl: String,
   @SerialName("hub_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hubUrl: String? = null,
   @SerialName("issue_search_url")
   public val issueSearchUrl: String,
@@ -63,6 +68,7 @@ public data class Root(
   @SerialName("starred_gists_url")
   public val starredGistsUrl: String,
   @SerialName("topic_search_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val topicSearchUrl: String? = null,
   @SerialName("user_url")
   public val userUrl: String,

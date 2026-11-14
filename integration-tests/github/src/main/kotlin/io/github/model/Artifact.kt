@@ -2,8 +2,11 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -32,16 +35,22 @@ public data class Artifact(
   @SerialName("workflow_run")
   public val workflowRun: WorkflowRun? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class WorkflowRun(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val id: Long? = null,
     @SerialName("repository_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val repositoryId: Long? = null,
     @SerialName("head_repository_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val headRepositoryId: Long? = null,
     @SerialName("head_branch")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val headBranch: String? = null,
     @SerialName("head_sha")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val headSha: String? = null,
   )
 }

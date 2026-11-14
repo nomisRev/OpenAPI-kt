@@ -7,6 +7,7 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -24,6 +25,7 @@ import kotlinx.serialization.json.jsonObject
 /**
  * Details of a deployment environment
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Environment(
   public val id: Long,
@@ -38,12 +40,14 @@ public data class Environment(
   @SerialName("updated_at")
   public val updatedAt: Instant,
   @SerialName("protection_rules")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val protectionRules: List<ProtectionRules>? = null,
   @SerialName("deployment_branch_policy")
   public val deploymentBranchPolicy: DeploymentBranchPolicySettings? = null,
 ) {
   @Serializable(with = ProtectionRules.Serializer::class)
   public sealed interface ProtectionRules {
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class IdAndNodeIdAndTypeAndWaitTimer(
       public val id: Long,
@@ -51,22 +55,29 @@ public data class Environment(
       public val nodeId: String,
       public val type: String,
       @SerialName("wait_timer")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val waitTimer: WaitTimer? = null,
     ) : ProtectionRules
 
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class IdAndNodeIdAndPreventSelfReviewAndTypeAndReviewers(
       public val id: Long,
       @SerialName("node_id")
       public val nodeId: String,
       @SerialName("prevent_self_review")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val preventSelfReview: Boolean? = null,
       public val type: String,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val reviewers: List<Reviewers>? = null,
     ) : ProtectionRules {
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class Reviewers(
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val type: DeploymentReviewerType? = null,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val reviewer: Reviewer? = null,
       ) {
         @Serializable(with = Reviewer.Serializer::class)

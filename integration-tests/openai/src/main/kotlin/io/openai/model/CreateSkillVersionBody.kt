@@ -5,6 +5,7 @@ import kotlin.ByteArray
 import kotlin.OptIn
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -22,9 +23,11 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Uploads a new immutable version of a skill.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class CreateSkillVersionBody(
   public val files: Files,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val default: Boolean? = null,
 ) {
   @Serializable(with = Files.Serializer::class)

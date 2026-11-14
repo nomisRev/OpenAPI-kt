@@ -1,7 +1,10 @@
 package io.openai.model
 
+import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -10,10 +13,14 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class AudioTranscription(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val model: Model? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val language: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val prompt: String? = null,
 ) {
   @Serializable(with = Model.Serializer::class)

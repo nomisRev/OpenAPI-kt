@@ -4,7 +4,6 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
-import kotlin.jvm.JvmInline
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -38,20 +37,18 @@ public sealed interface ComputerAction {
   /**
    * A drag action.
    */
-  @JvmInline
   @SerialName("drag")
   @Serializable
-  public value class Drag(
+  public data class Drag(
     public val path: List<CoordParam>,
   ) : ComputerAction
 
   /**
    * A collection of keypresses the model would like to perform.
    */
-  @JvmInline
   @SerialName("keypress")
   @Serializable
-  public value class Keypress(
+  public data class Keypress(
     public val keys: List<String>,
   ) : ComputerAction
 
@@ -86,10 +83,9 @@ public sealed interface ComputerAction {
   /**
    * An action to type in text.
    */
-  @JvmInline
   @SerialName("type")
   @Serializable
-  public value class Type(
+  public data class Type(
     public val text: String,
   ) : ComputerAction
 

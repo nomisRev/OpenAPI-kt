@@ -2,14 +2,18 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A deployment created as the result of an Actions check run from a workflow that references an environment
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class DeploymentSimple(
   public val url: String,
@@ -18,6 +22,7 @@ public data class DeploymentSimple(
   public val nodeId: String,
   public val task: String,
   @SerialName("original_environment")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val originalEnvironment: String? = null,
   public val environment: String,
   public val description: String?,
@@ -30,8 +35,10 @@ public data class DeploymentSimple(
   @SerialName("repository_url")
   public val repositoryUrl: String,
   @SerialName("transient_environment")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val transientEnvironment: Boolean? = null,
   @SerialName("production_environment")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val productionEnvironment: Boolean? = null,
   @SerialName("performed_via_github_app")
   public val performedViaGithubApp: NullableIntegration? = null,

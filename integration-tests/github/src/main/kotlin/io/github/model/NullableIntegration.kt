@@ -7,6 +7,7 @@ import kotlin.collections.List
 import kotlin.collections.Map
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -27,13 +28,16 @@ import kotlinx.serialization.json.JsonObject
 /**
  * GitHub apps are a new way to extend GitHub. They can be installed directly on organizations and user accounts and granted access to specific repositories. They come with granular permissions and built-in webhooks. GitHub apps are first class actors within GitHub.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class NullableIntegration(
   public val id: Long,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val slug: String? = null,
   @SerialName("node_id")
   public val nodeId: String,
   @SerialName("client_id")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val clientId: String? = null,
   public val owner: Owner,
   public val name: String,
@@ -49,6 +53,7 @@ public data class NullableIntegration(
   public val permissions: Permissions,
   public val events: List<String>,
   @SerialName("installations_count")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val installationsCount: Long? = null,
 ) {
   @Serializable(with = Owner.Serializer::class)
@@ -102,10 +107,15 @@ public data class NullableIntegration(
   @KeepGeneratedSerializer
   @Serializable(with = Permissions.Serializer::class)
   public data class Permissions(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val issues: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val checks: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val metadata: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val contents: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val deployments: String? = null,
     public val additional: Map<String, String>? = null,
   ) {

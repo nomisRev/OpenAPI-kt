@@ -2,13 +2,14 @@ package io.youtrack.api
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import io.youtrack.model.AgileRead
 import io.youtrack.model.AgileWrite
 import io.youtrack.model.SprintRead
@@ -34,11 +35,21 @@ public class Agiles internal constructor(
       fields: String? = "${'$'}type,columnSettings(${'$'}type,columns(${'$'}type,id),field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,name,owner(${'$'}type,id,login,ringId),projects(${'$'}type,id,name,shortName),status(${'$'}type,id,valid),swimlaneSettings(${'$'}type,enabled,field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,values(${'$'}type,id,name))",
       skip: Int? = null,
       top: Int? = null,
-    ): List<AgileRead> = client.get("/agiles") {
-      fields?.let { parameter("fields", it) }
-      skip?.let { parameter("${'$'}skip", it) }
-      top?.let { parameter("${'$'}top", it) }
-    }.body()
+    ): List<AgileRead> {
+      val response = client.get("agiles") {
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        if (skip != null) {
+          url.encodedParameters.append("%24skip", skip.toString())
+        }
+        if (top != null) {
+          url.encodedParameters.append("%24top", top.toString())
+        }
+      }
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class Post internal constructor(
@@ -48,14 +59,22 @@ public class Agiles internal constructor(
       template: String? = null,
       fields: String? = "${'$'}type,columnSettings(${'$'}type,columns(${'$'}type,id),field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,name,owner(${'$'}type,id,login,ringId),projects(${'$'}type,id,name,shortName),status(${'$'}type,id,valid),swimlaneSettings(${'$'}type,enabled,field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,values(${'$'}type,id,name))",
       body: AgileWrite? = null,
-    ): AgileRead = client.post("/agiles") {
-      template?.let { parameter("template", it) }
-      fields?.let { parameter("fields", it) }
-      body?.let {
-        contentType(ContentType.Application.Json)
-        setBody(it)
+    ): AgileRead {
+      val response = client.post("agiles") {
+        if (template != null) {
+          url.encodedParameters.append("template", template.encodeURLParameter())
+        }
+        if (fields != null) {
+          url.encodedParameters.append("fields", fields.encodeURLParameter())
+        }
+        body?.let {
+          contentType(ContentType.Application.Json)
+          setBody(it)
+        }
       }
-    }.body()
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class IdPath internal constructor(
@@ -75,7 +94,8 @@ public class Agiles internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        client.delete("/agiles/$id")
+        val response = client.delete("agiles/${id.encodeURLParameter()}")
+        if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
 
@@ -83,22 +103,34 @@ public class Agiles internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,columnSettings(${'$'}type,columns(${'$'}type,id),field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,name,owner(${'$'}type,id,login,ringId),projects(${'$'}type,id,name,shortName),status(${'$'}type,id,valid),swimlaneSettings(${'$'}type,enabled,field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,values(${'$'}type,id,name))"): AgileRead = client.get("/agiles/$id") {
-        fields?.let { parameter("fields", it) }
-      }.body()
+      public suspend operator fun invoke(fields: String? = "${'$'}type,columnSettings(${'$'}type,columns(${'$'}type,id),field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,name,owner(${'$'}type,id,login,ringId),projects(${'$'}type,id,name,shortName),status(${'$'}type,id,valid),swimlaneSettings(${'$'}type,enabled,field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,values(${'$'}type,id,name))"): AgileRead {
+        val response = client.get("agiles/${id.encodeURLParameter()}") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Post internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke(fields: String? = "${'$'}type,columnSettings(${'$'}type,columns(${'$'}type,id),field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,name,owner(${'$'}type,id,login,ringId),projects(${'$'}type,id,name,shortName),status(${'$'}type,id,valid),swimlaneSettings(${'$'}type,enabled,field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,values(${'$'}type,id,name))", body: AgileWrite? = null): AgileRead = client.post("/agiles/$id") {
-        fields?.let { parameter("fields", it) }
-        body?.let {
-          contentType(ContentType.Application.Json)
-          setBody(it)
+      public suspend operator fun invoke(fields: String? = "${'$'}type,columnSettings(${'$'}type,columns(${'$'}type,id),field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,name,owner(${'$'}type,id,login,ringId),projects(${'$'}type,id,name,shortName),status(${'$'}type,id,valid),swimlaneSettings(${'$'}type,enabled,field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,values(${'$'}type,id,name))", body: AgileWrite? = null): AgileRead {
+        val response = client.post("agiles/${id.encodeURLParameter()}") {
+          if (fields != null) {
+            url.encodedParameters.append("fields", fields.encodeURLParameter())
+          }
+          body?.let {
+            contentType(ContentType.Application.Json)
+            setBody(it)
+          }
         }
-      }.body()
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class Sprints internal constructor(
@@ -119,11 +151,21 @@ public class Agiles internal constructor(
           fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start",
           skip: Int? = null,
           top: Int? = null,
-        ): List<SprintRead> = client.get("/agiles/$id/sprints") {
-          fields?.let { parameter("fields", it) }
-          skip?.let { parameter("${'$'}skip", it) }
-          top?.let { parameter("${'$'}top", it) }
-        }.body()
+        ): List<SprintRead> {
+          val response = client.get("agiles/${id.encodeURLParameter()}/sprints") {
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            if (skip != null) {
+              url.encodedParameters.append("%24skip", skip.toString())
+            }
+            if (top != null) {
+              url.encodedParameters.append("%24top", top.toString())
+            }
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Post internal constructor(
@@ -134,14 +176,22 @@ public class Agiles internal constructor(
           muteUpdateNotifications: Boolean? = null,
           fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start",
           body: SprintWrite? = null,
-        ): SprintRead = client.post("/agiles/$id/sprints") {
-          muteUpdateNotifications?.let { parameter("muteUpdateNotifications", it) }
-          fields?.let { parameter("fields", it) }
-          body?.let {
-            contentType(ContentType.Application.Json)
-            setBody(it)
+        ): SprintRead {
+          val response = client.post("agiles/${id.encodeURLParameter()}/sprints") {
+            if (muteUpdateNotifications != null) {
+              url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+            }
+            if (fields != null) {
+              url.encodedParameters.append("fields", fields.encodeURLParameter())
+            }
+            body?.let {
+              contentType(ContentType.Application.Json)
+              setBody(it)
+            }
           }
-        }.body()
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class SprintIdPath internal constructor(
@@ -161,7 +211,8 @@ public class Agiles internal constructor(
           private val sprintId: String,
         ) {
           public suspend operator fun invoke() {
-            client.delete("/agiles/$id/sprints/$sprintId")
+            val response = client.delete("agiles/${id.encodeURLParameter()}/sprints/${sprintId.encodeURLParameter()}")
+            if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
 
@@ -170,9 +221,15 @@ public class Agiles internal constructor(
           private val id: String,
           private val sprintId: String,
         ) {
-          public suspend operator fun invoke(fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start"): SprintRead = client.get("/agiles/$id/sprints/$sprintId") {
-            fields?.let { parameter("fields", it) }
-          }.body()
+          public suspend operator fun invoke(fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start"): SprintRead {
+            val response = client.get("agiles/${id.encodeURLParameter()}/sprints/${sprintId.encodeURLParameter()}") {
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+            }
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
 
         public class Post internal constructor(
@@ -180,13 +237,19 @@ public class Agiles internal constructor(
           private val id: String,
           private val sprintId: String,
         ) {
-          public suspend operator fun invoke(fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start", body: SprintWrite? = null): SprintRead = client.post("/agiles/$id/sprints/$sprintId") {
-            fields?.let { parameter("fields", it) }
-            body?.let {
-              contentType(ContentType.Application.Json)
-              setBody(it)
+          public suspend operator fun invoke(fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start", body: SprintWrite? = null): SprintRead {
+            val response = client.post("agiles/${id.encodeURLParameter()}/sprints/${sprintId.encodeURLParameter()}") {
+              if (fields != null) {
+                url.encodedParameters.append("fields", fields.encodeURLParameter())
+              }
+              body?.let {
+                contentType(ContentType.Application.Json)
+                setBody(it)
+              }
             }
-          }.body()
+            if (response.status.value != 200) throw ResponseException(response, "")
+            return response.body()
+          }
         }
       }
     }

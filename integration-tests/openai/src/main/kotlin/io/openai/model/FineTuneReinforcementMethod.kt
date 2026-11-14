@@ -5,6 +5,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -13,9 +14,11 @@ import kotlinx.serialization.json.JsonClassDiscriminator
 /**
  * Configuration for the reinforcement fine-tuning method.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class FineTuneReinforcementMethod(
   public val grader: Grader,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val hyperparameters: FineTuneReinforcementHyperparameters? = null,
 ) {
   /**
@@ -101,11 +104,13 @@ public data class FineTuneReinforcementMethod(
      *
      */
     @SerialName("python")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class Python(
       public val name: String,
       public val source: String,
       @SerialName("image_tag")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val imageTag: String? = null,
     ) : Grader
 
@@ -114,13 +119,16 @@ public data class FineTuneReinforcementMethod(
      *
      */
     @SerialName("score_model")
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class ScoreModel(
       public val name: String,
       public val model: String,
       @SerialName("sampling_params")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val samplingParams: SamplingParams? = null,
       public val input: List<EvalItem>,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val range: List<Double>? = null,
     ) : Grader {
       /**
@@ -230,11 +238,13 @@ public data class FineTuneReinforcementMethod(
          *
          */
         @SerialName("python")
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class Python(
           public val name: String,
           public val source: String,
           @SerialName("image_tag")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val imageTag: String? = null,
         ) : Graders
 
@@ -243,13 +253,16 @@ public data class FineTuneReinforcementMethod(
          *
          */
         @SerialName("score_model")
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         public data class ScoreModel(
           public val name: String,
           public val model: String,
           @SerialName("sampling_params")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val samplingParams: SamplingParams? = null,
           public val input: List<EvalItem>,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val range: List<Double>? = null,
         ) : Graders {
           /**

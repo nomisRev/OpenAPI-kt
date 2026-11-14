@@ -6,6 +6,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -18,16 +19,19 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
 
 /**
  * Event
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Event(
   public val id: String,
   public val type: String?,
   public val actor: Actor,
   public val repo: Repo,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val org: Actor? = null,
   public val payload: Payload,
   public val `public`: Boolean,
@@ -160,25 +164,31 @@ public data class Event(
       override fun deserialize(decoder: Decoder): Payload {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseCreateEvent::class to { CaseCreateEvent(decodeFromJsonElement(CreateEvent.serializer(), it)) },
-          CaseDeleteEvent::class to { CaseDeleteEvent(decodeFromJsonElement(DeleteEvent.serializer(), it)) },
-          CaseDiscussionEvent::class to { CaseDiscussionEvent(decodeFromJsonElement(DiscussionEvent.serializer(), it)) },
-          CaseIssuesEvent::class to { CaseIssuesEvent(decodeFromJsonElement(IssuesEvent.serializer(), it)) },
-          CaseIssueCommentEvent::class to { CaseIssueCommentEvent(decodeFromJsonElement(IssueCommentEvent.serializer(), it)) },
-          CaseForkEvent::class to { CaseForkEvent(decodeFromJsonElement(ForkEvent.serializer(), it)) },
-          CaseGollumEvent::class to { CaseGollumEvent(decodeFromJsonElement(GollumEvent.serializer(), it)) },
-          CaseMemberEvent::class to { CaseMemberEvent(decodeFromJsonElement(MemberEvent.serializer(), it)) },
-          CasePublicEvent::class to { CasePublicEvent(decodeFromJsonElement(PublicEvent.serializer(), it)) },
-          CasePushEvent::class to { CasePushEvent(decodeFromJsonElement(PushEvent.serializer(), it)) },
-          CasePullRequestEvent::class to { CasePullRequestEvent(decodeFromJsonElement(PullRequestEvent.serializer(), it)) },
-          CasePullRequestReviewCommentEvent::class to { CasePullRequestReviewCommentEvent(decodeFromJsonElement(PullRequestReviewCommentEvent.serializer(), it)) },
-          CasePullRequestReviewEvent::class to { CasePullRequestReviewEvent(decodeFromJsonElement(PullRequestReviewEvent.serializer(), it)) },
-          CaseCommitCommentEvent::class to { CaseCommitCommentEvent(decodeFromJsonElement(CommitCommentEvent.serializer(), it)) },
-          CaseReleaseEvent::class to { CaseReleaseEvent(decodeFromJsonElement(ReleaseEvent.serializer(), it)) },
-          CaseWatchEvent::class to { CaseWatchEvent(decodeFromJsonElement(WatchEvent.serializer(), it)) },
-        )
+        return when {
+          value is JsonObject -> json.attemptDeserialize(
+            value,
+            CaseCreateEvent::class to { CaseCreateEvent(decodeFromJsonElement(CreateEvent.serializer(), it)) },
+            CaseDeleteEvent::class to { CaseDeleteEvent(decodeFromJsonElement(DeleteEvent.serializer(), it)) },
+            CaseDiscussionEvent::class to { CaseDiscussionEvent(decodeFromJsonElement(DiscussionEvent.serializer(), it)) },
+            CaseIssuesEvent::class to { CaseIssuesEvent(decodeFromJsonElement(IssuesEvent.serializer(), it)) },
+            CaseIssueCommentEvent::class to { CaseIssueCommentEvent(decodeFromJsonElement(IssueCommentEvent.serializer(), it)) },
+            CaseForkEvent::class to { CaseForkEvent(decodeFromJsonElement(ForkEvent.serializer(), it)) },
+            CaseGollumEvent::class to { CaseGollumEvent(decodeFromJsonElement(GollumEvent.serializer(), it)) },
+            CaseMemberEvent::class to { CaseMemberEvent(decodeFromJsonElement(MemberEvent.serializer(), it)) },
+            CasePublicEvent::class to { CasePublicEvent(decodeFromJsonElement(PublicEvent.serializer(), it)) },
+            CasePushEvent::class to { CasePushEvent(decodeFromJsonElement(PushEvent.serializer(), it)) },
+            CasePullRequestEvent::class to { CasePullRequestEvent(decodeFromJsonElement(PullRequestEvent.serializer(), it)) },
+            CasePullRequestReviewCommentEvent::class to { CasePullRequestReviewCommentEvent(decodeFromJsonElement(PullRequestReviewCommentEvent.serializer(), it)) },
+            CasePullRequestReviewEvent::class to { CasePullRequestReviewEvent(decodeFromJsonElement(PullRequestReviewEvent.serializer(), it)) },
+            CaseCommitCommentEvent::class to { CaseCommitCommentEvent(decodeFromJsonElement(CommitCommentEvent.serializer(), it)) },
+            CaseReleaseEvent::class to { CaseReleaseEvent(decodeFromJsonElement(ReleaseEvent.serializer(), it)) },
+            CaseWatchEvent::class to { CaseWatchEvent(decodeFromJsonElement(WatchEvent.serializer(), it)) },
+          )
+          else -> json.attemptDeserialize(
+            value,
+            CasePublicEvent::class to { CasePublicEvent(decodeFromJsonElement(PublicEvent.serializer(), it)) },
+          )
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: Payload) {

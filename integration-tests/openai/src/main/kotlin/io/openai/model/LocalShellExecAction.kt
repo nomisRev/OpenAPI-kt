@@ -3,6 +3,7 @@ package io.openai.model
 import kotlin.Long
 import kotlin.String
 import kotlin.collections.List
+import kotlin.collections.Map
 import kotlinx.serialization.Required
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -19,8 +20,7 @@ public data class LocalShellExecAction(
   public val timeoutMs: Long? = null,
   @SerialName("working_directory")
   public val workingDirectory: String? = null,
-  @Required
-  public val env: List<String> = emptyList(),
+  public val env: Map<String, String>,
   public val user: String? = null,
 ) {
   @Serializable

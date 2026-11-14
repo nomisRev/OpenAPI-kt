@@ -4,6 +4,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlinx.datetime.LocalDate
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.KeepGeneratedSerializer
@@ -26,8 +27,10 @@ import kotlinx.serialization.json.JsonObject
 public data class CopilotUsageMetricsDay(
   public val date: LocalDate,
   @SerialName("total_active_users")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val totalActiveUsers: Long? = null,
   @SerialName("total_engaged_users")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val totalEngagedUsers: Long? = null,
   @SerialName("copilot_ide_code_completions")
   public val copilotIdeCodeCompletions: CopilotIdeCodeCompletions? = null,

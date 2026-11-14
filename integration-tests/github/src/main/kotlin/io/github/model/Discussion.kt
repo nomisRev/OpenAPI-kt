@@ -2,15 +2,19 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A Discussion in a repository.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Discussion(
   @SerialName("active_lock_reason")
@@ -22,6 +26,7 @@ public data class Discussion(
   @SerialName("answer_html_url")
   public val answerHtmlUrl: String?,
   @SerialName("author_association")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val authorAssociation: AuthorAssociation? = null,
   public val body: String,
   public val category: Category,
@@ -35,6 +40,7 @@ public data class Discussion(
   @SerialName("node_id")
   public val nodeId: String,
   public val number: Long,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val reactions: Reactions? = null,
   @SerialName("repository_url")
   public val repositoryUrl: String,
@@ -42,51 +48,73 @@ public data class Discussion(
   @SerialName("state_reason")
   public val stateReason: StateReason?,
   @SerialName("timeline_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val timelineUrl: String? = null,
   public val title: String,
   @SerialName("updated_at")
   public val updatedAt: Instant,
   public val user: User?,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val labels: List<Label>? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class AnswerChosenBy(
     @SerialName("avatar_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val avatarUrl: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val deleted: Boolean? = null,
     public val email: String? = null,
     @SerialName("events_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val eventsUrl: String? = null,
     @SerialName("followers_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val followersUrl: String? = null,
     @SerialName("following_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val followingUrl: String? = null,
     @SerialName("gists_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val gistsUrl: String? = null,
     @SerialName("gravatar_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val gravatarId: String? = null,
     @SerialName("html_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val htmlUrl: String? = null,
     public val id: Long,
     public val login: String,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
     @SerialName("node_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val nodeId: String? = null,
     @SerialName("organizations_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val organizationsUrl: String? = null,
     @SerialName("received_events_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val receivedEventsUrl: String? = null,
     @SerialName("repos_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val reposUrl: String? = null,
     @SerialName("site_admin")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val siteAdmin: Boolean? = null,
     @SerialName("starred_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val starredUrl: String? = null,
     @SerialName("subscriptions_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val subscriptionsUrl: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: Type? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val url: String? = null,
     @SerialName("user_view_type")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val userViewType: String? = null,
   ) {
     @Serializable
@@ -114,6 +142,7 @@ public data class Discussion(
     ;
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Category(
     @SerialName("created_at")
@@ -125,6 +154,7 @@ public data class Discussion(
     public val isAnswerable: Boolean,
     public val name: String,
     @SerialName("node_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val nodeId: String? = null,
     @SerialName("repository_id")
     public val repositoryId: Long,
@@ -180,44 +210,64 @@ public data class Discussion(
     ;
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class User(
     @SerialName("avatar_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val avatarUrl: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val deleted: Boolean? = null,
     public val email: String? = null,
     @SerialName("events_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val eventsUrl: String? = null,
     @SerialName("followers_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val followersUrl: String? = null,
     @SerialName("following_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val followingUrl: String? = null,
     @SerialName("gists_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val gistsUrl: String? = null,
     @SerialName("gravatar_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val gravatarId: String? = null,
     @SerialName("html_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val htmlUrl: String? = null,
     public val id: Long,
     public val login: String,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
     @SerialName("node_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val nodeId: String? = null,
     @SerialName("organizations_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val organizationsUrl: String? = null,
     @SerialName("received_events_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val receivedEventsUrl: String? = null,
     @SerialName("repos_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val reposUrl: String? = null,
     @SerialName("site_admin")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val siteAdmin: Boolean? = null,
     @SerialName("starred_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val starredUrl: String? = null,
     @SerialName("subscriptions_url")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val subscriptionsUrl: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: Type? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val url: String? = null,
     @SerialName("user_view_type")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val userViewType: String? = null,
   ) {
     @Serializable

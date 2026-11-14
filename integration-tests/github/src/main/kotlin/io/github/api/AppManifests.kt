@@ -8,6 +8,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.post
+import io.ktor.http.encodeURLParameter
 import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
@@ -15,6 +16,7 @@ import kotlin.collections.List
 import kotlin.collections.Map
 import kotlin.jvm.JvmInline
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -54,7 +56,7 @@ public class AppManifests internal constructor(
         private val code: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.post("/app-manifests/$code/conversions")
+          val response = client.post("app-manifests/${code.encodeURLParameter()}/conversions")
           return when (response.status.value) {
             201 -> response.body<Response.Created>()
             404 -> Response.NotFound(response.body())
@@ -72,11 +74,12 @@ public class AppManifests internal constructor(
           @Serializable(with = Created.Serializer::class)
           public data class Created(
             public val id: Long,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val slug: String? = null,
             @SerialName("node_id")
             public val nodeId: String,
             @SerialName("client_id")
-            public val clientId: String? = null,
+            public val clientId: String,
             public val owner: Owner,
             public val name: String,
             public val description: String?,
@@ -91,12 +94,13 @@ public class AppManifests internal constructor(
             public val permissions: Permissions,
             public val events: List<String>,
             @SerialName("installations_count")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val installationsCount: Long? = null,
             @SerialName("client_secret")
-            public val clientSecret: String? = null,
+            public val clientSecret: String,
             @SerialName("webhook_secret")
-            public val webhookSecret: String? = null,
-            public val pem: String? = null,
+            public val webhookSecret: String?,
+            public val pem: String,
             public val additional: JsonObject? = null,
           ) : Response {
             @Serializable(with = Owner.Serializer::class)
@@ -150,10 +154,15 @@ public class AppManifests internal constructor(
             @KeepGeneratedSerializer
             @Serializable(with = Permissions.Serializer::class)
             public data class Permissions(
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val issues: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val checks: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val metadata: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val contents: String? = null,
+              @EncodeDefault(EncodeDefault.Mode.NEVER)
               public val deployments: String? = null,
               public val additional: Map<String, String>? = null,
             ) {

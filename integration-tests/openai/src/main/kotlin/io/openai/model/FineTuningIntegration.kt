@@ -1,7 +1,10 @@
 package io.openai.model
 
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -25,11 +28,13 @@ public data class FineTuningIntegration(
    * to your run, and set a default entity (team, username, etc) to be associated with your run.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Wandb(
     public val project: String,
     public val name: String? = null,
     public val entity: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val tags: List<String>? = null,
   )
 }

@@ -2,15 +2,19 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * Webhooks for repositories.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Hook(
   public val type: String,
@@ -29,6 +33,7 @@ public data class Hook(
   @SerialName("ping_url")
   public val pingUrl: String,
   @SerialName("deliveries_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val deliveriesUrl: String? = null,
   @SerialName("last_response")
   public val lastResponse: HookResponse,

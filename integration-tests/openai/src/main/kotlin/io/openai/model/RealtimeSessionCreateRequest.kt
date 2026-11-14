@@ -6,6 +6,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -19,35 +20,53 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.doubleOrNull
 
 /**
  * A new Realtime session configuration, with an ephemeral key. Default TTL
  * for keys is one minute.
  *
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class RealtimeSessionCreateRequest(
   @SerialName("client_secret")
   public val clientSecret: ClientSecret,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val modalities: List<Modalities>? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val instructions: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val voice: VoiceIdsOrCustomVoice? = null,
   @SerialName("input_audio_format")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val inputAudioFormat: String? = null,
   @SerialName("output_audio_format")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val outputAudioFormat: String? = null,
   @SerialName("input_audio_transcription")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val inputAudioTranscription: InputAudioTranscription? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val speed: Double? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tracing: Tracing? = null,
   @SerialName("turn_detection")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val turnDetection: TurnDetection? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val tools: List<Tools>? = null,
   @SerialName("tool_choice")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val toolChoice: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val temperature: Double? = null,
   @SerialName("max_response_output_tokens")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val maxResponseOutputTokens: MaxResponseOutputTokens? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val truncation: RealtimeTruncation? = null,
   public val prompt: Prompt? = null,
 ) {
@@ -69,9 +88,10 @@ public data class RealtimeSessionCreateRequest(
    * rather than the representation understood by the model.
    *
    */
-  @JvmInline
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
-  public value class InputAudioTranscription(
+  public data class InputAudioTranscription(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val model: String? = null,
   )
 
@@ -113,11 +133,17 @@ public data class RealtimeSessionCreateRequest(
       override fun deserialize(decoder: Decoder): MaxResponseOutputTokens {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          Inf::class to { decodeFromJsonElement(Inf.serializer(), it) },
-          CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            Inf::class to { decodeFromJsonElement(Inf.serializer(), it) },
+          )
+          value is JsonPrimitive && !value.isString && value.doubleOrNull != null -> json.attemptDeserialize(
+            value,
+            CaseLong::class to { CaseLong(decodeFromJsonElement(Long.serializer(), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: MaxResponseOutputTokens) {
@@ -140,11 +166,16 @@ public data class RealtimeSessionCreateRequest(
     ;
   }
 
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Tools(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: Type? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val name: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val description: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val parameters: JsonElement? = null,
   ) {
     @Serializable
@@ -180,12 +211,16 @@ public data class RealtimeSessionCreateRequest(
      * Granular configuration for tracing.
      *
      */
+    @OptIn(ExperimentalSerializationApi::class)
     @Serializable
     public data class TracingConfiguration(
       @SerialName("workflow_name")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val workflowName: String? = null,
       @SerialName("group_id")
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val groupId: String? = null,
+      @EncodeDefault(EncodeDefault.Mode.NEVER)
       public val metadata: JsonElement? = null,
     ) : Tracing
 
@@ -203,11 +238,17 @@ public data class RealtimeSessionCreateRequest(
       override fun deserialize(decoder: Decoder): Tracing {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          TracingConfiguration::class to { decodeFromJsonElement(TracingConfiguration.serializer(), it) },
-          Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            Auto::class to { decodeFromJsonElement(Auto.serializer(), it) },
+          )
+          value is JsonObject -> json.attemptDeserialize(
+            value,
+            TracingConfiguration::class to { decodeFromJsonElement(TracingConfiguration.serializer(), it) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: Tracing) {
@@ -225,13 +266,18 @@ public data class RealtimeSessionCreateRequest(
    * audio volume and respond at the end of user speech.
    *
    */
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class TurnDetection(
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val type: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val threshold: Double? = null,
     @SerialName("prefix_padding_ms")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val prefixPaddingMs: Long? = null,
     @SerialName("silence_duration_ms")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val silenceDurationMs: Long? = null,
   )
 }

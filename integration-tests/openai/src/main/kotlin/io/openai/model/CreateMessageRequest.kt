@@ -4,6 +4,7 @@ import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.jvm.JvmInline
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -16,9 +17,11 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonClassDiscriminator
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable
 public data class CreateMessageRequest(
@@ -27,10 +30,13 @@ public data class CreateMessageRequest(
   public val attachments: List<Attachments>? = null,
   public val metadata: Metadata? = null,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class Attachments(
     @SerialName("file_id")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val fileId: String? = null,
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val tools: List<Tools>? = null,
   ) {
     @OptIn(ExperimentalSerializationApi::class)
@@ -69,10 +75,12 @@ public data class CreateMessageRequest(
        * References an image [File](/docs/api-reference/files) in the content of a message.
        */
       @SerialName("image_file")
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class ImageFile(
         @SerialName("file_id")
         public val fileId: String,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val detail: Detail? = null,
       ) : Two {
         @Serializable
@@ -93,9 +101,11 @@ public data class CreateMessageRequest(
        * References an image URL in the content of a message.
        */
       @SerialName("image_url")
+      @OptIn(ExperimentalSerializationApi::class)
       @Serializable
       public data class ImageUrl(
         public val url: String,
+        @EncodeDefault(EncodeDefault.Mode.NEVER)
         public val detail: Detail? = null,
       ) : Two {
         @Serializable
@@ -115,10 +125,9 @@ public data class CreateMessageRequest(
       /**
        * The text content that is part of a message.
        */
-      @JvmInline
       @SerialName("text")
       @Serializable
-      public value class Text(
+      public data class Text(
         public val text: String,
       ) : Two
     }
@@ -137,11 +146,17 @@ public data class CreateMessageRequest(
       override fun deserialize(decoder: Decoder): Content {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          CaseTwoList::class to { CaseTwoList(decodeFromJsonElement(ListSerializer(Two.serializer()), it)) },
-          CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            CaseString::class to { CaseString(decodeFromJsonElement(String.serializer(), it)) },
+          )
+          value is JsonArray -> json.attemptDeserialize(
+            value,
+            CaseTwoList::class to { CaseTwoList(decodeFromJsonElement(ListSerializer(Two.serializer()), it)) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: Content) {

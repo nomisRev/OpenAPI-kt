@@ -16,7 +16,7 @@ public class RateLimit internal constructor(
     private val client: HttpClient,
   ) {
     public suspend operator fun invoke(): Response {
-      val response = client.get("/rate_limit")
+      val response = client.get("rate_limit")
       return when (response.status.value) {
         200 -> Response.Ok(response.body())
         304 -> Response.NotModified

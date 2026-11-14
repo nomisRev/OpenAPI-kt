@@ -1,26 +1,34 @@
 package io.github.model
 
 import kotlin.Boolean
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A hosted compute network configuration.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class NetworkConfiguration(
   public val id: String,
   public val name: String,
   @SerialName("compute_service")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val computeService: ComputeService? = null,
   @SerialName("network_settings_ids")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val networkSettingsIds: List<String>? = null,
   @SerialName("failover_network_settings_ids")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val failoverNetworkSettingsIds: List<String>? = null,
   @SerialName("failover_network_enabled")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val failoverNetworkEnabled: Boolean? = null,
   @SerialName("created_on")
   public val createdOn: Instant?,

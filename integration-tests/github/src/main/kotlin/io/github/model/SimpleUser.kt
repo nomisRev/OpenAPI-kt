@@ -2,13 +2,17 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A GitHub user.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class SimpleUser(
   public val name: String? = null,
@@ -46,7 +50,9 @@ public data class SimpleUser(
   @SerialName("site_admin")
   public val siteAdmin: Boolean,
   @SerialName("starred_at")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val starredAt: String? = null,
   @SerialName("user_view_type")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val userViewType: String? = null,
 )

@@ -5,6 +5,7 @@ import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
+import kotlinx.serialization.EncodeDefault
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -17,6 +18,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.JsonDecoder
 import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 @Serializable
 public data class GetBudget(
@@ -36,11 +38,14 @@ public data class GetBudget(
   @SerialName("budget_alerting")
   public val budgetAlerting: BudgetAlerting,
 ) {
+  @OptIn(ExperimentalSerializationApi::class)
   @Serializable
   public data class BudgetAlerting(
     @SerialName("will_alert")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val willAlert: Boolean? = null,
     @SerialName("alert_recipients")
+    @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val alertRecipients: List<String>? = null,
   )
 
@@ -88,11 +93,14 @@ public data class GetBudget(
       override fun deserialize(decoder: Decoder): BudgetType {
         val value = decoder.decodeSerializableValue(JsonElement.serializer())
         val json = requireNotNull(decoder as? JsonDecoder) { "Complex unions currently only supported for Json" }.json
-        return json.attemptDeserialize(
-          value,
-          ProductPricing::class to { decodeFromJsonElement(ProductPricing.serializer(), it) },
-          SkuPricing::class to { decodeFromJsonElement(SkuPricing.serializer(), it) },
-        )
+        return when {
+          value is JsonPrimitive && value.isString -> json.attemptDeserialize(
+            value,
+            ProductPricing::class to { decodeFromJsonElement(ProductPricing.serializer(), it) },
+            SkuPricing::class to { decodeFromJsonElement(SkuPricing.serializer(), it) },
+          )
+          else -> throw UnionSerializationException(value, emptyMap())
+        }
       }
 
       override fun serialize(encoder: Encoder, `value`: BudgetType) {

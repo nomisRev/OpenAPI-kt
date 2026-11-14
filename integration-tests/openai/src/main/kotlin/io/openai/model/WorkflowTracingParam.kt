@@ -1,14 +1,17 @@
 package io.openai.model
 
 import kotlin.Boolean
-import kotlin.jvm.JvmInline
+import kotlin.OptIn
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 
 /**
  * Controls diagnostic tracing during the session.
  */
-@JvmInline
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
-public value class WorkflowTracingParam(
+public data class WorkflowTracingParam(
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val enabled: Boolean? = null,
 )

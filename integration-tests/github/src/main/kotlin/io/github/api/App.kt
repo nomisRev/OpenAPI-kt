@@ -19,17 +19,20 @@ import io.ktor.client.call.body
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.`get`
 import io.ktor.client.request.delete
-import io.ktor.client.request.parameter
 import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
+import io.ktor.http.encodeURLParameter
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement
@@ -48,7 +51,11 @@ public class App internal constructor(
   public class Get internal constructor(
     private val client: HttpClient,
   ) {
-    public suspend operator fun invoke(): Integration? = client.get("/app").body()
+    public suspend operator fun invoke(): Integration? {
+      val response = client.get("app")
+      if (response.status.value != 200) throw ResponseException(response, "")
+      return response.body()
+    }
   }
 
   public class Hook internal constructor(
@@ -68,7 +75,11 @@ public class App internal constructor(
       public class Get internal constructor(
         private val client: HttpClient,
       ) {
-        public suspend operator fun invoke(): WebhookConfig = client.get("/app/hook/config").body()
+        public suspend operator fun invoke(): WebhookConfig {
+          val response = client.get("app/hook/config")
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
       }
 
       public class Patch internal constructor(
@@ -79,18 +90,27 @@ public class App internal constructor(
           contentType: WebhookConfigContentType? = null,
           secret: WebhookConfigSecret? = null,
           insecureSsl: WebhookConfigInsecureSsl? = null,
-        ): WebhookConfig = client.patch("/app/hook/config") {
-          contentType(ContentType.Application.Json)
-          setBody(Body(url = url, contentType = contentType, secret = secret, insecureSsl = insecureSsl))
-        }.body()
+        ): WebhookConfig {
+          val response = client.patch("app/hook/config") {
+            contentType(ContentType.Application.Json)
+            setBody(Body(url = url, contentType = contentType, secret = secret, insecureSsl = insecureSsl))
+          }
+          if (response.status.value != 200) throw ResponseException(response, "")
+          return response.body()
+        }
 
+        @OptIn(ExperimentalSerializationApi::class)
         @Serializable
         internal data class Body(
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val url: WebhookConfigUrl? = null,
           @SerialName("content_type")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val contentType: WebhookConfigContentType? = null,
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val secret: WebhookConfigSecret? = null,
           @SerialName("insecure_ssl")
+          @EncodeDefault(EncodeDefault.Mode.NEVER)
           public val insecureSsl: WebhookConfigInsecureSsl? = null,
         )
       }
@@ -107,9 +127,13 @@ public class App internal constructor(
         private val client: HttpClient,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, cursor: String? = null): Response {
-          val response = client.get("/app/hook/deliveries") {
-            perPage?.let { parameter("per_page", it) }
-            cursor?.let { parameter("cursor", it) }
+          val response = client.get("app/hook/deliveries") {
+            if (perPage != null) {
+              url.encodedParameters.append("per_page", perPage.toString())
+            }
+            if (cursor != null) {
+              url.encodedParameters.append("cursor", cursor.encodeURLParameter())
+            }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -147,7 +171,7 @@ public class App internal constructor(
           private val deliveryId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("/app/hook/deliveries/$deliveryId")
+            val response = client.get("app/hook/deliveries/$deliveryId")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               400 -> Response.BadRequest(response.body())
@@ -182,7 +206,7 @@ public class App internal constructor(
             private val deliveryId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.post("/app/hook/deliveries/$deliveryId/attempts")
+              val response = client.post("app/hook/deliveries/$deliveryId/attempts")
               return when (response.status.value) {
                 202 -> Response.Accepted(response.body())
                 400 -> Response.BadRequest(response.body())
@@ -219,9 +243,13 @@ public class App internal constructor(
       private val client: HttpClient,
     ) {
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-        val response = client.get("/app/installation-requests") {
-          perPage?.let { parameter("per_page", it) }
-          page?.let { parameter("page", it) }
+        val response = client.get("app/installation-requests") {
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
         }
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
@@ -260,12 +288,24 @@ public class App internal constructor(
         page: Long? = 1L,
         since: Instant? = null,
         outdated: String? = null,
-      ): List<Installation> = client.get("/app/installations") {
-        perPage?.let { parameter("per_page", it) }
-        page?.let { parameter("page", it) }
-        since?.let { parameter("since", it.toString()) }
-        outdated?.let { parameter("outdated", it) }
-      }.body()
+      ): List<Installation> {
+        val response = client.get("app/installations") {
+          if (perPage != null) {
+            url.encodedParameters.append("per_page", perPage.toString())
+          }
+          if (page != null) {
+            url.encodedParameters.append("page", page.toString())
+          }
+          if (since != null) {
+            url.encodedParameters.append("since", since.toString().encodeURLParameter())
+          }
+          if (outdated != null) {
+            url.encodedParameters.append("outdated", outdated.encodeURLParameter())
+          }
+        }
+        if (response.status.value != 200) throw ResponseException(response, "")
+        return response.body()
+      }
     }
 
     public class InstallationIdPath internal constructor(
@@ -285,7 +325,7 @@ public class App internal constructor(
         private val installationId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("/app/installations/$installationId")
+          val response = client.delete("app/installations/$installationId")
           return when (response.status.value) {
             204 -> Response.NoContent
             404 -> Response.NotFound(response.body())
@@ -307,7 +347,7 @@ public class App internal constructor(
         private val installationId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("/app/installations/$installationId")
+          val response = client.get("app/installations/$installationId")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             404 -> Response.NotFound(response.body())
@@ -336,16 +376,26 @@ public class App internal constructor(
           private val client: HttpClient,
           private val installationId: Long,
         ) {
+          public suspend operator fun invoke(): Response {
+            val response = client.post("app/installations/$installationId/access_tokens")
+            return when (response.status.value) {
+              201 -> Response.Created(response.body())
+              401 -> Response.Unauthorized(response.body())
+              403 -> Response.Forbidden(response.body())
+              404 -> Response.NotFound(response.body())
+              422 -> Response.UnprocessableEntity(response.body())
+              else -> throw ResponseException(response, "")
+            }
+          }
+
           public suspend operator fun invoke(
             repositories: List<String>? = null,
             repositoryIds: List<Long>? = null,
             permissions: AppPermissions? = null,
           ): Response {
-            val response = client.post("/app/installations/$installationId/access_tokens") {
-              if (repositories != null || repositoryIds != null || permissions != null) {
-                contentType(ContentType.Application.Json)
-                setBody(Body(repositories = repositories, repositoryIds = repositoryIds, permissions = permissions))
-              }
+            val response = client.post("app/installations/$installationId/access_tokens") {
+              contentType(ContentType.Application.Json)
+              setBody(Body(repositories = repositories, repositoryIds = repositoryIds, permissions = permissions))
             }
             return when (response.status.value) {
               201 -> Response.Created(response.body())
@@ -357,11 +407,15 @@ public class App internal constructor(
             }
           }
 
+          @OptIn(ExperimentalSerializationApi::class)
           @Serializable
           internal data class Body(
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val repositories: List<String>? = null,
             @SerialName("repository_ids")
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val repositoryIds: List<Long>? = null,
+            @EncodeDefault(EncodeDefault.Mode.NEVER)
             public val permissions: AppPermissions? = null,
           )
 
@@ -402,7 +456,7 @@ public class App internal constructor(
           private val installationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("/app/installations/$installationId/suspended")
+            val response = client.delete("app/installations/$installationId/suspended")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -424,7 +478,7 @@ public class App internal constructor(
           private val installationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("/app/installations/$installationId/suspended")
+            val response = client.put("app/installations/$installationId/suspended")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())

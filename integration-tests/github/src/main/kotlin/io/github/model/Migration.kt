@@ -2,15 +2,19 @@ package io.github.model
 
 import kotlin.Boolean
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.collections.List
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A migration.
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class Migration(
   public val id: Long,
@@ -40,6 +44,8 @@ public data class Migration(
   @SerialName("node_id")
   public val nodeId: String,
   @SerialName("archive_url")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val archiveUrl: String? = null,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val exclude: List<String>? = null,
 )

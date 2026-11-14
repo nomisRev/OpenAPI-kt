@@ -3,14 +3,18 @@ package io.github.model
 import kotlin.Boolean
 import kotlin.Double
 import kotlin.Long
+import kotlin.OptIn
 import kotlin.String
 import kotlin.time.Instant
+import kotlinx.serialization.EncodeDefault
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 /**
  * A projects v2 project
  */
+@OptIn(ExperimentalSerializationApi::class)
 @Serializable
 public data class ProjectsV2(
   public val id: Double,
@@ -34,10 +38,12 @@ public data class ProjectsV2(
   public val deletedAt: Instant?,
   @SerialName("deleted_by")
   public val deletedBy: NullableSimpleUser?,
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val state: State? = null,
   @SerialName("latest_status_update")
   public val latestStatusUpdate: NullableProjectsV2StatusUpdate? = null,
   @SerialName("is_template")
+  @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val isTemplate: Boolean? = null,
 ) {
   @Serializable
