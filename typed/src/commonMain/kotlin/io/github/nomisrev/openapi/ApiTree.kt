@@ -22,10 +22,17 @@ data class ApiTree(
     val warnings: List<String> = emptyList(),
 )
 
+/**
+ * A node of the tree: one step of a path ([PathStep]). [joinedBy] and [trailing] say how the step is written in the
+ * path, `/` and nothing for a segment between slashes, and are the text of a [PathSegment.Composite] between its steps
+ * (`.` for `json` in `{id}.json`). Two nodes with one [segment] and different text are different paths.
+ */
 data class PathNode(
     val segment: PathSegment,
     val operations: Map<HttpMethod, Route>,
     val children: List<PathNode>,
+    val joinedBy: String = "/",
+    val trailing: String = "",
 )
 
 fun Iterable<Route>.buildTree(
@@ -37,7 +44,10 @@ fun Iterable<Route>.buildTree(
     val pathsByResource = routes.groupBy(Route::resourceSegments) { it.path }.mapValues { it.value.toSet() }
     val placements = routes.map { route ->
         val resource = route.resourceSegments()
-        Placement(if (pathsByResource.getValue(resource).size > 1) route.segments else resource, route)
+        Placement(
+            if (pathsByResource.getValue(resource).size > 1) route.segments.flatMap(PathSegment::toSteps) else resource,
+            route,
+        )
     }
 
     return ApiTree(
@@ -55,8 +65,8 @@ fun Iterable<Route>.buildTree(
  * these segments (`/owners` and `/owners/`), each keeps its own, and an empty segment is a node of its own. The route
  * keeps its [Route.segments] either way, so it requests its path as written.
  */
-private fun Route.resourceSegments(): List<PathSegment> =
-    segments.filterNot { it is PathSegment.Literal && it.name.isEmpty() }
+private fun Route.resourceSegments(): List<PathStep> =
+    segments.filterNot { it is PathSegment.Literal && it.name.isEmpty() }.flatMap(PathSegment::toSteps)
 
 private tailrec suspend fun Set<NamingContext.Reference>.topLevelModels(registry: Registry): List<Model> {
     val models = with(registry) { map { it.toModel() } }
@@ -122,8 +132,8 @@ private fun List<Server>.normalizeForClientGeneration(): List<Server> {
     return if (isImplicitDefault) emptyList() else this
 }
 
-/** A route and the segments of its node that are still to be placed below the current one. */
-private class Placement(val remaining: List<PathSegment>, val route: Route) {
+/** A route and the steps of its node that are still to be placed below the current one. */
+private class Placement(val remaining: List<PathStep>, val route: Route) {
     fun next(): Placement = Placement(remaining.drop(1), route)
 }
 
@@ -150,18 +160,23 @@ private fun List<Placement>.childNodes(parentSegments: List<PathSegment>): List<
     for (spelling in spellings) {
         val identity = spelling.first().remaining.first().identityKey()
         val cluster = clusters.firstOrNull { cluster ->
-            cluster.first().remaining.first().identityKey() == identity && !cluster.sharesAnOperationWith(spelling)
+            cluster.first().remaining.first().identityKey() == identity &&
+                cluster.all { it.remaining.first().canShareNodeWith(spelling.first().remaining.first()) } &&
+                !cluster.sharesAnOperationWith(spelling)
         }
         if (cluster != null) cluster += spelling else clusters += spelling.toMutableList()
     }
-    return clusters.map { cluster -> cluster.toNode(parentSegments) }
+    // The spellings of one node are placed in the order of their first route, so the children of the node, and which
+    // of two with one Kotlin name is suffixed, follow the order the routes are declared in.
+    val order = withIndex().associate { [index, placement] -> placement to index }
+    return clusters.map { cluster -> cluster.sortedBy { order.getValue(it) }.toNode(parentSegments) }
 }
 
 private fun List<Placement>.toNode(parentSegments: List<PathSegment>): PathNode {
     val first = first()
-    val firstSegment = first.remaining.first()
+    val firstSegment = first.remaining.first().segment
     val segment = drop(1).fold(firstSegment) { segment, placement ->
-        val head = placement.remaining.first()
+        val head = placement.remaining.first().segment
         segment.requireCompatibleWith(
             other = head,
             nodePath = parentSegments + firstSegment,
@@ -175,13 +190,15 @@ private fun List<Placement>.toNode(parentSegments: List<PathSegment>): PathNode 
         segment = segment,
         operations = below.operations(),
         children = below.childNodes(parentSegments + firstSegment),
+        joinedBy = first.remaining.first().joinedBy,
+        trailing = first.remaining.first().trailing,
     )
 }
 
 /** Whether a route of these placements and one of [other] would end on one node with one method. */
 private fun List<Placement>.sharesAnOperationWith(other: List<Placement>): Boolean {
-    val operations = mapTo(mutableSetOf()) { it.route.method to it.remaining.drop(1).map(PathSegment::identityKey) }
-    return other.any { (it.route.method to it.remaining.drop(1).map(PathSegment::identityKey)) in operations }
+    val operations = mapTo(mutableSetOf()) { it.route.method to it.remaining.drop(1).map(PathStep::identityKey) }
+    return other.any { (it.route.method to it.remaining.drop(1).map(PathStep::identityKey)) in operations }
 }
 
 /**
@@ -191,7 +208,29 @@ private fun List<Placement>.sharesAnOperationWith(other: List<Placement>): Boole
  */
 private fun String.normalizeSegmentSeparators(): String = replace('-', '_')
 
-/** The segment as it is sent: a literal and a fixed enum value with one wire value are one spelling. */
+/** The step as it is sent: a literal and a fixed enum value with one wire value are one spelling. */
+private fun PathStep.spellingKey(): String =
+    segment.spellingKey() + identitySuffix() + if (fromComposite) "|composite:${segment.compatibilityDescription()}" else ""
+
+/** The resource a step names: spellings that differ only by `-` and `_` name one. */
+private fun PathStep.identityKey(): String = segment.identityKey() + identitySuffix()
+
+/**
+ * What distinguishes two steps with one name: how they are joined to the step before them, and what trails the last
+ * one. Empty for the steps of a path of `/`-separated segments, so their identity is that of their segment.
+ */
+private fun PathStep.identitySuffix(): String =
+    if (joinedBy == "/" && trailing.isEmpty()) "" else "|$joinedBy|$trailing"
+
+/**
+ * Whether two steps of one identity can be one node. A parameter of a composite is a plain parameter, so it shares a
+ * node only with a parameter of the same shape; two different shapes are two nodes (and keep their names apart with a
+ * suffix) instead of a conflict, since a composite never was one.
+ */
+private fun PathStep.canShareNodeWith(other: PathStep): Boolean =
+    !(fromComposite || other.fromComposite) ||
+        segment.normalizedForCompatibility() == other.segment.normalizedForCompatibility()
+
 private fun PathSegment.spellingKey(): String = when (this) {
     is PathSegment.Literal -> "literal:$name"
     is PathSegment.FixedValue -> "literal:$wireValue"
@@ -200,7 +239,6 @@ private fun PathSegment.spellingKey(): String = when (this) {
     is PathSegment.Composite -> "composite:$name"
 }
 
-/** The resource a segment names: spellings that differ only by `-` and `_` name one. */
 private fun PathSegment.identityKey(): String = when (this) {
     is PathSegment.Literal -> "literal:${name.normalizeSegmentSeparators()}"
     is PathSegment.FixedValue -> "literal:${wireValue.normalizeSegmentSeparators()}"

@@ -12,8 +12,9 @@ import kotlin.test.assertTrue
 
 /**
  * A path segment can be made of literal text and template expressions (`{id}.json`, `lists.{format}`,
- * `{name}:cancel`, OpenAPI 3.1.1 path templating): each expression is an argument of the navigation function, whose
- * name is the camel-cased concatenation of every part. `CompositePathSegmentRuntimeTest` checks the request path.
+ * `{name}:cancel`, OpenAPI 3.1.1 path templating): it is navigated one step per part, a navigation function for each
+ * expression and a property for the text (`api.hackathons.id(id).json`), like the steps of `/`-separated segments.
+ * `CompositePathSegmentRuntimeTest` checks the request path.
  */
 val compositePathSegmentSpec by testSuite {
     renderSpec(
@@ -43,9 +44,18 @@ val compositePathSegmentSpec by testSuite {
                 "responses": { "204": { "description": "No Content" } }
               }
             },
+            "/lists": {
+              "get": { "responses": { "204": { "description": "No Content" } } }
+            },
             "/lists.{format}": {
               "get": {
                 "parameters": [ { "name": "format", "in": "path", "required": true, "schema": { "type": "string" } } ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            },
+            "/hackathons/{id}/json": {
+              "get": {
+                "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } } ],
                 "responses": { "204": { "description": "No Content" } }
               }
             },
@@ -185,5 +195,38 @@ val compositePathSegmentSpec by testSuite {
             result.diagnostics.map { it.message },
         )
         assertTrue(result.diagnostics.all { it.severity == GenerationDiagnosticSeverity.Warning })
+    }
+
+    test("a path whose steps are those of another path, joined differently, is generated suffixed, with a warning") {
+        fun operation(path: String) = """
+            "$path": {
+              "get": {
+                "parameters": [ { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } } ],
+                "responses": { "204": { "description": "No Content" } }
+              }
+            }
+        """.trimIndent()
+        suspend fun generate(vararg paths: String) = OpenAPI.fromJson(
+            """{"openapi":"3.1.0","info":{"title":"Api","version":"0.0.1"},"paths":{${paths.joinToString(",") { operation(it) }}}}"""
+        ).toApiTree().generateClientWithDiagnostics(
+            RenderConfig(modelPackage = "test", apiPackage = "test", targets = setOf(KmpTarget.JVM))
+        )
+
+        val result = generate("/hackathons/{id}/json", "/hackathons/{id}.json")
+        assertEquals(
+            listOf("Path '/hackathons/{id}.json' is generated as 'json2' (class Json2): an earlier path segment has the same Kotlin name."),
+            result.diagnostics.map { it.message },
+        )
+        val hackathons = result.files.single { it.name == "Hackathons" }.toString()
+        assertTrue("public val json: Json = Json(client, id)" in hackathons, hackathons)
+        assertTrue("public val json2: Json2 = Json2(client, id)" in hackathons, hackathons)
+        assertTrue("client.get(\"hackathons/${'$'}{this.id.encodeURLParameter()}/json\")" in hackathons, hackathons)
+        assertTrue("client.get(\"hackathons/${'$'}{this.id.encodeURLParameter()}.json\")" in hackathons, hackathons)
+
+        // The order of the spec decides which one is suffixed.
+        assertEquals(
+            listOf("Path '/hackathons/{id}/json' is generated as 'json2' (class Json2): an earlier path segment has the same Kotlin name."),
+            generate("/hackathons/{id}.json", "/hackathons/{id}/json").diagnostics.map { it.message },
+        )
     }
 }

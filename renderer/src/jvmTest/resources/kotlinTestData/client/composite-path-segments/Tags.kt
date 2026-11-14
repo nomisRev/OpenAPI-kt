@@ -12,13 +12,13 @@ public class Tags internal constructor(
 ) {
   public fun arn(arn: String): ArnPath = ArnPath(client, arn)
 
-  public fun arnTagKeys(arn: String): ArnTagKeysPath = ArnTagKeysPath(client, arn)
-
   public class ArnPath internal constructor(
     private val client: HttpClient,
     private val arn: String,
   ) {
     public val `get`: Get = Get(client, arn)
+
+    public val tagKeys: TagKeys = TagKeys(client, arn)
 
     public class Get internal constructor(
       private val client: HttpClient,
@@ -29,21 +29,21 @@ public class Tags internal constructor(
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
-  }
 
-  public class ArnTagKeysPath internal constructor(
-    private val client: HttpClient,
-    private val arn: String,
-  ) {
-    public val delete: Delete = Delete(client, arn)
-
-    public class Delete internal constructor(
+    public class TagKeys internal constructor(
       private val client: HttpClient,
       private val arn: String,
     ) {
-      public suspend operator fun invoke() {
-        val response = client.delete("tags/${this.arn.encodeURLParameter()}")
-        if (response.status.value != 204) throw ResponseException(response, "")
+      public val delete: Delete = Delete(client, arn)
+
+      public class Delete internal constructor(
+        private val client: HttpClient,
+        private val arn: String,
+      ) {
+        public suspend operator fun invoke() {
+          val response = client.delete("tags/${this.arn.encodeURLParameter()}")
+          if (response.status.value != 204) throw ResponseException(response, "")
+        }
       }
     }
   }

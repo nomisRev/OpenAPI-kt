@@ -9,6 +9,7 @@ import io.github.nomisrev.openapi.PathNode
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.buildTree
+import io.github.nomisrev.openapi.parsePathSegments
 import io.github.nomisrev.openapi.parser.Components
 import io.github.nomisrev.openapi.parser.Info
 import io.github.nomisrev.openapi.parser.MediaType
@@ -887,5 +888,95 @@ val apiTreeSpec by testSuite {
         )
 
         assertTrue(api.toApiTree("Workflows").models.isEmpty())
+    }
+
+    // A segment of text and parameters is navigated one step per part: `{id}.json` is the node `id` and its child `json`.
+    fun pathRoute(method: HttpMethod, path: String): Route =
+        route(method, *parsePathSegments(path, emptyMap()).toTypedArray())
+
+    fun PathNode.shape(): String {
+        val name = when (val s = segment) {
+            is PathSegment.Parameter -> "{${s.name}}"
+            is PathSegment.Literal -> s.name
+            else -> error("Unexpected node segment $s")
+        }
+        val ops = operations.keys.map { it.value }.sorted().joinToString("")
+        val below = children.joinToString(",") { it.shape() }
+        return name + (if (ops.isEmpty()) "" else "[$ops]") + (if (below.isEmpty()) "" else "($below)")
+    }
+
+    fun List<Route>.shapes(): List<String> = buildTree("T").children.map { it.shape() }
+
+    test("buildTree navigates a composite segment as one node per part") {
+        assertEquals(
+            listOf("media({id}({extension}[GET]))"),
+            listOf(pathRoute(HttpMethod.Get, "/media/{id}.{extension}")).shapes(),
+        )
+        assertEquals(
+            listOf("v1({name}(cancel[POST]))"),
+            listOf(pathRoute(HttpMethod.Post, "/v1/{name}:cancel")).shapes(),
+        )
+        assertEquals(
+            listOf("v({version}(x[GET]))"),
+            listOf(pathRoute(HttpMethod.Get, "/v{version}/x")).shapes(),
+        )
+        assertEquals(
+            listOf("ranges({lo}({hi}[GET]))"),
+            listOf(pathRoute(HttpMethod.Get, "/ranges/{lo}-{hi}")).shapes(),
+        )
+        assertEquals(
+            listOf("lists({format}[GET])"),
+            listOf(pathRoute(HttpMethod.Get, "/lists.{format}")).shapes(),
+        )
+    }
+
+    test("buildTree shares the nodes of a prefix between a composite and a plain segment") {
+        assertEquals(
+            listOf("hackathons({id}[GET](json[GET]))"),
+            listOf(
+                pathRoute(HttpMethod.Get, "/hackathons/{id}"),
+                pathRoute(HttpMethod.Get, "/hackathons/{id}.json"),
+            ).shapes(),
+        )
+        assertEquals(
+            listOf("lists[GET]({format}[GET])"),
+            listOf(pathRoute(HttpMethod.Get, "/lists"), pathRoute(HttpMethod.Get, "/lists.{format}")).shapes(),
+        )
+        assertEquals(
+            listOf("tags({arn}[GET](tagKeys[DELETE]))"),
+            listOf(pathRoute(HttpMethod.Get, "/tags/{arn}"), pathRoute(HttpMethod.Delete, "/tags/{arn}#tagKeys")).shapes(),
+        )
+    }
+
+    test("buildTree keeps /{id}/json and /{id}.json as two nodes, each requesting its own path") {
+        val slash = pathRoute(HttpMethod.Get, "/hackathons/{id}/json")
+        val dot = pathRoute(HttpMethod.Get, "/hackathons/{id}.json")
+        listOf(listOf(slash, dot), listOf(dot, slash)).forEach { routes ->
+            val id = routes.buildTree("T").children.single().children.single()
+            assertEquals(2, id.children.size)
+            assertEquals(setOf(slash, dot), id.children.flatMap { it.operations.values }.toSet())
+            assertEquals(
+                setOf("/hackathons/{id}/json", "/hackathons/{id}.json"),
+                id.children.flatMap { it.operations.values }.map { it.path }.toSet(),
+            )
+        }
+        // Different methods do not merge them either.
+        val post = pathRoute(HttpMethod.Post, "/hackathons/{id}.json")
+        assertEquals(2, listOf(slash, post).buildTree("T").children.single().children.single().children.size)
+    }
+
+    test("buildTree does not share a parameter of a composite with a plain one of another type") {
+        val plain = route(HttpMethod.Get, literal("a"), intParam("id"))
+        val composite = route(
+            HttpMethod.Get,
+            literal("a"),
+            PathSegment.Composite(
+                listOf(
+                    PathSegment.Composite.Part.Param("id", stringType),
+                    PathSegment.Composite.Part.Text(".json"),
+                )
+            ),
+        )
+        assertEquals(2, listOf(plain, composite).buildTree("T").children.single().children.size)
     }
 }

@@ -31,7 +31,7 @@ sealed interface PathSegment {
      * A segment that is exactly `{name}`, or has no braces, is a [Parameter] or a [Literal] instead.
      *
      * A [Part.Param] is a plain parameter whatever its model: a fixed enum or a union is not expanded into separate
-     * nodes inside a composite. [name] is the segment as written, `{id}.json`.
+     * nodes inside a composite. A tree navigates a composite one step per part ([toSteps]). [name] is the segment as written, `{id}.json`.
      */
     @Serializable
     @SerialName("Composite")
@@ -83,6 +83,61 @@ sealed interface PathSegment {
         val cases: List<Model.Union.Case>
             get() = type.cases
     }
+}
+
+/**
+ * One step of navigating a path: a node of the [ApiTree]. A segment between two `/` is one step, and a
+ * [PathSegment.Composite] is one step per part ([toSteps]), so `{id}.json` is the step `id` and below it the step
+ * `json`, as `{id}/json` is.
+ *
+ * What [joinedBy] and [trailing] hold is not part of any name, only of the identity of the step. [joinedBy] is the
+ * text that joins the step to the one before it in the path (`/` between segments, `.` in `{id}.{extension}`, nothing in
+ * `{a}{b}`), and [trailing] the text after the last step of a segment (`{id}.`). `{id}/json` and `{id}.json` have the
+ * same names and different wire paths, so they are not one node. [fromComposite] is a parameter of a composite, which
+ * is always a plain [PathSegment.Parameter] whatever its model, and so is not the same node as a parameter of another
+ * shape (an overloaded union, another type) that has its name.
+ */
+data class PathStep(
+    val segment: PathSegment,
+    val joinedBy: String = "/",
+    val trailing: String = "",
+    val fromComposite: Boolean = false,
+)
+
+/**
+ * The steps of this segment. A [PathSegment.Composite.Part.Param] part is a step; a [PathSegment.Composite.Part.Text] part is a step named after
+ * its alphanumeric content (`.json` is `json`, `:cancel` is `cancel`) and the text around that content joins it to its
+ * neighbours; a text without alphanumeric content (`.` in `{id}.{extension}`, `-` in `{lo}-{hi}`) is no step. A
+ * fragment is read as text that starts with `#`. It is not sent, but it names a step and is part of its identity.
+ */
+fun PathSegment.toSteps(): List<PathStep> {
+    if (this !is PathSegment.Composite) return listOf(PathStep(this))
+    val steps = mutableListOf<PathStep>()
+    var pending = "/"
+    fun text(value: String) {
+        val first = value.indexOfFirst(Char::isLetterOrDigit)
+        if (first < 0) {
+            pending += value
+            return
+        }
+        val last = value.indexOfLast(Char::isLetterOrDigit)
+        steps += PathStep(PathSegment.Literal(value.substring(first, last + 1)), pending + value.substring(0, first))
+        pending = value.substring(last + 1)
+    }
+    for (part in parts) {
+        when (part) {
+            is PathSegment.Composite.Part.Text -> text(part.value)
+            is PathSegment.Composite.Part.Fragment -> text("#${part.value}")
+            is PathSegment.Composite.Part.Param -> {
+                steps += PathStep(PathSegment.Parameter(part.name, part.model), pending, fromComposite = true)
+                pending = ""
+            }
+        }
+    }
+    // Nothing to navigate (no parameter and no alphanumeric text): the segment stays one literal step, as written.
+    if (steps.isEmpty()) return listOf(PathStep(PathSegment.Literal(name)))
+    steps[steps.lastIndex] = steps.last().copy(trailing = pending)
+    return steps
 }
 
 private val DefaultPathParameterType = Model.Primitive.String(

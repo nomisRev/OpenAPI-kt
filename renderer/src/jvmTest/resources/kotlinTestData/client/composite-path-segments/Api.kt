@@ -17,9 +17,15 @@ public class Api internal constructor(
 
   public val hackathons: Hackathons = Hackathons(client)
 
+  public val lists: Lists = Lists(client)
+
   public val v1: V1 = V1(client)
 
+  public val v: V = V(client)
+
   public val ranges: Ranges = Ranges(client)
+
+  public val articles: Articles = Articles(client)
 
   public val tags: Tags = Tags(client)
 
@@ -42,10 +48,4 @@ public class Api internal constructor(
   override fun close() {
     client.close()
   }
-
-  public fun listsFormat(format: String): ListsFormatPath = ListsFormatPath(client, format)
-
-  public fun vVersion(version: String): VVersionPath = VVersionPath(client, version)
-
-  public fun articlesMediaTypeExtension(mediaTypeExtension: ArticlesMediaTypeExtensionPath.MediaTypeExtension): ArticlesMediaTypeExtensionPath = ArticlesMediaTypeExtensionPath(client, mediaTypeExtension)
 }

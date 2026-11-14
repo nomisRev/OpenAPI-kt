@@ -1,7 +1,7 @@
 package io.github.nomisrev.render
 
 import io.github.nomisrev.render.test.client.composite.path.segments.Api
-import io.github.nomisrev.render.test.client.composite.path.segments.ArticlesMediaTypeExtensionPath
+import io.github.nomisrev.render.test.client.composite.path.segments.Articles
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.respond
@@ -36,7 +36,7 @@ class CompositePathSegmentRuntimeTest {
 
     @Test
     fun twoParametersAreSeparatedByText() = runBlocking {
-        api.media.idExtension(id = "42", extension = "mp3").get()
+        api.media.id("42").extension("mp3").get()
 
         assertEquals(HttpMethod.Get, request.method)
         assertEquals("/media/42.mp3", request.url.encodedPath)
@@ -44,7 +44,7 @@ class CompositePathSegmentRuntimeTest {
 
     @Test
     fun aParameterFollowedByText() = runBlocking {
-        api.hackathons.idJson("42").get()
+        api.hackathons.id("42").json.get()
 
         assertEquals("/hackathons/42.json", request.url.encodedPath)
     }
@@ -54,20 +54,20 @@ class CompositePathSegmentRuntimeTest {
         api.hackathons.id("42").get()
         assertEquals("/hackathons/42", request.url.encodedPath)
 
-        api.hackathons.idJson("42").get()
+        api.hackathons.id("42").json.get()
         assertEquals("/hackathons/42.json", request.url.encodedPath)
     }
 
     @Test
     fun textFollowedByAParameter() = runBlocking {
-        api.listsFormat("json").get()
+        api.lists.format("json").get()
 
         assertEquals("/lists.json", request.url.encodedPath)
     }
 
     @Test
     fun aCustomVerbAfterAParameterEncodesTheValueOnly() = runBlocking {
-        api.v1.nameCancel("operations/7").post()
+        api.v1.name("operations/7").cancel.post()
 
         assertEquals(HttpMethod.Post, request.method)
         assertEquals("/v1/operations%2F7:cancel", request.url.encodedPath)
@@ -75,28 +75,28 @@ class CompositePathSegmentRuntimeTest {
 
     @Test
     fun aParameterAfterTextHasChildren() = runBlocking {
-        api.vVersion("2").x.get()
+        api.v.version("2").x.get()
 
         assertEquals("/v2/x", request.url.encodedPath)
     }
 
     @Test
     fun eachParameterIsEncodedOnItsOwn() = runBlocking {
-        api.media.idExtension(id = "a b/c", extension = "m p3").get()
+        api.media.id("a b/c").extension("m p3").get()
 
         assertEquals("/media/a%20b%2Fc.m%20p3", request.url.encodedPath)
     }
 
     @Test
     fun aNumberIsWrittenAsIs() = runBlocking {
-        api.ranges.loHi(lo = 1, hi = 20).get()
+        api.ranges.lo(1).hi(20).get()
 
         assertEquals("/ranges/1-20", request.url.encodedPath)
     }
 
     @Test
     fun theFragmentOfAPathKeyIsNotSent() = runBlocking {
-        api.tags.arnTagKeys("arn:aws:x/1").delete()
+        api.tags.arn("arn:aws:x/1").tagKeys.delete()
 
         assertEquals(HttpMethod.Delete, request.method)
         assertEquals("/tags/arn%3Aaws%3Ax%2F1", request.url.encodedPath)
@@ -104,7 +104,25 @@ class CompositePathSegmentRuntimeTest {
     }
 
     @Test
-    fun thePathWithoutTheFragmentIsAnotherNode() = runBlocking {
+    fun theTextAfterAParameterAndTheSegmentAfterItAreTwoPaths() = runBlocking {
+        api.hackathons.id("42").json.get()
+        assertEquals("/hackathons/42.json", request.url.encodedPath)
+
+        api.hackathons.id("42").json2.get()
+        assertEquals("/hackathons/42/json", request.url.encodedPath)
+    }
+
+    @Test
+    fun aPathAndTheSameWithATextParameterShareTheirNode() = runBlocking {
+        api.lists.get()
+        assertEquals("/lists", request.url.encodedPath)
+
+        api.lists.format("json").get()
+        assertEquals("/lists.json", request.url.encodedPath)
+    }
+
+    @Test
+    fun thePathWithoutTheFragmentIsTheNodeBeforeIt() = runBlocking {
         api.tags.arn("a").get()
 
         assertEquals("/tags/a", request.url.encodedPath)
@@ -112,7 +130,7 @@ class CompositePathSegmentRuntimeTest {
 
     @Test
     fun anEnumParameterIsAPlainParameterOfTheSegment() = runBlocking {
-        api.articlesMediaTypeExtension(ArticlesMediaTypeExtensionPath.MediaTypeExtension.Xml).get()
+        api.articles.mediaTypeExtension(Articles.MediaTypeExtensionPath.MediaTypeExtension.Xml).get()
 
         assertEquals("/articles.xml", request.url.encodedPath)
     }

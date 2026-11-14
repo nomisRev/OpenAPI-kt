@@ -131,9 +131,9 @@ private fun PathNode.toTypeSpec(
     val currentAccumulatedParams = accumulatedParams(parentAccumulatedParams)
     val builder = TypeSpec.classBuilder(className.simpleName)
     builder.addClientConstructorAndState(config, currentAccumulatedParams)
-    // An inline enum or object parameter of a composite segment is a type nested in the segment's class, named after
-    // the path (`ArticlesExtensionPath.Extension`): the navigation function takes it.
-    (segment as? PathSegment.Composite)?.parameters?.forEach { param ->
+    // An inline enum or object parameter of a composite is a type nested in the class of its own step
+    // (`ArticlesPath.MediaTypeExtensionPath.MediaTypeExtension`): the navigation function takes it.
+    (segment as? PathSegment.Parameter)?.let { param ->
         param.model.nestedOrNull()
             ?.takeIf { (it as? Model.ContextHolder)?.context?.head is NamingContext.Path }
             ?.toInlineParameterTypeSpec(config, className, param.name.toPascalCase())

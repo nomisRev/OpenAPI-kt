@@ -1,6 +1,6 @@
 # Path segments that mix template expressions with literal text (`{id}.json`, `{a}.{b}`, `v1.{format}`, `{name}:cancel`)
 
-**Status:** fixed for the shapes in this report (branch openapi-3.2-streaming). A segment of text and template expressions is `PathSegment.Composite` (parts: `Text`, `Param`, `Fragment`); the navigation member is the camel-cased concatenation of all parts (`idExtension`, `idJson`, `listsFormat`, `nameCancel`, `vVersion`) with one argument per parameter, each parameter is expanded and encoded on its own, a fixed enum or union inside a composite is a plain parameter. Path parameter names go through `%N` at the constructor call sites. A `#fragment` of a path key stays in the name (`arnTagKeys`), is not sent, and warns; `{.format}`, an undeclared expression, an unbalanced brace, a `?` in a path key and a declared path parameter that matches no expression warn (`pathTemplateProblems`, via `Registry.warn` into `GenerationDiagnostics`). Still open: a whole-segment parameter whose name is not an identifier (`{insight_id:}`, the illegal-character cluster) does not compile, and a literal segment still writes `$` unescaped (`$reset`, `$links`), as before; a name repeated in one composite (`{a}-{a}`) is not handled.
+**Status:** fixed for the shapes in this report (branch openapi-3.2-streaming). A segment of text and template expressions is `PathSegment.Composite` (parts: `Text`, `Param`, `Fragment`) in `Route.segments`, so the request path is unchanged, and it is navigated as a chain, one step per part, like `/`-separated segments: a parameter is a navigation function (`id(id)`), the alphanumeric content of a text is a property (`.json` is `json`, `:cancel` is `cancel`, `#tagKeys` is `tagKeys`), and text without any (`.` in `{id}.{extension}`, `-` in `{lo}-{hi}`) is only part of the wire path between two steps. `buildTree` expands a composite into `PathStep`s (`toSteps`), so `{id}` and `{id}.json` share the `id` node and `/lists` and `/lists.{format}` the `lists` node. `/hackathons/{id}/json` and `/hackathons/{id}.json` have the same names and different wire paths: they are two nodes, and the later one is suffixed (`json2`) with the existing warning. Each parameter is expanded and encoded on its own, a fixed enum or union inside a composite is a plain parameter, the inline enum of a composite parameter is nested in the class of its own step (`Articles.MediaTypeExtensionPath.MediaTypeExtension`). Path parameter names go through `%N` at the constructor call sites. A `#fragment` of a path key names a step, is not sent, and warns; `{.format}`, an undeclared expression, an unbalanced brace, a `?` in a path key and a declared path parameter that matches no expression warn (`pathTemplateProblems`, via `Registry.warn` into `GenerationDiagnostics`). Still open: a whole-segment parameter whose name is not an identifier (`{insight_id:}`, the illegal-character cluster) does not compile, and a literal segment still writes `$` unescaped (`$reset`, `$links`), as before; a name repeated in one composite (`{a}-{a}`) is not handled.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** wrong output (silent) and compile, one root cause in typed
 **Impact:** 303 of 1,547 documents have such a segment. 209 of them emit sources: 202 send the template text (`{id}`) on the wire in at least one operation, 9 of those compile cleanly (silent), 16 fail with syntax errors, 114 fail with `name contains illegal characters` (Google `{name}:verb`). The other 94 fail earlier for unrelated reasons and will hit this next. Providers: googleapis.com (171), amazonaws.com (80, `{arn}#tagKeys`), callfire, tomtom, healthcare.gov, gov.bc.ca, nytimes, gitea, twilio, jellyfin, discourse.
@@ -97,20 +97,25 @@ Not a regression of ca63f057 or c6c9a76d: those changed the `split("/")` handlin
 
 ## Correct final API
 
-A segment is a sequence of literal text and parameters. Every template expression is a navigation argument, the literal text is not part of any name the user types beyond what is needed to tell siblings apart:
+A segment is a sequence of literal text and parameters, and it is navigated one step per part, as the steps of `/`-separated segments are. A parameter is a navigation function, the alphanumeric content of a text is a property, and operations stay members of the last node:
 
 ```kotlin
 // /media/{id}.{extension}
-api.media.id("42", extension = "mp3").get()          // GET media/42.mp3
-// /hackathons/{id}.json   (literal suffix)
-api.hackathons.idJson("42").get()                     // GET hackathons/42.json
-// /lists.{format}         (literal prefix)
-api.lists("json").get()                               // GET lists.json   (class ListsFormatPath)
+api.media.id("42").extension("mp3").get()             // GET media/42.mp3
+// /hackathons/{id} and /hackathons/{id}.json   (one shared `id` node)
+api.hackathons.id("42").get()                         // GET hackathons/42
+api.hackathons.id("42").json.get()                    // GET hackathons/42.json
+// /lists.{format}         (shares the `lists` node with /lists)
+api.lists.format("json").get()                        // GET lists.json
 // /v1/{name}:cancel       (Google custom verb)
-api.v1.nameCancel("operations/7").post()              // POST v1/operations%2F7:cancel
+api.v1.name("operations/7").cancel.post()             // POST v1/operations%2F7:cancel
+// /v{version}/x, /ranges/{lo}-{hi}, /tags/{arn}#tagKeys
+api.v.version("2").x.get()                            // GET v2/x
+api.ranges.lo(1).hi(20).get()                         // GET ranges/1-20
+api.tags.arn("a").tagKeys.delete()                    // DELETE tags/a
 ```
 
-Wire: each parameter value is expanded by its own `style`/`explode` and percent-encoded on its own (`encodeURLParameter`, as whole-segment parameters are since 4f5c259c); literal parts are written as they are. `{id}` and `{id}.json` under one parent are two nodes (`id(…)` and `idJson(…)`). A path key with `#` or an expression that is not a declared-name (`{.format}`, `{insight_id:}`) is reported through `GenerationDiagnostics` instead of generated.
+Wire: each parameter value is expanded by its own `style`/`explode` and percent-encoded on its own (`encodeURLParameter`, as whole-segment parameters are since 4f5c259c); literal parts are written as they are. `/hackathons/{id}/json` and `/hackathons/{id}.json` both want `id(id).json`; they are different nodes with different paths, and the later one is renamed `json2` with the warning of `uniqueNames`. A path key with `#` or an expression that is not a declared-name (`{.format}`, `{insight_id:}`) is reported through `GenerationDiagnostics`.
 
 ## Fix slice
 

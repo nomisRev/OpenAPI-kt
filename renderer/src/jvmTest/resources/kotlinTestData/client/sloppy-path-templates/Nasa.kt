@@ -9,23 +9,30 @@ import kotlin.String
 public class Nasa internal constructor(
   private val client: HttpClient,
 ) {
-  public fun idFormat(id: String, format: String): IdFormatPath = IdFormatPath(client, id, format)
+  public fun id(id: String): IdPath = IdPath(client, id)
 
-  public class IdFormatPath internal constructor(
+  public class IdPath internal constructor(
     private val client: HttpClient,
     private val id: String,
-    private val format: String,
   ) {
-    public val `get`: Get = Get(client, id, format)
+    public fun format(format: String): FormatPath = FormatPath(client, id, format)
 
-    public class Get internal constructor(
+    public class FormatPath internal constructor(
       private val client: HttpClient,
       private val id: String,
       private val format: String,
     ) {
-      public suspend operator fun invoke() {
-        val response = client.get("nasa/${this.id.encodeURLParameter()}${this.format.encodeURLParameter()}")
-        if (response.status.value != 204) throw ResponseException(response, "")
+      public val `get`: Get = Get(client, id, format)
+
+      public class Get internal constructor(
+        private val client: HttpClient,
+        private val id: String,
+        private val format: String,
+      ) {
+        public suspend operator fun invoke() {
+          val response = client.get("nasa/${this.id.encodeURLParameter()}${this.format.encodeURLParameter()}")
+          if (response.status.value != 204) throw ResponseException(response, "")
+        }
       }
     }
   }

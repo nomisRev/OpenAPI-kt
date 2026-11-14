@@ -71,7 +71,7 @@ private fun ApiTree.propertyOverrideDiagnostics(): List<GenerationDiagnostic> =
 /** A warning for each node whose Kotlin name is taken by an earlier sibling, and is suffixed ([uniqueNames]). */
 private fun List<PathNode>.renamedPathDiagnostics(parentPath: String): List<GenerationDiagnostic> =
     zip(uniqueNames()).flatMap { [node, name] ->
-        val path = "$parentPath/${node.segment.templateText()}"
+        val path = "$parentPath${node.joinedBy}${node.segment.templateText()}${node.trailing}"
         val renamed = if (name.suffix == null) emptyList() else listOf(
             GenerationDiagnostic(
                 severity = GenerationDiagnosticSeverity.Warning,

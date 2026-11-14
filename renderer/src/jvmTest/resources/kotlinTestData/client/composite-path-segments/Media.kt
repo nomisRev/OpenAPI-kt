@@ -9,23 +9,30 @@ import kotlin.String
 public class Media internal constructor(
   private val client: HttpClient,
 ) {
-  public fun idExtension(id: String, extension: String): IdExtensionPath = IdExtensionPath(client, id, extension)
+  public fun id(id: String): IdPath = IdPath(client, id)
 
-  public class IdExtensionPath internal constructor(
+  public class IdPath internal constructor(
     private val client: HttpClient,
     private val id: String,
-    private val extension: String,
   ) {
-    public val `get`: Get = Get(client, id, extension)
+    public fun extension(extension: String): ExtensionPath = ExtensionPath(client, id, extension)
 
-    public class Get internal constructor(
+    public class ExtensionPath internal constructor(
       private val client: HttpClient,
       private val id: String,
       private val extension: String,
     ) {
-      public suspend operator fun invoke() {
-        val response = client.get("media/${this.id.encodeURLParameter()}.${this.extension.encodeURLParameter()}")
-        if (response.status.value != 204) throw ResponseException(response, "")
+      public val `get`: Get = Get(client, id, extension)
+
+      public class Get internal constructor(
+        private val client: HttpClient,
+        private val id: String,
+        private val extension: String,
+      ) {
+        public suspend operator fun invoke() {
+          val response = client.get("media/${this.id.encodeURLParameter()}.${this.extension.encodeURLParameter()}")
+          if (response.status.value != 204) throw ResponseException(response, "")
+        }
       }
     }
   }

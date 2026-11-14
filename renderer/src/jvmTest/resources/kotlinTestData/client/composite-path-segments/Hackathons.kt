@@ -11,13 +11,15 @@ public class Hackathons internal constructor(
 ) {
   public fun id(id: String): IdPath = IdPath(client, id)
 
-  public fun idJson(id: String): IdJsonPath = IdJsonPath(client, id)
-
   public class IdPath internal constructor(
     private val client: HttpClient,
     private val id: String,
   ) {
     public val `get`: Get = Get(client, id)
+
+    public val json: Json = Json(client, id)
+
+    public val json2: Json2 = Json2(client, id)
 
     public class Get internal constructor(
       private val client: HttpClient,
@@ -28,21 +30,38 @@ public class Hackathons internal constructor(
         if (response.status.value != 204) throw ResponseException(response, "")
       }
     }
-  }
 
-  public class IdJsonPath internal constructor(
-    private val client: HttpClient,
-    private val id: String,
-  ) {
-    public val `get`: Get = Get(client, id)
-
-    public class Get internal constructor(
+    public class Json internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
-      public suspend operator fun invoke() {
-        val response = client.get("hackathons/${this.id.encodeURLParameter()}.json")
-        if (response.status.value != 204) throw ResponseException(response, "")
+      public val `get`: Get = Get(client, id)
+
+      public class Get internal constructor(
+        private val client: HttpClient,
+        private val id: String,
+      ) {
+        public suspend operator fun invoke() {
+          val response = client.get("hackathons/${this.id.encodeURLParameter()}.json")
+          if (response.status.value != 204) throw ResponseException(response, "")
+        }
+      }
+    }
+
+    public class Json2 internal constructor(
+      private val client: HttpClient,
+      private val id: String,
+    ) {
+      public val `get`: Get = Get(client, id)
+
+      public class Get internal constructor(
+        private val client: HttpClient,
+        private val id: String,
+      ) {
+        public suspend operator fun invoke() {
+          val response = client.get("hackathons/${this.id.encodeURLParameter()}/json")
+          if (response.status.value != 204) throw ResponseException(response, "")
+        }
       }
     }
   }

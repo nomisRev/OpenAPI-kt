@@ -69,9 +69,8 @@ internal fun PathNode.accumulatedParams(parentAccumulatedParams: List<Accumulate
             )
         }
 
-        is PathSegment.Composite -> parentAccumulatedParams + segment.parameters.map { param ->
-            AccumulatedParam(name = param.name, type = param.model)
-        }
+        // A composite is expanded into its steps when the tree is built, so a node is never one.
+        is PathSegment.Composite -> error("The composite segment '${segment.name}' is a node per part")
 
         is PathSegment.FixedValue,
         is PathSegment.Literal -> parentAccumulatedParams
@@ -146,13 +145,7 @@ internal fun PathSegment.addConcreteNavigationMember(
                 currentAccumulatedParams = currentAccumulatedParams,
             )
 
-        is PathSegment.Composite ->
-            builder.addConcreteParameterNavigationMember(
-                functionName = memberName,
-                parameters = parameters.map { it.name.toCamelCase() to it.model.publicInputTypeName(config) },
-                childClassName = childClassName,
-                currentAccumulatedParams = currentAccumulatedParams,
-            )
+        is PathSegment.Composite -> error("The composite segment '$name' is a node per part")
     }
 }
 

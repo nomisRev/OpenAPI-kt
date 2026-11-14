@@ -6,6 +6,7 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.parsePathSegments
+import io.github.nomisrev.openapi.toSteps
 import io.github.nomisrev.openapi.pathTemplateProblems
 import kotlin.test.assertEquals
 
@@ -345,5 +346,32 @@ val PathSegmentSpec by testSuite {
             ),
             pathTemplateProblems("/a", setOf("id"))
         )
+    }
+
+    // A segment is navigated one step per part: a parameter, or the alphanumeric content of a text. Text without any
+    // is only the way two steps are joined on the wire.
+    fun steps(path: String, types: Map<String, Model> = emptyMap()): List<String> =
+        parsePathSegments(path, types).flatMap { it.toSteps() }.map { step ->
+            val name = when (val segment = step.segment) {
+                is PathSegment.Parameter -> "{${segment.name}}"
+                is PathSegment.Literal -> segment.name
+                else -> error("unexpected $segment")
+            }
+            "${step.joinedBy}$name${step.trailing}"
+        }
+
+    test("toSteps splits a composite segment into one step per part") {
+        assertEquals(listOf("/media", "/{id}", ".{extension}"), steps("/media/{id}.{extension}"))
+        assertEquals(listOf("/hackathons", "/{id}", ".json"), steps("/hackathons/{id}.json"))
+        assertEquals(listOf("/lists", ".{format}"), steps("/lists.{format}"))
+        assertEquals(listOf("/v1", "/{name}", ":cancel"), steps("/v1/{name}:cancel"))
+        assertEquals(listOf("/v", "{version}", "/x"), steps("/v{version}/x"))
+        assertEquals(listOf("/ranges", "/{lo}", "-{hi}"), steps("/ranges/{lo}-{hi}"))
+        assertEquals(listOf("/{a}", "{b}"), steps("/{a}{b}"))
+        assertEquals(listOf("/tags", "/{arn}", "#tagKeys"), steps("/tags/{arn}#tagKeys"))
+        // Text after the last step is kept for the identity of the node, not as a step.
+        assertEquals(listOf("/a", "/{id}."), steps("/a/{id}."))
+        // Plain segments are one step joined by `/`.
+        assertEquals(listOf("/pets", "/{petId}", "/"), steps("/pets/{petId}/"))
     }
 }
