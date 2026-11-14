@@ -1787,6 +1787,11 @@ val clientSpec by testSuite {
 
     test("a path whose Kotlin name an earlier path has is generated suffixed, with a warning") {
         val operation = """{ "get": { "responses": { "204": { "description": "No Content" } } } }"""
+        // The path parameters are declared, so the only warnings are the renamed paths.
+        fun String.withPathParameter(name: String) = replace(
+            "\"get\": {",
+            "\"get\": { \"parameters\": [{ \"name\": \"$name\", \"in\": \"path\", \"required\": true, \"schema\": { \"type\": \"string\" } }],"
+        )
         val result = OpenAPI.fromJson(
             """
             {
@@ -1798,8 +1803,8 @@ val clientSpec by testSuite {
                 "/owners": $operation,
                 "/owners/": $operation,
                 "/owners/slash": $operation,
-                "/accounts/{accountId}": $operation,
-                "/accounts/{account_id}/members": $operation
+                "/accounts/{accountId}": ${operation.withPathParameter("accountId")},
+                "/accounts/{account_id}/members": ${operation.withPathParameter("account_id")}
               }
             }
             """.trimIndent()

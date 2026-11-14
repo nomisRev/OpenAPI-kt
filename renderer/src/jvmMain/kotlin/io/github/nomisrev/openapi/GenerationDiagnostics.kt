@@ -87,6 +87,7 @@ private fun PathSegment.templateText(): String = when (this) {
     is PathSegment.Literal -> name
     is PathSegment.Parameter -> "{$name}"
     is PathSegment.OverloadedParameter -> "{$name}"
+    is PathSegment.Composite -> name
 }
 
 private fun ApiTree.requestBodyDiagnostics(): List<GenerationDiagnostic> =

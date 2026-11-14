@@ -3,6 +3,8 @@ package io.github.nomisrev.openapi.routes
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.NamingContext.RouteParam
 import io.github.nomisrev.openapi.PathSegment
+import io.github.nomisrev.openapi.pathTemplateParameterNames
+import io.github.nomisrev.openapi.pathTemplateProblems
 import io.github.nomisrev.openapi.parsePathSegments
 import io.github.nomisrev.openapi.parser.Operation
 import io.github.nomisrev.openapi.parser.Parameter
@@ -34,7 +36,10 @@ suspend fun resolveParameters(
     method: HttpMethod,
     operation: Operation,
 ): ResolvedParameters {
-    val pathParameters = extractPathParameters(path)
+    val pathParameters = pathTemplateParameterNames(path)
+    val declaredPathParameters = operation.parameters.map { it.resolve() }
+        .filter { it.input == Parameter.Input.Path }.mapTo(mutableSetOf()) { it.name }
+    pathTemplateProblems(path, declaredPathParameters).forEach(ctx::warn)
     val parameters = withMissingPathParameters(operation.parameters, pathParameters)
     val segments = parsePathSegments(path, emptyMap())
     // Per OpenAPI spec, a unique parameter is identified by (name, in).
@@ -124,7 +129,4 @@ context(ctx: Registry)
 private fun ReferenceOr<Parameter>.resolve(): Parameter =
     resolveComponent("parameters", ctx.openAPI.components.parameters)
 
-private val pathParamRegex = Regex("\\{.*?\\}")
 
-private fun extractPathParameters(path: String): List<String> =
-    pathParamRegex.findAll(path).map { it.value.removeSurrounding("{", "}") }.toList()

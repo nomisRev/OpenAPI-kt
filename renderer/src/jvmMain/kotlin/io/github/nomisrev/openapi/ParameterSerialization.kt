@@ -447,6 +447,21 @@ private fun String.pathProperty(): String {
  * (OpenAPI 3.1.1, 4.8.1) rather than replacing that path, as an absolute `/owners/$id` would.
  */
 internal fun Route.pathLiteral(config: RenderConfig): CodeBlock {
+    fun parameter(name: String, model: Model): CodeBlock {
+        val variable = name.pathProperty()
+        val input = parameters.firstOrNull { it.input == Parameter.Input.Path && it.name == name }
+        return if (input == null || !input.isSupported) CodeBlock.of("\${%L}", variable)
+        else expansionCode(
+            config = config,
+            style = if (input.contentType != null) Style.simple else input.style,
+            explode = input.explode,
+            name = name,
+            expr = variable,
+            model = model.publicInputModelOrSelf(),
+            encode = true,
+        ).templateText()
+    }
+
     val inner = segments.map { segment ->
         when (segment) {
             is PathSegment.FixedValue -> CodeBlock.of("%L", templateText(segment.wireValue.encodeURLParameter()))
@@ -454,20 +469,16 @@ internal fun Route.pathLiteral(config: RenderConfig): CodeBlock {
             is PathSegment.Literal -> CodeBlock.of("%L", segment.name.replace(' ', '·'))
             is PathSegment.OverloadedParameter ->
                 CodeBlock.of("%L.%M()", segment.name.pathProperty(), EncodeURLParameterMember).interpolated()
-            is PathSegment.Parameter -> {
-                val variable = segment.name.pathProperty()
-                val input = parameters.firstOrNull { it.input == Parameter.Input.Path && it.name == segment.name }
-                if (input == null || !input.isSupported) CodeBlock.of("\${%L}", variable)
-                else expansionCode(
-                    config = config,
-                    style = if (input.contentType != null) Style.simple else input.style,
-                    explode = input.explode,
-                    name = segment.name,
-                    expr = variable,
-                    model = segment.model.publicInputModelOrSelf(),
-                    encode = true,
-                ).templateText()
-            }
+            is PathSegment.Parameter -> parameter(segment.name, segment.model)
+            // Each parameter is expanded and encoded on its own, the text around it is written as it is. A fragment is not sent.
+            is PathSegment.Composite -> segment.parts.map { part ->
+                when (part) {
+                    is PathSegment.Composite.Part.Text ->
+                        CodeBlock.of("%L", templateText(part.value).replace(' ', '·'))
+                    is PathSegment.Composite.Part.Param -> parameter(part.name, part.model)
+                    is PathSegment.Composite.Part.Fragment -> CodeBlock.of("")
+                }
+            }.joinToCode("")
         }
     }
     return CodeBlock.of("\"%L\"", inner.joinToCode("/"))

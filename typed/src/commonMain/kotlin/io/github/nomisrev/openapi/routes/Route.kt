@@ -134,6 +134,7 @@ data class Route(
                 is PathSegment.Literal -> segment.name
                 is PathSegment.Parameter -> "{${segment.name}}"
                 is PathSegment.OverloadedParameter -> "{${segment.name}}"
+                is PathSegment.Composite -> segment.name
             }
         }
 
@@ -393,7 +394,8 @@ private suspend fun Route.expandFiniteEnumPathSegments(index: Int = 0): List<Rou
 context(ctx: Registry)
 private suspend fun Route.expandFiniteEnumPathSegmentAt(index: Int): List<Route>? {
     val segment = segments[index]
-    if (segment is PathSegment.Literal || segment is PathSegment.FixedValue) return null
+    // A composite segment keeps its parameters as plain parameters: no per-value nodes.
+    if (segment is PathSegment.Literal || segment is PathSegment.FixedValue || segment is PathSegment.Composite) return null
 
     val pathInput = parameters.firstOrNull { it.input == Parameter.Input.Path && it.name == segment.name }
     // A fixed segment or an overload is the value as is: `simple`. A `label` or `matrix` enum or union is reported.
@@ -401,6 +403,7 @@ private suspend fun Route.expandFiniteEnumPathSegmentAt(index: Int): List<Route>
     val model = pathInput?.type ?: when (segment) {
         is PathSegment.Parameter -> segment.model
         is PathSegment.OverloadedParameter -> segment.type
+        is PathSegment.Literal, is PathSegment.FixedValue, is PathSegment.Composite -> return null
     }
 
     val fixedEnum = model.closedEnumOrNull()

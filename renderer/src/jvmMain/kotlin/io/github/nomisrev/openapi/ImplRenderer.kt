@@ -4,6 +4,7 @@ package io.github.nomisrev.openapi
 
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.joinToCode
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.MemberName
@@ -68,6 +69,10 @@ internal fun PathNode.accumulatedParams(parentAccumulatedParams: List<Accumulate
             )
         }
 
+        is PathSegment.Composite -> parentAccumulatedParams + segment.parameters.map { param ->
+            AccumulatedParam(name = param.name, type = param.model)
+        }
+
         is PathSegment.FixedValue,
         is PathSegment.Literal -> parentAccumulatedParams
     }
@@ -102,7 +107,7 @@ internal fun TypeSpec.Builder.addClientConstructorAndState(
         addProperty(
             PropertySpec.builder(paramName, typeName)
                 .addModifiers(KModifier.PRIVATE)
-                .initializer(paramName)
+                .initializer("%N", paramName)
                 .build()
         )
     }
@@ -136,8 +141,15 @@ internal fun PathSegment.addConcreteNavigationMember(
         is PathSegment.Parameter ->
             builder.addConcreteParameterNavigationMember(
                 functionName = memberName,
-                paramName = name.toCamelCase(),
-                typeName = model.publicInputTypeName(config),
+                parameters = listOf(name.toCamelCase() to model.publicInputTypeName(config)),
+                childClassName = childClassName,
+                currentAccumulatedParams = currentAccumulatedParams,
+            )
+
+        is PathSegment.Composite ->
+            builder.addConcreteParameterNavigationMember(
+                functionName = memberName,
+                parameters = parameters.map { it.name.toCamelCase() to it.model.publicInputTypeName(config) },
                 childClassName = childClassName,
                 currentAccumulatedParams = currentAccumulatedParams,
             )
@@ -156,22 +168,23 @@ private fun TypeSpec.Builder.addConcreteNavigationProperty(
     )
 }
 
+/** The navigation function to [childClassName], with one argument for each of the segment's [parameters]. */
 private fun TypeSpec.Builder.addConcreteParameterNavigationMember(
     functionName: String,
-    paramName: String,
-    typeName: TypeName,
+    parameters: List<Pair<String, TypeName>>,
     childClassName: ClassName,
     currentAccumulatedParams: List<AccumulatedParam>,
 ) {
+    val function = FunSpec.builder(functionName).returns(childClassName)
+    parameters.forEach { [paramName, typeName] ->
+        function.addParameter(paramName, typeName).addExperimentalUuidOptInIfNeeded(typeName)
+    }
     addFunction(
-        FunSpec.builder(functionName)
-            .addParameter(paramName, typeName)
-            .addExperimentalUuidOptInIfNeeded(typeName)
-            .returns(childClassName)
+        function
             .addStatement(
                 "return %T(%L)",
                 childClassName,
-                currentAccumulatedParams.constructorArgs(paramName),
+                currentAccumulatedParams.constructorArgs(parameters.map { CodeBlock.of("%N", it.first) }),
             )
             .build()
     )
@@ -231,7 +244,7 @@ private fun TypeSpec.Builder.addOverloadedNavigationMembers(
         functionBuilder.addStatement(
             "return %T(%L)",
             childClassName,
-            currentAccumulatedParams.constructorArgs(encodedArg),
+            currentAccumulatedParams.constructorArgs(listOf(CodeBlock.of("%L", encodedArg))),
         )
         addFunction(functionBuilder.build())
     }
@@ -1154,12 +1167,12 @@ private fun CodeBlock.Builder.addMultipartRefBodyCode(bodyMayBeNull: Boolean) {
     }
 }
 
-private fun List<AccumulatedParam>.constructorArgs(extraArg: String? = null): String =
-    buildList {
-        add("client")
-        addAll(this@constructorArgs.map { it.name.toCamelCase() })
-        extraArg?.let(::add)
-    }.joinToString(", ")
+/**
+ * The constructor arguments of a child class: the client, each accumulated parameter (`%N`, so a name that is not an
+ * identifier is escaped), then [extraArgs].
+ */
+private fun List<AccumulatedParam>.constructorArgs(extraArgs: List<CodeBlock> = emptyList()): CodeBlock =
+    (listOf(CodeBlock.of("client")) + map { CodeBlock.of("%N", it.name.toCamelCase()) } + extraArgs).joinToCode(", ")
 
 private fun Route.Body.Multipart.FormData.multipartValueExpr(config: RenderConfig, paramName: String): CodeBlock =
     when {

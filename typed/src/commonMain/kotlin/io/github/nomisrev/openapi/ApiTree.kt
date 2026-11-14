@@ -197,6 +197,7 @@ private fun PathSegment.spellingKey(): String = when (this) {
     is PathSegment.FixedValue -> "literal:$wireValue"
     is PathSegment.Parameter -> "parameter:$name"
     is PathSegment.OverloadedParameter -> "parameter:$name"
+    is PathSegment.Composite -> "composite:$name"
 }
 
 /** The resource a segment names: spellings that differ only by `-` and `_` name one. */
@@ -205,6 +206,7 @@ private fun PathSegment.identityKey(): String = when (this) {
     is PathSegment.FixedValue -> "literal:${wireValue.normalizeSegmentSeparators()}"
     is PathSegment.Parameter -> "parameter:$name"
     is PathSegment.OverloadedParameter -> "parameter:$name"
+    is PathSegment.Composite -> "composite:$name"
 }
 
 private fun PathSegment.preferredRepresentation(other: PathSegment): PathSegment = when {
@@ -273,6 +275,7 @@ private fun List<PathSegment>.toPathTemplate(): String {
             is PathSegment.Literal -> segment.name
             is PathSegment.Parameter -> "{${segment.name}}"
             is PathSegment.OverloadedParameter -> "{${segment.name}}"
+            is PathSegment.Composite -> segment.name
         }
     }
     return if (path.isEmpty()) "/" else "/$path"
@@ -283,6 +286,11 @@ private fun PathSegment.normalizedForCompatibility(): PathSegment = when (this) 
     is PathSegment.Literal -> PathSegment.Literal(name.normalizeSegmentSeparators())
     is PathSegment.Parameter -> copy(model = model.normalizedForCompatibility())
     is PathSegment.OverloadedParameter -> copy(type = type.normalizedForCompatibility() as Model.Union)
+    is PathSegment.Composite -> copy(
+        parts = parts.map { part ->
+            if (part is PathSegment.Composite.Part.Param) part.copy(model = part.model.normalizedForCompatibility()) else part
+        }
+    )
 }
 
 private fun Route.normalizedForConcreteCollision(): Route = copy(
@@ -516,6 +524,7 @@ private fun PathSegment.compatibilityDescription(): String = when (val segment =
     is PathSegment.Parameter -> "Parameter(name=${segment.name}, model=${segment.model.compatibilityDescription()})"
     is PathSegment.OverloadedParameter ->
         "OverloadedParameter(name=${segment.name}, type=${segment.type.compatibilityDescription()})"
+    is PathSegment.Composite -> "Composite(name=${segment.name})"
 }
 
 @Suppress("CyclomaticComplexMethod")

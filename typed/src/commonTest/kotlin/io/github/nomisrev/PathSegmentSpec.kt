@@ -6,6 +6,8 @@ import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.PathSegment
 import io.github.nomisrev.openapi.UnionDispatch
 import io.github.nomisrev.openapi.parsePathSegments
+import io.github.nomisrev.openapi.pathTemplateProblems
+import kotlin.test.assertEquals
 
 val PathSegmentSpec by testSuite {
     val stringType = Model.Primitive.String(
@@ -180,8 +182,168 @@ val PathSegmentSpec by testSuite {
                 PathSegment.Literal("payloads"),
                 PathSegment.Parameter("payload", nonFlattenableUnionType)
             )
-        )
+        ),
+        // A segment of text and expressions is a composite; exactly `{name}`, or no braces, keeps its variant.
+        Input(
+            "/media/{id}.{ext}",
+            mapOf("id" to intType),
+            listOf(
+                PathSegment.Literal("media"),
+                PathSegment.Composite(
+                    listOf(
+                        PathSegment.Composite.Part.Param("id", intType),
+                        PathSegment.Composite.Part.Text("."),
+                        PathSegment.Composite.Part.Param("ext", stringType),
+                    )
+                )
+            )
+        ),
+        Input(
+            "/hackathons/{id}.json",
+            mapOf("id" to intType),
+            listOf(
+                PathSegment.Literal("hackathons"),
+                PathSegment.Composite(
+                    listOf(
+                        PathSegment.Composite.Part.Param("id", intType),
+                        PathSegment.Composite.Part.Text(".json"),
+                    )
+                )
+            )
+        ),
+        Input(
+            "/lists.{format}",
+            mapOf("format" to stringType),
+            listOf(
+                PathSegment.Composite(
+                    listOf(
+                        PathSegment.Composite.Part.Text("lists."),
+                        PathSegment.Composite.Part.Param("format", stringType),
+                    )
+                )
+            )
+        ),
+        Input(
+            "/v1/{name}:cancel",
+            emptyMap(),
+            listOf(
+                PathSegment.Literal("v1"),
+                PathSegment.Composite(
+                    listOf(
+                        PathSegment.Composite.Part.Param("name", stringType),
+                        PathSegment.Composite.Part.Text(":cancel"),
+                    )
+                )
+            )
+        ),
+        Input(
+            "/{a}{b}",
+            mapOf("a" to intType, "b" to intType),
+            listOf(
+                PathSegment.Composite(
+                    listOf(
+                        PathSegment.Composite.Part.Param("a", intType),
+                        PathSegment.Composite.Part.Param("b", intType),
+                    )
+                )
+            )
+        ),
+        Input(
+            "/v{version}/x",
+            mapOf("version" to intType),
+            listOf(
+                PathSegment.Composite(
+                    listOf(
+                        PathSegment.Composite.Part.Text("v"),
+                        PathSegment.Composite.Part.Param("version", intType),
+                    )
+                ),
+                PathSegment.Literal("x")
+            )
+        ),
+        // A fixed enum or a union inside a composite is a plain parameter.
+        Input(
+            "/w/{workflowId}.json",
+            mapOf("workflowId" to flattenableUnionType),
+            listOf(
+                PathSegment.Literal("w"),
+                PathSegment.Composite(
+                    listOf(
+                        PathSegment.Composite.Part.Param("workflowId", flattenableUnionType),
+                        PathSegment.Composite.Part.Text(".json"),
+                    )
+                )
+            )
+        ),
+        // A fragment is kept on the last segment, as a part that is not sent.
+        Input(
+            "/tags/{arn}#tagKeys",
+            mapOf("arn" to stringType),
+            listOf(
+                PathSegment.Literal("tags"),
+                PathSegment.Composite(
+                    listOf(
+                        PathSegment.Composite.Part.Param("arn", stringType),
+                        PathSegment.Composite.Part.Fragment("tagKeys"),
+                    )
+                )
+            )
+        ),
+        // Not a plain expression name, an undeclared one and an unbalanced brace read as before.
+        Input(
+            "/a/{.format}",
+            emptyMap(),
+            listOf(PathSegment.Literal("a"), PathSegment.Parameter(".format", stringType))
+        ),
+        Input(
+            "/a/{open",
+            emptyMap(),
+            listOf(PathSegment.Literal("a"), PathSegment.Literal("{open"))
+        ),
+        Input(
+            "/a/{id}",
+            emptyMap(),
+            listOf(PathSegment.Literal("a"), PathSegment.Parameter("id", stringType))
+        ),
     ).verifyAll("parsePathSegments") { input ->
         Eq(input.expected, parsePathSegments(input.path, input.pathParamTypes))
+    }
+
+    test("pathTemplateProblems reports what a path template does not allow, and nothing for a plain one") {
+        assertEquals(emptyList(), pathTemplateProblems("/media/{id}.{ext}", setOf("id", "ext")))
+        assertEquals(emptyList(), pathTemplateProblems("/pets/{petId}/", setOf("petId")))
+        assertEquals(
+            listOf(
+                "Path '/tags/{arn}#tagKeys' has a fragment ('#tagKeys'), which a path template does not have. " +
+                    "The fragment is not sent: the request is for 'tags/{arn}'. It stays in the generated names, " +
+                    "so paths that differ only by their fragment stay separate."
+            ),
+            pathTemplateProblems("/tags/{arn}#tagKeys", setOf("arn"))
+        )
+        assertEquals(
+            listOf(
+                "Path '/a/{.format}' has the template expression '{.format}', which is not a plain parameter " +
+                    "name. It is generated as a path parameter named '.format'."
+            ),
+            pathTemplateProblems("/a/{.format}", setOf(".format"))
+        )
+        assertEquals(
+            listOf("Path '/a/{open' has an unbalanced brace in the segment '{open'. It is sent as written."),
+            pathTemplateProblems("/a/{open", emptySet())
+        )
+        assertEquals(
+            listOf(
+                "Path '/a/{id}.json' has the template expression '{id}' without a declared path parameter. " +
+                    "It is generated as a required string parameter."
+            ),
+            pathTemplateProblems("/a/{id}.json", emptySet())
+        )
+        assertEquals(
+            listOf(
+                "Path '/a' declares the path parameter 'id', which matches no template expression in the path. " +
+                    "It is not sent."
+            ),
+            pathTemplateProblems("/a", setOf("id"))
+        )
     }
 }

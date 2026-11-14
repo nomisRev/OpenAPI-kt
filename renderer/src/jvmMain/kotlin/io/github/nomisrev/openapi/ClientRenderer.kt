@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FileSpec
 import com.squareup.kotlinpoet.TypeSpec
+import io.github.nomisrev.openapi.transformers.nestedOrNull
 
 fun ApiTree.generateClient(config: RenderConfig): List<FileSpec> =
     generateClientWithDiagnostics(config)
@@ -122,6 +123,14 @@ private fun PathNode.toTypeSpec(
     val currentAccumulatedParams = accumulatedParams(parentAccumulatedParams)
     val builder = TypeSpec.classBuilder(className.simpleName)
     builder.addClientConstructorAndState(config, currentAccumulatedParams)
+    // An inline enum or object parameter of a composite segment is a type nested in the segment's class, named after
+    // the path (`ArticlesExtensionPath.Extension`): the navigation function takes it.
+    (segment as? PathSegment.Composite)?.parameters?.forEach { param ->
+        param.model.nestedOrNull()
+            ?.takeIf { (it as? Model.ContextHolder)?.context?.head is NamingContext.Path }
+            ?.toInlineParameterTypeSpec(config, className, param.name.toPascalCase())
+            ?.let(builder::addType)
+    }
     val orderedOperations = operations.entries.sortedBy { it.key.value }
     val sharedInlineParameterModels = orderedOperations
         .map { it.value }

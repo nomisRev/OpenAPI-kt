@@ -5,6 +5,7 @@ package io.github.nomisrev.openapi
 import com.squareup.kotlinpoet.AnnotationSpec
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.joinToCode
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
 import com.squareup.kotlinpoet.ParameterSpec
@@ -98,11 +99,9 @@ internal fun Route.toOperationTypeSpec(
         .build()
 }
 
-private fun operationConstructorArgs(accumulatedParams: List<AccumulatedParam>): String =
-    buildList {
-        add("client")
-        addAll(accumulatedParams.map { it.name.toCamelCase() })
-    }.joinToString(", ")
+private fun operationConstructorArgs(accumulatedParams: List<AccumulatedParam>): CodeBlock =
+    (listOf(CodeBlock.of("client")) + accumulatedParams.map { CodeBlock.of("%N", it.name.toCamelCase()) })
+        .joinToCode(", ")
 
 private fun operationFunBuilder(functionName: String, operator: Boolean): FunSpec.Builder =
     FunSpec.builder(functionName)

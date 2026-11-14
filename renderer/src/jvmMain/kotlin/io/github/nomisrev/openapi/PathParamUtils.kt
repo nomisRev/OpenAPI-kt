@@ -9,7 +9,22 @@ internal fun PathSegment.routeSegmentSimpleName(): String = when (this) {
     is PathSegment.OverloadedParameter -> name.toPascalCase() + "Path"
     is PathSegment.FixedValue -> wireValue.toPascalCase()
     is PathSegment.Literal -> navigationName.toPascalCase()
+    is PathSegment.Composite -> words().toPascalCase() + if (parameters.isEmpty()) "" else "Path"
 }
+
+/**
+ * The words of a composite segment, literal text and parameter names alike, in order: `{id}.json` is `id .json`, so
+ * its class is `IdJsonPath` and its navigation function `idJson`.
+ */
+private fun PathSegment.Composite.words(): String = parts.joinToString(" ") { part ->
+    when (part) {
+        is PathSegment.Composite.Part.Text -> part.value
+        is PathSegment.Composite.Part.Param -> part.name
+        is PathSegment.Composite.Part.Fragment -> part.value
+    }
+}.replace(NotLetterOrDigit, " ")
+
+private val NotLetterOrDigit = Regex("[^\\p{L}\\p{N}]+")
 
 /**
  * The name of a literal segment's navigation property, and of its class: `slash` for the empty segment of a trailing
@@ -25,6 +40,7 @@ private fun PathSegment.navigationMemberName(): String = when (this) {
     is PathSegment.OverloadedParameter -> name.toCamelCase()
     is PathSegment.FixedValue -> name.toParamName()
     is PathSegment.Literal -> navigationName.toParamName()
+    is PathSegment.Composite -> if (parameters.isEmpty()) words().toParamName() else words().toCamelCase()
 }
 
 /**
