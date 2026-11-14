@@ -43,7 +43,12 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
 
 internal fun ApiTree.generationDiagnostics(): List<GenerationDiagnostic> =
     requestBodyDiagnostics() + ignoredParameterDiagnostics() + parameterDiagnostics() +
-        children.renamedPathDiagnostics(parentPath = "") + propertyOverrideDiagnostics() + typedWarningDiagnostics()
+        children.renamedPathDiagnostics(parentPath = "") + renamedServerDiagnostics() + propertyOverrideDiagnostics() + typedWarningDiagnostics()
+
+/** A warning for each server whose name is a last resort: the same name as an earlier server, or `Custom` ([serverNames]). */
+private fun ApiTree.renamedServerDiagnostics(): List<GenerationDiagnostic> =
+    if (servers.size < 2) emptyList()
+    else servers.serverNames().warnings.map { GenerationDiagnostic(GenerationDiagnosticSeverity.Warning, it) }
 
 /** The warnings `typed` recorded for schemas it generates differently from how they are declared. */
 private fun ApiTree.typedWarningDiagnostics(): List<GenerationDiagnostic> =

@@ -15,7 +15,14 @@ internal sealed interface ServerStrategy {
     data object NoServers : ServerStrategy
     data object SingleFixed : ServerStrategy
     data class SingleVariable(val server: Server, val serverClassName: ClassName) : ServerStrategy
-    data class Multiple(val servers: List<Server>, val serverClassName: ClassName) : ServerStrategy
+    data class Multiple(val servers: List<Server>, val serverClassName: ClassName) : ServerStrategy {
+        /** The type of each of [servers] in the server interface, computed once for the whole list. */
+        val names: ServerNames = servers.serverNames()
+
+        /** The class of the server at [index], nested in [serverClassName] (and in its scheme-shared parent). */
+        fun className(index: Int): ClassName =
+            names.names[index].path.fold(serverClassName) { parent, name -> parent.nestedClass(name) }
+    }
 }
 
 /** Determine the [ServerStrategy] for this [ApiTree]. */

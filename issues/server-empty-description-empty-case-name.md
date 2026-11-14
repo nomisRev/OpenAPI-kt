@@ -1,6 +1,6 @@
 # A server with `description: ""` gets a case with an empty name and file writing crashes
 
-**Status:** open
+**Status:** fixed on branch worktree-agent-af3ec27e9e0840678 (based on openapi-3.2-streaming), with `server-case-names-collide.md`: an empty, blank or `server`-only description is named after the URL (`ServerNamesTest.anEmptyOrBlankDescriptionIsNamedAfterTheUrl`).
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** emit
 **Impact:** 2 of 1,547 documents (wealthreader.com, groundhog-day.com); 2 more have such a server but stop at typed (vtex.local:Marketplace-Protocol, microcks.local)

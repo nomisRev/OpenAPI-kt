@@ -60,14 +60,8 @@ private fun buildSecondaryConstructors(strategy: ServerStrategy): List<FunSpec> 
             )
 
         is ServerStrategy.Multiple -> {
-            val defaultServer = strategy.servers.first()
-            val defaultCaseName = defaultServer.toServerCaseName()
-            val hasVariables = !defaultServer.variables.isNullOrEmpty()
-            val defaultExpr = CodeBlock.of(
-                "%T.%L",
-                strategy.serverClassName,
-                if (hasVariables) "$defaultCaseName()" else defaultCaseName,
-            )
+            val hasVariables = !strategy.servers.first().variables.isNullOrEmpty()
+            val defaultExpr = CodeBlock.of("%T%L", strategy.className(0), if (hasVariables) "()" else "")
             listOf(
                 serverConstructorWithBlock(strategy.serverClassName, defaultExpr),
                 serverConstructorNoBlock(strategy.serverClassName, defaultExpr),
@@ -210,8 +204,23 @@ internal fun ApiTree.generateServerType(config: RenderConfig): TypeSpec? {
                         .build()
                 )
 
-            for (server in strategy.servers) {
-                builder.addType(server.toServerCase(strategy.serverClassName))
+            val indices = strategy.servers.indices.groupBy { strategy.names.names[it].outer }
+            for ([outer, group] in indices) {
+                if (strategy.names.names[group.first()].inner == null) {
+                    builder.addType(strategy.servers[group.first()].toServerCase(outer, strategy.serverClassName))
+                } else {
+                    // Servers told apart by their scheme alone share one sealed interface, a case per scheme.
+                    val outerClassName = strategy.serverClassName.nestedClass(outer)
+                    val shared = TypeSpec.interfaceBuilder(outer)
+                        .addModifiers(KModifier.SEALED)
+                        .addSuperinterface(strategy.serverClassName)
+                    for (index in group) {
+                        shared.addType(
+                            strategy.servers[index].toServerCase(strategy.names.names[index].inner!!, outerClassName)
+                        )
+                    }
+                    builder.addType(shared.build())
+                }
             }
 
             // Always add Custom case
@@ -238,9 +247,8 @@ internal fun ApiTree.generateServerType(config: RenderConfig): TypeSpec? {
     }
 }
 
-/** Convert a Server to a sealed interface case (only called for [ServerStrategy.Multiple]). */
-private fun Server.toServerCase(serverClassName: ClassName): TypeSpec {
-    val caseName = toServerCaseName()
+/** Convert a Server to a case named [caseName] of the sealed interface [serverClassName] (only for [ServerStrategy.Multiple]). */
+private fun Server.toServerCase(caseName: String, serverClassName: ClassName): TypeSpec {
     return if (!variables.isNullOrEmpty()) {
         buildServerCaseWithVariables(caseName, serverClassName, asSealedCase = true)
     } else {
@@ -344,20 +352,4 @@ private fun buildServerUrlTemplate(
         result = result.replace("{$varName}", replacement)
     }
     return "\"$result\""
-}
-
-internal fun Server.toServerCaseName(): String {
-    if (description != null) {
-        return description!!
-            .replace(Regex("\\s+[Ss]erver\\s*$"), "")
-            .toPascalCase()
-    }
-    return url
-        .removePrefix("https://")
-        .removePrefix("http://")
-        .split("/", ".", "-")
-        .filter { it.isNotEmpty() && !it.startsWith("{") }
-        .take(2)
-        .joinToString("") { it.toPascalCase() }
-        .ifEmpty { "Default" }
 }

@@ -2702,6 +2702,43 @@ val clientSpec by testSuite {
         "client/factory-servers-variable-default"
     )
 
+    // Servers whose names clash are told apart by what differs in their URL: scheme-only pairs nest by scheme (with
+    // and without variables), other differences append the URL words that differ, and a server beside them keeps its
+    // name. `ServerNamesRuntimeTest` checks the URLs of the generated cases.
+    clientTest(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "servers": [
+            { "url": "https://api.example.com" },
+            { "url": "http://api.example.com" },
+            {
+              "url": "https://{region}.regional.example.com",
+              "description": "Regional endpoint",
+              "variables": { "region": { "default": "eu", "enum": ["eu", "us"] } }
+            },
+            {
+              "url": "http://{region}.regional.example.com",
+              "description": "Regional endpoint",
+              "variables": { "region": { "default": "eu", "enum": ["eu", "us"] } }
+            },
+            { "url": "https://metrics.example.com/v1", "description": "Metrics" },
+            { "url": "https://metrics.example.com/v2", "description": "Metrics" },
+            { "url": "https://backup.example.com", "description": "Backup server" }
+          ],
+          "paths": {
+            "/ping": {
+              "get": {
+                "responses": { "204": { "description": "OK" } }
+              }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/factory-server-names"
+    )
+
     clientTest(
         """
         {

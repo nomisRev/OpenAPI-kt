@@ -1,6 +1,6 @@
 # Two servers with the same description or host render two classes with one name
 
-**Status:** open
+**Status:** fixed on branch worktree-agent-af3ec27e9e0840678 (based on openapi-3.2-streaming). `Server.toServerCaseName` is replaced by `List<Server>.serverNames()` (`renderer/.../ServerNames.kt`), computed once per server list for the type, the default argument and the diagnostics. Servers whose names clash are told apart by their URL: scheme-only pairs nest by scheme (`ApiServer.ApiExample.Https`), other differences append the URL words the others lack (`ApiLinodeV4`, `ApiLinodeV4beta`), identical servers get a number and a warning. Names are identifiers (non-alphanumerics are word breaks, `Server1Password` for a leading digit, `Default` for nothing, `CustomServer` for `Custom`). Golden `client/factory-server-names`, `ServerNamesTest`, `ServerNamesRuntimeTest`.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
 **Impact:** 269 of 1,547 documents fail to compile with it; for 53 it is the only compile error. amazonaws.com (213), sportsdata.io (33), nytimes.com (9), and one each of clickmeter, parliament.uk:oralquestions, bclaws.ca, wso2apistore, ebay sell-fulfillment, vtex Headless-CMS, mermade, deutschebahn, bbci, shotstack, ptv, nasa, tvmaze, pressassociation. (272 documents have two servers with equal description-or-URL keys; the rest fail before compile.)

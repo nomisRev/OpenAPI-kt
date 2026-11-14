@@ -1,6 +1,6 @@
 # A server description or host that is not a Kotlin identifier renders an invalid server case
 
-**Status:** open
+**Status:** fixed on branch worktree-agent-af3ec27e9e0840678 (based on openapi-3.2-streaming), with `server-case-names-collide.md`. `Server.toServerCaseName` is replaced by `List<Server>.serverNames()` (`renderer/.../ServerNames.kt`), computed once per server list for the type, the default argument and the diagnostics. Servers whose names clash are told apart by their URL: scheme-only pairs nest by scheme (`ApiServer.ApiExample.Https`), other differences append the URL words the others lack (`ApiLinodeV4`, `ApiLinodeV4beta`), identical servers get a number and a warning. Names are identifiers (non-alphanumerics are word breaks, `Server1Password` for a leading digit, `Default` for nothing, `CustomServer` for `Custom`). Golden `client/factory-server-names`, `ServerNamesTest`, `ServerNamesRuntimeTest`. The default argument is built from the case's `ClassName` (`%T`), so declaration and use cannot drift apart.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
 **Impact:** 6 of 1,547 documents: 4 through the unescaped default argument (apispot.io:whois, 1password.com:events, gov.bc.ca:geocoder, pdfblocks.com), 3 through a `:` in the class name (apispot.io:whois again, patrowl.local, airbyte.local:config)
