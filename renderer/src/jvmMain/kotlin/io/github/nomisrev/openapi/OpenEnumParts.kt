@@ -20,8 +20,9 @@ internal data class OpenEnumParts(
 internal fun Model.Union.detectOpenEnum(): OpenEnumParts? {
     if (cases.size != 2) return null
     val [a, b] = cases
-    val aEnum = a.model as? Model.Enum
-    val bEnum = b.model as? Model.Enum
+    // The open enum reads and writes JSON strings, so an integer, number or boolean enum is an ordinary union case.
+    val aEnum = (a.model as? Model.Enum)?.takeIf { it.typedKind() == null }
+    val bEnum = (b.model as? Model.Enum)?.takeIf { it.typedKind() == null }
     val aString = a.model as? Model.Primitive.String
     val bString = b.model as? Model.Primitive.String
 

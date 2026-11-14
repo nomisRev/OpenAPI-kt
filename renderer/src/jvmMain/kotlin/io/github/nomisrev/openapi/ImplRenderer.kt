@@ -1259,8 +1259,7 @@ private fun Model.Enum.toPathParamValueExpression(
  */
 private fun Model.wireValueExpr(paramName: String): String =
     when {
-        this is Model.Enum && needsValueProperty() -> "$paramName.value"
-        this is Model.Enum -> "$paramName.toString()"
+        this is Model.Enum -> wireTextExpr(paramName)
         this is Model.Date || this is Model.DateTime || this is Model.Uuid -> "$paramName.toString()"
         else -> paramName
     }

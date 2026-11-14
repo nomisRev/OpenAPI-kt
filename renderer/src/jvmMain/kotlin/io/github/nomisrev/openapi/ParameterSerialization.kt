@@ -511,7 +511,7 @@ internal fun Model.formModel(config: RenderConfig): Model =
 internal fun Model.formValueExpr(config: RenderConfig, expr: String): String =
     when (val model = formModel(config)) {
         is Model.Primitive.String -> expr
-        is Model.Enum -> if (model.needsValueProperty()) "$expr.value" else "$expr.toString()"
+        is Model.Enum -> model.wireTextExpr(expr)
         is Model.Object -> model.properties.getValue("value").model.formValueExpr(config, "$expr.value")
         else -> "$expr.toString()"
     }

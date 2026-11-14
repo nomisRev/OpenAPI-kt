@@ -4336,6 +4336,54 @@ val clientSpec by testSuite {
         assertTrue(error.message.orEmpty().contains("flattened request-body overloads"))
         assertTrue(error.message.orEmpty().contains("32"))
     }
+
+    // Integer, number and boolean enums are numbers and booleans in a JSON body, and their canonical text in a
+    // path, query, header or form value.
+    renderSpec(
+        """
+        {
+          "openapi": "3.1.0",
+          "info": { "title": "Api", "version": "0.0.1" },
+          "paths": {
+            "/meters/{rate}": {
+              "get": {
+                "parameters": [
+                  { "name": "rate", "in": "path", "required": true, "schema": { "${'$'}ref": "#/components/schemas/Baudrate" } },
+                  { "name": "speed", "in": "query", "schema": { "${'$'}ref": "#/components/schemas/Baudrate" } },
+                  { "name": "scale", "in": "query", "schema": { "type": "number", "enum": [0.5, 1.5] } },
+                  { "name": "on", "in": "query", "schema": { "type": "boolean", "enum": [true, false] } },
+                  { "name": "X-Level", "in": "header", "schema": { "type": "integer", "format": "int64", "enum": [1, 5000000000] } }
+                ],
+                "responses": { "200": { "description": "OK" } }
+              }
+            },
+            "/meters": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/x-www-form-urlencoded": {
+                      "schema": {
+                        "type": "object",
+                        "properties": { "rate": { "${'$'}ref": "#/components/schemas/Baudrate" } },
+                        "required": ["rate"]
+                      }
+                    }
+                  }
+                },
+                "responses": { "200": { "description": "OK" } }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Baudrate": { "type": "integer", "enum": [300, 600, 1200] }
+            }
+          }
+        }
+        """.trimIndent(),
+        "client/enum-typed-parameters"
+    )
 }
 
 private fun flattenedBodyOverloadLimitJson(requiredUnionFieldCount: Int): String {
