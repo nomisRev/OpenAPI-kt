@@ -4,7 +4,9 @@ import io.ktor.client.HttpClient
 import io.ktor.client.plugins.ResponseException
 import io.ktor.client.request.HttpRequestBuilder
 import io.ktor.client.request.post
+import io.ktor.client.utils.EmptyContent
 import io.ktor.http.ContentType
+import io.ktor.http.content.OutgoingContent
 import io.ktor.http.contentType
 import kotlin.Unit
 
@@ -21,8 +23,10 @@ public class UploadImage internal constructor(
         require(contentType.match(ContentType("image", "*")) && contentType.contentSubtype != "*") {
           "contentType must be a media type in image/*, but was $contentType"
         }
-        contentType(contentType)
         block()
+        if (this.body !is EmptyContent && this.contentType() == null && (this.body as? OutgoingContent)?.contentType == null) {
+          this.contentType(contentType)
+        }
       }
       if (response.status.value != 204) throw ResponseException(response, "")
     }

@@ -19,6 +19,7 @@ import io.ktor.http.Headers
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.OutgoingContent
+import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.toByteArray
 import kotlinx.coroutines.runBlocking
@@ -205,12 +206,25 @@ class MediaTypeWithoutSchemaRuntimeTest {
     fun theCallerCanOverrideTheDeclaredMediaType() = runBlocking {
         reply = { respond("", HttpStatusCode.NoContent) }
 
-        api.upload.post {
-            headers.remove(HttpHeaders.ContentType)
-            setBody(io.ktor.http.content.ByteArrayContent(pdf, ContentType.Application.OctetStream))
-        }
-
+        api.upload.post { setBody(io.ktor.http.content.ByteArrayContent(pdf, ContentType.Application.OctetStream)) }
         assertEquals(ContentType.Application.OctetStream, request.body.contentType)
+
+        api.upload.post {
+            contentType(ContentType.Application.OctetStream)
+            setBody(pdf)
+        }
+        assertEquals(ContentType.Application.OctetStream, request.body.contentType)
+    }
+
+    @Test
+    fun aBlockThatSetsNoBodySendsNoContentType() = runBlocking {
+        reply = { respond("", HttpStatusCode.NoContent) }
+
+        api.upload.post { }
+
+        assertIs<OutgoingContent.NoContent>(request.body)
+        assertNull(request.headers[HttpHeaders.ContentType])
+        assertNull(request.body.contentType)
     }
 
     @Test
@@ -220,6 +234,8 @@ class MediaTypeWithoutSchemaRuntimeTest {
         api.uploadOptional.post()
 
         assertIs<OutgoingContent.NoContent>(request.body)
+        assertNull(request.headers[HttpHeaders.ContentType])
+        assertNull(request.body.contentType)
     }
 
     @Test

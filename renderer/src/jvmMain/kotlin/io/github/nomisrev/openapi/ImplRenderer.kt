@@ -36,6 +36,8 @@ private val BodyMember = MemberName("io.ktor.client.call", "body")
 private val HeaderMember = MemberName("io.ktor.client.request", "header")
 private val SetBodyMember = MemberName("io.ktor.client.request", "setBody")
 private val ContentTypeFunMember = MemberName("io.ktor.http", "contentType")
+private val EmptyContentType = ClassName("io.ktor.client.utils", "EmptyContent")
+private val OutgoingContentType = ClassName("io.ktor.http.content", "OutgoingContent")
 private val HeadersOfMember = MemberName("io.ktor.http", "headersOf")
 private val FormDataMember = MemberName("io.ktor.client.request.forms", "formData")
 private val FormUrlEncodeMember = MemberName("io.ktor.http", "formUrlEncode")
@@ -1040,32 +1042,42 @@ private fun addBodyCode(
 }
 
 /**
- * A [Route.Body.CallerSet] body: the declared media type, or the one the caller passes in [callerContentType], then
- * the caller's [block], which sets the body and may still change anything set before it, the media type included.
- * An optional media type argument that is absent leaves it to the block.
+ * A [Route.Body.CallerSet] body: the caller's [block] sets the body, and after it the media type is filled in, the
+ * declared one or the one the caller passes in [callerContentType], only when there is a body to describe and the
+ * block gave it no media type itself (neither a `Content-Type` header nor an `OutgoingContent` that has one). A
+ * request without a body gets no `Content-Type`.
  */
 private fun CodeBlock.Builder.addCallerSetBodyCode(
     body: Route.Body.CallerSet,
     callerContentType: CallerContentTypeArgument?,
     block: String,
 ) {
+    val mediaType: CodeBlock = when {
+        callerContentType == null -> body.contentType.toContentTypeCodeBlock()
+        else -> CodeBlock.of("%N", callerContentType.name)
+    }
     when {
-        callerContentType == null ->
-            addStatement("%M(%L)", ContentTypeFunMember, body.contentType.toContentTypeCodeBlock())
-
+        callerContentType == null -> Unit
         callerContentType.nullable -> {
             beginControlFlow("if (%N != null)", callerContentType.name)
             add(callerContentType.copy(nullable = false).requireCode())
-            addStatement("%M(%N)", ContentTypeFunMember, callerContentType.name)
             endControlFlow()
         }
 
-        else -> {
-            add(callerContentType.requireCode())
-            addStatement("%M(%N)", ContentTypeFunMember, callerContentType.name)
-        }
+        else -> add(callerContentType.requireCode())
     }
     addStatement("%N()", block)
+    val present = if (callerContentType?.nullable == true) CodeBlock.of("%N != null && ", callerContentType.name) else CodeBlock.of("")
+    // `this.`: an operation parameter named `body` or `contentType` is nearer than the builder's members.
+    beginControlFlow(
+        "if (%Lthis.body !is %T && this.%M() == null && (this.body as? %T)?.contentType == null)",
+        present,
+        EmptyContentType,
+        ContentTypeFunMember,
+        OutgoingContentType,
+    )
+    addStatement("this.%M(%L)", ContentTypeFunMember, mediaType)
+    endControlFlow()
 }
 
 /**
