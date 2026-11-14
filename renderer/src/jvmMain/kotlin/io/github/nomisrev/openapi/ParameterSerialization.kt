@@ -504,7 +504,7 @@ internal fun Model.formModel(config: RenderConfig): Model =
     } else this
 
 /**
- * The `String` form value of the scalar [expr] of this model: a string as is, an enum as its wire value (see
+ * The `String` form value of the scalar [expr] of this model: a string as is, a `JsonElement` as the content of its primitive, an enum as its wire value (see
  * `enum-wire-tostring`), a number, boolean, date, date-time or UUID as its `toString()` (`1`, `1.5`, `true`,
  * `2024-01-31`, `2024-01-31T10:00:00Z`), and a scalar wrapper as the value it wraps.
  */
@@ -512,6 +512,9 @@ internal fun Model.formValueExpr(config: RenderConfig, expr: String): String =
     when (val model = formModel(config)) {
         is Model.Primitive.String -> expr
         is Model.Enum -> model.wireTextExpr(expr)
+        // `true`, `0` and `a` for the JSON primitives `true`, `0` and `"a"`; any other JSON is its text.
+        is Model.FreeFormJson ->
+            "$expr.let·{ (it as? kotlinx.serialization.json.JsonPrimitive)?.content ?: it.toString() }"
         is Model.Object -> model.properties.getValue("value").model.formValueExpr(config, "$expr.value")
         else -> "$expr.toString()"
     }

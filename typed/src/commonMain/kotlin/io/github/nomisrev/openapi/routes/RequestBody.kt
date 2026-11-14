@@ -268,7 +268,7 @@ internal suspend fun Model.formModel(visited: Set<NamingContext.Reference> = emp
 }
 
 /**
- * A model whose form or parameter value is a single string: a primitive, date, UUID or enum, or a wrapper around one.
+ * A model whose form or parameter value is a single string: a primitive, date, UUID, enum or `JsonElement`, or a wrapper around one.
  */
 context(scope: Registry)
 internal suspend fun Model.isFormScalar(visited: Set<NamingContext.Reference> = emptySet()): Boolean = when (this) {
@@ -281,13 +281,14 @@ internal suspend fun Model.isFormScalar(visited: Set<NamingContext.Reference> = 
     is Model.Primitive.Int,
     is Model.Primitive.Long,
     is Model.Primitive.String,
+    // A `JsonElement`, such as an enum of members of different JSON types: its text is the content of a JSON primitive.
+    is Model.FreeFormJson,
     is Model.Uuid -> true
 
     is Model.ByteArray,
     is Model.Collection,
     is Model.Dictionary,
     is Model.DiscriminatedObject,
-    is Model.FreeFormJson,
     is Model.OneOf,
     is Model.AnyOf,
     is Model.Primitive.Unit -> false
