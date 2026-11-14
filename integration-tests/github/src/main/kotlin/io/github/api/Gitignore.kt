@@ -53,7 +53,7 @@ public class Gitignore internal constructor(
         private val name: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("gitignore/templates/${name.encodeURLParameter()}")
+          val response = client.get("gitignore/templates/${this.name.encodeURLParameter()}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             304 -> Response.NotModified

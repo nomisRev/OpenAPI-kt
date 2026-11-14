@@ -112,7 +112,7 @@ public class VectorStores internal constructor(
       private val vectorStoreId: String,
     ) {
       public suspend operator fun invoke(): DeleteVectorStoreResponse {
-        val response = client.delete("vector_stores/${vectorStoreId.encodeURLParameter()}")
+        val response = client.delete("vector_stores/${this.vectorStoreId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -123,7 +123,7 @@ public class VectorStores internal constructor(
       private val vectorStoreId: String,
     ) {
       public suspend operator fun invoke(): VectorStoreObject {
-        val response = client.get("vector_stores/${vectorStoreId.encodeURLParameter()}")
+        val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -134,7 +134,7 @@ public class VectorStores internal constructor(
       private val vectorStoreId: String,
     ) {
       public suspend operator fun invoke(body: UpdateVectorStoreRequest): VectorStoreObject {
-        val response = client.post("vector_stores/${vectorStoreId.encodeURLParameter()}") {
+        val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }
@@ -156,7 +156,7 @@ public class VectorStores internal constructor(
         private val vectorStoreId: String,
       ) {
         public suspend operator fun invoke(body: CreateVectorStoreFileBatchRequest): VectorStoreFileBatchObject {
-          val response = client.post("vector_stores/${vectorStoreId.encodeURLParameter()}/file_batches") {
+          val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}/file_batches") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -182,7 +182,7 @@ public class VectorStores internal constructor(
           private val batchId: String,
         ) {
           public suspend operator fun invoke(): VectorStoreFileBatchObject {
-            val response = client.get("vector_stores/${vectorStoreId.encodeURLParameter()}/file_batches/${batchId.encodeURLParameter()}")
+            val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}/file_batches/${this.batchId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -201,7 +201,7 @@ public class VectorStores internal constructor(
             private val batchId: String,
           ) {
             public suspend operator fun invoke(): VectorStoreFileBatchObject {
-              val response = client.post("vector_stores/${vectorStoreId.encodeURLParameter()}/file_batches/${batchId.encodeURLParameter()}/cancel")
+              val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}/file_batches/${this.batchId.encodeURLParameter()}/cancel")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -227,7 +227,7 @@ public class VectorStores internal constructor(
               before: String? = null,
               filter: Filter? = null,
             ): ListVectorStoreFilesResponse {
-              val response = client.get("vector_stores/${vectorStoreId.encodeURLParameter()}/file_batches/${batchId.encodeURLParameter()}/files") {
+              val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}/file_batches/${this.batchId.encodeURLParameter()}/files") {
                 if (limit != null) {
                   this.url.encodedParameters.append("limit", limit.toString())
                 }
@@ -299,7 +299,7 @@ public class VectorStores internal constructor(
           before: String? = null,
           filter: Filter? = null,
         ): ListVectorStoreFilesResponse {
-          val response = client.get("vector_stores/${vectorStoreId.encodeURLParameter()}/files") {
+          val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files") {
             if (limit != null) {
               this.url.encodedParameters.append("limit", limit.toString())
             }
@@ -352,7 +352,7 @@ public class VectorStores internal constructor(
         private val vectorStoreId: String,
       ) {
         public suspend operator fun invoke(body: CreateVectorStoreFileRequest): VectorStoreFileObject {
-          val response = client.post("vector_stores/${vectorStoreId.encodeURLParameter()}/files") {
+          val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -380,7 +380,7 @@ public class VectorStores internal constructor(
           private val fileId: String,
         ) {
           public suspend operator fun invoke(): DeleteVectorStoreFileResponse {
-            val response = client.delete("vector_stores/${vectorStoreId.encodeURLParameter()}/files/${fileId.encodeURLParameter()}")
+            val response = client.delete("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -392,7 +392,7 @@ public class VectorStores internal constructor(
           private val fileId: String,
         ) {
           public suspend operator fun invoke(): VectorStoreFileObject {
-            val response = client.get("vector_stores/${vectorStoreId.encodeURLParameter()}/files/${fileId.encodeURLParameter()}")
+            val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -404,7 +404,7 @@ public class VectorStores internal constructor(
           private val fileId: String,
         ) {
           public suspend operator fun invoke(body: UpdateVectorStoreFileAttributesRequest): VectorStoreFileObject {
-            val response = client.post("vector_stores/${vectorStoreId.encodeURLParameter()}/files/${fileId.encodeURLParameter()}") {
+            val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -426,7 +426,7 @@ public class VectorStores internal constructor(
             private val fileId: String,
           ) {
             public suspend operator fun invoke(): VectorStoreFileContentResponse {
-              val response = client.get("vector_stores/${vectorStoreId.encodeURLParameter()}/files/${fileId.encodeURLParameter()}/content")
+              val response = client.get("vector_stores/${this.vectorStoreId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}/content")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -446,7 +446,7 @@ public class VectorStores internal constructor(
         private val vectorStoreId: String,
       ) {
         public suspend operator fun invoke(body: VectorStoreSearchRequest): VectorStoreSearchResultsPage {
-          val response = client.post("vector_stores/${vectorStoreId.encodeURLParameter()}/search") {
+          val response = client.post("vector_stores/${this.vectorStoreId.encodeURLParameter()}/search") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }

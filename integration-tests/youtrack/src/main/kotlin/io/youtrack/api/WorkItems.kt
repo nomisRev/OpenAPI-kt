@@ -98,7 +98,7 @@ public class WorkItems internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),created,creator(${'$'}type,id,login,ringId),date,duration(${'$'}type,id),id,text,updated"): BaseWorkItemRead.IssueWorkItem {
-        val response = client.get("workItems/${id.encodeURLParameter()}") {
+        val response = client.get("workItems/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

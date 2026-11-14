@@ -423,7 +423,7 @@ public class Repos internal constructor(
         private val repo: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}")
+          val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
           return when (response.status.value) {
             204 -> Response.NoContent
             307 -> Response.TemporaryRedirect(response.body())
@@ -467,7 +467,7 @@ public class Repos internal constructor(
         private val repo: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}")
+          val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             301 -> Response.MovedPermanently(response.body())
@@ -502,7 +502,7 @@ public class Repos internal constructor(
         private val repo: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}")
+          val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             307 -> Response.TemporaryRedirect(response.body())
@@ -540,7 +540,7 @@ public class Repos internal constructor(
           allowForking: Boolean? = null,
           webCommitSignoffRequired: Boolean? = null,
         ): Response {
-          val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}") {
+          val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(Body(name = name, description = description, homepage = homepage, private = private, visibility = visibility, securityAndAnalysis = securityAndAnalysis, hasIssues = hasIssues, hasProjects = hasProjects, hasWiki = hasWiki, isTemplate = isTemplate, defaultBranch = defaultBranch, allowSquashMerge = allowSquashMerge, allowMergeCommit = allowMergeCommit, allowRebaseMerge = allowRebaseMerge, allowAutoMerge = allowAutoMerge, deleteBranchOnMerge = deleteBranchOnMerge, allowUpdateBranch = allowUpdateBranch, useSquashPrTitleAsDefault = useSquashPrTitleAsDefault, squashMergeCommitTitle = squashMergeCommitTitle, squashMergeCommitMessage = squashMergeCommitMessage, mergeCommitTitle = mergeCommitTitle, mergeCommitMessage = mergeCommitMessage, archived = archived, allowForking = allowForking, webCommitSignoffRequired = webCommitSignoffRequired))
           }
@@ -913,7 +913,7 @@ public class Repos internal constructor(
               page: Long? = 1L,
               name: String? = null,
             ): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/artifacts") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/artifacts") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -955,7 +955,7 @@ public class Repos internal constructor(
               private val artifactId: Long,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/artifacts/$artifactId")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/artifacts/${this.artifactId}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
@@ -967,7 +967,7 @@ public class Repos internal constructor(
               private val artifactId: Long,
             ) {
               public suspend operator fun invoke(): Artifact {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/artifacts/$artifactId")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/artifacts/${this.artifactId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -990,7 +990,7 @@ public class Repos internal constructor(
                 private val archiveFormat: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/artifacts/$artifactId/${archiveFormat.encodeURLParameter()}")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/artifacts/${this.artifactId}/${this.archiveFormat.encodeURLParameter()}")
                   return when (response.status.value) {
                     302 -> Response.Found
                     410 -> Response.Gone(response.body())
@@ -1036,7 +1036,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/cache/retention-limit")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/cache/retention-limit")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -1066,7 +1066,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsCacheRetentionLimitForRepository): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/cache/retention-limit") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/cache/retention-limit") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1112,7 +1112,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/cache/storage-limit")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/cache/storage-limit")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -1142,7 +1142,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsCacheStorageLimitForRepository): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/cache/storage-limit") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/cache/storage-limit") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1186,7 +1186,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): ActionsCacheUsageByRepository {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/cache/usage")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/cache/usage")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -1211,7 +1211,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(key: String, ref: String? = null): ActionsCacheList {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/caches") {
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/caches") {
                 this.url.encodedParameters.append("key", key.encodeURLParameter())
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
@@ -1235,7 +1235,7 @@ public class Repos internal constructor(
               sort: Sort? = Sort.LastAccessedAt,
               direction: Direction? = Direction.Desc,
             ): ActionsCacheList {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/caches") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/caches") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -1299,7 +1299,7 @@ public class Repos internal constructor(
               private val cacheId: Long,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/caches/$cacheId")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/caches/${this.cacheId}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
@@ -1332,7 +1332,7 @@ public class Repos internal constructor(
               private val jobId: Long,
             ) {
               public suspend operator fun invoke(): Job {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/jobs/$jobId")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/jobs/${this.jobId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -1353,7 +1353,7 @@ public class Repos internal constructor(
                 private val jobId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/jobs/$jobId/logs")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/jobs/${this.jobId}/logs")
                   if (response.status.value != 302) throw ResponseException(response, "")
                 }
               }
@@ -1374,7 +1374,7 @@ public class Repos internal constructor(
                 private val jobId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/jobs/$jobId/rerun")
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/jobs/${this.jobId}/rerun")
                   return when (response.status.value) {
                     201 -> Response.Created(response.body())
                     403 -> Response.Forbidden(response.body())
@@ -1383,7 +1383,7 @@ public class Repos internal constructor(
                 }
 
                 public suspend operator fun invoke(enableDebugLogging: Boolean? = null): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/jobs/$jobId/rerun") {
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/jobs/${this.jobId}/rerun") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(enableDebugLogging = enableDebugLogging))
                   }
@@ -1445,7 +1445,7 @@ public class Repos internal constructor(
                 private val repo: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/oidc/customization/sub")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/oidc/customization/sub")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     400 -> Response.BadRequest(response.body())
@@ -1475,7 +1475,7 @@ public class Repos internal constructor(
                 private val repo: String,
               ) {
                 public suspend operator fun invoke(useDefault: Boolean, includeClaimKeys: List<String>? = null): Response {
-                  val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/oidc/customization/sub") {
+                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/oidc/customization/sub") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(useDefault = useDefault, includeClaimKeys = includeClaimKeys))
                   }
@@ -1536,7 +1536,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/organization-secrets") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/organization-secrets") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -1570,7 +1570,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/organization-variables") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/organization-variables") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -1621,7 +1621,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): ActionsRepositoryPermissions {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -1637,7 +1637,7 @@ public class Repos internal constructor(
               allowedActions: AllowedActions? = null,
               shaPinningRequired: ShaPinningRequired? = null,
             ) {
-              val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions") {
+              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(enabled = enabled, allowedActions = allowedActions, shaPinningRequired = shaPinningRequired))
               }
@@ -1672,7 +1672,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): ActionsWorkflowAccessToRepository {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/access")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/access")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -1684,7 +1684,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsWorkflowAccessToRepository) {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/access") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/access") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1708,7 +1708,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/artifact-and-log-retention")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/artifact-and-log-retention")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -1733,7 +1733,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsArtifactAndLogRetention): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/artifact-and-log-retention") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/artifact-and-log-retention") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1774,7 +1774,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/fork-pr-contributor-approval")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/fork-pr-contributor-approval")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -1799,7 +1799,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsForkPrContributorApproval): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/fork-pr-contributor-approval") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/fork-pr-contributor-approval") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1840,7 +1840,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/fork-pr-workflows-private-repos")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/fork-pr-workflows-private-repos")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -1870,7 +1870,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsForkPrWorkflowsPrivateReposRequest): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/fork-pr-workflows-private-repos") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/fork-pr-workflows-private-repos") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -1911,7 +1911,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): io.github.model.SelectedActions {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/selected-actions")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/selected-actions")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -1923,7 +1923,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(body: io.github.model.SelectedActions? = null) {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/selected-actions") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/selected-actions") {
                   body?.let {
                     contentType(ContentType.Application.Json)
                     setBody(it)
@@ -1949,7 +1949,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): ActionsGetDefaultWorkflowPermissions {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/workflow")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/workflow")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -1961,7 +1961,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(body: ActionsSetDefaultWorkflowPermissions): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/permissions/workflow") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/permissions/workflow") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -2008,7 +2008,7 @@ public class Repos internal constructor(
               perPage: Long? = 30L,
               page: Long? = 1L,
             ): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners") {
                 if (name != null) {
                   this.url.encodedParameters.append("name", name.encodeURLParameter())
                 }
@@ -2044,7 +2044,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): List<RunnerApplication> {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners/downloads")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/downloads")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -2069,7 +2069,7 @@ public class Repos internal constructor(
                 labels: List<String>,
                 workFolder: String? = null,
               ): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners/generate-jitconfig") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/generate-jitconfig") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(name = name, runnerGroupId = runnerGroupId, labels = labels, workFolder = workFolder))
                 }
@@ -2130,7 +2130,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): AuthenticationToken {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners/registration-token")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/registration-token")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
@@ -2150,7 +2150,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): AuthenticationToken {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners/remove-token")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/remove-token")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
@@ -2176,7 +2176,7 @@ public class Repos internal constructor(
               private val runnerId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners/$runnerId")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   422 -> Response.UnprocessableEntity(response.body())
@@ -2200,7 +2200,7 @@ public class Repos internal constructor(
               private val runnerId: Long,
             ) {
               public suspend operator fun invoke(): Runner {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners/$runnerId")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -2229,7 +2229,7 @@ public class Repos internal constructor(
                 private val runnerId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners/$runnerId/labels")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}/labels")
                   return when (response.status.value) {
                     200 -> response.body<Response.Ok>()
                     404 -> Response.NotFound(response.body())
@@ -2258,7 +2258,7 @@ public class Repos internal constructor(
                 private val runnerId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners/$runnerId/labels")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}/labels")
                   return when (response.status.value) {
                     200 -> response.body<Response.Ok>()
                     404 -> Response.NotFound(response.body())
@@ -2287,7 +2287,7 @@ public class Repos internal constructor(
                 private val runnerId: Long,
               ) {
                 public suspend operator fun invoke(labels: List<String>): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners/$runnerId/labels") {
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}/labels") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(labels = labels))
                   }
@@ -2329,7 +2329,7 @@ public class Repos internal constructor(
                 private val runnerId: Long,
               ) {
                 public suspend operator fun invoke(labels: List<String>): Response {
-                  val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners/$runnerId/labels") {
+                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}/labels") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(labels = labels))
                   }
@@ -2381,7 +2381,7 @@ public class Repos internal constructor(
                   private val name: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners/$runnerId/labels/${name.encodeURLParameter()}")
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runners/${this.runnerId}/labels/${this.name.encodeURLParameter()}")
                     return when (response.status.value) {
                       200 -> response.body<Response.Ok>()
                       404 -> Response.NotFound(response.body())
@@ -2438,7 +2438,7 @@ public class Repos internal constructor(
               checkSuiteId: Long? = null,
               headSha: String? = null,
             ): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs") {
                 if (actor != null) {
                   this.url.encodedParameters.append("actor", actor.encodeURLParameter())
                 }
@@ -2564,7 +2564,7 @@ public class Repos internal constructor(
               private val runId: Long,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
@@ -2576,7 +2576,7 @@ public class Repos internal constructor(
               private val runId: Long,
             ) {
               public suspend operator fun invoke(excludePullRequests: Boolean? = false): WorkflowRun {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}") {
                   if (excludePullRequests != null) {
                     this.url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
                   }
@@ -2601,7 +2601,7 @@ public class Repos internal constructor(
                 private val runId: Long,
               ) {
                 public suspend operator fun invoke(): List<EnvironmentApprovals> {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/approvals")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/approvals")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -2623,7 +2623,7 @@ public class Repos internal constructor(
                 private val runId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/approve")
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/approve")
                   return when (response.status.value) {
                     201 -> Response.Created(response.body())
                     403 -> Response.Forbidden(response.body())
@@ -2668,7 +2668,7 @@ public class Repos internal constructor(
                   name: String? = null,
                   direction: Direction? = Direction.Desc,
                 ): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/artifacts") {
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/artifacts") {
                     if (perPage != null) {
                       this.url.encodedParameters.append("per_page", perPage.toString())
                     }
@@ -2735,7 +2735,7 @@ public class Repos internal constructor(
                   private val attemptNumber: Long,
                 ) {
                   public suspend operator fun invoke(excludePullRequests: Boolean? = false): WorkflowRun {
-                    val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/attempts/$attemptNumber") {
+                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/attempts/${this.attemptNumber}") {
                       if (excludePullRequests != null) {
                         this.url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
                       }
@@ -2762,7 +2762,7 @@ public class Repos internal constructor(
                     private val attemptNumber: Long,
                   ) {
                     public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                      val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/attempts/$attemptNumber/jobs") {
+                      val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/attempts/${this.attemptNumber}/jobs") {
                         if (perPage != null) {
                           this.url.encodedParameters.append("per_page", perPage.toString())
                         }
@@ -2809,7 +2809,7 @@ public class Repos internal constructor(
                     private val attemptNumber: Long,
                   ) {
                     public suspend operator fun invoke() {
-                      val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/attempts/$attemptNumber/logs")
+                      val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/attempts/${this.attemptNumber}/logs")
                       if (response.status.value != 302) throw ResponseException(response, "")
                     }
                   }
@@ -2832,7 +2832,7 @@ public class Repos internal constructor(
                 private val runId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/cancel")
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/cancel")
                   return when (response.status.value) {
                     202 -> Response.Accepted(response.body())
                     409 -> Response.Conflict(response.body())
@@ -2867,7 +2867,7 @@ public class Repos internal constructor(
                 private val runId: Long,
               ) {
                 public suspend operator fun invoke(body: ReviewCustomGatesCommentRequired) {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/deployment_protection_rule") {
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/deployment_protection_rule") {
                     contentType(ContentType.Application.Json)
                     setBody(body)
                   }
@@ -2875,7 +2875,7 @@ public class Repos internal constructor(
                 }
 
                 public suspend operator fun invoke(body: ReviewCustomGatesStateRequired) {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/deployment_protection_rule") {
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/deployment_protection_rule") {
                     contentType(ContentType.Application.Json)
                     setBody(body)
                   }
@@ -2899,7 +2899,7 @@ public class Repos internal constructor(
                 private val runId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/force-cancel")
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/force-cancel")
                   return when (response.status.value) {
                     202 -> Response.Accepted(response.body())
                     409 -> Response.Conflict(response.body())
@@ -2938,7 +2938,7 @@ public class Repos internal constructor(
                   perPage: Long? = 30L,
                   page: Long? = 1L,
                 ): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/jobs") {
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/jobs") {
                     if (filter != null) {
                       this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
                     }
@@ -2990,7 +2990,7 @@ public class Repos internal constructor(
                 private val runId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/logs")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/logs")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     403 -> Response.Forbidden(response.body())
@@ -3019,7 +3019,7 @@ public class Repos internal constructor(
                 private val runId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/logs")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/logs")
                   if (response.status.value != 302) throw ResponseException(response, "")
                 }
               }
@@ -3042,7 +3042,7 @@ public class Repos internal constructor(
                 private val runId: Long,
               ) {
                 public suspend operator fun invoke(): List<PendingDeployment> {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/pending_deployments")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/pending_deployments")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -3059,7 +3059,7 @@ public class Repos internal constructor(
                   state: State,
                   comment: String,
                 ): List<Deployment> {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/pending_deployments") {
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/pending_deployments") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(environmentIds = environmentIds, state = state, comment = comment))
                   }
@@ -3103,13 +3103,13 @@ public class Repos internal constructor(
                 private val runId: Long,
               ) {
                 public suspend operator fun invoke(): EmptyObject {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/rerun")
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/rerun")
                   if (response.status.value != 201) throw ResponseException(response, "")
                   return response.body()
                 }
 
                 public suspend operator fun invoke(enableDebugLogging: Boolean? = null): EmptyObject {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/rerun") {
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/rerun") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(enableDebugLogging = enableDebugLogging))
                   }
@@ -3142,13 +3142,13 @@ public class Repos internal constructor(
                 private val runId: Long,
               ) {
                 public suspend operator fun invoke(): EmptyObject {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/rerun-failed-jobs")
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/rerun-failed-jobs")
                   if (response.status.value != 201) throw ResponseException(response, "")
                   return response.body()
                 }
 
                 public suspend operator fun invoke(enableDebugLogging: Boolean? = null): EmptyObject {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/rerun-failed-jobs") {
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/rerun-failed-jobs") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(enableDebugLogging = enableDebugLogging))
                   }
@@ -3181,7 +3181,7 @@ public class Repos internal constructor(
                 private val runId: Long,
               ) {
                 public suspend operator fun invoke(): WorkflowRunUsage {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/timing")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/runs/${this.runId}/timing")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -3207,7 +3207,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/secrets") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/secrets") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -3240,7 +3240,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): ActionsPublicKey {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/secrets/public-key")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/secrets/public-key")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -3266,7 +3266,7 @@ public class Repos internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/secrets/${secretName.encodeURLParameter()}")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/secrets/${this.secretName.encodeURLParameter()}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
@@ -3278,7 +3278,7 @@ public class Repos internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke(): ActionsSecret {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/secrets/${secretName.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/secrets/${this.secretName.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -3291,7 +3291,7 @@ public class Repos internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke(encryptedValue: String, keyId: String): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/secrets/${secretName.encodeURLParameter()}") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/secrets/${this.secretName.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(encryptedValue = encryptedValue, keyId = keyId))
                 }
@@ -3338,7 +3338,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/variables") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/variables") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -3364,7 +3364,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(name: String, `value`: String): EmptyObject {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/variables") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/variables") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, value = value))
               }
@@ -3398,7 +3398,7 @@ public class Repos internal constructor(
               private val name: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/variables/${name.encodeURLParameter()}")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/variables/${this.name.encodeURLParameter()}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
@@ -3410,7 +3410,7 @@ public class Repos internal constructor(
               private val name: String,
             ) {
               public suspend operator fun invoke(): ActionsVariable {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/variables/${name.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/variables/${this.name.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -3423,7 +3423,7 @@ public class Repos internal constructor(
               private val name: String,
             ) {
               public suspend operator fun invoke(name: String? = null, `value`: String? = null) {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/variables/${name.encodeURLParameter()}") {
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/variables/${this.name.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(name = name, value = value))
                 }
@@ -3459,7 +3459,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/workflows") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -3504,7 +3504,7 @@ public class Repos internal constructor(
               private val workflowId: String,
             ) {
               public suspend operator fun invoke(): Workflow {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/workflows/${workflowId.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -3525,7 +3525,7 @@ public class Repos internal constructor(
                 private val workflowId: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/workflows/${workflowId.encodeURLParameter()}/disable")
+                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}/disable")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -3550,7 +3550,7 @@ public class Repos internal constructor(
                   inputs: JsonElement? = null,
                   returnRunDetails: Boolean? = null,
                 ): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/workflows/${workflowId.encodeURLParameter()}/dispatches") {
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}/dispatches") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(ref = ref, inputs = inputs, returnRunDetails = returnRunDetails))
                   }
@@ -3597,7 +3597,7 @@ public class Repos internal constructor(
                 private val workflowId: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/workflows/${workflowId.encodeURLParameter()}/enable")
+                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}/enable")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -3629,7 +3629,7 @@ public class Repos internal constructor(
                   checkSuiteId: Long? = null,
                   headSha: String? = null,
                 ): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/workflows/${workflowId.encodeURLParameter()}/runs") {
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}/runs") {
                     if (actor != null) {
                       this.url.encodedParameters.append("actor", actor.encodeURLParameter())
                     }
@@ -3725,7 +3725,7 @@ public class Repos internal constructor(
                 private val workflowId: String,
               ) {
                 public suspend operator fun invoke(): WorkflowUsage {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/workflows/${workflowId.encodeURLParameter()}/timing")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/actions/workflows/${this.workflowId.encodeURLParameter()}/timing")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -3757,7 +3757,7 @@ public class Repos internal constructor(
             timePeriod: TimePeriod? = null,
             activityType: ActivityType? = null,
           ): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/activity") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/activity") {
               if (direction != null) {
                 this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
@@ -3864,7 +3864,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/assignees") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/assignees") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -3905,7 +3905,7 @@ public class Repos internal constructor(
             private val assignee: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/assignees/${assignee.encodeURLParameter()}")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/assignees/${this.assignee.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -3939,7 +3939,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(bundle: Bundle): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/attestations") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/attestations") {
               contentType(ContentType.Application.Json)
               setBody(Body(bundle = bundle))
             }
@@ -4009,7 +4009,7 @@ public class Repos internal constructor(
               after: String? = null,
               predicateType: String? = null,
             ): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/attestations/${subjectDigest.encodeURLParameter()}") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/attestations/${this.subjectDigest.encodeURLParameter()}") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -4084,7 +4084,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): List<Autolink> {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/autolinks")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/autolinks")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -4100,7 +4100,7 @@ public class Repos internal constructor(
             urlTemplate: String,
             isAlphanumeric: Boolean? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/autolinks") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/autolinks") {
               contentType(ContentType.Application.Json)
               setBody(Body(keyPrefix = keyPrefix, urlTemplate = urlTemplate, isAlphanumeric = isAlphanumeric))
             }
@@ -4151,7 +4151,7 @@ public class Repos internal constructor(
             private val autolinkId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/autolinks/$autolinkId")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/autolinks/${this.autolinkId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -4175,7 +4175,7 @@ public class Repos internal constructor(
             private val autolinkId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/autolinks/$autolinkId")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/autolinks/${this.autolinkId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -4213,7 +4213,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/automated-security-fixes")
+            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/automated-security-fixes")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
@@ -4224,7 +4224,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/automated-security-fixes")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/automated-security-fixes")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound
@@ -4247,7 +4247,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/automated-security-fixes")
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/automated-security-fixes")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
@@ -4272,7 +4272,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches") {
               if (protected != null) {
                 this.url.encodedParameters.append("protected", protected.toString())
               }
@@ -4320,7 +4320,7 @@ public class Repos internal constructor(
             private val branch: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 301 -> Response.MovedPermanently(response.body())
@@ -4376,7 +4376,7 @@ public class Repos internal constructor(
               private val branch: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden(response.body())
@@ -4400,7 +4400,7 @@ public class Repos internal constructor(
               private val branch: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -4438,7 +4438,7 @@ public class Repos internal constructor(
                 lockBranch: Boolean? = null,
                 allowForkSyncing: Boolean? = null,
               ): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(requiredStatusChecks = requiredStatusChecks, enforceAdmins = enforceAdmins, requiredPullRequestReviews = requiredPullRequestReviews, restrictions = restrictions, requiredLinearHistory = requiredLinearHistory, allowForcePushes = allowForcePushes, allowDeletions = allowDeletions, blockCreations = blockCreations, requiredConversationResolution = requiredConversationResolution, lockBranch = lockBranch, allowForkSyncing = allowForkSyncing))
                 }
@@ -4608,7 +4608,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/enforce_admins")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/enforce_admins")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -4632,7 +4632,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): ProtectedBranchAdminEnforced {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/enforce_admins")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/enforce_admins")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -4645,7 +4645,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): ProtectedBranchAdminEnforced {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/enforce_admins")
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/enforce_admins")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -4671,7 +4671,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_pull_request_reviews")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_pull_request_reviews")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -4695,7 +4695,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): ProtectedBranchPullRequestReview {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_pull_request_reviews")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_pull_request_reviews")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -4708,7 +4708,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_pull_request_reviews")
+                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_pull_request_reviews")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     422 -> Response.UnprocessableEntity(response.body())
@@ -4724,7 +4724,7 @@ public class Repos internal constructor(
                   requireLastPushApproval: Boolean? = null,
                   bypassPullRequestAllowances: BypassPullRequestAllowances? = null,
                 ): Response {
-                  val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_pull_request_reviews") {
+                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_pull_request_reviews") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(dismissalRestrictions = dismissalRestrictions, dismissStaleReviews = dismissStaleReviews, requireCodeOwnerReviews = requireCodeOwnerReviews, requiredApprovingReviewCount = requiredApprovingReviewCount, requireLastPushApproval = requireLastPushApproval, bypassPullRequestAllowances = bypassPullRequestAllowances))
                   }
@@ -4817,7 +4817,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_signatures")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_signatures")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -4841,7 +4841,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_signatures")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_signatures")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -4867,7 +4867,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_signatures")
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_signatures")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -4908,7 +4908,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -4920,7 +4920,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -4946,7 +4946,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks")
+                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -4960,7 +4960,7 @@ public class Repos internal constructor(
                   contexts: List<String>? = null,
                   checks: List<Checks>? = null,
                 ): Response {
-                  val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks") {
+                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(strict = strict, contexts = contexts, checks = checks))
                   }
@@ -5028,7 +5028,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks/contexts")
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5038,7 +5038,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: ContextsStrings): Response {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5051,7 +5051,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5090,7 +5090,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks/contexts")
+                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5116,7 +5116,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks/contexts")
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       403 -> Response.Forbidden(response.body())
@@ -5127,7 +5127,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: ContextsStrings): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5141,7 +5141,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5185,7 +5185,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks/contexts")
+                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5195,7 +5195,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: ContextsStrings): Response {
-                    val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5208,7 +5208,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
+                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/required_status_checks/contexts") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5265,7 +5265,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -5277,7 +5277,7 @@ public class Repos internal constructor(
                 private val branch: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -5317,7 +5317,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(apps: List<String>): Response {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/apps") {
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/apps") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(apps = apps))
                     }
@@ -5351,7 +5351,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/apps")
+                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/apps")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5377,7 +5377,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(apps: List<String>): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/apps") {
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/apps") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(apps = apps))
                     }
@@ -5411,7 +5411,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(apps: List<String>): Response {
-                    val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/apps") {
+                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/apps") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(apps = apps))
                     }
@@ -5460,7 +5460,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/teams")
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       422 -> Response.UnprocessableEntity(response.body())
@@ -5469,7 +5469,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: TeamsStrings): Response {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5481,7 +5481,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5515,7 +5515,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/teams")
+                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5541,7 +5541,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/teams")
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       422 -> Response.UnprocessableEntity(response.body())
@@ -5550,7 +5550,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: TeamsStrings): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5562,7 +5562,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5596,7 +5596,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/teams")
+                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       422 -> Response.UnprocessableEntity(response.body())
@@ -5605,7 +5605,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: TeamsStrings): Response {
-                    val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5617,7 +5617,7 @@ public class Repos internal constructor(
                   }
 
                   public suspend operator fun invoke(body: List<String>): Response {
-                    val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/teams") {
+                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/teams") {
                       contentType(ContentType.Application.Json)
                       setBody(body)
                     }
@@ -5666,7 +5666,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(users: List<String>): Response {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/users") {
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/users") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(users = users))
                     }
@@ -5700,7 +5700,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/users")
+                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/users")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       404 -> Response.NotFound(response.body())
@@ -5726,7 +5726,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(users: List<String>): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/users") {
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/users") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(users = users))
                     }
@@ -5760,7 +5760,7 @@ public class Repos internal constructor(
                   private val branch: String,
                 ) {
                   public suspend operator fun invoke(users: List<String>): Response {
-                    val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/protection/restrictions/users") {
+                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/protection/restrictions/users") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(users = users))
                     }
@@ -5805,7 +5805,7 @@ public class Repos internal constructor(
               private val branch: String,
             ) {
               public suspend operator fun invoke(newName: String): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches/${branch.encodeURLParameter()}/rename") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/branches/${this.branch.encodeURLParameter()}/rename") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(newName = newName))
                 }
@@ -5872,7 +5872,7 @@ public class Repos internal constructor(
             output: Output? = null,
             actions: List<Actions>? = null,
           ): CheckRun {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-runs") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-runs") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, headSha = headSha, detailsUrl = detailsUrl, externalId = externalId, status = status, startedAt = startedAt, conclusion = conclusion, completedAt = completedAt, output = output, actions = actions))
             }
@@ -6042,7 +6042,7 @@ public class Repos internal constructor(
             private val checkRunId: Long,
           ) {
             public suspend operator fun invoke(): CheckRun {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-runs/$checkRunId")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-runs/${this.checkRunId}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -6065,7 +6065,7 @@ public class Repos internal constructor(
               output: Output? = null,
               actions: List<Actions>? = null,
             ): CheckRun {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-runs/$checkRunId") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-runs/${this.checkRunId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, detailsUrl = detailsUrl, externalId = externalId, startedAt = startedAt, status = status, conclusion = conclusion, completedAt = completedAt, output = output, actions = actions))
               }
@@ -6229,7 +6229,7 @@ public class Repos internal constructor(
               private val checkRunId: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<CheckAnnotation> {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-runs/$checkRunId/annotations") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-runs/${this.checkRunId}/annotations") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -6258,7 +6258,7 @@ public class Repos internal constructor(
               private val checkRunId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-runs/$checkRunId/rerequest")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-runs/${this.checkRunId}/rerequest")
                 return when (response.status.value) {
                   201 -> Response.Created(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -6307,7 +6307,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(headSha: String): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-suites") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-suites") {
               contentType(ContentType.Application.Json)
               setBody(Body(headSha = headSha))
             }
@@ -6348,7 +6348,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(autoTriggerChecks: List<AutoTriggerChecks>? = null): CheckSuitePreference {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-suites/preferences") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-suites/preferences") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(autoTriggerChecks = autoTriggerChecks))
               }
@@ -6393,7 +6393,7 @@ public class Repos internal constructor(
             private val checkSuiteId: Long,
           ) {
             public suspend operator fun invoke(): CheckSuite {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-suites/$checkSuiteId")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-suites/${this.checkSuiteId}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -6420,7 +6420,7 @@ public class Repos internal constructor(
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-suites/$checkSuiteId/check-runs") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-suites/${this.checkSuiteId}/check-runs") {
                   if (checkName != null) {
                     this.url.encodedParameters.append("check_name", checkName.encodeURLParameter())
                   }
@@ -6490,7 +6490,7 @@ public class Repos internal constructor(
               private val checkSuiteId: Long,
             ) {
               public suspend operator fun invoke(): EmptyObject {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-suites/$checkSuiteId/rerequest")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/check-suites/${this.checkSuiteId}/rerequest")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
@@ -6543,7 +6543,7 @@ public class Repos internal constructor(
               severity: CodeScanningAlertSeverity? = null,
               assignees: String? = null,
             ): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/alerts") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts") {
                 if (toolName != null) {
                   this.url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
                 }
@@ -6666,7 +6666,7 @@ public class Repos internal constructor(
               private val alertNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/alerts/$alertNumber")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   304 -> Response.NotModified
@@ -6719,7 +6719,7 @@ public class Repos internal constructor(
                 createRequest: CodeScanningAlertCreateRequest? = null,
                 assignees: CodeScanningAlertAssignees? = null,
               ): Response {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/alerts/$alertNumber") {
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(state = state, dismissedReason = dismissedReason, dismissedComment = dismissedComment, createRequest = createRequest, assignees = assignees))
                 }
@@ -6799,7 +6799,7 @@ public class Repos internal constructor(
                 private val alertNumber: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/alerts/$alertNumber/autofix")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}/autofix")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     400 -> Response.BadRequest(response.body())
@@ -6848,7 +6848,7 @@ public class Repos internal constructor(
                 private val alertNumber: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/alerts/$alertNumber/autofix")
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}/autofix")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     202 -> Response.Accepted(response.body())
@@ -6913,7 +6913,7 @@ public class Repos internal constructor(
                   private val alertNumber: Long,
                 ) {
                   public suspend operator fun invoke(body: CodeScanningAutofixCommits? = null): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/alerts/$alertNumber/autofix/commits") {
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}/autofix/commits") {
                       body?.let {
                         contentType(ContentType.Application.Json)
                         setBody(it)
@@ -6985,7 +6985,7 @@ public class Repos internal constructor(
                   ref: String? = null,
                   pr: Long? = null,
                 ): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/alerts/$alertNumber/instances") {
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/alerts/${this.alertNumber}/instances") {
                     if (page != null) {
                       this.url.encodedParameters.append("page", page.toString())
                     }
@@ -7063,7 +7063,7 @@ public class Repos internal constructor(
               direction: Direction? = Direction.Desc,
               sort: Sort? = Sort.Created,
             ): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/analyses") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/analyses") {
                 if (toolName != null) {
                   this.url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
                 }
@@ -7165,7 +7165,7 @@ public class Repos internal constructor(
               private val analysisId: Long,
             ) {
               public suspend operator fun invoke(confirmDelete: String? = null): Response {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/analyses/$analysisId") {
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/analyses/${this.analysisId}") {
                   if (confirmDelete != null) {
                     this.url.encodedParameters.append("confirm_delete", confirmDelete.encodeURLParameter())
                   }
@@ -7218,7 +7218,7 @@ public class Repos internal constructor(
               private val analysisId: Long,
             ) {
               public suspend fun json(): JsonResponse {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/analyses/$analysisId") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/analyses/${this.analysisId}") {
                   `header`(HttpHeaders.Accept, ContentType.Application.Json)
                 }
                 return when (response.status.value) {
@@ -7232,7 +7232,7 @@ public class Repos internal constructor(
               }
 
               public suspend fun sarifJson(): SarifJsonResponse {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/analyses/$analysisId") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/analyses/${this.analysisId}") {
                   `header`(HttpHeaders.Accept, ContentType("application", "sarif+json"))
                 }
                 return when (response.status.value) {
@@ -7312,7 +7312,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/codeql/databases")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/databases")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -7366,7 +7366,7 @@ public class Repos internal constructor(
                 private val language: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/codeql/databases/${language.encodeURLParameter()}")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/databases/${this.language.encodeURLParameter()}")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     403 -> Response.Forbidden(response.body())
@@ -7408,7 +7408,7 @@ public class Repos internal constructor(
                 private val language: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/codeql/databases/${language.encodeURLParameter()}")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/databases/${this.language.encodeURLParameter()}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     302 -> Response.Found
@@ -7471,7 +7471,7 @@ public class Repos internal constructor(
                 repositoryLists: List<String>? = null,
                 repositoryOwners: List<String>? = null,
               ): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(language = language, queryPack = queryPack, repositories = repositories, repositoryLists = repositoryLists, repositoryOwners = repositoryOwners))
                 }
@@ -7544,7 +7544,7 @@ public class Repos internal constructor(
                 private val codeqlVariantAnalysisId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses/$codeqlVariantAnalysisId")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses/${this.codeqlVariantAnalysisId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -7613,7 +7613,7 @@ public class Repos internal constructor(
                       private val repoName: String,
                     ) {
                       public suspend operator fun invoke(): Response {
-                        val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses/$codeqlVariantAnalysisId/repos/${repoOwner.encodeURLParameter()}/${repoName.encodeURLParameter()}")
+                        val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/codeql/variant-analyses/${this.codeqlVariantAnalysisId}/repos/${this.repoOwner.encodeURLParameter()}/${this.repoName.encodeURLParameter()}")
                         return when (response.status.value) {
                           200 -> Response.Ok(response.body())
                           404 -> Response.NotFound(response.body())
@@ -7666,7 +7666,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/default-setup")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/default-setup")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -7709,7 +7709,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(body: CodeScanningDefaultSetupUpdate): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/default-setup") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/default-setup") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -7788,7 +7788,7 @@ public class Repos internal constructor(
               toolName: String? = null,
               validate: Boolean? = null,
             ): Response {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/sarifs") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/sarifs") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(commitSha = commitSha, ref = ref, sarif = sarif, checkoutUri = checkoutUri, startedAt = startedAt, toolName = toolName, validate = validate))
               }
@@ -7869,7 +7869,7 @@ public class Repos internal constructor(
               private val sarifId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/sarifs/${sarifId.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-scanning/sarifs/${this.sarifId.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -7920,7 +7920,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-security-configuration")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/code-security-configuration")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               204 -> Response.NoContent
@@ -7971,7 +7971,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(ref: String? = null): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codeowners/errors") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codeowners/errors") {
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
@@ -8019,7 +8019,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -8081,7 +8081,7 @@ public class Repos internal constructor(
             displayName: String? = null,
             retentionPeriodMinutes: Long? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces") {
               contentType(ContentType.Application.Json)
               setBody(Body(ref = ref, location = location, geo = geo, clientIp = clientIp, machine = machine, devcontainerPath = devcontainerPath, multiRepoPermissionsOptOut = multiRepoPermissionsOptOut, workingDirectory = workingDirectory, idleTimeoutMinutes = idleTimeoutMinutes, displayName = displayName, retentionPeriodMinutes = retentionPeriodMinutes))
             }
@@ -8191,7 +8191,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/devcontainers") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/devcontainers") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -8269,7 +8269,7 @@ public class Repos internal constructor(
               clientIp: String? = null,
               ref: String? = null,
             ): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/machines") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/machines") {
                 if (location != null) {
                   this.url.encodedParameters.append("location", location.encodeURLParameter())
                 }
@@ -8333,7 +8333,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(ref: String? = null, clientIp: String? = null): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/new") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/new") {
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
@@ -8396,7 +8396,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(ref: String, devcontainerPath: String): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/permissions_check") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/permissions_check") {
                 this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 this.url.encodedParameters.append("devcontainer_path", devcontainerPath.encodeURLParameter())
               }
@@ -8464,7 +8464,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/secrets") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/secrets") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -8497,7 +8497,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): CodespacesPublicKey {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/secrets/public-key")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/secrets/public-key")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -8523,7 +8523,7 @@ public class Repos internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/secrets/${secretName.encodeURLParameter()}")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/secrets/${this.secretName.encodeURLParameter()}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
@@ -8535,7 +8535,7 @@ public class Repos internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke(): RepoCodespacesSecret {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/secrets/${secretName.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/secrets/${this.secretName.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -8548,7 +8548,7 @@ public class Repos internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke(encryptedValue: String? = null, keyId: String? = null): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/secrets/${secretName.encodeURLParameter()}") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/codespaces/secrets/${this.secretName.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(encryptedValue = encryptedValue, keyId = keyId))
                 }
@@ -8602,7 +8602,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/collaborators") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators") {
               if (affiliation != null) {
                 this.url.encodedParameters.append("affiliation", affiliation.value.encodeURLParameter())
               }
@@ -8685,7 +8685,7 @@ public class Repos internal constructor(
             private val username: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/collaborators/${username.encodeURLParameter()}")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators/${this.username.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 403 -> Response.Forbidden(response.body())
@@ -8714,7 +8714,7 @@ public class Repos internal constructor(
             private val username: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/collaborators/${username.encodeURLParameter()}")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators/${this.username.encodeURLParameter()}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound
@@ -8736,7 +8736,7 @@ public class Repos internal constructor(
             private val username: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/collaborators/${username.encodeURLParameter()}")
+              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators/${this.username.encodeURLParameter()}")
               return when (response.status.value) {
                 201 -> Response.Created(response.body())
                 204 -> Response.NoContent
@@ -8747,7 +8747,7 @@ public class Repos internal constructor(
             }
 
             public suspend operator fun invoke(permission: String? = null): Response {
-              val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/collaborators/${username.encodeURLParameter()}") {
+              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators/${this.username.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(permission = permission))
               }
@@ -8799,7 +8799,7 @@ public class Repos internal constructor(
               private val username: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/collaborators/${username.encodeURLParameter()}/permission")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/collaborators/${this.username.encodeURLParameter()}/permission")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -8836,7 +8836,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<CommitComment> {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/comments") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -8870,7 +8870,7 @@ public class Repos internal constructor(
             private val commentId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/comments/$commentId")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -8894,7 +8894,7 @@ public class Repos internal constructor(
             private val commentId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/comments/$commentId")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -8920,7 +8920,7 @@ public class Repos internal constructor(
             private val commentId: Long,
           ) {
             public suspend operator fun invoke(body: String): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/comments/$commentId") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(body = body))
               }
@@ -8970,7 +8970,7 @@ public class Repos internal constructor(
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/comments/$commentId/reactions") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}/reactions") {
                   if (content != null) {
                     this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                   }
@@ -9027,7 +9027,7 @@ public class Repos internal constructor(
               private val commentId: Long,
             ) {
               public suspend operator fun invoke(content: Content): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/comments/$commentId/reactions") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}/reactions") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(content = content))
                 }
@@ -9097,7 +9097,7 @@ public class Repos internal constructor(
                 private val reactionId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/comments/$commentId/reactions/$reactionId")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/comments/${this.commentId}/reactions/${this.reactionId}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -9132,7 +9132,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits") {
               if (sha != null) {
                 this.url.encodedParameters.append("sha", sha.encodeURLParameter())
               }
@@ -9219,7 +9219,7 @@ public class Repos internal constructor(
               private val commitSha: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${commitSha.encodeURLParameter()}/branches-where-head")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.commitSha.encodeURLParameter()}/branches-where-head")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   409 -> Response.Conflict(response.body())
@@ -9261,7 +9261,7 @@ public class Repos internal constructor(
               private val commitSha: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<CommitComment> {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${commitSha.encodeURLParameter()}/comments") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.commitSha.encodeURLParameter()}/comments") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -9286,7 +9286,7 @@ public class Repos internal constructor(
                 position: Long? = null,
                 line: Long? = null,
               ): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${commitSha.encodeURLParameter()}/comments") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.commitSha.encodeURLParameter()}/comments") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(body = body, path = path, position = position, line = line))
                 }
@@ -9341,7 +9341,7 @@ public class Repos internal constructor(
               private val commitSha: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${commitSha.encodeURLParameter()}/pulls") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.commitSha.encodeURLParameter()}/pulls") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -9392,7 +9392,7 @@ public class Repos internal constructor(
             private val ref: String,
           ) {
             public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${ref.encodeURLParameter()}") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.ref.encodeURLParameter()}") {
                 if (page != null) {
                   this.url.encodedParameters.append("page", page.toString())
                 }
@@ -9468,7 +9468,7 @@ public class Repos internal constructor(
                 page: Long? = 1L,
                 appId: Long? = null,
               ): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${ref.encodeURLParameter()}/check-runs") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.ref.encodeURLParameter()}/check-runs") {
                   if (checkName != null) {
                     this.url.encodedParameters.append("check_name", checkName.encodeURLParameter())
                   }
@@ -9546,7 +9546,7 @@ public class Repos internal constructor(
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${ref.encodeURLParameter()}/check-suites") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.ref.encodeURLParameter()}/check-suites") {
                   if (appId != null) {
                     this.url.encodedParameters.append("app_id", appId.toString())
                   }
@@ -9589,7 +9589,7 @@ public class Repos internal constructor(
               private val ref: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${ref.encodeURLParameter()}/status") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.ref.encodeURLParameter()}/status") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -9631,7 +9631,7 @@ public class Repos internal constructor(
               private val ref: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${ref.encodeURLParameter()}/statuses") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/commits/${this.ref.encodeURLParameter()}/statuses") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -9680,7 +9680,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): CommunityProfile {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/community/profile")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/community/profile")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -9710,7 +9710,7 @@ public class Repos internal constructor(
             private val basehead: String,
           ) {
             public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/compare/${basehead.encodeURLParameter()}") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/compare/${this.basehead.encodeURLParameter()}") {
                 if (page != null) {
                   this.url.encodedParameters.append("page", page.toString())
                 }
@@ -9788,7 +9788,7 @@ public class Repos internal constructor(
               committer: Committer? = null,
               author: Author? = null,
             ): Response {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/contents/${path.encodeURLParameter()}") {
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contents/${this.path.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(message = message, sha = sha, branch = branch, committer = committer, author = author))
               }
@@ -9877,7 +9877,7 @@ public class Repos internal constructor(
             private val path: String,
           ) {
             public suspend fun vndGithubObject(ref: String? = null): VndGithubObjectResponse {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/contents/${path.encodeURLParameter()}") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contents/${this.path.encodeURLParameter()}") {
                 `header`(HttpHeaders.Accept, ContentType("application", "vnd.github.object"))
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
@@ -9894,7 +9894,7 @@ public class Repos internal constructor(
             }
 
             public suspend fun json(ref: String? = null): JsonResponse {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/contents/${path.encodeURLParameter()}") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contents/${this.path.encodeURLParameter()}") {
                 `header`(HttpHeaders.Accept, ContentType.Application.Json)
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
@@ -10054,7 +10054,7 @@ public class Repos internal constructor(
               committer: Committer? = null,
               author: Author? = null,
             ): Response {
-              val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/contents/${path.encodeURLParameter()}") {
+              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contents/${this.path.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(message = message, content = content, sha = sha, branch = branch, committer = committer, author = author))
               }
@@ -10189,7 +10189,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/contributors") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/contributors") {
               if (anon != null) {
                 this.url.encodedParameters.append("anon", anon.encodeURLParameter())
               }
@@ -10266,7 +10266,7 @@ public class Repos internal constructor(
               after: String? = null,
               perPage: Long? = 30L,
             ): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependabot/alerts") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/alerts") {
                 if (state != null) {
                   this.url.encodedParameters.append("state", state.encodeURLParameter())
                 }
@@ -10464,7 +10464,7 @@ public class Repos internal constructor(
               private val alertNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependabot/alerts/$alertNumber")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/alerts/${this.alertNumber}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   304 -> Response.NotModified
@@ -10503,7 +10503,7 @@ public class Repos internal constructor(
                 dismissedComment: String? = null,
                 assignees: List<String>? = null,
               ): Response {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependabot/alerts/$alertNumber") {
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/alerts/${this.alertNumber}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(state = state, dismissedReason = dismissedReason, dismissedComment = dismissedComment, assignees = assignees))
                 }
@@ -10607,7 +10607,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependabot/secrets") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/secrets") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -10640,7 +10640,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): DependabotPublicKey {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependabot/secrets/public-key")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/secrets/public-key")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -10666,7 +10666,7 @@ public class Repos internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependabot/secrets/${secretName.encodeURLParameter()}")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/secrets/${this.secretName.encodeURLParameter()}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
@@ -10678,7 +10678,7 @@ public class Repos internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke(): DependabotSecret {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependabot/secrets/${secretName.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/secrets/${this.secretName.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -10691,7 +10691,7 @@ public class Repos internal constructor(
               private val secretName: String,
             ) {
               public suspend operator fun invoke(encryptedValue: String? = null, keyId: String? = null): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependabot/secrets/${secretName.encodeURLParameter()}") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependabot/secrets/${this.secretName.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(encryptedValue = encryptedValue, keyId = keyId))
                 }
@@ -10758,7 +10758,7 @@ public class Repos internal constructor(
               private val basehead: String,
             ) {
               public suspend operator fun invoke(name: String? = null): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependency-graph/compare/${basehead.encodeURLParameter()}") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependency-graph/compare/${this.basehead.encodeURLParameter()}") {
                   if (name != null) {
                     this.url.encodedParameters.append("name", name.encodeURLParameter())
                   }
@@ -10801,7 +10801,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependency-graph/sbom")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependency-graph/sbom")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -10839,7 +10839,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(body: Snapshot): Response {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependency-graph/snapshots") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dependency-graph/snapshots") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -10883,7 +10883,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): List<Deployment> {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/deployments") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments") {
               if (sha != null) {
                 this.url.encodedParameters.append("sha", sha.encodeURLParameter())
               }
@@ -10924,7 +10924,7 @@ public class Repos internal constructor(
             transientEnvironment: Boolean? = null,
             productionEnvironment: Boolean? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/deployments") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments") {
               contentType(ContentType.Application.Json)
               setBody(Body(ref = ref, task = task, autoMerge = autoMerge, requiredContexts = requiredContexts, payload = payload, environment = environment, description = description, transientEnvironment = transientEnvironment, productionEnvironment = productionEnvironment))
             }
@@ -11051,7 +11051,7 @@ public class Repos internal constructor(
             private val deploymentId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/deployments/$deploymentId")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments/${this.deploymentId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -11080,7 +11080,7 @@ public class Repos internal constructor(
             private val deploymentId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/deployments/$deploymentId")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments/${this.deploymentId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -11118,7 +11118,7 @@ public class Repos internal constructor(
               private val deploymentId: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/deployments/$deploymentId/statuses") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments/${this.deploymentId}/statuses") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -11159,7 +11159,7 @@ public class Repos internal constructor(
                 environmentUrl: String? = null,
                 autoInactive: Boolean? = null,
               ): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/deployments/$deploymentId/statuses") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments/${this.deploymentId}/statuses") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(state = state, targetUrl = targetUrl, logUrl = logUrl, description = description, environment = environment, environmentUrl = environmentUrl, autoInactive = autoInactive))
                 }
@@ -11241,7 +11241,7 @@ public class Repos internal constructor(
                 private val statusId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/deployments/$deploymentId/statuses/$statusId")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/deployments/${this.deploymentId}/statuses/${this.statusId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -11277,7 +11277,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(eventType: String, clientPayload: JsonElement? = null): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dispatches") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/dispatches") {
               contentType(ContentType.Application.Json)
               setBody(Body(eventType = eventType, clientPayload = clientPayload))
             }
@@ -11328,7 +11328,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -11380,7 +11380,7 @@ public class Repos internal constructor(
             private val environmentName: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}")
               if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
@@ -11392,7 +11392,7 @@ public class Repos internal constructor(
             private val environmentName: String,
           ) {
             public suspend operator fun invoke(): Environment {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -11405,7 +11405,7 @@ public class Repos internal constructor(
             private val environmentName: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}")
+              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 422 -> Response.UnprocessableEntity(response.body())
@@ -11419,7 +11419,7 @@ public class Repos internal constructor(
               reviewers: List<Reviewers>? = null,
               deploymentBranchPolicy: DeploymentBranchPolicySettings? = null,
             ): Response {
-              val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}") {
+              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(waitTimer = waitTimer, preventSelfReview = preventSelfReview, reviewers = reviewers, deploymentBranchPolicy = deploymentBranchPolicy))
               }
@@ -11483,7 +11483,7 @@ public class Repos internal constructor(
               private val environmentName: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment-branch-policies") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment-branch-policies") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -11511,7 +11511,7 @@ public class Repos internal constructor(
               private val environmentName: String,
             ) {
               public suspend operator fun invoke(body: DeploymentBranchPolicyNamePatternWithType): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment-branch-policies") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment-branch-policies") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -11556,7 +11556,7 @@ public class Repos internal constructor(
                 private val branchPolicyId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment-branch-policies/$branchPolicyId")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment-branch-policies/${this.branchPolicyId}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -11569,7 +11569,7 @@ public class Repos internal constructor(
                 private val branchPolicyId: Long,
               ) {
                 public suspend operator fun invoke(): DeploymentBranchPolicy {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment-branch-policies/$branchPolicyId")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment-branch-policies/${this.branchPolicyId}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -11583,7 +11583,7 @@ public class Repos internal constructor(
                 private val branchPolicyId: Long,
               ) {
                 public suspend operator fun invoke(body: DeploymentBranchPolicyNamePattern): DeploymentBranchPolicy {
-                  val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment-branch-policies/$branchPolicyId") {
+                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment-branch-policies/${this.branchPolicyId}") {
                     contentType(ContentType.Application.Json)
                     setBody(body)
                   }
@@ -11615,7 +11615,7 @@ public class Repos internal constructor(
               private val environmentName: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment_protection_rules")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment_protection_rules")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -11639,7 +11639,7 @@ public class Repos internal constructor(
               private val environmentName: String,
             ) {
               public suspend operator fun invoke(integrationId: Long? = null): DeploymentProtectionRule {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment_protection_rules") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment_protection_rules") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(integrationId = integrationId))
                 }
@@ -11671,7 +11671,7 @@ public class Repos internal constructor(
                 private val environmentName: String,
               ) {
                 public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment_protection_rules/apps") {
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment_protection_rules/apps") {
                     if (page != null) {
                       this.url.encodedParameters.append("page", page.toString())
                     }
@@ -11717,7 +11717,7 @@ public class Repos internal constructor(
                 private val protectionRuleId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment_protection_rules/$protectionRuleId")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment_protection_rules/${this.protectionRuleId}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -11730,7 +11730,7 @@ public class Repos internal constructor(
                 private val protectionRuleId: Long,
               ) {
                 public suspend operator fun invoke(): DeploymentProtectionRule {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment_protection_rules/$protectionRuleId")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/deployment_protection_rules/${this.protectionRuleId}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -11757,7 +11757,7 @@ public class Repos internal constructor(
               private val environmentName: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/secrets") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/secrets") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -11792,7 +11792,7 @@ public class Repos internal constructor(
                 private val environmentName: String,
               ) {
                 public suspend operator fun invoke(): ActionsPublicKey {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/secrets/public-key")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/secrets/public-key")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -11820,7 +11820,7 @@ public class Repos internal constructor(
                 private val secretName: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/secrets/${secretName.encodeURLParameter()}")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/secrets/${this.secretName.encodeURLParameter()}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -11833,7 +11833,7 @@ public class Repos internal constructor(
                 private val secretName: String,
               ) {
                 public suspend operator fun invoke(): ActionsSecret {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/secrets/${secretName.encodeURLParameter()}")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/secrets/${this.secretName.encodeURLParameter()}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -11847,7 +11847,7 @@ public class Repos internal constructor(
                 private val secretName: String,
               ) {
                 public suspend operator fun invoke(encryptedValue: String, keyId: String): Response {
-                  val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/secrets/${secretName.encodeURLParameter()}") {
+                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/secrets/${this.secretName.encodeURLParameter()}") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(encryptedValue = encryptedValue, keyId = keyId))
                   }
@@ -11896,7 +11896,7 @@ public class Repos internal constructor(
               private val environmentName: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/variables") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/variables") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -11923,7 +11923,7 @@ public class Repos internal constructor(
               private val environmentName: String,
             ) {
               public suspend operator fun invoke(name: String, `value`: String): EmptyObject {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/variables") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/variables") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(name = name, value = value))
                 }
@@ -11959,7 +11959,7 @@ public class Repos internal constructor(
                 private val name: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/variables/${name.encodeURLParameter()}")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/variables/${this.name.encodeURLParameter()}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -11972,7 +11972,7 @@ public class Repos internal constructor(
                 private val name: String,
               ) {
                 public suspend operator fun invoke(): ActionsVariable {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/variables/${name.encodeURLParameter()}")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/variables/${this.name.encodeURLParameter()}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
                 }
@@ -11986,7 +11986,7 @@ public class Repos internal constructor(
                 private val name: String,
               ) {
                 public suspend operator fun invoke(name: String? = null, `value`: String? = null) {
-                  val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/variables/${name.encodeURLParameter()}") {
+                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/environments/${this.environmentName.encodeURLParameter()}/variables/${this.name.encodeURLParameter()}") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(name = name, value = value))
                   }
@@ -12020,7 +12020,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/events") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/events") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -12053,7 +12053,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/forks") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/forks") {
               if (sort != null) {
                 this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
@@ -12103,7 +12103,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/forks")
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/forks")
             return when (response.status.value) {
               202 -> Response.Accepted(response.body())
               400 -> Response.BadRequest(response.body())
@@ -12119,7 +12119,7 @@ public class Repos internal constructor(
             name: String? = null,
             defaultBranchOnly: Boolean? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/forks") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/forks") {
               contentType(ContentType.Application.Json)
               setBody(Body(organization = organization, name = name, defaultBranchOnly = defaultBranchOnly))
             }
@@ -12203,7 +12203,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(content: String, encoding: String? = null): Response {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/blobs") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/blobs") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(content = content, encoding = encoding))
               }
@@ -12303,7 +12303,7 @@ public class Repos internal constructor(
               private val fileSha: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/blobs/${fileSha.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/blobs/${this.fileSha.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -12361,7 +12361,7 @@ public class Repos internal constructor(
               committer: Committer? = null,
               signature: String? = null,
             ): Response {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/commits") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/commits") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(message = message, tree = tree, parents = parents, author = author, committer = committer, signature = signature))
               }
@@ -12449,7 +12449,7 @@ public class Repos internal constructor(
               private val commitSha: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/commits/${commitSha.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/commits/${this.commitSha.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -12497,7 +12497,7 @@ public class Repos internal constructor(
               private val ref: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/matching-refs/${ref.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/matching-refs/${this.ref.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   409 -> Response.Conflict(response.body())
@@ -12540,7 +12540,7 @@ public class Repos internal constructor(
               private val ref: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/ref/${ref.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/ref/${this.ref.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -12581,7 +12581,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(ref: String, sha: String): Response {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/refs") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/refs") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(ref = ref, sha = sha))
               }
@@ -12631,7 +12631,7 @@ public class Repos internal constructor(
               private val ref: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/refs/${ref.encodeURLParameter()}")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/refs/${this.ref.encodeURLParameter()}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   409 -> Response.Conflict(response.body())
@@ -12658,7 +12658,7 @@ public class Repos internal constructor(
               private val ref: String,
             ) {
               public suspend operator fun invoke(sha: String, force: Boolean? = null): Response {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/refs/${ref.encodeURLParameter()}") {
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/refs/${this.ref.encodeURLParameter()}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(sha = sha, force = force))
                 }
@@ -12716,7 +12716,7 @@ public class Repos internal constructor(
               type: Type,
               tagger: Tagger? = null,
             ): Response {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/tags") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/tags") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(tag = tag, message = message, `object` = `object`, type = type, tagger = tagger))
               }
@@ -12794,7 +12794,7 @@ public class Repos internal constructor(
               private val tagSha: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/tags/${tagSha.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/tags/${this.tagSha.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -12835,7 +12835,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(tree: List<Tree>, baseTree: String? = null): Response {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/trees") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/trees") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(tree = tree, baseTree = baseTree))
               }
@@ -12932,7 +12932,7 @@ public class Repos internal constructor(
               private val treeSha: String,
             ) {
               public suspend operator fun invoke(recursive: String? = null): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/trees/${treeSha.encodeURLParameter()}") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/git/trees/${this.treeSha.encodeURLParameter()}") {
                   if (recursive != null) {
                     this.url.encodedParameters.append("recursive", recursive.encodeURLParameter())
                   }
@@ -12985,7 +12985,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -13017,7 +13017,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks")
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks")
             return when (response.status.value) {
               201 -> Response.Created(response.body())
               403 -> Response.Forbidden(response.body())
@@ -13033,7 +13033,7 @@ public class Repos internal constructor(
             events: List<String>? = null,
             active: Boolean? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, config = config, events = events, active = active))
             }
@@ -13123,7 +13123,7 @@ public class Repos internal constructor(
             private val hookId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -13147,7 +13147,7 @@ public class Repos internal constructor(
             private val hookId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -13179,7 +13179,7 @@ public class Repos internal constructor(
               removeEvents: List<String>? = null,
               active: Boolean? = null,
             ): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(config = config, events = events, addEvents = addEvents, removeEvents = removeEvents, active = active))
               }
@@ -13240,7 +13240,7 @@ public class Repos internal constructor(
               private val hookId: Long,
             ) {
               public suspend operator fun invoke(): WebhookConfig {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId/config")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/config")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -13253,7 +13253,7 @@ public class Repos internal constructor(
               private val hookId: Long,
             ) {
               public suspend operator fun invoke(): WebhookConfig {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId/config")
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/config")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -13264,7 +13264,7 @@ public class Repos internal constructor(
                 secret: WebhookConfigSecret? = null,
                 insecureSsl: WebhookConfigInsecureSsl? = null,
               ): WebhookConfig {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId/config") {
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/config") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(url = url, contentType = contentType, secret = secret, insecureSsl = insecureSsl))
                 }
@@ -13306,7 +13306,7 @@ public class Repos internal constructor(
               private val hookId: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, cursor: String? = null): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId/deliveries") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/deliveries") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -13356,7 +13356,7 @@ public class Repos internal constructor(
                 private val deliveryId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId/deliveries/$deliveryId")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/deliveries/${this.deliveryId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     400 -> Response.BadRequest(response.body())
@@ -13397,7 +13397,7 @@ public class Repos internal constructor(
                   private val deliveryId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId/deliveries/$deliveryId/attempts")
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/deliveries/${this.deliveryId}/attempts")
                     return when (response.status.value) {
                       202 -> Response.Accepted(response.body())
                       400 -> Response.BadRequest(response.body())
@@ -13439,7 +13439,7 @@ public class Repos internal constructor(
               private val hookId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId/pings")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/pings")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   404 -> Response.NotFound(response.body())
@@ -13472,7 +13472,7 @@ public class Repos internal constructor(
               private val hookId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId/tests")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/hooks/${this.hookId}/tests")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   404 -> Response.NotFound(response.body())
@@ -13509,7 +13509,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/immutable-releases")
+            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/immutable-releases")
             return when (response.status.value) {
               204 -> Response.NoContent
               409 -> Response.Conflict(response.body())
@@ -13532,7 +13532,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/immutable-releases")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/immutable-releases")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound
@@ -13555,7 +13555,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/immutable-releases")
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/immutable-releases")
             return when (response.status.value) {
               204 -> Response.NoContent
               409 -> Response.Conflict(response.body())
@@ -13604,7 +13604,7 @@ public class Repos internal constructor(
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/import")
+            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import")
             return when (response.status.value) {
               204 -> Response.NoContent
               503 -> Response.ServiceUnavailable(response.body())
@@ -13629,7 +13629,7 @@ public class Repos internal constructor(
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/import")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -13661,7 +13661,7 @@ public class Repos internal constructor(
         ) {
           @Deprecated("Deprecated by the API provider")
           public suspend operator fun invoke(): Response {
-            val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/import")
+            val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               503 -> Response.ServiceUnavailable(response.body())
@@ -13676,7 +13676,7 @@ public class Repos internal constructor(
             vcs: Vcs? = null,
             tfvcProject: String? = null,
           ): Response {
-            val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/import") {
+            val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import") {
               contentType(ContentType.Application.Json)
               setBody(Body(vcsUsername = vcsUsername, vcsPassword = vcsPassword, vcs = vcs, tfvcProject = tfvcProject))
             }
@@ -13743,7 +13743,7 @@ public class Repos internal constructor(
             vcsPassword: String? = null,
             tfvcProject: String? = null,
           ): Response {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/import") {
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import") {
               contentType(ContentType.Application.Json)
               setBody(Body(vcsUrl = vcsUrl, vcs = vcs, vcsUsername = vcsUsername, vcsPassword = vcsPassword, tfvcProject = tfvcProject))
             }
@@ -13826,7 +13826,7 @@ public class Repos internal constructor(
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(since: Long? = null): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/import/authors") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import/authors") {
                 if (since != null) {
                   this.url.encodedParameters.append("since", since.toString())
                 }
@@ -13872,7 +13872,7 @@ public class Repos internal constructor(
             ) {
               @Deprecated("Deprecated by the API provider")
               public suspend operator fun invoke(): Response {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/import/authors/$authorId")
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import/authors/${this.authorId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -13884,7 +13884,7 @@ public class Repos internal constructor(
 
               @Deprecated("Deprecated by the API provider")
               public suspend operator fun invoke(email: String? = null, name: String? = null): Response {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/import/authors/$authorId") {
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import/authors/${this.authorId}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(email = email, name = name))
                 }
@@ -13943,7 +13943,7 @@ public class Repos internal constructor(
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/import/large_files")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import/large_files")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 503 -> Response.ServiceUnavailable(response.body())
@@ -13979,7 +13979,7 @@ public class Repos internal constructor(
           ) {
             @Deprecated("Deprecated by the API provider")
             public suspend operator fun invoke(useLfs: UseLfs): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/import/lfs") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/import/lfs") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(useLfs = useLfs))
               }
@@ -14038,7 +14038,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/installation")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/installation")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               301 -> Response.MovedPermanently(response.body())
@@ -14080,7 +14080,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/interaction-limits")
+            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/interaction-limits")
             return when (response.status.value) {
               204 -> Response.NoContent
               409 -> Response.Conflict
@@ -14101,7 +14101,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/interaction-limits")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/interaction-limits")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -14154,7 +14154,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(body: InteractionLimit): Response {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/interaction-limits") {
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/interaction-limits") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -14190,7 +14190,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<RepositoryInvitation> {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/invitations") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/invitations") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -14220,7 +14220,7 @@ public class Repos internal constructor(
             private val invitationId: Long,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/invitations/$invitationId")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/invitations/${this.invitationId}")
               if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
@@ -14232,13 +14232,13 @@ public class Repos internal constructor(
             private val invitationId: Long,
           ) {
             public suspend operator fun invoke(): RepositoryInvitation {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/invitations/$invitationId")
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/invitations/${this.invitationId}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
 
             public suspend operator fun invoke(permissions: Permissions? = null): RepositoryInvitation {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/invitations/$invitationId") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/invitations/${this.invitationId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(permissions = permissions))
               }
@@ -14307,7 +14307,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
               if (milestone != null) {
                 this.url.encodedParameters.append("milestone", milestone.encodeURLParameter())
               }
@@ -14424,7 +14424,7 @@ public class Repos internal constructor(
             assignees: List<String>? = null,
             type: String? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseString(title), body = body, assignee = assignee, milestone = milestone, labels = labels, assignees = assignees, type = type))
             }
@@ -14449,7 +14449,7 @@ public class Repos internal constructor(
             assignees: List<String>? = null,
             type: String? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = Body.Title.CaseLong(title), body = body, assignee = assignee, milestone = milestone, labels = labels, assignees = assignees, type = type))
             }
@@ -14698,7 +14698,7 @@ public class Repos internal constructor(
               perPage: Long? = 30L,
               page: Long? = 1L,
             ): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/comments") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments") {
                 if (sort != null) {
                   this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
@@ -14783,7 +14783,7 @@ public class Repos internal constructor(
               private val commentId: Long,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/comments/$commentId")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
@@ -14795,7 +14795,7 @@ public class Repos internal constructor(
               private val commentId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/comments/$commentId")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -14821,7 +14821,7 @@ public class Repos internal constructor(
               private val commentId: Long,
             ) {
               public suspend operator fun invoke(body: String): Response {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/comments/$commentId") {
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(body = body))
                 }
@@ -14865,7 +14865,7 @@ public class Repos internal constructor(
                 private val commentId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/comments/$commentId/pin")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}/pin")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     401 -> Response.Unauthorized(response.body())
@@ -14917,7 +14917,7 @@ public class Repos internal constructor(
                 private val commentId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/comments/$commentId/pin")
+                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}/pin")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     401 -> Response.Unauthorized(response.body())
@@ -14980,7 +14980,7 @@ public class Repos internal constructor(
                   perPage: Long? = 30L,
                   page: Long? = 1L,
                 ): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/comments/$commentId/reactions") {
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}/reactions") {
                     if (content != null) {
                       this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                     }
@@ -15037,7 +15037,7 @@ public class Repos internal constructor(
                 private val commentId: Long,
               ) {
                 public suspend operator fun invoke(content: Content): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/comments/$commentId/reactions") {
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}/reactions") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(content = content))
                   }
@@ -15107,7 +15107,7 @@ public class Repos internal constructor(
                   private val reactionId: Long,
                 ) {
                   public suspend operator fun invoke() {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/comments/$commentId/reactions/$reactionId")
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/comments/${this.commentId}/reactions/${this.reactionId}")
                     if (response.status.value != 204) throw ResponseException(response, "")
                   }
                 }
@@ -15131,7 +15131,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/events") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/events") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -15172,7 +15172,7 @@ public class Repos internal constructor(
               private val eventId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/events/$eventId")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/events/${this.eventId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -15245,7 +15245,7 @@ public class Repos internal constructor(
             private val issueNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 301 -> Response.MovedPermanently(response.body())
@@ -15284,7 +15284,7 @@ public class Repos internal constructor(
             private val issueNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber")
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 301 -> Response.MovedPermanently(response.body())
@@ -15309,7 +15309,7 @@ public class Repos internal constructor(
               issueFieldValues: List<IssueFieldValues>? = null,
               type: String? = null,
             ): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(title = title, body = body, assignee = assignee, state = state, stateReason = stateReason, milestone = milestone, labels = labels, assignees = assignees, issueFieldValues = issueFieldValues, type = type))
               }
@@ -15648,13 +15648,13 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Issue {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/assignees")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/assignees")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
 
               public suspend operator fun invoke(assignees: List<String>? = null): Issue {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/assignees") {
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/assignees") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(assignees = assignees))
                 }
@@ -15677,13 +15677,13 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Issue {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/assignees")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/assignees")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
 
               public suspend operator fun invoke(assignees: List<String>? = null): Issue {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/assignees") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/assignees") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(assignees = assignees))
                 }
@@ -15716,7 +15716,7 @@ public class Repos internal constructor(
                 private val assignee: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/assignees/${assignee.encodeURLParameter()}")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/assignees/${this.assignee.encodeURLParameter()}")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -15756,7 +15756,7 @@ public class Repos internal constructor(
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/comments") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/comments") {
                   if (since != null) {
                     this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
                   }
@@ -15797,7 +15797,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(body: String): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/comments") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/comments") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(body = body))
                 }
@@ -15869,7 +15869,7 @@ public class Repos internal constructor(
                 private val issueNumber: Long,
               ) {
                 public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/dependencies/blocked_by") {
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/dependencies/blocked_by") {
                     if (perPage != null) {
                       this.url.encodedParameters.append("per_page", perPage.toString())
                     }
@@ -15912,7 +15912,7 @@ public class Repos internal constructor(
                 private val issueNumber: Long,
               ) {
                 public suspend operator fun invoke(issueId: Long): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/dependencies/blocked_by") {
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/dependencies/blocked_by") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(issueId = issueId))
                   }
@@ -15977,7 +15977,7 @@ public class Repos internal constructor(
                   private val issueId: Long,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/dependencies/blocked_by/$issueId")
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/dependencies/blocked_by/${this.issueId}")
                     return when (response.status.value) {
                       200 -> Response.Ok(response.body())
                       301 -> Response.MovedPermanently(response.body())
@@ -16038,7 +16038,7 @@ public class Repos internal constructor(
                 private val issueNumber: Long,
               ) {
                 public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/dependencies/blocking") {
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/dependencies/blocking") {
                     if (perPage != null) {
                       this.url.encodedParameters.append("per_page", perPage.toString())
                     }
@@ -16091,7 +16091,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/events") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/events") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -16133,7 +16133,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/issue-field-values") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/issue-field-values") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -16193,7 +16193,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   301 -> Response.MovedPermanently(response.body())
@@ -16227,7 +16227,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -16270,7 +16270,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   301 -> Response.MovedPermanently(response.body())
@@ -16282,7 +16282,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: LabelsStrings): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16298,7 +16298,7 @@ public class Repos internal constructor(
 
               @JvmName("StringList")
               public suspend operator fun invoke(body: List<String>): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16314,7 +16314,7 @@ public class Repos internal constructor(
 
               @JvmName("NameList")
               public suspend operator fun invoke(body: List<Name>): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16370,7 +16370,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels")
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   301 -> Response.MovedPermanently(response.body())
@@ -16382,7 +16382,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: LabelsStrings): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16398,7 +16398,7 @@ public class Repos internal constructor(
 
               @JvmName("StringList")
               public suspend operator fun invoke(body: List<String>): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16413,7 +16413,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: LabelsNames): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16429,7 +16429,7 @@ public class Repos internal constructor(
 
               @JvmName("NameList")
               public suspend operator fun invoke(body: List<Name>): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(body)
                 }
@@ -16444,7 +16444,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(body: String): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels") {
                   contentType(ContentType.Application.Json)
                   setBody(JsonPrimitive(body))
                 }
@@ -16517,7 +16517,7 @@ public class Repos internal constructor(
                 private val name: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels/${name.encodeURLParameter()}")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/labels/${this.name.encodeURLParameter()}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     301 -> Response.MovedPermanently(response.body())
@@ -16565,7 +16565,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/lock")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/lock")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden(response.body())
@@ -16594,7 +16594,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/lock")
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/lock")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden(response.body())
@@ -16606,7 +16606,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(lockReason: LockReason? = null): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/lock") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/lock") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(lockReason = lockReason))
                 }
@@ -16680,7 +16680,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/parent")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/parent")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   301 -> Response.MovedPermanently(response.body())
@@ -16733,7 +16733,7 @@ public class Repos internal constructor(
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/reactions") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/reactions") {
                   if (content != null) {
                     this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                   }
@@ -16795,7 +16795,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(content: Content): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/reactions") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/reactions") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(content = content))
                 }
@@ -16865,7 +16865,7 @@ public class Repos internal constructor(
                 private val reactionId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/reactions/$reactionId")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/reactions/${this.reactionId}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -16887,7 +16887,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(subIssueId: Long): Response {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/sub_issue") {
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/sub_issue") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(subIssueId = subIssueId))
                 }
@@ -16940,7 +16940,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/sub_issues") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/sub_issues") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -16978,7 +16978,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(subIssueId: Long, replaceParent: Boolean? = null): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/sub_issues") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/sub_issues") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(subIssueId = subIssueId, replaceParent = replaceParent))
                 }
@@ -17044,7 +17044,7 @@ public class Repos internal constructor(
                   afterId: Long? = null,
                   beforeId: Long? = null,
                 ): Response {
-                  val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/sub_issues/priority") {
+                  val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/sub_issues/priority") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(subIssueId = subIssueId, afterId = afterId, beforeId = beforeId))
                   }
@@ -17119,7 +17119,7 @@ public class Repos internal constructor(
               private val issueNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/timeline") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/issues/${this.issueNumber}/timeline") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -17170,7 +17170,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<DeployKey> {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/keys") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/keys") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -17193,7 +17193,7 @@ public class Repos internal constructor(
             key: String,
             readOnly: Boolean? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/keys") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/keys") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = title, key = key, readOnly = readOnly))
             }
@@ -17243,7 +17243,7 @@ public class Repos internal constructor(
             private val keyId: Long,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/keys/$keyId")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/keys/${this.keyId}")
               if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
@@ -17255,7 +17255,7 @@ public class Repos internal constructor(
             private val keyId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/keys/$keyId")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/keys/${this.keyId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -17293,7 +17293,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/labels") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -17329,7 +17329,7 @@ public class Repos internal constructor(
             color: String? = null,
             description: String? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/labels") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, color = color, description = description))
             }
@@ -17385,7 +17385,7 @@ public class Repos internal constructor(
             private val name: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/labels/${name.encodeURLParameter()}")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels/${this.name.encodeURLParameter()}")
               if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
@@ -17397,7 +17397,7 @@ public class Repos internal constructor(
             private val name: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/labels/${name.encodeURLParameter()}")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels/${this.name.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -17423,7 +17423,7 @@ public class Repos internal constructor(
             private val name: String,
           ) {
             public suspend operator fun invoke(): Label {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/labels/${name.encodeURLParameter()}")
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels/${this.name.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -17433,7 +17433,7 @@ public class Repos internal constructor(
               color: String? = null,
               description: String? = null,
             ): Label {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/labels/${name.encodeURLParameter()}") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/labels/${this.name.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(newName = newName, color = color, description = description))
               }
@@ -17469,7 +17469,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Language {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/languages")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/languages")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -17489,7 +17489,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(ref: String? = null): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/license") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/license") {
               if (ref != null) {
                 this.url.encodedParameters.append("ref", ref.encodeURLParameter())
               }
@@ -17526,7 +17526,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(branch: String): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/merge-upstream") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/merge-upstream") {
               contentType(ContentType.Application.Json)
               setBody(Body(branch = branch))
             }
@@ -17572,7 +17572,7 @@ public class Repos internal constructor(
             head: String,
             commitMessage: String? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/merges") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/merges") {
               contentType(ContentType.Application.Json)
               setBody(Body(base = base, head = head, commitMessage = commitMessage))
             }
@@ -17642,7 +17642,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/milestones") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones") {
               if (state != null) {
                 this.url.encodedParameters.append("state", state.value.encodeURLParameter())
               }
@@ -17723,7 +17723,7 @@ public class Repos internal constructor(
             description: String? = null,
             dueOn: Instant? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/milestones") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = title, state = state, description = description, dueOn = dueOn))
             }
@@ -17795,7 +17795,7 @@ public class Repos internal constructor(
             private val milestoneNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/milestones/$milestoneNumber")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones/${this.milestoneNumber}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -17819,7 +17819,7 @@ public class Repos internal constructor(
             private val milestoneNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/milestones/$milestoneNumber")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones/${this.milestoneNumber}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -17845,7 +17845,7 @@ public class Repos internal constructor(
             private val milestoneNumber: Long,
           ) {
             public suspend operator fun invoke(): Milestone {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/milestones/$milestoneNumber")
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones/${this.milestoneNumber}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -17856,7 +17856,7 @@ public class Repos internal constructor(
               description: String? = null,
               dueOn: Instant? = null,
             ): Milestone {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/milestones/$milestoneNumber") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones/${this.milestoneNumber}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(title = title, state = state, description = description, dueOn = dueOn))
               }
@@ -17905,7 +17905,7 @@ public class Repos internal constructor(
               private val milestoneNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Label> {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/milestones/$milestoneNumber/labels") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/milestones/${this.milestoneNumber}/labels") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -17943,7 +17943,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): List<Thread> {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/notifications") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/notifications") {
               if (all != null) {
                 this.url.encodedParameters.append("all", all.toString())
               }
@@ -17974,7 +17974,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/notifications")
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/notifications")
             return when (response.status.value) {
               202 -> response.body<Response.Accepted>()
               205 -> Response.ResetContent
@@ -17983,7 +17983,7 @@ public class Repos internal constructor(
           }
 
           public suspend operator fun invoke(lastReadAt: Instant? = null): Response {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/notifications") {
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/notifications") {
               contentType(ContentType.Application.Json)
               setBody(Body(lastReadAt = lastReadAt))
             }
@@ -18042,7 +18042,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages")
+            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -18075,7 +18075,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               404 -> Response.NotFound(response.body())
@@ -18100,7 +18100,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(buildType: BuildType? = null, source: Source? = null): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages") {
               contentType(ContentType.Application.Json)
               setBody(Body(buildType = buildType, source = source))
             }
@@ -18184,7 +18184,7 @@ public class Repos internal constructor(
             buildType: BuildType? = null,
             source: Source? = null,
           ): Response {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages") {
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages") {
               contentType(ContentType.Application.Json)
               setBody(Body(cname = cname, httpsEnforced = httpsEnforced, buildType = buildType, source = source))
             }
@@ -18329,7 +18329,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<PageBuild> {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages/builds") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/builds") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -18348,7 +18348,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): PageBuildStatus {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages/builds")
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/builds")
               if (response.status.value != 201) throw ResponseException(response, "")
               return response.body()
             }
@@ -18367,7 +18367,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): PageBuild {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages/builds/latest")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/builds/latest")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -18389,7 +18389,7 @@ public class Repos internal constructor(
               private val buildId: Long,
             ) {
               public suspend operator fun invoke(): PageBuild {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages/builds/$buildId")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/builds/${this.buildId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -18420,7 +18420,7 @@ public class Repos internal constructor(
               pagesBuildVersion: String,
               oidcToken: String,
             ): Response {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages/deployments") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/deployments") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(artifactId = artifactId, artifactUrl = artifactUrl, environment = environment, pagesBuildVersion = pagesBuildVersion, oidcToken = oidcToken))
               }
@@ -18490,7 +18490,7 @@ public class Repos internal constructor(
               private val pagesDeploymentId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages/deployments/${pagesDeploymentId.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/deployments/${this.pagesDeploymentId.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -18524,7 +18524,7 @@ public class Repos internal constructor(
                 private val pagesDeploymentId: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages/deployments/${pagesDeploymentId.encodeURLParameter()}/cancel")
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/deployments/${this.pagesDeploymentId.encodeURLParameter()}/cancel")
                   return when (response.status.value) {
                     204 -> Response.NoContent
                     404 -> Response.NotFound(response.body())
@@ -18557,7 +18557,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages/health")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pages/health")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 202 -> Response.Accepted(response.body())
@@ -18606,7 +18606,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/private-vulnerability-reporting")
+            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/private-vulnerability-reporting")
             return when (response.status.value) {
               204 -> Response.NoContent
               422 -> Response.UnprocessableEntity(response.body())
@@ -18629,7 +18629,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/private-vulnerability-reporting")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/private-vulnerability-reporting")
             return when (response.status.value) {
               200 -> response.body<Response.Ok>()
               422 -> Response.UnprocessableEntity(response.body())
@@ -18655,7 +18655,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/private-vulnerability-reporting")
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/private-vulnerability-reporting")
             return when (response.status.value) {
               204 -> Response.NoContent
               422 -> Response.UnprocessableEntity(response.body())
@@ -18695,7 +18695,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/properties/values")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/properties/values")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -18725,7 +18725,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(properties: List<CustomPropertyValue>): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/properties/values") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/properties/values") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(properties = properties))
               }
@@ -18789,7 +18789,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls") {
               if (state != null) {
                 this.url.encodedParameters.append("state", state.value.encodeURLParameter())
               }
@@ -18887,7 +18887,7 @@ public class Repos internal constructor(
             draft: Boolean? = null,
             issue: Long? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls") {
               contentType(ContentType.Application.Json)
               setBody(Body(title = title, head = head, headRepo = headRepo, base = base, body = body, maintainerCanModify = maintainerCanModify, draft = draft, issue = issue))
             }
@@ -18956,7 +18956,7 @@ public class Repos internal constructor(
               perPage: Long? = 30L,
               page: Long? = 1L,
             ): List<PullRequestReviewComment> {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/comments") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments") {
                 if (sort != null) {
                   this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
@@ -19023,7 +19023,7 @@ public class Repos internal constructor(
               private val commentId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/comments/$commentId")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   404 -> Response.NotFound(response.body())
@@ -19047,7 +19047,7 @@ public class Repos internal constructor(
               private val commentId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/comments/$commentId")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -19073,7 +19073,7 @@ public class Repos internal constructor(
               private val commentId: Long,
             ) {
               public suspend operator fun invoke(body: String): PullRequestReviewComment {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/comments/$commentId") {
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(body = body))
                 }
@@ -19110,7 +19110,7 @@ public class Repos internal constructor(
                   perPage: Long? = 30L,
                   page: Long? = 1L,
                 ): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/comments/$commentId/reactions") {
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}/reactions") {
                     if (content != null) {
                       this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                     }
@@ -19167,7 +19167,7 @@ public class Repos internal constructor(
                 private val commentId: Long,
               ) {
                 public suspend operator fun invoke(content: Content): Response {
-                  val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/comments/$commentId/reactions") {
+                  val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}/reactions") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(content = content))
                   }
@@ -19237,7 +19237,7 @@ public class Repos internal constructor(
                   private val reactionId: Long,
                 ) {
                   public suspend operator fun invoke() {
-                    val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/comments/$commentId/reactions/$reactionId")
+                    val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/comments/${this.commentId}/reactions/${this.reactionId}")
                     if (response.status.value != 204) throw ResponseException(response, "")
                   }
                 }
@@ -19280,7 +19280,7 @@ public class Repos internal constructor(
             private val pullNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 304 -> Response.NotModified
@@ -19332,7 +19332,7 @@ public class Repos internal constructor(
             private val pullNumber: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber")
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -19348,7 +19348,7 @@ public class Repos internal constructor(
               base: String? = null,
               maintainerCanModify: Boolean? = null,
             ): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(title = title, body = body, state = state, base = base, maintainerCanModify = maintainerCanModify))
               }
@@ -19428,7 +19428,7 @@ public class Repos internal constructor(
                 displayName: String? = null,
                 retentionPeriodMinutes: Long? = null,
               ): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/codespaces") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/codespaces") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(location = location, geo = geo, clientIp = clientIp, machine = machine, devcontainerPath = devcontainerPath, multiRepoPermissionsOptOut = multiRepoPermissionsOptOut, workingDirectory = workingDirectory, idleTimeoutMinutes = idleTimeoutMinutes, displayName = displayName, retentionPeriodMinutes = retentionPeriodMinutes))
                 }
@@ -19544,7 +19544,7 @@ public class Repos internal constructor(
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): List<PullRequestReviewComment> {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/comments") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/comments") {
                   if (sort != null) {
                     this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                   }
@@ -19606,7 +19606,7 @@ public class Repos internal constructor(
                 inReplyTo: Long? = null,
                 subjectType: SubjectType? = null,
               ): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/comments") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/comments") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(body = body, commitId = commitId, path = path, position = position, side = side, line = line, startLine = startLine, startSide = startSide, inReplyTo = inReplyTo, subjectType = subjectType))
                 }
@@ -19714,7 +19714,7 @@ public class Repos internal constructor(
                   private val commentId: Long,
                 ) {
                   public suspend operator fun invoke(body: String): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/comments/$commentId/replies") {
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/comments/${this.commentId}/replies") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(body = body))
                     }
@@ -19759,7 +19759,7 @@ public class Repos internal constructor(
               private val pullNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Commit> {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/commits") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/commits") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -19788,7 +19788,7 @@ public class Repos internal constructor(
               private val pullNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/files") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/files") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -19850,7 +19850,7 @@ public class Repos internal constructor(
               private val pullNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/merge")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/merge")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   404 -> Response.NotFound
@@ -19872,7 +19872,7 @@ public class Repos internal constructor(
               private val pullNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/merge")
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/merge")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -19890,7 +19890,7 @@ public class Repos internal constructor(
                 sha: String? = null,
                 mergeMethod: MergeMethod? = null,
               ): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/merge") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/merge") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(commitTitle = commitTitle, commitMessage = commitMessage, sha = sha, mergeMethod = mergeMethod))
                 }
@@ -19993,7 +19993,7 @@ public class Repos internal constructor(
               private val pullNumber: Long,
             ) {
               public suspend operator fun invoke(reviewers: List<String>, teamReviewers: List<String>? = null): Response {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/requested_reviewers") {
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/requested_reviewers") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(reviewers = reviewers, teamReviewers = teamReviewers))
                 }
@@ -20031,7 +20031,7 @@ public class Repos internal constructor(
               private val pullNumber: Long,
             ) {
               public suspend operator fun invoke(): PullRequestReviewRequest {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/requested_reviewers")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/requested_reviewers")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -20044,7 +20044,7 @@ public class Repos internal constructor(
               private val pullNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/requested_reviewers")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/requested_reviewers")
                 return when (response.status.value) {
                   201 -> Response.Created(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -20054,7 +20054,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(reviewers: List<String>? = null, teamReviewers: List<String>? = null): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/requested_reviewers") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/requested_reviewers") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(reviewers = reviewers, teamReviewers = teamReviewers))
                 }
@@ -20109,7 +20109,7 @@ public class Repos internal constructor(
               private val pullNumber: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<PullRequestReview> {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/reviews") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -20129,7 +20129,7 @@ public class Repos internal constructor(
               private val pullNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/reviews")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -20144,7 +20144,7 @@ public class Repos internal constructor(
                 event: Event? = null,
                 comments: List<Comments>? = null,
               ): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/reviews") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(commitId = commitId, body = body, event = event, comments = comments))
                 }
@@ -20243,7 +20243,7 @@ public class Repos internal constructor(
                 private val reviewId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/reviews/$reviewId")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -20275,7 +20275,7 @@ public class Repos internal constructor(
                 private val reviewId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/reviews/$reviewId")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -20302,7 +20302,7 @@ public class Repos internal constructor(
                 private val reviewId: Long,
               ) {
                 public suspend operator fun invoke(body: String): Response {
-                  val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/reviews/$reviewId") {
+                  val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}") {
                     contentType(ContentType.Application.Json)
                     setBody(Body(body = body))
                   }
@@ -20346,7 +20346,7 @@ public class Repos internal constructor(
                   private val reviewId: Long,
                 ) {
                   public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                    val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/reviews/$reviewId/comments") {
+                    val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}/comments") {
                       if (perPage != null) {
                         this.url.encodedParameters.append("per_page", perPage.toString())
                       }
@@ -20390,7 +20390,7 @@ public class Repos internal constructor(
                   private val reviewId: Long,
                 ) {
                   public suspend operator fun invoke(message: String, event: Event? = null): Response {
-                    val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/reviews/$reviewId/dismissals") {
+                    val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}/dismissals") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(message = message, event = event))
                     }
@@ -20448,7 +20448,7 @@ public class Repos internal constructor(
                   private val reviewId: Long,
                 ) {
                   public suspend operator fun invoke(body: String? = null, event: Event): Response {
-                    val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/reviews/$reviewId/events") {
+                    val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/reviews/${this.reviewId}/events") {
                       contentType(ContentType.Application.Json)
                       setBody(Body(body = body, event = event))
                     }
@@ -20517,7 +20517,7 @@ public class Repos internal constructor(
               private val pullNumber: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/update-branch")
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/update-branch")
                 return when (response.status.value) {
                   202 -> response.body<Response.Accepted>()
                   403 -> Response.Forbidden(response.body())
@@ -20527,7 +20527,7 @@ public class Repos internal constructor(
               }
 
               public suspend operator fun invoke(expectedHeadSha: String? = null): Response {
-                val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/update-branch") {
+                val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/pulls/${this.pullNumber}/update-branch") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(expectedHeadSha = expectedHeadSha))
                 }
@@ -20585,7 +20585,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(ref: String? = null): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/readme") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/readme") {
               if (ref != null) {
                 this.url.encodedParameters.append("ref", ref.encodeURLParameter())
               }
@@ -20631,7 +20631,7 @@ public class Repos internal constructor(
             private val dir: String,
           ) {
             public suspend operator fun invoke(ref: String? = null): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/readme/${dir.encodeURLParameter()}") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/readme/${this.dir.encodeURLParameter()}") {
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
@@ -20686,7 +20686,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -20728,7 +20728,7 @@ public class Repos internal constructor(
             generateReleaseNotes: Boolean? = null,
             makeLatest: MakeLatest? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases") {
               contentType(ContentType.Application.Json)
               setBody(Body(tagName = tagName, targetCommitish = targetCommitish, name = name, body = body, draft = draft, prerelease = prerelease, discussionCategoryName = discussionCategoryName, generateReleaseNotes = generateReleaseNotes, makeLatest = makeLatest))
             }
@@ -20821,7 +20821,7 @@ public class Repos internal constructor(
               private val assetId: Long,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/assets/$assetId")
+                val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/assets/${this.assetId}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
@@ -20833,7 +20833,7 @@ public class Repos internal constructor(
               private val assetId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/assets/$assetId")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/assets/${this.assetId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   302 -> Response.Found
@@ -20862,7 +20862,7 @@ public class Repos internal constructor(
               private val assetId: Long,
             ) {
               public suspend operator fun invoke(): ReleaseAsset {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/assets/$assetId")
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/assets/${this.assetId}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -20872,7 +20872,7 @@ public class Repos internal constructor(
                 label: String? = null,
                 state: String? = null,
               ): ReleaseAsset {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/assets/$assetId") {
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/assets/${this.assetId}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(name = name, label = label, state = state))
                 }
@@ -20912,7 +20912,7 @@ public class Repos internal constructor(
               previousTagName: String? = null,
               configurationFilePath: String? = null,
             ): Response {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/generate-notes") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/generate-notes") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(tagName = tagName, targetCommitish = targetCommitish, previousTagName = previousTagName, configurationFilePath = configurationFilePath))
               }
@@ -20964,7 +20964,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): Release {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/latest")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/latest")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -20993,7 +20993,7 @@ public class Repos internal constructor(
               private val tag: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/tags/${tag.encodeURLParameter()}")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/tags/${this.tag.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -21037,7 +21037,7 @@ public class Repos internal constructor(
             private val releaseId: Long,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}")
               if (response.status.value != 204) throw ResponseException(response, "")
             }
           }
@@ -21049,7 +21049,7 @@ public class Repos internal constructor(
             private val releaseId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 401 -> Response.Unauthorized
@@ -21073,7 +21073,7 @@ public class Repos internal constructor(
             private val releaseId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId")
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -21091,7 +21091,7 @@ public class Repos internal constructor(
               makeLatest: MakeLatest? = null,
               discussionCategoryName: String? = null,
             ): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(tagName = tagName, targetCommitish = targetCommitish, name = name, body = body, draft = draft, prerelease = prerelease, makeLatest = makeLatest, discussionCategoryName = discussionCategoryName))
               }
@@ -21168,7 +21168,7 @@ public class Repos internal constructor(
               private val releaseId: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<ReleaseAsset> {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId/assets") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}/assets") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -21192,7 +21192,7 @@ public class Repos internal constructor(
                 label: String? = null,
                 body: ByteArray? = null,
               ): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId/assets") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}/assets") {
                   this.url.encodedParameters.append("name", name.encodeURLParameter())
                   if (label != null) {
                     this.url.encodedParameters.append("label", label.encodeURLParameter())
@@ -21242,7 +21242,7 @@ public class Repos internal constructor(
                 perPage: Long? = 30L,
                 page: Long? = 1L,
               ): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId/reactions") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}/reactions") {
                   if (content != null) {
                     this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                   }
@@ -21296,7 +21296,7 @@ public class Repos internal constructor(
               private val releaseId: Long,
             ) {
               public suspend operator fun invoke(content: Content): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId/reactions") {
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}/reactions") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(content = content))
                 }
@@ -21363,7 +21363,7 @@ public class Repos internal constructor(
                 private val reactionId: Long,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId/reactions/$reactionId")
+                  val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/releases/${this.releaseId}/reactions/${this.reactionId}")
                   if (response.status.value != 204) throw ResponseException(response, "")
                 }
               }
@@ -21401,7 +21401,7 @@ public class Repos internal constructor(
               private val branch: String,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<RepositoryRuleDetailed> {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rules/branches/${branch.encodeURLParameter()}") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rules/branches/${this.branch.encodeURLParameter()}") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -21441,7 +21441,7 @@ public class Repos internal constructor(
             includesParents: Boolean? = true,
             targets: String? = null,
           ): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -21491,7 +21491,7 @@ public class Repos internal constructor(
             conditions: RepositoryRulesetConditions? = null,
             rules: List<RepositoryRule>? = null,
           ): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, target = target, enforcement = enforcement, bypassActors = bypassActors, conditions = conditions, rules = rules))
             }
@@ -21574,7 +21574,7 @@ public class Repos internal constructor(
               perPage: Long? = 30L,
               page: Long? = 1L,
             ): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets/rule-suites") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/rule-suites") {
                 if (ref != null) {
                   this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
@@ -21662,7 +21662,7 @@ public class Repos internal constructor(
               private val ruleSuiteId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets/rule-suites/$ruleSuiteId")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/rule-suites/${this.ruleSuiteId}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound(response.body())
@@ -21709,7 +21709,7 @@ public class Repos internal constructor(
             private val rulesetId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets/$rulesetId")
+              val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 404 -> Response.NotFound(response.body())
@@ -21738,7 +21738,7 @@ public class Repos internal constructor(
             private val rulesetId: Long,
           ) {
             public suspend operator fun invoke(includesParents: Boolean? = true): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets/$rulesetId") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}") {
                 if (includesParents != null) {
                   this.url.encodedParameters.append("includes_parents", includesParents.toString())
                 }
@@ -21773,7 +21773,7 @@ public class Repos internal constructor(
             private val rulesetId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets/$rulesetId")
+              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -21791,7 +21791,7 @@ public class Repos internal constructor(
               conditions: RepositoryRulesetConditions? = null,
               rules: List<RepositoryRule>? = null,
             ): Response {
-              val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets/$rulesetId") {
+              val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, target = target, enforcement = enforcement, bypassActors = bypassActors, conditions = conditions, rules = rules))
               }
@@ -21871,7 +21871,7 @@ public class Repos internal constructor(
               private val rulesetId: Long,
             ) {
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets/$rulesetId/history") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}/history") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -21919,7 +21919,7 @@ public class Repos internal constructor(
                 private val versionId: Long,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets/$rulesetId/history/$versionId")
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/rulesets/${this.rulesetId}/history/${this.versionId}")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     404 -> Response.NotFound(response.body())
@@ -21989,7 +21989,7 @@ public class Repos internal constructor(
               isMultiRepo: Boolean? = false,
               hideSecret: Boolean? = false,
             ): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/secret-scanning/alerts") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/alerts") {
                 if (state != null) {
                   this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                 }
@@ -22114,7 +22114,7 @@ public class Repos internal constructor(
               private val alertNumber: Long,
             ) {
               public suspend operator fun invoke(hideSecret: Boolean? = false): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/secret-scanning/alerts/$alertNumber") {
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/alerts/${this.alertNumber}") {
                   if (hideSecret != null) {
                     this.url.encodedParameters.append("hide_secret", hideSecret.toString())
                   }
@@ -22163,7 +22163,7 @@ public class Repos internal constructor(
                 resolutionComment: SecretScanningAlertResolutionComment? = null,
                 assignee: SecretScanningAlertAssignee? = null,
               ): Response {
-                val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/secret-scanning/alerts/$alertNumber") {
+                val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/alerts/${this.alertNumber}") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(state = state, resolution = resolution, resolutionComment = resolutionComment, assignee = assignee))
                 }
@@ -22228,7 +22228,7 @@ public class Repos internal constructor(
                 private val alertNumber: Long,
               ) {
                 public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-                  val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/secret-scanning/alerts/$alertNumber/locations") {
+                  val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/alerts/${this.alertNumber}/locations") {
                     if (page != null) {
                       this.url.encodedParameters.append("page", page.toString())
                     }
@@ -22281,7 +22281,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(reason: SecretScanningPushProtectionBypassReason, placeholderId: SecretScanningPushProtectionBypassPlaceholderId): Response {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/secret-scanning/push-protection-bypasses") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/push-protection-bypasses") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(reason = reason, placeholderId = placeholderId))
               }
@@ -22341,7 +22341,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/secret-scanning/scan-history")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/secret-scanning/scan-history")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound
@@ -22399,7 +22399,7 @@ public class Repos internal constructor(
             perPage: Long? = 30L,
             state: State? = null,
           ): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/security-advisories") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories") {
               if (direction != null) {
                 this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
@@ -22487,7 +22487,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(body: RepositoryAdvisoryCreate): Response {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/security-advisories") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -22532,7 +22532,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(body: PrivateVulnerabilityReportCreate): Response {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/security-advisories/reports") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories/reports") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -22586,7 +22586,7 @@ public class Repos internal constructor(
             private val ghsaId: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/security-advisories/${ghsaId.encodeURLParameter()}")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories/${this.ghsaId.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -22617,7 +22617,7 @@ public class Repos internal constructor(
             private val ghsaId: String,
           ) {
             public suspend operator fun invoke(body: RepositoryAdvisoryUpdate): Response {
-              val response = client.patch("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/security-advisories/${ghsaId.encodeURLParameter()}") {
+              val response = client.patch("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories/${this.ghsaId.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -22664,7 +22664,7 @@ public class Repos internal constructor(
               private val ghsaId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/security-advisories/${ghsaId.encodeURLParameter()}/cve")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories/${this.ghsaId.encodeURLParameter()}/cve")
                 return when (response.status.value) {
                   202 -> Response.Accepted(response.body())
                   400 -> Response.BadRequest(response.body())
@@ -22714,7 +22714,7 @@ public class Repos internal constructor(
               private val ghsaId: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/security-advisories/${ghsaId.encodeURLParameter()}/forks")
+                val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/security-advisories/${this.ghsaId.encodeURLParameter()}/forks")
                 return when (response.status.value) {
                   202 -> Response.Accepted(response.body())
                   400 -> Response.BadRequest(response.body())
@@ -22764,7 +22764,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/stargazers") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stargazers") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -22859,7 +22859,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/stats/code_frequency")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stats/code_frequency")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 202 -> Response.Accepted(response.body())
@@ -22898,7 +22898,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/stats/commit_activity")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stats/commit_activity")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 202 -> Response.Accepted(response.body())
@@ -22934,7 +22934,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/stats/contributors")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stats/contributors")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 202 -> Response.Accepted(response.body())
@@ -22970,7 +22970,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/stats/participation")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stats/participation")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 404 -> Response.NotFound(response.body())
@@ -23003,7 +23003,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/stats/punch_card")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/stats/punch_card")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 204 -> Response.NoContent
@@ -23049,7 +23049,7 @@ public class Repos internal constructor(
               description: String? = null,
               context: String? = null,
             ): Status {
-              val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/statuses/${sha.encodeURLParameter()}") {
+              val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/statuses/${this.sha.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(state = state, targetUrl = targetUrl, description = description, context = context))
               }
@@ -23099,7 +23099,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/subscribers") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/subscribers") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -23130,7 +23130,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/subscription")
+            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/subscription")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
@@ -23141,7 +23141,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/subscription")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/subscription")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               403 -> Response.Forbidden(response.body())
@@ -23169,13 +23169,13 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): RepositorySubscription {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/subscription")
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/subscription")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
 
           public suspend operator fun invoke(subscribed: Boolean? = null, ignored: Boolean? = null): RepositorySubscription {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/subscription") {
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/subscription") {
               contentType(ContentType.Application.Json)
               setBody(Body(subscribed = subscribed, ignored = ignored))
             }
@@ -23207,7 +23207,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Tag> {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/tags") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/tags") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -23243,7 +23243,7 @@ public class Repos internal constructor(
             private val ref: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/tarball/${ref.encodeURLParameter()}")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/tarball/${this.ref.encodeURLParameter()}")
               if (response.status.value != 302) throw ResponseException(response, "")
             }
           }
@@ -23263,7 +23263,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/teams") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/teams") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -23305,7 +23305,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/topics") {
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/topics") {
               if (page != null) {
                 this.url.encodedParameters.append("page", page.toString())
               }
@@ -23337,7 +23337,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(names: List<String>): Response {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/topics") {
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/topics") {
               contentType(ContentType.Application.Json)
               setBody(Body(names = names))
             }
@@ -23394,7 +23394,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(per: Per? = Per.Day): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/traffic/clones") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/traffic/clones") {
                 if (per != null) {
                   this.url.encodedParameters.append("per", per.value.encodeURLParameter())
                 }
@@ -23451,7 +23451,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/traffic/popular/paths")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/traffic/popular/paths")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -23484,7 +23484,7 @@ public class Repos internal constructor(
               private val repo: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/traffic/popular/referrers")
+                val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/traffic/popular/referrers")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   403 -> Response.Forbidden(response.body())
@@ -23518,7 +23518,7 @@ public class Repos internal constructor(
             private val repo: String,
           ) {
             public suspend operator fun invoke(per: Per? = Per.Day): Response {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/traffic/views") {
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/traffic/views") {
                 if (per != null) {
                   this.url.encodedParameters.append("per", per.value.encodeURLParameter())
                 }
@@ -23571,7 +23571,7 @@ public class Repos internal constructor(
             newName: String? = null,
             teamIds: List<Long>? = null,
           ): MinimalRepository {
-            val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/transfer") {
+            val response = client.post("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/transfer") {
               contentType(ContentType.Application.Json)
               setBody(Body(newOwner = newOwner, newName = newName, teamIds = teamIds))
             }
@@ -23611,7 +23611,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/vulnerability-alerts")
+            val response = client.delete("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/vulnerability-alerts")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
@@ -23622,7 +23622,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/vulnerability-alerts")
+            val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/vulnerability-alerts")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound
@@ -23643,7 +23643,7 @@ public class Repos internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.put("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/vulnerability-alerts")
+            val response = client.put("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/vulnerability-alerts")
             if (response.status.value != 204) throw ResponseException(response, "")
           }
         }
@@ -23671,7 +23671,7 @@ public class Repos internal constructor(
             private val ref: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/zipball/${ref.encodeURLParameter()}")
+              val response = client.get("repos/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/zipball/${this.ref.encodeURLParameter()}")
               if (response.status.value != 302) throw ResponseException(response, "")
             }
           }
@@ -23712,7 +23712,7 @@ public class Repos internal constructor(
             includeAllBranches: Boolean? = null,
             `private`: Boolean? = null,
           ): FullRepository {
-            val response = client.post("repos/${templateOwner.encodeURLParameter()}/${templateRepo.encodeURLParameter()}/generate") {
+            val response = client.post("repos/${this.templateOwner.encodeURLParameter()}/${this.templateRepo.encodeURLParameter()}/generate") {
               contentType(ContentType.Application.Json)
               setBody(Body(owner = owner, name = name, description = description, includeAllBranches = includeAllBranches, private = private))
             }

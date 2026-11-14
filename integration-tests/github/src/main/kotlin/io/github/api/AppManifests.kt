@@ -56,7 +56,7 @@ public class AppManifests internal constructor(
         private val code: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.post("app-manifests/${code.encodeURLParameter()}/conversions")
+          val response = client.post("app-manifests/${this.code.encodeURLParameter()}/conversions")
           return when (response.status.value) {
             201 -> response.body<Response.Created>()
             404 -> Response.NotFound(response.body())

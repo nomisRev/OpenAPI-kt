@@ -42,7 +42,7 @@ public class Networks internal constructor(
           private val repo: String,
         ) {
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-            val response = client.get("networks/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/events") {
+            val response = client.get("networks/${this.owner.encodeURLParameter()}/${this.repo.encodeURLParameter()}/events") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }

@@ -49,7 +49,7 @@ public class CodesOfConduct internal constructor(
       private val key: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("codes_of_conduct/${key.encodeURLParameter()}")
+        val response = client.get("codes_of_conduct/${this.key.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           304 -> Response.NotModified

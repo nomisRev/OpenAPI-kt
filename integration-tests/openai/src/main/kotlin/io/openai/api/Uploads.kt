@@ -58,7 +58,7 @@ public class Uploads internal constructor(
         private val uploadId: String,
       ) {
         public suspend operator fun invoke(): Upload {
-          val response = client.post("uploads/${uploadId.encodeURLParameter()}/cancel")
+          val response = client.post("uploads/${this.uploadId.encodeURLParameter()}/cancel")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -76,7 +76,7 @@ public class Uploads internal constructor(
         private val uploadId: String,
       ) {
         public suspend operator fun invoke(body: CompleteUploadRequest): Upload {
-          val response = client.post("uploads/${uploadId.encodeURLParameter()}/complete") {
+          val response = client.post("uploads/${this.uploadId.encodeURLParameter()}/complete") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -97,7 +97,7 @@ public class Uploads internal constructor(
         private val uploadId: String,
       ) {
         public suspend operator fun invoke(`data`: ByteArray): UploadPart {
-          val response = client.post("uploads/${uploadId.encodeURLParameter()}/parts") {
+          val response = client.post("uploads/${this.uploadId.encodeURLParameter()}/parts") {
             setBody(MultiPartFormDataContent(formData {
               append("data", data)
             }))

@@ -94,7 +94,7 @@ public class Agiles internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("agiles/${id.encodeURLParameter()}")
+        val response = client.delete("agiles/${this.id.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
@@ -104,7 +104,7 @@ public class Agiles internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,columnSettings(${'$'}type,columns(${'$'}type,id),field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,name,owner(${'$'}type,id,login,ringId),projects(${'$'}type,id,name,shortName),status(${'$'}type,id,valid),swimlaneSettings(${'$'}type,enabled,field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,values(${'$'}type,id,name))"): AgileRead {
-        val response = client.get("agiles/${id.encodeURLParameter()}") {
+        val response = client.get("agiles/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -119,7 +119,7 @@ public class Agiles internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,columnSettings(${'$'}type,columns(${'$'}type,id),field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,name,owner(${'$'}type,id,login,ringId),projects(${'$'}type,id,name,shortName),status(${'$'}type,id,valid),swimlaneSettings(${'$'}type,enabled,field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,values(${'$'}type,id,name))", body: AgileWrite? = null): AgileRead {
-        val response = client.post("agiles/${id.encodeURLParameter()}") {
+        val response = client.post("agiles/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -152,7 +152,7 @@ public class Agiles internal constructor(
           skip: Int? = null,
           top: Int? = null,
         ): List<SprintRead> {
-          val response = client.get("agiles/${id.encodeURLParameter()}/sprints") {
+          val response = client.get("agiles/${this.id.encodeURLParameter()}/sprints") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -177,7 +177,7 @@ public class Agiles internal constructor(
           fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start",
           body: SprintWrite? = null,
         ): SprintRead {
-          val response = client.post("agiles/${id.encodeURLParameter()}/sprints") {
+          val response = client.post("agiles/${this.id.encodeURLParameter()}/sprints") {
             if (muteUpdateNotifications != null) {
               this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
@@ -211,7 +211,7 @@ public class Agiles internal constructor(
           private val sprintId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("agiles/${id.encodeURLParameter()}/sprints/${sprintId.encodeURLParameter()}")
+            val response = client.delete("agiles/${this.id.encodeURLParameter()}/sprints/${this.sprintId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
@@ -222,7 +222,7 @@ public class Agiles internal constructor(
           private val sprintId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start"): SprintRead {
-            val response = client.get("agiles/${id.encodeURLParameter()}/sprints/${sprintId.encodeURLParameter()}") {
+            val response = client.get("agiles/${this.id.encodeURLParameter()}/sprints/${this.sprintId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -238,7 +238,7 @@ public class Agiles internal constructor(
           private val sprintId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start", body: SprintWrite? = null): SprintRead {
-            val response = client.post("agiles/${id.encodeURLParameter()}/sprints/${sprintId.encodeURLParameter()}") {
+            val response = client.post("agiles/${this.id.encodeURLParameter()}/sprints/${this.sprintId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }

@@ -71,7 +71,7 @@ public class Users internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,banned,email,fullName,guest,id,login,ringId"): UserRead {
-        val response = client.get("users/${id.encodeURLParameter()}") {
+        val response = client.get("users/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -104,7 +104,7 @@ public class Users internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,dateFieldFormat(${'$'}type,datePattern,id,pattern,presentation),id,locale(${'$'}type,community,id,language,locale,name),timezone(${'$'}type,id,offset,presentation)"): GeneralUserProfileRead {
-            val response = client.get("users/${id.encodeURLParameter()}/profiles/general") {
+            val response = client.get("users/${this.id.encodeURLParameter()}/profiles/general") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -119,7 +119,7 @@ public class Users internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,dateFieldFormat(${'$'}type,datePattern,id,pattern,presentation),id,locale(${'$'}type,community,id,language,locale,name),timezone(${'$'}type,id,offset,presentation)", body: GeneralUserProfileWrite? = null): GeneralUserProfileRead {
-            val response = client.post("users/${id.encodeURLParameter()}/profiles/general") {
+            val response = client.post("users/${this.id.encodeURLParameter()}/profiles/general") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -147,7 +147,7 @@ public class Users internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id"): NotificationsUserProfileRead {
-            val response = client.get("users/${id.encodeURLParameter()}/profiles/notifications") {
+            val response = client.get("users/${this.id.encodeURLParameter()}/profiles/notifications") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -162,7 +162,7 @@ public class Users internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: NotificationsUserProfileWrite? = null): NotificationsUserProfileRead {
-            val response = client.post("users/${id.encodeURLParameter()}/profiles/notifications") {
+            val response = client.post("users/${this.id.encodeURLParameter()}/profiles/notifications") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -190,7 +190,7 @@ public class Users internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id,periodFormat(${'$'}type,id)"): TimeTrackingUserProfileRead {
-            val response = client.get("users/${id.encodeURLParameter()}/profiles/timetracking") {
+            val response = client.get("users/${this.id.encodeURLParameter()}/profiles/timetracking") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -205,7 +205,7 @@ public class Users internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id,periodFormat(${'$'}type,id)", body: TimeTrackingUserProfileWrite? = null): TimeTrackingUserProfileRead {
-            val response = client.post("users/${id.encodeURLParameter()}/profiles/timetracking") {
+            val response = client.post("users/${this.id.encodeURLParameter()}/profiles/timetracking") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -236,7 +236,7 @@ public class Users internal constructor(
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueFolderRead.SavedQuery> {
-          val response = client.get("users/${id.encodeURLParameter()}/savedQueries") {
+          val response = client.get("users/${this.id.encodeURLParameter()}/savedQueries") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -268,7 +268,7 @@ public class Users internal constructor(
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueFolderRead.Tag> {
-          val response = client.get("users/${id.encodeURLParameter()}/tags") {
+          val response = client.get("users/${this.id.encodeURLParameter()}/tags") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }

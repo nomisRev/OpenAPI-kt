@@ -48,7 +48,7 @@ public class Classrooms internal constructor(
       private val classroomId: Long,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("classrooms/$classroomId")
+        val response = client.get("classrooms/${this.classroomId}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           404 -> Response.NotFound(response.body())
@@ -78,7 +78,7 @@ public class Classrooms internal constructor(
         private val classroomId: Long,
       ) {
         public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<SimpleClassroomAssignment> {
-          val response = client.get("classrooms/$classroomId/assignments") {
+          val response = client.get("classrooms/${this.classroomId}/assignments") {
             if (page != null) {
               this.url.encodedParameters.append("page", page.toString())
             }

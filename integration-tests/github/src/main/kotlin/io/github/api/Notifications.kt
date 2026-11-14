@@ -181,7 +181,7 @@ public class Notifications internal constructor(
         private val threadId: Long,
       ) {
         public suspend operator fun invoke() {
-          val response = client.delete("notifications/threads/$threadId")
+          val response = client.delete("notifications/threads/${this.threadId}")
           if (response.status.value != 204) throw ResponseException(response, "")
         }
       }
@@ -191,7 +191,7 @@ public class Notifications internal constructor(
         private val threadId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("notifications/threads/$threadId")
+          val response = client.get("notifications/threads/${this.threadId}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             304 -> Response.NotModified
@@ -223,7 +223,7 @@ public class Notifications internal constructor(
         private val threadId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.patch("notifications/threads/$threadId")
+          val response = client.patch("notifications/threads/${this.threadId}")
           return when (response.status.value) {
             205 -> Response.ResetContent
             304 -> Response.NotModified
@@ -258,7 +258,7 @@ public class Notifications internal constructor(
           private val threadId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("notifications/threads/$threadId/subscription")
+            val response = client.delete("notifications/threads/${this.threadId}/subscription")
             return when (response.status.value) {
               204 -> Response.NoContent
               304 -> Response.NotModified
@@ -288,7 +288,7 @@ public class Notifications internal constructor(
           private val threadId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("notifications/threads/$threadId/subscription")
+            val response = client.get("notifications/threads/${this.threadId}/subscription")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               304 -> Response.NotModified
@@ -320,7 +320,7 @@ public class Notifications internal constructor(
           private val threadId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("notifications/threads/$threadId/subscription")
+            val response = client.put("notifications/threads/${this.threadId}/subscription")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               304 -> Response.NotModified
@@ -331,7 +331,7 @@ public class Notifications internal constructor(
           }
 
           public suspend operator fun invoke(ignored: Boolean? = null): Response {
-            val response = client.put("notifications/threads/$threadId/subscription") {
+            val response = client.put("notifications/threads/${this.threadId}/subscription") {
               contentType(ContentType.Application.Json)
               setBody(Body(ignored = ignored))
             }

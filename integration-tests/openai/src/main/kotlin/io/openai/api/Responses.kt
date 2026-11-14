@@ -81,7 +81,7 @@ public class Responses internal constructor(
       private val responseId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.delete("responses/${responseId.encodeURLParameter()}")
+        val response = client.delete("responses/${this.responseId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok
           404 -> Response.NotFound(response.body())
@@ -108,7 +108,7 @@ public class Responses internal constructor(
         startingAfter: Long? = null,
         includeObfuscation: Boolean? = null,
       ): Response {
-        val response = client.get("responses/${responseId.encodeURLParameter()}") {
+        val response = client.get("responses/${this.responseId.encodeURLParameter()}") {
           include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
           if (stream != null) {
             this.url.encodedParameters.append("stream", stream.toString())
@@ -136,7 +136,7 @@ public class Responses internal constructor(
         private val responseId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.post("responses/${responseId.encodeURLParameter()}/cancel")
+          val response = client.post("responses/${this.responseId.encodeURLParameter()}/cancel")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             404 -> Response.NotFound(response.body())
@@ -172,7 +172,7 @@ public class Responses internal constructor(
           after: String? = null,
           include: List<IncludeEnum>? = null,
         ): ResponseItemList {
-          val response = client.get("responses/${responseId.encodeURLParameter()}/input_items") {
+          val response = client.get("responses/${this.responseId.encodeURLParameter()}/input_items") {
             if (limit != null) {
               this.url.encodedParameters.append("limit", limit.toString())
             }

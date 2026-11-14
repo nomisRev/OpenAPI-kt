@@ -322,7 +322,7 @@ public class Advisories internal constructor(
       private val ghsaId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("advisories/${ghsaId.encodeURLParameter()}")
+        val response = client.get("advisories/${this.ghsaId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           404 -> Response.NotFound(response.body())

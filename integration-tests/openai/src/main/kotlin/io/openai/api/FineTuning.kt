@@ -120,7 +120,7 @@ public class FineTuning internal constructor(
             limit: Long? = 10L,
             order: Order? = Order.Descending,
           ): ListFineTuningCheckpointPermissionResponse {
-            val response = client.get("fine_tuning/checkpoints/${fineTunedModelCheckpoint.encodeURLParameter()}/permissions") {
+            val response = client.get("fine_tuning/checkpoints/${this.fineTunedModelCheckpoint.encodeURLParameter()}/permissions") {
               if (projectId != null) {
                 this.url.encodedParameters.append("project_id", projectId.encodeURLParameter())
               }
@@ -155,7 +155,7 @@ public class FineTuning internal constructor(
           private val fineTunedModelCheckpoint: String,
         ) {
           public suspend operator fun invoke(body: CreateFineTuningCheckpointPermissionRequest): ListFineTuningCheckpointPermissionResponse {
-            val response = client.post("fine_tuning/checkpoints/${fineTunedModelCheckpoint.encodeURLParameter()}/permissions") {
+            val response = client.post("fine_tuning/checkpoints/${this.fineTunedModelCheckpoint.encodeURLParameter()}/permissions") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -177,7 +177,7 @@ public class FineTuning internal constructor(
             private val permissionId: String,
           ) {
             public suspend operator fun invoke(): DeleteFineTuningCheckpointPermissionResponse {
-              val response = client.delete("fine_tuning/checkpoints/${fineTunedModelCheckpoint.encodeURLParameter()}/permissions/${permissionId.encodeURLParameter()}")
+              val response = client.delete("fine_tuning/checkpoints/${this.fineTunedModelCheckpoint.encodeURLParameter()}/permissions/${this.permissionId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -252,7 +252,7 @@ public class FineTuning internal constructor(
         private val fineTuningJobId: String,
       ) {
         public suspend operator fun invoke(): FineTuningJob {
-          val response = client.get("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}")
+          val response = client.get("fine_tuning/jobs/${this.fineTuningJobId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -269,7 +269,7 @@ public class FineTuning internal constructor(
           private val fineTuningJobId: String,
         ) {
           public suspend operator fun invoke(): FineTuningJob {
-            val response = client.post("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/cancel")
+            val response = client.post("fine_tuning/jobs/${this.fineTuningJobId.encodeURLParameter()}/cancel")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -287,7 +287,7 @@ public class FineTuning internal constructor(
           private val fineTuningJobId: String,
         ) {
           public suspend operator fun invoke(after: String? = null, limit: Long? = 10L): ListFineTuningJobCheckpointsResponse {
-            val response = client.get("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/checkpoints") {
+            val response = client.get("fine_tuning/jobs/${this.fineTuningJobId.encodeURLParameter()}/checkpoints") {
               if (after != null) {
                 this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
@@ -312,7 +312,7 @@ public class FineTuning internal constructor(
           private val fineTuningJobId: String,
         ) {
           public suspend operator fun invoke(after: String? = null, limit: Long? = 20L): ListFineTuningJobEventsResponse {
-            val response = client.get("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/events") {
+            val response = client.get("fine_tuning/jobs/${this.fineTuningJobId.encodeURLParameter()}/events") {
               if (after != null) {
                 this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
@@ -337,7 +337,7 @@ public class FineTuning internal constructor(
           private val fineTuningJobId: String,
         ) {
           public suspend operator fun invoke(): FineTuningJob {
-            val response = client.post("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/pause")
+            val response = client.post("fine_tuning/jobs/${this.fineTuningJobId.encodeURLParameter()}/pause")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -355,7 +355,7 @@ public class FineTuning internal constructor(
           private val fineTuningJobId: String,
         ) {
           public suspend operator fun invoke(): FineTuningJob {
-            val response = client.post("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/resume")
+            val response = client.post("fine_tuning/jobs/${this.fineTuningJobId.encodeURLParameter()}/resume")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }

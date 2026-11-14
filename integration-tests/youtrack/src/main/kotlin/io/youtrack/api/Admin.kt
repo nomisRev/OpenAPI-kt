@@ -166,7 +166,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}")
+              val response = client.delete("admin/customFieldSettings/bundles/build/${this.id.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
             }
           }
@@ -176,7 +176,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.BuildBundle {
-              val response = client.get("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}") {
+              val response = client.get("admin/customFieldSettings/bundles/build/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -191,7 +191,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.BuildBundle? = null): BundleRead.BuildBundle {
-              val response = client.post("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}") {
+              val response = client.post("admin/customFieldSettings/bundles/build/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -224,7 +224,7 @@ public class Admin internal constructor(
                 skip: Int? = null,
                 top: Int? = null,
               ): List<BundleElementRead.BuildBundleElement> {
-                val response = client.get("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}/values") {
+                val response = client.get("admin/customFieldSettings/bundles/build/${this.id.encodeURLParameter()}/values") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -245,7 +245,7 @@ public class Admin internal constructor(
               private val id: String,
             ) {
               public suspend operator fun invoke(fields: String? = "${'$'}type,assembleDate,color(${'$'}type,background,foreground,id),id,name,ordinal", body: BundleElementWrite.BuildBundleElement? = null): BundleElementRead.BuildBundleElement {
-                val response = client.post("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}/values") {
+                val response = client.post("admin/customFieldSettings/bundles/build/${this.id.encodeURLParameter()}/values") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -276,7 +276,7 @@ public class Admin internal constructor(
                 private val buildBundleElementId: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}/values/${buildBundleElementId.encodeURLParameter()}")
+                  val response = client.delete("admin/customFieldSettings/bundles/build/${this.id.encodeURLParameter()}/values/${this.buildBundleElementId.encodeURLParameter()}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                 }
               }
@@ -287,7 +287,7 @@ public class Admin internal constructor(
                 private val buildBundleElementId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,assembleDate,color(${'$'}type,background,foreground,id),id,name,ordinal"): BundleElementRead.BuildBundleElement {
-                  val response = client.get("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}/values/${buildBundleElementId.encodeURLParameter()}") {
+                  val response = client.get("admin/customFieldSettings/bundles/build/${this.id.encodeURLParameter()}/values/${this.buildBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -303,7 +303,7 @@ public class Admin internal constructor(
                 private val buildBundleElementId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,assembleDate,color(${'$'}type,background,foreground,id),id,name,ordinal", body: BundleElementWrite.BuildBundleElement? = null): BundleElementRead.BuildBundleElement {
-                  val response = client.post("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}/values/${buildBundleElementId.encodeURLParameter()}") {
+                  val response = client.post("admin/customFieldSettings/bundles/build/${this.id.encodeURLParameter()}/values/${this.buildBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -389,7 +389,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}")
+              val response = client.delete("admin/customFieldSettings/bundles/enum/${this.id.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
             }
           }
@@ -399,7 +399,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.EnumBundle {
-              val response = client.get("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}") {
+              val response = client.get("admin/customFieldSettings/bundles/enum/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -414,7 +414,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.EnumBundle? = null): BundleRead.EnumBundle {
-              val response = client.post("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}") {
+              val response = client.post("admin/customFieldSettings/bundles/enum/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -447,7 +447,7 @@ public class Admin internal constructor(
                 skip: Int? = null,
                 top: Int? = null,
               ): List<BundleElementRead.EnumBundleElement> {
-                val response = client.get("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}/values") {
+                val response = client.get("admin/customFieldSettings/bundles/enum/${this.id.encodeURLParameter()}/values") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -468,7 +468,7 @@ public class Admin internal constructor(
               private val id: String,
             ) {
               public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,localizedName,name,ordinal", body: BundleElementWrite.EnumBundleElement? = null): BundleElementRead.EnumBundleElement {
-                val response = client.post("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}/values") {
+                val response = client.post("admin/customFieldSettings/bundles/enum/${this.id.encodeURLParameter()}/values") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -499,7 +499,7 @@ public class Admin internal constructor(
                 private val enumBundleElementId: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}/values/${enumBundleElementId.encodeURLParameter()}")
+                  val response = client.delete("admin/customFieldSettings/bundles/enum/${this.id.encodeURLParameter()}/values/${this.enumBundleElementId.encodeURLParameter()}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                 }
               }
@@ -510,7 +510,7 @@ public class Admin internal constructor(
                 private val enumBundleElementId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,localizedName,name,ordinal"): BundleElementRead.EnumBundleElement {
-                  val response = client.get("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}/values/${enumBundleElementId.encodeURLParameter()}") {
+                  val response = client.get("admin/customFieldSettings/bundles/enum/${this.id.encodeURLParameter()}/values/${this.enumBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -526,7 +526,7 @@ public class Admin internal constructor(
                 private val enumBundleElementId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,localizedName,name,ordinal", body: BundleElementWrite.EnumBundleElement? = null): BundleElementRead.EnumBundleElement {
-                  val response = client.post("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}/values/${enumBundleElementId.encodeURLParameter()}") {
+                  val response = client.post("admin/customFieldSettings/bundles/enum/${this.id.encodeURLParameter()}/values/${this.enumBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -612,7 +612,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}")
+              val response = client.delete("admin/customFieldSettings/bundles/ownedField/${this.id.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
             }
           }
@@ -622,7 +622,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.OwnedBundle {
-              val response = client.get("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}") {
+              val response = client.get("admin/customFieldSettings/bundles/ownedField/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -637,7 +637,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.OwnedBundle? = null): BundleRead.OwnedBundle {
-              val response = client.post("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}") {
+              val response = client.post("admin/customFieldSettings/bundles/ownedField/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -670,7 +670,7 @@ public class Admin internal constructor(
                 skip: Int? = null,
                 top: Int? = null,
               ): List<BundleElementRead.OwnedBundleElement> {
-                val response = client.get("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}/values") {
+                val response = client.get("admin/customFieldSettings/bundles/ownedField/${this.id.encodeURLParameter()}/values") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -691,7 +691,7 @@ public class Admin internal constructor(
               private val id: String,
             ) {
               public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,name,ordinal,owner(${'$'}type,id,login,ringId)", body: BundleElementWrite.OwnedBundleElement? = null): BundleElementRead.OwnedBundleElement {
-                val response = client.post("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}/values") {
+                val response = client.post("admin/customFieldSettings/bundles/ownedField/${this.id.encodeURLParameter()}/values") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -722,7 +722,7 @@ public class Admin internal constructor(
                 private val ownedBundleElementId: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}/values/${ownedBundleElementId.encodeURLParameter()}")
+                  val response = client.delete("admin/customFieldSettings/bundles/ownedField/${this.id.encodeURLParameter()}/values/${this.ownedBundleElementId.encodeURLParameter()}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                 }
               }
@@ -733,7 +733,7 @@ public class Admin internal constructor(
                 private val ownedBundleElementId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,name,ordinal,owner(${'$'}type,id,login,ringId)"): BundleElementRead.OwnedBundleElement {
-                  val response = client.get("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}/values/${ownedBundleElementId.encodeURLParameter()}") {
+                  val response = client.get("admin/customFieldSettings/bundles/ownedField/${this.id.encodeURLParameter()}/values/${this.ownedBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -749,7 +749,7 @@ public class Admin internal constructor(
                 private val ownedBundleElementId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,name,ordinal,owner(${'$'}type,id,login,ringId)", body: BundleElementWrite.OwnedBundleElement? = null): BundleElementRead.OwnedBundleElement {
-                  val response = client.post("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}/values/${ownedBundleElementId.encodeURLParameter()}") {
+                  val response = client.post("admin/customFieldSettings/bundles/ownedField/${this.id.encodeURLParameter()}/values/${this.ownedBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -835,7 +835,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}")
+              val response = client.delete("admin/customFieldSettings/bundles/state/${this.id.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
             }
           }
@@ -845,7 +845,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.StateBundle {
-              val response = client.get("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}") {
+              val response = client.get("admin/customFieldSettings/bundles/state/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -860,7 +860,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.StateBundle? = null): BundleRead.StateBundle {
-              val response = client.post("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}") {
+              val response = client.post("admin/customFieldSettings/bundles/state/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -893,7 +893,7 @@ public class Admin internal constructor(
                 skip: Int? = null,
                 top: Int? = null,
               ): List<BundleElementRead.StateBundleElement> {
-                val response = client.get("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}/values") {
+                val response = client.get("admin/customFieldSettings/bundles/state/${this.id.encodeURLParameter()}/values") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -914,7 +914,7 @@ public class Admin internal constructor(
               private val id: String,
             ) {
               public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,isResolved,localizedName,name,ordinal", body: BundleElementWrite.StateBundleElement? = null): BundleElementRead.StateBundleElement {
-                val response = client.post("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}/values") {
+                val response = client.post("admin/customFieldSettings/bundles/state/${this.id.encodeURLParameter()}/values") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -945,7 +945,7 @@ public class Admin internal constructor(
                 private val stateBundleElementId: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}/values/${stateBundleElementId.encodeURLParameter()}")
+                  val response = client.delete("admin/customFieldSettings/bundles/state/${this.id.encodeURLParameter()}/values/${this.stateBundleElementId.encodeURLParameter()}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                 }
               }
@@ -956,7 +956,7 @@ public class Admin internal constructor(
                 private val stateBundleElementId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,isResolved,localizedName,name,ordinal"): BundleElementRead.StateBundleElement {
-                  val response = client.get("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}/values/${stateBundleElementId.encodeURLParameter()}") {
+                  val response = client.get("admin/customFieldSettings/bundles/state/${this.id.encodeURLParameter()}/values/${this.stateBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -972,7 +972,7 @@ public class Admin internal constructor(
                 private val stateBundleElementId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,isResolved,localizedName,name,ordinal", body: BundleElementWrite.StateBundleElement? = null): BundleElementRead.StateBundleElement {
-                  val response = client.post("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}/values/${stateBundleElementId.encodeURLParameter()}") {
+                  val response = client.post("admin/customFieldSettings/bundles/state/${this.id.encodeURLParameter()}/values/${this.stateBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -1062,7 +1062,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}")
+              val response = client.delete("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
             }
           }
@@ -1072,7 +1072,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.UserBundle {
-              val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}") {
+              val response = client.get("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -1087,7 +1087,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.UserBundle? = null): BundleRead.UserBundle {
-              val response = client.post("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}") {
+              val response = client.post("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -1116,7 +1116,7 @@ public class Admin internal constructor(
                 skip: Int? = null,
                 top: Int? = null,
               ): List<UserRead> {
-                val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/aggregatedUsers") {
+                val response = client.get("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}/aggregatedUsers") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -1152,7 +1152,7 @@ public class Admin internal constructor(
                 skip: Int? = null,
                 top: Int? = null,
               ): List<UserGroupRead> {
-                val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/groups") {
+                val response = client.get("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}/groups") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -1173,7 +1173,7 @@ public class Admin internal constructor(
               private val id: String,
             ) {
               public suspend operator fun invoke(fields: String? = "${'$'}type,allUsersGroup,id,name,ringId", body: UserGroupWrite? = null): UserGroupRead {
-                val response = client.post("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/groups") {
+                val response = client.post("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}/groups") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -1202,7 +1202,7 @@ public class Admin internal constructor(
                 private val userGroupId: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/groups/${userGroupId.encodeURLParameter()}")
+                  val response = client.delete("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}/groups/${this.userGroupId.encodeURLParameter()}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                 }
               }
@@ -1213,7 +1213,7 @@ public class Admin internal constructor(
                 private val userGroupId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,allUsersGroup,id,name,ringId"): UserGroupRead {
-                  val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/groups/${userGroupId.encodeURLParameter()}") {
+                  val response = client.get("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}/groups/${this.userGroupId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -1244,7 +1244,7 @@ public class Admin internal constructor(
                 skip: Int? = null,
                 top: Int? = null,
               ): List<UserRead> {
-                val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/individuals") {
+                val response = client.get("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}/individuals") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -1265,7 +1265,7 @@ public class Admin internal constructor(
               private val id: String,
             ) {
               public suspend operator fun invoke(fields: String? = "${'$'}type,banned,email,fullName,guest,id,login,ringId", body: UserWrite? = null): UserRead {
-                val response = client.post("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/individuals") {
+                val response = client.post("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}/individuals") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -1294,7 +1294,7 @@ public class Admin internal constructor(
                 private val userId: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/individuals/${userId.encodeURLParameter()}")
+                  val response = client.delete("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}/individuals/${this.userId.encodeURLParameter()}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                 }
               }
@@ -1305,7 +1305,7 @@ public class Admin internal constructor(
                 private val userId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,banned,email,fullName,guest,id,login,ringId"): UserRead {
-                  val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/individuals/${userId.encodeURLParameter()}") {
+                  val response = client.get("admin/customFieldSettings/bundles/user/${this.id.encodeURLParameter()}/individuals/${this.userId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -1387,7 +1387,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}")
+              val response = client.delete("admin/customFieldSettings/bundles/version/${this.id.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
             }
           }
@@ -1397,7 +1397,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.VersionBundle {
-              val response = client.get("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}") {
+              val response = client.get("admin/customFieldSettings/bundles/version/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -1412,7 +1412,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.VersionBundle? = null): BundleRead.VersionBundle {
-              val response = client.post("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}") {
+              val response = client.post("admin/customFieldSettings/bundles/version/${this.id.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -1445,7 +1445,7 @@ public class Admin internal constructor(
                 skip: Int? = null,
                 top: Int? = null,
               ): List<BundleElementRead.VersionBundleElement> {
-                val response = client.get("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}/values") {
+                val response = client.get("admin/customFieldSettings/bundles/version/${this.id.encodeURLParameter()}/values") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -1466,7 +1466,7 @@ public class Admin internal constructor(
               private val id: String,
             ) {
               public suspend operator fun invoke(fields: String? = "${'$'}type,archived,color(${'$'}type,background,foreground,id),id,name,ordinal,releaseDate,released", body: BundleElementWrite.VersionBundleElement? = null): BundleElementRead.VersionBundleElement {
-                val response = client.post("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}/values") {
+                val response = client.post("admin/customFieldSettings/bundles/version/${this.id.encodeURLParameter()}/values") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -1497,7 +1497,7 @@ public class Admin internal constructor(
                 private val versionBundleElementId: String,
               ) {
                 public suspend operator fun invoke() {
-                  val response = client.delete("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}/values/${versionBundleElementId.encodeURLParameter()}")
+                  val response = client.delete("admin/customFieldSettings/bundles/version/${this.id.encodeURLParameter()}/values/${this.versionBundleElementId.encodeURLParameter()}")
                   if (response.status.value != 200) throw ResponseException(response, "")
                 }
               }
@@ -1508,7 +1508,7 @@ public class Admin internal constructor(
                 private val versionBundleElementId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,archived,color(${'$'}type,background,foreground,id),id,name,ordinal,releaseDate,released"): BundleElementRead.VersionBundleElement {
-                  val response = client.get("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}/values/${versionBundleElementId.encodeURLParameter()}") {
+                  val response = client.get("admin/customFieldSettings/bundles/version/${this.id.encodeURLParameter()}/values/${this.versionBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -1524,7 +1524,7 @@ public class Admin internal constructor(
                 private val versionBundleElementId: String,
               ) {
                 public suspend operator fun invoke(fields: String? = "${'$'}type,archived,color(${'$'}type,background,foreground,id),id,name,ordinal,releaseDate,released", body: BundleElementWrite.VersionBundleElement? = null): BundleElementRead.VersionBundleElement {
-                  val response = client.post("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}/values/${versionBundleElementId.encodeURLParameter()}") {
+                  val response = client.post("admin/customFieldSettings/bundles/version/${this.id.encodeURLParameter()}/values/${this.versionBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
                       this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
@@ -1613,7 +1613,7 @@ public class Admin internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("admin/customFieldSettings/customFields/${id.encodeURLParameter()}")
+            val response = client.delete("admin/customFieldSettings/customFields/${this.id.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
@@ -1623,7 +1623,7 @@ public class Admin internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,fieldType(${'$'}type,id),id,isAutoAttached,isUpdateable,localizedName,name,ordinal"): CustomFieldRead {
-            val response = client.get("admin/customFieldSettings/customFields/${id.encodeURLParameter()}") {
+            val response = client.get("admin/customFieldSettings/customFields/${this.id.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -1638,7 +1638,7 @@ public class Admin internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,fieldType(${'$'}type,id),id,isAutoAttached,isUpdateable,localizedName,name,ordinal", body: CustomFieldWrite? = null): CustomFieldRead {
-            val response = client.post("admin/customFieldSettings/customFields/${id.encodeURLParameter()}") {
+            val response = client.post("admin/customFieldSettings/customFields/${this.id.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -1665,7 +1665,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,bundle(${'$'}type,id),canBeEmpty,defaultValues(${'$'}type,id,name),emptyFieldText,id,isPublic"): CustomFieldDefaultsRead {
-              val response = client.get("admin/customFieldSettings/customFields/${id.encodeURLParameter()}/fieldDefaults") {
+              val response = client.get("admin/customFieldSettings/customFields/${this.id.encodeURLParameter()}/fieldDefaults") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -1680,7 +1680,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,bundle(${'$'}type,id),canBeEmpty,defaultValues(${'$'}type,id,name),emptyFieldText,id,isPublic", body: CustomFieldDefaultsWrite? = null): CustomFieldDefaultsRead {
-              val response = client.post("admin/customFieldSettings/customFields/${id.encodeURLParameter()}/fieldDefaults") {
+              val response = client.post("admin/customFieldSettings/customFields/${this.id.encodeURLParameter()}/fieldDefaults") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -1710,7 +1710,7 @@ public class Admin internal constructor(
               skip: Int? = null,
               top: Int? = null,
             ): List<ProjectCustomFieldRead> {
-              val response = client.get("admin/customFieldSettings/customFields/${id.encodeURLParameter()}/instances") {
+              val response = client.get("admin/customFieldSettings/customFields/${this.id.encodeURLParameter()}/instances") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -1809,7 +1809,7 @@ public class Admin internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,creationDate,id,link,name,size"): BackupFile {
-            val response = client.get("admin/databaseBackup/backups/${id.encodeURLParameter()}") {
+            val response = client.get("admin/databaseBackup/backups/${this.id.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -2257,7 +2257,7 @@ public class Admin internal constructor(
         private val id: String,
       ) {
         public suspend operator fun invoke() {
-          val response = client.delete("admin/projects/${id.encodeURLParameter()}")
+          val response = client.delete("admin/projects/${this.id.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
         }
       }
@@ -2267,7 +2267,7 @@ public class Admin internal constructor(
         private val id: String,
       ) {
         public suspend operator fun invoke(fields: String? = "${'$'}type,archived,customFields,id,leader(${'$'}type,id,login,ringId),name,shortName"): IssueFolderRead.Project {
-          val response = client.get("admin/projects/${id.encodeURLParameter()}") {
+          val response = client.get("admin/projects/${this.id.encodeURLParameter()}") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -2282,7 +2282,7 @@ public class Admin internal constructor(
         private val id: String,
       ) {
         public suspend operator fun invoke(fields: String? = "${'$'}type,archived,customFields,id,leader(${'$'}type,id,login,ringId),name,shortName", body: IssueFolderWrite.Project? = null): IssueFolderRead.Project {
-          val response = client.post("admin/projects/${id.encodeURLParameter()}") {
+          val response = client.post("admin/projects/${this.id.encodeURLParameter()}") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -2311,7 +2311,7 @@ public class Admin internal constructor(
             skip: Int? = null,
             top: Int? = null,
           ): List<BaseArticleRead.Article> {
-            val response = client.get("admin/projects/${id.encodeURLParameter()}/articles") {
+            val response = client.get("admin/projects/${this.id.encodeURLParameter()}/articles") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -2347,7 +2347,7 @@ public class Admin internal constructor(
             skip: Int? = null,
             top: Int? = null,
           ): List<ProjectCustomFieldRead> {
-            val response = client.get("admin/projects/${id.encodeURLParameter()}/customFields") {
+            val response = client.get("admin/projects/${this.id.encodeURLParameter()}/customFields") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -2368,7 +2368,7 @@ public class Admin internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,bundle(${'$'}type,id),canBeEmpty,defaultValues(${'$'}type,id,name),emptyFieldText,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,isPublic,ordinal", body: ProjectCustomFieldWrite? = null): ProjectCustomFieldRead {
-            val response = client.post("admin/projects/${id.encodeURLParameter()}/customFields") {
+            val response = client.post("admin/projects/${this.id.encodeURLParameter()}/customFields") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -2399,7 +2399,7 @@ public class Admin internal constructor(
             private val projectCustomFieldId: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("admin/projects/${id.encodeURLParameter()}/customFields/${projectCustomFieldId.encodeURLParameter()}")
+              val response = client.delete("admin/projects/${this.id.encodeURLParameter()}/customFields/${this.projectCustomFieldId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
             }
           }
@@ -2410,7 +2410,7 @@ public class Admin internal constructor(
             private val projectCustomFieldId: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,bundle(${'$'}type,id),canBeEmpty,defaultValues(${'$'}type,id,name),emptyFieldText,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,isPublic,ordinal"): ProjectCustomFieldRead {
-              val response = client.get("admin/projects/${id.encodeURLParameter()}/customFields/${projectCustomFieldId.encodeURLParameter()}") {
+              val response = client.get("admin/projects/${this.id.encodeURLParameter()}/customFields/${this.projectCustomFieldId.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -2426,7 +2426,7 @@ public class Admin internal constructor(
             private val projectCustomFieldId: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,bundle(${'$'}type,id),canBeEmpty,defaultValues(${'$'}type,id,name),emptyFieldText,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,isPublic,ordinal", body: ProjectCustomFieldWrite? = null): ProjectCustomFieldRead {
-              val response = client.post("admin/projects/${id.encodeURLParameter()}/customFields/${projectCustomFieldId.encodeURLParameter()}") {
+              val response = client.post("admin/projects/${this.id.encodeURLParameter()}/customFields/${this.projectCustomFieldId.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -2462,7 +2462,7 @@ public class Admin internal constructor(
             skip: Int? = null,
             top: Int? = null,
           ): List<IssueRead> {
-            val response = client.get("admin/projects/${id.encodeURLParameter()}/issues") {
+            val response = client.get("admin/projects/${this.id.encodeURLParameter()}/issues") {
               if (customFields != null) {
                 this.url.encodedParameters.append("customFields", customFields.encodeURLParameter())
               }
@@ -2490,7 +2490,7 @@ public class Admin internal constructor(
             fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
             body: IssueWrite? = null,
           ): IssueRead {
-            val response = client.post("admin/projects/${id.encodeURLParameter()}/issues") {
+            val response = client.post("admin/projects/${this.id.encodeURLParameter()}/issues") {
               if (muteUpdateNotifications != null) {
                 this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
               }
@@ -2524,7 +2524,7 @@ public class Admin internal constructor(
             private val issueId: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.delete("admin/projects/${id.encodeURLParameter()}/issues/${issueId.encodeURLParameter()}")
+              val response = client.delete("admin/projects/${this.id.encodeURLParameter()}/issues/${this.issueId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
             }
           }
@@ -2535,7 +2535,7 @@ public class Admin internal constructor(
             private val issueId: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))"): IssueRead {
-              val response = client.get("admin/projects/${id.encodeURLParameter()}/issues/${issueId.encodeURLParameter()}") {
+              val response = client.get("admin/projects/${this.id.encodeURLParameter()}/issues/${this.issueId.encodeURLParameter()}") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -2555,7 +2555,7 @@ public class Admin internal constructor(
               fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
               body: IssueWrite? = null,
             ): IssueRead {
-              val response = client.post("admin/projects/${id.encodeURLParameter()}/issues/${issueId.encodeURLParameter()}") {
+              val response = client.post("admin/projects/${this.id.encodeURLParameter()}/issues/${this.issueId.encodeURLParameter()}") {
                 if (muteUpdateNotifications != null) {
                   this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
                 }
@@ -2589,7 +2589,7 @@ public class Admin internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,enabled,estimate(${'$'}type,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,timeSpent(${'$'}type,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id)"): ProjectTimeTrackingSettingsRead {
-            val response = client.get("admin/projects/${id.encodeURLParameter()}/timeTrackingSettings") {
+            val response = client.get("admin/projects/${this.id.encodeURLParameter()}/timeTrackingSettings") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -2604,7 +2604,7 @@ public class Admin internal constructor(
           private val id: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,enabled,estimate(${'$'}type,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,timeSpent(${'$'}type,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id)", body: ProjectTimeTrackingSettingsWrite? = null): ProjectTimeTrackingSettingsRead {
-            val response = client.post("admin/projects/${id.encodeURLParameter()}/timeTrackingSettings") {
+            val response = client.post("admin/projects/${this.id.encodeURLParameter()}/timeTrackingSettings") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -2637,7 +2637,7 @@ public class Admin internal constructor(
               skip: Int? = null,
               top: Int? = null,
             ): List<WorkItemTypeRead> {
-              val response = client.get("admin/projects/${id.encodeURLParameter()}/timeTrackingSettings/workItemTypes") {
+              val response = client.get("admin/projects/${this.id.encodeURLParameter()}/timeTrackingSettings/workItemTypes") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -2658,7 +2658,7 @@ public class Admin internal constructor(
             private val id: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,autoAttached,id,name", body: WorkItemTypeWrite? = null): WorkItemTypeRead {
-              val response = client.post("admin/projects/${id.encodeURLParameter()}/timeTrackingSettings/workItemTypes") {
+              val response = client.post("admin/projects/${this.id.encodeURLParameter()}/timeTrackingSettings/workItemTypes") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -2687,7 +2687,7 @@ public class Admin internal constructor(
               private val workItemTypeId: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("admin/projects/${id.encodeURLParameter()}/timeTrackingSettings/workItemTypes/${workItemTypeId.encodeURLParameter()}")
+                val response = client.delete("admin/projects/${this.id.encodeURLParameter()}/timeTrackingSettings/workItemTypes/${this.workItemTypeId.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
               }
             }
@@ -2698,7 +2698,7 @@ public class Admin internal constructor(
               private val workItemTypeId: String,
             ) {
               public suspend operator fun invoke(fields: String? = "${'$'}type,autoAttached,id,name"): WorkItemTypeRead {
-                val response = client.get("admin/projects/${id.encodeURLParameter()}/timeTrackingSettings/workItemTypes/${workItemTypeId.encodeURLParameter()}") {
+                val response = client.get("admin/projects/${this.id.encodeURLParameter()}/timeTrackingSettings/workItemTypes/${this.workItemTypeId.encodeURLParameter()}") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -2822,7 +2822,7 @@ public class Admin internal constructor(
           private val workItemTypeId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("admin/timeTrackingSettings/workItemTypes/${workItemTypeId.encodeURLParameter()}")
+            val response = client.delete("admin/timeTrackingSettings/workItemTypes/${this.workItemTypeId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
@@ -2832,7 +2832,7 @@ public class Admin internal constructor(
           private val workItemTypeId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,autoAttached,id,name"): WorkItemTypeRead {
-            val response = client.get("admin/timeTrackingSettings/workItemTypes/${workItemTypeId.encodeURLParameter()}") {
+            val response = client.get("admin/timeTrackingSettings/workItemTypes/${this.workItemTypeId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -2847,7 +2847,7 @@ public class Admin internal constructor(
           private val workItemTypeId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,autoAttached,id,name", body: WorkItemTypeWrite? = null): WorkItemTypeRead {
-            val response = client.post("admin/timeTrackingSettings/workItemTypes/${workItemTypeId.encodeURLParameter()}") {
+            val response = client.post("admin/timeTrackingSettings/workItemTypes/${this.workItemTypeId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }

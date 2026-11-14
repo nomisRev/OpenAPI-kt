@@ -590,7 +590,7 @@ public class Audio internal constructor(
         private val consentId: String,
       ) {
         public suspend operator fun invoke(): VoiceConsentDeletedResource {
-          val response = client.delete("audio/voice_consents/${consentId.encodeURLParameter()}")
+          val response = client.delete("audio/voice_consents/${this.consentId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -601,7 +601,7 @@ public class Audio internal constructor(
         private val consentId: String,
       ) {
         public suspend operator fun invoke(): VoiceConsentResource {
-          val response = client.get("audio/voice_consents/${consentId.encodeURLParameter()}")
+          val response = client.get("audio/voice_consents/${this.consentId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -612,7 +612,7 @@ public class Audio internal constructor(
         private val consentId: String,
       ) {
         public suspend operator fun invoke(body: UpdateVoiceConsentRequest): VoiceConsentResource {
-          val response = client.post("audio/voice_consents/${consentId.encodeURLParameter()}") {
+          val response = client.post("audio/voice_consents/${this.consentId.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }

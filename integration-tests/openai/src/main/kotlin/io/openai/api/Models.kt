@@ -41,7 +41,7 @@ public class Models internal constructor(
       private val model: String,
     ) {
       public suspend operator fun invoke(): DeleteModelResponse {
-        val response = client.delete("models/${model.encodeURLParameter()}")
+        val response = client.delete("models/${this.model.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -52,7 +52,7 @@ public class Models internal constructor(
       private val model: String,
     ) {
       public suspend operator fun invoke(): Model {
-        val response = client.get("models/${model.encodeURLParameter()}")
+        val response = client.get("models/${this.model.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }

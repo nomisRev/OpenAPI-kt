@@ -108,7 +108,7 @@ public class Assistants internal constructor(
     ) {
       @Deprecated("Deprecated by the API provider")
       public suspend operator fun invoke(): DeleteAssistantResponse {
-        val response = client.delete("assistants/${assistantId.encodeURLParameter()}")
+        val response = client.delete("assistants/${this.assistantId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -121,7 +121,7 @@ public class Assistants internal constructor(
     ) {
       @Deprecated("Deprecated by the API provider")
       public suspend operator fun invoke(): AssistantObject {
-        val response = client.get("assistants/${assistantId.encodeURLParameter()}")
+        val response = client.get("assistants/${this.assistantId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -134,7 +134,7 @@ public class Assistants internal constructor(
     ) {
       @Deprecated("Deprecated by the API provider")
       public suspend operator fun invoke(body: ModifyAssistantRequest): AssistantObject {
-        val response = client.post("assistants/${assistantId.encodeURLParameter()}") {
+        val response = client.post("assistants/${this.assistantId.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(body)
         }

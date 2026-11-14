@@ -336,7 +336,7 @@ public class Gists internal constructor(
       private val gistId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.delete("gists/${gistId.encodeURLParameter()}")
+        val response = client.delete("gists/${this.gistId.encodeURLParameter()}")
         return when (response.status.value) {
           204 -> Response.NoContent
           304 -> Response.NotModified
@@ -366,7 +366,7 @@ public class Gists internal constructor(
       private val gistId: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("gists/${gistId.encodeURLParameter()}")
+        val response = client.get("gists/${this.gistId.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           304 -> Response.NotModified
@@ -418,7 +418,7 @@ public class Gists internal constructor(
       private val gistId: String,
     ) {
       public suspend operator fun invoke(description: String? = null, files: Map<String, Files?>? = null): Response {
-        val response = client.patch("gists/${gistId.encodeURLParameter()}") {
+        val response = client.patch("gists/${this.gistId.encodeURLParameter()}") {
           contentType(ContentType.Application.Json)
           setBody(Body(description = description, files = files))
         }
@@ -477,7 +477,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("gists/${gistId.encodeURLParameter()}/comments") {
+          val response = client.get("gists/${this.gistId.encodeURLParameter()}/comments") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -516,7 +516,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(body: String): Response {
-          val response = client.post("gists/${gistId.encodeURLParameter()}/comments") {
+          val response = client.post("gists/${this.gistId.encodeURLParameter()}/comments") {
             contentType(ContentType.Application.Json)
             setBody(Body(body = body))
           }
@@ -568,7 +568,7 @@ public class Gists internal constructor(
           private val commentId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("gists/${gistId.encodeURLParameter()}/comments/$commentId")
+            val response = client.delete("gists/${this.gistId.encodeURLParameter()}/comments/${this.commentId}")
             return when (response.status.value) {
               204 -> Response.NoContent
               304 -> Response.NotModified
@@ -599,7 +599,7 @@ public class Gists internal constructor(
           private val commentId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("gists/${gistId.encodeURLParameter()}/comments/$commentId")
+            val response = client.get("gists/${this.gistId.encodeURLParameter()}/comments/${this.commentId}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               304 -> Response.NotModified
@@ -652,7 +652,7 @@ public class Gists internal constructor(
           private val commentId: Long,
         ) {
           public suspend operator fun invoke(body: String): Response {
-            val response = client.patch("gists/${gistId.encodeURLParameter()}/comments/$commentId") {
+            val response = client.patch("gists/${this.gistId.encodeURLParameter()}/comments/${this.commentId}") {
               contentType(ContentType.Application.Json)
               setBody(Body(body = body))
             }
@@ -692,7 +692,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("gists/${gistId.encodeURLParameter()}/commits") {
+          val response = client.get("gists/${this.gistId.encodeURLParameter()}/commits") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -740,7 +740,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("gists/${gistId.encodeURLParameter()}/forks") {
+          val response = client.get("gists/${this.gistId.encodeURLParameter()}/forks") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -779,7 +779,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.post("gists/${gistId.encodeURLParameter()}/forks")
+          val response = client.post("gists/${this.gistId.encodeURLParameter()}/forks")
           return when (response.status.value) {
             201 -> Response.Created(response.body())
             304 -> Response.NotModified
@@ -827,7 +827,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("gists/${gistId.encodeURLParameter()}/star")
+          val response = client.delete("gists/${this.gistId.encodeURLParameter()}/star")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -857,7 +857,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("gists/${gistId.encodeURLParameter()}/star")
+          val response = client.get("gists/${this.gistId.encodeURLParameter()}/star")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -885,7 +885,7 @@ public class Gists internal constructor(
         private val gistId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.put("gists/${gistId.encodeURLParameter()}/star")
+          val response = client.put("gists/${this.gistId.encodeURLParameter()}/star")
           return when (response.status.value) {
             204 -> Response.NoContent
             304 -> Response.NotModified
@@ -924,7 +924,7 @@ public class Gists internal constructor(
         private val sha: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("gists/${gistId.encodeURLParameter()}/${sha.encodeURLParameter()}")
+          val response = client.get("gists/${this.gistId.encodeURLParameter()}/${this.sha.encodeURLParameter()}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             403 -> Response.Forbidden(response.body())

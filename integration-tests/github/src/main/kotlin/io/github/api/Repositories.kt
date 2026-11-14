@@ -111,7 +111,7 @@ public class Repositories internal constructor(
             private val issueNumber: Long,
           ) {
             public suspend operator fun invoke(issueFieldValues: List<IssueFieldValues>? = null): Response {
-              val response = client.post("repositories/$repositoryId/issues/$issueNumber/issue-field-values") {
+              val response = client.post("repositories/${this.repositoryId}/issues/${this.issueNumber}/issue-field-values") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(issueFieldValues = issueFieldValues))
               }
@@ -239,7 +239,7 @@ public class Repositories internal constructor(
             private val issueNumber: Long,
           ) {
             public suspend operator fun invoke(issueFieldValues: List<IssueFieldValues>? = null): Response {
-              val response = client.put("repositories/$repositoryId/issues/$issueNumber/issue-field-values") {
+              val response = client.put("repositories/${this.repositoryId}/issues/${this.issueNumber}/issue-field-values") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(issueFieldValues = issueFieldValues))
               }
@@ -376,7 +376,7 @@ public class Repositories internal constructor(
               private val issueFieldId: Long,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("repositories/$repositoryId/issues/$issueNumber/issue-field-values/$issueFieldId")
+                val response = client.delete("repositories/${this.repositoryId}/issues/${this.issueNumber}/issue-field-values/${this.issueFieldId}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden(response.body())

@@ -82,7 +82,7 @@ public class IssueLinkTypes internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("issueLinkTypes/${id.encodeURLParameter()}")
+        val response = client.delete("issueLinkTypes/${this.id.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
@@ -92,7 +92,7 @@ public class IssueLinkTypes internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource"): IssueLinkTypeRead {
-        val response = client.get("issueLinkTypes/${id.encodeURLParameter()}") {
+        val response = client.get("issueLinkTypes/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -107,7 +107,7 @@ public class IssueLinkTypes internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource", body: IssueLinkTypeWrite? = null): IssueLinkTypeRead {
-        val response = client.post("issueLinkTypes/${id.encodeURLParameter()}") {
+        val response = client.post("issueLinkTypes/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

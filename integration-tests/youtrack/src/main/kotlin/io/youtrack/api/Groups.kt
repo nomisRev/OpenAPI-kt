@@ -52,7 +52,7 @@ public class Groups internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,allUsersGroup,id,name,ringId"): UserGroupRead {
-        val response = client.get("groups/${id.encodeURLParameter()}") {
+        val response = client.get("groups/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

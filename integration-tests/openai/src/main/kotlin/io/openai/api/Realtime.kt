@@ -576,7 +576,7 @@ public class Realtime internal constructor(
           private val callId: String,
         ) {
           public suspend operator fun invoke(body: RealtimeSessionCreateRequestGA) {
-            val response = client.post("realtime/calls/${callId.encodeURLParameter()}/accept") {
+            val response = client.post("realtime/calls/${this.callId.encodeURLParameter()}/accept") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -596,7 +596,7 @@ public class Realtime internal constructor(
           private val callId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.post("realtime/calls/${callId.encodeURLParameter()}/hangup")
+            val response = client.post("realtime/calls/${this.callId.encodeURLParameter()}/hangup")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
@@ -613,7 +613,7 @@ public class Realtime internal constructor(
           private val callId: String,
         ) {
           public suspend operator fun invoke(body: RealtimeCallReferRequest) {
-            val response = client.post("realtime/calls/${callId.encodeURLParameter()}/refer") {
+            val response = client.post("realtime/calls/${this.callId.encodeURLParameter()}/refer") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -633,7 +633,7 @@ public class Realtime internal constructor(
           private val callId: String,
         ) {
           public suspend operator fun invoke(body: RealtimeCallRejectRequest? = null) {
-            val response = client.post("realtime/calls/${callId.encodeURLParameter()}/reject") {
+            val response = client.post("realtime/calls/${this.callId.encodeURLParameter()}/reject") {
               body?.let {
                 contentType(ContentType.Application.Json)
                 setBody(it)

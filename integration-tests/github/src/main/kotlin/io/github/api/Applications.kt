@@ -47,7 +47,7 @@ public class Applications internal constructor(
         private val clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.delete("applications/${clientId.encodeURLParameter()}/grant") {
+          val response = client.delete("applications/${this.clientId.encodeURLParameter()}/grant") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -91,7 +91,7 @@ public class Applications internal constructor(
         private val clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.delete("applications/${clientId.encodeURLParameter()}/token") {
+          val response = client.delete("applications/${this.clientId.encodeURLParameter()}/token") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -122,7 +122,7 @@ public class Applications internal constructor(
         private val clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.patch("applications/${clientId.encodeURLParameter()}/token") {
+          val response = client.patch("applications/${this.clientId.encodeURLParameter()}/token") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -155,7 +155,7 @@ public class Applications internal constructor(
         private val clientId: String,
       ) {
         public suspend operator fun invoke(accessToken: String): Response {
-          val response = client.post("applications/${clientId.encodeURLParameter()}/token") {
+          val response = client.post("applications/${this.clientId.encodeURLParameter()}/token") {
             contentType(ContentType.Application.Json)
             setBody(Body(accessToken = accessToken))
           }
@@ -206,7 +206,7 @@ public class Applications internal constructor(
             repositoryIds: List<Long>? = null,
             permissions: AppPermissions? = null,
           ): Response {
-            val response = client.post("applications/${clientId.encodeURLParameter()}/token/scoped") {
+            val response = client.post("applications/${this.clientId.encodeURLParameter()}/token/scoped") {
               contentType(ContentType.Application.Json)
               setBody(Body(accessToken = accessToken, target = target, targetId = targetId, repositories = repositories, repositoryIds = repositoryIds, permissions = permissions))
             }

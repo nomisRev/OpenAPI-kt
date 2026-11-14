@@ -102,7 +102,7 @@ public class Containers internal constructor(
       private val containerId: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("containers/${containerId.encodeURLParameter()}")
+        val response = client.delete("containers/${this.containerId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
@@ -112,7 +112,7 @@ public class Containers internal constructor(
       private val containerId: String,
     ) {
       public suspend operator fun invoke(): ContainerResource {
-        val response = client.get("containers/${containerId.encodeURLParameter()}")
+        val response = client.get("containers/${this.containerId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -137,7 +137,7 @@ public class Containers internal constructor(
           order: Order? = Order.Desc,
           after: String? = null,
         ): ContainerFileListResource {
-          val response = client.get("containers/${containerId.encodeURLParameter()}/files") {
+          val response = client.get("containers/${this.containerId.encodeURLParameter()}/files") {
             if (limit != null) {
               this.url.encodedParameters.append("limit", limit.toString())
             }
@@ -169,7 +169,7 @@ public class Containers internal constructor(
         private val containerId: String,
       ) {
         public suspend operator fun invoke(body: CreateContainerFileBody): ContainerFileResource {
-          val response = client.post("containers/${containerId.encodeURLParameter()}/files") {
+          val response = client.post("containers/${this.containerId.encodeURLParameter()}/files") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -178,7 +178,7 @@ public class Containers internal constructor(
         }
 
         public suspend operator fun invoke(fileId: String? = null, `file`: ByteArray? = null): ContainerFileResource {
-          val response = client.post("containers/${containerId.encodeURLParameter()}/files") {
+          val response = client.post("containers/${this.containerId.encodeURLParameter()}/files") {
             setBody(MultiPartFormDataContent(formData {
               if (fileId != null) {
                 append("file_id", fileId)
@@ -210,7 +210,7 @@ public class Containers internal constructor(
           private val fileId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("containers/${containerId.encodeURLParameter()}/files/${fileId.encodeURLParameter()}")
+            val response = client.delete("containers/${this.containerId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
@@ -221,7 +221,7 @@ public class Containers internal constructor(
           private val fileId: String,
         ) {
           public suspend operator fun invoke(): ContainerFileResource {
-            val response = client.get("containers/${containerId.encodeURLParameter()}/files/${fileId.encodeURLParameter()}")
+            val response = client.get("containers/${this.containerId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -240,7 +240,7 @@ public class Containers internal constructor(
             private val fileId: String,
           ) {
             public suspend operator fun invoke() {
-              val response = client.get("containers/${containerId.encodeURLParameter()}/files/${fileId.encodeURLParameter()}/content")
+              val response = client.get("containers/${this.containerId.encodeURLParameter()}/files/${this.fileId.encodeURLParameter()}/content")
               if (response.status.value != 200) throw ResponseException(response, "")
             }
           }

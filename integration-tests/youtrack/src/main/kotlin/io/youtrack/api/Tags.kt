@@ -89,7 +89,7 @@ public class Tags internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("tags/${id.encodeURLParameter()}")
+        val response = client.delete("tags/${this.id.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
@@ -99,7 +99,7 @@ public class Tags internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)"): IssueFolderRead.Tag {
-        val response = client.get("tags/${id.encodeURLParameter()}") {
+        val response = client.get("tags/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -114,7 +114,7 @@ public class Tags internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag {
-        val response = client.post("tags/${id.encodeURLParameter()}") {
+        val response = client.post("tags/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -144,7 +144,7 @@ public class Tags internal constructor(
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueRead> {
-          val response = client.get("tags/${id.encodeURLParameter()}/issues") {
+          val response = client.get("tags/${this.id.encodeURLParameter()}/issues") {
             if (customFields != null) {
               this.url.encodedParameters.append("customFields", customFields.encodeURLParameter())
             }

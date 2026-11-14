@@ -66,7 +66,7 @@ public class Chatkit internal constructor(
           private val sessionId: String,
         ) {
           public suspend operator fun invoke(): ChatSessionResource {
-            val response = client.post("chatkit/sessions/${sessionId.encodeURLParameter()}/cancel")
+            val response = client.post("chatkit/sessions/${this.sessionId.encodeURLParameter()}/cancel")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -129,7 +129,7 @@ public class Chatkit internal constructor(
         private val threadId: String,
       ) {
         public suspend operator fun invoke(): DeletedThreadResource {
-          val response = client.delete("chatkit/threads/${threadId.encodeURLParameter()}")
+          val response = client.delete("chatkit/threads/${this.threadId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -140,7 +140,7 @@ public class Chatkit internal constructor(
         private val threadId: String,
       ) {
         public suspend operator fun invoke(): ThreadResource {
-          val response = client.get("chatkit/threads/${threadId.encodeURLParameter()}")
+          val response = client.get("chatkit/threads/${this.threadId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -162,7 +162,7 @@ public class Chatkit internal constructor(
             after: String? = null,
             before: String? = null,
           ): ThreadItemListResource {
-            val response = client.get("chatkit/threads/${threadId.encodeURLParameter()}/items") {
+            val response = client.get("chatkit/threads/${this.threadId.encodeURLParameter()}/items") {
               if (limit != null) {
                 this.url.encodedParameters.append("limit", limit.toString())
               }

@@ -122,7 +122,7 @@ public class Chat internal constructor(
         private val completionId: String,
       ) {
         public suspend operator fun invoke(): ChatCompletionDeleted {
-          val response = client.delete("chat/completions/${completionId.encodeURLParameter()}")
+          val response = client.delete("chat/completions/${this.completionId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -133,7 +133,7 @@ public class Chat internal constructor(
         private val completionId: String,
       ) {
         public suspend operator fun invoke(): CreateChatCompletionResponse {
-          val response = client.get("chat/completions/${completionId.encodeURLParameter()}")
+          val response = client.get("chat/completions/${this.completionId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -144,7 +144,7 @@ public class Chat internal constructor(
         private val completionId: String,
       ) {
         public suspend operator fun invoke(metadata: Metadata?): CreateChatCompletionResponse {
-          val response = client.post("chat/completions/${completionId.encodeURLParameter()}") {
+          val response = client.post("chat/completions/${this.completionId.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(Body(metadata = metadata))
           }
@@ -173,7 +173,7 @@ public class Chat internal constructor(
             limit: Long? = 20L,
             order: Order? = Order.Asc,
           ): ChatCompletionMessageList {
-            val response = client.get("chat/completions/${completionId.encodeURLParameter()}/messages") {
+            val response = client.get("chat/completions/${this.completionId.encodeURLParameter()}/messages") {
               if (after != null) {
                 this.url.encodedParameters.append("after", after.encodeURLParameter())
               }

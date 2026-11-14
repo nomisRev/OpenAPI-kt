@@ -66,7 +66,7 @@ public class Licenses internal constructor(
       private val license: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("licenses/${license.encodeURLParameter()}")
+        val response = client.get("licenses/${this.license.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           304 -> Response.NotModified

@@ -130,7 +130,7 @@ public class Files internal constructor(
       private val fileId: String,
     ) {
       public suspend operator fun invoke(): DeleteFileResponse {
-        val response = client.delete("files/${fileId.encodeURLParameter()}")
+        val response = client.delete("files/${this.fileId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -141,7 +141,7 @@ public class Files internal constructor(
       private val fileId: String,
     ) {
       public suspend operator fun invoke(): OpenAIFile {
-        val response = client.get("files/${fileId.encodeURLParameter()}")
+        val response = client.get("files/${this.fileId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -158,7 +158,7 @@ public class Files internal constructor(
         private val fileId: String,
       ) {
         public suspend operator fun invoke(): String {
-          val response = client.get("files/${fileId.encodeURLParameter()}/content")
+          val response = client.get("files/${this.fileId.encodeURLParameter()}/content")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body<JsonPrimitive>().let { if (it.isString) it.content else throw JsonConvertException("Illegal input: expected a JSON string but was $it") }
         }

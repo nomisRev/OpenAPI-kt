@@ -119,7 +119,7 @@ public class Batches internal constructor(
       private val batchId: String,
     ) {
       public suspend operator fun invoke(): Batch {
-        val response = client.get("batches/${batchId.encodeURLParameter()}")
+        val response = client.get("batches/${this.batchId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -136,7 +136,7 @@ public class Batches internal constructor(
         private val batchId: String,
       ) {
         public suspend operator fun invoke(): Batch {
-          val response = client.post("batches/${batchId.encodeURLParameter()}/cancel")
+          val response = client.post("batches/${this.batchId.encodeURLParameter()}/cancel")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }

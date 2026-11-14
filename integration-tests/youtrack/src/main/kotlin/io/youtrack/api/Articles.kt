@@ -112,7 +112,7 @@ public class Articles internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("articles/${id.encodeURLParameter()}")
+        val response = client.delete("articles/${this.id.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
@@ -122,7 +122,7 @@ public class Articles internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,content,created,id,idReadable,parentArticle(${'$'}type,id,idReadable),project(${'$'}type,id,name,shortName),summary,updated,updatedBy(${'$'}type,id,login,ringId)"): BaseArticleRead.Article {
-        val response = client.get("articles/${id.encodeURLParameter()}") {
+        val response = client.get("articles/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -141,7 +141,7 @@ public class Articles internal constructor(
         fields: String? = "${'$'}type,content,created,id,idReadable,parentArticle(${'$'}type,id,idReadable),project(${'$'}type,id,name,shortName),summary,updated,updatedBy(${'$'}type,id,login,ringId)",
         body: BaseArticleWrite.Article? = null,
       ): BaseArticleRead.Article {
-        val response = client.post("articles/${id.encodeURLParameter()}") {
+        val response = client.post("articles/${this.id.encodeURLParameter()}") {
           if (muteUpdateNotifications != null) {
             this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
           }
@@ -177,7 +177,7 @@ public class Articles internal constructor(
           skip: Int? = null,
           top: Int? = null,
         ): List<ArticleAttachmentRead> {
-          val response = client.get("articles/${id.encodeURLParameter()}/attachments") {
+          val response = client.get("articles/${this.id.encodeURLParameter()}/attachments") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -202,7 +202,7 @@ public class Articles internal constructor(
           fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url",
           body: ArticleAttachmentWrite? = null,
         ): ArticleAttachmentRead {
-          val response = client.post("articles/${id.encodeURLParameter()}/attachments") {
+          val response = client.post("articles/${this.id.encodeURLParameter()}/attachments") {
             if (muteUpdateNotifications != null) {
               this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
@@ -236,7 +236,7 @@ public class Articles internal constructor(
           private val articleAttachmentId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("articles/${id.encodeURLParameter()}/attachments/${articleAttachmentId.encodeURLParameter()}")
+            val response = client.delete("articles/${this.id.encodeURLParameter()}/attachments/${this.articleAttachmentId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
@@ -247,7 +247,7 @@ public class Articles internal constructor(
           private val articleAttachmentId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url"): ArticleAttachmentRead {
-            val response = client.get("articles/${id.encodeURLParameter()}/attachments/${articleAttachmentId.encodeURLParameter()}") {
+            val response = client.get("articles/${this.id.encodeURLParameter()}/attachments/${this.articleAttachmentId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -263,7 +263,7 @@ public class Articles internal constructor(
           private val articleAttachmentId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url", body: ArticleAttachmentWrite? = null): ArticleAttachmentRead {
-            val response = client.post("articles/${id.encodeURLParameter()}/attachments/${articleAttachmentId.encodeURLParameter()}") {
+            val response = client.post("articles/${this.id.encodeURLParameter()}/attachments/${this.articleAttachmentId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -298,7 +298,7 @@ public class Articles internal constructor(
           skip: Int? = null,
           top: Int? = null,
         ): List<BaseArticleRead.Article> {
-          val response = client.get("articles/${id.encodeURLParameter()}/childArticles") {
+          val response = client.get("articles/${this.id.encodeURLParameter()}/childArticles") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -323,7 +323,7 @@ public class Articles internal constructor(
           fields: String? = "${'$'}type,content,created,id,idReadable,parentArticle(${'$'}type,id,idReadable),project(${'$'}type,id,name,shortName),summary,updated,updatedBy(${'$'}type,id,login,ringId)",
           body: BaseArticleWrite.Article? = null,
         ): BaseArticleRead.Article {
-          val response = client.post("articles/${id.encodeURLParameter()}/childArticles") {
+          val response = client.post("articles/${this.id.encodeURLParameter()}/childArticles") {
             if (muteUpdateNotifications != null) {
               this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
@@ -357,7 +357,7 @@ public class Articles internal constructor(
           private val articleId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("articles/${id.encodeURLParameter()}/childArticles/${articleId.encodeURLParameter()}")
+            val response = client.delete("articles/${this.id.encodeURLParameter()}/childArticles/${this.articleId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
@@ -368,7 +368,7 @@ public class Articles internal constructor(
           private val articleId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,content,created,id,idReadable,parentArticle(${'$'}type,id,idReadable),project(${'$'}type,id,name,shortName),summary,updated,updatedBy(${'$'}type,id,login,ringId)"): BaseArticleRead.Article {
-            val response = client.get("articles/${id.encodeURLParameter()}/childArticles/${articleId.encodeURLParameter()}") {
+            val response = client.get("articles/${this.id.encodeURLParameter()}/childArticles/${this.articleId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -388,7 +388,7 @@ public class Articles internal constructor(
             fields: String? = "${'$'}type,content,created,id,idReadable,parentArticle(${'$'}type,id,idReadable),project(${'$'}type,id,name,shortName),summary,updated,updatedBy(${'$'}type,id,login,ringId)",
             body: BaseArticleWrite.Article? = null,
           ): BaseArticleRead.Article {
-            val response = client.post("articles/${id.encodeURLParameter()}/childArticles/${articleId.encodeURLParameter()}") {
+            val response = client.post("articles/${this.id.encodeURLParameter()}/childArticles/${this.articleId.encodeURLParameter()}") {
               if (muteUpdateNotifications != null) {
                 this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
               }
@@ -426,7 +426,7 @@ public class Articles internal constructor(
           skip: Int? = null,
           top: Int? = null,
         ): List<ArticleCommentRead> {
-          val response = client.get("articles/${id.encodeURLParameter()}/comments") {
+          val response = client.get("articles/${this.id.encodeURLParameter()}/comments") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -452,7 +452,7 @@ public class Articles internal constructor(
           fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
           body: ArticleCommentWrite? = null,
         ): ArticleCommentRead {
-          val response = client.post("articles/${id.encodeURLParameter()}/comments") {
+          val response = client.post("articles/${this.id.encodeURLParameter()}/comments") {
             if (draftId != null) {
               this.url.encodedParameters.append("draftId", draftId.encodeURLParameter())
             }
@@ -491,7 +491,7 @@ public class Articles internal constructor(
           private val articleCommentId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}")
+            val response = client.delete("articles/${this.id.encodeURLParameter()}/comments/${this.articleCommentId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
@@ -502,7 +502,7 @@ public class Articles internal constructor(
           private val articleCommentId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))"): ArticleCommentRead {
-            val response = client.get("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}") {
+            val response = client.get("articles/${this.id.encodeURLParameter()}/comments/${this.articleCommentId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
@@ -522,7 +522,7 @@ public class Articles internal constructor(
             fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))",
             body: ArticleCommentWrite? = null,
           ): ArticleCommentRead {
-            val response = client.post("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}") {
+            val response = client.post("articles/${this.id.encodeURLParameter()}/comments/${this.articleCommentId.encodeURLParameter()}") {
               if (muteUpdateNotifications != null) {
                 this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
               }
@@ -560,7 +560,7 @@ public class Articles internal constructor(
               skip: Int? = null,
               top: Int? = null,
             ): List<ReactionRead> {
-              val response = client.get("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}/reactions") {
+              val response = client.get("articles/${this.id.encodeURLParameter()}/comments/${this.articleCommentId.encodeURLParameter()}/reactions") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -582,7 +582,7 @@ public class Articles internal constructor(
             private val articleCommentId: String,
           ) {
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: ReactionWrite? = null): ReactionRead {
-              val response = client.post("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}/reactions") {
+              val response = client.post("articles/${this.id.encodeURLParameter()}/comments/${this.articleCommentId.encodeURLParameter()}/reactions") {
                 if (fields != null) {
                   this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
@@ -613,7 +613,7 @@ public class Articles internal constructor(
               private val reactionId: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}/reactions/${reactionId.encodeURLParameter()}")
+                val response = client.delete("articles/${this.id.encodeURLParameter()}/comments/${this.articleCommentId.encodeURLParameter()}/reactions/${this.reactionId.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
               }
             }
@@ -625,7 +625,7 @@ public class Articles internal constructor(
               private val reactionId: String,
             ) {
               public suspend operator fun invoke(fields: String? = "${'$'}type,id"): ReactionRead {
-                val response = client.get("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}/reactions/${reactionId.encodeURLParameter()}") {
+                val response = client.get("articles/${this.id.encodeURLParameter()}/comments/${this.articleCommentId.encodeURLParameter()}/reactions/${this.reactionId.encodeURLParameter()}") {
                   if (fields != null) {
                     this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
@@ -650,7 +650,7 @@ public class Articles internal constructor(
         private val id: String,
       ) {
         public suspend operator fun invoke(fields: String? = "${'$'}type,content,created,id,idReadable,parentArticle(${'$'}type,id,idReadable),project(${'$'}type,id,name,shortName),summary,updated,updatedBy(${'$'}type,id,login,ringId)"): BaseArticleRead.Article {
-          val response = client.get("articles/${id.encodeURLParameter()}/parentArticle") {
+          val response = client.get("articles/${this.id.encodeURLParameter()}/parentArticle") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -680,7 +680,7 @@ public class Articles internal constructor(
           skip: Int? = null,
           top: Int? = null,
         ): List<IssueFolderRead.Tag> {
-          val response = client.get("articles/${id.encodeURLParameter()}/tags") {
+          val response = client.get("articles/${this.id.encodeURLParameter()}/tags") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -701,7 +701,7 @@ public class Articles internal constructor(
         private val id: String,
       ) {
         public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag {
-          val response = client.post("articles/${id.encodeURLParameter()}/tags") {
+          val response = client.post("articles/${this.id.encodeURLParameter()}/tags") {
             if (fields != null) {
               this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
@@ -730,7 +730,7 @@ public class Articles internal constructor(
           private val tagId: String,
         ) {
           public suspend operator fun invoke() {
-            val response = client.delete("articles/${id.encodeURLParameter()}/tags/${tagId.encodeURLParameter()}")
+            val response = client.delete("articles/${this.id.encodeURLParameter()}/tags/${this.tagId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
           }
         }
@@ -741,7 +741,7 @@ public class Articles internal constructor(
           private val tagId: String,
         ) {
           public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)"): IssueFolderRead.Tag {
-            val response = client.get("articles/${id.encodeURLParameter()}/tags/${tagId.encodeURLParameter()}") {
+            val response = client.get("articles/${this.id.encodeURLParameter()}/tags/${this.tagId.encodeURLParameter()}") {
               if (fields != null) {
                 this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }

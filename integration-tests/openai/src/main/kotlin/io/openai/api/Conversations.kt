@@ -63,7 +63,7 @@ public class Conversations internal constructor(
       private val conversationId: String,
     ) {
       public suspend operator fun invoke(): DeletedConversationResource {
-        val response = client.delete("conversations/${conversationId.encodeURLParameter()}")
+        val response = client.delete("conversations/${this.conversationId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -74,7 +74,7 @@ public class Conversations internal constructor(
       private val conversationId: String,
     ) {
       public suspend operator fun invoke(): ConversationResource {
-        val response = client.get("conversations/${conversationId.encodeURLParameter()}")
+        val response = client.get("conversations/${this.conversationId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -85,7 +85,7 @@ public class Conversations internal constructor(
       private val conversationId: String,
     ) {
       public suspend operator fun invoke(body: UpdateConversationBody? = null): ConversationResource {
-        val response = client.post("conversations/${conversationId.encodeURLParameter()}") {
+        val response = client.post("conversations/${this.conversationId.encodeURLParameter()}") {
           body?.let {
             contentType(ContentType.Application.Json)
             setBody(it)
@@ -116,7 +116,7 @@ public class Conversations internal constructor(
           after: String? = null,
           include: List<IncludeEnum>? = null,
         ): ConversationItemList {
-          val response = client.get("conversations/${conversationId.encodeURLParameter()}/items") {
+          val response = client.get("conversations/${this.conversationId.encodeURLParameter()}/items") {
             if (limit != null) {
               this.url.encodedParameters.append("limit", limit.toString())
             }
@@ -149,7 +149,7 @@ public class Conversations internal constructor(
         private val conversationId: String,
       ) {
         public suspend operator fun invoke(items: List<InputItem>, include: List<IncludeEnum>? = null): ConversationItemList {
-          val response = client.post("conversations/${conversationId.encodeURLParameter()}/items") {
+          val response = client.post("conversations/${this.conversationId.encodeURLParameter()}/items") {
             include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
             contentType(ContentType.Application.Json)
             setBody(Body(items = items))
@@ -179,7 +179,7 @@ public class Conversations internal constructor(
           private val itemId: String,
         ) {
           public suspend operator fun invoke(): ConversationResource {
-            val response = client.delete("conversations/${conversationId.encodeURLParameter()}/items/${itemId.encodeURLParameter()}")
+            val response = client.delete("conversations/${this.conversationId.encodeURLParameter()}/items/${this.itemId.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -191,7 +191,7 @@ public class Conversations internal constructor(
           private val itemId: String,
         ) {
           public suspend operator fun invoke(include: List<IncludeEnum>? = null): ConversationItem {
-            val response = client.get("conversations/${conversationId.encodeURLParameter()}/items/${itemId.encodeURLParameter()}") {
+            val response = client.get("conversations/${this.conversationId.encodeURLParameter()}/items/${this.itemId.encodeURLParameter()}") {
               include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
             }
             if (response.status.value != 200) throw ResponseException(response, "")

@@ -117,7 +117,7 @@ public class Skills internal constructor(
       private val skillId: String,
     ) {
       public suspend operator fun invoke(): DeletedSkillResource {
-        val response = client.delete("skills/${skillId.encodeURLParameter()}")
+        val response = client.delete("skills/${this.skillId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -128,7 +128,7 @@ public class Skills internal constructor(
       private val skillId: String,
     ) {
       public suspend operator fun invoke(): SkillResource {
-        val response = client.get("skills/${skillId.encodeURLParameter()}")
+        val response = client.get("skills/${this.skillId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -139,13 +139,13 @@ public class Skills internal constructor(
       private val skillId: String,
     ) {
       public suspend operator fun invoke(): SkillResource {
-        val response = client.post("skills/${skillId.encodeURLParameter()}")
+        val response = client.post("skills/${this.skillId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
 
       public suspend operator fun invoke(body: SetDefaultSkillVersionBody? = null): SkillResource {
-        val response = client.post("skills/${skillId.encodeURLParameter()}") {
+        val response = client.post("skills/${this.skillId.encodeURLParameter()}") {
           body?.let {
             contentType(ContentType.Application.Json)
             setBody(it)
@@ -156,7 +156,7 @@ public class Skills internal constructor(
       }
 
       public suspend operator fun invoke(defaultVersion: String): SkillResource {
-        val response = client.post("skills/${skillId.encodeURLParameter()}") {
+        val response = client.post("skills/${this.skillId.encodeURLParameter()}") {
           contentType(ContentType.Application.FormUrlEncoded)
           setBody(Parameters.build {
             append("default_version", defaultVersion)
@@ -178,7 +178,7 @@ public class Skills internal constructor(
         private val skillId: String,
       ) {
         public suspend fun zip(): ByteArray {
-          val response = client.get("skills/${skillId.encodeURLParameter()}/content") {
+          val response = client.get("skills/${this.skillId.encodeURLParameter()}/content") {
             `header`(HttpHeaders.Accept, ContentType.Application.Zip)
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -186,7 +186,7 @@ public class Skills internal constructor(
         }
 
         public suspend fun json(): String {
-          val response = client.get("skills/${skillId.encodeURLParameter()}/content") {
+          val response = client.get("skills/${this.skillId.encodeURLParameter()}/content") {
             `header`(HttpHeaders.Accept, ContentType.Application.Json)
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -214,7 +214,7 @@ public class Skills internal constructor(
           order: OrderEnum? = null,
           after: String? = null,
         ): SkillVersionListResource {
-          val response = client.get("skills/${skillId.encodeURLParameter()}/versions") {
+          val response = client.get("skills/${this.skillId.encodeURLParameter()}/versions") {
             if (limit != null) {
               this.url.encodedParameters.append("limit", limit.toString())
             }
@@ -235,13 +235,13 @@ public class Skills internal constructor(
         private val skillId: String,
       ) {
         public suspend operator fun invoke(): SkillVersionResource {
-          val response = client.post("skills/${skillId.encodeURLParameter()}/versions")
+          val response = client.post("skills/${this.skillId.encodeURLParameter()}/versions")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
 
         public suspend operator fun invoke(files: CreateSkillVersionBody.Files, default: Boolean? = null): SkillVersionResource {
-          val response = client.post("skills/${skillId.encodeURLParameter()}/versions") {
+          val response = client.post("skills/${this.skillId.encodeURLParameter()}/versions") {
             setBody(MultiPartFormDataContent(formData {
               append("files", Json.encodeToString(files))
               if (default != null) {
@@ -254,7 +254,7 @@ public class Skills internal constructor(
         }
 
         public suspend operator fun invoke(body: CreateSkillVersionBody? = null): SkillVersionResource {
-          val response = client.post("skills/${skillId.encodeURLParameter()}/versions") {
+          val response = client.post("skills/${this.skillId.encodeURLParameter()}/versions") {
             body?.let {
               contentType(ContentType.Application.Json)
               setBody(it)
@@ -282,7 +282,7 @@ public class Skills internal constructor(
           private val version: String,
         ) {
           public suspend operator fun invoke(): DeletedSkillVersionResource {
-            val response = client.delete("skills/${skillId.encodeURLParameter()}/versions/${version.encodeURLParameter()}")
+            val response = client.delete("skills/${this.skillId.encodeURLParameter()}/versions/${this.version.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -294,7 +294,7 @@ public class Skills internal constructor(
           private val version: String,
         ) {
           public suspend operator fun invoke(): SkillVersionResource {
-            val response = client.get("skills/${skillId.encodeURLParameter()}/versions/${version.encodeURLParameter()}")
+            val response = client.get("skills/${this.skillId.encodeURLParameter()}/versions/${this.version.encodeURLParameter()}")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -313,7 +313,7 @@ public class Skills internal constructor(
             private val version: String,
           ) {
             public suspend fun zip(): ByteArray {
-              val response = client.get("skills/${skillId.encodeURLParameter()}/versions/${version.encodeURLParameter()}/content") {
+              val response = client.get("skills/${this.skillId.encodeURLParameter()}/versions/${this.version.encodeURLParameter()}/content") {
                 `header`(HttpHeaders.Accept, ContentType.Application.Zip)
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -321,7 +321,7 @@ public class Skills internal constructor(
             }
 
             public suspend fun json(): String {
-              val response = client.get("skills/${skillId.encodeURLParameter()}/versions/${version.encodeURLParameter()}/content") {
+              val response = client.get("skills/${this.skillId.encodeURLParameter()}/versions/${this.version.encodeURLParameter()}/content") {
                 `header`(HttpHeaders.Accept, ContentType.Application.Json)
               }
               if (response.status.value != 200) throw ResponseException(response, "")

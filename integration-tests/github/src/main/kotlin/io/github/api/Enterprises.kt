@@ -97,7 +97,7 @@ public class Enterprises internal constructor(
             private val enterprise: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("enterprises/${enterprise.encodeURLParameter()}/actions/cache/retention-limit")
+              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/actions/cache/retention-limit")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -126,7 +126,7 @@ public class Enterprises internal constructor(
             private val enterprise: String,
           ) {
             public suspend operator fun invoke(body: ActionsCacheRetentionLimitForEnterprise): Response {
-              val response = client.put("enterprises/${enterprise.encodeURLParameter()}/actions/cache/retention-limit") {
+              val response = client.put("enterprises/${this.enterprise.encodeURLParameter()}/actions/cache/retention-limit") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -170,7 +170,7 @@ public class Enterprises internal constructor(
             private val enterprise: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("enterprises/${enterprise.encodeURLParameter()}/actions/cache/storage-limit")
+              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/actions/cache/storage-limit")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 403 -> Response.Forbidden(response.body())
@@ -199,7 +199,7 @@ public class Enterprises internal constructor(
             private val enterprise: String,
           ) {
             public suspend operator fun invoke(body: ActionsCacheStorageLimitForEnterprise): Response {
-              val response = client.put("enterprises/${enterprise.encodeURLParameter()}/actions/cache/storage-limit") {
+              val response = client.put("enterprises/${this.enterprise.encodeURLParameter()}/actions/cache/storage-limit") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -264,7 +264,7 @@ public class Enterprises internal constructor(
                 private val enterprise: String,
               ) {
                 public suspend operator fun invoke(): Response {
-                  val response = client.get("enterprises/${enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo")
+                  val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo")
                   return when (response.status.value) {
                     200 -> Response.Ok(response.body())
                     403 -> Response.Forbidden(response.body())
@@ -293,7 +293,7 @@ public class Enterprises internal constructor(
                 private val enterprise: String,
               ) {
                 public suspend operator fun invoke(body: OidcCustomPropertyInclusionInput): Response {
-                  val response = client.post("enterprises/${enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo") {
+                  val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo") {
                     contentType(ContentType.Application.Json)
                     setBody(body)
                   }
@@ -334,7 +334,7 @@ public class Enterprises internal constructor(
                   private val customPropertyName: String,
                 ) {
                   public suspend operator fun invoke(): Response {
-                    val response = client.delete("enterprises/${enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo/${customPropertyName.encodeURLParameter()}")
+                    val response = client.delete("enterprises/${this.enterprise.encodeURLParameter()}/actions/oidc/customization/properties/repo/${this.customPropertyName.encodeURLParameter()}")
                     return when (response.status.value) {
                       204 -> Response.NoContent
                       400 -> Response.BadRequest
@@ -390,7 +390,7 @@ public class Enterprises internal constructor(
             before: String? = null,
             after: String? = null,
           ): Response {
-            val response = client.get("enterprises/${enterprise.encodeURLParameter()}/code-security/configurations") {
+            val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations") {
               if (perPage != null) {
                 this.url.encodedParameters.append("per_page", perPage.toString())
               }
@@ -453,7 +453,7 @@ public class Enterprises internal constructor(
             privateVulnerabilityReporting: PrivateVulnerabilityReporting? = null,
             enforcement: Enforcement? = null,
           ): Response {
-            val response = client.post("enterprises/${enterprise.encodeURLParameter()}/code-security/configurations") {
+            val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, description = description, advancedSecurity = advancedSecurity, codeSecurity = codeSecurity, dependencyGraph = dependencyGraph, dependencyGraphAutosubmitAction = dependencyGraphAutosubmitAction, dependencyGraphAutosubmitActionOptions = dependencyGraphAutosubmitActionOptions, dependabotAlerts = dependabotAlerts, dependabotSecurityUpdates = dependabotSecurityUpdates, codeScanningOptions = codeScanningOptions, codeScanningDefaultSetup = codeScanningDefaultSetup, codeScanningDefaultSetupOptions = codeScanningDefaultSetupOptions, codeScanningDelegatedAlertDismissal = codeScanningDelegatedAlertDismissal, secretProtection = secretProtection, secretScanning = secretScanning, secretScanningPushProtection = secretScanningPushProtection, secretScanningValidityChecks = secretScanningValidityChecks, secretScanningNonProviderPatterns = secretScanningNonProviderPatterns, secretScanningGenericSecrets = secretScanningGenericSecrets, secretScanningDelegatedAlertDismissal = secretScanningDelegatedAlertDismissal, secretScanningExtendedMetadata = secretScanningExtendedMetadata, privateVulnerabilityReporting = privateVulnerabilityReporting, enforcement = enforcement))
             }
@@ -811,7 +811,7 @@ public class Enterprises internal constructor(
             private val enterprise: String,
           ) {
             public suspend operator fun invoke(): CodeSecurityDefaultConfigurations {
-              val response = client.get("enterprises/${enterprise.encodeURLParameter()}/code-security/configurations/defaults")
+              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/defaults")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -841,7 +841,7 @@ public class Enterprises internal constructor(
             private val configurationId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("enterprises/${enterprise.encodeURLParameter()}/code-security/configurations/$configurationId")
+              val response = client.delete("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}")
               return when (response.status.value) {
                 204 -> Response.NoContent
                 400 -> Response.BadRequest(response.body())
@@ -879,7 +879,7 @@ public class Enterprises internal constructor(
             private val configurationId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.get("enterprises/${enterprise.encodeURLParameter()}/code-security/configurations/$configurationId")
+              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 304 -> Response.NotModified
@@ -936,7 +936,7 @@ public class Enterprises internal constructor(
               privateVulnerabilityReporting: PrivateVulnerabilityReporting? = null,
               enforcement: Enforcement? = null,
             ): Response {
-              val response = client.patch("enterprises/${enterprise.encodeURLParameter()}/code-security/configurations/$configurationId") {
+              val response = client.patch("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}") {
                 contentType(ContentType.Application.Json)
                 setBody(Body(name = name, description = description, advancedSecurity = advancedSecurity, codeSecurity = codeSecurity, dependencyGraph = dependencyGraph, dependencyGraphAutosubmitAction = dependencyGraphAutosubmitAction, dependencyGraphAutosubmitActionOptions = dependencyGraphAutosubmitActionOptions, dependabotAlerts = dependabotAlerts, dependabotSecurityUpdates = dependabotSecurityUpdates, codeScanningDefaultSetup = codeScanningDefaultSetup, codeScanningDefaultSetupOptions = codeScanningDefaultSetupOptions, codeScanningOptions = codeScanningOptions, codeScanningDelegatedAlertDismissal = codeScanningDelegatedAlertDismissal, secretProtection = secretProtection, secretScanning = secretScanning, secretScanningPushProtection = secretScanningPushProtection, secretScanningValidityChecks = secretScanningValidityChecks, secretScanningNonProviderPatterns = secretScanningNonProviderPatterns, secretScanningGenericSecrets = secretScanningGenericSecrets, secretScanningDelegatedAlertDismissal = secretScanningDelegatedAlertDismissal, secretScanningExtendedMetadata = secretScanningExtendedMetadata, privateVulnerabilityReporting = privateVulnerabilityReporting, enforcement = enforcement))
               }
@@ -1302,7 +1302,7 @@ public class Enterprises internal constructor(
               private val configurationId: Long,
             ) {
               public suspend operator fun invoke(scope: Scope): Response {
-                val response = client.post("enterprises/${enterprise.encodeURLParameter()}/code-security/configurations/$configurationId/attach") {
+                val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}/attach") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(scope = scope))
                 }
@@ -1364,7 +1364,7 @@ public class Enterprises internal constructor(
               private val configurationId: Long,
             ) {
               public suspend operator fun invoke(defaultForNewRepos: DefaultForNewRepos? = null): Response {
-                val response = client.put("enterprises/${enterprise.encodeURLParameter()}/code-security/configurations/$configurationId/defaults") {
+                val response = client.put("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}/defaults") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(defaultForNewRepos = defaultForNewRepos))
                 }
@@ -1454,7 +1454,7 @@ public class Enterprises internal constructor(
                 after: String? = null,
                 status: String? = "all",
               ): Response {
-                val response = client.get("enterprises/${enterprise.encodeURLParameter()}/code-security/configurations/$configurationId/repositories") {
+                val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/code-security/configurations/${this.configurationId}/repositories") {
                   if (perPage != null) {
                     this.url.encodedParameters.append("per_page", perPage.toString())
                   }
@@ -1526,7 +1526,7 @@ public class Enterprises internal constructor(
             after: String? = null,
             perPage: Long? = 30L,
           ): Response {
-            val response = client.get("enterprises/${enterprise.encodeURLParameter()}/dependabot/alerts") {
+            val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/dependabot/alerts") {
               if (state != null) {
                 this.url.encodedParameters.append("state", state.encodeURLParameter())
               }
@@ -1718,7 +1718,7 @@ public class Enterprises internal constructor(
         private val enterprise: String,
       ) {
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
-          val response = client.get("enterprises/${enterprise.encodeURLParameter()}/teams") {
+          val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams") {
             if (perPage != null) {
               this.url.encodedParameters.append("per_page", perPage.toString())
             }
@@ -1755,7 +1755,7 @@ public class Enterprises internal constructor(
           organizationSelectionType: OrganizationSelectionType? = null,
           groupId: String? = null,
         ): EnterpriseTeam {
-          val response = client.post("enterprises/${enterprise.encodeURLParameter()}/teams") {
+          val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/teams") {
             contentType(ContentType.Application.Json)
             setBody(Body(name = name, description = description, syncToOrganizations = syncToOrganizations, organizationSelectionType = organizationSelectionType, groupId = groupId))
           }
@@ -1831,7 +1831,7 @@ public class Enterprises internal constructor(
             private val enterpriseTeam: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
-              val response = client.get("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/memberships") {
+              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -1857,7 +1857,7 @@ public class Enterprises internal constructor(
               private val enterpriseTeam: String,
             ) {
               public suspend operator fun invoke(usernames: List<String>): List<SimpleUser> {
-                val response = client.post("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/memberships/add") {
+                val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships/add") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(usernames = usernames))
                 }
@@ -1885,7 +1885,7 @@ public class Enterprises internal constructor(
               private val enterpriseTeam: String,
             ) {
               public suspend operator fun invoke(usernames: List<String>): List<SimpleUser> {
-                val response = client.post("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/memberships/remove") {
+                val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships/remove") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(usernames = usernames))
                 }
@@ -1919,7 +1919,7 @@ public class Enterprises internal constructor(
               private val username: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.delete("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/memberships/${username.encodeURLParameter()}")
+                val response = client.delete("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships/${this.username.encodeURLParameter()}")
                 return when (response.status.value) {
                   204 -> Response.NoContent
                   403 -> Response.Forbidden(response.body())
@@ -1943,7 +1943,7 @@ public class Enterprises internal constructor(
               private val username: String,
             ) {
               public suspend operator fun invoke(): SimpleUser {
-                val response = client.get("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/memberships/${username.encodeURLParameter()}")
+                val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships/${this.username.encodeURLParameter()}")
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()
               }
@@ -1956,7 +1956,7 @@ public class Enterprises internal constructor(
               private val username: String,
             ) {
               public suspend operator fun invoke(): SimpleUser {
-                val response = client.put("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/memberships/${username.encodeURLParameter()}")
+                val response = client.put("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/memberships/${this.username.encodeURLParameter()}")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
@@ -1983,7 +1983,7 @@ public class Enterprises internal constructor(
             private val enterpriseTeam: String,
           ) {
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<OrganizationSimple> {
-              val response = client.get("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/organizations") {
+              val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations") {
                 if (perPage != null) {
                   this.url.encodedParameters.append("per_page", perPage.toString())
                 }
@@ -2009,7 +2009,7 @@ public class Enterprises internal constructor(
               private val enterpriseTeam: String,
             ) {
               public suspend operator fun invoke(organizationSlugs: List<String>): List<OrganizationSimple> {
-                val response = client.post("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/organizations/add") {
+                val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations/add") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(organizationSlugs = organizationSlugs))
                 }
@@ -2038,7 +2038,7 @@ public class Enterprises internal constructor(
               private val enterpriseTeam: String,
             ) {
               public suspend operator fun invoke(organizationSlugs: List<String>) {
-                val response = client.post("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/organizations/remove") {
+                val response = client.post("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations/remove") {
                   contentType(ContentType.Application.Json)
                   setBody(Body(organizationSlugs = organizationSlugs))
                 }
@@ -2072,7 +2072,7 @@ public class Enterprises internal constructor(
               private val org: String,
             ) {
               public suspend operator fun invoke() {
-                val response = client.delete("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/organizations/${org.encodeURLParameter()}")
+                val response = client.delete("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations/${this.org.encodeURLParameter()}")
                 if (response.status.value != 204) throw ResponseException(response, "")
               }
             }
@@ -2084,7 +2084,7 @@ public class Enterprises internal constructor(
               private val org: String,
             ) {
               public suspend operator fun invoke(): Response {
-                val response = client.get("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/organizations/${org.encodeURLParameter()}")
+                val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations/${this.org.encodeURLParameter()}")
                 return when (response.status.value) {
                   200 -> Response.Ok(response.body())
                   404 -> Response.NotFound
@@ -2108,7 +2108,7 @@ public class Enterprises internal constructor(
               private val org: String,
             ) {
               public suspend operator fun invoke(): OrganizationSimple {
-                val response = client.put("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/organizations/${org.encodeURLParameter()}")
+                val response = client.put("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.enterpriseTeam.encodeURLParameter()}/organizations/${this.org.encodeURLParameter()}")
                 if (response.status.value != 201) throw ResponseException(response, "")
                 return response.body()
               }
@@ -2134,7 +2134,7 @@ public class Enterprises internal constructor(
           private val teamSlug: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("enterprises/${enterprise.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}")
+            val response = client.delete("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.teamSlug.encodeURLParameter()}")
             return when (response.status.value) {
               204 -> Response.NoContent
               403 -> Response.Forbidden(response.body())
@@ -2157,7 +2157,7 @@ public class Enterprises internal constructor(
           private val teamSlug: String,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("enterprises/${enterprise.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}")
+            val response = client.get("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.teamSlug.encodeURLParameter()}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               403 -> Response.Forbidden(response.body())
@@ -2188,7 +2188,7 @@ public class Enterprises internal constructor(
             organizationSelectionType: OrganizationSelectionType? = null,
             groupId: String? = null,
           ): Response {
-            val response = client.patch("enterprises/${enterprise.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}") {
+            val response = client.patch("enterprises/${this.enterprise.encodeURLParameter()}/teams/${this.teamSlug.encodeURLParameter()}") {
               contentType(ContentType.Application.Json)
               setBody(Body(name = name, description = description, syncToOrganizations = syncToOrganizations, organizationSelectionType = organizationSelectionType, groupId = groupId))
             }

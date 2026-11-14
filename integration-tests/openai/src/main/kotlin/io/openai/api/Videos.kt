@@ -135,7 +135,7 @@ public class Videos internal constructor(
       private val videoId: String,
     ) {
       public suspend operator fun invoke(): DeletedVideoResource {
-        val response = client.delete("videos/${videoId.encodeURLParameter()}")
+        val response = client.delete("videos/${this.videoId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -146,7 +146,7 @@ public class Videos internal constructor(
       private val videoId: String,
     ) {
       public suspend operator fun invoke(): VideoResource {
-        val response = client.get("videos/${videoId.encodeURLParameter()}")
+        val response = client.get("videos/${this.videoId.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
       }
@@ -163,7 +163,7 @@ public class Videos internal constructor(
         private val videoId: String,
       ) {
         public suspend fun videoMp4(variant: VideoContentVariant? = null): ByteArray {
-          val response = client.get("videos/${videoId.encodeURLParameter()}/content") {
+          val response = client.get("videos/${this.videoId.encodeURLParameter()}/content") {
             `header`(HttpHeaders.Accept, ContentType("video", "mp4"))
             if (variant != null) {
               this.url.encodedParameters.append("variant", variant.value.encodeURLParameter())
@@ -174,7 +174,7 @@ public class Videos internal constructor(
         }
 
         public suspend fun imageWebp(variant: VideoContentVariant? = null): ByteArray {
-          val response = client.get("videos/${videoId.encodeURLParameter()}/content") {
+          val response = client.get("videos/${this.videoId.encodeURLParameter()}/content") {
             `header`(HttpHeaders.Accept, ContentType("image", "webp"))
             if (variant != null) {
               this.url.encodedParameters.append("variant", variant.value.encodeURLParameter())
@@ -185,7 +185,7 @@ public class Videos internal constructor(
         }
 
         public suspend fun json(variant: VideoContentVariant? = null): String {
-          val response = client.get("videos/${videoId.encodeURLParameter()}/content") {
+          val response = client.get("videos/${this.videoId.encodeURLParameter()}/content") {
             `header`(HttpHeaders.Accept, ContentType.Application.Json)
             if (variant != null) {
               this.url.encodedParameters.append("variant", variant.value.encodeURLParameter())
@@ -208,13 +208,13 @@ public class Videos internal constructor(
         private val videoId: String,
       ) {
         public suspend operator fun invoke(): VideoResource {
-          val response = client.post("videos/${videoId.encodeURLParameter()}/remix")
+          val response = client.post("videos/${this.videoId.encodeURLParameter()}/remix")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
 
         public suspend operator fun invoke(prompt: String): VideoResource {
-          val response = client.post("videos/${videoId.encodeURLParameter()}/remix") {
+          val response = client.post("videos/${this.videoId.encodeURLParameter()}/remix") {
             setBody(MultiPartFormDataContent(formData {
               append("prompt", prompt)
             }))
@@ -224,7 +224,7 @@ public class Videos internal constructor(
         }
 
         public suspend operator fun invoke(body: CreateVideoRemixBody? = null): VideoResource {
-          val response = client.post("videos/${videoId.encodeURLParameter()}/remix") {
+          val response = client.post("videos/${this.videoId.encodeURLParameter()}/remix") {
             body?.let {
               contentType(ContentType.Application.Json)
               setBody(it)

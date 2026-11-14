@@ -40,7 +40,7 @@ public class MarketplaceListing internal constructor(
         private val accountId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("marketplace_listing/accounts/$accountId")
+          val response = client.get("marketplace_listing/accounts/${this.accountId}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             401 -> Response.Unauthorized(response.body())
@@ -130,7 +130,7 @@ public class MarketplaceListing internal constructor(
             perPage: Long? = 30L,
             page: Long? = 1L,
           ): Response {
-            val response = client.get("marketplace_listing/plans/$planId/accounts") {
+            val response = client.get("marketplace_listing/plans/${this.planId}/accounts") {
               if (sort != null) {
                 this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
@@ -220,7 +220,7 @@ public class MarketplaceListing internal constructor(
           private val accountId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("marketplace_listing/stubbed/accounts/$accountId")
+            val response = client.get("marketplace_listing/stubbed/accounts/${this.accountId}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               401 -> Response.Unauthorized(response.body())
@@ -303,7 +303,7 @@ public class MarketplaceListing internal constructor(
               perPage: Long? = 30L,
               page: Long? = 1L,
             ): Response {
-              val response = client.get("marketplace_listing/stubbed/plans/$planId/accounts") {
+              val response = client.get("marketplace_listing/stubbed/plans/${this.planId}/accounts") {
                 if (sort != null) {
                   this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }

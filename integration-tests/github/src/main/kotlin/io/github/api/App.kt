@@ -171,7 +171,7 @@ public class App internal constructor(
           private val deliveryId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.get("app/hook/deliveries/$deliveryId")
+            val response = client.get("app/hook/deliveries/${this.deliveryId}")
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
               400 -> Response.BadRequest(response.body())
@@ -206,7 +206,7 @@ public class App internal constructor(
             private val deliveryId: Long,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.post("app/hook/deliveries/$deliveryId/attempts")
+              val response = client.post("app/hook/deliveries/${this.deliveryId}/attempts")
               return when (response.status.value) {
                 202 -> Response.Accepted(response.body())
                 400 -> Response.BadRequest(response.body())
@@ -325,7 +325,7 @@ public class App internal constructor(
         private val installationId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("app/installations/$installationId")
+          val response = client.delete("app/installations/${this.installationId}")
           return when (response.status.value) {
             204 -> Response.NoContent
             404 -> Response.NotFound(response.body())
@@ -347,7 +347,7 @@ public class App internal constructor(
         private val installationId: Long,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.get("app/installations/$installationId")
+          val response = client.get("app/installations/${this.installationId}")
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
             404 -> Response.NotFound(response.body())
@@ -377,7 +377,7 @@ public class App internal constructor(
           private val installationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.post("app/installations/$installationId/access_tokens")
+            val response = client.post("app/installations/${this.installationId}/access_tokens")
             return when (response.status.value) {
               201 -> Response.Created(response.body())
               401 -> Response.Unauthorized(response.body())
@@ -393,7 +393,7 @@ public class App internal constructor(
             repositoryIds: List<Long>? = null,
             permissions: AppPermissions? = null,
           ): Response {
-            val response = client.post("app/installations/$installationId/access_tokens") {
+            val response = client.post("app/installations/${this.installationId}/access_tokens") {
               contentType(ContentType.Application.Json)
               setBody(Body(repositories = repositories, repositoryIds = repositoryIds, permissions = permissions))
             }
@@ -456,7 +456,7 @@ public class App internal constructor(
           private val installationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.delete("app/installations/$installationId/suspended")
+            val response = client.delete("app/installations/${this.installationId}/suspended")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())
@@ -478,7 +478,7 @@ public class App internal constructor(
           private val installationId: Long,
         ) {
           public suspend operator fun invoke(): Response {
-            val response = client.put("app/installations/$installationId/suspended")
+            val response = client.put("app/installations/${this.installationId}/suspended")
             return when (response.status.value) {
               204 -> Response.NoContent
               404 -> Response.NotFound(response.body())

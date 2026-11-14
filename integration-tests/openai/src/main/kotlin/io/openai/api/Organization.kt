@@ -182,7 +182,7 @@ public class Organization internal constructor(
         private val keyId: String,
       ) {
         public suspend operator fun invoke(): Response {
-          val response = client.delete("organization/admin_api_keys/${keyId.encodeURLParameter()}")
+          val response = client.delete("organization/admin_api_keys/${this.keyId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -204,7 +204,7 @@ public class Organization internal constructor(
         private val keyId: String,
       ) {
         public suspend operator fun invoke(): AdminApiKey {
-          val response = client.get("organization/admin_api_keys/${keyId.encodeURLParameter()}")
+          val response = client.get("organization/admin_api_keys/${this.keyId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -394,7 +394,7 @@ public class Organization internal constructor(
         private val certificateId: String,
       ) {
         public suspend operator fun invoke(): DeleteCertificateResponse {
-          val response = client.delete("organization/certificates/${certificateId.encodeURLParameter()}")
+          val response = client.delete("organization/certificates/${this.certificateId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -405,7 +405,7 @@ public class Organization internal constructor(
         private val certificateId: String,
       ) {
         public suspend operator fun invoke(include: List<Include>? = null): Certificate {
-          val response = client.get("organization/certificates/${certificateId.encodeURLParameter()}") {
+          val response = client.get("organization/certificates/${this.certificateId.encodeURLParameter()}") {
             include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -427,7 +427,7 @@ public class Organization internal constructor(
         private val certificateId: String,
       ) {
         public suspend operator fun invoke(body: ModifyCertificateRequest): Certificate {
-          val response = client.post("organization/certificates/${certificateId.encodeURLParameter()}") {
+          val response = client.post("organization/certificates/${this.certificateId.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -568,7 +568,7 @@ public class Organization internal constructor(
         private val groupId: String,
       ) {
         public suspend operator fun invoke(): GroupDeletedResource {
-          val response = client.delete("organization/groups/${groupId.encodeURLParameter()}")
+          val response = client.delete("organization/groups/${this.groupId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -579,7 +579,7 @@ public class Organization internal constructor(
         private val groupId: String,
       ) {
         public suspend operator fun invoke(body: UpdateGroupBody): GroupResourceWithSuccess {
-          val response = client.post("organization/groups/${groupId.encodeURLParameter()}") {
+          val response = client.post("organization/groups/${this.groupId.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -607,7 +607,7 @@ public class Organization internal constructor(
             after: String? = null,
             order: Order? = null,
           ): RoleListResource {
-            val response = client.get("organization/groups/${groupId.encodeURLParameter()}/roles") {
+            val response = client.get("organization/groups/${this.groupId.encodeURLParameter()}/roles") {
               if (limit != null) {
                 this.url.encodedParameters.append("limit", limit.toString())
               }
@@ -639,7 +639,7 @@ public class Organization internal constructor(
           private val groupId: String,
         ) {
           public suspend operator fun invoke(body: PublicAssignOrganizationGroupRoleBody): GroupRoleAssignment {
-            val response = client.post("organization/groups/${groupId.encodeURLParameter()}/roles") {
+            val response = client.post("organization/groups/${this.groupId.encodeURLParameter()}/roles") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -661,7 +661,7 @@ public class Organization internal constructor(
             private val roleId: String,
           ) {
             public suspend operator fun invoke(): DeletedRoleAssignmentResource {
-              val response = client.delete("organization/groups/${groupId.encodeURLParameter()}/roles/${roleId.encodeURLParameter()}")
+              val response = client.delete("organization/groups/${this.groupId.encodeURLParameter()}/roles/${this.roleId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -688,7 +688,7 @@ public class Organization internal constructor(
             after: String? = null,
             order: Order? = Order.Desc,
           ): UserListResource {
-            val response = client.get("organization/groups/${groupId.encodeURLParameter()}/users") {
+            val response = client.get("organization/groups/${this.groupId.encodeURLParameter()}/users") {
               if (limit != null) {
                 this.url.encodedParameters.append("limit", limit.toString())
               }
@@ -720,7 +720,7 @@ public class Organization internal constructor(
           private val groupId: String,
         ) {
           public suspend operator fun invoke(body: CreateGroupUserBody): GroupUserAssignment {
-            val response = client.post("organization/groups/${groupId.encodeURLParameter()}/users") {
+            val response = client.post("organization/groups/${this.groupId.encodeURLParameter()}/users") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -742,7 +742,7 @@ public class Organization internal constructor(
             private val userId: String,
           ) {
             public suspend operator fun invoke(): GroupUserDeletedResource {
-              val response = client.delete("organization/groups/${groupId.encodeURLParameter()}/users/${userId.encodeURLParameter()}")
+              val response = client.delete("organization/groups/${this.groupId.encodeURLParameter()}/users/${this.userId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -804,7 +804,7 @@ public class Organization internal constructor(
         private val inviteId: String,
       ) {
         public suspend operator fun invoke(): InviteDeleteResponse {
-          val response = client.delete("organization/invites/${inviteId.encodeURLParameter()}")
+          val response = client.delete("organization/invites/${this.inviteId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -815,7 +815,7 @@ public class Organization internal constructor(
         private val inviteId: String,
       ) {
         public suspend operator fun invoke(): Invite {
-          val response = client.get("organization/invites/${inviteId.encodeURLParameter()}")
+          val response = client.get("organization/invites/${this.inviteId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -896,7 +896,7 @@ public class Organization internal constructor(
         private val projectId: String,
       ) {
         public suspend operator fun invoke(): Project {
-          val response = client.get("organization/projects/${projectId.encodeURLParameter()}")
+          val response = client.get("organization/projects/${this.projectId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -907,7 +907,7 @@ public class Organization internal constructor(
         private val projectId: String,
       ) {
         public suspend operator fun invoke(body: ProjectUpdateRequest): Response {
-          val response = client.post("organization/projects/${projectId.encodeURLParameter()}") {
+          val response = client.post("organization/projects/${this.projectId.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -942,7 +942,7 @@ public class Organization internal constructor(
           private val projectId: String,
         ) {
           public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): ProjectApiKeyListResponse {
-            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/api_keys") {
+            val response = client.get("organization/projects/${this.projectId.encodeURLParameter()}/api_keys") {
               if (limit != null) {
                 this.url.encodedParameters.append("limit", limit.toString())
               }
@@ -970,7 +970,7 @@ public class Organization internal constructor(
             private val keyId: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("organization/projects/${projectId.encodeURLParameter()}/api_keys/${keyId.encodeURLParameter()}")
+              val response = client.delete("organization/projects/${this.projectId.encodeURLParameter()}/api_keys/${this.keyId.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 400 -> Response.BadRequest(response.body())
@@ -995,7 +995,7 @@ public class Organization internal constructor(
             private val keyId: String,
           ) {
             public suspend operator fun invoke(): ProjectApiKey {
-              val response = client.get("organization/projects/${projectId.encodeURLParameter()}/api_keys/${keyId.encodeURLParameter()}")
+              val response = client.get("organization/projects/${this.projectId.encodeURLParameter()}/api_keys/${this.keyId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -1014,7 +1014,7 @@ public class Organization internal constructor(
           private val projectId: String,
         ) {
           public suspend operator fun invoke(): Project {
-            val response = client.post("organization/projects/${projectId.encodeURLParameter()}/archive")
+            val response = client.post("organization/projects/${this.projectId.encodeURLParameter()}/archive")
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()
           }
@@ -1040,7 +1040,7 @@ public class Organization internal constructor(
             after: String? = null,
             order: Order? = Order.Desc,
           ): ListCertificatesResponse {
-            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/certificates") {
+            val response = client.get("organization/projects/${this.projectId.encodeURLParameter()}/certificates") {
               if (limit != null) {
                 this.url.encodedParameters.append("limit", limit.toString())
               }
@@ -1078,7 +1078,7 @@ public class Organization internal constructor(
             private val projectId: String,
           ) {
             public suspend operator fun invoke(body: ToggleCertificatesRequest): ListCertificatesResponse {
-              val response = client.post("organization/projects/${projectId.encodeURLParameter()}/certificates/activate") {
+              val response = client.post("organization/projects/${this.projectId.encodeURLParameter()}/certificates/activate") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -1099,7 +1099,7 @@ public class Organization internal constructor(
             private val projectId: String,
           ) {
             public suspend operator fun invoke(body: ToggleCertificatesRequest): ListCertificatesResponse {
-              val response = client.post("organization/projects/${projectId.encodeURLParameter()}/certificates/deactivate") {
+              val response = client.post("organization/projects/${this.projectId.encodeURLParameter()}/certificates/deactivate") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -1129,7 +1129,7 @@ public class Organization internal constructor(
             after: String? = null,
             order: Order? = Order.Asc,
           ): ProjectGroupListResource {
-            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/groups") {
+            val response = client.get("organization/projects/${this.projectId.encodeURLParameter()}/groups") {
               if (limit != null) {
                 this.url.encodedParameters.append("limit", limit.toString())
               }
@@ -1161,7 +1161,7 @@ public class Organization internal constructor(
           private val projectId: String,
         ) {
           public suspend operator fun invoke(body: InviteProjectGroupBody): ProjectGroup {
-            val response = client.post("organization/projects/${projectId.encodeURLParameter()}/groups") {
+            val response = client.post("organization/projects/${this.projectId.encodeURLParameter()}/groups") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -1183,7 +1183,7 @@ public class Organization internal constructor(
             private val groupId: String,
           ) {
             public suspend operator fun invoke(): ProjectGroupDeletedResource {
-              val response = client.delete("organization/projects/${projectId.encodeURLParameter()}/groups/${groupId.encodeURLParameter()}")
+              val response = client.delete("organization/projects/${this.projectId.encodeURLParameter()}/groups/${this.groupId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -1208,7 +1208,7 @@ public class Organization internal constructor(
             after: String? = null,
             before: String? = null,
           ): ProjectRateLimitListResponse {
-            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/rate_limits") {
+            val response = client.get("organization/projects/${this.projectId.encodeURLParameter()}/rate_limits") {
               if (limit != null) {
                 this.url.encodedParameters.append("limit", limit.toString())
               }
@@ -1237,7 +1237,7 @@ public class Organization internal constructor(
             private val rateLimitId: String,
           ) {
             public suspend operator fun invoke(body: ProjectRateLimitUpdateRequest): Response {
-              val response = client.post("organization/projects/${projectId.encodeURLParameter()}/rate_limits/${rateLimitId.encodeURLParameter()}") {
+              val response = client.post("organization/projects/${this.projectId.encodeURLParameter()}/rate_limits/${this.rateLimitId.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -1276,7 +1276,7 @@ public class Organization internal constructor(
           private val projectId: String,
         ) {
           public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): Response {
-            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/service_accounts") {
+            val response = client.get("organization/projects/${this.projectId.encodeURLParameter()}/service_accounts") {
               if (limit != null) {
                 this.url.encodedParameters.append("limit", limit.toString())
               }
@@ -1307,7 +1307,7 @@ public class Organization internal constructor(
           private val projectId: String,
         ) {
           public suspend operator fun invoke(body: ProjectServiceAccountCreateRequest): Response {
-            val response = client.post("organization/projects/${projectId.encodeURLParameter()}/service_accounts") {
+            val response = client.post("organization/projects/${this.projectId.encodeURLParameter()}/service_accounts") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -1344,7 +1344,7 @@ public class Organization internal constructor(
             private val serviceAccountId: String,
           ) {
             public suspend operator fun invoke(): ProjectServiceAccountDeleteResponse {
-              val response = client.delete("organization/projects/${projectId.encodeURLParameter()}/service_accounts/${serviceAccountId.encodeURLParameter()}")
+              val response = client.delete("organization/projects/${this.projectId.encodeURLParameter()}/service_accounts/${this.serviceAccountId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -1356,7 +1356,7 @@ public class Organization internal constructor(
             private val serviceAccountId: String,
           ) {
             public suspend operator fun invoke(): ProjectServiceAccount {
-              val response = client.get("organization/projects/${projectId.encodeURLParameter()}/service_accounts/${serviceAccountId.encodeURLParameter()}")
+              val response = client.get("organization/projects/${this.projectId.encodeURLParameter()}/service_accounts/${this.serviceAccountId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -1379,7 +1379,7 @@ public class Organization internal constructor(
           private val projectId: String,
         ) {
           public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): Response {
-            val response = client.get("organization/projects/${projectId.encodeURLParameter()}/users") {
+            val response = client.get("organization/projects/${this.projectId.encodeURLParameter()}/users") {
               if (limit != null) {
                 this.url.encodedParameters.append("limit", limit.toString())
               }
@@ -1410,7 +1410,7 @@ public class Organization internal constructor(
           private val projectId: String,
         ) {
           public suspend operator fun invoke(body: ProjectUserCreateRequest): Response {
-            val response = client.post("organization/projects/${projectId.encodeURLParameter()}/users") {
+            val response = client.post("organization/projects/${this.projectId.encodeURLParameter()}/users") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -1449,7 +1449,7 @@ public class Organization internal constructor(
             private val userId: String,
           ) {
             public suspend operator fun invoke(): Response {
-              val response = client.delete("organization/projects/${projectId.encodeURLParameter()}/users/${userId.encodeURLParameter()}")
+              val response = client.delete("organization/projects/${this.projectId.encodeURLParameter()}/users/${this.userId.encodeURLParameter()}")
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
                 400 -> Response.BadRequest(response.body())
@@ -1474,7 +1474,7 @@ public class Organization internal constructor(
             private val userId: String,
           ) {
             public suspend operator fun invoke(): ProjectUser {
-              val response = client.get("organization/projects/${projectId.encodeURLParameter()}/users/${userId.encodeURLParameter()}")
+              val response = client.get("organization/projects/${this.projectId.encodeURLParameter()}/users/${this.userId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }
@@ -1486,7 +1486,7 @@ public class Organization internal constructor(
             private val userId: String,
           ) {
             public suspend operator fun invoke(body: ProjectUserUpdateRequest): Response {
-              val response = client.post("organization/projects/${projectId.encodeURLParameter()}/users/${userId.encodeURLParameter()}") {
+              val response = client.post("organization/projects/${this.projectId.encodeURLParameter()}/users/${this.userId.encodeURLParameter()}") {
                 contentType(ContentType.Application.Json)
                 setBody(body)
               }
@@ -1582,7 +1582,7 @@ public class Organization internal constructor(
         private val roleId: String,
       ) {
         public suspend operator fun invoke(): RoleDeletedResource {
-          val response = client.delete("organization/roles/${roleId.encodeURLParameter()}")
+          val response = client.delete("organization/roles/${this.roleId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -1593,7 +1593,7 @@ public class Organization internal constructor(
         private val roleId: String,
       ) {
         public suspend operator fun invoke(body: PublicUpdateOrganizationRoleBody): Role {
-          val response = client.post("organization/roles/${roleId.encodeURLParameter()}") {
+          val response = client.post("organization/roles/${this.roleId.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -2228,7 +2228,7 @@ public class Organization internal constructor(
         private val userId: String,
       ) {
         public suspend operator fun invoke(): UserDeleteResponse {
-          val response = client.delete("organization/users/${userId.encodeURLParameter()}")
+          val response = client.delete("organization/users/${this.userId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -2239,7 +2239,7 @@ public class Organization internal constructor(
         private val userId: String,
       ) {
         public suspend operator fun invoke(): User {
-          val response = client.get("organization/users/${userId.encodeURLParameter()}")
+          val response = client.get("organization/users/${this.userId.encodeURLParameter()}")
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
         }
@@ -2250,7 +2250,7 @@ public class Organization internal constructor(
         private val userId: String,
       ) {
         public suspend operator fun invoke(body: UserRoleUpdateRequest): User {
-          val response = client.post("organization/users/${userId.encodeURLParameter()}") {
+          val response = client.post("organization/users/${this.userId.encodeURLParameter()}") {
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -2278,7 +2278,7 @@ public class Organization internal constructor(
             after: String? = null,
             order: Order? = null,
           ): RoleListResource {
-            val response = client.get("organization/users/${userId.encodeURLParameter()}/roles") {
+            val response = client.get("organization/users/${this.userId.encodeURLParameter()}/roles") {
               if (limit != null) {
                 this.url.encodedParameters.append("limit", limit.toString())
               }
@@ -2310,7 +2310,7 @@ public class Organization internal constructor(
           private val userId: String,
         ) {
           public suspend operator fun invoke(body: PublicAssignOrganizationGroupRoleBody): UserRoleAssignment {
-            val response = client.post("organization/users/${userId.encodeURLParameter()}/roles") {
+            val response = client.post("organization/users/${this.userId.encodeURLParameter()}/roles") {
               contentType(ContentType.Application.Json)
               setBody(body)
             }
@@ -2332,7 +2332,7 @@ public class Organization internal constructor(
             private val roleId: String,
           ) {
             public suspend operator fun invoke(): DeletedRoleAssignmentResource {
-              val response = client.delete("organization/users/${userId.encodeURLParameter()}/roles/${roleId.encodeURLParameter()}")
+              val response = client.delete("organization/users/${this.userId.encodeURLParameter()}/roles/${this.roleId.encodeURLParameter()}")
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
             }

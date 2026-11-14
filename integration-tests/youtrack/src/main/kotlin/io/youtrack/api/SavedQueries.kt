@@ -82,7 +82,7 @@ public class SavedQueries internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke() {
-        val response = client.delete("savedQueries/${id.encodeURLParameter()}")
+        val response = client.delete("savedQueries/${this.id.encodeURLParameter()}")
         if (response.status.value != 200) throw ResponseException(response, "")
       }
     }
@@ -92,7 +92,7 @@ public class SavedQueries internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query"): IssueFolderRead.SavedQuery {
-        val response = client.get("savedQueries/${id.encodeURLParameter()}") {
+        val response = client.get("savedQueries/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
@@ -107,7 +107,7 @@ public class SavedQueries internal constructor(
       private val id: String,
     ) {
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query", body: IssueFolderWrite.SavedQuery? = null): IssueFolderRead.SavedQuery {
-        val response = client.post("savedQueries/${id.encodeURLParameter()}") {
+        val response = client.post("savedQueries/${this.id.encodeURLParameter()}") {
           if (fields != null) {
             this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }

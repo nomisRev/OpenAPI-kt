@@ -25,7 +25,7 @@ public class Apps internal constructor(
       private val appSlug: String,
     ) {
       public suspend operator fun invoke(): Response {
-        val response = client.get("apps/${appSlug.encodeURLParameter()}")
+        val response = client.get("apps/${this.appSlug.encodeURLParameter()}")
         return when (response.status.value) {
           200 -> Response.Ok(response.body())
           403 -> Response.Forbidden(response.body())
