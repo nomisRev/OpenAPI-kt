@@ -50,7 +50,7 @@ public class Repositories internal constructor(
     public suspend operator fun invoke(since: Long? = null): Response {
       val response = client.get("repositories") {
         if (since != null) {
-          url.encodedParameters.append("since", since.toString())
+          this.url.encodedParameters.append("since", since.toString())
         }
       }
       return when (response.status.value) {

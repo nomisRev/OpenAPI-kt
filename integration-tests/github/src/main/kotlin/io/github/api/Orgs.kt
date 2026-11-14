@@ -626,10 +626,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/actions/cache/usage-by-repository") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -672,10 +672,10 @@ public class Orgs internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/actions/hosted-runners") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -1580,10 +1580,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/actions/permissions/repositories") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -1800,10 +1800,10 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/actions/permissions/self-hosted-runners/repositories") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -2021,13 +2021,13 @@ public class Orgs internal constructor(
           ): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/actions/runner-groups") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
               if (visibleToRepository != null) {
-                url.encodedParameters.append("visible_to_repository", visibleToRepository.encodeURLParameter())
+                this.url.encodedParameters.append("visible_to_repository", visibleToRepository.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -2213,10 +2213,10 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/hosted-runners") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -2251,10 +2251,10 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/repositories") {
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -2344,10 +2344,10 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/actions/runner-groups/$runnerGroupId/runners") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -2446,13 +2446,13 @@ public class Orgs internal constructor(
           ): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/actions/runners") {
               if (name != null) {
-                url.encodedParameters.append("name", name.encodeURLParameter())
+                this.url.encodedParameters.append("name", name.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -2847,10 +2847,10 @@ public class Orgs internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/actions/secrets") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -2995,10 +2995,10 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/actions/secrets/${secretName.encodeURLParameter()}/repositories") {
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -3108,10 +3108,10 @@ public class Orgs internal constructor(
           public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/actions/variables") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -3270,10 +3270,10 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/actions/variables/${name.encodeURLParameter()}/repositories") {
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -3850,13 +3850,13 @@ public class Orgs internal constructor(
           ): Response {
             val response = client.post("orgs/${org.encodeURLParameter()}/attestations/bulk-list") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               contentType(ContentType.Application.Json)
               setBody(Body(subjectDigests = subjectDigests, predicateType = predicateType))
@@ -4025,16 +4025,16 @@ public class Orgs internal constructor(
           ): List<IdAndName> {
             val response = client.get("orgs/${org.encodeURLParameter()}/attestations/repositories") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (predicateType != null) {
-                url.encodedParameters.append("predicate_type", predicateType.encodeURLParameter())
+                this.url.encodedParameters.append("predicate_type", predicateType.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -4111,16 +4111,16 @@ public class Orgs internal constructor(
           ): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/attestations/${subjectDigest.encodeURLParameter()}") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (predicateType != null) {
-                url.encodedParameters.append("predicate_type", predicateType.encodeURLParameter())
+                this.url.encodedParameters.append("predicate_type", predicateType.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -4181,10 +4181,10 @@ public class Orgs internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
           val response = client.get("orgs/${org.encodeURLParameter()}/blocks") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -4285,19 +4285,19 @@ public class Orgs internal constructor(
         ): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/campaigns") {
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (direction != null) {
-              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
             }
             if (state != null) {
-              url.encodedParameters.append("state", state.value.encodeURLParameter())
+              this.url.encodedParameters.append("state", state.value.encodeURLParameter())
             }
             if (sort != null) {
-              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
             }
           }
           return when (response.status.value) {
@@ -4651,37 +4651,37 @@ public class Orgs internal constructor(
           ): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/code-scanning/alerts") {
               if (toolName != null) {
-                url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
+                this.url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
               }
               if (toolGuid != null) {
-                url.encodedParameters.append("tool_guid", toolGuid.encodeURLParameter())
+                this.url.encodedParameters.append("tool_guid", toolGuid.encodeURLParameter())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (direction != null) {
-                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
               if (state != null) {
-                url.encodedParameters.append("state", state.value.encodeURLParameter())
+                this.url.encodedParameters.append("state", state.value.encodeURLParameter())
               }
               if (sort != null) {
-                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
               if (severity != null) {
-                url.encodedParameters.append("severity", severity.value.encodeURLParameter())
+                this.url.encodedParameters.append("severity", severity.value.encodeURLParameter())
               }
               if (assignees != null) {
-                url.encodedParameters.append("assignees", assignees.encodeURLParameter())
+                this.url.encodedParameters.append("assignees", assignees.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -4771,16 +4771,16 @@ public class Orgs internal constructor(
           ): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/code-security/configurations") {
               if (targetType != null) {
-                url.encodedParameters.append("target_type", targetType.value.encodeURLParameter())
+                this.url.encodedParameters.append("target_type", targetType.value.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -6001,16 +6001,16 @@ public class Orgs internal constructor(
               ): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/code-security/configurations/$configurationId/repositories") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (before != null) {
-                    url.encodedParameters.append("before", before.encodeURLParameter())
+                    this.url.encodedParameters.append("before", before.encodeURLParameter())
                   }
                   if (after != null) {
-                    url.encodedParameters.append("after", after.encodeURLParameter())
+                    this.url.encodedParameters.append("after", after.encodeURLParameter())
                   }
                   if (status != null) {
-                    url.encodedParameters.append("status", status.encodeURLParameter())
+                    this.url.encodedParameters.append("status", status.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -6057,10 +6057,10 @@ public class Orgs internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/codespaces") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -6305,10 +6305,10 @@ public class Orgs internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/codespaces/secrets") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -6477,10 +6477,10 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/codespaces/secrets/${secretName.encodeURLParameter()}/repositories") {
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -6695,10 +6695,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 50L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/copilot/billing/seats") {
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
               }
               return when (response.status.value) {
@@ -7199,16 +7199,16 @@ public class Orgs internal constructor(
           ): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/copilot/metrics") {
               if (since != null) {
-                url.encodedParameters.append("since", since.encodeURLParameter())
+                this.url.encodedParameters.append("since", since.encodeURLParameter())
               }
               if (until != null) {
-                url.encodedParameters.append("until", until.encodeURLParameter())
+                this.url.encodedParameters.append("until", until.encodeURLParameter())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
             }
             return when (response.status.value) {
@@ -7284,59 +7284,59 @@ public class Orgs internal constructor(
           ): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/dependabot/alerts") {
               if (state != null) {
-                url.encodedParameters.append("state", state.encodeURLParameter())
+                this.url.encodedParameters.append("state", state.encodeURLParameter())
               }
               if (severity != null) {
-                url.encodedParameters.append("severity", severity.encodeURLParameter())
+                this.url.encodedParameters.append("severity", severity.encodeURLParameter())
               }
               if (ecosystem != null) {
-                url.encodedParameters.append("ecosystem", ecosystem.encodeURLParameter())
+                this.url.encodedParameters.append("ecosystem", ecosystem.encodeURLParameter())
               }
               if (`package` != null) {
-                url.encodedParameters.append("package", `package`.encodeURLParameter())
+                this.url.encodedParameters.append("package", `package`.encodeURLParameter())
               }
               if (epssPercentage != null) {
-                url.encodedParameters.append("epss_percentage", epssPercentage.encodeURLParameter())
+                this.url.encodedParameters.append("epss_percentage", epssPercentage.encodeURLParameter())
               }
               if (artifactRegistryUrl != null) {
-                url.encodedParameters.append("artifact_registry_url", artifactRegistryUrl.encodeURLParameter())
+                this.url.encodedParameters.append("artifact_registry_url", artifactRegistryUrl.encodeURLParameter())
               }
               if (artifactRegistry != null) {
-                url.encodedParameters.append("artifact_registry", artifactRegistry.encodeURLParameter())
+                this.url.encodedParameters.append("artifact_registry", artifactRegistry.encodeURLParameter())
               }
               if (has != null) {
                 when (has) {
                   is Has.CaseString -> {
-                    url.encodedParameters.append("has", has.value.encodeURLParameter())
+                    this.url.encodedParameters.append("has", has.value.encodeURLParameter())
                   }
                   is Has.CasePatchOrDeploymentList -> {
-                    has.value.forEach { url.encodedParameters.append("has", it.value.encodeURLParameter()) }
+                    has.value.forEach { this.url.encodedParameters.append("has", it.value.encodeURLParameter()) }
                   }
                 }
               }
               if (assignee != null) {
-                url.encodedParameters.append("assignee", assignee.encodeURLParameter())
+                this.url.encodedParameters.append("assignee", assignee.encodeURLParameter())
               }
               if (runtimeRisk != null) {
-                url.encodedParameters.append("runtime_risk", runtimeRisk.encodeURLParameter())
+                this.url.encodedParameters.append("runtime_risk", runtimeRisk.encodeURLParameter())
               }
               if (scope != null) {
-                url.encodedParameters.append("scope", scope.value.encodeURLParameter())
+                this.url.encodedParameters.append("scope", scope.value.encodeURLParameter())
               }
               if (sort != null) {
-                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
               if (direction != null) {
-                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
             }
             return when (response.status.value) {
@@ -7489,10 +7489,10 @@ public class Orgs internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/dependabot/secrets") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -7689,10 +7689,10 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/dependabot/secrets/${secretName.encodeURLParameter()}/repositories") {
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -7842,10 +7842,10 @@ public class Orgs internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
           val response = client.get("orgs/${org.encodeURLParameter()}/events") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -7867,10 +7867,10 @@ public class Orgs internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/failed_invitations") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -7909,10 +7909,10 @@ public class Orgs internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/hooks") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -8225,10 +8225,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, cursor: String? = null): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/hooks/$hookId/deliveries") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (cursor != null) {
-                  url.encodedParameters.append("cursor", cursor.encodeURLParameter())
+                  this.url.encodedParameters.append("cursor", cursor.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -8433,22 +8433,22 @@ public class Orgs internal constructor(
                   apiRouteSubstring: String? = null,
                 ): ApiInsightsRouteStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/route-stats/installation/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (direction != null) {
-                      url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                      this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                     }
-                    sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                    sort?.forEach { this.url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
                     if (apiRouteSubstring != null) {
-                      url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
+                      this.url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -8516,22 +8516,22 @@ public class Orgs internal constructor(
                   apiRouteSubstring: String? = null,
                 ): ApiInsightsRouteStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/route-stats/classic_pat/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (direction != null) {
-                      url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                      this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                     }
-                    sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                    sort?.forEach { this.url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
                     if (apiRouteSubstring != null) {
-                      url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
+                      this.url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -8599,22 +8599,22 @@ public class Orgs internal constructor(
                   apiRouteSubstring: String? = null,
                 ): ApiInsightsRouteStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/route-stats/fine_grained_pat/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (direction != null) {
-                      url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                      this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                     }
-                    sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                    sort?.forEach { this.url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
                     if (apiRouteSubstring != null) {
-                      url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
+                      this.url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -8682,22 +8682,22 @@ public class Orgs internal constructor(
                   apiRouteSubstring: String? = null,
                 ): ApiInsightsRouteStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/route-stats/oauth_app/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (direction != null) {
-                      url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                      this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                     }
-                    sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                    sort?.forEach { this.url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
                     if (apiRouteSubstring != null) {
-                      url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
+                      this.url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -8765,22 +8765,22 @@ public class Orgs internal constructor(
                   apiRouteSubstring: String? = null,
                 ): ApiInsightsRouteStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/route-stats/github_app_user_to_server/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (direction != null) {
-                      url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                      this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                     }
-                    sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                    sort?.forEach { this.url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
                     if (apiRouteSubstring != null) {
-                      url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
+                      this.url.encodedParameters.append("api_route_substring", apiRouteSubstring.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -8841,22 +8841,22 @@ public class Orgs internal constructor(
               subjectNameSubstring: String? = null,
             ): ApiInsightsSubjectStats {
               val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/subject-stats") {
-                url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                 if (maxTimestamp != null) {
-                  url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                  this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (direction != null) {
-                  url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                  this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                 }
-                sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                sort?.forEach { this.url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
                 if (subjectNameSubstring != null) {
-                  url.encodedParameters.append("subject_name_substring", subjectNameSubstring.encodeURLParameter())
+                  this.url.encodedParameters.append("subject_name_substring", subjectNameSubstring.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -8918,9 +8918,9 @@ public class Orgs internal constructor(
           ) {
             public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
               val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats") {
-                url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                 if (maxTimestamp != null) {
-                  url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                  this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -8948,9 +8948,9 @@ public class Orgs internal constructor(
               ) {
                 public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/users/${userId.encodeURLParameter()}") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -8980,9 +8980,9 @@ public class Orgs internal constructor(
               ) {
                 public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/installation/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -9012,9 +9012,9 @@ public class Orgs internal constructor(
               ) {
                 public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/classic_pat/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -9044,9 +9044,9 @@ public class Orgs internal constructor(
               ) {
                 public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/fine_grained_pat/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -9076,9 +9076,9 @@ public class Orgs internal constructor(
               ) {
                 public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/oauth_app/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -9108,9 +9108,9 @@ public class Orgs internal constructor(
               ) {
                 public suspend operator fun invoke(minTimestamp: String, maxTimestamp: String? = null): ApiInsightsSummaryStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/summary-stats/github_app_user_to_server/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -9150,11 +9150,11 @@ public class Orgs internal constructor(
               maxTimestamp: String? = null,
             ): ApiInsightsTimeStats {
               val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats") {
-                url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                 if (maxTimestamp != null) {
-                  url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                  this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                 }
-                url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                this.url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
               }
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
@@ -9185,11 +9185,11 @@ public class Orgs internal constructor(
                   maxTimestamp: String? = null,
                 ): ApiInsightsTimeStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/users/${userId.encodeURLParameter()}") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
-                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                    this.url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
@@ -9222,11 +9222,11 @@ public class Orgs internal constructor(
                   maxTimestamp: String? = null,
                 ): ApiInsightsTimeStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/installation/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
-                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                    this.url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
@@ -9259,11 +9259,11 @@ public class Orgs internal constructor(
                   maxTimestamp: String? = null,
                 ): ApiInsightsTimeStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/classic_pat/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
-                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                    this.url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
@@ -9296,11 +9296,11 @@ public class Orgs internal constructor(
                   maxTimestamp: String? = null,
                 ): ApiInsightsTimeStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/fine_grained_pat/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
-                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                    this.url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
@@ -9333,11 +9333,11 @@ public class Orgs internal constructor(
                   maxTimestamp: String? = null,
                 ): ApiInsightsTimeStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/oauth_app/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
-                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                    this.url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
@@ -9370,11 +9370,11 @@ public class Orgs internal constructor(
                   maxTimestamp: String? = null,
                 ): ApiInsightsTimeStats {
                   val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/time-stats/github_app_user_to_server/$actorId") {
-                    url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                     if (maxTimestamp != null) {
-                      url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                      this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                     }
-                    url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
+                    this.url.encodedParameters.append("timestamp_increment", timestampIncrement.encodeURLParameter())
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
                   return response.body()
@@ -9412,22 +9412,22 @@ public class Orgs internal constructor(
                 actorNameSubstring: String? = null,
               ): ApiInsightsUserStats {
                 val response = client.get("orgs/${org.encodeURLParameter()}/insights/api/user-stats/${userId.encodeURLParameter()}") {
-                  url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
+                  this.url.encodedParameters.append("min_timestamp", minTimestamp.encodeURLParameter())
                   if (maxTimestamp != null) {
-                    url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
+                    this.url.encodedParameters.append("max_timestamp", maxTimestamp.encodeURLParameter())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (direction != null) {
-                    url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                    this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                   }
-                  sort?.forEach { url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
+                  sort?.forEach { this.url.encodedParameters.append("sort", it.value.encodeURLParameter()) }
                   if (actorNameSubstring != null) {
-                    url.encodedParameters.append("actor_name_substring", actorNameSubstring.encodeURLParameter())
+                    this.url.encodedParameters.append("actor_name_substring", actorNameSubstring.encodeURLParameter())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -9498,10 +9498,10 @@ public class Orgs internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/installations") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -9639,16 +9639,16 @@ public class Orgs internal constructor(
         ): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/invitations") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
             if (role != null) {
-              url.encodedParameters.append("role", role.value.encodeURLParameter())
+              this.url.encodedParameters.append("role", role.value.encodeURLParameter())
             }
             if (invitationSource != null) {
-              url.encodedParameters.append("invitation_source", invitationSource.value.encodeURLParameter())
+              this.url.encodedParameters.append("invitation_source", invitationSource.value.encodeURLParameter())
             }
           }
           return when (response.status.value) {
@@ -9828,10 +9828,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/invitations/$invitationId/teams") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -10154,31 +10154,31 @@ public class Orgs internal constructor(
         ): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/issues") {
             if (filter != null) {
-              url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+              this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
             }
             if (state != null) {
-              url.encodedParameters.append("state", state.value.encodeURLParameter())
+              this.url.encodedParameters.append("state", state.value.encodeURLParameter())
             }
             if (labels != null) {
-              url.encodedParameters.append("labels", labels.encodeURLParameter())
+              this.url.encodedParameters.append("labels", labels.encodeURLParameter())
             }
             if (type != null) {
-              url.encodedParameters.append("type", type.encodeURLParameter())
+              this.url.encodedParameters.append("type", type.encodeURLParameter())
             }
             if (sort != null) {
-              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
             }
             if (direction != null) {
-              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
             }
             if (since != null) {
-              url.encodedParameters.append("since", since.toString().encodeURLParameter())
+              this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -10276,16 +10276,16 @@ public class Orgs internal constructor(
         ): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/members") {
             if (filter != null) {
-              url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+              this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
             }
             if (role != null) {
-              url.encodedParameters.append("role", role.value.encodeURLParameter())
+              this.url.encodedParameters.append("role", role.value.encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -10409,10 +10409,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/members/${username.encodeURLParameter()}/codespaces") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -10775,12 +10775,12 @@ public class Orgs internal constructor(
         ): List<Migration> {
           val response = client.get("orgs/${org.encodeURLParameter()}/migrations") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
-            exclude?.forEach { url.encodedParameters.append("exclude", it.value.encodeURLParameter()) }
+            exclude?.forEach { this.url.encodedParameters.append("exclude", it.value.encodeURLParameter()) }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
@@ -10896,7 +10896,7 @@ public class Orgs internal constructor(
         ) {
           public suspend operator fun invoke(exclude: List<Exclude>? = null): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/migrations/$migrationId") {
-              exclude?.forEach { url.encodedParameters.append("exclude", it.value.encodeURLParameter()) }
+              exclude?.forEach { this.url.encodedParameters.append("exclude", it.value.encodeURLParameter()) }
             }
             return when (response.status.value) {
               200 -> Response.Ok(response.body())
@@ -11046,10 +11046,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/migrations/$migrationId/repositories") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -11328,10 +11328,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/organization-roles/$roleId/teams") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -11369,10 +11369,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/organization-roles/$roleId/users") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -11416,13 +11416,13 @@ public class Orgs internal constructor(
         ): List<SimpleUser> {
           val response = client.get("orgs/${org.encodeURLParameter()}/outside_collaborators") {
             if (filter != null) {
-              url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+              this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -11562,15 +11562,15 @@ public class Orgs internal constructor(
           perPage: Long? = 30L,
         ): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/packages") {
-            url.encodedParameters.append("package_type", packageType.value.encodeURLParameter())
+            this.url.encodedParameters.append("package_type", packageType.value.encodeURLParameter())
             if (visibility != null) {
-              url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
+              this.url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
           }
           return when (response.status.value) {
@@ -11710,7 +11710,7 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("orgs/${org.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -11761,13 +11761,13 @@ public class Orgs internal constructor(
               ): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/versions") {
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (state != null) {
-                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                    this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -11994,7 +11994,7 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("orgs/${org.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -12045,13 +12045,13 @@ public class Orgs internal constructor(
               ): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/versions") {
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (state != null) {
-                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                    this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -12278,7 +12278,7 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("orgs/${org.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -12329,13 +12329,13 @@ public class Orgs internal constructor(
               ): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/versions") {
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (state != null) {
-                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                    this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -12562,7 +12562,7 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("orgs/${org.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -12613,13 +12613,13 @@ public class Orgs internal constructor(
               ): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/versions") {
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (state != null) {
-                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                    this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -12846,7 +12846,7 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("orgs/${org.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -12897,13 +12897,13 @@ public class Orgs internal constructor(
               ): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/versions") {
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (state != null) {
-                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                    this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -13130,7 +13130,7 @@ public class Orgs internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("orgs/${org.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -13181,13 +13181,13 @@ public class Orgs internal constructor(
               ): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/versions") {
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (state != null) {
-                    url.encodedParameters.append("state", state.value.encodeURLParameter())
+                    this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -13364,31 +13364,31 @@ public class Orgs internal constructor(
         ): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/personal-access-token-requests") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
             if (sort != null) {
-              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
             }
             if (direction != null) {
-              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
             }
-            owner?.forEach { url.encodedParameters.append("owner", it.encodeURLParameter()) }
+            owner?.forEach { this.url.encodedParameters.append("owner", it.encodeURLParameter()) }
             if (repository != null) {
-              url.encodedParameters.append("repository", repository.encodeURLParameter())
+              this.url.encodedParameters.append("repository", repository.encodeURLParameter())
             }
             if (permission != null) {
-              url.encodedParameters.append("permission", permission.encodeURLParameter())
+              this.url.encodedParameters.append("permission", permission.encodeURLParameter())
             }
             if (lastUsedBefore != null) {
-              url.encodedParameters.append("last_used_before", lastUsedBefore.toString().encodeURLParameter())
+              this.url.encodedParameters.append("last_used_before", lastUsedBefore.toString().encodeURLParameter())
             }
             if (lastUsedAfter != null) {
-              url.encodedParameters.append("last_used_after", lastUsedAfter.toString().encodeURLParameter())
+              this.url.encodedParameters.append("last_used_after", lastUsedAfter.toString().encodeURLParameter())
             }
-            tokenId?.forEach { url.encodedParameters.append("token_id", it.encodeURLParameter()) }
+            tokenId?.forEach { this.url.encodedParameters.append("token_id", it.encodeURLParameter()) }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -13592,10 +13592,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/personal-access-token-requests/$patRequestId/repositories") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -13657,31 +13657,31 @@ public class Orgs internal constructor(
         ): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/personal-access-tokens") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
             if (sort != null) {
-              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
             }
             if (direction != null) {
-              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
             }
-            owner?.forEach { url.encodedParameters.append("owner", it.encodeURLParameter()) }
+            owner?.forEach { this.url.encodedParameters.append("owner", it.encodeURLParameter()) }
             if (repository != null) {
-              url.encodedParameters.append("repository", repository.encodeURLParameter())
+              this.url.encodedParameters.append("repository", repository.encodeURLParameter())
             }
             if (permission != null) {
-              url.encodedParameters.append("permission", permission.encodeURLParameter())
+              this.url.encodedParameters.append("permission", permission.encodeURLParameter())
             }
             if (lastUsedBefore != null) {
-              url.encodedParameters.append("last_used_before", lastUsedBefore.toString().encodeURLParameter())
+              this.url.encodedParameters.append("last_used_before", lastUsedBefore.toString().encodeURLParameter())
             }
             if (lastUsedAfter != null) {
-              url.encodedParameters.append("last_used_after", lastUsedAfter.toString().encodeURLParameter())
+              this.url.encodedParameters.append("last_used_after", lastUsedAfter.toString().encodeURLParameter())
             }
-            tokenId?.forEach { url.encodedParameters.append("token_id", it.encodeURLParameter()) }
+            tokenId?.forEach { this.url.encodedParameters.append("token_id", it.encodeURLParameter()) }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -13873,10 +13873,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/personal-access-tokens/$patId/repositories") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -13929,10 +13929,10 @@ public class Orgs internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/private-registries") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -14307,16 +14307,16 @@ public class Orgs internal constructor(
         ): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/projectsV2") {
             if (q != null) {
-              url.encodedParameters.append("q", q.encodeURLParameter())
+              this.url.encodedParameters.append("q", q.encodeURLParameter())
             }
             if (before != null) {
-              url.encodedParameters.append("before", before.encodeURLParameter())
+              this.url.encodedParameters.append("before", before.encodeURLParameter())
             }
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
           }
           return when (response.status.value) {
@@ -14468,13 +14468,13 @@ public class Orgs internal constructor(
             ): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/fields") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (before != null) {
-                  url.encodedParameters.append("before", before.encodeURLParameter())
+                  this.url.encodedParameters.append("before", before.encodeURLParameter())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -14720,26 +14720,26 @@ public class Orgs internal constructor(
             ): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/projectsV2/$projectNumber/items") {
                 if (q != null) {
-                  url.encodedParameters.append("q", q.encodeURLParameter())
+                  this.url.encodedParameters.append("q", q.encodeURLParameter())
                 }
                 if (fields != null) {
                   when (fields) {
                     is Fields.CaseString -> {
-                      url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.value.encodeURLParameter())
                     }
                     is Fields.CaseStrings -> {
-                      fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                      fields.value.forEach { this.url.encodedParameters.append("fields", it.encodeURLParameter()) }
                     }
                   }
                 }
                 if (before != null) {
-                  url.encodedParameters.append("before", before.encodeURLParameter())
+                  this.url.encodedParameters.append("before", before.encodeURLParameter())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
               }
               return when (response.status.value) {
@@ -14932,10 +14932,10 @@ public class Orgs internal constructor(
                   if (fields != null) {
                     when (fields) {
                       is Fields.CaseString -> {
-                        url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                        this.url.encodedParameters.append("fields", fields.value.encodeURLParameter())
                       }
                       is Fields.CaseStrings -> {
-                        fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                        fields.value.forEach { this.url.encodedParameters.append("fields", it.encodeURLParameter()) }
                       }
                     }
                   }
@@ -15251,21 +15251,21 @@ public class Orgs internal constructor(
                     if (fields != null) {
                       when (fields) {
                         is Fields.CaseString -> {
-                          url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                          this.url.encodedParameters.append("fields", fields.value.encodeURLParameter())
                         }
                         is Fields.CaseStrings -> {
-                          fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                          fields.value.forEach { this.url.encodedParameters.append("fields", it.encodeURLParameter()) }
                         }
                       }
                     }
                     if (before != null) {
-                      url.encodedParameters.append("before", before.encodeURLParameter())
+                      this.url.encodedParameters.append("before", before.encodeURLParameter())
                     }
                     if (after != null) {
-                      url.encodedParameters.append("after", after.encodeURLParameter())
+                      this.url.encodedParameters.append("after", after.encodeURLParameter())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                   }
                   return when (response.status.value) {
@@ -15561,13 +15561,13 @@ public class Orgs internal constructor(
           ): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/properties/values") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
               if (repositoryQuery != null) {
-                url.encodedParameters.append("repository_query", repositoryQuery.encodeURLParameter())
+                this.url.encodedParameters.append("repository_query", repositoryQuery.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -15652,10 +15652,10 @@ public class Orgs internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
           val response = client.get("orgs/${org.encodeURLParameter()}/public_members") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -15752,19 +15752,19 @@ public class Orgs internal constructor(
         ): List<MinimalRepository> {
           val response = client.get("orgs/${org.encodeURLParameter()}/repos") {
             if (type != null) {
-              url.encodedParameters.append("type", type.value.encodeURLParameter())
+              this.url.encodedParameters.append("type", type.value.encodeURLParameter())
             }
             if (sort != null) {
-              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
             }
             if (direction != null) {
-              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -16030,13 +16030,13 @@ public class Orgs internal constructor(
         ): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/rulesets") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
             if (targets != null) {
-              url.encodedParameters.append("targets", targets.encodeURLParameter())
+              this.url.encodedParameters.append("targets", targets.encodeURLParameter())
             }
           }
           return when (response.status.value) {
@@ -16160,25 +16160,25 @@ public class Orgs internal constructor(
           ): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/rulesets/rule-suites") {
               if (ref != null) {
-                url.encodedParameters.append("ref", ref.encodeURLParameter())
+                this.url.encodedParameters.append("ref", ref.encodeURLParameter())
               }
               if (repositoryName != null) {
-                url.encodedParameters.append("repository_name", repositoryName.encodeURLParameter())
+                this.url.encodedParameters.append("repository_name", repositoryName.encodeURLParameter())
               }
               if (timePeriod != null) {
-                url.encodedParameters.append("time_period", timePeriod.value.encodeURLParameter())
+                this.url.encodedParameters.append("time_period", timePeriod.value.encodeURLParameter())
               }
               if (actorName != null) {
-                url.encodedParameters.append("actor_name", actorName.encodeURLParameter())
+                this.url.encodedParameters.append("actor_name", actorName.encodeURLParameter())
               }
               if (ruleSuiteResult != null) {
-                url.encodedParameters.append("rule_suite_result", ruleSuiteResult.value.encodeURLParameter())
+                this.url.encodedParameters.append("rule_suite_result", ruleSuiteResult.value.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -16450,10 +16450,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/rulesets/$rulesetId/history") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -16562,46 +16562,46 @@ public class Orgs internal constructor(
           ): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/secret-scanning/alerts") {
               if (state != null) {
-                url.encodedParameters.append("state", state.value.encodeURLParameter())
+                this.url.encodedParameters.append("state", state.value.encodeURLParameter())
               }
               if (secretType != null) {
-                url.encodedParameters.append("secret_type", secretType.encodeURLParameter())
+                this.url.encodedParameters.append("secret_type", secretType.encodeURLParameter())
               }
               if (resolution != null) {
-                url.encodedParameters.append("resolution", resolution.encodeURLParameter())
+                this.url.encodedParameters.append("resolution", resolution.encodeURLParameter())
               }
               if (assignee != null) {
-                url.encodedParameters.append("assignee", assignee.encodeURLParameter())
+                this.url.encodedParameters.append("assignee", assignee.encodeURLParameter())
               }
               if (sort != null) {
-                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
               if (direction != null) {
-                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (validity != null) {
-                url.encodedParameters.append("validity", validity.encodeURLParameter())
+                this.url.encodedParameters.append("validity", validity.encodeURLParameter())
               }
               if (isPubliclyLeaked != null) {
-                url.encodedParameters.append("is_publicly_leaked", isPubliclyLeaked.toString())
+                this.url.encodedParameters.append("is_publicly_leaked", isPubliclyLeaked.toString())
               }
               if (isMultiRepo != null) {
-                url.encodedParameters.append("is_multi_repo", isMultiRepo.toString())
+                this.url.encodedParameters.append("is_multi_repo", isMultiRepo.toString())
               }
               if (hideSecret != null) {
-                url.encodedParameters.append("hide_secret", hideSecret.toString())
+                this.url.encodedParameters.append("hide_secret", hideSecret.toString())
               }
             }
             return when (response.status.value) {
@@ -16968,22 +16968,22 @@ public class Orgs internal constructor(
         ): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/security-advisories") {
             if (direction != null) {
-              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
             }
             if (sort != null) {
-              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
             }
             if (before != null) {
-              url.encodedParameters.append("before", before.encodeURLParameter())
+              this.url.encodedParameters.append("before", before.encodeURLParameter())
             }
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (state != null) {
-              url.encodedParameters.append("state", state.value.encodeURLParameter())
+              this.url.encodedParameters.append("state", state.value.encodeURLParameter())
             }
           }
           return when (response.status.value) {
@@ -17201,10 +17201,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/settings/immutable-releases/repositories") {
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -17289,10 +17289,10 @@ public class Orgs internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("orgs/${org.encodeURLParameter()}/settings/network-configurations") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -17495,16 +17495,16 @@ public class Orgs internal constructor(
               ): Response {
                 val response = client.get("orgs/${org.encodeURLParameter()}/team/${teamSlug.encodeURLParameter()}/copilot/metrics") {
                   if (since != null) {
-                    url.encodedParameters.append("since", since.encodeURLParameter())
+                    this.url.encodedParameters.append("since", since.encodeURLParameter())
                   }
                   if (until != null) {
-                    url.encodedParameters.append("until", until.encodeURLParameter())
+                    this.url.encodedParameters.append("until", until.encodeURLParameter())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -17565,13 +17565,13 @@ public class Orgs internal constructor(
         ): Response {
           val response = client.get("orgs/${org.encodeURLParameter()}/teams") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
             if (teamType != null) {
-              url.encodedParameters.append("team_type", teamType.value.encodeURLParameter())
+              this.url.encodedParameters.append("team_type", teamType.value.encodeURLParameter())
             }
           }
           return when (response.status.value) {
@@ -17899,10 +17899,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/invitations") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -17941,13 +17941,13 @@ public class Orgs internal constructor(
             ): List<SimpleUser> {
               val response = client.get("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/members") {
                 if (role != null) {
-                  url.encodedParameters.append("role", role.value.encodeURLParameter())
+                  this.url.encodedParameters.append("role", role.value.encodeURLParameter())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -18111,10 +18111,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<MinimalRepository> {
               val response = client.get("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/repos") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -18230,10 +18230,10 @@ public class Orgs internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<io.github.model.Team> {
               val response = client.get("orgs/${org.encodeURLParameter()}/teams/${teamSlug.encodeURLParameter()}/teams") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")

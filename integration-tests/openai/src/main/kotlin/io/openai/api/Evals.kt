@@ -49,16 +49,16 @@ public class Evals internal constructor(
     ): EvalList {
       val response = client.get("evals") {
         if (after != null) {
-          url.encodedParameters.append("after", after.encodeURLParameter())
+          this.url.encodedParameters.append("after", after.encodeURLParameter())
         }
         if (limit != null) {
-          url.encodedParameters.append("limit", limit.toString())
+          this.url.encodedParameters.append("limit", limit.toString())
         }
         if (order != null) {
-          url.encodedParameters.append("order", order.value.encodeURLParameter())
+          this.url.encodedParameters.append("order", order.value.encodeURLParameter())
         }
         if (orderBy != null) {
-          url.encodedParameters.append("order_by", orderBy.value.encodeURLParameter())
+          this.url.encodedParameters.append("order_by", orderBy.value.encodeURLParameter())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -196,16 +196,16 @@ public class Evals internal constructor(
         ): EvalRunList {
           val response = client.get("evals/${evalId.encodeURLParameter()}/runs") {
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (order != null) {
-              url.encodedParameters.append("order", order.value.encodeURLParameter())
+              this.url.encodedParameters.append("order", order.value.encodeURLParameter())
             }
             if (status != null) {
-              url.encodedParameters.append("status", status.value.encodeURLParameter())
+              this.url.encodedParameters.append("status", status.value.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -360,16 +360,16 @@ public class Evals internal constructor(
             ): EvalRunOutputItemList {
               val response = client.get("evals/${evalId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}/output_items") {
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
                 if (limit != null) {
-                  url.encodedParameters.append("limit", limit.toString())
+                  this.url.encodedParameters.append("limit", limit.toString())
                 }
                 if (status != null) {
-                  url.encodedParameters.append("status", status.value.encodeURLParameter())
+                  this.url.encodedParameters.append("status", status.value.encodeURLParameter())
                 }
                 if (order != null) {
-                  url.encodedParameters.append("order", order.value.encodeURLParameter())
+                  this.url.encodedParameters.append("order", order.value.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")

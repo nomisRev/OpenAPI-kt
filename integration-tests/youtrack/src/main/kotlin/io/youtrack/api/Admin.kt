@@ -117,13 +117,13 @@ public class Admin internal constructor(
           ): List<BundleRead.BuildBundle> {
             val response = client.get("admin/customFieldSettings/bundles/build") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               if (skip != null) {
-                url.encodedParameters.append("%24skip", skip.toString())
+                this.url.encodedParameters.append("%24skip", skip.toString())
               }
               if (top != null) {
-                url.encodedParameters.append("%24top", top.toString())
+                this.url.encodedParameters.append("%24top", top.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -137,7 +137,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.BuildBundle? = null): BundleRead.BuildBundle {
             val response = client.post("admin/customFieldSettings/bundles/build") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -178,7 +178,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.BuildBundle {
               val response = client.get("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -193,7 +193,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.BuildBundle? = null): BundleRead.BuildBundle {
               val response = client.post("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 body?.let {
                   contentType(ContentType.Application.Json)
@@ -226,13 +226,13 @@ public class Admin internal constructor(
               ): List<BundleElementRead.BuildBundleElement> {
                 val response = client.get("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}/values") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   if (skip != null) {
-                    url.encodedParameters.append("%24skip", skip.toString())
+                    this.url.encodedParameters.append("%24skip", skip.toString())
                   }
                   if (top != null) {
-                    url.encodedParameters.append("%24top", top.toString())
+                    this.url.encodedParameters.append("%24top", top.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -247,7 +247,7 @@ public class Admin internal constructor(
               public suspend operator fun invoke(fields: String? = "${'$'}type,assembleDate,color(${'$'}type,background,foreground,id),id,name,ordinal", body: BundleElementWrite.BuildBundleElement? = null): BundleElementRead.BuildBundleElement {
                 val response = client.post("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}/values") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   body?.let {
                     contentType(ContentType.Application.Json)
@@ -289,7 +289,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,assembleDate,color(${'$'}type,background,foreground,id),id,name,ordinal"): BundleElementRead.BuildBundleElement {
                   val response = client.get("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}/values/${buildBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -305,7 +305,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,assembleDate,color(${'$'}type,background,foreground,id),id,name,ordinal", body: BundleElementWrite.BuildBundleElement? = null): BundleElementRead.BuildBundleElement {
                   val response = client.post("admin/customFieldSettings/bundles/build/${id.encodeURLParameter()}/values/${buildBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                     body?.let {
                       contentType(ContentType.Application.Json)
@@ -340,13 +340,13 @@ public class Admin internal constructor(
           ): List<BundleRead.EnumBundle> {
             val response = client.get("admin/customFieldSettings/bundles/enum") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               if (skip != null) {
-                url.encodedParameters.append("%24skip", skip.toString())
+                this.url.encodedParameters.append("%24skip", skip.toString())
               }
               if (top != null) {
-                url.encodedParameters.append("%24top", top.toString())
+                this.url.encodedParameters.append("%24top", top.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -360,7 +360,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.EnumBundle? = null): BundleRead.EnumBundle {
             val response = client.post("admin/customFieldSettings/bundles/enum") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -401,7 +401,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.EnumBundle {
               val response = client.get("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -416,7 +416,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.EnumBundle? = null): BundleRead.EnumBundle {
               val response = client.post("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 body?.let {
                   contentType(ContentType.Application.Json)
@@ -449,13 +449,13 @@ public class Admin internal constructor(
               ): List<BundleElementRead.EnumBundleElement> {
                 val response = client.get("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}/values") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   if (skip != null) {
-                    url.encodedParameters.append("%24skip", skip.toString())
+                    this.url.encodedParameters.append("%24skip", skip.toString())
                   }
                   if (top != null) {
-                    url.encodedParameters.append("%24top", top.toString())
+                    this.url.encodedParameters.append("%24top", top.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -470,7 +470,7 @@ public class Admin internal constructor(
               public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,localizedName,name,ordinal", body: BundleElementWrite.EnumBundleElement? = null): BundleElementRead.EnumBundleElement {
                 val response = client.post("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}/values") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   body?.let {
                     contentType(ContentType.Application.Json)
@@ -512,7 +512,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,localizedName,name,ordinal"): BundleElementRead.EnumBundleElement {
                   val response = client.get("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}/values/${enumBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -528,7 +528,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,localizedName,name,ordinal", body: BundleElementWrite.EnumBundleElement? = null): BundleElementRead.EnumBundleElement {
                   val response = client.post("admin/customFieldSettings/bundles/enum/${id.encodeURLParameter()}/values/${enumBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                     body?.let {
                       contentType(ContentType.Application.Json)
@@ -563,13 +563,13 @@ public class Admin internal constructor(
           ): List<BundleRead.OwnedBundle> {
             val response = client.get("admin/customFieldSettings/bundles/ownedField") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               if (skip != null) {
-                url.encodedParameters.append("%24skip", skip.toString())
+                this.url.encodedParameters.append("%24skip", skip.toString())
               }
               if (top != null) {
-                url.encodedParameters.append("%24top", top.toString())
+                this.url.encodedParameters.append("%24top", top.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -583,7 +583,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.OwnedBundle? = null): BundleRead.OwnedBundle {
             val response = client.post("admin/customFieldSettings/bundles/ownedField") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -624,7 +624,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.OwnedBundle {
               val response = client.get("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -639,7 +639,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.OwnedBundle? = null): BundleRead.OwnedBundle {
               val response = client.post("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 body?.let {
                   contentType(ContentType.Application.Json)
@@ -672,13 +672,13 @@ public class Admin internal constructor(
               ): List<BundleElementRead.OwnedBundleElement> {
                 val response = client.get("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}/values") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   if (skip != null) {
-                    url.encodedParameters.append("%24skip", skip.toString())
+                    this.url.encodedParameters.append("%24skip", skip.toString())
                   }
                   if (top != null) {
-                    url.encodedParameters.append("%24top", top.toString())
+                    this.url.encodedParameters.append("%24top", top.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -693,7 +693,7 @@ public class Admin internal constructor(
               public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,name,ordinal,owner(${'$'}type,id,login,ringId)", body: BundleElementWrite.OwnedBundleElement? = null): BundleElementRead.OwnedBundleElement {
                 val response = client.post("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}/values") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   body?.let {
                     contentType(ContentType.Application.Json)
@@ -735,7 +735,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,name,ordinal,owner(${'$'}type,id,login,ringId)"): BundleElementRead.OwnedBundleElement {
                   val response = client.get("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}/values/${ownedBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -751,7 +751,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,name,ordinal,owner(${'$'}type,id,login,ringId)", body: BundleElementWrite.OwnedBundleElement? = null): BundleElementRead.OwnedBundleElement {
                   val response = client.post("admin/customFieldSettings/bundles/ownedField/${id.encodeURLParameter()}/values/${ownedBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                     body?.let {
                       contentType(ContentType.Application.Json)
@@ -786,13 +786,13 @@ public class Admin internal constructor(
           ): List<BundleRead.StateBundle> {
             val response = client.get("admin/customFieldSettings/bundles/state") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               if (skip != null) {
-                url.encodedParameters.append("%24skip", skip.toString())
+                this.url.encodedParameters.append("%24skip", skip.toString())
               }
               if (top != null) {
-                url.encodedParameters.append("%24top", top.toString())
+                this.url.encodedParameters.append("%24top", top.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -806,7 +806,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.StateBundle? = null): BundleRead.StateBundle {
             val response = client.post("admin/customFieldSettings/bundles/state") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -847,7 +847,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.StateBundle {
               val response = client.get("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -862,7 +862,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.StateBundle? = null): BundleRead.StateBundle {
               val response = client.post("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 body?.let {
                   contentType(ContentType.Application.Json)
@@ -895,13 +895,13 @@ public class Admin internal constructor(
               ): List<BundleElementRead.StateBundleElement> {
                 val response = client.get("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}/values") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   if (skip != null) {
-                    url.encodedParameters.append("%24skip", skip.toString())
+                    this.url.encodedParameters.append("%24skip", skip.toString())
                   }
                   if (top != null) {
-                    url.encodedParameters.append("%24top", top.toString())
+                    this.url.encodedParameters.append("%24top", top.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -916,7 +916,7 @@ public class Admin internal constructor(
               public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,isResolved,localizedName,name,ordinal", body: BundleElementWrite.StateBundleElement? = null): BundleElementRead.StateBundleElement {
                 val response = client.post("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}/values") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   body?.let {
                     contentType(ContentType.Application.Json)
@@ -958,7 +958,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,isResolved,localizedName,name,ordinal"): BundleElementRead.StateBundleElement {
                   val response = client.get("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}/values/${stateBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -974,7 +974,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,color(${'$'}type,background,foreground,id),id,isResolved,localizedName,name,ordinal", body: BundleElementWrite.StateBundleElement? = null): BundleElementRead.StateBundleElement {
                   val response = client.post("admin/customFieldSettings/bundles/state/${id.encodeURLParameter()}/values/${stateBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                     body?.let {
                       contentType(ContentType.Application.Json)
@@ -1009,13 +1009,13 @@ public class Admin internal constructor(
           ): List<BundleRead.UserBundle> {
             val response = client.get("admin/customFieldSettings/bundles/user") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               if (skip != null) {
-                url.encodedParameters.append("%24skip", skip.toString())
+                this.url.encodedParameters.append("%24skip", skip.toString())
               }
               if (top != null) {
-                url.encodedParameters.append("%24top", top.toString())
+                this.url.encodedParameters.append("%24top", top.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -1029,7 +1029,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.UserBundle? = null): BundleRead.UserBundle {
             val response = client.post("admin/customFieldSettings/bundles/user") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -1074,7 +1074,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.UserBundle {
               val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -1089,7 +1089,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.UserBundle? = null): BundleRead.UserBundle {
               val response = client.post("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 body?.let {
                   contentType(ContentType.Application.Json)
@@ -1118,13 +1118,13 @@ public class Admin internal constructor(
               ): List<UserRead> {
                 val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/aggregatedUsers") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   if (skip != null) {
-                    url.encodedParameters.append("%24skip", skip.toString())
+                    this.url.encodedParameters.append("%24skip", skip.toString())
                   }
                   if (top != null) {
-                    url.encodedParameters.append("%24top", top.toString())
+                    this.url.encodedParameters.append("%24top", top.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -1154,13 +1154,13 @@ public class Admin internal constructor(
               ): List<UserGroupRead> {
                 val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/groups") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   if (skip != null) {
-                    url.encodedParameters.append("%24skip", skip.toString())
+                    this.url.encodedParameters.append("%24skip", skip.toString())
                   }
                   if (top != null) {
-                    url.encodedParameters.append("%24top", top.toString())
+                    this.url.encodedParameters.append("%24top", top.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -1175,7 +1175,7 @@ public class Admin internal constructor(
               public suspend operator fun invoke(fields: String? = "${'$'}type,allUsersGroup,id,name,ringId", body: UserGroupWrite? = null): UserGroupRead {
                 val response = client.post("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/groups") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   body?.let {
                     contentType(ContentType.Application.Json)
@@ -1215,7 +1215,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,allUsersGroup,id,name,ringId"): UserGroupRead {
                   val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/groups/${userGroupId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -1246,13 +1246,13 @@ public class Admin internal constructor(
               ): List<UserRead> {
                 val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/individuals") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   if (skip != null) {
-                    url.encodedParameters.append("%24skip", skip.toString())
+                    this.url.encodedParameters.append("%24skip", skip.toString())
                   }
                   if (top != null) {
-                    url.encodedParameters.append("%24top", top.toString())
+                    this.url.encodedParameters.append("%24top", top.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -1267,7 +1267,7 @@ public class Admin internal constructor(
               public suspend operator fun invoke(fields: String? = "${'$'}type,banned,email,fullName,guest,id,login,ringId", body: UserWrite? = null): UserRead {
                 val response = client.post("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/individuals") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   body?.let {
                     contentType(ContentType.Application.Json)
@@ -1307,7 +1307,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,banned,email,fullName,guest,id,login,ringId"): UserRead {
                   val response = client.get("admin/customFieldSettings/bundles/user/${id.encodeURLParameter()}/individuals/${userId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -1338,13 +1338,13 @@ public class Admin internal constructor(
           ): List<BundleRead.VersionBundle> {
             val response = client.get("admin/customFieldSettings/bundles/version") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               if (skip != null) {
-                url.encodedParameters.append("%24skip", skip.toString())
+                this.url.encodedParameters.append("%24skip", skip.toString())
               }
               if (top != null) {
-                url.encodedParameters.append("%24top", top.toString())
+                this.url.encodedParameters.append("%24top", top.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -1358,7 +1358,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.VersionBundle? = null): BundleRead.VersionBundle {
             val response = client.post("admin/customFieldSettings/bundles/version") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -1399,7 +1399,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id"): BundleRead.VersionBundle {
               val response = client.get("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -1414,7 +1414,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: BundleWrite.VersionBundle? = null): BundleRead.VersionBundle {
               val response = client.post("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 body?.let {
                   contentType(ContentType.Application.Json)
@@ -1447,13 +1447,13 @@ public class Admin internal constructor(
               ): List<BundleElementRead.VersionBundleElement> {
                 val response = client.get("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}/values") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   if (skip != null) {
-                    url.encodedParameters.append("%24skip", skip.toString())
+                    this.url.encodedParameters.append("%24skip", skip.toString())
                   }
                   if (top != null) {
-                    url.encodedParameters.append("%24top", top.toString())
+                    this.url.encodedParameters.append("%24top", top.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -1468,7 +1468,7 @@ public class Admin internal constructor(
               public suspend operator fun invoke(fields: String? = "${'$'}type,archived,color(${'$'}type,background,foreground,id),id,name,ordinal,releaseDate,released", body: BundleElementWrite.VersionBundleElement? = null): BundleElementRead.VersionBundleElement {
                 val response = client.post("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}/values") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                   body?.let {
                     contentType(ContentType.Application.Json)
@@ -1510,7 +1510,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,archived,color(${'$'}type,background,foreground,id),id,name,ordinal,releaseDate,released"): BundleElementRead.VersionBundleElement {
                   val response = client.get("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}/values/${versionBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -1526,7 +1526,7 @@ public class Admin internal constructor(
                 public suspend operator fun invoke(fields: String? = "${'$'}type,archived,color(${'$'}type,background,foreground,id),id,name,ordinal,releaseDate,released", body: BundleElementWrite.VersionBundleElement? = null): BundleElementRead.VersionBundleElement {
                   val response = client.post("admin/customFieldSettings/bundles/version/${id.encodeURLParameter()}/values/${versionBundleElementId.encodeURLParameter()}") {
                     if (fields != null) {
-                      url.encodedParameters.append("fields", fields.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                     }
                     body?.let {
                       contentType(ContentType.Application.Json)
@@ -1562,13 +1562,13 @@ public class Admin internal constructor(
         ): List<CustomFieldRead> {
           val response = client.get("admin/customFieldSettings/customFields") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1582,7 +1582,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,fieldType(${'$'}type,id),id,isAutoAttached,isUpdateable,localizedName,name,ordinal", body: CustomFieldWrite? = null): CustomFieldRead {
           val response = client.post("admin/customFieldSettings/customFields") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -1625,7 +1625,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,fieldType(${'$'}type,id),id,isAutoAttached,isUpdateable,localizedName,name,ordinal"): CustomFieldRead {
             val response = client.get("admin/customFieldSettings/customFields/${id.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -1640,7 +1640,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,fieldType(${'$'}type,id),id,isAutoAttached,isUpdateable,localizedName,name,ordinal", body: CustomFieldWrite? = null): CustomFieldRead {
             val response = client.post("admin/customFieldSettings/customFields/${id.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -1667,7 +1667,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,bundle(${'$'}type,id),canBeEmpty,defaultValues(${'$'}type,id,name),emptyFieldText,id,isPublic"): CustomFieldDefaultsRead {
               val response = client.get("admin/customFieldSettings/customFields/${id.encodeURLParameter()}/fieldDefaults") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -1682,7 +1682,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,bundle(${'$'}type,id),canBeEmpty,defaultValues(${'$'}type,id,name),emptyFieldText,id,isPublic", body: CustomFieldDefaultsWrite? = null): CustomFieldDefaultsRead {
               val response = client.post("admin/customFieldSettings/customFields/${id.encodeURLParameter()}/fieldDefaults") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 body?.let {
                   contentType(ContentType.Application.Json)
@@ -1712,13 +1712,13 @@ public class Admin internal constructor(
             ): List<ProjectCustomFieldRead> {
               val response = client.get("admin/customFieldSettings/customFields/${id.encodeURLParameter()}/instances") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 if (skip != null) {
-                  url.encodedParameters.append("%24skip", skip.toString())
+                  this.url.encodedParameters.append("%24skip", skip.toString())
                 }
                 if (top != null) {
-                  url.encodedParameters.append("%24top", top.toString())
+                  this.url.encodedParameters.append("%24top", top.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -1744,13 +1744,13 @@ public class Admin internal constructor(
         ): List<FieldTypeRead> {
           val response = client.get("admin/customFieldSettings/types") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1784,13 +1784,13 @@ public class Admin internal constructor(
         ): List<BackupFile> {
           val response = client.get("admin/databaseBackup/backups") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1811,7 +1811,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,creationDate,id,link,name,size"): BackupFile {
             val response = client.get("admin/databaseBackup/backups/${id.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -1836,7 +1836,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,availableDiskSpace,backupStatus(${'$'}type,backupCancelled,backupError(${'$'}type,date,errorMessage,id),backupInProgress,id),id,isOn,location"): DatabaseBackupSettingsRead {
           val response = client.get("admin/databaseBackup/settings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1850,7 +1850,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,availableDiskSpace,backupStatus(${'$'}type,backupCancelled,backupError(${'$'}type,date,errorMessage,id),backupInProgress,id),id,isOn,location", body: DatabaseBackupSettingsWrite? = null): DatabaseBackupSettingsRead {
           val response = client.post("admin/databaseBackup/settings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -1873,7 +1873,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,backupCancelled,backupError(${'$'}type,date,errorMessage,id),backupInProgress,id"): io.youtrack.model.BackupStatus {
             val response = client.get("admin/databaseBackup/settings/backupStatus") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -1909,7 +1909,7 @@ public class Admin internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,appearanceSettings(${'$'}type,dateFieldFormat(${'$'}type,datePattern,id,pattern,presentation),id,timeZone(${'$'}type,id,offset,presentation)),id,license(${'$'}type,error,id,license,username),localeSettings(${'$'}type,id,isRTL,locale(${'$'}type,community,id,language,locale,name)),notificationSettings(${'$'}type,emailSettings(${'$'}type,id,isEnabled),id),restSettings(${'$'}type,allowAllOrigins,allowedOrigins,id),systemSettings(${'$'}type,baseUrl,id,isApplicationReadOnly,maxExportItems,maxUploadFileSize)"): GlobalSettingsRead {
         val response = client.get("admin/globalSettings") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -1923,7 +1923,7 @@ public class Admin internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,appearanceSettings(${'$'}type,dateFieldFormat(${'$'}type,datePattern,id,pattern,presentation),id,timeZone(${'$'}type,id,offset,presentation)),id,license(${'$'}type,error,id,license,username),localeSettings(${'$'}type,id,isRTL,locale(${'$'}type,community,id,language,locale,name)),notificationSettings(${'$'}type,emailSettings(${'$'}type,id,isEnabled),id),restSettings(${'$'}type,allowAllOrigins,allowedOrigins,id),systemSettings(${'$'}type,baseUrl,id,isApplicationReadOnly,maxExportItems,maxUploadFileSize)", body: GlobalSettingsWrite? = null): GlobalSettingsRead {
         val response = client.post("admin/globalSettings") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
           body?.let {
             contentType(ContentType.Application.Json)
@@ -1948,7 +1948,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,dateFieldFormat(${'$'}type,datePattern,id,pattern,presentation),id,timeZone(${'$'}type,id,offset,presentation)"): AppearanceSettingsRead {
           val response = client.get("admin/globalSettings/appearanceSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1962,7 +1962,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,dateFieldFormat(${'$'}type,datePattern,id,pattern,presentation),id,timeZone(${'$'}type,id,offset,presentation)", body: AppearanceSettingsWrite? = null): AppearanceSettingsRead {
           val response = client.post("admin/globalSettings/appearanceSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -1988,7 +1988,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,error,id,license,username"): LicenseRead {
           val response = client.get("admin/globalSettings/license") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -2002,7 +2002,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,error,id,license,username", body: LicenseWrite? = null): LicenseRead {
           val response = client.post("admin/globalSettings/license") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -2028,7 +2028,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,id,isRTL,locale(${'$'}type,community,id,language,locale,name)"): LocaleSettingsRead {
           val response = client.get("admin/globalSettings/localeSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -2042,7 +2042,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,id,isRTL,locale(${'$'}type,community,id,language,locale,name)", body: LocaleSettingsWrite? = null): LocaleSettingsRead {
           val response = client.post("admin/globalSettings/localeSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -2068,7 +2068,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,emailSettings(${'$'}type,id,isEnabled),id"): NotificationSettingsRead {
           val response = client.get("admin/globalSettings/notificationSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -2082,7 +2082,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,emailSettings(${'$'}type,id,isEnabled),id", body: NotificationSettingsWrite? = null): NotificationSettingsRead {
           val response = client.post("admin/globalSettings/notificationSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -2108,7 +2108,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,allowAllOrigins,allowedOrigins,id"): RestCorsSettingsRead {
           val response = client.get("admin/globalSettings/restSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -2122,7 +2122,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,allowAllOrigins,allowedOrigins,id", body: RestCorsSettingsWrite? = null): RestCorsSettingsRead {
           val response = client.post("admin/globalSettings/restSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -2148,7 +2148,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,baseUrl,id,isApplicationReadOnly,maxExportItems,maxUploadFileSize"): SystemSettingsRead {
           val response = client.get("admin/globalSettings/systemSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -2162,7 +2162,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,baseUrl,id,isApplicationReadOnly,maxExportItems,maxUploadFileSize", body: SystemSettingsWrite? = null): SystemSettingsRead {
           val response = client.post("admin/globalSettings/systemSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -2195,13 +2195,13 @@ public class Admin internal constructor(
       ): List<IssueFolderRead.Project> {
         val response = client.get("admin/projects") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
           if (skip != null) {
-            url.encodedParameters.append("%24skip", skip.toString())
+            this.url.encodedParameters.append("%24skip", skip.toString())
           }
           if (top != null) {
-            url.encodedParameters.append("%24top", top.toString())
+            this.url.encodedParameters.append("%24top", top.toString())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -2219,10 +2219,10 @@ public class Admin internal constructor(
       ): IssueFolderRead.Project {
         val response = client.post("admin/projects") {
           if (template != null) {
-            url.encodedParameters.append("template", template.encodeURLParameter())
+            this.url.encodedParameters.append("template", template.encodeURLParameter())
           }
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
           body?.let {
             contentType(ContentType.Application.Json)
@@ -2269,7 +2269,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,archived,customFields,id,leader(${'$'}type,id,login,ringId),name,shortName"): IssueFolderRead.Project {
           val response = client.get("admin/projects/${id.encodeURLParameter()}") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -2284,7 +2284,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,archived,customFields,id,leader(${'$'}type,id,login,ringId),name,shortName", body: IssueFolderWrite.Project? = null): IssueFolderRead.Project {
           val response = client.post("admin/projects/${id.encodeURLParameter()}") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -2313,13 +2313,13 @@ public class Admin internal constructor(
           ): List<BaseArticleRead.Article> {
             val response = client.get("admin/projects/${id.encodeURLParameter()}/articles") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               if (skip != null) {
-                url.encodedParameters.append("%24skip", skip.toString())
+                this.url.encodedParameters.append("%24skip", skip.toString())
               }
               if (top != null) {
-                url.encodedParameters.append("%24top", top.toString())
+                this.url.encodedParameters.append("%24top", top.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -2349,13 +2349,13 @@ public class Admin internal constructor(
           ): List<ProjectCustomFieldRead> {
             val response = client.get("admin/projects/${id.encodeURLParameter()}/customFields") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               if (skip != null) {
-                url.encodedParameters.append("%24skip", skip.toString())
+                this.url.encodedParameters.append("%24skip", skip.toString())
               }
               if (top != null) {
-                url.encodedParameters.append("%24top", top.toString())
+                this.url.encodedParameters.append("%24top", top.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -2370,7 +2370,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,bundle(${'$'}type,id),canBeEmpty,defaultValues(${'$'}type,id,name),emptyFieldText,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,isPublic,ordinal", body: ProjectCustomFieldWrite? = null): ProjectCustomFieldRead {
             val response = client.post("admin/projects/${id.encodeURLParameter()}/customFields") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -2412,7 +2412,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,bundle(${'$'}type,id),canBeEmpty,defaultValues(${'$'}type,id,name),emptyFieldText,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,isPublic,ordinal"): ProjectCustomFieldRead {
               val response = client.get("admin/projects/${id.encodeURLParameter()}/customFields/${projectCustomFieldId.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -2428,7 +2428,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,bundle(${'$'}type,id),canBeEmpty,defaultValues(${'$'}type,id,name),emptyFieldText,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,isPublic,ordinal", body: ProjectCustomFieldWrite? = null): ProjectCustomFieldRead {
               val response = client.post("admin/projects/${id.encodeURLParameter()}/customFields/${projectCustomFieldId.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 body?.let {
                   contentType(ContentType.Application.Json)
@@ -2464,16 +2464,16 @@ public class Admin internal constructor(
           ): List<IssueRead> {
             val response = client.get("admin/projects/${id.encodeURLParameter()}/issues") {
               if (customFields != null) {
-                url.encodedParameters.append("customFields", customFields.encodeURLParameter())
+                this.url.encodedParameters.append("customFields", customFields.encodeURLParameter())
               }
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               if (skip != null) {
-                url.encodedParameters.append("%24skip", skip.toString())
+                this.url.encodedParameters.append("%24skip", skip.toString())
               }
               if (top != null) {
-                url.encodedParameters.append("%24top", top.toString())
+                this.url.encodedParameters.append("%24top", top.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -2492,10 +2492,10 @@ public class Admin internal constructor(
           ): IssueRead {
             val response = client.post("admin/projects/${id.encodeURLParameter()}/issues") {
               if (muteUpdateNotifications != null) {
-                url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+                this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
               }
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -2537,7 +2537,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,created,customFields(${'$'}type,id,name,value(${'$'}type,id,name)),description,id,idReadable,links(${'$'}type,direction,id,linkType(${'$'}type,id,localizedName,name)),numberInProject,project(${'$'}type,id,name,shortName),reporter(${'$'}type,id,login,ringId),resolved,summary,updated,updater(${'$'}type,id,login,ringId),visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))"): IssueRead {
               val response = client.get("admin/projects/${id.encodeURLParameter()}/issues/${issueId.encodeURLParameter()}") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -2557,10 +2557,10 @@ public class Admin internal constructor(
             ): IssueRead {
               val response = client.post("admin/projects/${id.encodeURLParameter()}/issues/${issueId.encodeURLParameter()}") {
                 if (muteUpdateNotifications != null) {
-                  url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+                  this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
                 }
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 body?.let {
                   contentType(ContentType.Application.Json)
@@ -2591,7 +2591,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,enabled,estimate(${'$'}type,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,timeSpent(${'$'}type,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id)"): ProjectTimeTrackingSettingsRead {
             val response = client.get("admin/projects/${id.encodeURLParameter()}/timeTrackingSettings") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -2606,7 +2606,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,enabled,estimate(${'$'}type,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,timeSpent(${'$'}type,field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id)", body: ProjectTimeTrackingSettingsWrite? = null): ProjectTimeTrackingSettingsRead {
             val response = client.post("admin/projects/${id.encodeURLParameter()}/timeTrackingSettings") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -2639,13 +2639,13 @@ public class Admin internal constructor(
             ): List<WorkItemTypeRead> {
               val response = client.get("admin/projects/${id.encodeURLParameter()}/timeTrackingSettings/workItemTypes") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 if (skip != null) {
-                  url.encodedParameters.append("%24skip", skip.toString())
+                  this.url.encodedParameters.append("%24skip", skip.toString())
                 }
                 if (top != null) {
-                  url.encodedParameters.append("%24top", top.toString())
+                  this.url.encodedParameters.append("%24top", top.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -2660,7 +2660,7 @@ public class Admin internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,autoAttached,id,name", body: WorkItemTypeWrite? = null): WorkItemTypeRead {
               val response = client.post("admin/projects/${id.encodeURLParameter()}/timeTrackingSettings/workItemTypes") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 body?.let {
                   contentType(ContentType.Application.Json)
@@ -2700,7 +2700,7 @@ public class Admin internal constructor(
               public suspend operator fun invoke(fields: String? = "${'$'}type,autoAttached,id,name"): WorkItemTypeRead {
                 val response = client.get("admin/projects/${id.encodeURLParameter()}/timeTrackingSettings/workItemTypes/${workItemTypeId.encodeURLParameter()}") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -2724,7 +2724,7 @@ public class Admin internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,allocatedMemory,availableMemory,availableProcessors,blobStringsCacheHitRate,cachedResultsCountInDBQueriesCache,databaseBackgroundThreads,databaseLocation,databaseQueriesCacheHitRate,databaseSize,fullDatabaseSize,id,installationFolder,logsLocation,notificationAnalyzerThreads,onlineUsers(${'$'}type,id,users),pendingAsyncJobs,reportCalculatorThreads,requestsPerSecond,startedTime,textIndexSize,totalTransactions,transactionsPerSecond,uptime,usedMemory"): io.youtrack.model.Telemetry {
         val response = client.get("admin/telemetry") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -2748,7 +2748,7 @@ public class Admin internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,workItemTypes(${'$'}type,id,name),workTimeSettings(${'$'}type,daysAWeek,firstDayOfWeek,id,minutesADay,workDays)"): GlobalTimeTrackingSettings {
         val response = client.get("admin/timeTrackingSettings") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -2775,13 +2775,13 @@ public class Admin internal constructor(
         ): List<WorkItemTypeRead> {
           val response = client.get("admin/timeTrackingSettings/workItemTypes") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -2795,7 +2795,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,autoAttached,id,name", body: WorkItemTypeWrite? = null): WorkItemTypeRead {
           val response = client.post("admin/timeTrackingSettings/workItemTypes") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -2834,7 +2834,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,autoAttached,id,name"): WorkItemTypeRead {
             val response = client.get("admin/timeTrackingSettings/workItemTypes/${workItemTypeId.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -2849,7 +2849,7 @@ public class Admin internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,autoAttached,id,name", body: WorkItemTypeWrite? = null): WorkItemTypeRead {
             val response = client.post("admin/timeTrackingSettings/workItemTypes/${workItemTypeId.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -2876,7 +2876,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,daysAWeek,firstDayOfWeek,id,minutesADay,workDays"): WorkTimeSettingsRead {
           val response = client.get("admin/timeTrackingSettings/workTimeSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -2890,7 +2890,7 @@ public class Admin internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,daysAWeek,firstDayOfWeek,id,minutesADay,workDays", body: WorkTimeSettingsWrite? = null): WorkTimeSettingsRead {
           val response = client.post("admin/timeTrackingSettings/workTimeSettings") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)

@@ -38,13 +38,13 @@ public class Agiles internal constructor(
     ): List<AgileRead> {
       val response = client.get("agiles") {
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         if (skip != null) {
-          url.encodedParameters.append("%24skip", skip.toString())
+          this.url.encodedParameters.append("%24skip", skip.toString())
         }
         if (top != null) {
-          url.encodedParameters.append("%24top", top.toString())
+          this.url.encodedParameters.append("%24top", top.toString())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -62,10 +62,10 @@ public class Agiles internal constructor(
     ): AgileRead {
       val response = client.post("agiles") {
         if (template != null) {
-          url.encodedParameters.append("template", template.encodeURLParameter())
+          this.url.encodedParameters.append("template", template.encodeURLParameter())
         }
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         body?.let {
           contentType(ContentType.Application.Json)
@@ -106,7 +106,7 @@ public class Agiles internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,columnSettings(${'$'}type,columns(${'$'}type,id),field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,name,owner(${'$'}type,id,login,ringId),projects(${'$'}type,id,name,shortName),status(${'$'}type,id,valid),swimlaneSettings(${'$'}type,enabled,field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,values(${'$'}type,id,name))"): AgileRead {
         val response = client.get("agiles/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -121,7 +121,7 @@ public class Agiles internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,columnSettings(${'$'}type,columns(${'$'}type,id),field(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id),id,name,owner(${'$'}type,id,login,ringId),projects(${'$'}type,id,name,shortName),status(${'$'}type,id,valid),swimlaneSettings(${'$'}type,enabled,field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,values(${'$'}type,id,name))", body: AgileWrite? = null): AgileRead {
         val response = client.post("agiles/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
           body?.let {
             contentType(ContentType.Application.Json)
@@ -154,13 +154,13 @@ public class Agiles internal constructor(
         ): List<SprintRead> {
           val response = client.get("agiles/${id.encodeURLParameter()}/sprints") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -179,10 +179,10 @@ public class Agiles internal constructor(
         ): SprintRead {
           val response = client.post("agiles/${id.encodeURLParameter()}/sprints") {
             if (muteUpdateNotifications != null) {
-              url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+              this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -224,7 +224,7 @@ public class Agiles internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start"): SprintRead {
             val response = client.get("agiles/${id.encodeURLParameter()}/sprints/${sprintId.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -240,7 +240,7 @@ public class Agiles internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,archived,finish,id,isDefault,name,start", body: SprintWrite? = null): SprintRead {
             val response = client.post("agiles/${id.encodeURLParameter()}/sprints/${sprintId.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)

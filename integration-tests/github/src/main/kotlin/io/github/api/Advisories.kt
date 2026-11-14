@@ -64,72 +64,72 @@ public class Advisories internal constructor(
     ): Response {
       val response = client.get("advisories") {
         if (ghsaId != null) {
-          url.encodedParameters.append("ghsa_id", ghsaId.encodeURLParameter())
+          this.url.encodedParameters.append("ghsa_id", ghsaId.encodeURLParameter())
         }
         if (type != null) {
-          url.encodedParameters.append("type", type.value.encodeURLParameter())
+          this.url.encodedParameters.append("type", type.value.encodeURLParameter())
         }
         if (cveId != null) {
-          url.encodedParameters.append("cve_id", cveId.encodeURLParameter())
+          this.url.encodedParameters.append("cve_id", cveId.encodeURLParameter())
         }
         if (ecosystem != null) {
-          url.encodedParameters.append("ecosystem", ecosystem.value.encodeURLParameter())
+          this.url.encodedParameters.append("ecosystem", ecosystem.value.encodeURLParameter())
         }
         if (severity != null) {
-          url.encodedParameters.append("severity", severity.value.encodeURLParameter())
+          this.url.encodedParameters.append("severity", severity.value.encodeURLParameter())
         }
         if (cwes != null) {
           when (cwes) {
             is Cwes.CaseString -> {
-              url.encodedParameters.append("cwes", cwes.value.encodeURLParameter())
+              this.url.encodedParameters.append("cwes", cwes.value.encodeURLParameter())
             }
             is Cwes.CaseStrings -> {
-              cwes.value.forEach { url.encodedParameters.append("cwes", it.encodeURLParameter()) }
+              cwes.value.forEach { this.url.encodedParameters.append("cwes", it.encodeURLParameter()) }
             }
           }
         }
         if (isWithdrawn != null) {
-          url.encodedParameters.append("is_withdrawn", isWithdrawn.toString())
+          this.url.encodedParameters.append("is_withdrawn", isWithdrawn.toString())
         }
         if (affects != null) {
           when (affects) {
             is Affects.CaseString -> {
-              url.encodedParameters.append("affects", affects.value.encodeURLParameter())
+              this.url.encodedParameters.append("affects", affects.value.encodeURLParameter())
             }
             is Affects.CaseStrings -> {
-              affects.value.forEach { url.encodedParameters.append("affects", it.encodeURLParameter()) }
+              affects.value.forEach { this.url.encodedParameters.append("affects", it.encodeURLParameter()) }
             }
           }
         }
         if (published != null) {
-          url.encodedParameters.append("published", published.encodeURLParameter())
+          this.url.encodedParameters.append("published", published.encodeURLParameter())
         }
         if (updated != null) {
-          url.encodedParameters.append("updated", updated.encodeURLParameter())
+          this.url.encodedParameters.append("updated", updated.encodeURLParameter())
         }
         if (modified != null) {
-          url.encodedParameters.append("modified", modified.encodeURLParameter())
+          this.url.encodedParameters.append("modified", modified.encodeURLParameter())
         }
         if (epssPercentage != null) {
-          url.encodedParameters.append("epss_percentage", epssPercentage.encodeURLParameter())
+          this.url.encodedParameters.append("epss_percentage", epssPercentage.encodeURLParameter())
         }
         if (epssPercentile != null) {
-          url.encodedParameters.append("epss_percentile", epssPercentile.encodeURLParameter())
+          this.url.encodedParameters.append("epss_percentile", epssPercentile.encodeURLParameter())
         }
         if (before != null) {
-          url.encodedParameters.append("before", before.encodeURLParameter())
+          this.url.encodedParameters.append("before", before.encodeURLParameter())
         }
         if (after != null) {
-          url.encodedParameters.append("after", after.encodeURLParameter())
+          this.url.encodedParameters.append("after", after.encodeURLParameter())
         }
         if (direction != null) {
-          url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+          this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
         }
         if (perPage != null) {
-          url.encodedParameters.append("per_page", perPage.toString())
+          this.url.encodedParameters.append("per_page", perPage.toString())
         }
         if (sort != null) {
-          url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+          this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
         }
       }
       return when (response.status.value) {

@@ -35,13 +35,13 @@ public class IssueLinkTypes internal constructor(
     ): List<IssueLinkTypeRead> {
       val response = client.get("issueLinkTypes") {
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         if (skip != null) {
-          url.encodedParameters.append("%24skip", skip.toString())
+          this.url.encodedParameters.append("%24skip", skip.toString())
         }
         if (top != null) {
-          url.encodedParameters.append("%24top", top.toString())
+          this.url.encodedParameters.append("%24top", top.toString())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -55,7 +55,7 @@ public class IssueLinkTypes internal constructor(
     public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource", body: IssueLinkTypeWrite? = null): IssueLinkTypeRead {
       val response = client.post("issueLinkTypes") {
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         body?.let {
           contentType(ContentType.Application.Json)
@@ -94,7 +94,7 @@ public class IssueLinkTypes internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource"): IssueLinkTypeRead {
         val response = client.get("issueLinkTypes/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -109,7 +109,7 @@ public class IssueLinkTypes internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,aggregation,directed,id,localizedName,localizedSourceToTarget,localizedTargetToSource,name,readOnly,sourceToTarget,targetToSource", body: IssueLinkTypeWrite? = null): IssueLinkTypeRead {
         val response = client.post("issueLinkTypes/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
           body?.let {
             contentType(ContentType.Application.Json)

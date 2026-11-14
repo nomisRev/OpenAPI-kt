@@ -915,13 +915,13 @@ public class Repos internal constructor(
             ): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/artifacts") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (name != null) {
-                  url.encodedParameters.append("name", name.encodeURLParameter())
+                  this.url.encodedParameters.append("name", name.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -1212,9 +1212,9 @@ public class Repos internal constructor(
           ) {
             public suspend operator fun invoke(key: String, ref: String? = null): ActionsCacheList {
               val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/caches") {
-                url.encodedParameters.append("key", key.encodeURLParameter())
+                this.url.encodedParameters.append("key", key.encodeURLParameter())
                 if (ref != null) {
-                  url.encodedParameters.append("ref", ref.encodeURLParameter())
+                  this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -1237,22 +1237,22 @@ public class Repos internal constructor(
             ): ActionsCacheList {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/caches") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (ref != null) {
-                  url.encodedParameters.append("ref", ref.encodeURLParameter())
+                  this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
                 if (key != null) {
-                  url.encodedParameters.append("key", key.encodeURLParameter())
+                  this.url.encodedParameters.append("key", key.encodeURLParameter())
                 }
                 if (sort != null) {
-                  url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                  this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
                 if (direction != null) {
-                  url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                  this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -1538,10 +1538,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/organization-secrets") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -1572,10 +1572,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/organization-variables") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -2010,13 +2010,13 @@ public class Repos internal constructor(
             ): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runners") {
                 if (name != null) {
-                  url.encodedParameters.append("name", name.encodeURLParameter())
+                  this.url.encodedParameters.append("name", name.encodeURLParameter())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -2440,34 +2440,34 @@ public class Repos internal constructor(
             ): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs") {
                 if (actor != null) {
-                  url.encodedParameters.append("actor", actor.encodeURLParameter())
+                  this.url.encodedParameters.append("actor", actor.encodeURLParameter())
                 }
                 if (branch != null) {
-                  url.encodedParameters.append("branch", branch.encodeURLParameter())
+                  this.url.encodedParameters.append("branch", branch.encodeURLParameter())
                 }
                 if (event != null) {
-                  url.encodedParameters.append("event", event.encodeURLParameter())
+                  this.url.encodedParameters.append("event", event.encodeURLParameter())
                 }
                 if (status != null) {
-                  url.encodedParameters.append("status", status.value.encodeURLParameter())
+                  this.url.encodedParameters.append("status", status.value.encodeURLParameter())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (created != null) {
-                  url.encodedParameters.append("created", created.toString().encodeURLParameter())
+                  this.url.encodedParameters.append("created", created.toString().encodeURLParameter())
                 }
                 if (excludePullRequests != null) {
-                  url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
+                  this.url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
                 }
                 if (checkSuiteId != null) {
-                  url.encodedParameters.append("check_suite_id", checkSuiteId.toString())
+                  this.url.encodedParameters.append("check_suite_id", checkSuiteId.toString())
                 }
                 if (headSha != null) {
-                  url.encodedParameters.append("head_sha", headSha.encodeURLParameter())
+                  this.url.encodedParameters.append("head_sha", headSha.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -2578,7 +2578,7 @@ public class Repos internal constructor(
               public suspend operator fun invoke(excludePullRequests: Boolean? = false): WorkflowRun {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId") {
                   if (excludePullRequests != null) {
-                    url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
+                    this.url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -2670,16 +2670,16 @@ public class Repos internal constructor(
                 ): Response {
                   val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/artifacts") {
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                     if (name != null) {
-                      url.encodedParameters.append("name", name.encodeURLParameter())
+                      this.url.encodedParameters.append("name", name.encodeURLParameter())
                     }
                     if (direction != null) {
-                      url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                      this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -2737,7 +2737,7 @@ public class Repos internal constructor(
                   public suspend operator fun invoke(excludePullRequests: Boolean? = false): WorkflowRun {
                     val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/attempts/$attemptNumber") {
                       if (excludePullRequests != null) {
-                        url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
+                        this.url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
                       }
                     }
                     if (response.status.value != 200) throw ResponseException(response, "")
@@ -2764,10 +2764,10 @@ public class Repos internal constructor(
                     public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                       val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/attempts/$attemptNumber/jobs") {
                         if (perPage != null) {
-                          url.encodedParameters.append("per_page", perPage.toString())
+                          this.url.encodedParameters.append("per_page", perPage.toString())
                         }
                         if (page != null) {
-                          url.encodedParameters.append("page", page.toString())
+                          this.url.encodedParameters.append("page", page.toString())
                         }
                       }
                       return when (response.status.value) {
@@ -2940,13 +2940,13 @@ public class Repos internal constructor(
                 ): Response {
                   val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/runs/$runId/jobs") {
                     if (filter != null) {
-                      url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+                      this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -3209,10 +3209,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/secrets") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -3340,10 +3340,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/variables") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -3461,10 +3461,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/workflows") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -3631,34 +3631,34 @@ public class Repos internal constructor(
                 ): Response {
                   val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/actions/workflows/${workflowId.encodeURLParameter()}/runs") {
                     if (actor != null) {
-                      url.encodedParameters.append("actor", actor.encodeURLParameter())
+                      this.url.encodedParameters.append("actor", actor.encodeURLParameter())
                     }
                     if (branch != null) {
-                      url.encodedParameters.append("branch", branch.encodeURLParameter())
+                      this.url.encodedParameters.append("branch", branch.encodeURLParameter())
                     }
                     if (event != null) {
-                      url.encodedParameters.append("event", event.encodeURLParameter())
+                      this.url.encodedParameters.append("event", event.encodeURLParameter())
                     }
                     if (status != null) {
-                      url.encodedParameters.append("status", status.value.encodeURLParameter())
+                      this.url.encodedParameters.append("status", status.value.encodeURLParameter())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                     if (created != null) {
-                      url.encodedParameters.append("created", created.toString().encodeURLParameter())
+                      this.url.encodedParameters.append("created", created.toString().encodeURLParameter())
                     }
                     if (excludePullRequests != null) {
-                      url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
+                      this.url.encodedParameters.append("exclude_pull_requests", excludePullRequests.toString())
                     }
                     if (checkSuiteId != null) {
-                      url.encodedParameters.append("check_suite_id", checkSuiteId.toString())
+                      this.url.encodedParameters.append("check_suite_id", checkSuiteId.toString())
                     }
                     if (headSha != null) {
-                      url.encodedParameters.append("head_sha", headSha.encodeURLParameter())
+                      this.url.encodedParameters.append("head_sha", headSha.encodeURLParameter())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -3759,28 +3759,28 @@ public class Repos internal constructor(
           ): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/activity") {
               if (direction != null) {
-                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (ref != null) {
-                url.encodedParameters.append("ref", ref.encodeURLParameter())
+                this.url.encodedParameters.append("ref", ref.encodeURLParameter())
               }
               if (actor != null) {
-                url.encodedParameters.append("actor", actor.encodeURLParameter())
+                this.url.encodedParameters.append("actor", actor.encodeURLParameter())
               }
               if (timePeriod != null) {
-                url.encodedParameters.append("time_period", timePeriod.value.encodeURLParameter())
+                this.url.encodedParameters.append("time_period", timePeriod.value.encodeURLParameter())
               }
               if (activityType != null) {
-                url.encodedParameters.append("activity_type", activityType.value.encodeURLParameter())
+                this.url.encodedParameters.append("activity_type", activityType.value.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -3866,10 +3866,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/assignees") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -4011,16 +4011,16 @@ public class Repos internal constructor(
             ): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/attestations/${subjectDigest.encodeURLParameter()}") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (before != null) {
-                  url.encodedParameters.append("before", before.encodeURLParameter())
+                  this.url.encodedParameters.append("before", before.encodeURLParameter())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
                 if (predicateType != null) {
-                  url.encodedParameters.append("predicate_type", predicateType.encodeURLParameter())
+                  this.url.encodedParameters.append("predicate_type", predicateType.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -4274,13 +4274,13 @@ public class Repos internal constructor(
           ): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/branches") {
               if (protected != null) {
-                url.encodedParameters.append("protected", protected.toString())
+                this.url.encodedParameters.append("protected", protected.toString())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -6231,10 +6231,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<CheckAnnotation> {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-runs/$checkRunId/annotations") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -6422,19 +6422,19 @@ public class Repos internal constructor(
               ): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/check-suites/$checkSuiteId/check-runs") {
                   if (checkName != null) {
-                    url.encodedParameters.append("check_name", checkName.encodeURLParameter())
+                    this.url.encodedParameters.append("check_name", checkName.encodeURLParameter())
                   }
                   if (status != null) {
-                    url.encodedParameters.append("status", status.value.encodeURLParameter())
+                    this.url.encodedParameters.append("status", status.value.encodeURLParameter())
                   }
                   if (filter != null) {
-                    url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+                    this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -6545,43 +6545,43 @@ public class Repos internal constructor(
             ): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/alerts") {
                 if (toolName != null) {
-                  url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
+                  this.url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
                 }
                 if (toolGuid != null) {
-                  url.encodedParameters.append("tool_guid", toolGuid.encodeURLParameter())
+                  this.url.encodedParameters.append("tool_guid", toolGuid.encodeURLParameter())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (ref != null) {
-                  url.encodedParameters.append("ref", ref.encodeURLParameter())
+                  this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
                 if (pr != null) {
-                  url.encodedParameters.append("pr", pr.toString())
+                  this.url.encodedParameters.append("pr", pr.toString())
                 }
                 if (direction != null) {
-                  url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                  this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                 }
                 if (before != null) {
-                  url.encodedParameters.append("before", before.encodeURLParameter())
+                  this.url.encodedParameters.append("before", before.encodeURLParameter())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
                 if (sort != null) {
-                  url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                  this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
                 if (state != null) {
-                  url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                 }
                 if (severity != null) {
-                  url.encodedParameters.append("severity", severity.value.encodeURLParameter())
+                  this.url.encodedParameters.append("severity", severity.value.encodeURLParameter())
                 }
                 if (assignees != null) {
-                  url.encodedParameters.append("assignees", assignees.encodeURLParameter())
+                  this.url.encodedParameters.append("assignees", assignees.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -6987,16 +6987,16 @@ public class Repos internal constructor(
                 ): Response {
                   val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/alerts/$alertNumber/instances") {
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (ref != null) {
-                      url.encodedParameters.append("ref", ref.encodeURLParameter())
+                      this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                     }
                     if (pr != null) {
-                      url.encodedParameters.append("pr", pr.toString())
+                      this.url.encodedParameters.append("pr", pr.toString())
                     }
                   }
                   return when (response.status.value) {
@@ -7065,31 +7065,31 @@ public class Repos internal constructor(
             ): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/analyses") {
                 if (toolName != null) {
-                  url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
+                  this.url.encodedParameters.append("tool_name", toolName.encodeURLParameter())
                 }
                 if (toolGuid != null) {
-                  url.encodedParameters.append("tool_guid", toolGuid.encodeURLParameter())
+                  this.url.encodedParameters.append("tool_guid", toolGuid.encodeURLParameter())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (pr != null) {
-                  url.encodedParameters.append("pr", pr.toString())
+                  this.url.encodedParameters.append("pr", pr.toString())
                 }
                 if (ref != null) {
-                  url.encodedParameters.append("ref", ref.encodeURLParameter())
+                  this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
                 if (sarifId != null) {
-                  url.encodedParameters.append("sarif_id", sarifId.encodeURLParameter())
+                  this.url.encodedParameters.append("sarif_id", sarifId.encodeURLParameter())
                 }
                 if (direction != null) {
-                  url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                  this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                 }
                 if (sort != null) {
-                  url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                  this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -7167,7 +7167,7 @@ public class Repos internal constructor(
               public suspend operator fun invoke(confirmDelete: String? = null): Response {
                 val response = client.delete("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/code-scanning/analyses/$analysisId") {
                   if (confirmDelete != null) {
-                    url.encodedParameters.append("confirm_delete", confirmDelete.encodeURLParameter())
+                    this.url.encodedParameters.append("confirm_delete", confirmDelete.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -7973,7 +7973,7 @@ public class Repos internal constructor(
             public suspend operator fun invoke(ref: String? = null): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codeowners/errors") {
                 if (ref != null) {
-                  url.encodedParameters.append("ref", ref.encodeURLParameter())
+                  this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -8021,10 +8021,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -8193,10 +8193,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/devcontainers") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -8271,13 +8271,13 @@ public class Repos internal constructor(
             ): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/machines") {
                 if (location != null) {
-                  url.encodedParameters.append("location", location.encodeURLParameter())
+                  this.url.encodedParameters.append("location", location.encodeURLParameter())
                 }
                 if (clientIp != null) {
-                  url.encodedParameters.append("client_ip", clientIp.encodeURLParameter())
+                  this.url.encodedParameters.append("client_ip", clientIp.encodeURLParameter())
                 }
                 if (ref != null) {
-                  url.encodedParameters.append("ref", ref.encodeURLParameter())
+                  this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -8335,10 +8335,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(ref: String? = null, clientIp: String? = null): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/new") {
                 if (ref != null) {
-                  url.encodedParameters.append("ref", ref.encodeURLParameter())
+                  this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
                 if (clientIp != null) {
-                  url.encodedParameters.append("client_ip", clientIp.encodeURLParameter())
+                  this.url.encodedParameters.append("client_ip", clientIp.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -8397,8 +8397,8 @@ public class Repos internal constructor(
           ) {
             public suspend operator fun invoke(ref: String, devcontainerPath: String): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/permissions_check") {
-                url.encodedParameters.append("ref", ref.encodeURLParameter())
-                url.encodedParameters.append("devcontainer_path", devcontainerPath.encodeURLParameter())
+                this.url.encodedParameters.append("ref", ref.encodeURLParameter())
+                this.url.encodedParameters.append("devcontainer_path", devcontainerPath.encodeURLParameter())
               }
               return when (response.status.value) {
                 200 -> Response.Ok(response.body())
@@ -8466,10 +8466,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/codespaces/secrets") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -8604,16 +8604,16 @@ public class Repos internal constructor(
           ): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/collaborators") {
               if (affiliation != null) {
-                url.encodedParameters.append("affiliation", affiliation.value.encodeURLParameter())
+                this.url.encodedParameters.append("affiliation", affiliation.value.encodeURLParameter())
               }
               if (permission != null) {
-                url.encodedParameters.append("permission", permission.value.encodeURLParameter())
+                this.url.encodedParameters.append("permission", permission.value.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -8838,10 +8838,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<CommitComment> {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/comments") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -8972,13 +8972,13 @@ public class Repos internal constructor(
               ): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/comments/$commentId/reactions") {
                   if (content != null) {
-                    url.encodedParameters.append("content", content.value.encodeURLParameter())
+                    this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -9134,28 +9134,28 @@ public class Repos internal constructor(
           ): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits") {
               if (sha != null) {
-                url.encodedParameters.append("sha", sha.encodeURLParameter())
+                this.url.encodedParameters.append("sha", sha.encodeURLParameter())
               }
               if (path != null) {
-                url.encodedParameters.append("path", path.encodeURLParameter())
+                this.url.encodedParameters.append("path", path.encodeURLParameter())
               }
               if (author != null) {
-                url.encodedParameters.append("author", author.encodeURLParameter())
+                this.url.encodedParameters.append("author", author.encodeURLParameter())
               }
               if (committer != null) {
-                url.encodedParameters.append("committer", committer.encodeURLParameter())
+                this.url.encodedParameters.append("committer", committer.encodeURLParameter())
               }
               if (since != null) {
-                url.encodedParameters.append("since", since.toString().encodeURLParameter())
+                this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
               }
               if (until != null) {
-                url.encodedParameters.append("until", until.toString().encodeURLParameter())
+                this.url.encodedParameters.append("until", until.toString().encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -9263,10 +9263,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<CommitComment> {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${commitSha.encodeURLParameter()}/comments") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -9343,10 +9343,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${commitSha.encodeURLParameter()}/pulls") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -9394,10 +9394,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${ref.encodeURLParameter()}") {
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
               }
               return when (response.status.value) {
@@ -9470,22 +9470,22 @@ public class Repos internal constructor(
               ): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${ref.encodeURLParameter()}/check-runs") {
                   if (checkName != null) {
-                    url.encodedParameters.append("check_name", checkName.encodeURLParameter())
+                    this.url.encodedParameters.append("check_name", checkName.encodeURLParameter())
                   }
                   if (status != null) {
-                    url.encodedParameters.append("status", status.value.encodeURLParameter())
+                    this.url.encodedParameters.append("status", status.value.encodeURLParameter())
                   }
                   if (filter != null) {
-                    url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+                    this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                   if (appId != null) {
-                    url.encodedParameters.append("app_id", appId.toString())
+                    this.url.encodedParameters.append("app_id", appId.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -9548,16 +9548,16 @@ public class Repos internal constructor(
               ): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${ref.encodeURLParameter()}/check-suites") {
                   if (appId != null) {
-                    url.encodedParameters.append("app_id", appId.toString())
+                    this.url.encodedParameters.append("app_id", appId.toString())
                   }
                   if (checkName != null) {
-                    url.encodedParameters.append("check_name", checkName.encodeURLParameter())
+                    this.url.encodedParameters.append("check_name", checkName.encodeURLParameter())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -9591,10 +9591,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${ref.encodeURLParameter()}/status") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -9633,10 +9633,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/commits/${ref.encodeURLParameter()}/statuses") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -9712,10 +9712,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/compare/${basehead.encodeURLParameter()}") {
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
               }
               return when (response.status.value) {
@@ -9880,7 +9880,7 @@ public class Repos internal constructor(
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/contents/${path.encodeURLParameter()}") {
                 `header`(HttpHeaders.Accept, ContentType("application", "vnd.github.object"))
                 if (ref != null) {
-                  url.encodedParameters.append("ref", ref.encodeURLParameter())
+                  this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -9897,7 +9897,7 @@ public class Repos internal constructor(
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/contents/${path.encodeURLParameter()}") {
                 `header`(HttpHeaders.Accept, ContentType.Application.Json)
                 if (ref != null) {
-                  url.encodedParameters.append("ref", ref.encodeURLParameter())
+                  this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -10191,13 +10191,13 @@ public class Repos internal constructor(
           ): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/contributors") {
               if (anon != null) {
-                url.encodedParameters.append("anon", anon.encodeURLParameter())
+                this.url.encodedParameters.append("anon", anon.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -10268,53 +10268,53 @@ public class Repos internal constructor(
             ): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependabot/alerts") {
                 if (state != null) {
-                  url.encodedParameters.append("state", state.encodeURLParameter())
+                  this.url.encodedParameters.append("state", state.encodeURLParameter())
                 }
                 if (severity != null) {
-                  url.encodedParameters.append("severity", severity.encodeURLParameter())
+                  this.url.encodedParameters.append("severity", severity.encodeURLParameter())
                 }
                 if (ecosystem != null) {
-                  url.encodedParameters.append("ecosystem", ecosystem.encodeURLParameter())
+                  this.url.encodedParameters.append("ecosystem", ecosystem.encodeURLParameter())
                 }
                 if (`package` != null) {
-                  url.encodedParameters.append("package", `package`.encodeURLParameter())
+                  this.url.encodedParameters.append("package", `package`.encodeURLParameter())
                 }
                 if (manifest != null) {
-                  url.encodedParameters.append("manifest", manifest.encodeURLParameter())
+                  this.url.encodedParameters.append("manifest", manifest.encodeURLParameter())
                 }
                 if (epssPercentage != null) {
-                  url.encodedParameters.append("epss_percentage", epssPercentage.encodeURLParameter())
+                  this.url.encodedParameters.append("epss_percentage", epssPercentage.encodeURLParameter())
                 }
                 if (has != null) {
                   when (has) {
                     is Has.CaseString -> {
-                      url.encodedParameters.append("has", has.value.encodeURLParameter())
+                      this.url.encodedParameters.append("has", has.value.encodeURLParameter())
                     }
                     is Has.CasePatchList -> {
-                      has.value.forEach { url.encodedParameters.append("has", it.value.encodeURLParameter()) }
+                      has.value.forEach { this.url.encodedParameters.append("has", it.value.encodeURLParameter()) }
                     }
                   }
                 }
                 if (assignee != null) {
-                  url.encodedParameters.append("assignee", assignee.encodeURLParameter())
+                  this.url.encodedParameters.append("assignee", assignee.encodeURLParameter())
                 }
                 if (scope != null) {
-                  url.encodedParameters.append("scope", scope.value.encodeURLParameter())
+                  this.url.encodedParameters.append("scope", scope.value.encodeURLParameter())
                 }
                 if (sort != null) {
-                  url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                  this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
                 if (direction != null) {
-                  url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                  this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                 }
                 if (before != null) {
-                  url.encodedParameters.append("before", before.encodeURLParameter())
+                  this.url.encodedParameters.append("before", before.encodeURLParameter())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
               }
               return when (response.status.value) {
@@ -10609,10 +10609,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependabot/secrets") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -10760,7 +10760,7 @@ public class Repos internal constructor(
               public suspend operator fun invoke(name: String? = null): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/dependency-graph/compare/${basehead.encodeURLParameter()}") {
                   if (name != null) {
-                    url.encodedParameters.append("name", name.encodeURLParameter())
+                    this.url.encodedParameters.append("name", name.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -10885,22 +10885,22 @@ public class Repos internal constructor(
           ): List<Deployment> {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/deployments") {
               if (sha != null) {
-                url.encodedParameters.append("sha", sha.encodeURLParameter())
+                this.url.encodedParameters.append("sha", sha.encodeURLParameter())
               }
               if (ref != null) {
-                url.encodedParameters.append("ref", ref.encodeURLParameter())
+                this.url.encodedParameters.append("ref", ref.encodeURLParameter())
               }
               if (task != null) {
-                url.encodedParameters.append("task", task.encodeURLParameter())
+                this.url.encodedParameters.append("task", task.encodeURLParameter())
               }
               if (environment != null) {
-                url.encodedParameters.append("environment", environment.encodeURLParameter())
+                this.url.encodedParameters.append("environment", environment.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -11120,10 +11120,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/deployments/$deploymentId/statuses") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -11330,10 +11330,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -11485,10 +11485,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment-branch-policies") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -11673,10 +11673,10 @@ public class Repos internal constructor(
                 public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
                   val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/deployment_protection_rules/apps") {
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                   }
                   if (response.status.value != 200) throw ResponseException(response, "")
@@ -11759,10 +11759,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/secrets") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -11898,10 +11898,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 10L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/environments/${environmentName.encodeURLParameter()}/variables") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -12022,10 +12022,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/events") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -12055,13 +12055,13 @@ public class Repos internal constructor(
           ): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/forks") {
               if (sort != null) {
-                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -12934,7 +12934,7 @@ public class Repos internal constructor(
               public suspend operator fun invoke(recursive: String? = null): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/git/trees/${treeSha.encodeURLParameter()}") {
                   if (recursive != null) {
-                    url.encodedParameters.append("recursive", recursive.encodeURLParameter())
+                    this.url.encodedParameters.append("recursive", recursive.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -12987,10 +12987,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -13308,10 +13308,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, cursor: String? = null): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/hooks/$hookId/deliveries") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (cursor != null) {
-                    url.encodedParameters.append("cursor", cursor.encodeURLParameter())
+                    this.url.encodedParameters.append("cursor", cursor.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -13828,7 +13828,7 @@ public class Repos internal constructor(
             public suspend operator fun invoke(since: Long? = null): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/import/authors") {
                 if (since != null) {
-                  url.encodedParameters.append("since", since.toString())
+                  this.url.encodedParameters.append("since", since.toString())
                 }
               }
               return when (response.status.value) {
@@ -14192,10 +14192,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<RepositoryInvitation> {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/invitations") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -14309,40 +14309,40 @@ public class Repos internal constructor(
           ): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues") {
               if (milestone != null) {
-                url.encodedParameters.append("milestone", milestone.encodeURLParameter())
+                this.url.encodedParameters.append("milestone", milestone.encodeURLParameter())
               }
               if (state != null) {
-                url.encodedParameters.append("state", state.value.encodeURLParameter())
+                this.url.encodedParameters.append("state", state.value.encodeURLParameter())
               }
               if (assignee != null) {
-                url.encodedParameters.append("assignee", assignee.encodeURLParameter())
+                this.url.encodedParameters.append("assignee", assignee.encodeURLParameter())
               }
               if (type != null) {
-                url.encodedParameters.append("type", type.encodeURLParameter())
+                this.url.encodedParameters.append("type", type.encodeURLParameter())
               }
               if (creator != null) {
-                url.encodedParameters.append("creator", creator.encodeURLParameter())
+                this.url.encodedParameters.append("creator", creator.encodeURLParameter())
               }
               if (mentioned != null) {
-                url.encodedParameters.append("mentioned", mentioned.encodeURLParameter())
+                this.url.encodedParameters.append("mentioned", mentioned.encodeURLParameter())
               }
               if (labels != null) {
-                url.encodedParameters.append("labels", labels.encodeURLParameter())
+                this.url.encodedParameters.append("labels", labels.encodeURLParameter())
               }
               if (sort != null) {
-                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
               if (direction != null) {
-                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
               if (since != null) {
-                url.encodedParameters.append("since", since.toString().encodeURLParameter())
+                this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -14700,19 +14700,19 @@ public class Repos internal constructor(
             ): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/comments") {
                 if (sort != null) {
-                  url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                  this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
                 if (direction != null) {
-                  url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                  this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                 }
                 if (since != null) {
-                  url.encodedParameters.append("since", since.toString().encodeURLParameter())
+                  this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -14982,13 +14982,13 @@ public class Repos internal constructor(
                 ): Response {
                   val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/comments/$commentId/reactions") {
                     if (content != null) {
-                      url.encodedParameters.append("content", content.value.encodeURLParameter())
+                      this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                   }
                   return when (response.status.value) {
@@ -15133,10 +15133,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/events") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -15758,13 +15758,13 @@ public class Repos internal constructor(
               ): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/comments") {
                   if (since != null) {
-                    url.encodedParameters.append("since", since.toString().encodeURLParameter())
+                    this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -15871,10 +15871,10 @@ public class Repos internal constructor(
                 public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                   val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/dependencies/blocked_by") {
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                   }
                   return when (response.status.value) {
@@ -16040,10 +16040,10 @@ public class Repos internal constructor(
                 public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                   val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/dependencies/blocking") {
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                   }
                   return when (response.status.value) {
@@ -16093,10 +16093,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/events") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -16135,10 +16135,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/issue-field-values") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -16229,10 +16229,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/labels") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -16735,13 +16735,13 @@ public class Repos internal constructor(
               ): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/reactions") {
                   if (content != null) {
-                    url.encodedParameters.append("content", content.value.encodeURLParameter())
+                    this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -16942,10 +16942,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/sub_issues") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -17121,10 +17121,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/issues/$issueNumber/timeline") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -17172,10 +17172,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<DeployKey> {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/keys") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -17295,10 +17295,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/labels") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -17491,7 +17491,7 @@ public class Repos internal constructor(
           public suspend operator fun invoke(ref: String? = null): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/license") {
               if (ref != null) {
-                url.encodedParameters.append("ref", ref.encodeURLParameter())
+                this.url.encodedParameters.append("ref", ref.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -17644,19 +17644,19 @@ public class Repos internal constructor(
           ): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/milestones") {
               if (state != null) {
-                url.encodedParameters.append("state", state.value.encodeURLParameter())
+                this.url.encodedParameters.append("state", state.value.encodeURLParameter())
               }
               if (sort != null) {
-                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
               if (direction != null) {
-                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -17907,10 +17907,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Label> {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/milestones/$milestoneNumber/labels") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -17945,22 +17945,22 @@ public class Repos internal constructor(
           ): List<Thread> {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/notifications") {
               if (all != null) {
-                url.encodedParameters.append("all", all.toString())
+                this.url.encodedParameters.append("all", all.toString())
               }
               if (participating != null) {
-                url.encodedParameters.append("participating", participating.toString())
+                this.url.encodedParameters.append("participating", participating.toString())
               }
               if (since != null) {
-                url.encodedParameters.append("since", since.toString().encodeURLParameter())
+                this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.toString().encodeURLParameter())
+                this.url.encodedParameters.append("before", before.toString().encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -18331,10 +18331,10 @@ public class Repos internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<PageBuild> {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pages/builds") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -18791,25 +18791,25 @@ public class Repos internal constructor(
           ): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls") {
               if (state != null) {
-                url.encodedParameters.append("state", state.value.encodeURLParameter())
+                this.url.encodedParameters.append("state", state.value.encodeURLParameter())
               }
               if (head != null) {
-                url.encodedParameters.append("head", head.encodeURLParameter())
+                this.url.encodedParameters.append("head", head.encodeURLParameter())
               }
               if (base != null) {
-                url.encodedParameters.append("base", base.encodeURLParameter())
+                this.url.encodedParameters.append("base", base.encodeURLParameter())
               }
               if (sort != null) {
-                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
               if (direction != null) {
-                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -18958,19 +18958,19 @@ public class Repos internal constructor(
             ): List<PullRequestReviewComment> {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/comments") {
                 if (sort != null) {
-                  url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                  this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
                 if (direction != null) {
-                  url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                  this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                 }
                 if (since != null) {
-                  url.encodedParameters.append("since", since.toString().encodeURLParameter())
+                  this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -19112,13 +19112,13 @@ public class Repos internal constructor(
                 ): Response {
                   val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/comments/$commentId/reactions") {
                     if (content != null) {
-                      url.encodedParameters.append("content", content.value.encodeURLParameter())
+                      this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                   }
                   return when (response.status.value) {
@@ -19546,19 +19546,19 @@ public class Repos internal constructor(
               ): List<PullRequestReviewComment> {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/comments") {
                   if (sort != null) {
-                    url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                    this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                   }
                   if (direction != null) {
-                    url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                    this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                   }
                   if (since != null) {
-                    url.encodedParameters.append("since", since.toString().encodeURLParameter())
+                    this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -19761,10 +19761,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Commit> {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/commits") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -19790,10 +19790,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/files") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -20111,10 +20111,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<PullRequestReview> {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/reviews") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -20348,10 +20348,10 @@ public class Repos internal constructor(
                   public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                     val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/pulls/$pullNumber/reviews/$reviewId/comments") {
                       if (perPage != null) {
-                        url.encodedParameters.append("per_page", perPage.toString())
+                        this.url.encodedParameters.append("per_page", perPage.toString())
                       }
                       if (page != null) {
-                        url.encodedParameters.append("page", page.toString())
+                        this.url.encodedParameters.append("page", page.toString())
                       }
                     }
                     return when (response.status.value) {
@@ -20587,7 +20587,7 @@ public class Repos internal constructor(
           public suspend operator fun invoke(ref: String? = null): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/readme") {
               if (ref != null) {
-                url.encodedParameters.append("ref", ref.encodeURLParameter())
+                this.url.encodedParameters.append("ref", ref.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -20633,7 +20633,7 @@ public class Repos internal constructor(
             public suspend operator fun invoke(ref: String? = null): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/readme/${dir.encodeURLParameter()}") {
                 if (ref != null) {
-                  url.encodedParameters.append("ref", ref.encodeURLParameter())
+                  this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -20688,10 +20688,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -21170,10 +21170,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<ReleaseAsset> {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId/assets") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -21193,9 +21193,9 @@ public class Repos internal constructor(
                 body: ByteArray? = null,
               ): Response {
                 val response = client.post("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId/assets") {
-                  url.encodedParameters.append("name", name.encodeURLParameter())
+                  this.url.encodedParameters.append("name", name.encodeURLParameter())
                   if (label != null) {
-                    url.encodedParameters.append("label", label.encodeURLParameter())
+                    this.url.encodedParameters.append("label", label.encodeURLParameter())
                   }
                   body?.let {
                     contentType(ContentType.Application.OctetStream)
@@ -21244,13 +21244,13 @@ public class Repos internal constructor(
               ): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/releases/$releaseId/reactions") {
                   if (content != null) {
-                    url.encodedParameters.append("content", content.value.encodeURLParameter())
+                    this.url.encodedParameters.append("content", content.value.encodeURLParameter())
                   }
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -21403,10 +21403,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<RepositoryRuleDetailed> {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rules/branches/${branch.encodeURLParameter()}") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -21443,16 +21443,16 @@ public class Repos internal constructor(
           ): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
               if (includesParents != null) {
-                url.encodedParameters.append("includes_parents", includesParents.toString())
+                this.url.encodedParameters.append("includes_parents", includesParents.toString())
               }
               if (targets != null) {
-                url.encodedParameters.append("targets", targets.encodeURLParameter())
+                this.url.encodedParameters.append("targets", targets.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -21576,22 +21576,22 @@ public class Repos internal constructor(
             ): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets/rule-suites") {
                 if (ref != null) {
-                  url.encodedParameters.append("ref", ref.encodeURLParameter())
+                  this.url.encodedParameters.append("ref", ref.encodeURLParameter())
                 }
                 if (timePeriod != null) {
-                  url.encodedParameters.append("time_period", timePeriod.value.encodeURLParameter())
+                  this.url.encodedParameters.append("time_period", timePeriod.value.encodeURLParameter())
                 }
                 if (actorName != null) {
-                  url.encodedParameters.append("actor_name", actorName.encodeURLParameter())
+                  this.url.encodedParameters.append("actor_name", actorName.encodeURLParameter())
                 }
                 if (ruleSuiteResult != null) {
-                  url.encodedParameters.append("rule_suite_result", ruleSuiteResult.value.encodeURLParameter())
+                  this.url.encodedParameters.append("rule_suite_result", ruleSuiteResult.value.encodeURLParameter())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {
@@ -21740,7 +21740,7 @@ public class Repos internal constructor(
             public suspend operator fun invoke(includesParents: Boolean? = true): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets/$rulesetId") {
                 if (includesParents != null) {
-                  url.encodedParameters.append("includes_parents", includesParents.toString())
+                  this.url.encodedParameters.append("includes_parents", includesParents.toString())
                 }
               }
               return when (response.status.value) {
@@ -21873,10 +21873,10 @@ public class Repos internal constructor(
               public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/rulesets/$rulesetId/history") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (page != null) {
-                    url.encodedParameters.append("page", page.toString())
+                    this.url.encodedParameters.append("page", page.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -21991,46 +21991,46 @@ public class Repos internal constructor(
             ): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/secret-scanning/alerts") {
                 if (state != null) {
-                  url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                 }
                 if (secretType != null) {
-                  url.encodedParameters.append("secret_type", secretType.encodeURLParameter())
+                  this.url.encodedParameters.append("secret_type", secretType.encodeURLParameter())
                 }
                 if (resolution != null) {
-                  url.encodedParameters.append("resolution", resolution.encodeURLParameter())
+                  this.url.encodedParameters.append("resolution", resolution.encodeURLParameter())
                 }
                 if (assignee != null) {
-                  url.encodedParameters.append("assignee", assignee.encodeURLParameter())
+                  this.url.encodedParameters.append("assignee", assignee.encodeURLParameter())
                 }
                 if (sort != null) {
-                  url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                  this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
                 if (direction != null) {
-                  url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                  this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (before != null) {
-                  url.encodedParameters.append("before", before.encodeURLParameter())
+                  this.url.encodedParameters.append("before", before.encodeURLParameter())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
                 if (validity != null) {
-                  url.encodedParameters.append("validity", validity.encodeURLParameter())
+                  this.url.encodedParameters.append("validity", validity.encodeURLParameter())
                 }
                 if (isPubliclyLeaked != null) {
-                  url.encodedParameters.append("is_publicly_leaked", isPubliclyLeaked.toString())
+                  this.url.encodedParameters.append("is_publicly_leaked", isPubliclyLeaked.toString())
                 }
                 if (isMultiRepo != null) {
-                  url.encodedParameters.append("is_multi_repo", isMultiRepo.toString())
+                  this.url.encodedParameters.append("is_multi_repo", isMultiRepo.toString())
                 }
                 if (hideSecret != null) {
-                  url.encodedParameters.append("hide_secret", hideSecret.toString())
+                  this.url.encodedParameters.append("hide_secret", hideSecret.toString())
                 }
               }
               return when (response.status.value) {
@@ -22116,7 +22116,7 @@ public class Repos internal constructor(
               public suspend operator fun invoke(hideSecret: Boolean? = false): Response {
                 val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/secret-scanning/alerts/$alertNumber") {
                   if (hideSecret != null) {
-                    url.encodedParameters.append("hide_secret", hideSecret.toString())
+                    this.url.encodedParameters.append("hide_secret", hideSecret.toString())
                   }
                 }
                 return when (response.status.value) {
@@ -22230,10 +22230,10 @@ public class Repos internal constructor(
                 public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
                   val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/secret-scanning/alerts/$alertNumber/locations") {
                     if (page != null) {
-                      url.encodedParameters.append("page", page.toString())
+                      this.url.encodedParameters.append("page", page.toString())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                   }
                   return when (response.status.value) {
@@ -22401,22 +22401,22 @@ public class Repos internal constructor(
           ): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/security-advisories") {
               if (direction != null) {
-                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
               if (sort != null) {
-                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (state != null) {
-                url.encodedParameters.append("state", state.value.encodeURLParameter())
+                this.url.encodedParameters.append("state", state.value.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -22766,10 +22766,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/stargazers") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -23101,10 +23101,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/subscribers") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -23209,10 +23209,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Tag> {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/tags") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -23265,10 +23265,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/teams") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -23307,10 +23307,10 @@ public class Repos internal constructor(
           public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
             val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/topics") {
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
             }
             return when (response.status.value) {
@@ -23396,7 +23396,7 @@ public class Repos internal constructor(
             public suspend operator fun invoke(per: Per? = Per.Day): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/traffic/clones") {
                 if (per != null) {
-                  url.encodedParameters.append("per", per.value.encodeURLParameter())
+                  this.url.encodedParameters.append("per", per.value.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -23520,7 +23520,7 @@ public class Repos internal constructor(
             public suspend operator fun invoke(per: Per? = Per.Day): Response {
               val response = client.get("repos/${owner.encodeURLParameter()}/${repo.encodeURLParameter()}/traffic/views") {
                 if (per != null) {
-                  url.encodedParameters.append("per", per.value.encodeURLParameter())
+                  this.url.encodedParameters.append("per", per.value.encodeURLParameter())
                 }
               }
               return when (response.status.value) {

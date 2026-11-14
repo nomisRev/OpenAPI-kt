@@ -63,10 +63,10 @@ public class Assignments internal constructor(
         public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<ClassroomAcceptedAssignment> {
           val response = client.get("assignments/$assignmentId/accepted_assignments") {
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")

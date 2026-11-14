@@ -30,13 +30,13 @@ public class Licenses internal constructor(
     ): Response {
       val response = client.get("licenses") {
         if (featured != null) {
-          url.encodedParameters.append("featured", featured.toString())
+          this.url.encodedParameters.append("featured", featured.toString())
         }
         if (perPage != null) {
-          url.encodedParameters.append("per_page", perPage.toString())
+          this.url.encodedParameters.append("per_page", perPage.toString())
         }
         if (page != null) {
-          url.encodedParameters.append("page", page.toString())
+          this.url.encodedParameters.append("page", page.toString())
         }
       }
       return when (response.status.value) {

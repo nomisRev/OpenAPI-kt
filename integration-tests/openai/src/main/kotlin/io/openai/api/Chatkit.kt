@@ -94,19 +94,19 @@ public class Chatkit internal constructor(
       ): ThreadListResource {
         val response = client.get("chatkit/threads") {
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
           if (before != null) {
-            url.encodedParameters.append("before", before.encodeURLParameter())
+            this.url.encodedParameters.append("before", before.encodeURLParameter())
           }
           if (user != null) {
-            url.encodedParameters.append("user", user.encodeURLParameter())
+            this.url.encodedParameters.append("user", user.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -164,16 +164,16 @@ public class Chatkit internal constructor(
           ): ThreadItemListResource {
             val response = client.get("chatkit/threads/${threadId.encodeURLParameter()}/items") {
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (order != null) {
-                url.encodedParameters.append("order", order.value.encodeURLParameter())
+                this.url.encodedParameters.append("order", order.value.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")

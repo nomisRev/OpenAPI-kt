@@ -30,31 +30,31 @@ public class ActivitiesPage internal constructor(
     ): ActivityCursorPage {
       val response = client.get("activitiesPage") {
         if (categories != null) {
-          url.encodedParameters.append("categories", categories.encodeURLParameter())
+          this.url.encodedParameters.append("categories", categories.encodeURLParameter())
         }
         if (reverse != null) {
-          url.encodedParameters.append("reverse", reverse.toString())
+          this.url.encodedParameters.append("reverse", reverse.toString())
         }
         if (start != null) {
-          url.encodedParameters.append("start", start.encodeURLParameter())
+          this.url.encodedParameters.append("start", start.encodeURLParameter())
         }
         if (end != null) {
-          url.encodedParameters.append("end", end.encodeURLParameter())
+          this.url.encodedParameters.append("end", end.encodeURLParameter())
         }
         if (author != null) {
-          url.encodedParameters.append("author", author.encodeURLParameter())
+          this.url.encodedParameters.append("author", author.encodeURLParameter())
         }
         if (issueQuery != null) {
-          url.encodedParameters.append("issueQuery", issueQuery.encodeURLParameter())
+          this.url.encodedParameters.append("issueQuery", issueQuery.encodeURLParameter())
         }
         if (cursor != null) {
-          url.encodedParameters.append("cursor", cursor.encodeURLParameter())
+          this.url.encodedParameters.append("cursor", cursor.encodeURLParameter())
         }
         if (activityId != null) {
-          url.encodedParameters.append("activityId", activityId.encodeURLParameter())
+          this.url.encodedParameters.append("activityId", activityId.encodeURLParameter())
         }
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")

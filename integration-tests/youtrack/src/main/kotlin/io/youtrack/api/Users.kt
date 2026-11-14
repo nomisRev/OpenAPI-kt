@@ -40,13 +40,13 @@ public class Users internal constructor(
     ): List<UserRead> {
       val response = client.get("users") {
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         if (skip != null) {
-          url.encodedParameters.append("%24skip", skip.toString())
+          this.url.encodedParameters.append("%24skip", skip.toString())
         }
         if (top != null) {
-          url.encodedParameters.append("%24top", top.toString())
+          this.url.encodedParameters.append("%24top", top.toString())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -73,7 +73,7 @@ public class Users internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,banned,email,fullName,guest,id,login,ringId"): UserRead {
         val response = client.get("users/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -106,7 +106,7 @@ public class Users internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,dateFieldFormat(${'$'}type,datePattern,id,pattern,presentation),id,locale(${'$'}type,community,id,language,locale,name),timezone(${'$'}type,id,offset,presentation)"): GeneralUserProfileRead {
             val response = client.get("users/${id.encodeURLParameter()}/profiles/general") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -121,7 +121,7 @@ public class Users internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,dateFieldFormat(${'$'}type,datePattern,id,pattern,presentation),id,locale(${'$'}type,community,id,language,locale,name),timezone(${'$'}type,id,offset,presentation)", body: GeneralUserProfileWrite? = null): GeneralUserProfileRead {
             val response = client.post("users/${id.encodeURLParameter()}/profiles/general") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -149,7 +149,7 @@ public class Users internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,id"): NotificationsUserProfileRead {
             val response = client.get("users/${id.encodeURLParameter()}/profiles/notifications") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -164,7 +164,7 @@ public class Users internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: NotificationsUserProfileWrite? = null): NotificationsUserProfileRead {
             val response = client.post("users/${id.encodeURLParameter()}/profiles/notifications") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -192,7 +192,7 @@ public class Users internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,id,periodFormat(${'$'}type,id)"): TimeTrackingUserProfileRead {
             val response = client.get("users/${id.encodeURLParameter()}/profiles/timetracking") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -207,7 +207,7 @@ public class Users internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,id,periodFormat(${'$'}type,id)", body: TimeTrackingUserProfileWrite? = null): TimeTrackingUserProfileRead {
             val response = client.post("users/${id.encodeURLParameter()}/profiles/timetracking") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -238,13 +238,13 @@ public class Users internal constructor(
         ): List<IssueFolderRead.SavedQuery> {
           val response = client.get("users/${id.encodeURLParameter()}/savedQueries") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -270,13 +270,13 @@ public class Users internal constructor(
         ): List<IssueFolderRead.Tag> {
           val response = client.get("users/${id.encodeURLParameter()}/tags") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -297,7 +297,7 @@ public class Users internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,banned,email,fullName,guest,id,login,ringId"): UserRead.Me {
         val response = client.get("users/me") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")

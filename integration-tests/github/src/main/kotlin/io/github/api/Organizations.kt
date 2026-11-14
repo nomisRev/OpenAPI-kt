@@ -57,10 +57,10 @@ public class Organizations internal constructor(
     public suspend operator fun invoke(since: Long? = null, perPage: Long? = 30L): Response {
       val response = client.get("organizations") {
         if (since != null) {
-          url.encodedParameters.append("since", since.toString())
+          this.url.encodedParameters.append("since", since.toString())
         }
         if (perPage != null) {
-          url.encodedParameters.append("per_page", perPage.toString())
+          this.url.encodedParameters.append("per_page", perPage.toString())
         }
       }
       return when (response.status.value) {
@@ -274,10 +274,10 @@ public class Organizations internal constructor(
           public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): Response {
             val response = client.get("organizations/${org.encodeURLParameter()}/dependabot/repository-access") {
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
             }
             return when (response.status.value) {
@@ -435,13 +435,13 @@ public class Organizations internal constructor(
             ): Response {
               val response = client.get("organizations/${org.encodeURLParameter()}/settings/billing/budgets") {
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (scope != null) {
-                  url.encodedParameters.append("scope", scope.value.encodeURLParameter())
+                  this.url.encodedParameters.append("scope", scope.value.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -897,22 +897,22 @@ public class Organizations internal constructor(
               ): Response {
                 val response = client.get("organizations/${org.encodeURLParameter()}/settings/billing/premium_request/usage") {
                   if (year != null) {
-                    url.encodedParameters.append("year", year.toString())
+                    this.url.encodedParameters.append("year", year.toString())
                   }
                   if (month != null) {
-                    url.encodedParameters.append("month", month.toString())
+                    this.url.encodedParameters.append("month", month.toString())
                   }
                   if (day != null) {
-                    url.encodedParameters.append("day", day.toString())
+                    this.url.encodedParameters.append("day", day.toString())
                   }
                   if (user != null) {
-                    url.encodedParameters.append("user", user.encodeURLParameter())
+                    this.url.encodedParameters.append("user", user.encodeURLParameter())
                   }
                   if (model != null) {
-                    url.encodedParameters.append("model", model.encodeURLParameter())
+                    this.url.encodedParameters.append("model", model.encodeURLParameter())
                   }
                   if (product != null) {
-                    url.encodedParameters.append("product", product.encodeURLParameter())
+                    this.url.encodedParameters.append("product", product.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -982,13 +982,13 @@ public class Organizations internal constructor(
             ): Response {
               val response = client.get("organizations/${org.encodeURLParameter()}/settings/billing/usage") {
                 if (year != null) {
-                  url.encodedParameters.append("year", year.toString())
+                  this.url.encodedParameters.append("year", year.toString())
                 }
                 if (month != null) {
-                  url.encodedParameters.append("month", month.toString())
+                  this.url.encodedParameters.append("month", month.toString())
                 }
                 if (day != null) {
-                  url.encodedParameters.append("day", day.toString())
+                  this.url.encodedParameters.append("day", day.toString())
                 }
               }
               return when (response.status.value) {
@@ -1052,22 +1052,22 @@ public class Organizations internal constructor(
               ): Response {
                 val response = client.get("organizations/${org.encodeURLParameter()}/settings/billing/usage/summary") {
                   if (year != null) {
-                    url.encodedParameters.append("year", year.toString())
+                    this.url.encodedParameters.append("year", year.toString())
                   }
                   if (month != null) {
-                    url.encodedParameters.append("month", month.toString())
+                    this.url.encodedParameters.append("month", month.toString())
                   }
                   if (day != null) {
-                    url.encodedParameters.append("day", day.toString())
+                    this.url.encodedParameters.append("day", day.toString())
                   }
                   if (repository != null) {
-                    url.encodedParameters.append("repository", repository.encodeURLParameter())
+                    this.url.encodedParameters.append("repository", repository.encodeURLParameter())
                   }
                   if (product != null) {
-                    url.encodedParameters.append("product", product.encodeURLParameter())
+                    this.url.encodedParameters.append("product", product.encodeURLParameter())
                   }
                   if (sku != null) {
-                    url.encodedParameters.append("sku", sku.encodeURLParameter())
+                    this.url.encodedParameters.append("sku", sku.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {

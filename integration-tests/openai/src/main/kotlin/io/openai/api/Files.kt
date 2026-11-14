@@ -44,16 +44,16 @@ public class Files internal constructor(
     ): ListFilesResponse {
       val response = client.get("files") {
         if (purpose != null) {
-          url.encodedParameters.append("purpose", purpose.encodeURLParameter())
+          this.url.encodedParameters.append("purpose", purpose.encodeURLParameter())
         }
         if (limit != null) {
-          url.encodedParameters.append("limit", limit.toString())
+          this.url.encodedParameters.append("limit", limit.toString())
         }
         if (order != null) {
-          url.encodedParameters.append("order", order.value.encodeURLParameter())
+          this.url.encodedParameters.append("order", order.value.encodeURLParameter())
         }
         if (after != null) {
-          url.encodedParameters.append("after", after.encodeURLParameter())
+          this.url.encodedParameters.append("after", after.encodeURLParameter())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")

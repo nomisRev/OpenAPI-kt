@@ -24,10 +24,10 @@ public class Classrooms internal constructor(
     public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<SimpleClassroom> {
       val response = client.get("classrooms") {
         if (page != null) {
-          url.encodedParameters.append("page", page.toString())
+          this.url.encodedParameters.append("page", page.toString())
         }
         if (perPage != null) {
-          url.encodedParameters.append("per_page", perPage.toString())
+          this.url.encodedParameters.append("per_page", perPage.toString())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -80,10 +80,10 @@ public class Classrooms internal constructor(
         public suspend operator fun invoke(page: Long? = 1L, perPage: Long? = 30L): List<SimpleClassroomAssignment> {
           val response = client.get("classrooms/$classroomId/assignments") {
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")

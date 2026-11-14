@@ -18,7 +18,7 @@ public class Octocat internal constructor(
     public suspend operator fun invoke(s: String? = null): String {
       val response = client.get("octocat") {
         if (s != null) {
-          url.encodedParameters.append("s", s.encodeURLParameter())
+          this.url.encodedParameters.append("s", s.encodeURLParameter())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")

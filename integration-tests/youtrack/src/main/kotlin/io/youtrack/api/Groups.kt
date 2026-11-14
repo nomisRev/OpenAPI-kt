@@ -27,13 +27,13 @@ public class Groups internal constructor(
     ): List<UserGroupRead> {
       val response = client.get("groups") {
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         if (skip != null) {
-          url.encodedParameters.append("%24skip", skip.toString())
+          this.url.encodedParameters.append("%24skip", skip.toString())
         }
         if (top != null) {
-          url.encodedParameters.append("%24top", top.toString())
+          this.url.encodedParameters.append("%24top", top.toString())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -54,7 +54,7 @@ public class Groups internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,allUsersGroup,id,name,ringId"): UserGroupRead {
         val response = client.get("groups/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")

@@ -118,15 +118,15 @@ public class Conversations internal constructor(
         ): ConversationItemList {
           val response = client.get("conversations/${conversationId.encodeURLParameter()}/items") {
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (order != null) {
-              url.encodedParameters.append("order", order.value.encodeURLParameter())
+              this.url.encodedParameters.append("order", order.value.encodeURLParameter())
             }
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
-            include?.forEach { url.encodedParameters.append("include", it.value.encodeURLParameter()) }
+            include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
@@ -150,7 +150,7 @@ public class Conversations internal constructor(
       ) {
         public suspend operator fun invoke(items: List<InputItem>, include: List<IncludeEnum>? = null): ConversationItemList {
           val response = client.post("conversations/${conversationId.encodeURLParameter()}/items") {
-            include?.forEach { url.encodedParameters.append("include", it.value.encodeURLParameter()) }
+            include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
             contentType(ContentType.Application.Json)
             setBody(Body(items = items))
           }
@@ -192,7 +192,7 @@ public class Conversations internal constructor(
         ) {
           public suspend operator fun invoke(include: List<IncludeEnum>? = null): ConversationItem {
             val response = client.get("conversations/${conversationId.encodeURLParameter()}/items/${itemId.encodeURLParameter()}") {
-              include?.forEach { url.encodedParameters.append("include", it.value.encodeURLParameter()) }
+              include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
             return response.body()

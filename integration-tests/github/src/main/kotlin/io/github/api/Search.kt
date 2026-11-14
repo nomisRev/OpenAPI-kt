@@ -57,18 +57,18 @@ public class Search internal constructor(
         page: Long? = 1L,
       ): Response {
         val response = client.get("search/code") {
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
-            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -152,18 +152,18 @@ public class Search internal constructor(
         page: Long? = 1L,
       ): Response {
         val response = client.get("search/commits") {
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
-            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -227,21 +227,21 @@ public class Search internal constructor(
         advancedSearch: String? = null,
       ): Response {
         val response = client.get("search/issues") {
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
-            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
           if (advancedSearch != null) {
-            url.encodedParameters.append("advanced_search", advancedSearch.encodeURLParameter())
+            this.url.encodedParameters.append("advanced_search", advancedSearch.encodeURLParameter())
           }
         }
         return when (response.status.value) {
@@ -346,19 +346,19 @@ public class Search internal constructor(
         page: Long? = 1L,
       ): Response {
         val response = client.get("search/labels") {
-          url.encodedParameters.append("repository_id", repositoryId.toString())
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("repository_id", repositoryId.toString())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
-            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -436,18 +436,18 @@ public class Search internal constructor(
         page: Long? = 1L,
       ): Response {
         val response = client.get("search/repositories") {
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
-            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -530,12 +530,12 @@ public class Search internal constructor(
         page: Long? = 1L,
       ): Response {
         val response = client.get("search/topics") {
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -576,18 +576,18 @@ public class Search internal constructor(
         page: Long? = 1L,
       ): Response {
         val response = client.get("search/users") {
-          url.encodedParameters.append("q", q.encodeURLParameter())
+          this.url.encodedParameters.append("q", q.encodeURLParameter())
           if (sort != null) {
-            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {

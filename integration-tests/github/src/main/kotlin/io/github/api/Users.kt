@@ -82,10 +82,10 @@ public class Users internal constructor(
     public suspend operator fun invoke(since: Long? = null, perPage: Long? = 30L): Response {
       val response = client.get("users") {
         if (since != null) {
-          url.encodedParameters.append("since", since.toString())
+          this.url.encodedParameters.append("since", since.toString())
         }
         if (perPage != null) {
-          url.encodedParameters.append("per_page", perPage.toString())
+          this.url.encodedParameters.append("per_page", perPage.toString())
         }
       }
       return when (response.status.value) {
@@ -496,13 +496,13 @@ public class Users internal constructor(
           ): Response {
             val response = client.post("users/${username.encodeURLParameter()}/attestations/bulk-list") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               contentType(ContentType.Application.Json)
               setBody(Body(subjectDigests = subjectDigests, predicateType = predicateType))
@@ -712,16 +712,16 @@ public class Users internal constructor(
           ): Response {
             val response = client.get("users/${username.encodeURLParameter()}/attestations/${subjectDigest.encodeURLParameter()}") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (predicateType != null) {
-                url.encodedParameters.append("predicate_type", predicateType.encodeURLParameter())
+                this.url.encodedParameters.append("predicate_type", predicateType.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -845,10 +845,10 @@ public class Users internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
           val response = client.get("users/${username.encodeURLParameter()}/events") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -877,10 +877,10 @@ public class Users internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
               val response = client.get("users/${username.encodeURLParameter()}/events/orgs/${org.encodeURLParameter()}") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -903,10 +903,10 @@ public class Users internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
             val response = client.get("users/${username.encodeURLParameter()}/events/public") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -929,10 +929,10 @@ public class Users internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
           val response = client.get("users/${username.encodeURLParameter()}/followers") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -956,10 +956,10 @@ public class Users internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
           val response = client.get("users/${username.encodeURLParameter()}/following") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1014,13 +1014,13 @@ public class Users internal constructor(
         ): Response {
           val response = client.get("users/${username.encodeURLParameter()}/gists") {
             if (since != null) {
-              url.encodedParameters.append("since", since.toString().encodeURLParameter())
+              this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -1055,10 +1055,10 @@ public class Users internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<GpgKey> {
           val response = client.get("users/${username.encodeURLParameter()}/gpg_keys") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1080,10 +1080,10 @@ public class Users internal constructor(
         public suspend operator fun invoke(subjectType: SubjectType? = null, subjectId: String? = null): Response {
           val response = client.get("users/${username.encodeURLParameter()}/hovercard") {
             if (subjectType != null) {
-              url.encodedParameters.append("subject_type", subjectType.value.encodeURLParameter())
+              this.url.encodedParameters.append("subject_type", subjectType.value.encodeURLParameter())
             }
             if (subjectId != null) {
-              url.encodedParameters.append("subject_id", subjectId.encodeURLParameter())
+              this.url.encodedParameters.append("subject_id", subjectId.encodeURLParameter())
             }
           }
           return when (response.status.value) {
@@ -1156,10 +1156,10 @@ public class Users internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<KeySimple> {
           val response = client.get("users/${username.encodeURLParameter()}/keys") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1181,10 +1181,10 @@ public class Users internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<OrganizationSimple> {
           val response = client.get("users/${username.encodeURLParameter()}/orgs") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1222,15 +1222,15 @@ public class Users internal constructor(
           perPage: Long? = 30L,
         ): Response {
           val response = client.get("users/${username.encodeURLParameter()}/packages") {
-            url.encodedParameters.append("package_type", packageType.value.encodeURLParameter())
+            this.url.encodedParameters.append("package_type", packageType.value.encodeURLParameter())
             if (visibility != null) {
-              url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
+              this.url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
           }
           return when (response.status.value) {
@@ -1370,7 +1370,7 @@ public class Users internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("users/${username.encodeURLParameter()}/packages/npm/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -1629,7 +1629,7 @@ public class Users internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("users/${username.encodeURLParameter()}/packages/maven/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -1888,7 +1888,7 @@ public class Users internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("users/${username.encodeURLParameter()}/packages/rubygems/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -2147,7 +2147,7 @@ public class Users internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("users/${username.encodeURLParameter()}/packages/docker/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -2406,7 +2406,7 @@ public class Users internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("users/${username.encodeURLParameter()}/packages/nuget/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -2665,7 +2665,7 @@ public class Users internal constructor(
               public suspend operator fun invoke(token: String? = null): Response {
                 val response = client.post("users/${username.encodeURLParameter()}/packages/container/${packageName.encodeURLParameter()}/restore") {
                   if (token != null) {
-                    url.encodedParameters.append("token", token.encodeURLParameter())
+                    this.url.encodedParameters.append("token", token.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -2866,16 +2866,16 @@ public class Users internal constructor(
         ): Response {
           val response = client.get("users/${username.encodeURLParameter()}/projectsV2") {
             if (q != null) {
-              url.encodedParameters.append("q", q.encodeURLParameter())
+              this.url.encodedParameters.append("q", q.encodeURLParameter())
             }
             if (before != null) {
-              url.encodedParameters.append("before", before.encodeURLParameter())
+              this.url.encodedParameters.append("before", before.encodeURLParameter())
             }
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
           }
           return when (response.status.value) {
@@ -2973,13 +2973,13 @@ public class Users internal constructor(
             ): Response {
               val response = client.get("users/${username.encodeURLParameter()}/projectsV2/$projectNumber/fields") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (before != null) {
-                  url.encodedParameters.append("before", before.encodeURLParameter())
+                  this.url.encodedParameters.append("before", before.encodeURLParameter())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -3211,24 +3211,24 @@ public class Users internal constructor(
             ): Response {
               val response = client.get("users/${username.encodeURLParameter()}/projectsV2/$projectNumber/items") {
                 if (before != null) {
-                  url.encodedParameters.append("before", before.encodeURLParameter())
+                  this.url.encodedParameters.append("before", before.encodeURLParameter())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (q != null) {
-                  url.encodedParameters.append("q", q.encodeURLParameter())
+                  this.url.encodedParameters.append("q", q.encodeURLParameter())
                 }
                 if (fields != null) {
                   when (fields) {
                     is Fields.CaseString -> {
-                      url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                      this.url.encodedParameters.append("fields", fields.value.encodeURLParameter())
                     }
                     is Fields.CaseStrings -> {
-                      fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                      fields.value.forEach { this.url.encodedParameters.append("fields", it.encodeURLParameter()) }
                     }
                   }
                 }
@@ -3423,10 +3423,10 @@ public class Users internal constructor(
                   if (fields != null) {
                     when (fields) {
                       is Fields.CaseString -> {
-                        url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                        this.url.encodedParameters.append("fields", fields.value.encodeURLParameter())
                       }
                       is Fields.CaseStrings -> {
-                        fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                        fields.value.forEach { this.url.encodedParameters.append("fields", it.encodeURLParameter()) }
                       }
                     }
                   }
@@ -3659,21 +3659,21 @@ public class Users internal constructor(
                     if (fields != null) {
                       when (fields) {
                         is Fields.CaseString -> {
-                          url.encodedParameters.append("fields", fields.value.encodeURLParameter())
+                          this.url.encodedParameters.append("fields", fields.value.encodeURLParameter())
                         }
                         is Fields.CaseStrings -> {
-                          fields.value.forEach { url.encodedParameters.append("fields", it.encodeURLParameter()) }
+                          fields.value.forEach { this.url.encodedParameters.append("fields", it.encodeURLParameter()) }
                         }
                       }
                     }
                     if (before != null) {
-                      url.encodedParameters.append("before", before.encodeURLParameter())
+                      this.url.encodedParameters.append("before", before.encodeURLParameter())
                     }
                     if (after != null) {
-                      url.encodedParameters.append("after", after.encodeURLParameter())
+                      this.url.encodedParameters.append("after", after.encodeURLParameter())
                     }
                     if (perPage != null) {
-                      url.encodedParameters.append("per_page", perPage.toString())
+                      this.url.encodedParameters.append("per_page", perPage.toString())
                     }
                   }
                   return when (response.status.value) {
@@ -3777,10 +3777,10 @@ public class Users internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
           val response = client.get("users/${username.encodeURLParameter()}/received_events") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -3801,10 +3801,10 @@ public class Users internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<Event> {
             val response = client.get("users/${username.encodeURLParameter()}/received_events/public") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -3833,19 +3833,19 @@ public class Users internal constructor(
         ): List<MinimalRepository> {
           val response = client.get("users/${username.encodeURLParameter()}/repos") {
             if (type != null) {
-              url.encodedParameters.append("type", type.value.encodeURLParameter())
+              this.url.encodedParameters.append("type", type.value.encodeURLParameter())
             }
             if (sort != null) {
-              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
             }
             if (direction != null) {
-              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -3932,19 +3932,19 @@ public class Users internal constructor(
               ): Response {
                 val response = client.get("users/${username.encodeURLParameter()}/settings/billing/premium_request/usage") {
                   if (year != null) {
-                    url.encodedParameters.append("year", year.toString())
+                    this.url.encodedParameters.append("year", year.toString())
                   }
                   if (month != null) {
-                    url.encodedParameters.append("month", month.toString())
+                    this.url.encodedParameters.append("month", month.toString())
                   }
                   if (day != null) {
-                    url.encodedParameters.append("day", day.toString())
+                    this.url.encodedParameters.append("day", day.toString())
                   }
                   if (model != null) {
-                    url.encodedParameters.append("model", model.encodeURLParameter())
+                    this.url.encodedParameters.append("model", model.encodeURLParameter())
                   }
                   if (product != null) {
-                    url.encodedParameters.append("product", product.encodeURLParameter())
+                    this.url.encodedParameters.append("product", product.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -4014,13 +4014,13 @@ public class Users internal constructor(
             ): Response {
               val response = client.get("users/${username.encodeURLParameter()}/settings/billing/usage") {
                 if (year != null) {
-                  url.encodedParameters.append("year", year.toString())
+                  this.url.encodedParameters.append("year", year.toString())
                 }
                 if (month != null) {
-                  url.encodedParameters.append("month", month.toString())
+                  this.url.encodedParameters.append("month", month.toString())
                 }
                 if (day != null) {
-                  url.encodedParameters.append("day", day.toString())
+                  this.url.encodedParameters.append("day", day.toString())
                 }
               }
               return when (response.status.value) {
@@ -4084,22 +4084,22 @@ public class Users internal constructor(
               ): Response {
                 val response = client.get("users/${username.encodeURLParameter()}/settings/billing/usage/summary") {
                   if (year != null) {
-                    url.encodedParameters.append("year", year.toString())
+                    this.url.encodedParameters.append("year", year.toString())
                   }
                   if (month != null) {
-                    url.encodedParameters.append("month", month.toString())
+                    this.url.encodedParameters.append("month", month.toString())
                   }
                   if (day != null) {
-                    url.encodedParameters.append("day", day.toString())
+                    this.url.encodedParameters.append("day", day.toString())
                   }
                   if (repository != null) {
-                    url.encodedParameters.append("repository", repository.encodeURLParameter())
+                    this.url.encodedParameters.append("repository", repository.encodeURLParameter())
                   }
                   if (product != null) {
-                    url.encodedParameters.append("product", product.encodeURLParameter())
+                    this.url.encodedParameters.append("product", product.encodeURLParameter())
                   }
                   if (sku != null) {
-                    url.encodedParameters.append("sku", sku.encodeURLParameter())
+                    this.url.encodedParameters.append("sku", sku.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -4165,10 +4165,10 @@ public class Users internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SocialAccount> {
           val response = client.get("users/${username.encodeURLParameter()}/social_accounts") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -4190,10 +4190,10 @@ public class Users internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SshSigningKey> {
           val response = client.get("users/${username.encodeURLParameter()}/ssh_signing_keys") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -4220,16 +4220,16 @@ public class Users internal constructor(
         ): Response {
           val response = client.get("users/${username.encodeURLParameter()}/starred") {
             if (sort != null) {
-              url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+              this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
             }
             if (direction != null) {
-              url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+              this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -4317,10 +4317,10 @@ public class Users internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<MinimalRepository> {
           val response = client.get("users/${username.encodeURLParameter()}/subscriptions") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")

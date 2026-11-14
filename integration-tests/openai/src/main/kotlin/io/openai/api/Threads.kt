@@ -149,19 +149,19 @@ public class Threads internal constructor(
         ): ListMessagesResponse {
           val response = client.get("threads/${threadId.encodeURLParameter()}/messages") {
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (order != null) {
-              url.encodedParameters.append("order", order.value.encodeURLParameter())
+              this.url.encodedParameters.append("order", order.value.encodeURLParameter())
             }
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
             if (before != null) {
-              url.encodedParameters.append("before", before.encodeURLParameter())
+              this.url.encodedParameters.append("before", before.encodeURLParameter())
             }
             if (runId != null) {
-              url.encodedParameters.append("run_id", runId.encodeURLParameter())
+              this.url.encodedParameters.append("run_id", runId.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -268,16 +268,16 @@ public class Threads internal constructor(
         ): ListRunsResponse {
           val response = client.get("threads/${threadId.encodeURLParameter()}/runs") {
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (order != null) {
-              url.encodedParameters.append("order", order.value.encodeURLParameter())
+              this.url.encodedParameters.append("order", order.value.encodeURLParameter())
             }
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
             if (before != null) {
-              url.encodedParameters.append("before", before.encodeURLParameter())
+              this.url.encodedParameters.append("before", before.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -302,7 +302,7 @@ public class Threads internal constructor(
       ) {
         public suspend operator fun invoke(body: CreateRunRequest, include: List<Include>? = null): RunObject {
           val response = client.post("threads/${threadId.encodeURLParameter()}/runs") {
-            include?.forEach { url.encodedParameters.append("include%5B%5D", it.value.encodeURLParameter()) }
+            include?.forEach { this.url.encodedParameters.append("include%5B%5D", it.value.encodeURLParameter()) }
             contentType(ContentType.Application.Json)
             setBody(body)
           }
@@ -405,18 +405,18 @@ public class Threads internal constructor(
             ): ListRunStepsResponse {
               val response = client.get("threads/${threadId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}/steps") {
                 if (limit != null) {
-                  url.encodedParameters.append("limit", limit.toString())
+                  this.url.encodedParameters.append("limit", limit.toString())
                 }
                 if (order != null) {
-                  url.encodedParameters.append("order", order.value.encodeURLParameter())
+                  this.url.encodedParameters.append("order", order.value.encodeURLParameter())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
                 if (before != null) {
-                  url.encodedParameters.append("before", before.encodeURLParameter())
+                  this.url.encodedParameters.append("before", before.encodeURLParameter())
                 }
-                include?.forEach { url.encodedParameters.append("include%5B%5D", it.value.encodeURLParameter()) }
+                include?.forEach { this.url.encodedParameters.append("include%5B%5D", it.value.encodeURLParameter()) }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
               return response.body()
@@ -459,7 +459,7 @@ public class Threads internal constructor(
             ) {
               public suspend operator fun invoke(include: List<Include>? = null): RunStepObject {
                 val response = client.get("threads/${threadId.encodeURLParameter()}/runs/${runId.encodeURLParameter()}/steps/${stepId.encodeURLParameter()}") {
-                  include?.forEach { url.encodedParameters.append("include%5B%5D", it.value.encodeURLParameter()) }
+                  include?.forEach { this.url.encodedParameters.append("include%5B%5D", it.value.encodeURLParameter()) }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
                 return response.body()

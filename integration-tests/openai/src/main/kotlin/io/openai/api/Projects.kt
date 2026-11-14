@@ -76,13 +76,13 @@ public class Projects internal constructor(
             ): RoleListResource {
               val response = client.get("projects/${projectId.encodeURLParameter()}/groups/${groupId.encodeURLParameter()}/roles") {
                 if (limit != null) {
-                  url.encodedParameters.append("limit", limit.toString())
+                  this.url.encodedParameters.append("limit", limit.toString())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
                 if (order != null) {
-                  url.encodedParameters.append("order", order.value.encodeURLParameter())
+                  this.url.encodedParameters.append("order", order.value.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -162,13 +162,13 @@ public class Projects internal constructor(
         ): PublicRoleListResource {
           val response = client.get("projects/${projectId.encodeURLParameter()}/roles") {
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
             if (order != null) {
-              url.encodedParameters.append("order", order.value.encodeURLParameter())
+              this.url.encodedParameters.append("order", order.value.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -275,13 +275,13 @@ public class Projects internal constructor(
             ): RoleListResource {
               val response = client.get("projects/${projectId.encodeURLParameter()}/users/${userId.encodeURLParameter()}/roles") {
                 if (limit != null) {
-                  url.encodedParameters.append("limit", limit.toString())
+                  this.url.encodedParameters.append("limit", limit.toString())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
                 if (order != null) {
-                  url.encodedParameters.append("order", order.value.encodeURLParameter())
+                  this.url.encodedParameters.append("order", order.value.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")

@@ -443,10 +443,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/blocks") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -623,13 +623,13 @@ public class User internal constructor(
       ): Response {
         val response = client.get("user/codespaces") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
           if (repositoryId != null) {
-            url.encodedParameters.append("repository_id", repositoryId.toString())
+            this.url.encodedParameters.append("repository_id", repositoryId.toString())
           }
         }
         return when (response.status.value) {
@@ -833,10 +833,10 @@ public class User internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("user/codespaces/secrets") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1870,10 +1870,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/emails") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -2013,10 +2013,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/followers") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -2059,10 +2059,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/following") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -2228,10 +2228,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/gpg_keys") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -2418,10 +2418,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/installations") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -2474,10 +2474,10 @@ public class User internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("user/installations/$installationId/repositories") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -3017,28 +3017,28 @@ public class User internal constructor(
       ): Response {
         val response = client.get("user/issues") {
           if (filter != null) {
-            url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+            this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
           }
           if (state != null) {
-            url.encodedParameters.append("state", state.value.encodeURLParameter())
+            this.url.encodedParameters.append("state", state.value.encodeURLParameter())
           }
           if (labels != null) {
-            url.encodedParameters.append("labels", labels.encodeURLParameter())
+            this.url.encodedParameters.append("labels", labels.encodeURLParameter())
           }
           if (sort != null) {
-            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
           }
           if (direction != null) {
-            url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
           }
           if (since != null) {
-            url.encodedParameters.append("since", since.toString().encodeURLParameter())
+            this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -3134,10 +3134,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/keys") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -3318,10 +3318,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/marketplace_purchases") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -3361,10 +3361,10 @@ public class User internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("user/marketplace_purchases/stubbed") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -3412,13 +3412,13 @@ public class User internal constructor(
         ): Response {
           val response = client.get("user/memberships/orgs") {
             if (state != null) {
-              url.encodedParameters.append("state", state.value.encodeURLParameter())
+              this.url.encodedParameters.append("state", state.value.encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -3569,10 +3569,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/migrations") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -3706,7 +3706,7 @@ public class User internal constructor(
       ) {
         public suspend operator fun invoke(exclude: List<String>? = null): Response {
           val response = client.get("user/migrations/$migrationId") {
-            exclude?.forEach { url.encodedParameters.append("exclude", it.encodeURLParameter()) }
+            exclude?.forEach { this.url.encodedParameters.append("exclude", it.encodeURLParameter()) }
           }
           return when (response.status.value) {
             200 -> Response.Ok(response.body())
@@ -3885,10 +3885,10 @@ public class User internal constructor(
           public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
             val response = client.get("user/migrations/$migrationId/repositories") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -3923,10 +3923,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/orgs") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -3983,15 +3983,15 @@ public class User internal constructor(
         perPage: Long? = 30L,
       ): Response {
         val response = client.get("user/packages") {
-          url.encodedParameters.append("package_type", packageType.value.encodeURLParameter())
+          this.url.encodedParameters.append("package_type", packageType.value.encodeURLParameter())
           if (visibility != null) {
-            url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
+            this.url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
         }
         return when (response.status.value) {
@@ -4115,7 +4115,7 @@ public class User internal constructor(
             public suspend operator fun invoke(token: String? = null): Response {
               val response = client.post("user/packages/npm/${packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
-                  url.encodedParameters.append("token", token.encodeURLParameter())
+                  this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -4164,13 +4164,13 @@ public class User internal constructor(
             ): Response {
               val response = client.get("user/packages/npm/${packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (state != null) {
-                  url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -4386,7 +4386,7 @@ public class User internal constructor(
             public suspend operator fun invoke(token: String? = null): Response {
               val response = client.post("user/packages/maven/${packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
-                  url.encodedParameters.append("token", token.encodeURLParameter())
+                  this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -4435,13 +4435,13 @@ public class User internal constructor(
             ): Response {
               val response = client.get("user/packages/maven/${packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (state != null) {
-                  url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -4657,7 +4657,7 @@ public class User internal constructor(
             public suspend operator fun invoke(token: String? = null): Response {
               val response = client.post("user/packages/rubygems/${packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
-                  url.encodedParameters.append("token", token.encodeURLParameter())
+                  this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -4706,13 +4706,13 @@ public class User internal constructor(
             ): Response {
               val response = client.get("user/packages/rubygems/${packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (state != null) {
-                  url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -4928,7 +4928,7 @@ public class User internal constructor(
             public suspend operator fun invoke(token: String? = null): Response {
               val response = client.post("user/packages/docker/${packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
-                  url.encodedParameters.append("token", token.encodeURLParameter())
+                  this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -4977,13 +4977,13 @@ public class User internal constructor(
             ): Response {
               val response = client.get("user/packages/docker/${packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (state != null) {
-                  url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -5199,7 +5199,7 @@ public class User internal constructor(
             public suspend operator fun invoke(token: String? = null): Response {
               val response = client.post("user/packages/nuget/${packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
-                  url.encodedParameters.append("token", token.encodeURLParameter())
+                  this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -5248,13 +5248,13 @@ public class User internal constructor(
             ): Response {
               val response = client.get("user/packages/nuget/${packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (state != null) {
-                  url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -5470,7 +5470,7 @@ public class User internal constructor(
             public suspend operator fun invoke(token: String? = null): Response {
               val response = client.post("user/packages/container/${packageName.encodeURLParameter()}/restore") {
                 if (token != null) {
-                  url.encodedParameters.append("token", token.encodeURLParameter())
+                  this.url.encodedParameters.append("token", token.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -5519,13 +5519,13 @@ public class User internal constructor(
             ): Response {
               val response = client.get("user/packages/container/${packageName.encodeURLParameter()}/versions") {
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (state != null) {
-                  url.encodedParameters.append("state", state.value.encodeURLParameter())
+                  this.url.encodedParameters.append("state", state.value.encodeURLParameter())
                 }
               }
               return when (response.status.value) {
@@ -5680,10 +5680,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/public_emails") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -5741,31 +5741,31 @@ public class User internal constructor(
       ): Response {
         val response = client.get("user/repos") {
           if (visibility != null) {
-            url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
+            this.url.encodedParameters.append("visibility", visibility.value.encodeURLParameter())
           }
           if (affiliation != null) {
-            url.encodedParameters.append("affiliation", affiliation.encodeURLParameter())
+            this.url.encodedParameters.append("affiliation", affiliation.encodeURLParameter())
           }
           if (type != null) {
-            url.encodedParameters.append("type", type.value.encodeURLParameter())
+            this.url.encodedParameters.append("type", type.value.encodeURLParameter())
           }
           if (sort != null) {
-            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
           }
           if (direction != null) {
-            url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
           if (since != null) {
-            url.encodedParameters.append("since", since.toString().encodeURLParameter())
+            this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
           }
           if (before != null) {
-            url.encodedParameters.append("before", before.toString().encodeURLParameter())
+            this.url.encodedParameters.append("before", before.toString().encodeURLParameter())
           }
         }
         return when (response.status.value) {
@@ -6057,10 +6057,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/repository_invitations") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -6237,10 +6237,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/social_accounts") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -6340,10 +6340,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/ssh_signing_keys") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -6530,16 +6530,16 @@ public class User internal constructor(
         val response = client.get("user/starred") {
           `header`(HttpHeaders.Accept, ContentType.Application.Json)
           if (sort != null) {
-            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
           }
           if (direction != null) {
-            url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -6560,16 +6560,16 @@ public class User internal constructor(
         val response = client.get("user/starred") {
           `header`(HttpHeaders.Accept, ContentType("application", "vnd.github.v3.star+json"))
           if (sort != null) {
-            url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+            this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
           }
           if (direction != null) {
-            url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+            this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -6767,10 +6767,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/subscriptions") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -6811,10 +6811,10 @@ public class User internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("user/teams") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {

@@ -38,10 +38,10 @@ public class Installation internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("installation/repositories") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {

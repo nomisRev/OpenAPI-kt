@@ -129,10 +129,10 @@ public class App internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, cursor: String? = null): Response {
           val response = client.get("app/hook/deliveries") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (cursor != null) {
-              url.encodedParameters.append("cursor", cursor.encodeURLParameter())
+              this.url.encodedParameters.append("cursor", cursor.encodeURLParameter())
             }
           }
           return when (response.status.value) {
@@ -245,10 +245,10 @@ public class App internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("app/installation-requests") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -291,16 +291,16 @@ public class App internal constructor(
       ): List<Installation> {
         val response = client.get("app/installations") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
           if (since != null) {
-            url.encodedParameters.append("since", since.toString().encodeURLParameter())
+            this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
           }
           if (outdated != null) {
-            url.encodedParameters.append("outdated", outdated.encodeURLParameter())
+            this.url.encodedParameters.append("outdated", outdated.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")

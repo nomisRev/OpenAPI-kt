@@ -544,10 +544,10 @@ public class Audio internal constructor(
       public suspend operator fun invoke(after: String? = null, limit: Long? = 20L): VoiceConsentListResource {
         val response = client.get("audio/voice_consents") {
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")

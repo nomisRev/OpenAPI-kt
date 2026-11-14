@@ -28,7 +28,7 @@ public class IssuesGetter internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,count,id", body: IssueCountResponseWrite? = null): IssueCountResponseRead {
         val response = client.post("issuesGetter/count") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
           body?.let {
             contentType(ContentType.Application.Json)

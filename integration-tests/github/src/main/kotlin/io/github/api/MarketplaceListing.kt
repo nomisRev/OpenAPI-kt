@@ -79,10 +79,10 @@ public class MarketplaceListing internal constructor(
       public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
         val response = client.get("marketplace_listing/plans") {
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -132,16 +132,16 @@ public class MarketplaceListing internal constructor(
           ): Response {
             val response = client.get("marketplace_listing/plans/$planId/accounts") {
               if (sort != null) {
-                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
               if (direction != null) {
-                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (page != null) {
-                url.encodedParameters.append("page", page.toString())
+                this.url.encodedParameters.append("page", page.toString())
               }
             }
             return when (response.status.value) {
@@ -257,10 +257,10 @@ public class MarketplaceListing internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("marketplace_listing/stubbed/plans") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -305,16 +305,16 @@ public class MarketplaceListing internal constructor(
             ): Response {
               val response = client.get("marketplace_listing/stubbed/plans/$planId/accounts") {
                 if (sort != null) {
-                  url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                  this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
                 }
                 if (direction != null) {
-                  url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                  this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
                 }
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               return when (response.status.value) {

@@ -48,22 +48,22 @@ public class Notifications internal constructor(
     ): Response {
       val response = client.get("notifications") {
         if (all != null) {
-          url.encodedParameters.append("all", all.toString())
+          this.url.encodedParameters.append("all", all.toString())
         }
         if (participating != null) {
-          url.encodedParameters.append("participating", participating.toString())
+          this.url.encodedParameters.append("participating", participating.toString())
         }
         if (since != null) {
-          url.encodedParameters.append("since", since.toString().encodeURLParameter())
+          this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
         }
         if (before != null) {
-          url.encodedParameters.append("before", before.toString().encodeURLParameter())
+          this.url.encodedParameters.append("before", before.toString().encodeURLParameter())
         }
         if (page != null) {
-          url.encodedParameters.append("page", page.toString())
+          this.url.encodedParameters.append("page", page.toString())
         }
         if (perPage != null) {
-          url.encodedParameters.append("per_page", perPage.toString())
+          this.url.encodedParameters.append("per_page", perPage.toString())
         }
       }
       return when (response.status.value) {

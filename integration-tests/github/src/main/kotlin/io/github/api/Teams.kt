@@ -232,10 +232,10 @@ public class Teams internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<OrganizationInvitation> {
           val response = client.get("teams/$teamId/invitations") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -266,13 +266,13 @@ public class Teams internal constructor(
         ): Response {
           val response = client.get("teams/$teamId/members") {
             if (role != null) {
-              url.encodedParameters.append("role", role.value.encodeURLParameter())
+              this.url.encodedParameters.append("role", role.value.encodeURLParameter())
             }
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -555,10 +555,10 @@ public class Teams internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("teams/$teamId/repos") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -728,10 +728,10 @@ public class Teams internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("teams/$teamId/teams") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {

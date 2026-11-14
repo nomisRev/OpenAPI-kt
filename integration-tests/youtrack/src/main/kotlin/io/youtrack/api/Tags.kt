@@ -37,16 +37,16 @@ public class Tags internal constructor(
     ): List<IssueFolderRead.Tag> {
       val response = client.get("tags") {
         if (query != null) {
-          url.encodedParameters.append("query", query.encodeURLParameter())
+          this.url.encodedParameters.append("query", query.encodeURLParameter())
         }
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         if (skip != null) {
-          url.encodedParameters.append("%24skip", skip.toString())
+          this.url.encodedParameters.append("%24skip", skip.toString())
         }
         if (top != null) {
-          url.encodedParameters.append("%24top", top.toString())
+          this.url.encodedParameters.append("%24top", top.toString())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -60,7 +60,7 @@ public class Tags internal constructor(
     public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag {
       val response = client.post("tags") {
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         body?.let {
           contentType(ContentType.Application.Json)
@@ -101,7 +101,7 @@ public class Tags internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)"): IssueFolderRead.Tag {
         val response = client.get("tags/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -116,7 +116,7 @@ public class Tags internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag {
         val response = client.post("tags/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
           body?.let {
             contentType(ContentType.Application.Json)
@@ -146,16 +146,16 @@ public class Tags internal constructor(
         ): List<IssueRead> {
           val response = client.get("tags/${id.encodeURLParameter()}/issues") {
             if (customFields != null) {
-              url.encodedParameters.append("customFields", customFields.encodeURLParameter())
+              this.url.encodedParameters.append("customFields", customFields.encodeURLParameter())
             }
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")

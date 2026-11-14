@@ -66,13 +66,13 @@ public class Gists internal constructor(
     ): Response {
       val response = client.get("gists") {
         if (since != null) {
-          url.encodedParameters.append("since", since.toString().encodeURLParameter())
+          this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
         }
         if (perPage != null) {
-          url.encodedParameters.append("per_page", perPage.toString())
+          this.url.encodedParameters.append("per_page", perPage.toString())
         }
         if (page != null) {
-          url.encodedParameters.append("page", page.toString())
+          this.url.encodedParameters.append("page", page.toString())
         }
       }
       return when (response.status.value) {
@@ -224,13 +224,13 @@ public class Gists internal constructor(
       ): Response {
         val response = client.get("gists/public") {
           if (since != null) {
-            url.encodedParameters.append("since", since.toString().encodeURLParameter())
+            this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -275,13 +275,13 @@ public class Gists internal constructor(
       ): Response {
         val response = client.get("gists/starred") {
           if (since != null) {
-            url.encodedParameters.append("since", since.toString().encodeURLParameter())
+            this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
           }
           if (perPage != null) {
-            url.encodedParameters.append("per_page", perPage.toString())
+            this.url.encodedParameters.append("per_page", perPage.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.toString())
+            this.url.encodedParameters.append("page", page.toString())
           }
         }
         return when (response.status.value) {
@@ -479,10 +479,10 @@ public class Gists internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("gists/${gistId.encodeURLParameter()}/comments") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -694,10 +694,10 @@ public class Gists internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("gists/${gistId.encodeURLParameter()}/commits") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -742,10 +742,10 @@ public class Gists internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("gists/${gistId.encodeURLParameter()}/forks") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {

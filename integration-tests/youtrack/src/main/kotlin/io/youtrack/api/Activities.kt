@@ -34,31 +34,31 @@ public class Activities internal constructor(
     ): List<ActivityItem> {
       val response = client.get("activities") {
         if (categories != null) {
-          url.encodedParameters.append("categories", categories.encodeURLParameter())
+          this.url.encodedParameters.append("categories", categories.encodeURLParameter())
         }
         if (reverse != null) {
-          url.encodedParameters.append("reverse", reverse.toString())
+          this.url.encodedParameters.append("reverse", reverse.toString())
         }
         if (start != null) {
-          url.encodedParameters.append("start", start.encodeURLParameter())
+          this.url.encodedParameters.append("start", start.encodeURLParameter())
         }
         if (end != null) {
-          url.encodedParameters.append("end", end.encodeURLParameter())
+          this.url.encodedParameters.append("end", end.encodeURLParameter())
         }
         if (author != null) {
-          url.encodedParameters.append("author", author.encodeURLParameter())
+          this.url.encodedParameters.append("author", author.encodeURLParameter())
         }
         if (issueQuery != null) {
-          url.encodedParameters.append("issueQuery", issueQuery.encodeURLParameter())
+          this.url.encodedParameters.append("issueQuery", issueQuery.encodeURLParameter())
         }
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         if (skip != null) {
-          url.encodedParameters.append("%24skip", skip.toString())
+          this.url.encodedParameters.append("%24skip", skip.toString())
         }
         if (top != null) {
-          url.encodedParameters.append("%24top", top.toString())
+          this.url.encodedParameters.append("%24top", top.toString())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -79,7 +79,7 @@ public class Activities internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,added,author(${'$'}type,id,login,ringId),category(${'$'}type,id),field(${'$'}type,customField(${'$'}type,fieldType(${'$'}type,id),id,localizedName,name),id,name),id,removed,target,targetMember,timestamp"): ActivityItem {
         val response = client.get("activities/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")

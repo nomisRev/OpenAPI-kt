@@ -35,13 +35,13 @@ public class SavedQueries internal constructor(
     ): List<IssueFolderRead.SavedQuery> {
       val response = client.get("savedQueries") {
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         if (skip != null) {
-          url.encodedParameters.append("%24skip", skip.toString())
+          this.url.encodedParameters.append("%24skip", skip.toString())
         }
         if (top != null) {
-          url.encodedParameters.append("%24top", top.toString())
+          this.url.encodedParameters.append("%24top", top.toString())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -55,7 +55,7 @@ public class SavedQueries internal constructor(
     public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query", body: IssueFolderWrite.SavedQuery? = null): IssueFolderRead.SavedQuery {
       val response = client.post("savedQueries") {
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         body?.let {
           contentType(ContentType.Application.Json)
@@ -94,7 +94,7 @@ public class SavedQueries internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query"): IssueFolderRead.SavedQuery {
         val response = client.get("savedQueries/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -109,7 +109,7 @@ public class SavedQueries internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId),query", body: IssueFolderWrite.SavedQuery? = null): IssueFolderRead.SavedQuery {
         val response = client.post("savedQueries/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
           body?.let {
             contentType(ContentType.Application.Json)

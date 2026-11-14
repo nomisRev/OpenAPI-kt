@@ -1,5 +1,6 @@
 package io.openai.model
 
+import kotlin.Long
 import kotlin.OptIn
 import kotlin.String
 import kotlinx.serialization.EncodeDefault
@@ -8,7 +9,10 @@ import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.descriptors.PolymorphicKind
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.descriptors.buildSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -29,9 +33,27 @@ public sealed interface RealtimeAudioFormats {
     @EncodeDefault(EncodeDefault.Mode.NEVER)
     public val rate: Rate? = null,
   ) : RealtimeAudioFormats {
-    @Serializable
-    public enum class Rate {
-      `24000`,
+    @Serializable(with = Rate.Serializer::class)
+    public enum class Rate(
+      public val `value`: Long,
+    ) {
+      `24000`(24_000L),
+      ;
+
+      internal object Serializer : KSerializer<Rate> {
+        override val descriptor: SerialDescriptor =
+            PrimitiveSerialDescriptor("Rate", PrimitiveKind.LONG)
+
+        override fun serialize(encoder: Encoder, `value`: Rate) {
+          encoder.encodeLong(value.value)
+        }
+
+        override fun deserialize(decoder: Decoder): Rate {
+          val value = decoder.decodeLong()
+          val member = Rate.entries.firstOrNull { it.value == value }
+          return member ?: throw SerializationException("""Rate has no member with value $value""")
+        }
+      }
     }
 
     @Serializable

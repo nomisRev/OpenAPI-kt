@@ -50,16 +50,16 @@ public class VectorStores internal constructor(
     ): ListVectorStoresResponse {
       val response = client.get("vector_stores") {
         if (limit != null) {
-          url.encodedParameters.append("limit", limit.toString())
+          this.url.encodedParameters.append("limit", limit.toString())
         }
         if (order != null) {
-          url.encodedParameters.append("order", order.value.encodeURLParameter())
+          this.url.encodedParameters.append("order", order.value.encodeURLParameter())
         }
         if (after != null) {
-          url.encodedParameters.append("after", after.encodeURLParameter())
+          this.url.encodedParameters.append("after", after.encodeURLParameter())
         }
         if (before != null) {
-          url.encodedParameters.append("before", before.encodeURLParameter())
+          this.url.encodedParameters.append("before", before.encodeURLParameter())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -229,19 +229,19 @@ public class VectorStores internal constructor(
             ): ListVectorStoreFilesResponse {
               val response = client.get("vector_stores/${vectorStoreId.encodeURLParameter()}/file_batches/${batchId.encodeURLParameter()}/files") {
                 if (limit != null) {
-                  url.encodedParameters.append("limit", limit.toString())
+                  this.url.encodedParameters.append("limit", limit.toString())
                 }
                 if (order != null) {
-                  url.encodedParameters.append("order", order.value.encodeURLParameter())
+                  this.url.encodedParameters.append("order", order.value.encodeURLParameter())
                 }
                 if (after != null) {
-                  url.encodedParameters.append("after", after.encodeURLParameter())
+                  this.url.encodedParameters.append("after", after.encodeURLParameter())
                 }
                 if (before != null) {
-                  url.encodedParameters.append("before", before.encodeURLParameter())
+                  this.url.encodedParameters.append("before", before.encodeURLParameter())
                 }
                 if (filter != null) {
-                  url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+                  this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -301,19 +301,19 @@ public class VectorStores internal constructor(
         ): ListVectorStoreFilesResponse {
           val response = client.get("vector_stores/${vectorStoreId.encodeURLParameter()}/files") {
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (order != null) {
-              url.encodedParameters.append("order", order.value.encodeURLParameter())
+              this.url.encodedParameters.append("order", order.value.encodeURLParameter())
             }
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
             if (before != null) {
-              url.encodedParameters.append("before", before.encodeURLParameter())
+              this.url.encodedParameters.append("before", before.encodeURLParameter())
             }
             if (filter != null) {
-              url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+              this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")

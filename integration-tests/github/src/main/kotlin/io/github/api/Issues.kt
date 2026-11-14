@@ -40,40 +40,40 @@ public class Issues internal constructor(
     ): Response {
       val response = client.get("issues") {
         if (filter != null) {
-          url.encodedParameters.append("filter", filter.value.encodeURLParameter())
+          this.url.encodedParameters.append("filter", filter.value.encodeURLParameter())
         }
         if (state != null) {
-          url.encodedParameters.append("state", state.value.encodeURLParameter())
+          this.url.encodedParameters.append("state", state.value.encodeURLParameter())
         }
         if (labels != null) {
-          url.encodedParameters.append("labels", labels.encodeURLParameter())
+          this.url.encodedParameters.append("labels", labels.encodeURLParameter())
         }
         if (sort != null) {
-          url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+          this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
         }
         if (direction != null) {
-          url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+          this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
         }
         if (since != null) {
-          url.encodedParameters.append("since", since.toString().encodeURLParameter())
+          this.url.encodedParameters.append("since", since.toString().encodeURLParameter())
         }
         if (collab != null) {
-          url.encodedParameters.append("collab", collab.toString())
+          this.url.encodedParameters.append("collab", collab.toString())
         }
         if (orgs != null) {
-          url.encodedParameters.append("orgs", orgs.toString())
+          this.url.encodedParameters.append("orgs", orgs.toString())
         }
         if (owned != null) {
-          url.encodedParameters.append("owned", owned.toString())
+          this.url.encodedParameters.append("owned", owned.toString())
         }
         if (pulls != null) {
-          url.encodedParameters.append("pulls", pulls.toString())
+          this.url.encodedParameters.append("pulls", pulls.toString())
         }
         if (perPage != null) {
-          url.encodedParameters.append("per_page", perPage.toString())
+          this.url.encodedParameters.append("per_page", perPage.toString())
         }
         if (page != null) {
-          url.encodedParameters.append("page", page.toString())
+          this.url.encodedParameters.append("page", page.toString())
         }
       }
       return when (response.status.value) {

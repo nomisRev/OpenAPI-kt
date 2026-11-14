@@ -30,10 +30,10 @@ public class Commands internal constructor(
     ): CommandListRead {
       val response = client.post("commands") {
         if (muteUpdateNotifications != null) {
-          url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+          this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
         }
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         body?.let {
           contentType(ContentType.Application.Json)
@@ -56,7 +56,7 @@ public class Commands internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,caret,commands(${'$'}type,description,error,id),comment,id,issues(${'$'}type,id,idReadable,numberInProject),query,suggestions(${'$'}type,caret,completionEnd,completionStart,description,id,matchingEnd,matchingStart,option,prefix,suffix)", body: CommandListWrite? = null): CommandListRead {
         val response = client.post("commands/assist") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
           body?.let {
             contentType(ContentType.Application.Json)

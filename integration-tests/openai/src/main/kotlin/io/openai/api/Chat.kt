@@ -50,19 +50,19 @@ public class Chat internal constructor(
       ): ChatCompletionList {
         val response = client.get("chat/completions") {
           if (model != null) {
-            url.encodedParameters.append("model", model.encodeURLParameter())
+            this.url.encodedParameters.append("model", model.encodeURLParameter())
           }
           if (metadata != null) {
-            metadata.values.forEach { url.encodedParameters.append(it.key.encodeURLParameter(), it.value.encodeURLParameter()) }
+            metadata.values.forEach { this.url.encodedParameters.append(it.key.encodeURLParameter(), it.value.encodeURLParameter()) }
           }
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -175,13 +175,13 @@ public class Chat internal constructor(
           ): ChatCompletionMessageList {
             val response = client.get("chat/completions/${completionId.encodeURLParameter()}/messages") {
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (order != null) {
-                url.encodedParameters.append("order", order.value.encodeURLParameter())
+                this.url.encodedParameters.append("order", order.value.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")

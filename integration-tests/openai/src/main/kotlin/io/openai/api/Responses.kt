@@ -109,15 +109,15 @@ public class Responses internal constructor(
         includeObfuscation: Boolean? = null,
       ): Response {
         val response = client.get("responses/${responseId.encodeURLParameter()}") {
-          include?.forEach { url.encodedParameters.append("include", it.value.encodeURLParameter()) }
+          include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
           if (stream != null) {
-            url.encodedParameters.append("stream", stream.toString())
+            this.url.encodedParameters.append("stream", stream.toString())
           }
           if (startingAfter != null) {
-            url.encodedParameters.append("starting_after", startingAfter.toString())
+            this.url.encodedParameters.append("starting_after", startingAfter.toString())
           }
           if (includeObfuscation != null) {
-            url.encodedParameters.append("include_obfuscation", includeObfuscation.toString())
+            this.url.encodedParameters.append("include_obfuscation", includeObfuscation.toString())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -174,15 +174,15 @@ public class Responses internal constructor(
         ): ResponseItemList {
           val response = client.get("responses/${responseId.encodeURLParameter()}/input_items") {
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (order != null) {
-              url.encodedParameters.append("order", order.value.encodeURLParameter())
+              this.url.encodedParameters.append("order", order.value.encodeURLParameter())
             }
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
-            include?.forEach { url.encodedParameters.append("include", it.value.encodeURLParameter()) }
+            include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()

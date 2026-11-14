@@ -392,13 +392,13 @@ public class Enterprises internal constructor(
           ): Response {
             val response = client.get("enterprises/${enterprise.encodeURLParameter()}/code-security/configurations") {
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -1456,16 +1456,16 @@ public class Enterprises internal constructor(
               ): Response {
                 val response = client.get("enterprises/${enterprise.encodeURLParameter()}/code-security/configurations/$configurationId/repositories") {
                   if (perPage != null) {
-                    url.encodedParameters.append("per_page", perPage.toString())
+                    this.url.encodedParameters.append("per_page", perPage.toString())
                   }
                   if (before != null) {
-                    url.encodedParameters.append("before", before.encodeURLParameter())
+                    this.url.encodedParameters.append("before", before.encodeURLParameter())
                   }
                   if (after != null) {
-                    url.encodedParameters.append("after", after.encodeURLParameter())
+                    this.url.encodedParameters.append("after", after.encodeURLParameter())
                   }
                   if (status != null) {
-                    url.encodedParameters.append("status", status.encodeURLParameter())
+                    this.url.encodedParameters.append("status", status.encodeURLParameter())
                   }
                 }
                 return when (response.status.value) {
@@ -1528,50 +1528,50 @@ public class Enterprises internal constructor(
           ): Response {
             val response = client.get("enterprises/${enterprise.encodeURLParameter()}/dependabot/alerts") {
               if (state != null) {
-                url.encodedParameters.append("state", state.encodeURLParameter())
+                this.url.encodedParameters.append("state", state.encodeURLParameter())
               }
               if (severity != null) {
-                url.encodedParameters.append("severity", severity.encodeURLParameter())
+                this.url.encodedParameters.append("severity", severity.encodeURLParameter())
               }
               if (ecosystem != null) {
-                url.encodedParameters.append("ecosystem", ecosystem.encodeURLParameter())
+                this.url.encodedParameters.append("ecosystem", ecosystem.encodeURLParameter())
               }
               if (`package` != null) {
-                url.encodedParameters.append("package", `package`.encodeURLParameter())
+                this.url.encodedParameters.append("package", `package`.encodeURLParameter())
               }
               if (epssPercentage != null) {
-                url.encodedParameters.append("epss_percentage", epssPercentage.encodeURLParameter())
+                this.url.encodedParameters.append("epss_percentage", epssPercentage.encodeURLParameter())
               }
               if (has != null) {
                 when (has) {
                   is Has.CaseString -> {
-                    url.encodedParameters.append("has", has.value.encodeURLParameter())
+                    this.url.encodedParameters.append("has", has.value.encodeURLParameter())
                   }
                   is Has.CasePatchList -> {
-                    has.value.forEach { url.encodedParameters.append("has", it.value.encodeURLParameter()) }
+                    has.value.forEach { this.url.encodedParameters.append("has", it.value.encodeURLParameter()) }
                   }
                 }
               }
               if (assignee != null) {
-                url.encodedParameters.append("assignee", assignee.encodeURLParameter())
+                this.url.encodedParameters.append("assignee", assignee.encodeURLParameter())
               }
               if (scope != null) {
-                url.encodedParameters.append("scope", scope.value.encodeURLParameter())
+                this.url.encodedParameters.append("scope", scope.value.encodeURLParameter())
               }
               if (sort != null) {
-                url.encodedParameters.append("sort", sort.value.encodeURLParameter())
+                this.url.encodedParameters.append("sort", sort.value.encodeURLParameter())
               }
               if (direction != null) {
-                url.encodedParameters.append("direction", direction.value.encodeURLParameter())
+                this.url.encodedParameters.append("direction", direction.value.encodeURLParameter())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (perPage != null) {
-                url.encodedParameters.append("per_page", perPage.toString())
+                this.url.encodedParameters.append("per_page", perPage.toString())
               }
             }
             return when (response.status.value) {
@@ -1720,10 +1720,10 @@ public class Enterprises internal constructor(
         public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): Response {
           val response = client.get("enterprises/${enterprise.encodeURLParameter()}/teams") {
             if (perPage != null) {
-              url.encodedParameters.append("per_page", perPage.toString())
+              this.url.encodedParameters.append("per_page", perPage.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.toString())
+              this.url.encodedParameters.append("page", page.toString())
             }
           }
           return when (response.status.value) {
@@ -1833,10 +1833,10 @@ public class Enterprises internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<SimpleUser> {
               val response = client.get("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/memberships") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -1985,10 +1985,10 @@ public class Enterprises internal constructor(
             public suspend operator fun invoke(perPage: Long? = 30L, page: Long? = 1L): List<OrganizationSimple> {
               val response = client.get("enterprises/${enterprise.encodeURLParameter()}/teams/${enterpriseTeam.encodeURLParameter()}/organizations") {
                 if (perPage != null) {
-                  url.encodedParameters.append("per_page", perPage.toString())
+                  this.url.encodedParameters.append("per_page", perPage.toString())
                 }
                 if (page != null) {
-                  url.encodedParameters.append("page", page.toString())
+                  this.url.encodedParameters.append("page", page.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")

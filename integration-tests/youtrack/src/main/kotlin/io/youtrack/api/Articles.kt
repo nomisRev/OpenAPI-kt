@@ -44,13 +44,13 @@ public class Articles internal constructor(
     ): List<BaseArticleRead.Article> {
       val response = client.get("articles") {
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         if (skip != null) {
-          url.encodedParameters.append("%24skip", skip.toString())
+          this.url.encodedParameters.append("%24skip", skip.toString())
         }
         if (top != null) {
-          url.encodedParameters.append("%24top", top.toString())
+          this.url.encodedParameters.append("%24top", top.toString())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -69,13 +69,13 @@ public class Articles internal constructor(
     ): BaseArticleRead.Article {
       val response = client.post("articles") {
         if (draftId != null) {
-          url.encodedParameters.append("draftId", draftId.encodeURLParameter())
+          this.url.encodedParameters.append("draftId", draftId.encodeURLParameter())
         }
         if (muteUpdateNotifications != null) {
-          url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+          this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
         }
         if (fields != null) {
-          url.encodedParameters.append("fields", fields.encodeURLParameter())
+          this.url.encodedParameters.append("fields", fields.encodeURLParameter())
         }
         body?.let {
           contentType(ContentType.Application.Json)
@@ -124,7 +124,7 @@ public class Articles internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,content,created,id,idReadable,parentArticle(${'$'}type,id,idReadable),project(${'$'}type,id,name,shortName),summary,updated,updatedBy(${'$'}type,id,login,ringId)"): BaseArticleRead.Article {
         val response = client.get("articles/${id.encodeURLParameter()}") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -143,10 +143,10 @@ public class Articles internal constructor(
       ): BaseArticleRead.Article {
         val response = client.post("articles/${id.encodeURLParameter()}") {
           if (muteUpdateNotifications != null) {
-            url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+            this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
           }
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
           body?.let {
             contentType(ContentType.Application.Json)
@@ -179,13 +179,13 @@ public class Articles internal constructor(
         ): List<ArticleAttachmentRead> {
           val response = client.get("articles/${id.encodeURLParameter()}/attachments") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -204,10 +204,10 @@ public class Articles internal constructor(
         ): ArticleAttachmentRead {
           val response = client.post("articles/${id.encodeURLParameter()}/attachments") {
             if (muteUpdateNotifications != null) {
-              url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+              this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -249,7 +249,7 @@ public class Articles internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url"): ArticleAttachmentRead {
             val response = client.get("articles/${id.encodeURLParameter()}/attachments/${articleAttachmentId.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -265,7 +265,7 @@ public class Articles internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,author(${'$'}type,id,login,ringId),charset,created,extension,id,metaData,mimeType,name,size,updated,url", body: ArticleAttachmentWrite? = null): ArticleAttachmentRead {
             val response = client.post("articles/${id.encodeURLParameter()}/attachments/${articleAttachmentId.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -300,13 +300,13 @@ public class Articles internal constructor(
         ): List<BaseArticleRead.Article> {
           val response = client.get("articles/${id.encodeURLParameter()}/childArticles") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -325,10 +325,10 @@ public class Articles internal constructor(
         ): BaseArticleRead.Article {
           val response = client.post("articles/${id.encodeURLParameter()}/childArticles") {
             if (muteUpdateNotifications != null) {
-              url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+              this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -370,7 +370,7 @@ public class Articles internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,content,created,id,idReadable,parentArticle(${'$'}type,id,idReadable),project(${'$'}type,id,name,shortName),summary,updated,updatedBy(${'$'}type,id,login,ringId)"): BaseArticleRead.Article {
             val response = client.get("articles/${id.encodeURLParameter()}/childArticles/${articleId.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -390,10 +390,10 @@ public class Articles internal constructor(
           ): BaseArticleRead.Article {
             val response = client.post("articles/${id.encodeURLParameter()}/childArticles/${articleId.encodeURLParameter()}") {
               if (muteUpdateNotifications != null) {
-                url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+                this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
               }
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -428,13 +428,13 @@ public class Articles internal constructor(
         ): List<ArticleCommentRead> {
           val response = client.get("articles/${id.encodeURLParameter()}/comments") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -454,13 +454,13 @@ public class Articles internal constructor(
         ): ArticleCommentRead {
           val response = client.post("articles/${id.encodeURLParameter()}/comments") {
             if (draftId != null) {
-              url.encodedParameters.append("draftId", draftId.encodeURLParameter())
+              this.url.encodedParameters.append("draftId", draftId.encodeURLParameter())
             }
             if (muteUpdateNotifications != null) {
-              url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+              this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
             }
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -504,7 +504,7 @@ public class Articles internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,attachments(${'$'}type,id),author(${'$'}type,id,login,ringId),created,id,text,updated,visibility(${'$'}type,id,permittedGroups(${'$'}type,id,name,ringId),permittedUsers(${'$'}type,id,login,ringId))"): ArticleCommentRead {
             val response = client.get("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -524,10 +524,10 @@ public class Articles internal constructor(
           ): ArticleCommentRead {
             val response = client.post("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}") {
               if (muteUpdateNotifications != null) {
-                url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
+                this.url.encodedParameters.append("muteUpdateNotifications", muteUpdateNotifications.toString())
               }
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
               body?.let {
                 contentType(ContentType.Application.Json)
@@ -562,13 +562,13 @@ public class Articles internal constructor(
             ): List<ReactionRead> {
               val response = client.get("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}/reactions") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 if (skip != null) {
-                  url.encodedParameters.append("%24skip", skip.toString())
+                  this.url.encodedParameters.append("%24skip", skip.toString())
                 }
                 if (top != null) {
-                  url.encodedParameters.append("%24top", top.toString())
+                  this.url.encodedParameters.append("%24top", top.toString())
                 }
               }
               if (response.status.value != 200) throw ResponseException(response, "")
@@ -584,7 +584,7 @@ public class Articles internal constructor(
             public suspend operator fun invoke(fields: String? = "${'$'}type,id", body: ReactionWrite? = null): ReactionRead {
               val response = client.post("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}/reactions") {
                 if (fields != null) {
-                  url.encodedParameters.append("fields", fields.encodeURLParameter())
+                  this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                 }
                 body?.let {
                   contentType(ContentType.Application.Json)
@@ -627,7 +627,7 @@ public class Articles internal constructor(
               public suspend operator fun invoke(fields: String? = "${'$'}type,id"): ReactionRead {
                 val response = client.get("articles/${id.encodeURLParameter()}/comments/${articleCommentId.encodeURLParameter()}/reactions/${reactionId.encodeURLParameter()}") {
                   if (fields != null) {
-                    url.encodedParameters.append("fields", fields.encodeURLParameter())
+                    this.url.encodedParameters.append("fields", fields.encodeURLParameter())
                   }
                 }
                 if (response.status.value != 200) throw ResponseException(response, "")
@@ -652,7 +652,7 @@ public class Articles internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,content,created,id,idReadable,parentArticle(${'$'}type,id,idReadable),project(${'$'}type,id,name,shortName),summary,updated,updatedBy(${'$'}type,id,login,ringId)"): BaseArticleRead.Article {
           val response = client.get("articles/${id.encodeURLParameter()}/parentArticle") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -682,13 +682,13 @@ public class Articles internal constructor(
         ): List<IssueFolderRead.Tag> {
           val response = client.get("articles/${id.encodeURLParameter()}/tags") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             if (skip != null) {
-              url.encodedParameters.append("%24skip", skip.toString())
+              this.url.encodedParameters.append("%24skip", skip.toString())
             }
             if (top != null) {
-              url.encodedParameters.append("%24top", top.toString())
+              this.url.encodedParameters.append("%24top", top.toString())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -703,7 +703,7 @@ public class Articles internal constructor(
         public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)", body: IssueFolderWrite.Tag? = null): IssueFolderRead.Tag {
           val response = client.post("articles/${id.encodeURLParameter()}/tags") {
             if (fields != null) {
-              url.encodedParameters.append("fields", fields.encodeURLParameter())
+              this.url.encodedParameters.append("fields", fields.encodeURLParameter())
             }
             body?.let {
               contentType(ContentType.Application.Json)
@@ -743,7 +743,7 @@ public class Articles internal constructor(
           public suspend operator fun invoke(fields: String? = "${'$'}type,id,name,owner(${'$'}type,id,login,ringId)"): IssueFolderRead.Tag {
             val response = client.get("articles/${id.encodeURLParameter()}/tags/${tagId.encodeURLParameter()}") {
               if (fields != null) {
-                url.encodedParameters.append("fields", fields.encodeURLParameter())
+                this.url.encodedParameters.append("fields", fields.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")

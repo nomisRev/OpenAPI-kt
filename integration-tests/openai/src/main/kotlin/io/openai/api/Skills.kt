@@ -53,13 +53,13 @@ public class Skills internal constructor(
     ): SkillListResource {
       val response = client.get("skills") {
         if (limit != null) {
-          url.encodedParameters.append("limit", limit.toString())
+          this.url.encodedParameters.append("limit", limit.toString())
         }
         if (order != null) {
-          url.encodedParameters.append("order", order.value.encodeURLParameter())
+          this.url.encodedParameters.append("order", order.value.encodeURLParameter())
         }
         if (after != null) {
-          url.encodedParameters.append("after", after.encodeURLParameter())
+          this.url.encodedParameters.append("after", after.encodeURLParameter())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -216,13 +216,13 @@ public class Skills internal constructor(
         ): SkillVersionListResource {
           val response = client.get("skills/${skillId.encodeURLParameter()}/versions") {
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (order != null) {
-              url.encodedParameters.append("order", order.value.encodeURLParameter())
+              this.url.encodedParameters.append("order", order.value.encodeURLParameter())
             }
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")

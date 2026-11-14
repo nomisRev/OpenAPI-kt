@@ -126,13 +126,13 @@ public class Organization internal constructor(
       ): ApiKeyList {
         val response = client.get("organization/admin_api_keys") {
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -234,31 +234,31 @@ public class Organization internal constructor(
         val response = client.get("organization/audit_logs") {
           if (effectiveAt != null) {
             if (effectiveAt.gt != null) {
-              url.encodedParameters.append("gt", effectiveAt.gt.toString())
+              this.url.encodedParameters.append("gt", effectiveAt.gt.toString())
             }
             if (effectiveAt.gte != null) {
-              url.encodedParameters.append("gte", effectiveAt.gte.toString())
+              this.url.encodedParameters.append("gte", effectiveAt.gte.toString())
             }
             if (effectiveAt.lt != null) {
-              url.encodedParameters.append("lt", effectiveAt.lt.toString())
+              this.url.encodedParameters.append("lt", effectiveAt.lt.toString())
             }
             if (effectiveAt.lte != null) {
-              url.encodedParameters.append("lte", effectiveAt.lte.toString())
+              this.url.encodedParameters.append("lte", effectiveAt.lte.toString())
             }
           }
-          projectIds?.forEach { url.encodedParameters.append("project_ids%5B%5D", it.encodeURLParameter()) }
-          eventTypes?.forEach { url.encodedParameters.append("event_types%5B%5D", it.value.encodeURLParameter()) }
-          actorIds?.forEach { url.encodedParameters.append("actor_ids%5B%5D", it.encodeURLParameter()) }
-          actorEmails?.forEach { url.encodedParameters.append("actor_emails%5B%5D", it.encodeURLParameter()) }
-          resourceIds?.forEach { url.encodedParameters.append("resource_ids%5B%5D", it.encodeURLParameter()) }
+          projectIds?.forEach { this.url.encodedParameters.append("project_ids%5B%5D", it.encodeURLParameter()) }
+          eventTypes?.forEach { this.url.encodedParameters.append("event_types%5B%5D", it.value.encodeURLParameter()) }
+          actorIds?.forEach { this.url.encodedParameters.append("actor_ids%5B%5D", it.encodeURLParameter()) }
+          actorEmails?.forEach { this.url.encodedParameters.append("actor_emails%5B%5D", it.encodeURLParameter()) }
+          resourceIds?.forEach { this.url.encodedParameters.append("resource_ids%5B%5D", it.encodeURLParameter()) }
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
           if (before != null) {
-            url.encodedParameters.append("before", before.encodeURLParameter())
+            this.url.encodedParameters.append("before", before.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -303,13 +303,13 @@ public class Organization internal constructor(
       ): ListCertificatesResponse {
         val response = client.get("organization/certificates") {
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -406,7 +406,7 @@ public class Organization internal constructor(
       ) {
         public suspend operator fun invoke(include: List<Include>? = null): Certificate {
           val response = client.get("organization/certificates/${certificateId.encodeURLParameter()}") {
-            include?.forEach { url.encodedParameters.append("include", it.value.encodeURLParameter()) }
+            include?.forEach { this.url.encodedParameters.append("include", it.value.encodeURLParameter()) }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
           return response.body()
@@ -456,20 +456,20 @@ public class Organization internal constructor(
         page: String? = null,
       ): UsageResponse {
         val response = client.get("organization/costs") {
-          url.encodedParameters.append("start_time", startTime.toString())
+          this.url.encodedParameters.append("start_time", startTime.toString())
           if (endTime != null) {
-            url.encodedParameters.append("end_time", endTime.toString())
+            this.url.encodedParameters.append("end_time", endTime.toString())
           }
           if (bucketWidth != null) {
-            url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+            this.url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
           }
-          projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
-          groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+          projectIds?.forEach { this.url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+          groupBy?.forEach { this.url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
           if (page != null) {
-            url.encodedParameters.append("page", page.encodeURLParameter())
+            this.url.encodedParameters.append("page", page.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -513,13 +513,13 @@ public class Organization internal constructor(
       ): GroupListResource {
         val response = client.get("organization/groups") {
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -609,13 +609,13 @@ public class Organization internal constructor(
           ): RoleListResource {
             val response = client.get("organization/groups/${groupId.encodeURLParameter()}/roles") {
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (order != null) {
-                url.encodedParameters.append("order", order.value.encodeURLParameter())
+                this.url.encodedParameters.append("order", order.value.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -690,13 +690,13 @@ public class Organization internal constructor(
           ): UserListResource {
             val response = client.get("organization/groups/${groupId.encodeURLParameter()}/users") {
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (order != null) {
-                url.encodedParameters.append("order", order.value.encodeURLParameter())
+                this.url.encodedParameters.append("order", order.value.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -767,10 +767,10 @@ public class Organization internal constructor(
       public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): InviteListResponse {
         val response = client.get("organization/invites") {
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -842,13 +842,13 @@ public class Organization internal constructor(
       ): ProjectListResponse {
         val response = client.get("organization/projects") {
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
           if (includeArchived != null) {
-            url.encodedParameters.append("include_archived", includeArchived.toString())
+            this.url.encodedParameters.append("include_archived", includeArchived.toString())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -944,10 +944,10 @@ public class Organization internal constructor(
           public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): ProjectApiKeyListResponse {
             val response = client.get("organization/projects/${projectId.encodeURLParameter()}/api_keys") {
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -1042,13 +1042,13 @@ public class Organization internal constructor(
           ): ListCertificatesResponse {
             val response = client.get("organization/projects/${projectId.encodeURLParameter()}/certificates") {
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (order != null) {
-                url.encodedParameters.append("order", order.value.encodeURLParameter())
+                this.url.encodedParameters.append("order", order.value.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -1131,13 +1131,13 @@ public class Organization internal constructor(
           ): ProjectGroupListResource {
             val response = client.get("organization/projects/${projectId.encodeURLParameter()}/groups") {
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (order != null) {
-                url.encodedParameters.append("order", order.value.encodeURLParameter())
+                this.url.encodedParameters.append("order", order.value.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -1210,13 +1210,13 @@ public class Organization internal constructor(
           ): ProjectRateLimitListResponse {
             val response = client.get("organization/projects/${projectId.encodeURLParameter()}/rate_limits") {
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (before != null) {
-                url.encodedParameters.append("before", before.encodeURLParameter())
+                this.url.encodedParameters.append("before", before.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -1278,10 +1278,10 @@ public class Organization internal constructor(
           public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): Response {
             val response = client.get("organization/projects/${projectId.encodeURLParameter()}/service_accounts") {
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -1381,10 +1381,10 @@ public class Organization internal constructor(
           public suspend operator fun invoke(limit: Long? = 20L, after: String? = null): Response {
             val response = client.get("organization/projects/${projectId.encodeURLParameter()}/users") {
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
             }
             return when (response.status.value) {
@@ -1531,13 +1531,13 @@ public class Organization internal constructor(
       ): PublicRoleListResource {
         val response = client.get("organization/roles") {
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
           if (order != null) {
-            url.encodedParameters.append("order", order.value.encodeURLParameter())
+            this.url.encodedParameters.append("order", order.value.encodeURLParameter())
           }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
@@ -1644,23 +1644,23 @@ public class Organization internal constructor(
           page: String? = null,
         ): UsageResponse {
           val response = client.get("organization/usage/audio_speeches") {
-            url.encodedParameters.append("start_time", startTime.toString())
+            this.url.encodedParameters.append("start_time", startTime.toString())
             if (endTime != null) {
-              url.encodedParameters.append("end_time", endTime.toString())
+              this.url.encodedParameters.append("end_time", endTime.toString())
             }
             if (bucketWidth != null) {
-              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+              this.url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
             }
-            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
-            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
-            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
-            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
-            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            projectIds?.forEach { this.url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { this.url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { this.url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { this.url.encodedParameters.append("models", it.encodeURLParameter()) }
+            groupBy?.forEach { this.url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.encodeURLParameter())
+              this.url.encodedParameters.append("page", page.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1712,23 +1712,23 @@ public class Organization internal constructor(
           page: String? = null,
         ): UsageResponse {
           val response = client.get("organization/usage/audio_transcriptions") {
-            url.encodedParameters.append("start_time", startTime.toString())
+            this.url.encodedParameters.append("start_time", startTime.toString())
             if (endTime != null) {
-              url.encodedParameters.append("end_time", endTime.toString())
+              this.url.encodedParameters.append("end_time", endTime.toString())
             }
             if (bucketWidth != null) {
-              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+              this.url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
             }
-            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
-            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
-            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
-            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
-            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            projectIds?.forEach { this.url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { this.url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { this.url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { this.url.encodedParameters.append("models", it.encodeURLParameter()) }
+            groupBy?.forEach { this.url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.encodeURLParameter())
+              this.url.encodedParameters.append("page", page.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1777,20 +1777,20 @@ public class Organization internal constructor(
           page: String? = null,
         ): UsageResponse {
           val response = client.get("organization/usage/code_interpreter_sessions") {
-            url.encodedParameters.append("start_time", startTime.toString())
+            this.url.encodedParameters.append("start_time", startTime.toString())
             if (endTime != null) {
-              url.encodedParameters.append("end_time", endTime.toString())
+              this.url.encodedParameters.append("end_time", endTime.toString())
             }
             if (bucketWidth != null) {
-              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+              this.url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
             }
-            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
-            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            projectIds?.forEach { this.url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            groupBy?.forEach { this.url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.encodeURLParameter())
+              this.url.encodedParameters.append("page", page.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1837,26 +1837,26 @@ public class Organization internal constructor(
           page: String? = null,
         ): UsageResponse {
           val response = client.get("organization/usage/completions") {
-            url.encodedParameters.append("start_time", startTime.toString())
+            this.url.encodedParameters.append("start_time", startTime.toString())
             if (endTime != null) {
-              url.encodedParameters.append("end_time", endTime.toString())
+              this.url.encodedParameters.append("end_time", endTime.toString())
             }
             if (bucketWidth != null) {
-              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+              this.url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
             }
-            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
-            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
-            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
-            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
+            projectIds?.forEach { this.url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { this.url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { this.url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { this.url.encodedParameters.append("models", it.encodeURLParameter()) }
             if (batch != null) {
-              url.encodedParameters.append("batch", batch.toString())
+              this.url.encodedParameters.append("batch", batch.toString())
             }
-            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            groupBy?.forEach { this.url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.encodeURLParameter())
+              this.url.encodedParameters.append("page", page.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1912,23 +1912,23 @@ public class Organization internal constructor(
           page: String? = null,
         ): UsageResponse {
           val response = client.get("organization/usage/embeddings") {
-            url.encodedParameters.append("start_time", startTime.toString())
+            this.url.encodedParameters.append("start_time", startTime.toString())
             if (endTime != null) {
-              url.encodedParameters.append("end_time", endTime.toString())
+              this.url.encodedParameters.append("end_time", endTime.toString())
             }
             if (bucketWidth != null) {
-              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+              this.url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
             }
-            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
-            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
-            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
-            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
-            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            projectIds?.forEach { this.url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { this.url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { this.url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { this.url.encodedParameters.append("models", it.encodeURLParameter()) }
+            groupBy?.forEach { this.url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.encodeURLParameter())
+              this.url.encodedParameters.append("page", page.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -1982,25 +1982,25 @@ public class Organization internal constructor(
           page: String? = null,
         ): UsageResponse {
           val response = client.get("organization/usage/images") {
-            url.encodedParameters.append("start_time", startTime.toString())
+            this.url.encodedParameters.append("start_time", startTime.toString())
             if (endTime != null) {
-              url.encodedParameters.append("end_time", endTime.toString())
+              this.url.encodedParameters.append("end_time", endTime.toString())
             }
             if (bucketWidth != null) {
-              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+              this.url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
             }
-            sources?.forEach { url.encodedParameters.append("sources", it.value.encodeURLParameter()) }
-            sizes?.forEach { url.encodedParameters.append("sizes", it.toString().encodeURLParameter()) }
-            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
-            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
-            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
-            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
-            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            sources?.forEach { this.url.encodedParameters.append("sources", it.value.encodeURLParameter()) }
+            sizes?.forEach { this.url.encodedParameters.append("sizes", it.toString().encodeURLParameter()) }
+            projectIds?.forEach { this.url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { this.url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { this.url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { this.url.encodedParameters.append("models", it.encodeURLParameter()) }
+            groupBy?.forEach { this.url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.encodeURLParameter())
+              this.url.encodedParameters.append("page", page.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -2078,23 +2078,23 @@ public class Organization internal constructor(
           page: String? = null,
         ): UsageResponse {
           val response = client.get("organization/usage/moderations") {
-            url.encodedParameters.append("start_time", startTime.toString())
+            this.url.encodedParameters.append("start_time", startTime.toString())
             if (endTime != null) {
-              url.encodedParameters.append("end_time", endTime.toString())
+              this.url.encodedParameters.append("end_time", endTime.toString())
             }
             if (bucketWidth != null) {
-              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+              this.url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
             }
-            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
-            userIds?.forEach { url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
-            apiKeyIds?.forEach { url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
-            models?.forEach { url.encodedParameters.append("models", it.encodeURLParameter()) }
-            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            projectIds?.forEach { this.url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            userIds?.forEach { this.url.encodedParameters.append("user_ids", it.encodeURLParameter()) }
+            apiKeyIds?.forEach { this.url.encodedParameters.append("api_key_ids", it.encodeURLParameter()) }
+            models?.forEach { this.url.encodedParameters.append("models", it.encodeURLParameter()) }
+            groupBy?.forEach { this.url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.encodeURLParameter())
+              this.url.encodedParameters.append("page", page.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -2143,20 +2143,20 @@ public class Organization internal constructor(
           page: String? = null,
         ): UsageResponse {
           val response = client.get("organization/usage/vector_stores") {
-            url.encodedParameters.append("start_time", startTime.toString())
+            this.url.encodedParameters.append("start_time", startTime.toString())
             if (endTime != null) {
-              url.encodedParameters.append("end_time", endTime.toString())
+              this.url.encodedParameters.append("end_time", endTime.toString())
             }
             if (bucketWidth != null) {
-              url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
+              this.url.encodedParameters.append("bucket_width", bucketWidth.toString().encodeURLParameter())
             }
-            projectIds?.forEach { url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
-            groupBy?.forEach { url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
+            projectIds?.forEach { this.url.encodedParameters.append("project_ids", it.encodeURLParameter()) }
+            groupBy?.forEach { this.url.encodedParameters.append("group_by", it.value.encodeURLParameter()) }
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (page != null) {
-              url.encodedParameters.append("page", page.encodeURLParameter())
+              this.url.encodedParameters.append("page", page.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -2199,12 +2199,12 @@ public class Organization internal constructor(
       ): UserListResponse {
         val response = client.get("organization/users") {
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
-          emails?.forEach { url.encodedParameters.append("emails", it.encodeURLParameter()) }
+          emails?.forEach { this.url.encodedParameters.append("emails", it.encodeURLParameter()) }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
@@ -2280,13 +2280,13 @@ public class Organization internal constructor(
           ): RoleListResource {
             val response = client.get("organization/users/${userId.encodeURLParameter()}/roles") {
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (order != null) {
-                url.encodedParameters.append("order", order.value.encodeURLParameter())
+                this.url.encodedParameters.append("order", order.value.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")

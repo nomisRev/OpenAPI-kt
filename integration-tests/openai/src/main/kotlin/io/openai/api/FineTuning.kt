@@ -122,16 +122,16 @@ public class FineTuning internal constructor(
           ): ListFineTuningCheckpointPermissionResponse {
             val response = client.get("fine_tuning/checkpoints/${fineTunedModelCheckpoint.encodeURLParameter()}/permissions") {
               if (projectId != null) {
-                url.encodedParameters.append("project_id", projectId.encodeURLParameter())
+                this.url.encodedParameters.append("project_id", projectId.encodeURLParameter())
               }
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
               if (order != null) {
-                url.encodedParameters.append("order", order.value.encodeURLParameter())
+                this.url.encodedParameters.append("order", order.value.encodeURLParameter())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -206,12 +206,12 @@ public class FineTuning internal constructor(
       ): ListPaginatedFineTuningJobsResponse {
         val response = client.get("fine_tuning/jobs") {
           if (after != null) {
-            url.encodedParameters.append("after", after.encodeURLParameter())
+            this.url.encodedParameters.append("after", after.encodeURLParameter())
           }
           if (limit != null) {
-            url.encodedParameters.append("limit", limit.toString())
+            this.url.encodedParameters.append("limit", limit.toString())
           }
-          metadata?.forEach { url.encodedParameters.append("metadata%5B${it.key.encodeURLParameter()}%5D", it.value.encodeURLParameter()) }
+          metadata?.forEach { this.url.encodedParameters.append("metadata%5B${it.key.encodeURLParameter()}%5D", it.value.encodeURLParameter()) }
         }
         if (response.status.value != 200) throw ResponseException(response, "")
         return response.body()
@@ -289,10 +289,10 @@ public class FineTuning internal constructor(
           public suspend operator fun invoke(after: String? = null, limit: Long? = 10L): ListFineTuningJobCheckpointsResponse {
             val response = client.get("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/checkpoints") {
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")
@@ -314,10 +314,10 @@ public class FineTuning internal constructor(
           public suspend operator fun invoke(after: String? = null, limit: Long? = 20L): ListFineTuningJobEventsResponse {
             val response = client.get("fine_tuning/jobs/${fineTuningJobId.encodeURLParameter()}/events") {
               if (after != null) {
-                url.encodedParameters.append("after", after.encodeURLParameter())
+                this.url.encodedParameters.append("after", after.encodeURLParameter())
               }
               if (limit != null) {
-                url.encodedParameters.append("limit", limit.toString())
+                this.url.encodedParameters.append("limit", limit.toString())
               }
             }
             if (response.status.value != 200) throw ResponseException(response, "")

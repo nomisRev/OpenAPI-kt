@@ -44,16 +44,16 @@ public class Containers internal constructor(
     ): ContainerListResource {
       val response = client.get("containers") {
         if (limit != null) {
-          url.encodedParameters.append("limit", limit.toString())
+          this.url.encodedParameters.append("limit", limit.toString())
         }
         if (order != null) {
-          url.encodedParameters.append("order", order.value.encodeURLParameter())
+          this.url.encodedParameters.append("order", order.value.encodeURLParameter())
         }
         if (after != null) {
-          url.encodedParameters.append("after", after.encodeURLParameter())
+          this.url.encodedParameters.append("after", after.encodeURLParameter())
         }
         if (name != null) {
-          url.encodedParameters.append("name", name.encodeURLParameter())
+          this.url.encodedParameters.append("name", name.encodeURLParameter())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -139,13 +139,13 @@ public class Containers internal constructor(
         ): ContainerFileListResource {
           val response = client.get("containers/${containerId.encodeURLParameter()}/files") {
             if (limit != null) {
-              url.encodedParameters.append("limit", limit.toString())
+              this.url.encodedParameters.append("limit", limit.toString())
             }
             if (order != null) {
-              url.encodedParameters.append("order", order.value.encodeURLParameter())
+              this.url.encodedParameters.append("order", order.value.encodeURLParameter())
             }
             if (after != null) {
-              url.encodedParameters.append("after", after.encodeURLParameter())
+              this.url.encodedParameters.append("after", after.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")

@@ -28,7 +28,7 @@ public class Search internal constructor(
       public suspend operator fun invoke(fields: String? = "${'$'}type,id,suggestions(${'$'}type,caret,completionEnd,completionStart,description,id,matchingEnd,matchingStart,option,prefix,suffix)", body: SearchSuggestionsWrite? = null): SearchSuggestionsRead {
         val response = client.post("search/assist") {
           if (fields != null) {
-            url.encodedParameters.append("fields", fields.encodeURLParameter())
+            this.url.encodedParameters.append("fields", fields.encodeURLParameter())
           }
           body?.let {
             contentType(ContentType.Application.Json)

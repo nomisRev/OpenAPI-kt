@@ -51,13 +51,13 @@ public class Videos internal constructor(
     ): VideoListResource {
       val response = client.get("videos") {
         if (limit != null) {
-          url.encodedParameters.append("limit", limit.toString())
+          this.url.encodedParameters.append("limit", limit.toString())
         }
         if (order != null) {
-          url.encodedParameters.append("order", order.value.encodeURLParameter())
+          this.url.encodedParameters.append("order", order.value.encodeURLParameter())
         }
         if (after != null) {
-          url.encodedParameters.append("after", after.encodeURLParameter())
+          this.url.encodedParameters.append("after", after.encodeURLParameter())
         }
       }
       if (response.status.value != 200) throw ResponseException(response, "")
@@ -166,7 +166,7 @@ public class Videos internal constructor(
           val response = client.get("videos/${videoId.encodeURLParameter()}/content") {
             `header`(HttpHeaders.Accept, ContentType("video", "mp4"))
             if (variant != null) {
-              url.encodedParameters.append("variant", variant.value.encodeURLParameter())
+              this.url.encodedParameters.append("variant", variant.value.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -177,7 +177,7 @@ public class Videos internal constructor(
           val response = client.get("videos/${videoId.encodeURLParameter()}/content") {
             `header`(HttpHeaders.Accept, ContentType("image", "webp"))
             if (variant != null) {
-              url.encodedParameters.append("variant", variant.value.encodeURLParameter())
+              this.url.encodedParameters.append("variant", variant.value.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
@@ -188,7 +188,7 @@ public class Videos internal constructor(
           val response = client.get("videos/${videoId.encodeURLParameter()}/content") {
             `header`(HttpHeaders.Accept, ContentType.Application.Json)
             if (variant != null) {
-              url.encodedParameters.append("variant", variant.value.encodeURLParameter())
+              this.url.encodedParameters.append("variant", variant.value.encodeURLParameter())
             }
           }
           if (response.status.value != 200) throw ResponseException(response, "")
