@@ -17,9 +17,9 @@ public class Hackathons internal constructor(
   ) {
     public val `get`: Get = Get(client, id)
 
-    public val json: Json = Json(client, id)
+    public val dotJson: DotJson = DotJson(client, id)
 
-    public val json2: Json2 = Json2(client, id)
+    public val json: Json = Json(client, id)
 
     public class Get internal constructor(
       private val client: HttpClient,
@@ -31,7 +31,7 @@ public class Hackathons internal constructor(
       }
     }
 
-    public class Json internal constructor(
+    public class DotJson internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {
@@ -48,7 +48,7 @@ public class Hackathons internal constructor(
       }
     }
 
-    public class Json2 internal constructor(
+    public class Json internal constructor(
       private val client: HttpClient,
       private val id: String,
     ) {

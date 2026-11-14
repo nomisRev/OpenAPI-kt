@@ -44,7 +44,8 @@ class CompositePathSegmentRuntimeTest {
 
     @Test
     fun aParameterFollowedByText() = runBlocking {
-        api.hackathons.id("42").json.get()
+        // `dotJson`, not `json`: the spec also has `/hackathons/{id}/json`, which keeps the plain name.
+        api.hackathons.id("42").dotJson.get()
 
         assertEquals("/hackathons/42.json", request.url.encodedPath)
     }
@@ -54,7 +55,7 @@ class CompositePathSegmentRuntimeTest {
         api.hackathons.id("42").get()
         assertEquals("/hackathons/42", request.url.encodedPath)
 
-        api.hackathons.id("42").json.get()
+        api.hackathons.id("42").dotJson.get()
         assertEquals("/hackathons/42.json", request.url.encodedPath)
     }
 
@@ -105,10 +106,10 @@ class CompositePathSegmentRuntimeTest {
 
     @Test
     fun theTextAfterAParameterAndTheSegmentAfterItAreTwoPaths() = runBlocking {
-        api.hackathons.id("42").json.get()
+        api.hackathons.id("42").dotJson.get()
         assertEquals("/hackathons/42.json", request.url.encodedPath)
 
-        api.hackathons.id("42").json2.get()
+        api.hackathons.id("42").json.get()
         assertEquals("/hackathons/42/json", request.url.encodedPath)
     }
 

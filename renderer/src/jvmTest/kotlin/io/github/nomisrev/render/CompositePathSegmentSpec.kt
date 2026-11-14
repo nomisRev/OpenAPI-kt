@@ -197,7 +197,7 @@ val compositePathSegmentSpec by testSuite {
         assertTrue(result.diagnostics.all { it.severity == GenerationDiagnosticSeverity.Warning })
     }
 
-    test("a path whose steps are those of another path, joined differently, is generated suffixed, with a warning") {
+    test("a step joined without a slash that has the name of a sibling is named with its separator, with a warning") {
         fun operation(path: String) = """
             "$path": {
               "get": {
@@ -212,21 +212,33 @@ val compositePathSegmentSpec by testSuite {
             RenderConfig(modelPackage = "test", apiPackage = "test", targets = setOf(KmpTarget.JVM))
         )
 
+        val warning = "Path '/hackathons/{id}.json' is generated as 'dotJson' (class DotJson): another path segment " +
+            "has the same Kotlin name, so this one is named with the text that joins it ('.')."
         val result = generate("/hackathons/{id}/json", "/hackathons/{id}.json")
-        assertEquals(
-            listOf("Path '/hackathons/{id}.json' is generated as 'json2' (class Json2): an earlier path segment has the same Kotlin name."),
-            result.diagnostics.map { it.message },
-        )
+        assertEquals(listOf(warning), result.diagnostics.map { it.message })
         val hackathons = result.files.single { it.name == "Hackathons" }.toString()
         assertTrue("public val json: Json = Json(client, id)" in hackathons, hackathons)
-        assertTrue("public val json2: Json2 = Json2(client, id)" in hackathons, hackathons)
+        assertTrue("public val dotJson: DotJson = DotJson(client, id)" in hackathons, hackathons)
         assertTrue("client.get(\"hackathons/${'$'}{this.id.encodeURLParameter()}/json\")" in hackathons, hackathons)
         assertTrue("client.get(\"hackathons/${'$'}{this.id.encodeURLParameter()}.json\")" in hackathons, hackathons)
 
-        // The order of the spec decides which one is suffixed.
-        assertEquals(
-            listOf("Path '/hackathons/{id}/json' is generated as 'json2' (class Json2): an earlier path segment has the same Kotlin name."),
-            generate("/hackathons/{id}.json", "/hackathons/{id}/json").diagnostics.map { it.message },
+        // The order of the spec does not matter: the segment after a slash keeps the plain name.
+        val reversed = generate("/hackathons/{id}.json", "/hackathons/{id}/json")
+        assertEquals(listOf(warning), reversed.diagnostics.map { it.message })
+        assertTrue(
+            "public val dotJson: DotJson = DotJson(client, id)" in reversed.files.single { it.name == "Hackathons" }.toString()
         )
+
+        // A parameter step and other separators.
+        val others = generate("/lists/{id}", "/lists.{id}", "/v1/{id}/cancel", "/v1/{id}:cancel")
+        val lists = others.files.single { it.name == "Lists" }.toString()
+        assertTrue("public fun id(id: String): IdPath = IdPath(client, id)" in lists, lists)
+        assertTrue("public fun dotId(id: String): DotIdPath = DotIdPath(client, id)" in lists, lists)
+        val v1 = others.files.single { it.name == "V1" }.toString()
+        assertTrue("public val colonCancel: ColonCancel = ColonCancel(client, id)" in v1, v1)
+
+        // Two joined steps of one name and no slash step: both are named with their separator.
+        val joined = generate("/hackathons/{id}.json", "/hackathons/{id}:json").files.single { it.name == "Hackathons" }.toString()
+        assertTrue("public val dotJson: DotJson" in joined && "public val colonJson: ColonJson" in joined, joined)
     }
 }

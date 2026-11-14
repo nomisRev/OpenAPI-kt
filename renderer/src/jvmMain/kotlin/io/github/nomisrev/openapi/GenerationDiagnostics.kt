@@ -72,13 +72,15 @@ private fun ApiTree.propertyOverrideDiagnostics(): List<GenerationDiagnostic> =
 private fun List<PathNode>.renamedPathDiagnostics(parentPath: String): List<GenerationDiagnostic> =
     zip(uniqueNames()).flatMap { [node, name] ->
         val path = "$parentPath${node.joinedBy}${node.segment.templateText()}${node.trailing}"
-        val renamed = if (name.suffix == null) emptyList() else listOf(
-            GenerationDiagnostic(
-                severity = GenerationDiagnosticSeverity.Warning,
-                message = "Path '$path' is generated as '${name.memberName.unescapeBackticks()}' " +
-                    "(class ${name.simpleName}): an earlier path segment has the same Kotlin name.",
-            )
-        )
+        val generatedAs = "Path '$path' is generated as '${name.memberName.unescapeBackticks()}' (class ${name.simpleName})"
+        val reason = when {
+            name.suffix != null -> "an earlier path segment has the same Kotlin name."
+            name.separator != null ->
+                "another path segment has the same Kotlin name, so this one is named with the text that joins it " +
+                    "('${name.separator}')."
+            else -> null
+        }
+        val renamed = listOfNotNull(reason).map { GenerationDiagnostic(GenerationDiagnosticSeverity.Warning, "$generatedAs: $it") }
         renamed + node.children.renamedPathDiagnostics(path)
     }
 
