@@ -57,14 +57,12 @@ private fun ApiTree.generateClientFiles(config: RenderConfig): List<FileSpec> {
         listOf(generateSerializationUtils(config.copy(modelPackage = config.apiPackage)))
     } else emptyList()
 
-    // The inline models of the operations live in the api package; a model of the model package has its own copy,
-    // and when both packages are one, the models' file is the only one.
-    val apiPackage = config.apiPackage.toPackageName()
-    val optionalPackages = buildSet { collectOptionalPackages(config, this) }
-    val modelsGenerateIt = apiPackage == config.modelPackage.toPackageName() &&
-        apiPackage in buildSet { models.forEach { it.collectOptionalPackages(config, this) } }
-    val optional = if (apiPackage in optionalPackages && !modelsGenerateIt) {
-        listOf(generateOptionalSupport(config, apiPackage))
+    // The tri-state type lives in the model package only. The models' files include it when a model needs it; when
+    // only an inline model or a flattened body of an operation does, it is added here.
+    val operationsNeedIt = buildSet { collectOptionalPackages(config, this) }.isNotEmpty()
+    val modelsGenerateIt = buildSet { models.forEach { it.collectOptionalPackages(config, this) } }.isNotEmpty()
+    val optional = if (operationsNeedIt && !modelsGenerateIt) {
+        listOf(generateOptionalSupport(config, config.modelPackage.toPackageName()))
     } else emptyList()
 
     return files + serializationUtils + optional

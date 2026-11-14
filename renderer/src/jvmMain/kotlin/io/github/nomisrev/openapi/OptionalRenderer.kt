@@ -40,9 +40,13 @@ internal val Model.Object.Property.isOptionalNullable: Boolean
 internal val RenderConfig.optionalName: String
     get() = optionalTypeName ?: DefaultOptionalTypeName
 
-/** The generated tri-state type of [packageName]: every package that has such a property gets its own copy. */
+/**
+ * The generated tri-state type. There is one, in the model package, also for the inline models and the `invoke`
+ * parameters of the api package ([packageName]): two copies would be two types a caller cannot pass for one another.
+ */
+@Suppress("UNUSED_PARAMETER")
 internal fun RenderConfig.optionalClassName(packageName: String): ClassName =
-    ClassName(packageName, optionalName)
+    ClassName(modelPackage.toPackageName(), optionalName)
 
 /** `Optional<T>` for the (non-null) value type [valueType]. */
 internal fun RenderConfig.optionalOf(packageName: String, valueType: TypeName): TypeName =

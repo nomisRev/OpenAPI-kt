@@ -42,7 +42,7 @@ private fun ApiTree.additionalFiles(config: RenderConfig): List<FileSpec> {
     val utils = if (needsSerializationUtils) listOf(generateSerializationUtils(config)) else emptyList()
     val modelPackage = config.modelPackage.toPackageName()
     val optionalPackages = buildSet { models.forEach { it.collectOptionalPackages(config, this) } }
-    val optional = if (modelPackage in optionalPackages) listOf(generateOptionalSupport(config, modelPackage)) else emptyList()
+    val optional = if (optionalPackages.isNotEmpty()) listOf(generateOptionalSupport(config, modelPackage)) else emptyList()
     return utils + optional
 }
 
