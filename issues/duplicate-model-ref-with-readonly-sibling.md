@@ -1,6 +1,16 @@
 # A `$ref` annotated `readOnly`/`writeOnly` makes its target model generate twice
 
-**Status:** open
+**Status:** fixed in `040871b9` (typed part). The renderer guard against two files with one name is not added
+yet; it belongs with `context-variants-of-one-schema-share-a-class-name.md`.
+
+**Correction (2026-11-15):** the claims below about `integration-tests/youtrack` are wrong. All 115 of its annotated
+references point at schemas that have `readOnly`/`writeOnly` properties of their own (`ActivityItem.author` ->
+`User`, which has a read-only `id`), so use and definition agreed and it never had this duplicate. Its generated
+client is unchanged by the fix. Only an annotated reference to a schema with one shape (Google's pattern) broke.
+
+**Result:** `Scan` used in a request and a response is `ScanWrite` (no `status`) and `ScanRead` (with `status`), and
+there is one `Status`. Proof: `typed/.../registry/AnnotatedReferenceSpec.kt`, golden `client/annotated-reference`,
+`AnnotatedReferenceRuntimeTest`.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** emit (harness check); in the Gradle plugin the second file silently overwrites the first
 **Impact:** 73 of 1,547 documents (66 of them fail for this reason only). 66 googleapis.com services, adyen.com (2), apache.org (2), apple.com:sirikit-cloud-media, bunq.com, influxdata.com

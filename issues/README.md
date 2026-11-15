@@ -48,6 +48,7 @@ Read these numbers with three caveats:
 | [dollar-in-path-literal-interpolated](dollar-in-path-literal-interpolated.md), [keyword-path-parameter-unescaped-at-use-sites](keyword-path-parameter-unescaped-at-use-sites.md) | `bb15dd58` | parameter names `_` / empty |
 | [union-case-name-collisions](union-case-name-collisions.md) | `11ac049c` | a `required`-only branch next to `$ref` branches still becomes a free-form JSON case |
 | [shared-error-case-inline-type-wrong-owner](shared-error-case-inline-type-wrong-owner.md) | `a8e070fa` | none known |
+| [duplicate-model-ref-with-readonly-sibling](duplicate-model-ref-with-readonly-sibling.md) | `040871b9` | the renderer still has no guard against two files with one name |
 | [response-media-type-without-schema](response-media-type-without-schema.md) | `3e55150c`, and the two commits after `e0a84a6c` | malformed media type keys on responses still abort the document (`malformed-media-type-key-crash`) |
 | [unregistered-status-codes-share-one-response-case](unregistered-status-codes-share-one-response-case.md) | `0862fee5` | the multi-content-type and error-dispatch shapes are covered by a golden only |
 | [server-case-names-collide](server-case-names-collide.md), [server-case-name-not-identifier](server-case-name-not-identifier.md), [server-empty-description-empty-case-name](server-empty-description-empty-case-name.md) | `796be767` | names over 200 characters are not shortened |
@@ -90,6 +91,12 @@ parameters (36, render), unresolved `$ref` pointers (22, typed), recursive `allO
 
 After `a8e070fa` the 43 apisetu.gov.in documents compile (re-checked with `--filter apisetu.gov.in`, the other 138
 apisetu documents unchanged), which makes 1,171 by that count; no full census was run for it.
+
+A ninth census after `a8e070fa` and `040871b9` (`exploration/build/census-2026-11-15c/`): 1,238 generate and
+compile, 61 fail to compile, 159 fail in typed, 30 fail at emit, 46 fail at render. 110 documents newly compile (45
+compile -> pass, 65 emit -> pass), none stops earlier than before. The 30 left at emit are the other three
+duplicate-file causes: Read/Write variants under one class name, the root client class against a path class, and two
+schemas with one Kotlin name.
 
 The tables below still carry the counts of the first census.
 
