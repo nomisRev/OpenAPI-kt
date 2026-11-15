@@ -54,6 +54,7 @@ Read these numbers with three caveats:
 | [response-media-type-without-schema](response-media-type-without-schema.md) | `3e55150c`, and the two commits after `e0a84a6c` | malformed media type keys on responses still abort the document (`malformed-media-type-key-crash`) |
 | [unregistered-status-codes-share-one-response-case](unregistered-status-codes-share-one-response-case.md) | `0862fee5` | the multi-content-type and error-dispatch shapes are covered by a golden only |
 | [server-case-names-collide](server-case-names-collide.md), [server-case-name-not-identifier](server-case-name-not-identifier.md), [server-empty-description-empty-case-name](server-empty-description-empty-case-name.md) | `796be767` | names over 200 characters are not shortened |
+| [path-literal-segment-loses-navigation-property](path-literal-segment-loses-navigation-property.md) | `3b80f367` | a digit- or separator-only parameter next to a literal of that name (`{1}`, `1`) fails a new check instead of compiling |
 
 A second census after these commits (`exploration/build/census-2026-11-14b/`, taken before `01f1fe46` and
 `fde99b78`): 457 generate and compile (was 445), 541 fail to compile (was 555), 387 fail in typed (was 380), none

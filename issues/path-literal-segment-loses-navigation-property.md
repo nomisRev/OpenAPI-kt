@@ -1,6 +1,13 @@
 # A literal path segment named `client`, or like a path parameter above it, silently loses its navigation property
 
-**Status:** open
+**Status:** fixed in `3b80f367`. The private state of a path or root class is `__client` for the `HttpClient` and
+`_<name>` for a path parameter, so a literal segment `client` or one named like a parameter above it keeps its
+property (`api.client.register.post()`, `api.realm("r").roles.realm.get()`), and a path parameter `{client}` compiles.
+Building a class fails when two of its properties share a name. Proof: `StateNameCollisionSpec`, goldens
+`client/state-name-collision` and `client/client-path-parameter`, `StateNameCollisionRuntimeTest`; re-checked with
+`--filter`: amazonaws.com:sso-oidc, authentiq.io and keycloak.local compile with the members. Left open: a parameter
+whose name is only digits or separators next to a literal with the same name (`{1}` and `1`, both `_1`) fails that
+check instead of compiling; none is known in the corpus.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** wrong output (the generated code compiles; operations are unreachable)
 **Impact:** 13 of 1,547 documents have a literal segment `client`; 2 of them reach emit and both lose operations (amazonaws.com:sso-oidc, authentiq.io). 1 document has a literal segment named like a path parameter above it (keycloak.local). No compile error points at this, so the census does not count it.
