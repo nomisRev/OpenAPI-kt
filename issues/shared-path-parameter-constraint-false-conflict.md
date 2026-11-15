@@ -1,6 +1,13 @@
 # A path parameter with different constraints per operation is rejected as a "conflicting shared path node"
 
-**Status:** open
+**Status:** fixed in `4315b888`. Declarations that differ only by validation keywords or a default are one node; the
+node keeps those only when every declaration has the same. Proof: `ApiTreeSpec`, golden
+`client/shared-path-parameter-validation`, `SharedPathParameterRuntimeTest`.
+
+**Follow-up (decided 2026-11-15):** constraints are not enforced anywhere in the generated client yet. When constraint
+support is added, each operation should check its own declaration of a shared path parameter (every route keeps its
+own parameter with its constraints; only the shared navigation step drops them). No wrapper types or overloads per
+constraint.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** typed
 **Impact:** 31 of 1,547 documents (Twilio x13, AWS x9, VTEX x3, stream-io, oxforddictionaries, shutterstock, threatjammer, lgtm, godaddy)

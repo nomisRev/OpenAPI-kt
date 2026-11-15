@@ -1,6 +1,7 @@
 # A path parameter whose schema is `nullable: true` is generated as `String?` and does not compile
 
-**Status:** open
+**Status:** fixed in `dfc4cf2d`: a path parameter declared nullable is generated as not nullable, with a warning.
+Covered by the `/notes/{id}` case of golden `client/shared-path-parameter-types`.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** compile
 **Impact:** 5 of 1,547 documents (gettyimages.com, nbg.gr, parliament.uk:writtenquestions, parliament.uk:treaties, vtex.local:Intelligent-Search-API); 2 more have the construct and fail earlier (microsoft.com:graph, vtex.local:Subscriptions-API-(v3))

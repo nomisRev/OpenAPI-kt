@@ -49,6 +49,8 @@ Read these numbers with three caveats:
 | [union-case-name-collisions](union-case-name-collisions.md) | `11ac049c` | a `required`-only branch next to `$ref` branches still becomes a free-form JSON case |
 | [shared-error-case-inline-type-wrong-owner](shared-error-case-inline-type-wrong-owner.md) | `a8e070fa` | none known |
 | [duplicate-model-ref-with-readonly-sibling](duplicate-model-ref-with-readonly-sibling.md) | `040871b9` | the renderer still has no guard against two files with one name |
+| [shared-path-parameter-constraint-false-conflict](shared-path-parameter-constraint-false-conflict.md) | `4315b888` | constraints are not enforced anywhere yet; when they are, each operation checks its own declaration |
+| [shared-path-parameter-different-types](shared-path-parameter-different-types.md), [nullable-path-parameter](nullable-path-parameter.md) | `dfc4cf2d`, `956639e0` | a type without a word of its own (inline enum, union) is numbered; an inline type below the `slash` node of a trailing slash is still referenced under the wrong class (magento.com, `Company.Slash.Post.Body`) |
 | [response-media-type-without-schema](response-media-type-without-schema.md) | `3e55150c`, and the two commits after `e0a84a6c` | malformed media type keys on responses still abort the document (`malformed-media-type-key-crash`) |
 | [unregistered-status-codes-share-one-response-case](unregistered-status-codes-share-one-response-case.md) | `0862fee5` | the multi-content-type and error-dispatch shapes are covered by a golden only |
 | [server-case-names-collide](server-case-names-collide.md), [server-case-name-not-identifier](server-case-name-not-identifier.md), [server-empty-description-empty-case-name](server-empty-description-empty-case-name.md) | `796be767` | names over 200 characters are not shortened |
@@ -97,6 +99,11 @@ compile, 61 fail to compile, 159 fail in typed, 30 fail at emit, 46 fail at rend
 compile -> pass, 65 emit -> pass), none stops earlier than before. The 30 left at emit are the other three
 duplicate-file causes: Read/Write variants under one class name, the root client class against a path class, and two
 schemas with one Kotlin name.
+
+A tenth census after `4315b888`, `dfc4cf2d` and `956639e0` (`exploration/build/census-2026-11-15e/`): 1,286 generate
+and compile, 68 fail to compile, 94 fail in typed, 34 fail at emit, 52 fail at render. No document stops earlier than
+before. Of the 65 documents that stopped on a conflicting path parameter, 43 compile; the other 22 now reach a later
+failure (12 compile, 4 duplicate files, 6 refused parameters). 5 more compile through the nullable path parameter fix.
 
 The tables below still carry the counts of the first census.
 

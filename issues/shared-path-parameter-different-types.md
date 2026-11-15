@@ -1,6 +1,11 @@
 # Operations that type one path variable differently abort generation
 
-**Status:** open
+**Status:** fixed in `dfc4cf2d` with candidate 1 below (decided 2026-11-15: an operation must not be reachable with a
+type it does not declare). `id(id: String): IdStringPath` and `id(id: Uuid): IdUuidPath` are overloads, the classes
+are named with the type whatever the order of the document, each with a warning. A group with a type that has no
+word of its own (inline enum, union), with two equal words, or with more than one list, is numbered instead. A
+nullable path parameter is generated as not nullable, with a warning. Proof: `ApiTreeSpec`, golden
+`client/shared-path-parameter-types`, `SharedPathParameterRuntimeTest`.
 **Confirmed:** census 2026-11-14 (branch openapi-3.2-streaming)
 **Stage:** typed
 **Impact:** 26 of 1,547 documents (magento, hetzner.cloud, sendgrid, jellyfin, 1password connect, vimeo, files.com, discourse, appcenter.ms, ...)
