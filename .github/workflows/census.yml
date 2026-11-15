@@ -10,9 +10,9 @@ on:
   workflow_dispatch:
     inputs:
       timeout:
-        description: 'Seconds per worker/compiler process'
+        description: 'Seconds per worker/compiler process (CI runners compile about three times slower than a local machine, where 120 is enough)'
         required: false
-        default: '120'
+        default: '360'
 
 env:
   SNAPSHOT_KEY: corpus-snapshot-1
@@ -90,7 +90,7 @@ jobs:
       - name: Run shard ${{ matrix.shard }} of ${{ env.SHARDS }}
         run: >
           ./gradlew :exploration:run
-          --args="--jobs 4 --timeout ${{ inputs.timeout || '120' }} --shard ${{ matrix.shard }}/$SHARDS --output $RUNNER_TEMP/census"
+          --args="--jobs 4 --timeout ${{ inputs.timeout || '360' }} --shard ${{ matrix.shard }}/$SHARDS --output $RUNNER_TEMP/census"
 
       - name: Keep only the evidence (no inputs, sources or classes)
         if: always()
