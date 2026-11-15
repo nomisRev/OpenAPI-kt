@@ -105,6 +105,23 @@ and compile, 68 fail to compile, 94 fail in typed, 34 fail at emit, 52 fail at r
 before. Of the 65 documents that stopped on a conflicting path parameter, 43 compile; the other 22 now reach a later
 failure (12 compile, 4 duplicate files, 6 refused parameters). 5 more compile through the nullable path parameter fix.
 
+An eleventh census after `1be3a8ed` (`exploration/build/census-2026-11-15f/`): 1,292 generate and compile, 62 fail to
+compile, 94 fail in typed, 34 fail at emit, 52 fail at render. 7 documents with an enum parameter inside a composite
+segment newly compile (it is a step per value now). One stopped earlier: gitea.io, where the value `patch` of
+`/pulls/{index}.{diffType}` got the name of the `PATCH` operation of its parent. `dadbcc06` names such a step with its
+separator (`dotPatch`); re-checked with `--filter`: gitea.io and googleapis.com:contentwarehouse compile, which makes
+1,294 by that count, and amazonaws.com:s3 gets past the clash to another error.
+
+Not reported yet, seen in that census:
+
+- A path step after a slash with the name of an operation of its parent (`/actionTargets/get` next to
+  `GET /actionTargets`): `val get` twice. amazonaws.com:securityhub, amazonaws.com:guardduty, tokenjay.app. Needs a
+  naming decision; the separator rule only covers steps joined without a slash.
+- The root client class is named from a title with `:` (8 documents, `name contains illegal characters`).
+- A form body that is a `$ref` to a schema with inline enum fields refers to `Post.Body.<Enum>` (6 documents).
+- discourse.local: a generated class name longer than a file name can be (`…And…And….class`, permission denied).
+- icons8.com now reaches the `:` root class name.
+
 The tables below still carry the counts of the first census.
 
 ## Suggested order
