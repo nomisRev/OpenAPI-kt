@@ -72,6 +72,11 @@ internal data class CorpusOptions(
     val timeout: Long = 120,
     val skipCompile: Boolean = false,
     val fetchOnly: Boolean = false,
+    /** 1-based part of the selection to check, out of [shards]: every [shards]th entry, starting at entry [shard]. */
+    val shard: Int = 1,
+    val shards: Int = 1,
+    /** Only write `summary.json` for the `results.jsonl` (and compile logs) already in [output], for merged shards. */
+    val summarizeOnly: Boolean = false,
     val output: File = File("exploration/build/corpus"),
 )
 
@@ -89,12 +94,20 @@ internal fun parseOptions(args: Array<String>): CorpusOptions {
             "--skip-compile" -> options = options.copy(skipCompile = true)
             "--fetch-only" -> options = options.copy(fetchOnly = true)
             "--output" -> options = options.copy(output = File(value(flag)))
+            "--shard" -> {
+                val text = value(flag)
+                val parts = text.split('/').map { it.toIntOrNull() }
+                require(parts.size == 2 && parts.all { it != null }) { "--shard takes I/N, e.g. 2/4: $text" }
+                options = options.copy(shard = parts[0]!!, shards = parts[1]!!)
+            }
+            "--summarize-only" -> options = options.copy(summarizeOnly = true)
             else -> error("Unknown argument: $flag")
         }
     }
     require(options.jobs > 0 && options.timeout > 0 && options.limit >= 0) {
         "jobs/timeout must be positive and limit nonnegative"
     }
+    require(options.shards > 0 && options.shard in 1..options.shards) { "--shard I/N needs 1 <= I <= N" }
     return options
 }
 
@@ -112,6 +125,7 @@ internal fun selectEntries(index: JsonObject, options: CorpusOptions): List<Json
         }
     }
 }.sortedBy(::entryHash).let { if (options.limit == 0) it else it.take(options.limit) }
+    .filterIndexed { index, _ -> index % options.shards == options.shard - 1 }
 
 internal fun runProcess(command: List<String>, directory: File, label: String, timeout: Long): String {
     val process = ProcessBuilder(command).redirectErrorStream(true)
@@ -239,11 +253,17 @@ fun main(args: Array<String>) = runBlocking {
             --skip-compile     Only generate sources
             --fetch-only       Only download documents
             --output PATH      Artifact directory (default: exploration/build/corpus)
+            --shard I/N        Check only part I of N of the selection (every Nth document)
+            --summarize-only   Only summarize the results.jsonl already in --output (merged shards)
         """.trimIndent())
         return@runBlocking
     }
     val options = parseOptions(args)
     val out = options.output.canonicalFile.apply { mkdirs() }
+    if (options.summarizeOnly) {
+        println(corpusJson.encodeToString(JsonObject.serializer(), summarize(out)))
+        return@runBlocking
+    }
     HttpClient(CIO) {
         expectSuccess = true
         install(HttpTimeout) { requestTimeoutMillis = 60_000; connectTimeoutMillis = 60_000; socketTimeoutMillis = 60_000 }

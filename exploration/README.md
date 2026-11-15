@@ -25,6 +25,13 @@ for a fresh index snapshot or to preserve another run's evidence. Keep selection
 flags identical for a repeat run. `--fetch-only` downloads without launching
 worker JVMs; `--skip-compile` enables a faster generation census.
 
+On GitHub Actions, `.github/workflows/census.yml` (started by hand) runs the
+preferred-version census split over four runners with `--shard I/4` and merges
+them with `--summarize-only`. It takes its own API Guru snapshot on the first run
+and keeps it in the Actions cache, so its counts compare with other CI runs, not
+with runs on the 2026-11-01 snapshot. The counts are in the run summary, the
+evidence (results, logs, no sources) in the `census` artifact.
+
 Selection defaults to preferred versions, ordered by a stable hash of API ID and
 version, so `--limit` does not simply select an alphabetical block of AWS specs.
 This is reproducible sampling, not stratification by provider or feature.

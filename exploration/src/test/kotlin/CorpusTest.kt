@@ -79,11 +79,25 @@ val corpusTests by testSuite {
         assertEquals(all.take(1), selectEntries(index, CorpusOptions(allVersions = true, limit = 1)))
         assertEquals(1, selectEntries(index, CorpusOptions(filter = "other")).size)
     }
+    test("shards split the selection into disjoint parts that together are the whole selection") {
+        val index = JsonObject((1..10).associate { n ->
+            "api$n" to Json.parseToJsonElement("""{"preferred":"v1","versions":{"v1":{"openapiVer":"3.0.0","swaggerUrl":"https://api.apis.guru/$n.json"}}}""")
+        })
+        val whole = selectEntries(index, CorpusOptions(limit = 7))
+        val shards = (1..3).map { selectEntries(index, CorpusOptions(limit = 7, shard = it, shards = 3)) }
+        assertEquals(whole.toSet(), shards.flatten().toSet())
+        assertEquals(whole.size, shards.sumOf { it.size })
+        assertTrue(shards.all { it.size in 2..3 })
+    }
     test("invalid CLI bounds are rejected") {
-        for (args in listOf(arrayOf("--jobs", "0"), arrayOf("--timeout", "0"), arrayOf("--limit", "-1"), arrayOf("--unknown"), arrayOf("--output"))) {
+        for (args in listOf(arrayOf("--jobs", "0"), arrayOf("--timeout", "0"), arrayOf("--limit", "-1"), arrayOf("--unknown"), arrayOf("--output"),
+            arrayOf("--shard", "0/4"), arrayOf("--shard", "5/4"), arrayOf("--shard", "1"), arrayOf("--shard", "a/b"))) {
             assertFails { parseOptions(args) }
         }
         assertEquals(4, parseOptions(arrayOf("--jobs", "4", "--fetch-only")).jobs)
+        val sharded = parseOptions(arrayOf("--shard", "2/4"))
+        assertEquals(2 to 4, sharded.shard to sharded.shards)
+        assertTrue(parseOptions(arrayOf("--summarize-only")).summarizeOnly)
     }
     test("summary counts compiler diagnostics once per document and groups phase failures") {
         val directory = Files.createTempDirectory("corpus-test").toFile()
