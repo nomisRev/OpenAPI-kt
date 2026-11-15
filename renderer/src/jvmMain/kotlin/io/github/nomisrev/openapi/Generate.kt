@@ -34,8 +34,39 @@ fun ApiTree.renderWithDiagnostics(config: RenderConfig): GenerationResult {
 
 fun ApiTree.generateModels(config: RenderConfig): List<FileSpec> {
     val modelsConfig = config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this)
-    return models.mapNotNull { model -> model.toFileSpecOrNull(modelsConfig) } + additionalFiles(modelsConfig)
+    return modelFiles(modelsConfig).map(ModelFile::file) + additionalFiles(modelsConfig)
 }
+
+/** A file of a model, with the shape of the model, which tells whether another model with the same file name is equal. */
+internal data class ModelFile(val file: FileSpec, val shape: String) {
+    val key: String get() = "${file.packageName}.${file.name}"
+}
+
+/**
+ * The files of the models, one per class name and shape: the `Read` and `Write` variants of a schema that are equal are
+ * rendered under one name, and are one file. Models of different shape under one name are not both emitted, the first
+ * one is ([modelFileCollisionDiagnostics] reports the others).
+ */
+internal fun ApiTree.modelFiles(config: RenderConfig): List<ModelFile> =
+    allModelFiles(config).distinctBy(ModelFile::key)
+
+private fun ApiTree.allModelFiles(config: RenderConfig): List<ModelFile> =
+    models.mapNotNull { model ->
+        model.toFileSpecOrNull(config)?.let { file -> ModelFile(file, model.contextComparisonKey(config.contextSpecificNames)) }
+    }
+
+/** An error for each class name that two models of a different shape would be rendered under. */
+internal fun ApiTree.modelFileCollisionDiagnostics(config: RenderConfig): List<GenerationDiagnostic> =
+    allModelFiles(config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this))
+        .groupBy(ModelFile::key)
+        .filterValues { files -> files.map(ModelFile::shape).distinct().size > 1 }
+        .keys.sorted()
+        .map { name ->
+            GenerationDiagnostic(
+                GenerationDiagnosticSeverity.Error,
+                "Two different models would be generated as '$name'. Only the first is emitted; report this schema."
+            )
+        }
 
 private fun ApiTree.additionalFiles(config: RenderConfig): List<FileSpec> {
     val needsSerializationUtils = models.any(Model::requiresSerializationUtils)

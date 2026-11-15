@@ -8,6 +8,16 @@ private data class NamedContextModel(
     val model: Model,
 )
 
+/**
+ * The names of the schemas that are rendered as two classes, `XRead` and `XWrite`: the names with more than one
+ * distinct variant. A name with one variant, or with variants that are equal, keeps its bare name (and is one class,
+ * see [modelFiles]). Whether two variants are equal depends on the names their properties refer to, so a
+ * name that is split can split the names that refer to it: this repeats until no more names are split.
+ *
+ * A variant without a context (`Null`) is a schema with nothing context-specific beneath it, which does not also have a
+ * `Read` or `Write` variant; if one does anyway, it counts as a variant, and keeps the bare name while the others get a
+ * suffix, so that the names are different.
+ */
 internal fun List<Model>.contextSpecificNames(): Set<String> {
     val modelsByName = filterIsInstance<Model.ContextHolder>()
         .mapNotNull { holder ->
@@ -21,17 +31,7 @@ internal fun List<Model>.contextSpecificNames(): Set<String> {
     while (true) {
         val next = modelsByName
             .filter { [_, models] ->
-                val readKeys = models
-                    .asSequence()
-                    .filter { it.context == SchemaContext.Read }
-                    .map { it.model.contextComparisonKey(splitNames) }
-                    .toSet()
-                val writeKeys = models
-                    .asSequence()
-                    .filter { it.context == SchemaContext.Write }
-                    .map { it.model.contextComparisonKey(splitNames) }
-                    .toSet()
-                readKeys.isNotEmpty() && writeKeys.isNotEmpty() && readKeys != writeKeys
+                models.mapTo(mutableSetOf()) { it.model.contextComparisonKey(splitNames) }.size > 1
             }
             .keys
 
@@ -40,7 +40,7 @@ internal fun List<Model>.contextSpecificNames(): Set<String> {
     }
 }
 
-private fun Model.contextComparisonKey(splitNames: Set<String>): String =
+internal fun Model.contextComparisonKey(splitNames: Set<String>): String =
     InlineModelSharingJson.encodeToString(normalizedForContextComparison(splitNames))
 
 private fun Model.normalizedForContextComparison(splitNames: Set<String>): Model =

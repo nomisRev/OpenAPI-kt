@@ -13,7 +13,7 @@ public data class IssueKey(
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val id: String? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
-  public val project: IssueFolderWrite? = null,
+  public val project: IssueFolderRead? = null,
   @EncodeDefault(EncodeDefault.Mode.NEVER)
   public val numberInProject: Long? = null,
 )

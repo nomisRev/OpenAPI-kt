@@ -44,7 +44,7 @@ fun List<GenerationDiagnostic>.throwOnErrors() {
 }
 
 internal fun ApiTree.generationDiagnostics(config: RenderConfig): List<GenerationDiagnostic> =
-    requestBodyDiagnostics() + ignoredParameterDiagnostics() + parameterDiagnostics() +
+    requestBodyDiagnostics() + modelFileCollisionDiagnostics(config) + ignoredParameterDiagnostics() + parameterDiagnostics() +
         renamedArgumentDiagnostics(config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this)) +
         children.renamedPathDiagnostics(parentPath = "", operations = operations.keys) + renamedServerDiagnostics() + rootClassNameDiagnostics() + propertyOverrideDiagnostics() + typedWarningDiagnostics() +
         renamedEnumEntryDiagnostics(config.withOptionalTypeName(this).withNamedModels(models).withPathClassNames(this)) +

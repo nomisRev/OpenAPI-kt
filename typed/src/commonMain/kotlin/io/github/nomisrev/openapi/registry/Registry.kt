@@ -3,6 +3,7 @@ package io.github.nomisrev.openapi.registry
 import io.github.nomisrev.openapi.Model
 import io.github.nomisrev.openapi.NamingContext
 import io.github.nomisrev.openapi.routes.SchemaContext
+import io.github.nomisrev.openapi.parser.AdditionalProperties
 import io.github.nomisrev.openapi.parser.OpenAPI
 import io.github.nomisrev.openapi.parser.ReferenceOr
 import io.github.nomisrev.openapi.parser.Schema
@@ -42,6 +43,66 @@ class Registry(
     
     fun scope(): Scope = ScopeImpl(null, emptySet())
 
+    /**
+     * The names of the component schemas that are context-specific: they, or anything they contain, are `readOnly` or
+     * `writeOnly`, following `$ref`s, so they have a request and a response shape. Computed once, in linear time, from
+     * the components alone: the answer for a schema depends on that schema only, never on where it is used, so that a
+     * use and the definition of one schema agree on its name. Cycles need no special care.
+     */
+    private val contextSpecificComponents: Set<String> by lazy {
+        val prefix = "#/components/schemas/"
+        val direct = mutableSetOf<String>()
+        val usedBy = mutableMapOf<String, MutableList<String>>()
+        openAPI.components.schemas.forEach { [name, declared] ->
+            val scan = ContextScan().apply { scan(declared) }
+            if (scan.direct) direct += name
+            scan.refs.forEach { if (it.startsWith(prefix)) usedBy.getOrPut(it.schemaName()) { mutableListOf() } += name }
+        }
+        val result = direct.toMutableSet()
+        val pending = ArrayDeque(direct)
+        while (pending.isNotEmpty()) {
+            usedBy[pending.removeLast()]?.forEach { if (result.add(it)) pending.addLast(it) }
+        }
+        result
+    }
+
+    /** What a schema says about its context without following `$ref`s: its own flags, and the components it refers to. */
+    private class ContextScan {
+        var direct = false
+        val refs = mutableSetOf<String>()
+
+        fun scan(refOrSchema: ReferenceOr<Schema>?) {
+            when (refOrSchema) {
+                null -> Unit
+                // Only an annotation on the reference itself counts here; what it refers to is followed through [refs].
+                is ReferenceOr.Reference -> {
+                    if (refOrSchema.readOnly == true || refOrSchema.writeOnly == true) direct = true
+                    if (refOrSchema.ref != "#") refs += refOrSchema.ref
+                }
+                is ReferenceOr.Value<Schema> -> scan(refOrSchema.value)
+            }
+        }
+
+        fun scan(schema: Schema) {
+            if (schema.readOnly == true || schema.writeOnly == true) direct = true
+            schema.allOf?.forEach(::scan)
+            schema.oneOf?.forEach(::scan)
+            schema.anyOf?.forEach(::scan)
+            schema.properties?.values?.forEach(::scan)
+            scan(schema.items)
+            (schema.additionalProperties as? AdditionalProperties.PSchema)?.let { scan(it.value) }
+        }
+    }
+
+    private fun isContextSpecific(ref: String, peeked: Schema): Boolean =
+        if (ref.startsWith("#/components/schemas/")) ref.schemaName() in contextSpecificComponents
+        else peeked.isContextSpecific()
+
+    private fun Schema.isContextSpecific(): Boolean {
+        val scan = ContextScan().apply { scan(this@isContextSpecific) }
+        return scan.direct || scan.refs.any { it.startsWith("#/components/schemas/") && it.schemaName() in contextSpecificComponents }
+    }
+
     suspend fun NamingContext.Reference.toModel(): Model =
         ReferenceOr.schema(name).toModel(NamingContext(this, emptyList()), context)
 
@@ -77,7 +138,6 @@ class Registry(
     private inner class ScopeImpl(
         private val currentAnchor: Pair<NamingContext, Schema>?,
         private val expanding: Set<NamingContext>,
-        private val forceContext: SchemaContext? = null,
     ) : Scope {
         override fun registry(): Registry = this@Registry
         override suspend fun ReferenceOr<Schema>.peek(): Schema = when (this) {
@@ -122,15 +182,11 @@ class Registry(
             is ReferenceOr.Reference -> {
                 val peeked = peek()
                 // `readOnly` or `writeOnly` next to this `$ref` is about the property that holds it: it is left out of
-                // one shape of its parent. Whether the schema referred to has two shapes depends on its own content only,
-                // so that a use and the definition of one schema agree on its name.
-                val contextSpecific = peeked.readOrWriteOnly()
-                val resolvedRef = if (contextSpecific) {
-                    forceContext ?: context
-                } else {
-                    SchemaContext.Null
-                }
-                val nextForceContext = if (!contextSpecific) SchemaContext.Write else null
+                // one shape of its parent. Whether the schema referred to has two shapes depends on its own content
+                // (and what it refers to) only, so that a use and the definition of one schema agree on its name.
+                // The context of the use flows on to what is beneath, which has one shape when this has.
+                val contextSpecific = isContextSpecific(ref, peeked)
+                val resolvedRef = if (contextSpecific) context else SchemaContext.Null
                 val reference = NamingContext.Reference(ref.schemaName(), resolvedRef)
                 val namingContext = NamingContext(reference, emptyList())
                 val resolved = if (expanding.contains(namingContext)) {
@@ -139,81 +195,13 @@ class Registry(
                     ResolvedSchema.Reference(reference, peeked)
                 }
                 val nextAnchor = if (peeked.recursiveAnchor == true) Pair(namingContext, peeked) else currentAnchor
-                block(
-                    ScopeImpl(nextAnchor, expanding + namingContext, nextForceContext),
-                    resolved
-                )
+                block(ScopeImpl(nextAnchor, expanding + namingContext), resolved)
             }
             is ReferenceOr.Value<Schema> -> {
-                val hasReadOnlyOrWriteOnly = value.readOrWriteOnly()
-                val nextContext = if (hasReadOnlyOrWriteOnly) (forceContext ?: context) else SchemaContext.Null
-                if (value.recursiveAnchor == true) {
-                    block(
-                        ScopeImpl(Pair(name, value), expanding, nextContext),
-                        ResolvedSchema.Value(name, value)
-                    )
-                } else {
-                    block(
-                        ScopeImpl(currentAnchor, expanding, nextContext),
-                        ResolvedSchema.Value(name, value)
-                    )
-                }
+                // An inline schema is part of the schema that holds it: the context flows through it.
+                val nextAnchor = if (value.recursiveAnchor == true) Pair(name, value) else currentAnchor
+                block(ScopeImpl(nextAnchor, expanding), ResolvedSchema.Value(name, value))
             }
-        }
-
-        /*
-         * Traverse a schema to determine if it has readOnly or writeOnly in any (nested) properties.
-         * Checks `allOf`, `oneOf`, `anyOf`, `properties`, and `items`.
-         */
-        @Suppress("CyclomaticComplexMethod")
-        private suspend fun Schema.readOrWriteOnly(visited: MutableSet<String> = mutableSetOf()): Boolean {
-            suspend fun ReferenceOr<Schema>.schema(): Schema? = when (this) {
-                is ReferenceOr.Value<Schema> -> value
-                is ReferenceOr.Reference if (ref == "#" || ref in visited) -> null
-                is ReferenceOr.Reference -> {
-                    visited.add(ref)
-                    peek()
-                }
-            }
-
-            // For property-level refs ($ref), context-specificity is NOT inherited: only a readOnly
-            // or writeOnly annotation on the *reference itself* counts. If the referenced schema
-            // happens to have readOnly fields internally, that is that schema's own concern and does
-            // not make the *parent* schema context-specific. Recursion into $ref schemas would
-            // incorrectly mark schemas as context-specific just because they reference schemas that
-            // have readOnly fields (e.g. IssueKey referencing IssueFolder which has readOnly id).
-            //
-            // For inline schemas (allOf / oneOf / anyOf / items / Value properties) we DO recurse
-            // because those schemas are effectively part of the parent's own definition.
-            suspend fun Collection<ReferenceOr<Schema>>?.readOrWriteOnlyProperties(): Boolean =
-                orEmpty().any { refOrSchema ->
-                    when (refOrSchema) {
-                        // A $ref property: only count if the reference annotation itself is readOnly/writeOnly
-                        is ReferenceOr.Reference ->
-                            refOrSchema.readOnly == true || refOrSchema.writeOnly == true
-                        // An inline schema: recurse fully
-                        is ReferenceOr.Value<Schema> ->
-                            refOrSchema.value.writeOnly == true ||
-                                    refOrSchema.value.readOnly == true ||
-                                    refOrSchema.value.readOrWriteOnly(visited)
-                    }
-                }
-
-            suspend fun Collection<ReferenceOr<Schema>>?.readOrWriteOnlyComposite(): Boolean =
-                orEmpty().any { refOrSchema ->
-                    if (refOrSchema is ReferenceOr.Reference &&
-                        (refOrSchema.readOnly == true || refOrSchema.writeOnly == true)
-                    ) return@any true
-                    val schema = refOrSchema.schema()
-                    schema != null && (schema.writeOnly == true || schema.readOnly == true || schema.readOrWriteOnly(
-                        visited
-                    ))
-                }
-
-            return writeOnly == true || readOnly == true ||
-                    allOf.readOrWriteOnlyComposite() || oneOf.readOrWriteOnlyComposite() ||
-                    properties?.values.readOrWriteOnlyProperties() ||
-                    anyOf.readOrWriteOnlyComposite() || listOfNotNull(items).readOrWriteOnlyComposite()
         }
 
         /**
@@ -234,7 +222,7 @@ class Registry(
             val name = ref.drop("#/components/schemas/".length)
             val schema = peek(ref)
             // As in the other `resolve`: an annotation next to the `$ref` does not give its target two shapes.
-            val contextSpecific = schema.readOrWriteOnly()
+            val contextSpecific = isContextSpecific(ref, schema)
             val schemaContext = if (contextSpecific) context else SchemaContext.Null
             val reference = NamingContext.Reference(name, schemaContext)
             val namingContext = NamingContext(reference, emptyList())
@@ -246,13 +234,7 @@ class Registry(
 //            cache.add(reference)
 
             val currentAnchor = if (schema.recursiveAnchor == true) Pair(namingContext, schema) else null
-            // When the schema is not context-specific (schemaContext = Null), propagate Write as the
-            // forced context into nested scopes. This prevents the caller's Read context from
-            // "bleeding" into a schema that doesn't distinguish Read from Write — nested references
-            // to context-specific schemas should resolve as Write (the plain/neutral variant) rather
-            // than picking up the outer Read context and producing leaked "Read"-suffixed types.
-            val nextForceContext = if (!contextSpecific) SchemaContext.Write else null
-            block(ScopeImpl(currentAnchor, expanding + namingContext, nextForceContext), resolved)
+            block(ScopeImpl(currentAnchor, expanding + namingContext), resolved)
         }
     }
 }
