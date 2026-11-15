@@ -114,9 +114,11 @@ separator (`dotPatch`); re-checked with `--filter`: gitea.io and googleapis.com:
 
 Not reported yet, seen in that census:
 
-- A path step after a slash with the name of an operation of its parent (`/actionTargets/get` next to
-  `GET /actionTargets`): `val get` twice. amazonaws.com:securityhub, amazonaws.com:guardduty, tokenjay.app. Needs a
-  naming decision; the separator rule only covers steps joined without a slash.
+- Fixed in `5ff2e4f4` (decided 2026-11-15): a path step after a slash with the name of an operation of its parent
+  (`/standards/get` next to `GET /standards`) is one member with that operation, `api.standards.get()` and
+  `api.standards.get.post()`, neither renamed. amazonaws.com:securityhub, amazonaws.com:guardduty and tokenjay.app
+  compile (re-checked with `--filter`), which makes 1,297 by that count. Not covered: the same clash on the root
+  client class, and a type nested in the operation with the name of one nested in the step (left as two members).
 - The root client class is named from a title with `:` (8 documents, `name contains illegal characters`).
 - A form body that is a `$ref` to a schema with inline enum fields refers to `Post.Body.<Enum>` (6 documents).
 - discourse.local: a generated class name longer than a file name can be (`…And…And….class`, permission denied).
