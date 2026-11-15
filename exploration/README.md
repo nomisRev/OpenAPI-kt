@@ -26,7 +26,7 @@ flags identical for a repeat run. `--fetch-only` downloads without launching
 worker JVMs; `--skip-compile` enables a faster generation census.
 
 On GitHub Actions, `.github/workflows/census.yml` (started by hand) runs the
-preferred-version census split over four runners with `--shard I/4` and merges
+preferred-version census split over 16 runners with `--shard I/16` and merges
 them with `--summarize-only`. It takes its own API Guru snapshot on the first run
 and keeps it in the Actions cache, so its counts compare with other CI runs, not
 with runs on the 2026-11-01 snapshot. The counts are in the run summary, the

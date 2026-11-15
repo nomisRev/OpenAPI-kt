@@ -1,6 +1,6 @@
 name: "Corpus census"
 
-# Runs the API Guru corpus census (exploration/README.md), split over four runners. Start it from the Actions tab or
+# Runs the API Guru corpus census (exploration/README.md), split over 16 runners. Start it from the Actions tab or
 # with `gh workflow run census.yml --ref <branch>`. The first run downloads an API Guru snapshot and keeps it in the
 # Actions cache under SNAPSHOT_KEY, so later runs check the same documents; the summary prints the index hash, which
 # changes when the cache was evicted (7 days unused) and a new snapshot was taken. Change SNAPSHOT_KEY to re-pin.
@@ -16,7 +16,7 @@ on:
 
 env:
   SNAPSHOT_KEY: corpus-snapshot-1
-  SHARDS: 4
+  SHARDS: 16
 
 permissions:
   contents: read
@@ -65,7 +65,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2, 3, 4]
+        shard: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
     steps:
       - uses: actions/checkout@v5
 
